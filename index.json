@@ -1,0 +1,79 @@
+{
+  "$schema": "https://myriad.app/schemas/tapp-store-v1.json",
+  "name": "Myriad Official Tapp Store",
+  "version": "1.0.0",
+  "api_version": "1",
+  "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
+  "updated_at": "2025-12-04T00:00:00Z",
+  "maintainer": {
+    "name": "Myriad Team",
+    "email": "tapp@myriad.app",
+    "url": "https://github.com/Myriad-You/tapp-store"
+  },
+  "apps": [
+    {
+      "id": "com.myriad.quick-notes",
+      "name": "便携便签",
+      "version": "0.1.0",
+      "description": "简单的笔记工具，快速记录想法和灵感",
+      "long_description": "便携便签是一款简洁高效的笔记应用，支持 Markdown 语法和快捷模板。提供桌面小组件，让你随时记录灵感。",
+      "author": {
+        "name": "Myriad Team",
+        "url": "https://github.com/Myriad-You"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/com.myriad.quick-notes",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "productivity",
+      "tags": ["笔记", "markdown", "效率", "widget", "便签"],
+      "permissions": ["storage", "ui:notification", "ui:theme", "widget:register", "component:page"],
+      "min_myriad_version": "0.1.0",
+      "icon": "📝",
+      "screenshots": [],
+      "download": {
+        "manifest": "apps/com.myriad.quick-notes/manifest.json",
+        "code": "apps/com.myriad.quick-notes/index.js",
+        "readme": "apps/com.myriad.quick-notes/README.md"
+      },
+      "size": 15360,
+      "downloads": 0,
+      "rating": 0,
+      "featured": true,
+      "verified": true,
+      "created_at": "2025-12-04T00:00:00Z",
+      "updated_at": "2025-12-04T00:00:00Z"
+    },
+    {
+      "id": "com.myriad.ai-chat",
+      "name": "AI 聊天助手",
+      "version": "0.1.0",
+      "description": "AI 驱动的智能对话助手，支持多轮对话",
+      "long_description": "AI 聊天助手让你随时与 AI 进行自然对话。支持上下文理解、多轮会话，并提供便捷的小组件入口。",
+      "author": {
+        "name": "Myriad Team",
+        "url": "https://github.com/Myriad-You"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/com.myriad.ai-chat",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "ai",
+      "tags": ["AI", "聊天", "助手", "widget", "GPT"],
+      "permissions": ["storage", "ui:notification", "ui:theme", "widget:register", "component:page", "ai:generate"],
+      "min_myriad_version": "0.1.0",
+      "icon": "🤖",
+      "screenshots": [],
+      "download": {
+        "manifest": "apps/com.myriad.ai-chat/manifest.json",
+        "code": "apps/com.myriad.ai-chat/index.js",
+        "readme": "apps/com.myriad.ai-chat/README.md"
+      },
+      "size": 18432,
+      "downloads": 0,
+      "rating": 0,
+      "featured": true,
+      "verified": true,
+      "created_at": "2025-12-04T00:00:00Z",
+      "updated_at": "2025-12-04T00:00:00Z"
+    }
+  ]
+}

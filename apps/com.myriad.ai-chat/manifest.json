@@ -1,0 +1,48 @@
+{
+  "id": "com.myriad.ai-chat",
+  "name": "AI 聊天助手",
+  "version": "0.1.0",
+  "description": "AI 驱动的智能对话助手，支持多轮对话",
+  "main": "index.js",
+  "author": {
+    "name": "Myriad Team"
+  },
+  "permissions": [
+    "storage",
+    "ui:notification",
+    "ui:theme",
+    "widget:register",
+    "component:page",
+    "ai:generate"
+  ],
+  "icon": "🤖",
+  "widgets": [
+    {
+      "id": "ai-chat",
+      "name": "AI 助手",
+      "description": "快速与 AI 对话",
+      "icon": "🤖",
+      "defaultSize": "2x2",
+      "sizes": ["2x2", "4x2", "4x4"],
+      "category": "utility"
+    }
+  ],
+  "settings": [
+    {
+      "key": "saveHistory",
+      "label": "保存对话历史",
+      "type": "toggle",
+      "description": "退出后保留对话记录",
+      "defaultValue": true
+    },
+    {
+      "key": "maxHistory",
+      "label": "最大历史条数",
+      "type": "number",
+      "description": "保留的最大对话条数",
+      "defaultValue": 100,
+      "min": 10,
+      "max": 500
+    }
+  ]
+}

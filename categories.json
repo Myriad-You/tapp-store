@@ -1,0 +1,12 @@
+{
+  "categories": [
+    { "id": "all", "name": "全部", "icon": "📦", "order": 0 },
+    { "id": "productivity", "name": "效率工具", "icon": "📝", "order": 1 },
+    { "id": "ai", "name": "AI 助手", "icon": "🤖", "order": 2 },
+    { "id": "developer", "name": "开发工具", "icon": "🔧", "order": 3 },
+    { "id": "games", "name": "游戏娱乐", "icon": "🎮", "order": 4 },
+    { "id": "data", "name": "数据分析", "icon": "📊", "order": 5 },
+    { "id": "social", "name": "社交", "icon": "👥", "order": 6 },
+    { "id": "utility", "name": "实用工具", "icon": "🔨", "order": 7 }
+  ]
+}

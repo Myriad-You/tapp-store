@@ -1,0 +1,47 @@
+{
+  "id": "com.myriad.quick-notes",
+  "name": "便携便签",
+  "version": "0.1.0",
+  "description": "简单的笔记工具，快速记录想法和灵感",
+  "main": "index.js",
+  "author": {
+    "name": "Myriad Team"
+  },
+  "permissions": [
+    "storage",
+    "ui:notification",
+    "ui:theme",
+    "widget:register",
+    "component:page"
+  ],
+  "icon": "📝",
+  "widgets": [
+    {
+      "id": "notes",
+      "name": "便签",
+      "description": "快速查看和添加笔记",
+      "icon": "📝",
+      "defaultSize": "2x2",
+      "sizes": ["2x2", "4x2", "4x4"],
+      "category": "utility"
+    }
+  ],
+  "settings": [
+    {
+      "key": "maxNotes",
+      "label": "最大笔记数",
+      "type": "number",
+      "description": "保留的最大笔记数量",
+      "defaultValue": 100,
+      "min": 10,
+      "max": 500
+    },
+    {
+      "key": "showTimestamp",
+      "label": "显示时间戳",
+      "type": "toggle",
+      "description": "在笔记下方显示创建时间",
+      "defaultValue": true
+    }
+  ]
+}
