@@ -313,9 +313,16 @@ Tapp.pages['ai-chat'] = {
     // 获取全局主色调
     const primaryColor = await getPrimaryColor();
 
-    // 使用双层架构 - 先获取 DOM 元素
-    var bgLayer = document.getElementById('tapp-background');
-    var contentLayer = document.getElementById('tapp-content');
+    // 使用双层架构 - 先获取 DOM 元素（在 container 内部查找）
+    var bgLayer = container.querySelector('#tapp-background');
+    var contentLayer = container.querySelector('#tapp-content');
+
+    // 如果双层元素不存在，降级到单层渲染
+    if (!bgLayer || !contentLayer) {
+      console.warn('[AI Chat] 双层架构元素不存在，使用单层渲染模式');
+      contentLayer = container;
+      bgLayer = null;
+    }
 
     // 加载历史
     const saveHistory = await Tapp.settings.get('saveHistory');
@@ -397,8 +404,8 @@ Tapp.pages['ai-chat'] = {
       if (!text) return;
 
       isGenerating = true;
-      const sendBtn = container.querySelector('.send-btn');
-      const input = container.querySelector('.chat-input');
+      const sendBtn = contentLayer ? contentLayer.querySelector('.send-btn') : null;
+      const input = contentLayer ? contentLayer.querySelector('.chat-input') : null;
 
       if (sendBtn) {
         sendBtn.disabled = true;
@@ -493,6 +500,9 @@ Tapp.pages['ai-chat'] = {
                     background: radial-gradient(circle, ${primaryColor}15, transparent 70%);
                     filter: blur(60px); pointer-events: none;"></div>
       `;
+    } else if (contentLayer === container) {
+      // 单层模式：直接设置容器背景
+      container.className = 'min-h-full bg-gray-50 dark:bg-gray-900';
     }
 
     // 内容层（自动 safe area padding）
