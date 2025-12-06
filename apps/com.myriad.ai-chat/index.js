@@ -328,7 +328,6 @@ Tapp.pages['ai-chat'] = {
 
     // 渲染消息列表
     function renderMessages() {
-      const messagesArea = contentLayer ? contentLayer.querySelector('.messages-area') : null;
       if (!messagesArea) return;
 
       // 清空消息区域
@@ -836,19 +835,6 @@ Tapp.pages['ai-chat'] = {
 // ===== 生命周期（仅 Page 模式执行）=====
 Tapp.lifecycle.onReady(async function() {
   console.log('[AI Chat] 页面模式已就绪');
-
-  // 注册页面
-  await Tapp.component.registerPage({
-    id: 'ai-chat',
-    path: '/tapp/ai-chat',
-    title: 'AI 聊天助手',
-    icon: '🤖',
-    menu: true,
-    order: 20,
-    fullscreen: true,
-  });
-
-  console.log('[AI Chat] 页面已注册');
 
   // 初始化存储
   const saveHistory = await Tapp.settings.get('saveHistory');
