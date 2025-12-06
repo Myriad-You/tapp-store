@@ -499,8 +499,6 @@ Tapp.pages['ai-chat'] = {
       if (!text) return;
 
       isGenerating = true;
-      const sendBtn = contentLayer ? contentLayer.querySelector('.send-btn') : null;
-      const input = contentLayer ? contentLayer.querySelector('.chat-input') : null;
 
       if (sendBtn) {
         sendBtn.disabled = true;
@@ -519,7 +517,7 @@ Tapp.pages['ai-chat'] = {
       }
 
       renderMessages();
-      if (input) input.value = '';
+      if (chatInput) chatInput.value = '';
 
       try {
         const response = await Tapp.ai.generate({
