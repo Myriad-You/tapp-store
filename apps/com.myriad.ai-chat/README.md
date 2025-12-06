@@ -55,49 +55,63 @@
 
 ## 技术架构
 
-采用最新的 Tapp 开发标准，代码分离架构：
+采用最新的 Tapp 开发标准，完全符合新样式规范：
 
 ### Core 代码
-- `getThemeColors(isDark, primaryColor)`: 主题颜色配置，支持自定义主色调
-- `adjustColorBrightness()`: 颜色亮度调整工具
 - `formatTime()`: 时间格式化工具
-- `getLoadingIcon()`: 加载动画 SVG
-- `getSendIcon()`: 发送图标 SVG
+- `getPrimaryColor()`: 获取全局主色调，带错误处理
 
 ### Widget 代码
-- 小组件渲染逻辑
-- 独立的消息历史管理（widgetMessages）
-- 响应式尺寸适配
-- 主色调集成（`Tapp.ui.getPrimaryColor()`）
+- ✅ **Tailwind CSS 样式**: 完全使用 Tailwind 类名
+- ✅ **毛玻璃风格**: `glass` 类 + `backdrop-blur`
+- ✅ **渐变装饰层**: `from-violet-500/5 to-transparent`
+- ✅ **响应式 props**: 支持 `scale`, `fontScale`, `isEditMode`
+- ✅ **HTML 模板**: 使用 `innerHTML` + 模板字符串
+- ✅ **独立消息存储**: `widgetMessages`
+- ✅ **编辑模式边框**: 虚线边框指示器
 
 ### Page 代码
-- 完整页面渲染
-- 生命周期管理
-- 组件注册和注销
-- 主题变化监听（`Tapp.ui.onThemeChange()`）
-- 主色调变化监听（`Tapp.ui.onPrimaryColorChange()`）
+- ✅ **双层架构**: `#tapp-background` 装饰层 + `#tapp-content` 内容层
+- ✅ **渐变光晕**: 背景层使用 `primaryColor` 生成动态光晕
+- ✅ **Safe Area**: 内容层自动 72px 顶部 padding（全屏模式）
+- ✅ **现代化 UI**: Tailwind + 毛玻璃效果
+- ✅ **响应式布局**: 最大宽度 5xl，居中布局
+- ✅ **自适应 textarea**: 自动调整高度
+- ✅ **生命周期管理**: `onReady`, `onDestroy`
+- ✅ **主题监听**: 主题和主色调变化自动重渲染
 
-### 新特性
-- **Widget 自动注册**: 通过 Manifest 的 `widgets` 字段自动预注册
-- **新 AI API**: 使用 `Tapp.ai.generate({ prompt, maxTokens })` 返回结构化响应
-- **DOM 安全 API**: 使用 `Tapp.dom.setText()` 和 `Tapp.dom.createElement()` 防止 XSS
-- **设置集成**: 通过 `Tapp.settings.get()` 读取用户配置
-- **主色调 API**: 使用 `Tapp.ui.getPrimaryColor()` 获取壁纸色并实时监听变化
+### 样式特性
+- **毛玻璃背景**: `bg-white/60 dark:bg-white/[0.03] backdrop-blur`
+- **渐变装饰**: `bg-gradient-to-br from-violet-500/5`
+- **颜色系统**: Indigo 主色调 + Gray 文本系统
+- **暗色适配**: 完整的 `dark:` 前缀支持
+- **过渡动画**: `transition-colors`, `transition-all`
+- **自定义滚动条**: `scrollbar-thin scrollbar-thumb-gray-300`
+
+### API 使用
+- **Widget 自动注册**: 通过 Manifest 的 `widgets` 字段
+- **新 AI API**: `Tapp.ai.generate({ prompt, maxTokens })`
+- **DOM 安全 API**: `Tapp.dom.escapeHtml()` 防止 XSS
+- **设置集成**: `Tapp.settings.get()` 读取配置
+- **主色调 API**: `Tapp.ui.getPrimaryColor()` 获取壁纸色
 
 ## 版本历史
 
 ### v1.0.0（最新）
 
-- ✨ 重构为新 Tapp 标准
-- 🏗️ 采用 Core + Widget + Page 分离架构
-- 🔒 使用 DOM 安全 API 防止 XSS
-- 🎨 优化主题适配和颜色系统
-- 🌈 集成主色调 API，UI 颜色跟随系统壁纸实时调整
-- ⚡ 新 AI API 集成
-- 🔧 移除手动 Widget 注册（使用 Manifest 自动注册）
-- 📱 改进响应式尺寸适配
-- 🎯 添加更多用户可配置选项
-- 🎭 监听主题和主色调变化，动态更新界面
+- ✨ **完全重构为新 Tapp 标准**
+- 🏗️ **代码分离架构**: Core + Widget + Page 三部分分离
+- 🎨 **毛玻璃风格**: 完整使用 Tailwind CSS + Glass 设计
+- 🌈 **主色调集成**: UI 颜色跟随系统壁纸实时调整
+- 📐 **响应式设计**: 支持 scale/fontScale props
+- 🎯 **编辑模式**: 虚线边框指示器
+- 🔒 **安全防护**: DOM 安全 API 防止 XSS
+- ⚡ **新 AI API**: 结构化响应格式
+- 🔧 **Widget 自动注册**: Manifest 自动预注册
+- 🎭 **实时响应**: 主题和主色调变化自动重渲染
+- 🌓 **完整暗色模式**: dark: 前缀全覆盖
+- 📱 **渐变装饰层**: 视觉层次丰富
+- ⚙️ **用户设置**: 可配置历史条数和 Token 长度
 
 ### v0.1.0
 
