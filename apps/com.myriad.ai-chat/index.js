@@ -795,39 +795,37 @@ Tapp.pages['ai-chat'] = {
       inputWrapper.appendChild(sendBtn);
       inputArea.appendChild(inputWrapper);
 
+      // 绑定事件（在添加到 DOM 之前）
+      if (sendBtn) {
+        sendBtn.addEventListener('click', function() {
+          sendMessage(chatInput.value);
+        });
+      }
+
+      if (chatInput) {
+        chatInput.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage(chatInput.value);
+          }
+        });
+
+        // 自动调整 textarea 高度
+        chatInput.addEventListener('input', function() {
+          chatInput.style.height = 'auto';
+          chatInput.style.height = Math.min(chatInput.scrollHeight, 150) + 'px';
+        });
+      }
+
+      if (clearBtnPage) {
+        clearBtnPage.addEventListener('click', clearChat);
+      }
+
       // 组装容器
       mainContainer.appendChild(header);
       mainContainer.appendChild(messagesArea);
       mainContainer.appendChild(inputArea);
       contentLayer.appendChild(mainContainer);
-    }
-
-    // 绑定事件
-    const input = contentLayer ? contentLayer.querySelector('.chat-input') : null;
-    const sendBtn = contentLayer ? contentLayer.querySelector('.send-btn') : null;
-    const clearBtnPage = contentLayer ? contentLayer.querySelector('.clear-btn-page') : null;
-
-    if (sendBtn) {
-      sendBtn.addEventListener('click', () => sendMessage(input.value));
-    }
-
-    if (input) {
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          sendMessage(input.value);
-        }
-      });
-
-      // 自动调整 textarea 高度
-      input.addEventListener('input', () => {
-        input.style.height = 'auto';
-        input.style.height = Math.min(input.scrollHeight, 150) + 'px';
-      });
-    }
-
-    if (clearBtnPage) {
-      clearBtnPage.addEventListener('click', clearChat);
     }
 
     // 初始渲染
