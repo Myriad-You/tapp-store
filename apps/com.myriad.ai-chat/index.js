@@ -1,6 +1,7 @@
 // AI Chat Tapp v1.0 - Core
 // AI 聊天助手 - 核心代码
-// 使用全局主题变量 + 自适应尺寸 + i18n 国际化 + Glass 风格
+// 使用 Tailwind + Glass 风格 + i18n 国际化
+// Widget 支持 4x2 和 4x4 尺寸
 
 console.log('[AI Chat] Core 加载中...');
 
@@ -42,7 +43,7 @@ var i18n = {
     errorGenerate: 'Sorry, there was an error generating a response: ',
     errorNoResponse: 'Sorry, I cannot answer this question at the moment.',
     examples: ['Explain artificial intelligence', 'Write me a poem', 'How to learn programming', 'Recommend a movie'],
-    hints: ['Write code', 'Translate', 'Explain', 'Brainstorm'],
+    hints: ['Code', 'Translate', 'Explain', 'Brainstorm'],
   },
   'ja-JP': {
     title: 'AI チャットアシスタント',
@@ -97,12 +98,26 @@ function formatTime(date) {
   });
 }
 
+// 主题颜色工具
+function getThemeColors(isDark) {
+  return {
+    bg: isDark ? '#1a1a2e' : '#f8fafc',
+    card: isDark ? '#262640' : '#ffffff',
+    cardHover: isDark ? '#2d2d4a' : '#f1f5f9',
+    border: isDark ? '#3d3d5c' : '#e2e8f0',
+    text: isDark ? '#e2e8f0' : '#1e293b',
+    textSecondary: isDark ? '#94a3b8' : '#64748b',
+    accent: '#8b5cf6',
+    accentHover: '#7c3aed',
+  };
+}
+
 console.log('[AI Chat] Core 已加载');
 
 
 // ========== WIDGET 代码（小组件渲染）==========
 // Widget 模式只加载 core + widget，不执行 onReady
-// 只支持 4x4 尺寸，Glass 风格
+// 支持 4x2 和 4x4 尺寸，使用 Tailwind + Glass 风格
 
 console.log('[AI Chat] Widget 加载中...');
 
@@ -112,6 +127,8 @@ Tapp.widgets['ai-chat'] = {
     var fontScale = props.fontScale || 1;
     var isDark = props.theme === 'dark';
     var themeColor = props.primaryColor || '#8b5cf6';
+    var size = props.size || '4x4';
+    var isCompact = size === '4x2'; // 4x2 紧凑模式
     
     // 设置当前语言
     currentLocale = normalizeLocale(props.locale);
@@ -123,311 +140,238 @@ Tapp.widgets['ai-chat'] = {
     // 获取用户设置
     var maxTokens = await Tapp.settings.get('maxTokens') || 500;
 
-    // 清空容器
-    container.innerHTML = '';
-    container.style.cssText = 
-      'height: 100%;' +
-      'width: 100%;' +
-      'position: relative;' +
-      'overflow: hidden;' +
-      'border-radius: 16px;';
+    // 文字颜色
+    var textColor = isDark ? '#f3f4f6' : '#1f2937';
+    var subtextColor = isDark ? '#9ca3af' : '#6b7280';
+    var borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
 
-    // ========== 背景装饰层 ==========
-    var bgLayer = document.createElement('div');
-    bgLayer.style.cssText = 
-      'position: absolute;' +
-      'inset: 0;' +
-      'background: ' + (isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.6)') + ';' +
-      'backdrop-filter: blur(12px);' +
-      '-webkit-backdrop-filter: blur(12px);' +
-      'border: 1px solid ' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)') + ';' +
-      'border-radius: 16px;';
-    container.appendChild(bgLayer);
+    // ========== 构建 HTML（使用 Tailwind 类） ==========
+    var editModeOverlay = props.isEditMode 
+      ? '<div class="absolute inset-0 border-2 border-dashed border-blue-400 rounded-xl pointer-events-none z-20"></div>'
+      : '';
 
-    // 右上角光晕
-    var glow = document.createElement('div');
-    glow.style.cssText = 
-      'position: absolute;' +
-      'right: -20%;' +
-      'top: -20%;' +
-      'width: 60%;' +
-      'height: 60%;' +
-      'border-radius: 50%;' +
-      'background: radial-gradient(circle, ' + themeColor + '15, transparent 70%);' +
-      'filter: blur(30px);' +
-      'pointer-events: none;';
-    container.appendChild(glow);
+    // 渐变光晕背景
+    var glowStyle = 'background: radial-gradient(circle, ' + themeColor + '15, transparent 70%);';
+    
+    // 根据尺寸决定布局
+    if (isCompact) {
+      // ========== 4x2 紧凑布局 ==========
+      container.innerHTML = 
+        '<div class="relative h-full w-full rounded-xl overflow-hidden glass">' +
+          // 渐变装饰层
+          '<div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent"></div>' +
+          // 右上角光晕
+          '<div class="absolute -right-1/4 -top-1/4 w-1/2 h-1/2 rounded-full blur-3xl pointer-events-none" style="' + glowStyle + '"></div>' +
+          // 主内容区
+          '<div class="relative z-10 h-full flex flex-col">' +
+            // 头部 + 输入区合并
+            '<div class="flex items-center gap-2 p-3" style="padding:' + (12 * scale) + 'px;">' +
+              '<span style="font-size:' + (18 * scale) + 'px;">🤖</span>' +
+              '<input type="text" id="ai-chat-input" placeholder="' + t('placeholder') + '" ' +
+                'class="flex-1 px-3 py-2 rounded-lg border outline-none transition-colors" ' +
+                'style="font-size:' + (13 * fontScale) + 'px;' +
+                  'background:' + (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)') + ';' +
+                  'border-color:' + borderColor + ';' +
+                  'color:' + textColor + ';" />' +
+              '<button id="ai-chat-send" class="flex items-center justify-center rounded-lg transition-opacity" ' +
+                'style="width:' + (36 * scale) + 'px;height:' + (36 * scale) + 'px;background:' + themeColor + ';">' +
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">' +
+                  '<path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>' +
+                '</svg>' +
+              '</button>' +
+            '</div>' +
+            // 消息预览区
+            '<div id="ai-chat-messages" class="flex-1 overflow-hidden px-3 pb-3" style="padding-left:' + (12 * scale) + 'px;padding-right:' + (12 * scale) + 'px;padding-bottom:' + (12 * scale) + 'px;">' +
+            '</div>' +
+          '</div>' +
+          editModeOverlay +
+        '</div>';
+    } else {
+      // ========== 4x4 完整布局 ==========
+      container.innerHTML = 
+        '<div class="relative h-full w-full rounded-xl overflow-hidden glass">' +
+          // 渐变装饰层
+          '<div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent"></div>' +
+          // 右上角光晕
+          '<div class="absolute -right-1/4 -top-1/4 w-1/2 h-1/2 rounded-full blur-3xl pointer-events-none" style="' + glowStyle + '"></div>' +
+          // 主内容区
+          '<div class="relative z-10 h-full flex flex-col">' +
+            // 头部
+            '<div class="flex items-center gap-2 border-b" style="padding:' + (14 * scale) + 'px ' + (16 * scale) + 'px;border-color:' + borderColor + ';">' +
+              '<span style="font-size:' + (20 * scale) + 'px;">🤖</span>' +
+              '<span class="flex-1 font-semibold" style="font-size:' + (15 * fontScale) + 'px;color:' + textColor + ';">' + t('widgetTitle') + '</span>' +
+              '<div class="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0"></div>' +
+              '<button id="ai-chat-clear" class="flex items-center justify-center rounded-lg transition-all opacity-60 hover:opacity-100" ' +
+                'style="width:' + (28 * scale) + 'px;height:' + (28 * scale) + 'px;" title="' + t('clearChat') + '">' +
+                '<span style="font-size:' + (14 * scale) + 'px;">🗑️</span>' +
+              '</button>' +
+            '</div>' +
+            // 消息区域
+            '<div id="ai-chat-messages" class="flex-1 overflow-y-auto flex flex-col gap-3" style="padding:' + (12 * scale) + 'px;">' +
+            '</div>' +
+            // 输入区域
+            '<div class="border-t" style="padding:' + (12 * scale) + 'px ' + (14 * scale) + 'px;border-color:' + borderColor + ';">' +
+              '<div class="flex gap-2 items-center">' +
+                '<input type="text" id="ai-chat-input" placeholder="' + t('placeholder') + '" ' +
+                  'class="flex-1 px-3 py-2.5 rounded-xl border outline-none transition-colors" ' +
+                  'style="font-size:' + (13 * fontScale) + 'px;' +
+                    'background:' + (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.6)') + ';' +
+                    'backdrop-filter:blur(4px);' +
+                    'border-color:' + (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)') + ';' +
+                    'color:' + textColor + ';" />' +
+                '<button id="ai-chat-send" class="flex items-center justify-center rounded-xl transition-opacity hover:opacity-90" ' +
+                  'style="width:' + (38 * scale) + 'px;height:' + (38 * scale) + 'px;background:' + themeColor + ';flex-shrink:0;">' +
+                  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">' +
+                    '<path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>' +
+                  '</svg>' +
+                '</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          editModeOverlay +
+        '</div>';
+    }
 
-    // ========== 主内容区 ==========
-    var mainContent = document.createElement('div');
-    mainContent.style.cssText = 
-      'position: relative;' +
-      'z-index: 1;' +
-      'height: 100%;' +
-      'display: flex;' +
-      'flex-direction: column;';
-    container.appendChild(mainContent);
+    // ========== 获取 DOM 元素 ==========
+    var messagesArea = container.querySelector('#ai-chat-messages');
+    var chatInput = container.querySelector('#ai-chat-input');
+    var sendBtn = container.querySelector('#ai-chat-send');
+    var clearBtn = container.querySelector('#ai-chat-clear');
 
-    // === 头部 ===
-    var header = document.createElement('div');
-    header.style.cssText = 
-      'display: flex;' +
-      'align-items: center;' +
-      'gap: ' + (10 * scale) + 'px;' +
-      'padding: ' + (14 * scale) + 'px ' + (16 * scale) + 'px;' +
-      'border-bottom: 1px solid ' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)') + ';';
-
-    var headerIcon = document.createElement('span');
-    headerIcon.style.cssText = 'font-size: ' + (20 * scale) + 'px;';
-    headerIcon.textContent = '🤖';
-
-    var headerTitle = document.createElement('span');
-    headerTitle.style.cssText = 
-      'flex: 1;' +
-      'font-size: ' + (15 * fontScale) + 'px;' +
-      'font-weight: 600;' +
-      'color: ' + (isDark ? '#f3f4f6' : '#1f2937') + ';';
-    Tapp.dom.setText(headerTitle, t('widgetTitle'));
-
-    var statusDot = document.createElement('div');
-    statusDot.className = 'status-dot';
-    statusDot.style.cssText = 
-      'width: 6px;' +
-      'height: 6px;' +
-      'border-radius: 50%;' +
-      'background: #22c55e;' +
-      'flex-shrink: 0;';
-
-    var clearBtn = document.createElement('button');
-    clearBtn.style.cssText = 
-      'width: ' + (28 * scale) + 'px;' +
-      'height: ' + (28 * scale) + 'px;' +
-      'display: flex;' +
-      'align-items: center;' +
-      'justify-content: center;' +
-      'border-radius: ' + (8 * scale) + 'px;' +
-      'border: none;' +
-      'background: transparent;' +
-      'color: ' + (isDark ? '#9ca3af' : '#6b7280') + ';' +
-      'cursor: pointer;' +
-      'opacity: 0.6;' +
-      'transition: all 0.2s ease;' +
-      'font-size: ' + (14 * scale) + 'px;';
-    clearBtn.textContent = '🗑️';
-    clearBtn.title = t('clearChat');
-    clearBtn.onmouseenter = function() { clearBtn.style.opacity = '1'; clearBtn.style.background = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'; };
-    clearBtn.onmouseleave = function() { clearBtn.style.opacity = '0.6'; clearBtn.style.background = 'transparent'; };
-
-    header.appendChild(headerIcon);
-    header.appendChild(headerTitle);
-    header.appendChild(statusDot);
-    header.appendChild(clearBtn);
-    mainContent.appendChild(header);
-
-    // === 消息区域 ===
-    var messagesArea = document.createElement('div');
-    messagesArea.style.cssText = 
-      'flex: 1;' +
-      'overflow-y: auto;' +
-      'padding: ' + (12 * scale) + 'px;' +
-      'display: flex;' +
-      'flex-direction: column;' +
-      'gap: ' + (12 * scale) + 'px;';
-    mainContent.appendChild(messagesArea);
-
-    // === 输入区域 ===
-    var inputArea = document.createElement('div');
-    inputArea.style.cssText = 
-      'padding: ' + (12 * scale) + 'px ' + (14 * scale) + 'px;' +
-      'border-top: 1px solid ' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)') + ';';
-
-    var inputWrapper = document.createElement('div');
-    inputWrapper.style.cssText = 
-      'display: flex;' +
-      'gap: ' + (8 * scale) + 'px;' +
-      'align-items: center;';
-
-    var chatInput = document.createElement('input');
-    chatInput.type = 'text';
-    chatInput.placeholder = t('placeholder');
-    chatInput.style.cssText = 
-      'flex: 1;' +
-      'padding: ' + (10 * scale) + 'px ' + (14 * scale) + 'px;' +
-      'border: 1px solid ' + (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)') + ';' +
-      'border-radius: ' + (12 * scale) + 'px;' +
-      'background: ' + (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.6)') + ';' +
-      'backdrop-filter: blur(4px);' +
-      '-webkit-backdrop-filter: blur(4px);' +
-      'color: ' + (isDark ? '#f3f4f6' : '#1f2937') + ';' +
-      'font-size: ' + (13 * fontScale) + 'px;' +
-      'outline: none;' +
-      'transition: border-color 0.2s ease;';
-    chatInput.onfocus = function() { chatInput.style.borderColor = themeColor; };
-    chatInput.onblur = function() { chatInput.style.borderColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)'; };
-
-    var sendBtn = document.createElement('button');
-    sendBtn.style.cssText = 
-      'width: ' + (38 * scale) + 'px;' +
-      'height: ' + (38 * scale) + 'px;' +
-      'display: flex;' +
-      'align-items: center;' +
-      'justify-content: center;' +
-      'border-radius: ' + (12 * scale) + 'px;' +
-      'border: none;' +
-      'background: ' + themeColor + ';' +
-      'color: white;' +
-      'cursor: pointer;' +
-      'flex-shrink: 0;' +
-      'transition: opacity 0.2s ease;';
-    sendBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
-    sendBtn.onmouseenter = function() { sendBtn.style.opacity = '0.9'; };
-    sendBtn.onmouseleave = function() { sendBtn.style.opacity = '1'; };
-
-    inputWrapper.appendChild(chatInput);
-    inputWrapper.appendChild(sendBtn);
-    inputArea.appendChild(inputWrapper);
-    mainContent.appendChild(inputArea);
-
-    // 编辑模式边框
-    if (props.isEditMode) {
-      var editBorder = document.createElement('div');
-      editBorder.style.cssText = 
-        'position: absolute;' +
-        'inset: 0;' +
-        'border: 2px dashed ' + themeColor + ';' +
-        'border-radius: 16px;' +
-        'pointer-events: none;' +
-        'z-index: 10;';
-      container.appendChild(editBorder);
+    // ========== 输入框焦点样式 ==========
+    if (chatInput) {
+      chatInput.addEventListener('focus', function() {
+        chatInput.style.borderColor = themeColor;
+      });
+      chatInput.addEventListener('blur', function() {
+        chatInput.style.borderColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
+      });
     }
 
     // ========== 渲染消息列表 ==========
     function renderMessages() {
+      if (!messagesArea) return;
       messagesArea.innerHTML = '';
 
       if (messages.length === 0) {
-        // 空状态 - 欢迎界面
-        var emptyState = document.createElement('div');
-        emptyState.style.cssText = 
-          'flex: 1;' +
-          'display: flex;' +
-          'flex-direction: column;' +
-          'align-items: center;' +
-          'justify-content: center;' +
-          'text-align: center;' +
-          'padding: ' + (16 * scale) + 'px;';
+        // 空状态
+        if (isCompact) {
+          // 4x2 紧凑模式 - 简单提示
+          var emptyEl = document.createElement('div');
+          emptyEl.className = 'flex items-center justify-center h-full';
+          emptyEl.innerHTML = 
+            '<span style="font-size:' + (12 * fontScale) + 'px;color:' + subtextColor + ';">' + t('startChat') + '</span>';
+          messagesArea.appendChild(emptyEl);
+        } else {
+          // 4x4 完整模式 - 欢迎界面 + 提示按钮
+          var emptyState = document.createElement('div');
+          emptyState.className = 'flex-1 flex flex-col items-center justify-center text-center';
+          emptyState.style.padding = (16 * scale) + 'px';
 
-        var emptyIcon = document.createElement('div');
-        emptyIcon.style.cssText = 
-          'font-size: ' + (40 * scale) + 'px;' +
-          'margin-bottom: ' + (12 * scale) + 'px;' +
-          'opacity: 0.5;';
-        emptyIcon.textContent = '💬';
+          var emptyIcon = document.createElement('div');
+          emptyIcon.style.cssText = 'font-size:' + (40 * scale) + 'px;margin-bottom:' + (12 * scale) + 'px;opacity:0.5;';
+          emptyIcon.textContent = '💬';
 
-        var emptyText = document.createElement('div');
-        emptyText.style.cssText = 
-          'font-size: ' + (13 * fontScale) + 'px;' +
-          'color: ' + (isDark ? '#9ca3af' : '#6b7280') + ';' +
-          'margin-bottom: ' + (16 * scale) + 'px;';
-        Tapp.dom.setText(emptyText, t('startChat'));
+          var emptyText = document.createElement('div');
+          emptyText.style.cssText = 'font-size:' + (13 * fontScale) + 'px;color:' + subtextColor + ';margin-bottom:' + (16 * scale) + 'px;';
+          Tapp.dom.setText(emptyText, t('startChat'));
 
-        // 提示词按钮
-        var hintsContainer = document.createElement('div');
-        hintsContainer.style.cssText = 
-          'display: flex;' +
-          'flex-wrap: wrap;' +
-          'justify-content: center;' +
-          'gap: ' + (8 * scale) + 'px;';
+          // 提示词按钮
+          var hintsContainer = document.createElement('div');
+          hintsContainer.className = 'flex flex-wrap justify-center gap-2';
 
-        var hints = t('hints');
-        hints.forEach(function(hint) {
-          var hintBtn = document.createElement('button');
-          hintBtn.style.cssText = 
-            'padding: ' + (6 * scale) + 'px ' + (12 * scale) + 'px;' +
-            'font-size: ' + (11 * fontScale) + 'px;' +
-            'border: 1px solid ' + (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)') + ';' +
-            'border-radius: ' + (8 * scale) + 'px;' +
-            'background: ' + (isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.5)') + ';' +
-            'color: ' + (isDark ? '#d1d5db' : '#374151') + ';' +
-            'cursor: pointer;' +
-            'transition: all 0.2s ease;';
-          Tapp.dom.setText(hintBtn, hint);
+          var hints = t('hints');
+          hints.forEach(function(hint) {
+            var hintBtn = document.createElement('button');
+            hintBtn.className = 'px-3 py-1.5 rounded-lg border transition-all';
+            hintBtn.style.cssText = 
+              'font-size:' + (11 * fontScale) + 'px;' +
+              'border-color:' + (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)') + ';' +
+              'background:' + (isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.5)') + ';' +
+              'color:' + (isDark ? '#d1d5db' : '#374151') + ';';
+            Tapp.dom.setText(hintBtn, hint);
 
-          hintBtn.onmouseenter = function() {
-            hintBtn.style.background = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)';
-            hintBtn.style.borderColor = themeColor;
-            hintBtn.style.color = themeColor;
-          };
-          hintBtn.onmouseleave = function() {
-            hintBtn.style.background = isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.5)';
-            hintBtn.style.borderColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
-            hintBtn.style.color = isDark ? '#d1d5db' : '#374151';
-          };
-          hintBtn.onclick = function() {
-            chatInput.value = hint + '：';
-            chatInput.focus();
-          };
+            hintBtn.addEventListener('mouseenter', function() {
+              hintBtn.style.background = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)';
+              hintBtn.style.borderColor = themeColor;
+              hintBtn.style.color = themeColor;
+            });
+            hintBtn.addEventListener('mouseleave', function() {
+              hintBtn.style.background = isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.5)';
+              hintBtn.style.borderColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
+              hintBtn.style.color = isDark ? '#d1d5db' : '#374151';
+            });
+            hintBtn.addEventListener('click', function() {
+              if (chatInput) {
+                chatInput.value = hint + '：';
+                chatInput.focus();
+              }
+            });
 
-          hintsContainer.appendChild(hintBtn);
-        });
+            hintsContainer.appendChild(hintBtn);
+          });
 
-        emptyState.appendChild(emptyIcon);
-        emptyState.appendChild(emptyText);
-        emptyState.appendChild(hintsContainer);
-        messagesArea.appendChild(emptyState);
+          emptyState.appendChild(emptyIcon);
+          emptyState.appendChild(emptyText);
+          emptyState.appendChild(hintsContainer);
+          messagesArea.appendChild(emptyState);
+        }
         return;
       }
 
-      // 显示最近的消息（最多 10 条）
-      var displayMessages = messages.slice(-10);
+      // 显示消息
+      var displayCount = isCompact ? Math.min(messages.length, 2) : Math.min(messages.length, 10);
+      var displayMessages = messages.slice(-displayCount);
+
       displayMessages.forEach(function(msg) {
         var msgContainer = document.createElement('div');
-        msgContainer.style.cssText = 
-          'display: flex;' +
-          'gap: ' + (10 * scale) + 'px;' +
-          'align-items: flex-start;' +
-          (msg.role === 'user' ? 'flex-direction: row-reverse;' : '');
+        msgContainer.className = 'flex gap-2 items-start' + (msg.role === 'user' ? ' flex-row-reverse' : '');
+        msgContainer.style.gap = (isCompact ? 6 : 10) * scale + 'px';
 
-        // 头像
-        var avatar = document.createElement('div');
-        avatar.style.cssText = 
-          'width: ' + (28 * scale) + 'px;' +
-          'height: ' + (28 * scale) + 'px;' +
-          'border-radius: ' + (8 * scale) + 'px;' +
-          'display: flex;' +
-          'align-items: center;' +
-          'justify-content: center;' +
-          'flex-shrink: 0;' +
-          'font-size: ' + (14 * scale) + 'px;' +
-          'background: ' + (msg.role === 'user' ? themeColor : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)')) + ';';
-        avatar.textContent = msg.role === 'user' ? '👤' : '🤖';
+        // 头像（4x4 显示，4x2 隐藏）
+        if (!isCompact) {
+          var avatar = document.createElement('div');
+          avatar.className = 'flex items-center justify-center flex-shrink-0 rounded-lg';
+          avatar.style.cssText = 
+            'width:' + (28 * scale) + 'px;' +
+            'height:' + (28 * scale) + 'px;' +
+            'font-size:' + (14 * scale) + 'px;' +
+            'background:' + (msg.role === 'user' ? themeColor : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)')) + ';';
+          avatar.textContent = msg.role === 'user' ? '👤' : '🤖';
+          msgContainer.appendChild(avatar);
+        }
 
         // 消息气泡
         var bubble = document.createElement('div');
         var content = msg.content;
-        if (content.length > 200) {
-          content = content.substring(0, 200) + '...';
+        var maxLen = isCompact ? 80 : 200;
+        if (content.length > maxLen) {
+          content = content.substring(0, maxLen) + '...';
         }
+        
+        var bubbleRadius = isCompact ? 10 : 14;
+        var bubbleRadiusSmall = isCompact ? 3 : 4;
+        bubble.className = 'max-w-[80%]';
         bubble.style.cssText = 
-          'max-width: 80%;' +
-          'padding: ' + (10 * scale) + 'px ' + (14 * scale) + 'px;' +
-          'border-radius: ' + (14 * scale) + 'px;' +
+          'padding:' + ((isCompact ? 8 : 10) * scale) + 'px ' + ((isCompact ? 10 : 14) * scale) + 'px;' +
+          'border-radius:' + (bubbleRadius * scale) + 'px;' +
           (msg.role === 'user' 
-            ? 'border-bottom-right-radius: ' + (4 * scale) + 'px; background: ' + themeColor + '; color: white;'
-            : 'border-bottom-left-radius: ' + (4 * scale) + 'px; background: ' + (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.6)') + '; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); color: ' + (isDark ? '#f3f4f6' : '#1f2937') + ';') +
-          'font-size: ' + (13 * fontScale) + 'px;' +
-          'line-height: 1.5;' +
-          'word-break: break-word;';
+            ? 'border-bottom-right-radius:' + (bubbleRadiusSmall * scale) + 'px;background:' + themeColor + ';color:white;'
+            : 'border-bottom-left-radius:' + (bubbleRadiusSmall * scale) + 'px;' +
+              'background:' + (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.6)') + ';' +
+              'backdrop-filter:blur(4px);color:' + textColor + ';') +
+          'font-size:' + ((isCompact ? 12 : 13) * fontScale) + 'px;' +
+          'line-height:1.5;' +
+          'word-break:break-word;';
         Tapp.dom.setText(bubble, content);
 
-        msgContainer.appendChild(avatar);
         msgContainer.appendChild(bubble);
         messagesArea.appendChild(msgContainer);
       });
 
       // 滚动到底部
       setTimeout(function() {
-        messagesArea.scrollTop = messagesArea.scrollHeight;
+        if (messagesArea) messagesArea.scrollTop = messagesArea.scrollHeight;
       }, 10);
     }
 
@@ -438,9 +382,8 @@ Tapp.widgets['ai-chat'] = {
       if (!text) return;
 
       isGenerating = true;
-      sendBtn.disabled = true;
-      statusDot.style.background = '#f59e0b';
-      chatInput.value = '';
+      if (sendBtn) sendBtn.disabled = true;
+      if (chatInput) chatInput.value = '';
 
       // 添加用户消息
       messages.push({
@@ -492,10 +435,8 @@ Tapp.widgets['ai-chat'] = {
       }
 
       renderMessages();
-
       isGenerating = false;
-      sendBtn.disabled = false;
-      statusDot.style.background = '#22c55e';
+      if (sendBtn) sendBtn.disabled = false;
     }
 
     // ========== 清空对话 ==========
@@ -507,19 +448,27 @@ Tapp.widgets['ai-chat'] = {
     }
 
     // ========== 绑定事件 ==========
-    sendBtn.onclick = function() { sendMessage(chatInput.value); };
-    chatInput.onkeydown = function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage(chatInput.value);
-      }
-    };
-    clearBtn.onclick = clearChat;
+    if (sendBtn) {
+      sendBtn.addEventListener('click', function() {
+        if (chatInput) sendMessage(chatInput.value);
+      });
+    }
+    if (chatInput) {
+      chatInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage(chatInput.value);
+        }
+      });
+    }
+    if (clearBtn) {
+      clearBtn.addEventListener('click', clearChat);
+    }
 
     // 初始渲染
     renderMessages();
 
-    console.log('[AI Chat] Widget 已渲染');
+    console.log('[AI Chat] Widget 已渲染, 尺寸:', size);
   }
 };
 
@@ -529,10 +478,6 @@ console.log('[AI Chat] Widget 已加载');
 // ========== PAGE 代码（页面渲染 + 生命周期）==========
 // Page 模式加载 core + page，执行完整生命周期
 // 使用控制面板语言 + 自适应尺寸 + 语言切换监听
-// 
-// 框架自动提供两层容器：
-// - #tapp-background: 背景层，填满全屏
-// - #tapp-content: 内容层，自动应用安全区域 padding
 
 console.log('[AI Chat] Page 加载中...');
 
@@ -556,7 +501,7 @@ function renderPage(locale, isDarkTheme, primaryColor) {
   var isDark = isDarkTheme !== false;
   var themeColor = primaryColor || '#8b5cf6';
 
-  // 获取框架提供的分层容器（框架自动创建）
+  // 获取框架提供的分层容器
   var bgLayer = document.getElementById('tapp-background');
   var contentLayer = document.getElementById('tapp-content');
   
@@ -567,7 +512,7 @@ function renderPage(locale, isDarkTheme, primaryColor) {
   // 获取设置
   var maxTokens = 500;
 
-  // ========== 背景层：装饰效果（填满全屏） ==========
+  // ========== 背景层 ==========
   if (bgLayer) {
     bgLayer.style.background = isDark ? '#0a0a0a' : '#f8fafc';
 
@@ -601,7 +546,7 @@ function renderPage(locale, isDarkTheme, primaryColor) {
     bgLayer.appendChild(glow2);
   }
 
-  // ========== 内容层：主要内容（自动避开安全区域） ==========
+  // ========== 内容层 ==========
   if (!contentLayer) return;
 
   contentLayer.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
@@ -1061,7 +1006,7 @@ Tapp.lifecycle.onReady(async function() {
       chatHistory = await Tapp.storage.get('chatHistory') || [];
     }
     
-    // 渲染页面（框架自动提供 #tapp-background 和 #tapp-content）
+    // 渲染页面
     renderPage(currentLang, currentTheme === 'dark', currentPrimaryColor);
     
     // 监听语言变化
@@ -1076,7 +1021,7 @@ Tapp.lifecycle.onReady(async function() {
       rerender();
     });
     
-    // 监听主色调变化（壁纸色）
+    // 监听主色调变化
     Tapp.ui.onPrimaryColorChange(function(newColor) {
       currentPrimaryColor = newColor;
       rerender();
@@ -1089,7 +1034,6 @@ Tapp.lifecycle.onReady(async function() {
 
 Tapp.lifecycle.onDestroy(async function() {
   console.log('[AI Chat] 正在销毁...');
-  // 清理资源（如果有需要）
 });
 
 console.log('[AI Chat] Tapp 已加载');

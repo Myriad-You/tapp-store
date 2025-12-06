@@ -24,7 +24,7 @@
       "description": "快速与 AI 对话",
       "icon": "🤖",
       "defaultSize": "4x4",
-      "sizes": ["4x4"],
+      "sizes": ["4x2", "4x4"],
       "minRefreshInterval": 1000,
       "category": "utility"
     }
