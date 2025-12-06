@@ -44,7 +44,6 @@
 | `storage`         | 保存对话历史      |
 | `ui:notification` | 显示系统通知      |
 | `ui:theme`        | 适配深色/浅色主题 |
-| `component:page`  | 注册独立页面      |
 | `ai:generate`     | 调用 AI 生成能力  |
 
 ## 设置选项
