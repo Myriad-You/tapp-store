@@ -94,8 +94,6 @@ tapp-store/
       "theme_color": "#FF66AB",
       "screenshots": ["url1", "url2"],
       "size": 12345, // 字节
-      "downloads": 100,
-      "rating": 4.5,
       "featured": true, // 是否推荐
       "verified": true, // 是否官方验证
       "created_at": "2025-12-04T00:00:00Z",
@@ -142,7 +140,7 @@ tapp-store/
 
 ## 开发指南
 
-参考 [Tapp 开发文档](../docs/development/TAPP_DEVELOPMENT.md) 了解如何开发 Tapp 应用。
+参考 [Tapp 开发文档](../development/TAPP_DEVELOPMENT.md) 了解如何开发 Tapp 应用。
 
 ## 许可证
 

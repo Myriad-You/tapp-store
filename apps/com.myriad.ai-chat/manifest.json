@@ -1,8 +1,8 @@
 {
   "id": "com.myriad.ai-chat",
   "name": "AI 聊天助手",
-  "version": "0.1.0",
-  "description": "AI 驱动的智能对话助手，支持多轮对话",
+  "version": "1.0.0",
+  "description": "AI 驱动的智能对话助手，支持多轮对话和小组件模式",
   "main": "index.js",
   "author": {
     "name": "Myriad Team"
@@ -11,11 +11,12 @@
     "storage",
     "ui:notification",
     "ui:theme",
-    "widget:register",
     "component:page",
     "ai:generate"
   ],
   "icon": "🤖",
+  "themeColor": "#8b5cf6",
+  "aiQuota": "standard",
   "widgets": [
     {
       "id": "ai-chat",
@@ -24,6 +25,7 @@
       "icon": "🤖",
       "defaultSize": "2x2",
       "sizes": ["2x2", "4x2", "4x4"],
+      "minRefreshInterval": 1000,
       "category": "utility"
     }
   ],
@@ -43,6 +45,15 @@
       "defaultValue": 100,
       "min": 10,
       "max": 500
+    },
+    {
+      "key": "maxTokens",
+      "label": "AI 回复长度",
+      "type": "number",
+      "description": "AI 回复的最大 token 数",
+      "defaultValue": 500,
+      "min": 100,
+      "max": 2000
     }
   ]
 }
