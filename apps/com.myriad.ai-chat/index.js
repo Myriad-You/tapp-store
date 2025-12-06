@@ -845,26 +845,18 @@ Tapp.lifecycle.onReady(async function() {
     }
   }
 
-  // 渲染页面
-  const pageContainer = document.getElementById('tapp-root');
-  if (pageContainer) {
-    pageContainer.innerHTML = '';
-    await Tapp.pages['ai-chat'].render(pageContainer);
-  }
+  // 直接渲染页面（框架自动提供 #tapp-background 和 #tapp-content）
+  await Tapp.pages['ai-chat'].render();
 
   // 监听主题变化，重新渲染
   Tapp.ui.onThemeChange(async function() {
-    if (pageContainer) {
-      await Tapp.pages['ai-chat'].render(pageContainer);
-    }
+    await Tapp.pages['ai-chat'].render();
   });
 
   // 监听主色调变化，重新渲染
   Tapp.ui.onPrimaryColorChange(async function(newColor) {
     console.log('[AI Chat] 主色调变化:', newColor);
-    if (pageContainer) {
-      await Tapp.pages['ai-chat'].render(pageContainer);
-    }
+    await Tapp.pages['ai-chat'].render();
   });
 });
 
