@@ -313,16 +313,9 @@ Tapp.pages['ai-chat'] = {
     // 获取全局主色调
     const primaryColor = await getPrimaryColor();
 
-    // 使用双层架构 - 先获取 DOM 元素（在 container 内部查找）
-    var bgLayer = container.querySelector('#tapp-background');
-    var contentLayer = container.querySelector('#tapp-content');
-
-    // 如果双层元素不存在，降级到单层渲染
-    if (!bgLayer || !contentLayer) {
-      console.warn('[AI Chat] 双层架构元素不存在，使用单层渲染模式');
-      contentLayer = container;
-      bgLayer = null;
-    }
+    // 获取框架提供的分层容器（框架自动创建）
+    var bgLayer = document.getElementById('tapp-background');
+    var contentLayer = document.getElementById('tapp-content');
 
     // 加载历史
     const saveHistory = await Tapp.settings.get('saveHistory');
@@ -486,26 +479,42 @@ Tapp.pages['ai-chat'] = {
       });
     }
 
-    // 背景装饰层（全屏，无 padding）
+    // ========== 背景层：装饰效果（填满全屏） ==========
     if (bgLayer) {
       bgLayer.style.background = isDark ? '#0a0a0a' : '#f8fafc';
-      bgLayer.innerHTML = `
-        <!-- 右上角渐变光晕 -->
-        <div style="position: absolute; right: -10%; top: -10%; width: 50%; height: 50%;
-                    background: radial-gradient(circle, ${primaryColor}20, transparent 70%);
-                    filter: blur(60px); pointer-events: none;"></div>
+      bgLayer.innerHTML = '';
 
-        <!-- 左下角渐变光晕 -->
-        <div style="position: absolute; left: -10%; bottom: -10%; width: 40%; height: 40%;
-                    background: radial-gradient(circle, ${primaryColor}15, transparent 70%);
-                    filter: blur(60px); pointer-events: none;"></div>
+      // 右上角渐变光晕
+      var glow1 = document.createElement('div');
+      glow1.style.cssText = `
+        position: absolute;
+        right: -10%;
+        top: -10%;
+        width: 50%;
+        height: 50%;
+        background: radial-gradient(circle, ${primaryColor}20, transparent 70%);
+        filter: blur(60px);
+        pointer-events: none;
       `;
-    } else if (contentLayer === container) {
-      // 单层模式：直接设置容器背景
-      container.className = 'min-h-full bg-gray-50 dark:bg-gray-900';
+
+      // 左下角渐变光晕
+      var glow2 = document.createElement('div');
+      glow2.style.cssText = `
+        position: absolute;
+        left: -10%;
+        bottom: -10%;
+        width: 40%;
+        height: 40%;
+        background: radial-gradient(circle, ${primaryColor}15, transparent 70%);
+        filter: blur(60px);
+        pointer-events: none;
+      `;
+
+      bgLayer.appendChild(glow1);
+      bgLayer.appendChild(glow2);
     }
 
-    // 内容层（自动 safe area padding）
+    // ========== 内容层：主要内容（自动避开安全区域） ==========
     if (contentLayer) {
       contentLayer.innerHTML = `
         <div class="h-full flex flex-col max-w-5xl mx-auto">
