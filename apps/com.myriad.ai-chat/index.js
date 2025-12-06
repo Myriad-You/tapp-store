@@ -1,23 +1,100 @@
-// ========== CORE 代码（共享工具函数）==========
-// Core 部分在 Widget 和 Page 模式下都会加载
+// AI Chat Tapp v1.0 - Core
+// AI 聊天助手 - 核心代码
+// 使用全局主题变量 + 自适应尺寸 + i18n 国际化 + Glass 风格
 
 console.log('[AI Chat] Core 加载中...');
 
+// ========== i18n 翻译表 ==========
+var i18n = {
+  'zh-CN': {
+    title: 'AI 聊天助手',
+    subtitle: '由 AI 驱动的智能对话',
+    widgetTitle: 'AI 助手',
+    placeholder: '输入你的问题...',
+    placeholderFull: '输入你的问题...（按 Enter 发送，Shift+Enter 换行）',
+    send: '发送',
+    sending: '生成中...',
+    clearChat: '清空对话',
+    clearSuccess: '对话已清空',
+    clearMessage: '开始新的对话吧',
+    startChat: '开始对话吧',
+    welcome: '你好！我是 AI 助手',
+    welcomeSubtitle: '有什么可以帮助你的吗？',
+    errorGenerate: '抱歉，生成回复时遇到了问题：',
+    errorNoResponse: '抱歉，我暂时无法回答这个问题。',
+    examples: ['解释一下人工智能', '帮我写一首诗', '如何学习编程', '推荐一部电影'],
+    hints: ['写代码', '翻译', '解释概念', '头脑风暴'],
+  },
+  'en-US': {
+    title: 'AI Chat Assistant',
+    subtitle: 'AI-powered intelligent conversation',
+    widgetTitle: 'AI Assistant',
+    placeholder: 'Ask a question...',
+    placeholderFull: 'Ask a question... (Press Enter to send, Shift+Enter for new line)',
+    send: 'Send',
+    sending: 'Generating...',
+    clearChat: 'Clear Chat',
+    clearSuccess: 'Chat Cleared',
+    clearMessage: 'Start a new conversation',
+    startChat: 'Start chatting',
+    welcome: 'Hello! I\'m your AI Assistant',
+    welcomeSubtitle: 'How can I help you today?',
+    errorGenerate: 'Sorry, there was an error generating a response: ',
+    errorNoResponse: 'Sorry, I cannot answer this question at the moment.',
+    examples: ['Explain artificial intelligence', 'Write me a poem', 'How to learn programming', 'Recommend a movie'],
+    hints: ['Write code', 'Translate', 'Explain', 'Brainstorm'],
+  },
+  'ja-JP': {
+    title: 'AI チャットアシスタント',
+    subtitle: 'AI駆動のインテリジェント会話',
+    widgetTitle: 'AI アシスタント',
+    placeholder: '質問を入力...',
+    placeholderFull: '質問を入力...（Enterで送信、Shift+Enterで改行）',
+    send: '送信',
+    sending: '生成中...',
+    clearChat: 'クリア',
+    clearSuccess: 'チャットをクリア',
+    clearMessage: '新しい会話を始めましょう',
+    startChat: '会話を始めましょう',
+    welcome: 'こんにちは！AI アシスタントです',
+    welcomeSubtitle: '何かお手伝いできますか？',
+    errorGenerate: '申し訳ありません。応答の生成中にエラーが発生しました：',
+    errorNoResponse: '申し訳ありません。この質問には現在お答えできません。',
+    examples: ['人工知能について説明して', '詩を書いて', 'プログラミングの学び方', '映画のおすすめ'],
+    hints: ['コード', '翻訳', '説明', 'アイデア'],
+  },
+};
+
+// 当前语言（默认中文）
+var currentLocale = 'zh-CN';
+
+// 规范化语言代码
+function normalizeLocale(locale) {
+  if (!locale) return 'zh-CN';
+  var l = locale.toLowerCase();
+  if (l.startsWith('zh')) return 'zh-CN';
+  if (l.startsWith('en')) return 'en-US';
+  if (l.startsWith('ja')) return 'ja-JP';
+  return 'zh-CN';
+}
+
+// 获取翻译文本
+function t(key) {
+  var keys = key.split('.');
+  var value = i18n[currentLocale] || i18n['zh-CN'];
+  for (var i = 0; i < keys.length; i++) {
+    value = value[keys[i]];
+    if (value === undefined) return key;
+  }
+  return value;
+}
+
 // 时间格式化工具
 function formatTime(date) {
-  return new Date(date).toLocaleTimeString('zh-CN', {
+  return new Date(date).toLocaleTimeString(currentLocale, {
     hour: '2-digit',
     minute: '2-digit'
   });
-}
-
-// 获取主色调
-async function getPrimaryColor() {
-  try {
-    return await Tapp.ui.getPrimaryColor();
-  } catch (e) {
-    return '#8b5cf6'; // 默认紫色
-  }
 }
 
 console.log('[AI Chat] Core 已加载');
@@ -25,115 +102,345 @@ console.log('[AI Chat] Core 已加载');
 
 // ========== WIDGET 代码（小组件渲染）==========
 // Widget 模式只加载 core + widget，不执行 onReady
+// 只支持 4x4 尺寸，Glass 风格
 
 console.log('[AI Chat] Widget 加载中...');
 
 Tapp.widgets['ai-chat'] = {
   render: async function(container, props) {
-    const scale = props.scale || 1;
-    const fontScale = props.fontScale || 1;
-    const size = props.size.split('x').map(Number);
-    const isCompact = size[0] <= 2 && size[1] <= 2;
+    var scale = props.scale || 1;
+    var fontScale = props.fontScale || 1;
+    var isDark = props.theme === 'dark';
+    var themeColor = props.primaryColor || '#8b5cf6';
+    
+    // 设置当前语言
+    currentLocale = normalizeLocale(props.locale);
 
     // 加载历史消息
-    let messages = await Tapp.storage.get('widgetMessages') || [];
-    let isGenerating = false;
+    var messages = await Tapp.storage.get('widgetMessages') || [];
+    var isGenerating = false;
 
     // 获取用户设置
-    const maxTokens = await Tapp.settings.get('maxTokens') || 500;
+    var maxTokens = await Tapp.settings.get('maxTokens') || 500;
 
-    // 渲染消息列表
+    // 清空容器
+    container.innerHTML = '';
+    container.style.cssText = 
+      'height: 100%;' +
+      'width: 100%;' +
+      'position: relative;' +
+      'overflow: hidden;' +
+      'border-radius: 16px;';
+
+    // ========== 背景装饰层 ==========
+    var bgLayer = document.createElement('div');
+    bgLayer.style.cssText = 
+      'position: absolute;' +
+      'inset: 0;' +
+      'background: ' + (isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.6)') + ';' +
+      'backdrop-filter: blur(12px);' +
+      '-webkit-backdrop-filter: blur(12px);' +
+      'border: 1px solid ' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)') + ';' +
+      'border-radius: 16px;';
+    container.appendChild(bgLayer);
+
+    // 右上角光晕
+    var glow = document.createElement('div');
+    glow.style.cssText = 
+      'position: absolute;' +
+      'right: -20%;' +
+      'top: -20%;' +
+      'width: 60%;' +
+      'height: 60%;' +
+      'border-radius: 50%;' +
+      'background: radial-gradient(circle, ' + themeColor + '15, transparent 70%);' +
+      'filter: blur(30px);' +
+      'pointer-events: none;';
+    container.appendChild(glow);
+
+    // ========== 主内容区 ==========
+    var mainContent = document.createElement('div');
+    mainContent.style.cssText = 
+      'position: relative;' +
+      'z-index: 1;' +
+      'height: 100%;' +
+      'display: flex;' +
+      'flex-direction: column;';
+    container.appendChild(mainContent);
+
+    // === 头部 ===
+    var header = document.createElement('div');
+    header.style.cssText = 
+      'display: flex;' +
+      'align-items: center;' +
+      'gap: ' + (10 * scale) + 'px;' +
+      'padding: ' + (14 * scale) + 'px ' + (16 * scale) + 'px;' +
+      'border-bottom: 1px solid ' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)') + ';';
+
+    var headerIcon = document.createElement('span');
+    headerIcon.style.cssText = 'font-size: ' + (20 * scale) + 'px;';
+    headerIcon.textContent = '🤖';
+
+    var headerTitle = document.createElement('span');
+    headerTitle.style.cssText = 
+      'flex: 1;' +
+      'font-size: ' + (15 * fontScale) + 'px;' +
+      'font-weight: 600;' +
+      'color: ' + (isDark ? '#f3f4f6' : '#1f2937') + ';';
+    Tapp.dom.setText(headerTitle, t('widgetTitle'));
+
+    var statusDot = document.createElement('div');
+    statusDot.className = 'status-dot';
+    statusDot.style.cssText = 
+      'width: 6px;' +
+      'height: 6px;' +
+      'border-radius: 50%;' +
+      'background: #22c55e;' +
+      'flex-shrink: 0;';
+
+    var clearBtn = document.createElement('button');
+    clearBtn.style.cssText = 
+      'width: ' + (28 * scale) + 'px;' +
+      'height: ' + (28 * scale) + 'px;' +
+      'display: flex;' +
+      'align-items: center;' +
+      'justify-content: center;' +
+      'border-radius: ' + (8 * scale) + 'px;' +
+      'border: none;' +
+      'background: transparent;' +
+      'color: ' + (isDark ? '#9ca3af' : '#6b7280') + ';' +
+      'cursor: pointer;' +
+      'opacity: 0.6;' +
+      'transition: all 0.2s ease;' +
+      'font-size: ' + (14 * scale) + 'px;';
+    clearBtn.textContent = '🗑️';
+    clearBtn.title = t('clearChat');
+    clearBtn.onmouseenter = function() { clearBtn.style.opacity = '1'; clearBtn.style.background = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'; };
+    clearBtn.onmouseleave = function() { clearBtn.style.opacity = '0.6'; clearBtn.style.background = 'transparent'; };
+
+    header.appendChild(headerIcon);
+    header.appendChild(headerTitle);
+    header.appendChild(statusDot);
+    header.appendChild(clearBtn);
+    mainContent.appendChild(header);
+
+    // === 消息区域 ===
+    var messagesArea = document.createElement('div');
+    messagesArea.style.cssText = 
+      'flex: 1;' +
+      'overflow-y: auto;' +
+      'padding: ' + (12 * scale) + 'px;' +
+      'display: flex;' +
+      'flex-direction: column;' +
+      'gap: ' + (12 * scale) + 'px;';
+    mainContent.appendChild(messagesArea);
+
+    // === 输入区域 ===
+    var inputArea = document.createElement('div');
+    inputArea.style.cssText = 
+      'padding: ' + (12 * scale) + 'px ' + (14 * scale) + 'px;' +
+      'border-top: 1px solid ' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)') + ';';
+
+    var inputWrapper = document.createElement('div');
+    inputWrapper.style.cssText = 
+      'display: flex;' +
+      'gap: ' + (8 * scale) + 'px;' +
+      'align-items: center;';
+
+    var chatInput = document.createElement('input');
+    chatInput.type = 'text';
+    chatInput.placeholder = t('placeholder');
+    chatInput.style.cssText = 
+      'flex: 1;' +
+      'padding: ' + (10 * scale) + 'px ' + (14 * scale) + 'px;' +
+      'border: 1px solid ' + (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)') + ';' +
+      'border-radius: ' + (12 * scale) + 'px;' +
+      'background: ' + (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.6)') + ';' +
+      'backdrop-filter: blur(4px);' +
+      '-webkit-backdrop-filter: blur(4px);' +
+      'color: ' + (isDark ? '#f3f4f6' : '#1f2937') + ';' +
+      'font-size: ' + (13 * fontScale) + 'px;' +
+      'outline: none;' +
+      'transition: border-color 0.2s ease;';
+    chatInput.onfocus = function() { chatInput.style.borderColor = themeColor; };
+    chatInput.onblur = function() { chatInput.style.borderColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)'; };
+
+    var sendBtn = document.createElement('button');
+    sendBtn.style.cssText = 
+      'width: ' + (38 * scale) + 'px;' +
+      'height: ' + (38 * scale) + 'px;' +
+      'display: flex;' +
+      'align-items: center;' +
+      'justify-content: center;' +
+      'border-radius: ' + (12 * scale) + 'px;' +
+      'border: none;' +
+      'background: ' + themeColor + ';' +
+      'color: white;' +
+      'cursor: pointer;' +
+      'flex-shrink: 0;' +
+      'transition: opacity 0.2s ease;';
+    sendBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
+    sendBtn.onmouseenter = function() { sendBtn.style.opacity = '0.9'; };
+    sendBtn.onmouseleave = function() { sendBtn.style.opacity = '1'; };
+
+    inputWrapper.appendChild(chatInput);
+    inputWrapper.appendChild(sendBtn);
+    inputArea.appendChild(inputWrapper);
+    mainContent.appendChild(inputArea);
+
+    // 编辑模式边框
+    if (props.isEditMode) {
+      var editBorder = document.createElement('div');
+      editBorder.style.cssText = 
+        'position: absolute;' +
+        'inset: 0;' +
+        'border: 2px dashed ' + themeColor + ';' +
+        'border-radius: 16px;' +
+        'pointer-events: none;' +
+        'z-index: 10;';
+      container.appendChild(editBorder);
+    }
+
+    // ========== 渲染消息列表 ==========
     function renderMessages() {
-      const messagesArea = container.querySelector('.messages-area');
-      if (!messagesArea) return;
+      messagesArea.innerHTML = '';
 
       if (messages.length === 0) {
-        // 空状态
-        const hints = isCompact ? [] : ['写代码', '翻译', '解释概念'];
-        messagesArea.innerHTML = `
-          <div class="flex-1 flex flex-col items-center justify-center text-center p-3">
-            <div class="text-4xl mb-2 opacity-50" style="font-size: ${isCompact ? 28 : 36}px;">💬</div>
-            <div class="text-xs text-gray-600 dark:text-gray-400" style="font-size: ${12 * fontScale}px;">开始对话吧</div>
-            ${hints.length > 0 ? `
-              <div class="mt-3 flex flex-wrap justify-center gap-1.5" style="gap: ${6 * scale}px; margin-top: ${12 * scale}px;">
-                ${hints.map(hint => `
-                  <button class="hint-chip px-2 py-1 text-[10px] border border-gray-300 dark:border-gray-600 rounded-lg
-                                 bg-white/40 dark:bg-white/[0.02] hover:bg-white/60 dark:hover:bg-white/[0.04]
-                                 text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400
-                                 hover:border-indigo-400 transition-colors cursor-pointer"
-                       style="font-size: ${11 * fontScale}px; padding: ${4 * scale}px ${10 * scale}px;"
-                       data-hint="${Tapp.dom.escapeHtml(hint)}">
-                    ${Tapp.dom.escapeHtml(hint)}
-                  </button>
-                `).join('')}
-              </div>
-            ` : ''}
-          </div>
-        `;
+        // 空状态 - 欢迎界面
+        var emptyState = document.createElement('div');
+        emptyState.style.cssText = 
+          'flex: 1;' +
+          'display: flex;' +
+          'flex-direction: column;' +
+          'align-items: center;' +
+          'justify-content: center;' +
+          'text-align: center;' +
+          'padding: ' + (16 * scale) + 'px;';
 
-        // 绑定提示词点击事件
-        container.querySelectorAll('.hint-chip').forEach(chip => {
-          chip.addEventListener('click', () => {
-            const input = container.querySelector('.chat-input');
-            if (input) {
-              input.value = chip.dataset.hint + '：';
-              input.focus();
-            }
-          });
+        var emptyIcon = document.createElement('div');
+        emptyIcon.style.cssText = 
+          'font-size: ' + (40 * scale) + 'px;' +
+          'margin-bottom: ' + (12 * scale) + 'px;' +
+          'opacity: 0.5;';
+        emptyIcon.textContent = '💬';
+
+        var emptyText = document.createElement('div');
+        emptyText.style.cssText = 
+          'font-size: ' + (13 * fontScale) + 'px;' +
+          'color: ' + (isDark ? '#9ca3af' : '#6b7280') + ';' +
+          'margin-bottom: ' + (16 * scale) + 'px;';
+        Tapp.dom.setText(emptyText, t('startChat'));
+
+        // 提示词按钮
+        var hintsContainer = document.createElement('div');
+        hintsContainer.style.cssText = 
+          'display: flex;' +
+          'flex-wrap: wrap;' +
+          'justify-content: center;' +
+          'gap: ' + (8 * scale) + 'px;';
+
+        var hints = t('hints');
+        hints.forEach(function(hint) {
+          var hintBtn = document.createElement('button');
+          hintBtn.style.cssText = 
+            'padding: ' + (6 * scale) + 'px ' + (12 * scale) + 'px;' +
+            'font-size: ' + (11 * fontScale) + 'px;' +
+            'border: 1px solid ' + (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)') + ';' +
+            'border-radius: ' + (8 * scale) + 'px;' +
+            'background: ' + (isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.5)') + ';' +
+            'color: ' + (isDark ? '#d1d5db' : '#374151') + ';' +
+            'cursor: pointer;' +
+            'transition: all 0.2s ease;';
+          Tapp.dom.setText(hintBtn, hint);
+
+          hintBtn.onmouseenter = function() {
+            hintBtn.style.background = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)';
+            hintBtn.style.borderColor = themeColor;
+            hintBtn.style.color = themeColor;
+          };
+          hintBtn.onmouseleave = function() {
+            hintBtn.style.background = isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.5)';
+            hintBtn.style.borderColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
+            hintBtn.style.color = isDark ? '#d1d5db' : '#374151';
+          };
+          hintBtn.onclick = function() {
+            chatInput.value = hint + '：';
+            chatInput.focus();
+          };
+
+          hintsContainer.appendChild(hintBtn);
         });
+
+        emptyState.appendChild(emptyIcon);
+        emptyState.appendChild(emptyText);
+        emptyState.appendChild(hintsContainer);
+        messagesArea.appendChild(emptyState);
         return;
       }
 
-      // 显示最近的消息
-      const displayMessages = messages.slice(isCompact ? -4 : -10);
-      messagesArea.innerHTML = displayMessages.map(msg => {
-        let content = msg.content;
-        const maxLen = isCompact ? 100 : 300;
-        if (content.length > maxLen) {
-          content = content.substring(0, maxLen) + '...';
-        }
+      // 显示最近的消息（最多 10 条）
+      var displayMessages = messages.slice(-10);
+      displayMessages.forEach(function(msg) {
+        var msgContainer = document.createElement('div');
+        msgContainer.style.cssText = 
+          'display: flex;' +
+          'gap: ' + (10 * scale) + 'px;' +
+          'align-items: flex-start;' +
+          (msg.role === 'user' ? 'flex-direction: row-reverse;' : '');
 
-        return `
-          <div class="flex gap-2 ${msg.role === 'user' ? 'flex-row-reverse' : ''}"
-               style="gap: ${8 * scale}px; align-items: flex-start;">
-            <div class="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 text-xs
-                        ${msg.role === 'user' ? 'bg-indigo-500/90' : 'bg-white/20 dark:bg-white/[0.05]'}"
-                 style="width: ${isCompact ? 22 : 26}px; height: ${isCompact ? 22 : 26}px; font-size: ${isCompact ? 11 : 13}px;">
-              ${msg.role === 'user' ? '👤' : '🤖'}
-            </div>
-            <div class="max-w-[85%] px-3 py-2 rounded-xl ${msg.role === 'user'
-              ? 'bg-indigo-500/90 text-white rounded-br-sm'
-              : 'bg-white/40 dark:bg-white/[0.03] text-gray-800 dark:text-gray-200 rounded-bl-sm'}
-                        backdrop-blur-sm"
-                 style="padding: ${isCompact ? 8 : 10}px ${isCompact ? 10 : 14}px;
-                        font-size: ${isCompact ? 12 : 13}px;
-                        line-height: 1.5;">
-              ${Tapp.dom.escapeHtml(content)}
-            </div>
-          </div>
-        `;
-      }).join('');
+        // 头像
+        var avatar = document.createElement('div');
+        avatar.style.cssText = 
+          'width: ' + (28 * scale) + 'px;' +
+          'height: ' + (28 * scale) + 'px;' +
+          'border-radius: ' + (8 * scale) + 'px;' +
+          'display: flex;' +
+          'align-items: center;' +
+          'justify-content: center;' +
+          'flex-shrink: 0;' +
+          'font-size: ' + (14 * scale) + 'px;' +
+          'background: ' + (msg.role === 'user' ? themeColor : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)')) + ';';
+        avatar.textContent = msg.role === 'user' ? '👤' : '🤖';
+
+        // 消息气泡
+        var bubble = document.createElement('div');
+        var content = msg.content;
+        if (content.length > 200) {
+          content = content.substring(0, 200) + '...';
+        }
+        bubble.style.cssText = 
+          'max-width: 80%;' +
+          'padding: ' + (10 * scale) + 'px ' + (14 * scale) + 'px;' +
+          'border-radius: ' + (14 * scale) + 'px;' +
+          (msg.role === 'user' 
+            ? 'border-bottom-right-radius: ' + (4 * scale) + 'px; background: ' + themeColor + '; color: white;'
+            : 'border-bottom-left-radius: ' + (4 * scale) + 'px; background: ' + (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.6)') + '; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); color: ' + (isDark ? '#f3f4f6' : '#1f2937') + ';') +
+          'font-size: ' + (13 * fontScale) + 'px;' +
+          'line-height: 1.5;' +
+          'word-break: break-word;';
+        Tapp.dom.setText(bubble, content);
+
+        msgContainer.appendChild(avatar);
+        msgContainer.appendChild(bubble);
+        messagesArea.appendChild(msgContainer);
+      });
 
       // 滚动到底部
-      setTimeout(() => {
+      setTimeout(function() {
         messagesArea.scrollTop = messagesArea.scrollHeight;
       }, 10);
     }
 
-    // 发送消息
+    // ========== 发送消息 ==========
     async function sendMessage(text) {
       if (!text || isGenerating) return;
       text = text.trim();
       if (!text) return;
 
       isGenerating = true;
-      const sendBtn = container.querySelector('.send-btn');
-      const statusDot = container.querySelector('.status-dot');
-      const input = container.querySelector('.chat-input');
-
-      if (sendBtn) sendBtn.disabled = true;
-      if (statusDot) statusDot.style.background = '#f59e0b';
-      if (input) input.value = '';
+      sendBtn.disabled = true;
+      statusDot.style.background = '#f59e0b';
+      chatInput.value = '';
 
       // 添加用户消息
       messages.push({
@@ -144,12 +451,12 @@ Tapp.widgets['ai-chat'] = {
       renderMessages();
 
       try {
-        const response = await Tapp.ai.generate({
+        var response = await Tapp.ai.generate({
           prompt: text,
           maxTokens: maxTokens
         });
 
-        let content = '';
+        var content = '';
         if (response && response.success) {
           content = response.result || '';
         }
@@ -163,13 +470,13 @@ Tapp.widgets['ai-chat'] = {
         } else {
           messages.push({
             role: 'assistant',
-            content: '抱歉，我暂时无法回答这个问题。',
+            content: t('errorNoResponse'),
             timestamp: Date.now()
           });
         }
 
         // 限制历史数量
-        const maxHistory = await Tapp.settings.get('maxHistory') || 100;
+        var maxHistory = await Tapp.settings.get('maxHistory') || 100;
         if (messages.length > maxHistory) {
           messages = messages.slice(-maxHistory);
         }
@@ -179,7 +486,7 @@ Tapp.widgets['ai-chat'] = {
         console.error('[AI Chat Widget] Error:', error);
         messages.push({
           role: 'assistant',
-          content: '出错了: ' + (error && error.message ? error.message : '请求失败'),
+          content: t('errorGenerate') + (error && error.message ? error.message : 'Unknown error'),
           timestamp: Date.now()
         });
       }
@@ -187,13 +494,11 @@ Tapp.widgets['ai-chat'] = {
       renderMessages();
 
       isGenerating = false;
-      if (sendBtn) {
-        sendBtn.disabled = false;
-      }
-      if (statusDot) statusDot.style.background = '#22c55e';
+      sendBtn.disabled = false;
+      statusDot.style.background = '#22c55e';
     }
 
-    // 清空对话
+    // ========== 清空对话 ==========
     async function clearChat() {
       if (messages.length === 0) return;
       messages = [];
@@ -201,90 +506,15 @@ Tapp.widgets['ai-chat'] = {
       renderMessages();
     }
 
-    // 渲染容器
-    container.innerHTML = `
-      <div class="relative h-full w-full rounded-xl overflow-hidden glass">
-        <!-- 背景装饰层 -->
-        <div class="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent"></div>
-
-        <!-- 主内容区 -->
-        <div class="relative z-10 h-full flex flex-col" style="padding: 0;">
-
-          <!-- 头部 -->
-          <div class="flex items-center gap-2 border-b border-gray-200/50 dark:border-gray-700/50"
-               style="padding: ${isCompact ? 10 : 12}px ${isCompact ? 12 : 16}px; gap: ${8 * scale}px;">
-            <span style="font-size: ${isCompact ? 16 : 18}px;">🤖</span>
-            <span class="flex-1 font-semibold text-gray-800 dark:text-gray-200"
-                  style="font-size: ${isCompact ? 13 : 14}px;">AI 助手</span>
-            <div class="status-dot w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0"></div>
-            <button class="clear-btn w-6 h-6 flex items-center justify-center rounded-md
-                           bg-transparent hover:bg-gray-200/50 dark:hover:bg-white/[0.05]
-                           text-gray-500 dark:text-gray-400 transition-colors opacity-60 hover:opacity-100"
-                    title="清空对话">
-              🗑️
-            </button>
-          </div>
-
-          <!-- 消息区域 -->
-          <div class="messages-area flex-1 overflow-y-auto flex flex-col gap-2.5 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600"
-               style="padding: ${isCompact ? 8 : 12}px; gap: ${isCompact ? 8 : 10}px;">
-            <!-- 消息将在这里渲染 -->
-          </div>
-
-          <!-- 输入区域 -->
-          <div class="border-t border-gray-200/50 dark:border-gray-700/50"
-               style="padding: ${isCompact ? 8 : 10}px ${isCompact ? 8 : 12}px;">
-            <div class="flex gap-1.5 items-center" style="gap: ${6 * scale}px;">
-              <input type="text"
-                     class="chat-input flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                            bg-white/60 dark:bg-white/[0.03] backdrop-blur-sm
-                            text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400
-                            focus:border-indigo-500 focus:outline-none transition-colors"
-                     placeholder="${isCompact ? '提问...' : '输入问题...'}"
-                     style="padding: ${isCompact ? 8 : 10}px ${isCompact ? 10 : 14}px;
-                            font-size: ${(isCompact ? 12 : 13) * fontScale}px;">
-              <button class="send-btn w-8 h-8 flex items-center justify-center rounded-lg
-                             bg-indigo-500 hover:bg-indigo-600 text-white
-                             transition-colors disabled:opacity-60 flex-shrink-0"
-                      style="width: ${isCompact ? 32 : 36}px; height: ${isCompact ? 32 : 36}px;"
-                      title="发送">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- 编辑模式边框 -->
-        ${props.isEditMode ? `
-          <div class="absolute inset-0 border-2 border-dashed border-violet-400 rounded-xl pointer-events-none"></div>
-        ` : ''}
-      </div>
-    `;
-
-    // 绑定事件
-    const input = container.querySelector('.chat-input');
-    const sendBtn = container.querySelector('.send-btn');
-    const clearBtn = container.querySelector('.clear-btn');
-
-    if (sendBtn) {
-      sendBtn.addEventListener('click', () => sendMessage(input.value));
-    }
-
-    if (input) {
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          sendMessage(input.value);
-        }
-      });
-    }
-
-    if (clearBtn) {
-      clearBtn.addEventListener('click', clearChat);
-    }
+    // ========== 绑定事件 ==========
+    sendBtn.onclick = function() { sendMessage(chatInput.value); };
+    chatInput.onkeydown = function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage(chatInput.value);
+      }
+    };
+    clearBtn.onclick = clearChat;
 
     // 初始渲染
     renderMessages();
@@ -320,6 +550,9 @@ function rerender() {
 
 // 页面渲染函数
 function renderPage(locale, isDarkTheme, primaryColor) {
+  // 更新当前语言（规范化处理）
+  currentLocale = normalizeLocale(locale);
+  
   var isDark = isDarkTheme !== false;
   var themeColor = primaryColor || '#8b5cf6';
 
@@ -405,7 +638,7 @@ function renderPage(locale, isDarkTheme, primaryColor) {
     'align-items: center;' +
     'justify-content: center;' +
     'font-size: calc(20px * var(--tapp-scale, 1));' +
-    'background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);';
+    'background: linear-gradient(135deg, #6366f1 0%, ' + themeColor + ' 100%);';
   headerIcon.textContent = '🤖';
 
   // 头部文字区域
@@ -418,7 +651,7 @@ function renderPage(locale, isDarkTheme, primaryColor) {
     'font-size: calc(18px * var(--tapp-font-scale, 1));' +
     'font-weight: 600;' +
     'color: ' + (isDark ? '#f3f4f6' : '#1f2937') + ';';
-  Tapp.dom.setText(headerTitle, 'AI 聊天助手');
+  Tapp.dom.setText(headerTitle, t('title'));
 
   var headerSubtitle = document.createElement('p');
   headerSubtitle.className = 'tapp-hide-compact';
@@ -426,7 +659,7 @@ function renderPage(locale, isDarkTheme, primaryColor) {
     'margin: 2px 0 0 0;' +
     'font-size: calc(12px * var(--tapp-font-scale, 1));' +
     'color: ' + (isDark ? '#9ca3af' : '#6b7280') + ';';
-  Tapp.dom.setText(headerSubtitle, '由 AI 驱动的智能对话');
+  Tapp.dom.setText(headerSubtitle, t('subtitle'));
 
   headerText.appendChild(headerTitle);
   headerText.appendChild(headerSubtitle);
@@ -442,7 +675,7 @@ function renderPage(locale, isDarkTheme, primaryColor) {
     'color: ' + (isDark ? '#9ca3af' : '#6b7280') + ';' +
     'cursor: pointer;' +
     'transition: all 0.2s ease;';
-  Tapp.dom.setText(clearBtnPage, '清空对话');
+  Tapp.dom.setText(clearBtnPage, t('clearChat'));
 
   clearBtnPage.onmouseenter = function() {
     clearBtnPage.style.background = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)';
@@ -484,7 +717,7 @@ function renderPage(locale, isDarkTheme, primaryColor) {
 
   // 输入框
   var chatInput = document.createElement('textarea');
-  chatInput.placeholder = '输入你的问题...（按 Enter 发送，Shift+Enter 换行）';
+  chatInput.placeholder = t('placeholderFull');
   chatInput.rows = 1;
   chatInput.style.cssText = 
     'flex: 1;' +
@@ -524,7 +757,7 @@ function renderPage(locale, isDarkTheme, primaryColor) {
     'cursor: pointer;' +
     'align-self: flex-end;' +
     'transition: opacity 0.2s ease;';
-  Tapp.dom.setText(sendBtn, '发送');
+  Tapp.dom.setText(sendBtn, t('send'));
 
   sendBtn.onmouseenter = function() { sendBtn.style.opacity = '0.9'; };
   sendBtn.onmouseleave = function() { sendBtn.style.opacity = '1'; };
@@ -558,14 +791,14 @@ function renderPage(locale, isDarkTheme, primaryColor) {
         'font-weight: 600;' +
         'color: ' + (isDark ? '#f3f4f6' : '#1f2937') + ';' +
         'margin-bottom: calc(8px * var(--tapp-scale, 1));';
-      Tapp.dom.setText(welcomeTitle, '你好！我是 AI 助手');
+      Tapp.dom.setText(welcomeTitle, t('welcome'));
 
       var welcomeSubtitle = document.createElement('div');
       welcomeSubtitle.style.cssText = 
         'font-size: calc(14px * var(--tapp-font-scale, 1));' +
         'color: ' + (isDark ? '#9ca3af' : '#6b7280') + ';' +
         'margin-bottom: calc(32px * var(--tapp-scale, 1));';
-      Tapp.dom.setText(welcomeSubtitle, '有什么可以帮助你的吗？');
+      Tapp.dom.setText(welcomeSubtitle, t('welcomeSubtitle'));
 
       var examplesContainer = document.createElement('div');
       examplesContainer.style.cssText = 
@@ -575,7 +808,7 @@ function renderPage(locale, isDarkTheme, primaryColor) {
         'gap: calc(12px * var(--tapp-scale, 1));' +
         'max-width: 560px;';
 
-      var examples = ['解释一下人工智能', '帮我写一首诗', '如何学习编程', '推荐一部电影'];
+      var examples = t('examples');
       examples.forEach(function(q) {
         var exampleBtn = document.createElement('button');
         exampleBtn.style.cssText = 
@@ -637,7 +870,7 @@ function renderPage(locale, isDarkTheme, primaryColor) {
         'justify-content: center;' +
         'flex-shrink: 0;' +
         'font-size: calc(18px * var(--tapp-scale, 1));' +
-        'background: ' + (msg.role === 'user' ? 'rgba(99,102,241,0.9)' : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)')) + ';';
+        'background: ' + (msg.role === 'user' ? themeColor : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)')) + ';';
       avatar.textContent = msg.role === 'user' ? '👤' : '🤖';
 
       // 消息内容区域
@@ -653,7 +886,7 @@ function renderPage(locale, isDarkTheme, primaryColor) {
         'padding: calc(12px * var(--tapp-scale, 1)) calc(16px * var(--tapp-scale, 1));' +
         'border-radius: calc(16px * var(--tapp-scale, 1));' +
         (msg.role === 'user' ? 'border-bottom-right-radius: calc(4px * var(--tapp-scale, 1));' : 'border-bottom-left-radius: calc(4px * var(--tapp-scale, 1));') +
-        'background: ' + (msg.role === 'user' ? 'rgba(99,102,241,0.9)' : (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.6)')) + ';' +
+        'background: ' + (msg.role === 'user' ? themeColor : (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.6)')) + ';' +
         (msg.role !== 'user' ? 'backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);' : '') +
         'color: ' + (msg.role === 'user' ? 'white' : (isDark ? '#f3f4f6' : '#1f2937')) + ';' +
         'font-size: calc(14px * var(--tapp-font-scale, 1));' +
@@ -695,7 +928,7 @@ function renderPage(locale, isDarkTheme, primaryColor) {
 
     if (sendBtn) {
       sendBtn.disabled = true;
-      Tapp.dom.setText(sendBtn, '生成中...');
+      Tapp.dom.setText(sendBtn, t('sending'));
     }
 
     chatHistory.push({
@@ -723,7 +956,7 @@ function renderPage(locale, isDarkTheme, primaryColor) {
       }
 
       if (!content) {
-        content = '抱歉，我暂时无法回答这个问题。';
+        content = t('errorNoResponse');
       }
 
       chatHistory.push({
@@ -733,10 +966,10 @@ function renderPage(locale, isDarkTheme, primaryColor) {
       });
     } catch (error) {
       console.error('[AI Chat] 生成失败:', error);
-      var errorMsg = error && error.message ? error.message : '未知错误';
+      var errorMsg = error && error.message ? error.message : 'Unknown error';
       chatHistory.push({
         role: 'assistant',
-        content: '抱歉，生成回复时遇到了问题：' + errorMsg,
+        content: t('errorGenerate') + errorMsg,
         timestamp: Date.now(),
       });
     }
@@ -760,7 +993,7 @@ function renderPage(locale, isDarkTheme, primaryColor) {
     isGenerating = false;
     if (sendBtn) {
       sendBtn.disabled = false;
-      Tapp.dom.setText(sendBtn, '发送');
+      Tapp.dom.setText(sendBtn, t('send'));
     }
   }
 
@@ -771,8 +1004,8 @@ function renderPage(locale, isDarkTheme, primaryColor) {
     await Tapp.storage.set('chatHistory', []);
     renderMessages();
     await Tapp.ui.showNotification({
-      title: '对话已清空',
-      message: '开始新的对话吧',
+      title: t('clearSuccess'),
+      message: t('clearMessage'),
       type: 'info',
     });
   }
