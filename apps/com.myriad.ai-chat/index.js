@@ -870,11 +870,7 @@ Tapp.lifecycle.onReady(async function() {
 
 Tapp.lifecycle.onDestroy(async function() {
   console.log('[AI Chat] 正在销毁...');
-  try {
-    await Tapp.component.unregister('page', 'ai-chat');
-  } catch (e) {
-    console.log('[AI Chat] 注销时出错:', e);
-  }
+  // 页面会自动注销，无需手动调用 unregister
 });
 
 console.log('[AI Chat] Tapp 已加载');
