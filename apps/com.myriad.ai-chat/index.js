@@ -313,6 +313,10 @@ Tapp.pages['ai-chat'] = {
     // 获取全局主色调
     const primaryColor = await getPrimaryColor();
 
+    // 使用双层架构 - 先获取 DOM 元素
+    var bgLayer = document.getElementById('tapp-background');
+    var contentLayer = document.getElementById('tapp-content');
+
     // 加载历史
     const saveHistory = await Tapp.settings.get('saveHistory');
     if (saveHistory !== false) {
@@ -474,10 +478,6 @@ Tapp.pages['ai-chat'] = {
         type: 'info',
       });
     }
-
-    // 使用双层架构渲染
-    var bgLayer = document.getElementById('tapp-background');
-    var contentLayer = document.getElementById('tapp-content');
 
     // 背景装饰层（全屏，无 padding）
     if (bgLayer) {
