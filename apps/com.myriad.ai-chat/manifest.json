@@ -17,6 +17,7 @@
   "icon": "🤖",
   "themeColor": "#8b5cf6",
   "aiQuota": "standard",
+  "hasPage": true,
   "widgets": [
     {
       "id": "ai-chat",

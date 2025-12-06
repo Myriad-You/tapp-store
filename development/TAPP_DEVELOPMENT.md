@@ -26,6 +26,7 @@ Tapp (Third-party App) 是 Myriad 的扩展应用系统，允许开发者创建�
   - [快捷键 API](#快捷键-api)
   - [事件总线 API](#事件总线-api)
   - [后台需求 API](#后台需求-api)
+  - [动态内容 API](#动态内容-api)
   - [速率限制 API](#速率限制-api)
   - [性能指标 API（管理员）](#性能指标-api管理员)
 - [权限系统](#权限系统)
@@ -36,6 +37,7 @@ Tapp (Third-party App) 是 Myriad 的扩展应用系统，允许开发者创建�
 - [小组件开发](#小组件开发)
 - [最佳实践](#最佳实践)
 - [示例代码](#示例代码)
+- [AI 辅助开发指南](#ai-辅助开发指南)
 - [常见问题](#常见问题)
 
 ---
@@ -150,14 +152,6 @@ Tapp.pages['my-page'] = {
 
 // 生命周期（仅 Page 模式执行）
 Tapp.lifecycle.onReady(async function() {
-  // 注册页面组件
-  await Tapp.component.registerPage({
-    id: 'my-page',
-    path: '/tapp/my-page',
-    title: 'My Page',
-    icon: '📄',
-  });
-  
   // 渲染页面
   var container = document.getElementById('tapp-root');
   await Tapp.pages['my-page'].render(container);
@@ -220,20 +214,21 @@ Tapp.widgets['my-widget'] = {
 
 ## Manifest 配置
 
-| 字段          | 类型     | 必填 | 说明                             |
-| ------------- | -------- | ---- | -------------------------------- |
-| `id`          | string   | ✅   | 唯一标识符，推荐使用反向域名格式 |
-| `name`        | string   | ✅   | 应用名称                         |
-| `version`     | string   | ✅   | 版本号（语义化版本）             |
-| `description` | string   | ❌   | 应用描述                         |
-| `main`        | string   | ✅   | 入口文件名                       |
-| `author`      | object   | ❌   | 作者信息 `{name, email?, url?}`  |
-| `permissions` | string[] | ❌   | 所需权限列表                     |
-| `icon`        | string   | ❌   | 图标（emoji 或 URL）             |
-| `themeColor`  | string   | ❌   | 主题色（十六进制）               |
-| `widgets`     | object[] | ❌   | 小组件定义                       |
-| `settings`    | object[] | ❌   | 用户可配置的设置项               |
-| `aiQuota`     | string   | ❌   | AI 配额等级 `standard`/`premium` |
+| 字段          | 类型     | 必填 | 说明                               |
+| ------------- | -------- | ---- | ---------------------------------- |
+| `id`          | string   | ✅   | 唯一标识符，推荐使用反向域名格式   |
+| `name`        | string   | ✅   | 应用名称                           |
+| `version`     | string   | ✅   | 版本号（语义化版本）               |
+| `description` | string   | ❌   | 应用描述                           |
+| `main`        | string   | ✅   | 入口文件名                         |
+| `author`      | object   | ❌   | 作者信息 `{name, email?, url?}`    |
+| `permissions` | string[] | ❌   | 所需权限列表                       |
+| `icon`        | string   | ❌   | 图标（emoji 或 URL）               |
+| `themeColor`  | string   | ❌   | 主题色（十六进制）                 |
+| `widgets`     | object[] | ❌   | 小组件定义                         |
+| `hasPage`     | boolean  | ❌   | 是否有页面模块（可在页面模式运行） |
+| `settings`    | object[] | ❌   | 用户可配置的设置项                 |
+| `aiQuota`     | string   | ❌   | AI 配额等级 `standard`/`premium`   |
 
 ### widgets 配置
 
@@ -251,6 +246,57 @@ Tapp.widgets['my-widget'] = {
   ]
 }
 ```
+
+### hasPage 配置
+
+声明应用是否有页面模块。设为 `true` 后，运行中的 Tapp 可以点击打开页面视图。
+
+```json
+{
+  "hasPage": true
+}
+```
+
+**页面模块的作用**：
+
+页面模块允许 Tapp 提供完整的页面体验，而不仅仅是小组件。当用户点击运行中的 Tapp 时，会打开一个全屏页面视图。
+
+**何时声明 `hasPage: true`**：
+
+- 应用需要提供详细的配置界面
+- 应用需要展示大量数据（如列表、报告、仪表盘）
+- 应用需要复杂的交互界面（如编辑器、游戏）
+- 应用希望提供比 Widget 更丰富的功能
+
+**代码结构要求**：
+
+声明 `hasPage: true` 后，需要在 `PAGE_CODE` 中定义页面渲染逻辑：
+
+```javascript
+// PAGE_CODE 中
+Tapp.pages["my-page"] = {
+  render: function (container, locale, isDark, primaryColor) {
+    var bgLayer = document.getElementById("tapp-background");
+    var contentLayer = document.getElementById("tapp-content");
+    // 渲染页面...
+  },
+};
+
+Tapp.lifecycle.onReady(async function () {
+  var locale = await Tapp.ui.getLocale();
+  var theme = await Tapp.ui.getTheme();
+  var primaryColor = await Tapp.ui.getPrimaryColor();
+
+  Tapp.pages["my-page"].render(null, locale, theme === "dark", primaryColor);
+});
+```
+
+**注意**：
+
+- `hasPage: true` 表示应用代码中包含 `Tapp.pages` 定义或页面渲染逻辑
+- 只有 `hasPage: true` 的应用在运行时才会显示"点击打开"提示
+- 页面渲染使用框架提供的 `#tapp-background` 和 `#tapp-content` 容器
+- 详细的页面开发指南请参考「页面分层架构」章节
 
 ### settings 配置
 
@@ -530,12 +576,26 @@ const allSettings = await Tapp.settings.getAll();
 // 设置页面标题
 await Tapp.ui.setTitle("我的页面");
 
-// 显示通知
+// 显示通知（Toast）
+// 通知会以 Glass Morphism 风格显示在页面顶部
+// 支持四种类型，每种类型有不同的配色和图标
 await Tapp.ui.showNotification({
-  title: "标题",
-  message: "消息内容",
-  type: "success" | "error" | "warning" | "info",
-  duration: 3000, // 可选，毫秒
+  title: "操作成功", // 可选：通知标题（加粗显示）
+  message: "数据已保存", // 必填：通知消息
+  type: "success", // 可选：类型 "success" | "error" | "warning" | "info"
+  duration: 3000, // 可选：显示时长（毫秒），默认 3000
+});
+
+// 通知类型说明：
+// - success: 绿色，成功操作（✓ 图标）
+// - error:   红色，错误提示（✗ 图标）
+// - warning: 橙色，警告信息（⚠ 图标）
+// - info:    蓝色，一般信息（ℹ 图标）
+
+// 简单通知示例
+await Tapp.ui.showNotification({
+  message: "欢迎使用！",
+  type: "info",
 });
 
 // 获取当前主题
@@ -566,13 +626,9 @@ const unsubscribe = Tapp.ui.onLocaleChange((locale) => {
   console.log("语言切换为:", locale);
 });
 
-// 确认对话框
-const confirmed = await Tapp.ui.confirm({
-  title: "确认操作",
-  message: "确定要执行吗？",
-  confirmText: "确定",
-  cancelText: "取消",
-});
+// 确认对话框（参数为消息字符串）
+const confirmed = await Tapp.ui.confirm("确定要执行吗？");
+// 返回: true（用户点击确定）或 false（用户点击取消）
 
 // 全屏控制（需要 ui:fullscreen）
 await Tapp.ui.fullscreen.request(); // 请求全屏
@@ -677,12 +733,11 @@ const analysis = await Tapp.ai.analyze({
 });
 
 // AI 对话（需要 ai:chat 权限）
-const chat = await Tapp.ai.chat({
-  messages: [{ role: "user", content: "你好" }],
-  context: {
-    includePlatformStats: true, // 可选，包含平台统计
-  },
-});
+const chat = await Tapp.ai.chat(
+  [{ role: "user", content: "你好" }], // messages: 消息数组
+  { includePlatformStats: true }, // context: 上下文（可选）
+  { maxTokens: 1000 } // options: 选项（可选）
+);
 
 // 获取 AI 配额
 const quota = await Tapp.ai.getQuota();
@@ -725,17 +780,27 @@ await Tapp.widget.updateConfig("my-widget", {
 **权限**: `report:read`, `report:write`
 
 ```javascript
+// ========== 读取报告（需要 report:read 权限）==========
+
 // 获取报告列表
 const reports = await Tapp.report.listReports();
 // 返回: [{ id, platform, type, createdAt, summary }]
 
+// 简便方法：获取报告列表
+const reports = await Tapp.report.list();
+
 // 获取报告详情
 const report = await Tapp.report.getReport(reportId);
+
+// 简便方法：获取报告详情
+const report = await Tapp.report.get(reportId);
 
 // 获取特定平台的报告
 const steamReport = await Tapp.report.getPlatformReport("steam");
 
-// 创建报告（需要 report:write 权限）
+// ========== 写入报告（需要 report:write 权限）==========
+
+// 创建报告
 const newReport = await Tapp.report.create(
   "我的报告", // title
   "summary", // reportType
@@ -932,19 +997,75 @@ const system = await Tapp.context.getSystem();
 // 返回: { theme, language, timezone }
 ```
 
-### 组件注册 API
+### 用户角色 API
 
-**权限**: `component:page`, `component:theme`, `component:agent`
+**无需权限** - 获取当前访客的用户等级，以便根据用户等级提供不同内容
+
+用户角色分为三个等级：
+
+- `guest` - 游客（未登录用户），只能查看管理员的 Tapp 内容
+- `user` - 普通用户（已登录），可使用 `basic` 权限，可临时安装 Tapp
+- `admin` - 管理员，可使用所有权限，其 Tapp 对所有用户可见
 
 ```javascript
-// 注册自定义页面（需要 component:page）
-await Tapp.component.registerPage({
-  id: "my-page",
-  path: "/tapp/my-page",
-  title: "我的页面",
-  icon: "📄",
-});
+// 获取当前用户角色: "guest" | "user" | "admin"
+const role = await Tapp.user.getRole();
 
+// 检查是否为管理员
+const isAdmin = await Tapp.user.isAdmin();
+
+// 检查是否为游客（未登录）
+const isGuest = await Tapp.user.isGuest();
+
+// 检查是否已登录（普通用户或管理员）
+const isLoggedIn = await Tapp.user.isLoggedIn();
+
+// 获取用户可用的权限等级列表
+const levels = await Tapp.user.getAllowedPermissionLevels();
+// 返回: admin -> ['public', 'basic', 'elevated', 'privileged']
+//       user  -> ['public', 'basic']
+//       guest -> ['public']
+
+// 检查用户是否可以使用指定权限等级
+const canUseElevated = await Tapp.user.canUsePermissionLevel("elevated");
+```
+
+#### 根据用户等级提供不同内容示例
+
+```javascript
+// 在 Tapp 初始化时检查用户角色
+async function initContent() {
+  const role = await Tapp.user.getRole();
+
+  if (role === "guest") {
+    // 游客：显示基础信息和登录提示
+    renderGuestView();
+  } else if (role === "user") {
+    // 普通用户：显示标准功能
+    renderUserView();
+  } else if (role === "admin") {
+    // 管理员：显示完整功能 + 管理选项
+    renderAdminView();
+  }
+}
+
+// 根据权限等级显示/隐藏功能
+async function checkFeatureAccess() {
+  const canUseAI = await Tapp.user.canUsePermissionLevel("elevated");
+
+  if (canUseAI) {
+    showAIFeatures();
+  } else {
+    showAILockedMessage();
+  }
+}
+```
+
+### 组件注册 API
+
+**权限**: `component:theme`, `component:agent`
+
+```javascript
 // 注册自定义主题（需要 component:theme）
 await Tapp.component.registerTheme({
   id: "my-theme",
@@ -980,9 +1101,16 @@ await Tapp.shortcut.register({
   id: "my-shortcut",
   keys: "Ctrl+Shift+M",
   description: "打开我的 Tapp",
-  handler: () => {
-    // 快捷键触发时执行
-  },
+  action: "open-tapp", // 快捷键触发时的动作标识符
+  scope: "global", // 可选: 'global' | 'tapp' | 'editor'
+});
+
+// 通过事件监听快捷键触发
+Tapp.event.on("shortcut:triggered", (data) => {
+  if (data.shortcutId === "my-shortcut") {
+    // 快捷键被触发时执行
+    console.log("快捷键已触发:", data.action);
+  }
 });
 
 // 注销快捷键
@@ -990,6 +1118,7 @@ await Tapp.shortcut.unregister("my-shortcut");
 
 // 列出已注册快捷键
 const shortcuts = await Tapp.shortcut.list();
+// 返回: [{ id, tappId, keys, description, action, scope, enabled }]
 ```
 
 ### 事件总线 API
@@ -1076,6 +1205,153 @@ Tapp.lifecycle.onReady(async function () {
 ```
 
 > **注意**：`widget` 需求由系统自动管理，注册 Widget 时自动声明，所有 Widget 注销时自动释放。
+
+### 动态内容 API
+
+**权限**: `ui:notification`（自动声明 `notification` 后台需求）
+
+动态内容 API 允许 Tapp 在控制岛（右上角信息控制岛）收缩状态下显示自定义动态内容，实现类似系统问候语、天气、歌词等轮播效果。
+
+```javascript
+// 设置动态内容
+await Tapp.dynamicContent.set({
+  icon: "📊", // 图标（emoji 或 URL）
+  text: "今日活跃: 128", // 主文本
+  subtext: "较昨日 +15%", // 副文本（可选）
+  priority: 10, // 优先级（可选，默认 -1，越高越靠前）
+  showSubtext: true, // 是否显示副文本（可选）
+  expiresAt: Date.now() + 3600000, // 过期时间戳（可选）
+  i18n: {
+    // 多语言支持（可选）
+    text: {
+      "zh-CN": "今日活跃: 128",
+      "en-US": "Active today: 128",
+    },
+    subtext: {
+      "zh-CN": "较昨日 +15%",
+      "en-US": "+15% vs yesterday",
+    },
+  },
+});
+// 返回: { success: true, data: { registered: true } }
+
+// 快速更新文本（无需重新设置完整配置）
+await Tapp.dynamicContent.update({
+  text: "今日活跃: 156",
+  subtext: "较昨日 +22%",
+});
+// 返回: { success: true, data: { updated: true } }
+
+// 获取当前动态内容
+const content = await Tapp.dynamicContent.get();
+// 返回: { type: 'tapp-xxx', icon: '📊', text: '...', ... } 或 null
+
+// 移除动态内容
+await Tapp.dynamicContent.remove();
+// 返回: { success: true, data: { removed: true } }
+```
+
+#### 动态内容配置参数
+
+| 参数          | 类型    | 必填 | 说明                                          |
+| ------------- | ------- | ---- | --------------------------------------------- |
+| `icon`        | string  | ✅   | 图标，支持 emoji 或图片 URL                   |
+| `text`        | string  | ✅   | 主文本内容                                    |
+| `subtext`     | string  | ❌   | 副文本（在主文本下方显示）                    |
+| `priority`    | number  | ❌   | 优先级，默认 -1（Tapp 内容低于系统内容）      |
+| `showSubtext` | boolean | ❌   | 是否显示副文本，默认根据 subtext 是否存在判断 |
+| `expiresAt`   | number  | ❌   | 过期时间（毫秒时间戳），过期后自动移除        |
+| `i18n`        | object  | ❌   | 多语言文本映射，支持 `text` 和 `subtext` 字段 |
+
+#### 控制岛显示规则
+
+- 动态内容会与系统内置内容（问候语、天气、一言、歌词）一起轮播显示
+- 轮播间隔约 15 秒（低端设备 30 秒）
+- 当用户悬停在控制岛上时，轮播暂停
+- 点击控制岛会展开控制面板
+
+#### 文本滚动效果
+
+当动态内容文本超过 2 行时：
+
+- 系统会自动启用垂直滚动动画
+- 滚动会在短暂延迟后开始
+- 悬停时滚动暂停
+- 歌词类内容会根据歌词持续时间自动调整滚动速度
+
+#### 歌词切换动画
+
+当动态内容快速更新时（如歌词切换）：
+
+- 系统会自动添加淡入淡出过渡效果
+- 淡出时间约 100ms，淡入时间约 150ms
+- 确保文本切换时的视觉连续性
+
+#### 使用示例
+
+##### 实时数据展示
+
+```javascript
+Tapp.lifecycle.onReady(async function () {
+  // 声明后台需求以保持 Tapp 运行
+  await Tapp.background.require("sync", "实时数据更新");
+
+  // 设置初始内容
+  await Tapp.dynamicContent.set({
+    icon: "📈",
+    text: "加载中...",
+    priority: 5,
+  });
+
+  // 定时更新数据
+  async function updateStats() {
+    const stats = await fetchLatestStats();
+    await Tapp.dynamicContent.update({
+      text: "实时访问: " + stats.visitors,
+      subtext:
+        stats.trend > 0
+          ? "↑ " + stats.trend + "%"
+          : "↓ " + Math.abs(stats.trend) + "%",
+    });
+  }
+
+  updateStats();
+  setInterval(updateStats, 30000); // 每30秒更新
+});
+
+Tapp.lifecycle.onDestroy(async function () {
+  await Tapp.dynamicContent.remove();
+});
+```
+
+##### 多语言内容
+
+```javascript
+await Tapp.dynamicContent.set({
+  icon: "🌍",
+  text: "欢迎使用",
+  i18n: {
+    text: {
+      "zh-CN": "欢迎使用 Myriad",
+      "en-US": "Welcome to Myriad",
+      "ja-JP": "Myriad へようこそ",
+    },
+  },
+});
+```
+
+##### 带过期时间的通知
+
+```javascript
+// 设置一个 1 小时后过期的提醒
+await Tapp.dynamicContent.set({
+  icon: "⏰",
+  text: "别忘了休息一下！",
+  expiresAt: Date.now() + 60 * 60 * 1000, // 1小时后过期
+});
+```
+
+> **注意**：设置动态内容会自动声明 `notification` 后台需求，确保 Tapp 在后台继续运行以保持内容更新。移除动态内容时会自动释放该需求。
 
 ### 速率限制 API
 
@@ -1219,7 +1495,6 @@ Tapp 使用细粒度权限控制，每个 API 调用都需要相应权限。
 | `report:write`      | 提升 | 创建/修改报告  | ❌       | ✅     |
 | `network:fetch`     | 提升 | 发送 HTTP 请求 | ❌       | ✅     |
 | `media:control`     | 提升 | 控制媒体播放   | ❌       | ✅     |
-| `component:page`    | 提升 | 注册自定义页面 | ❌       | ✅     |
 | `component:theme`   | 提升 | 注册自定义主题 | ❌       | ✅     |
 | `shortcut:register` | 提升 | 注册键盘快捷键 | ❌       | ✅     |
 | `event:publish`     | 提升 | 发布系统事件   | ❌       | ✅     |
@@ -1312,9 +1587,53 @@ card.style.padding = "calc(var(--tapp-spacing-unit) * 4)";
 card.style.borderRadius = "calc(var(--tapp-radius-unit) * 3)";
 ```
 
-### 响应式工具类
+### 样式系统概述
 
-沙箱预置了类似 Tailwind 的响应式工具类：
+> **重要说明**：Widget 模式和 Page 模式对样式的支持有所不同。
+
+| 模式   | 完整 Tailwind 类 | `tapp-*` 工具类 | 内联 style | CSS 变量 |
+| ------ | ---------------- | --------------- | ---------- | -------- |
+| Widget | ✅ 完全支持      | ✅ 支持         | ✅ 支持    | ✅ 支持  |
+| Page   | ❌ 不可用        | ✅ 支持         | ✅ 推荐    | ✅ 支持  |
+
+#### 原因说明
+
+- **Widget 模式**：渲染在主应用的 iframe 中，**继承主应用的 Tailwind 样式表**，因此可以直接使用完整的 Tailwind 类（如 `flex`, `p-4`, `text-gray-700`, `dark:bg-white/5` 等）。
+- **Page 模式**：运行在独立的沙箱 iframe 中，**没有预加载 Tailwind**，因此推荐使用内联 `style` 或沙箱内置的 `tapp-*` 工具类。
+
+#### 推荐的样式方式
+
+**Widget 模式（推荐使用 Tailwind）**：
+
+```javascript
+container.innerHTML = `
+  <div class="relative h-full w-full rounded-xl overflow-hidden glass">
+    <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent"></div>
+    <div class="relative z-10 h-full flex flex-col p-3">
+      <h3 class="text-xs font-semibold text-gray-700 dark:text-gray-300">标题</h3>
+    </div>
+  </div>
+`;
+```
+
+**Page 模式（推荐使用内联样式 + tapp-\* 类）**：
+
+```javascript
+var card = document.createElement("div");
+card.style.cssText = `
+  background: ${isDark ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.7)"};
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: calc(24px * var(--tapp-scale, 1));
+`;
+card.className = "tapp-transition"; // 使用内置工具类
+```
+
+---
+
+### 内置响应式工具类（`tapp-*` 前缀）
+
+沙箱预置了带 `tapp-` 前缀的响应式工具类，**两种模式都可用**。这些类会根据容器尺寸自动缩放：
 
 #### 文字尺寸
 
@@ -1504,6 +1823,16 @@ Tapp 页面模式下，框架自动提供**背景层**和**内容层**的分层�
 | left   | 16px | 左侧边距                   |
 | right  | 16px | 右侧边距                   |
 | bottom | 0    | 底部无需额外间距           |
+
+### 样式规范（Page 模式）
+
+Page 模式运行在独立沙箱中，**没有预加载 Tailwind**，因此需要使用以下方式编写样式：
+
+1. **内联 `style` 属性**（推荐）：直接在元素上设置样式
+2. **`tapp-*` 工具类**：沙箱内置的响应式工具类
+3. **CSS 变量**：如 `var(--tapp-scale)`, `var(--tapp-font-scale)` 等
+
+> ⚠️ **不要使用**：Tailwind 类（如 `flex`, `p-4`, `dark:bg-*`）在 Page 模式下不可用。
 
 ### 使用方式
 
@@ -1882,13 +2211,15 @@ Tapp.widgets["my-widget"] = {
 
 ---
 
-### 样式规范
+### 样式规范（Widget 模式）
 
 > 以下样式规范基于 Myriad 内置小组件的实际实现，遵循这些规范可确保 Tapp 小组件与系统风格一致。
+>
+> ⚠️ **注意**：本节使用的 Tailwind 类（如 `glass`, `rounded-xl`, `dark:` 前缀等）**仅在 Widget 模式下可用**。Page 模式请参考「页面分层架构」章节使用内联样式。
 
 #### 核心样式特征
 
-Myriad 小组件采用**毛玻璃（Glass）风格**设计，主要特征：
+Myriad 小组件采用**毛玻璃（Glass）风格**设计，主要特征（使用 Tailwind 类）：
 
 | 特征       | 实现方式                                           |
 | ---------- | -------------------------------------------------- |
@@ -2422,6 +2753,49 @@ Tapp.lifecycle.onReady(async () => {
 });
 ```
 
+### 通知系统示例
+
+通知（Toast）以 Glass Morphism 风格显示在页面顶部，会自动显示 Tapp 来源信息：
+
+```javascript
+// 成功通知 - 绿色配色
+await Tapp.ui.showNotification({
+  title: "保存成功",
+  message: "您的设置已保存",
+  type: "success",
+  duration: 3000,
+});
+
+// 错误通知 - 红色配色
+await Tapp.ui.showNotification({
+  title: "操作失败",
+  message: "网络连接超时，请重试",
+  type: "error",
+  duration: 5000, // 错误信息可以显示更久
+});
+
+// 警告通知 - 橙色配色
+await Tapp.ui.showNotification({
+  title: "注意",
+  message: "即将达到存储限制",
+  type: "warning",
+});
+
+// 信息通知 - 蓝色配色
+await Tapp.ui.showNotification({
+  message: "提示：按 F11 进入全屏模式",
+  type: "info",
+});
+```
+
+通知 UI 特点：
+
+- **Glass Morphism 风格**：磨砂玻璃背景，与页面信息条保持一致
+- **自动 Tapp 标识**：显示 Tapp 图标和名称，便于用户识别来源
+- **类型区分**：四种类型对应不同配色和图标
+- **悬停暂停**：鼠标悬停时暂停自动关闭计时器
+- **响应式**：适配移动端和桌面端显示
+
 ### 数据统计小组件（Glass 风格）
 
 ```javascript
@@ -2766,6 +3140,439 @@ console.log(runtime.getAllTapps());
 
 ---
 
+## AI 辅助开发指南
+
+> **本章节专为 AI 代码生成工具设计**，提供生成 Tapp 代码时的关键规范和注意事项。
+
+### 代码生成规范
+
+#### 必须遵循的规则
+
+1. **支持原生 ES6+ 语法**：Tapp 沙箱直接在现代浏览器中运行，完全支持 ES6+ 语法：
+
+   - ✅ `const`/`let` 块级作用域
+   - ✅ 箭头函数 `() => {}`
+   - ✅ 模板字符串 `` `${var}` ``
+   - ✅ 解构赋值 `{ a, b } = obj`
+   - ✅ `class` 语法
+   - ✅ `async`/`await`
+   - ✅ 可选链 `?.` 和空值合并 `??`
+   - ❌ `import`/`export` → 不支持 ES Modules，使用全局对象 `Tapp.widgets`、`Tapp.pages`
+   - ❌ 顶层 `await` → 代码在 IIFE 中执行，需在 async 函数内使用
+
+2. **三段式代码结构**：
+
+   ```
+   CORE_CODE   → 共享工具函数（两种模式都加载）
+   WIDGET_CODE → Widget 渲染函数（仅 Widget 模式）
+   PAGE_CODE   → 页面渲染 + 生命周期（仅 Page 模式）
+   ```
+
+3. **Widget 渲染函数必须挂载到全局**：
+
+   ```javascript
+   // ✅ 正确
+   Tapp.widgets['my-widget'] = {
+     render: function(container, props) { ... }
+   };
+
+   // ❌ 错误（函数不会被调用）
+   function renderWidget(container, props) { ... }
+   ```
+
+4. **生命周期只在 PAGE_CODE 中使用**：
+
+   ```javascript
+   // PAGE_CODE 中
+   Tapp.lifecycle.onReady(function () {
+     // Widget 模式不会执行这里的代码
+   });
+   ```
+
+5. **必须使用 Tapp.dom API 防止 XSS**：
+
+   ```javascript
+   // ❌ 危险
+   container.innerHTML = "<div>" + userData + "</div>";
+
+   // ✅ 安全
+   var div = Tapp.dom.createElement("div", { text: userData });
+   container.appendChild(div);
+   ```
+
+#### API 调用签名速查
+
+| API                      | 正确签名                                   | 常见错误                          |
+| ------------------------ | ------------------------------------------ | --------------------------------- |
+| `Tapp.ui.confirm`        | `confirm(message)`                         | ~~`confirm({ title, message })`~~ |
+| `Tapp.ai.chat`           | `chat(messages, context, options)`         | ~~`chat({ messages, context })`~~ |
+| `Tapp.shortcut.register` | `{ id, keys, description, action, scope }` | ~~`{ handler: function() {} }`~~  |
+| `Tapp.storage.get/set`   | 返回 Promise                               | 忘记 `await`                      |
+| `Tapp.platform.getData`  | `getData(platform, { limit, offset })`     | 忘记 options 参数                 |
+
+#### Widget 渲染函数 Props 参数
+
+```javascript
+Tapp.widgets["example"] = {
+  render: function (container, props) {
+    // props 包含以下字段：
+    var size = props.size; // '1x1' | '2x1' | '2x2' | '4x2' | '4x4'
+    var theme = props.theme; // 'light' | 'dark'
+    var scale = props.scale || 1; // 缩放比例 0.1-2
+    var fontScale = props.fontScale || 1; // 字体缩放 0.6-1.2
+    var locale = props.locale; // 'zh-CN' | 'en-US' | 'ja-JP'
+    var isEditMode = props.isEditMode; // 是否编辑模式
+    var isPreview = props.isPreview; // 是否预览模式
+    var config = props.config; // 用户配置对象
+  },
+};
+```
+
+### 样式生成规范
+
+> ⚠️ **重要**：Widget 模式和 Page 模式的样式支持不同，生成代码时必须区分！
+
+| 模式   | Tailwind 类 | `tapp-*` 工具类 | 内联 style | CSS 变量 |
+| ------ | ----------- | --------------- | ---------- | -------- |
+| Widget | ✅ 可用     | ✅ 可用         | ✅ 可用    | ✅ 可用  |
+| Page   | ❌ 不可用   | ✅ 可用         | ✅ 推荐    | ✅ 可用  |
+
+#### Widget 模式 - Glass 风格必备元素
+
+Widget 可以使用完整 Tailwind 类（因为继承主应用样式表）：
+
+```javascript
+// 标准 Widget 容器结构（使用 Tailwind）
+container.innerHTML =
+  '<div class="relative h-full w-full rounded-xl overflow-hidden glass">' +
+  // 1. 渐变装饰层（必须）
+  '<div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent"></div>' +
+  // 2. 主内容区（z-10 确保在装饰层之上）
+  '<div class="relative z-10 h-full flex flex-col p-3">' +
+  "<!-- 内容 -->" +
+  "</div>" +
+  // 3. 编辑模式边框（必须）
+  (props.isEditMode
+    ? '<div class="absolute inset-0 border-2 border-dashed border-blue-400 rounded-xl pointer-events-none"></div>'
+    : "") +
+  "</div>";
+```
+
+#### Page 模式 - 使用内联样式
+
+Page 模式没有 Tailwind，必须使用内联样式：
+
+```javascript
+// Page 容器结构（使用内联样式 + tapp-* 工具类）
+var card = document.createElement("div");
+card.className = "tapp-transition"; // 内置工具类可用
+card.style.cssText = `
+  position: relative;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: ${isDark ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.6)"};
+  backdrop-filter: blur(12px);
+  padding: calc(12px * var(--tapp-scale, 1));
+`;
+```
+
+#### 响应式样式使用 scale 变量
+
+```javascript
+// ✅ 正确：使用 scale 和 fontScale
+element.style.padding = 12 * props.scale + "px";
+element.style.fontSize = 14 * props.fontScale + "px";
+element.style.gap = 8 * props.scale + "px";
+
+// ❌ 错误：硬编码像素值
+element.style.padding = "12px";
+```
+
+#### 暗色模式适配
+
+```javascript
+var isDark = props.theme === "dark";
+
+// 背景色
+var bgColor = isDark ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.6)";
+
+// 文字色
+var textColor = isDark ? "#f3f4f6" : "#1f2937";
+var subtextColor = isDark ? "#9ca3af" : "#6b7280";
+
+// 边框色
+var borderColor = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)";
+```
+
+### 权限声明规范
+
+#### 按需声明最小权限
+
+```json
+{
+  "permissions": [
+    "storage", // 需要存储数据时
+    "ui:notification", // 需要显示通知时
+    "platform:read", // 需要读取平台数据时
+    "widget:register" // 需要注册小组件时
+  ]
+}
+```
+
+#### 权限与 API 对应关系
+
+| 权限              | 可用 API                                  | 用户角色 |
+| ----------------- | ----------------------------------------- | -------- |
+| `storage`         | `Tapp.storage.*`, `Tapp.settings.*`       | 所有用户 |
+| `ui:notification` | `Tapp.ui.showNotification()`              | 所有用户 |
+| `ui:theme`        | `Tapp.ui.getTheme()`, `getPrimaryColor()` | 所有用户 |
+| `platform:read`   | `Tapp.platform.getData()`, `getStats()`   | 所有用户 |
+| `platform:write`  | `Tapp.platform.addItem()`                 | 仅管理员 |
+| `ai:generate`     | `Tapp.ai.generate()`                      | 仅管理员 |
+| `ai:chat`         | `Tapp.ai.chat()`                          | 仅管理员 |
+| `network:fetch`   | `Tapp.fetch.proxy()`                      | 仅管理员 |
+| `widget:register` | `Tapp.widget.register()`                  | 所有用户 |
+
+### 常见生成错误及修正
+
+#### 错误 1：使用 ES Modules 语法
+
+```javascript
+// ❌ 错误：不支持 ES Modules
+import { something } from "./module";
+export const myFunction = () => {};
+
+// ✅ 修正：使用全局对象
+Tapp.widgets["my-widget"] = {
+  render: (container, props) => {
+    /* ... */
+  },
+};
+```
+
+#### 推荐用法：使用现代 ES6+ 语法
+
+```javascript
+// ✅ 完全支持 ES6+ 语法
+const data = await Tapp.storage.get("key");
+const items = data?.items ?? [];
+items.forEach((item) => console.log(item));
+
+// ✅ 使用 async/await
+const fetchData = async () => {
+  const result = await Tapp.platform.getData("netease");
+  return result;
+};
+```
+
+#### 错误 2：直接使用 innerHTML 渲染用户数据
+
+```javascript
+// ❌ 错误（XSS 漏洞）
+container.innerHTML = "<h1>" + userName + "</h1>";
+
+// ✅ 修正
+var h1 = document.createElement("h1");
+Tapp.dom.setText(h1, userName);
+container.appendChild(h1);
+```
+
+#### 错误 3：在 Widget 代码中使用生命周期
+
+```javascript
+// ❌ 错误（Widget 模式不执行 onReady）
+// WIDGET_CODE 中：
+Tapp.lifecycle.onReady(function () {
+  // 这里的代码不会运行！
+});
+
+// ✅ 修正：Widget 渲染函数直接执行初始化
+Tapp.widgets["my-widget"] = {
+  render: function (container, props) {
+    // 直接在这里初始化
+  },
+};
+```
+
+#### 错误 4：忘记处理异步 API
+
+```javascript
+// ❌ 错误（data 是 Promise，不是实际数据）
+var data = Tapp.storage.get("key");
+console.log(data.value);
+
+// ✅ 修正（使用 async/await 或 .then）
+Tapp.widgets["my-widget"] = {
+  render: async function (container, props) {
+    var data = await Tapp.storage.get("key");
+    console.log(data);
+  },
+};
+```
+
+#### 错误 5：在 CORE_CODE 中定义 Widget
+
+```javascript
+// ❌ 错误（CORE_CODE 在 Widget 渲染前执行，挂载会被覆盖）
+// CORE_CODE 中：
+Tapp.widgets['my-widget'] = { ... };
+
+// ✅ 修正（Widget 定义必须在 WIDGET_CODE 中）
+// WIDGET_CODE 中：
+Tapp.widgets['my-widget'] = {
+  render: function(container, props) { ... }
+};
+```
+
+### 代码模板
+
+#### 最小 Widget 模板
+
+```javascript
+// === CORE_CODE ===
+function formatNumber(num) {
+  return num.toLocaleString();
+}
+
+// === WIDGET_CODE ===
+Tapp.widgets["my-widget"] = {
+  render: async function (container, props) {
+    var isDark = props.theme === "dark";
+    var scale = props.scale || 1;
+    var fontScale = props.fontScale || 1;
+
+    container.innerHTML =
+      '<div class="relative h-full w-full rounded-xl overflow-hidden glass">' +
+      '<div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent"></div>' +
+      '<div class="relative z-10 h-full flex items-center justify-center p-3" style="padding:' +
+      12 * scale +
+      'px;">' +
+      '<span class="font-bold" style="font-size:' +
+      24 * fontScale +
+      "px;color:" +
+      (isDark ? "#f3f4f6" : "#1f2937") +
+      ';">' +
+      "Hello World" +
+      "</span>" +
+      "</div>" +
+      (props.isEditMode
+        ? '<div class="absolute inset-0 border-2 border-dashed border-blue-400 rounded-xl pointer-events-none"></div>'
+        : "") +
+      "</div>";
+  },
+};
+
+// === PAGE_CODE ===
+Tapp.lifecycle.onReady(async function () {
+  await Tapp.widget.register({
+    id: "my-widget",
+    name: "我的小组件",
+    defaultSize: "2x2",
+    sizes: ["1x1", "2x2", "4x2"],
+  });
+});
+```
+
+#### 最小 Page 模板
+
+```javascript
+// === CORE_CODE ===
+var i18n = {
+  "zh-CN": { title: "我的页面", greeting: "你好！" },
+  "en-US": { title: "My Page", greeting: "Hello!" },
+};
+
+function t(key, locale) {
+  var lang = i18n[locale] || i18n["zh-CN"];
+  return lang[key] || key;
+}
+
+// === PAGE_CODE ===
+Tapp.pages["my-page"] = {
+  render: function (container, locale, isDark, primaryColor) {
+    var bgLayer = document.getElementById("tapp-background");
+    var contentLayer = document.getElementById("tapp-content");
+
+    // 背景层
+    if (bgLayer) {
+      bgLayer.style.background = isDark ? "#0a0a0a" : "#f8fafc";
+    }
+
+    // 内容层
+    if (contentLayer) {
+      contentLayer.innerHTML =
+        '<div style="max-width:900px;margin:0 auto;padding:24px;">' +
+        '<h1 style="font-size:32px;color:' +
+        (isDark ? "#f9fafb" : "#1f2937") +
+        ';">' +
+        Tapp.dom.escapeHtml(t("title", locale)) +
+        "</h1>" +
+        '<p style="color:' +
+        (isDark ? "#9ca3af" : "#6b7280") +
+        ';">' +
+        Tapp.dom.escapeHtml(t("greeting", locale)) +
+        "</p>" +
+        "</div>";
+    }
+  },
+};
+
+Tapp.lifecycle.onReady(async function () {
+  var locale = await Tapp.ui.getLocale();
+  var theme = await Tapp.ui.getTheme();
+  var primaryColor = await Tapp.ui.getPrimaryColor();
+
+  Tapp.pages["my-page"].render(
+    document.getElementById("tapp-root"),
+    locale,
+    theme === "dark",
+    primaryColor
+  );
+
+  // 监听变化
+  Tapp.ui.onThemeChange(function (newTheme) {
+    Tapp.pages["my-page"].render(
+      null,
+      locale,
+      newTheme === "dark",
+      primaryColor
+    );
+  });
+
+  Tapp.ui.onLocaleChange(function (newLocale) {
+    locale = newLocale;
+    Tapp.pages["my-page"].render(null, locale, theme === "dark", primaryColor);
+  });
+});
+```
+
+### 生成检查清单
+
+生成 Tapp 代码后，请检查以下项目：
+
+**代码结构**：
+
+- [ ] 是否避免使用 ES Modules？（无 import/export，使用 Tapp.widgets/Tapp.pages）
+- [ ] Widget 渲染函数是否挂载到 `Tapp.widgets['id']`？
+- [ ] 代码是否正确分布在 CORE/WIDGET/PAGE 三段中？
+
+**样式规范**（⚠️ 重要）：
+
+- [ ] **Widget 代码**是否使用 Tailwind 类？（Widget 模式可用）
+- [ ] **Page 代码**是否使用内联 style + `tapp-*` 工具类？（Page 模式不支持 Tailwind）
+- [ ] 是否处理了 `props.theme` 暗色模式？
+- [ ] 是否使用了 `props.scale`/`props.fontScale` 进行缩放？
+- [ ] 是否添加了编辑模式边框 `props.isEditMode`？
+
+**安全与权限**：
+
+- [ ] 用户输入是否使用了 `Tapp.dom` API 安全渲染？
+- [ ] 异步 API 是否正确使用了 `await`？
+- [ ] 权限声明是否只包含必需的权限？
+
+---
+
 ## 常见问题
 
 ### Q: 为什么我的网络请求失败？
@@ -2795,6 +3602,48 @@ A: 系统会过滤可能的注入攻击。避免在提示词中包含：外部 U
 ---
 
 ## 更新日志
+
+### 2025-12-06 - 样式规范文档修正
+
+#### 样式系统澄清
+
+- 📝 新增「样式系统概述」章节：明确 Widget 和 Page 模式的样式支持差异
+- 📝 Widget 模式：完全支持 Tailwind CSS 类（继承主应用样式表）
+- 📝 Page 模式：推荐使用内联 style + `tapp-*` 工具类（沙箱无 Tailwind）
+- 📝 更新「样式规范」章节标题为「样式规范（Widget 模式）」
+- 📝 新增「样式规范（Page 模式）」章节说明
+- 📝 更新 AI 辅助开发指南中的样式生成规范和检查清单
+
+#### API 文档修正
+
+- 🔧 修正 `Tapp.ui.confirm()` 签名：接受字符串参数而非对象
+- 🔧 修正 `Tapp.ai.chat()` 签名：接受三个独立参数 `(messages, context, options)` 而非单个对象
+- 🔧 修正 `Tapp.shortcut.register()` 配置：使用 `action` 字符串而非 `handler` 回调函数
+- 📝 补充 `Tapp.report.list()` 和 `Tapp.report.get()` 简便方法文档
+- 📝 补充快捷键触发事件监听说明
+
+#### 动态内容 API
+
+- 🆕 `Tapp.dynamicContent.set()`：设置控制岛动态内容
+- 🆕 `Tapp.dynamicContent.update()`：快速更新动态内容文本
+- 🆕 `Tapp.dynamicContent.get()`：获取当前动态内容
+- 🆕 `Tapp.dynamicContent.remove()`：移除动态内容
+- 🆕 多语言支持：`i18n` 参数支持 `text` 和 `subtext` 的多语言映射
+- 🆕 过期时间：`expiresAt` 参数支持自动过期移除
+- 自动后台需求：设置动态内容时自动声明 `notification` 后台需求
+
+#### 控制岛动画优化
+
+- 🎨 歌词切换淡入淡出效果：文本切换时添加平滑过渡动画
+- 🎨 CSS 类 `.lyric-transition`：用于歌词切换时的淡出效果
+- ⚡ 优化歌词更新逻辑：减少不必要的状态更新，提升性能
+
+#### hasPage 页面模块文档完善
+
+- 📝 完善 `hasPage` 配置文档：补充页面模块的作用说明
+- 📝 新增「何时声明 hasPage」使用场景指南
+- 📝 新增「代码结构要求」示例：展示 PAGE_CODE 的基本结构
+- 📝 添加页面分层架构章节的交叉引用
 
 ### 2025-12-05 - 主色调 API & 后台运行需求系统
 
