@@ -226,10 +226,17 @@ Tapp.widgets['ai-chat'] = {
             {},
             { maxTokens: 500 }
           ).then(function(resp) {
-            console.log('[AI Chat Widget] Response:', resp);
-            if (resp && resp.success && resp.message) {
+            console.log('[AI Chat Widget] Raw Response:', JSON.stringify(resp, null, 2));
+            console.log('[AI Chat Widget] resp.success:', resp?.success);
+            console.log('[AI Chat Widget] resp.message:', resp?.message);
+            
+            // 兼容两种响应格式
+            var aiMessage = resp?.message || resp;
+            var content = aiMessage?.content;
+            
+            if (content) {
               // 显示简短回复
-              var reply = resp.message.content || resp.message;
+              var reply = content;
               if (typeof reply === 'string' && reply.length > 50) {
                 reply = reply.substring(0, 50) + '...';
               }
@@ -243,7 +250,7 @@ Tapp.widgets['ai-chat'] = {
                 statusEl.style.color = colors.subtext;
               }, 3000);
             } else {
-              throw new Error(resp.error || 'Unknown error');
+              throw new Error(resp?.error || 'No content in response');
             }
           }).catch(function(err) {
             console.error('[AI Chat Widget] Error:', err);
@@ -467,12 +474,15 @@ Tapp.widgets['ai-chat'] = {
 
           Tapp.ai.chat(chatMessages, {}, { maxTokens: 500 })
             .then(function(resp) {
+              console.log('[AI Chat Widget 4x4] Raw Response:', JSON.stringify(resp, null, 2));
               msgArea.removeChild(loadingBubble);
-              if (resp && resp.success && resp.message) {
-                var reply = resp.message.content || resp.message;
-                addWidgetMessage('assistant', reply);
+              // 兼容两种响应格式
+              var aiMessage = resp?.message || resp;
+              var content = aiMessage?.content;
+              if (content) {
+                addWidgetMessage('assistant', content);
               } else {
-                throw new Error(resp.error || 'Unknown error');
+                throw new Error(resp?.error || 'No content in response');
               }
             })
             .catch(function(err) {
@@ -943,13 +953,16 @@ async function sendMessage() {
     var loadingIndicator = document.getElementById('loading-indicator');
     if (loadingIndicator) loadingIndicator.remove();
 
-    if (response && response.success && response.message) {
-      var aiReply = response.message.content || response.message;
-      pageState.messages.push({ role: 'assistant', content: aiReply });
+    console.log('[AI Chat Page] Raw Response:', JSON.stringify(response, null, 2));
+    // 兼容两种响应格式
+    var aiMessage = response?.message || response;
+    var content = aiMessage?.content;
+    if (content) {
+      pageState.messages.push({ role: 'assistant', content: content });
       saveHistory();
       renderMessages();
     } else {
-      throw new Error(response.error || 'Unknown error');
+      throw new Error(response?.error || 'No content in response');
     }
   } catch (err) {
     console.error('[AI Chat] 发送失败:', err);
