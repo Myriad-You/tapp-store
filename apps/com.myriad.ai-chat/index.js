@@ -106,177 +106,219 @@ function escapeHtml(text) {
 
 console.log('[AI Chat] 核心模块已加载');
 
+// ========== 动画工具 ==========
+function createKeyframes() {
+  if (document.getElementById('ai-chat-keyframes')) return;
+  var style = document.createElement('style');
+  style.id = 'ai-chat-keyframes';
+  style.textContent = [
+    '@keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }',
+    '@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }',
+    '@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }',
+    '@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }',
+    '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }',
+    '@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }',
+    '@keyframes typingDot { 0%, 60%, 100% { opacity: 0.3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-4px); } }',
+    '@keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }',
+    '@keyframes slideInRight { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }',
+    '@keyframes slideInLeft { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }',
+    '@keyframes glowPulse { 0%, 100% { box-shadow: 0 0 0 0 var(--glow-color, rgba(139, 92, 246, 0.4)); } 50% { box-shadow: 0 0 20px 4px var(--glow-color, rgba(139, 92, 246, 0.2)); } }',
+  ].join('\n');
+  document.head.appendChild(style);
+}
 
 // ========== WIDGET ==========
 console.log('[AI Chat] 注册 Widget...');
 
 Tapp.widgets['ai-chat'] = {
   render: function(container, props) {
-    console.log('[AI Chat Widget] 渲染, 尺寸:', props.size);
-    console.log('[AI Chat Widget] props:', JSON.stringify(props));
-    console.log('[AI Chat Widget] container 尺寸:', container.offsetWidth, 'x', container.offsetHeight);
-    console.log('[AI Chat Widget] _TAPP_DIMENSIONS:', JSON.stringify(window._TAPP_DIMENSIONS));
-    
     try {
+      createKeyframes();
+      
       var isDark = props.theme === 'dark';
       var themeColor = props.primaryColor || '#8b5cf6';
       var size = props.size || '4x2';
       var isCompact = size === '4x2';
-      // 从全局尺寸对象获取 scale（由 TappSandbox 自动计算并注入）
       var dims = window._TAPP_DIMENSIONS || {};
       var scale = dims.scale || props.scale || 1;
       var fontScale = dims.fontScale || props.fontScale || 1;
-      
-      console.log('[AI Chat Widget] isDark:', isDark, 'scale:', scale, 'fontScale:', fontScale);
       
       currentLocale = normalizeLocale(props.locale);
       var colors = getThemeColors(isDark, themeColor);
 
       container.innerHTML = '';
-      // 不覆盖容器的定位样式，只设置必要的属性
-      // container 已经由 TappSandbox 设置好了 position 和尺寸
 
-      // 主容器 - 使用 Tailwind (Widget 模式可用)
+      // ========== 主容器 ==========
       var main = document.createElement('div');
-      main.className = 'relative h-full w-full rounded-xl overflow-hidden';
-      // 使用更明显的背景色（调试用，确保可见性）
-      var bgColor = isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(248, 250, 252, 0.95)';
-      main.style.cssText = 
-        'position:absolute;inset:0;' +
-        'background:' + bgColor + ';' +
-        'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);' +
-        'border:1px solid ' + colors.border + ';';
+      main.style.cssText = [
+        'position:absolute;inset:0;border-radius:' + (16 * scale) + 'px;overflow:hidden',
+        'background:' + (isDark ? 'linear-gradient(145deg, rgba(15,23,42,0.95), rgba(30,41,59,0.9))' : 'linear-gradient(145deg, rgba(255,255,255,0.98), rgba(248,250,252,0.95))'),
+        'backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)',
+        'border:1px solid ' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'),
+        'box-shadow:' + (isDark ? '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)' : '0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)'),
+        'animation:scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
+      ].join(';');
 
-      // 渐变装饰
+      // 装饰渐变
       var gradient = document.createElement('div');
-      gradient.className = 'absolute inset-0 pointer-events-none';
-      gradient.style.background = 'linear-gradient(135deg,' + colors.primary + '08,transparent 60%)';
+      gradient.style.cssText = [
+        'position:absolute;inset:0;pointer-events:none;opacity:0.6',
+        'background:radial-gradient(ellipse at top right, ' + colors.primary + '15 0%, transparent 50%), radial-gradient(ellipse at bottom left, ' + colors.primary + '08 0%, transparent 40%)'
+      ].join(';');
       main.appendChild(gradient);
 
-      // 内容区
+      // 顶部光效线
+      var glowLine = document.createElement('div');
+      glowLine.style.cssText = [
+        'position:absolute;top:0;left:10%;right:10%;height:1px',
+        'background:linear-gradient(90deg, transparent, ' + colors.primary + '60, transparent)',
+        'opacity:0.8'
+      ].join(';');
+      main.appendChild(glowLine);
+
       var content = document.createElement('div');
-      content.className = 'relative z-10 h-full';
+      content.style.cssText = 'position:relative;z-index:10;height:100%;display:flex;flex-direction:column;';
 
       if (isCompact) {
-        // ===== 4x2 紧凑布局 =====
-        content.className = 'relative z-10 h-full flex items-center gap-3';
-        content.style.padding = (12 * scale) + 'px ' + (16 * scale) + 'px';
+        // ========== 4x2 紧凑布局 ==========
+        content.style.cssText = 'position:relative;z-index:10;height:100%;display:flex;align-items:center;gap:' + (12 * scale) + 'px;padding:' + (14 * scale) + 'px ' + (16 * scale) + 'px;';
 
-        // 图标
-        var icon = document.createElement('div');
-        icon.className = 'flex-shrink-0 flex items-center justify-center rounded-xl';
-        icon.style.cssText = 
-          'width:' + (40 * scale) + 'px;height:' + (40 * scale) + 'px;' +
-          'font-size:' + (20 * scale) + 'px;' +
-          'background:linear-gradient(135deg,' + colors.primary + '30,' + colors.primary + '10);';
-        icon.textContent = '🤖';
-        content.appendChild(icon);
+        // AI 图标（带呼吸动画）
+        var iconWrap = document.createElement('div');
+        iconWrap.style.cssText = [
+          'flex-shrink:0;width:' + (44 * scale) + 'px;height:' + (44 * scale) + 'px',
+          'border-radius:' + (14 * scale) + 'px;display:flex;align-items:center;justify-content:center',
+          'background:linear-gradient(135deg, ' + colors.primary + ', ' + colors.primary + 'cc)',
+          'box-shadow:0 4px 16px ' + colors.primary + '40',
+          'animation:glowPulse 3s ease-in-out infinite',
+          '--glow-color:' + colors.primary + '40'
+        ].join(';');
+        iconWrap.innerHTML = '<svg width="' + (22 * scale) + '" height="' + (22 * scale) + '" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M12 8V4H8"/><rect x="8" y="8" width="8" height="8" rx="2"/><path d="M12 16v4h4"/><circle cx="12" cy="12" r="2"/></svg>';
+        content.appendChild(iconWrap);
 
-        // 输入区
-        var inputWrap = document.createElement('div');
-        inputWrap.className = 'flex-1 min-w-0';
+        // 输入区域容器
+        var inputContainer = document.createElement('div');
+        inputContainer.style.cssText = 'flex:1;min-width:0;position:relative;';
 
+        // 输入框
         var input = document.createElement('input');
         input.type = 'text';
         input.placeholder = t('placeholder');
-        input.className = 'w-full outline-none transition-all duration-200';
-        input.style.cssText = 
-          'padding:' + (10 * scale) + 'px ' + (14 * scale) + 'px;' +
-          'border-radius:' + (10 * scale) + 'px;' +
-          'font-size:' + (14 * fontScale) + 'px;' +
-          'background:' + colors.inputBg + ';' +
-          'border:1px solid ' + colors.border + ';' +
-          'color:' + colors.text + ';';
+        input.style.cssText = [
+          'width:100%;padding:' + (12 * scale) + 'px ' + (16 * scale) + 'px',
+          'border-radius:' + (12 * scale) + 'px;font-size:' + (14 * fontScale) + 'px',
+          'background:' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)'),
+          'border:1.5px solid ' + (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'),
+          'color:' + colors.text + ';outline:none',
+          'transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+          'font-family:inherit'
+        ].join(';');
         
         input.onfocus = function() {
           input.style.borderColor = colors.primary;
-          input.style.boxShadow = '0 0 0 3px ' + colors.primary + '20';
+          input.style.boxShadow = '0 0 0 4px ' + colors.primary + '20, 0 2px 8px ' + colors.primary + '15';
+          input.style.background = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.9)';
         };
         input.onblur = function() {
-          input.style.borderColor = colors.border;
+          input.style.borderColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)';
           input.style.boxShadow = 'none';
+          input.style.background = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)';
         };
-        inputWrap.appendChild(input);
-        content.appendChild(inputWrap);
+        inputContainer.appendChild(input);
+
+        // 回复显示区（初始隐藏）
+        var replyArea = document.createElement('div');
+        replyArea.style.cssText = [
+          'display:none;padding:' + (10 * scale) + 'px ' + (14 * scale) + 'px',
+          'background:' + (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)'),
+          'border-radius:' + (10 * scale) + 'px;font-size:' + (13 * fontScale) + 'px',
+          'color:' + colors.text + ';line-height:1.5;max-height:100%;overflow:hidden',
+          'animation:fadeIn 0.3s ease-out'
+        ].join(';');
+        inputContainer.appendChild(replyArea);
+        content.appendChild(inputContainer);
 
         // 发送按钮
         var sendBtn = document.createElement('button');
-        sendBtn.className = 'flex-shrink-0 flex items-center justify-center border-none cursor-pointer transition-opacity duration-200';
-        sendBtn.style.cssText = 
-          'width:' + (40 * scale) + 'px;height:' + (40 * scale) + 'px;' +
-          'border-radius:' + (10 * scale) + 'px;' +
-          'background:' + colors.primary + ';';
-        sendBtn.innerHTML = '<svg width="' + (16 * scale) + '" height="' + (16 * scale) + '" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
+        sendBtn.style.cssText = [
+          'flex-shrink:0;width:' + (44 * scale) + 'px;height:' + (44 * scale) + 'px',
+          'border-radius:' + (12 * scale) + 'px;border:none;cursor:pointer',
+          'background:linear-gradient(135deg, ' + colors.primary + ', ' + colors.primary + 'dd)',
+          'display:flex;align-items:center;justify-content:center',
+          'transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          'box-shadow:0 4px 12px ' + colors.primary + '30'
+        ].join(';');
+        sendBtn.innerHTML = '<svg width="' + (18 * scale) + '" height="' + (18 * scale) + '" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
         
-        sendBtn.onmouseenter = function() { sendBtn.style.opacity = '0.85'; };
-        sendBtn.onmouseleave = function() { sendBtn.style.opacity = '1'; };
+        sendBtn.onmouseenter = function() {
+          if (!sending) {
+            sendBtn.style.transform = 'scale(1.05)';
+            sendBtn.style.boxShadow = '0 6px 20px ' + colors.primary + '50';
+          }
+        };
+        sendBtn.onmouseleave = function() {
+          sendBtn.style.transform = 'scale(1)';
+          sendBtn.style.boxShadow = '0 4px 12px ' + colors.primary + '30';
+        };
         content.appendChild(sendBtn);
 
-        // 状态元素
-        var statusEl = document.createElement('div');
-        statusEl.style.cssText = 'display:none;font-size:' + (12 * fontScale) + 'px;color:' + colors.subtext + ';';
-        content.appendChild(statusEl);
-
-        // 事件绑定
+        // 状态逻辑
         var sending = false;
         
+        function showLoading() {
+          input.style.display = 'none';
+          replyArea.style.display = 'block';
+          replyArea.innerHTML = '<div style="display:flex;align-items:center;gap:' + (6 * scale) + 'px;color:' + colors.subtext + '"><div style="display:flex;gap:3px;"><span style="width:6px;height:6px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite;animation-delay:0s"></span><span style="width:6px;height:6px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite;animation-delay:0.2s"></span><span style="width:6px;height:6px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite;animation-delay:0.4s"></span></div><span>' + t('sending') + '</span></div>';
+        }
+
+        function showReply(text) {
+          var displayText = text.length > 80 ? text.substring(0, 80) + '...' : text;
+          replyArea.innerHTML = '';
+          replyArea.style.animation = 'fadeIn 0.3s ease-out';
+          replyArea.textContent = displayText;
+          setTimeout(function() { resetInput(); }, 5000);
+        }
+
+        function showError(msg) {
+          replyArea.innerHTML = '<span style="color:#ef4444">❌ ' + msg + '</span>';
+          setTimeout(function() { resetInput(); }, 3000);
+        }
+
+        function resetInput() {
+          replyArea.style.display = 'none';
+          input.style.display = 'block';
+          input.style.animation = 'fadeIn 0.2s ease-out';
+          input.focus();
+        }
+
         function doSend() {
           var text = input.value.trim();
           if (!text || sending) return;
           
           sending = true;
-          sendBtn.style.opacity = '0.5';
+          sendBtn.style.opacity = '0.6';
           sendBtn.style.pointerEvents = 'none';
           input.value = '';
-          statusEl.textContent = t('sending');
-          statusEl.style.display = 'block';
-          inputWrap.style.display = 'none';
+          showLoading();
 
-          Tapp.ai.chat(
-            [{ role: 'user', content: text }],
-            {},
-            { maxTokens: 500 }
-          ).then(function(resp) {
-            console.log('[AI Chat Widget] Raw Response:', JSON.stringify(resp, null, 2));
-            console.log('[AI Chat Widget] resp.success:', resp?.success);
-            console.log('[AI Chat Widget] resp.message:', resp?.message);
-            
-            // 兼容两种响应格式
-            var aiMessage = resp?.message || resp;
-            var content = aiMessage?.content;
-            
-            if (content) {
-              // 显示简短回复
-              var reply = content;
-              if (typeof reply === 'string' && reply.length > 50) {
-                reply = reply.substring(0, 50) + '...';
+          Tapp.ai.chat([{ role: 'user', content: text }], {}, { maxTokens: 500 })
+            .then(function(resp) {
+              var aiMessage = resp?.message || resp;
+              var replyContent = aiMessage?.content;
+              if (replyContent) {
+                showReply(replyContent);
+              } else {
+                throw new Error(resp?.error || 'No content');
               }
-              statusEl.textContent = reply;
-              statusEl.style.color = colors.text;
-              
-              // 3秒后恢复输入
-              setTimeout(function() {
-                statusEl.style.display = 'none';
-                inputWrap.style.display = 'block';
-                statusEl.style.color = colors.subtext;
-              }, 3000);
-            } else {
-              throw new Error(resp?.error || 'No content in response');
-            }
-          }).catch(function(err) {
-            console.error('[AI Chat Widget] Error:', err);
-            statusEl.textContent = t('error') + ': ' + (err.message || err);
-            statusEl.style.color = '#ef4444';
-            setTimeout(function() {
-              statusEl.style.display = 'none';
-              inputWrap.style.display = 'block';
-              statusEl.style.color = colors.subtext;
-            }, 3000);
-          }).finally(function() {
-            sending = false;
-            sendBtn.style.opacity = '1';
-            sendBtn.style.pointerEvents = 'auto';
-          });
+            })
+            .catch(function(err) {
+              showError(err.message || t('error'));
+            })
+            .finally(function() {
+              sending = false;
+              sendBtn.style.opacity = '1';
+              sendBtn.style.pointerEvents = 'auto';
+            });
         }
 
         sendBtn.onclick = doSend;
@@ -288,170 +330,210 @@ Tapp.widgets['ai-chat'] = {
         };
 
       } else {
-        // ===== 4x4 完整布局 =====
-        content.className = 'relative z-10 h-full flex flex-col';
+        // ========== 4x4 完整布局 ==========
         
         // 头部
         var header = document.createElement('div');
-        header.className = 'flex items-center gap-2';
-        header.style.cssText = 
-          'padding:' + (12 * scale) + 'px ' + (14 * scale) + 'px;' +
-          'border-bottom:1px solid ' + colors.border + ';';
+        header.style.cssText = [
+          'display:flex;align-items:center;gap:' + (10 * scale) + 'px',
+          'padding:' + (14 * scale) + 'px ' + (16 * scale) + 'px',
+          'border-bottom:1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)')
+        ].join(';');
 
+        // 头部图标
         var headerIcon = document.createElement('div');
-        headerIcon.className = 'flex items-center justify-center rounded-lg';
-        headerIcon.style.cssText = 
-          'width:' + (32 * scale) + 'px;height:' + (32 * scale) + 'px;' +
-          'font-size:' + (16 * scale) + 'px;' +
-          'background:linear-gradient(135deg,' + colors.primary + '30,' + colors.primary + '10);';
-        headerIcon.textContent = '🤖';
+        headerIcon.style.cssText = [
+          'width:' + (34 * scale) + 'px;height:' + (34 * scale) + 'px',
+          'border-radius:' + (10 * scale) + 'px;display:flex;align-items:center;justify-content:center',
+          'background:linear-gradient(135deg, ' + colors.primary + '25, ' + colors.primary + '10)'
+        ].join(';');
+        headerIcon.innerHTML = '<svg width="' + (18 * scale) + '" height="' + (18 * scale) + '" viewBox="0 0 24 24" fill="none" stroke="' + colors.primary + '" stroke-width="2"><path d="M12 8V4H8"/><rect x="8" y="8" width="8" height="8" rx="2"/><path d="M12 16v4h4"/></svg>';
         header.appendChild(headerIcon);
 
         var headerTitle = document.createElement('span');
-        headerTitle.className = 'flex-1 font-semibold';
-        headerTitle.style.cssText = 'font-size:' + (14 * fontScale) + 'px;color:' + colors.text + ';';
+        headerTitle.style.cssText = 'flex:1;font-size:' + (15 * fontScale) + 'px;font-weight:600;color:' + colors.text;
         headerTitle.textContent = t('widgetTitle');
         header.appendChild(headerTitle);
 
-        var statusDot = document.createElement('div');
-        statusDot.style.cssText = 
-          'width:' + (6 * scale) + 'px;height:' + (6 * scale) + 'px;' +
-          'border-radius:50%;background:#22c55e;';
-        header.appendChild(statusDot);
+        // 状态指示器
+        var statusIndicator = document.createElement('div');
+        statusIndicator.style.cssText = [
+          'display:flex;align-items:center;gap:' + (6 * scale) + 'px',
+          'padding:' + (4 * scale) + 'px ' + (10 * scale) + 'px',
+          'background:' + (isDark ? 'rgba(34,197,94,0.15)' : 'rgba(34,197,94,0.1)'),
+          'border-radius:' + (20 * scale) + 'px;font-size:' + (11 * fontScale) + 'px;color:#22c55e'
+        ].join(';');
+        statusIndicator.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite"></span><span>Online</span>';
+        header.appendChild(statusIndicator);
         content.appendChild(header);
 
         // 消息区域
         var msgArea = document.createElement('div');
-        msgArea.className = 'flex-1 overflow-y-auto';
-        msgArea.style.cssText = 
-          'padding:' + (12 * scale) + 'px;' +
-          'display:flex;flex-direction:column;gap:' + (8 * scale) + 'px;';
-        
-        // 初始提示
+        msgArea.style.cssText = [
+          'flex:1;overflow-y:auto;overflow-x:hidden;padding:' + (12 * scale) + 'px',
+          'display:flex;flex-direction:column;gap:' + (10 * scale) + 'px',
+          'scroll-behavior:smooth'
+        ].join(';');
+
+        // 空状态
         var emptyState = document.createElement('div');
-        emptyState.className = 'flex-1 flex flex-col items-center justify-center text-center';
-        emptyState.style.padding = (16 * scale) + 'px';
+        emptyState.style.cssText = [
+          'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center',
+          'padding:' + (12 * scale) + 'px;animation:fadeIn 0.5s ease-out'
+        ].join(';');
 
         var emptyIcon = document.createElement('div');
-        emptyIcon.style.cssText = 'font-size:' + (28 * scale) + 'px;margin-bottom:' + (6 * scale) + 'px;opacity:0.5;';
-        emptyIcon.textContent = '💬';
+        emptyIcon.style.cssText = [
+          'width:' + (48 * scale) + 'px;height:' + (48 * scale) + 'px;margin-bottom:' + (10 * scale) + 'px',
+          'border-radius:' + (14 * scale) + 'px;display:flex;align-items:center;justify-content:center',
+          'background:linear-gradient(135deg, ' + colors.primary + '20, ' + colors.primary + '08)'
+        ].join(';');
+        emptyIcon.innerHTML = '<svg width="' + (24 * scale) + '" height="' + (24 * scale) + '" viewBox="0 0 24 24" fill="none" stroke="' + colors.primary + '" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>';
         emptyState.appendChild(emptyIcon);
 
         var emptyText = document.createElement('div');
-        emptyText.style.cssText = 'font-size:' + (12 * fontScale) + 'px;color:' + colors.subtext + ';';
+        emptyText.style.cssText = 'font-size:' + (12 * fontScale) + 'px;color:' + colors.subtext + ';margin-bottom:' + (12 * scale) + 'px;';
         emptyText.textContent = t('startChat');
         emptyState.appendChild(emptyText);
 
-        // 提示词按钮
-        var hintsRow = document.createElement('div');
-        hintsRow.className = 'flex flex-wrap justify-center gap-1';
-        hintsRow.style.marginTop = (10 * scale) + 'px';
-
-        var hints = t('hints');
-        hints.forEach(function(hint) {
+        // 快捷提示
+        var hintsWrap = document.createElement('div');
+        hintsWrap.style.cssText = 'display:flex;flex-wrap:wrap;justify-content:center;gap:' + (6 * scale) + 'px;';
+        t('hints').forEach(function(hint, i) {
           var hintBtn = document.createElement('button');
-          hintBtn.className = 'cursor-pointer transition-all duration-200 border-none';
-          hintBtn.style.cssText = 
-            'padding:' + (4 * scale) + 'px ' + (8 * scale) + 'px;' +
-            'border-radius:' + (6 * scale) + 'px;' +
-            'font-size:' + (10 * fontScale) + 'px;' +
-            'background:' + colors.cardBg + ';' +
-            'color:' + colors.subtext + ';';
+          hintBtn.style.cssText = [
+            'padding:' + (6 * scale) + 'px ' + (12 * scale) + 'px',
+            'border-radius:' + (8 * scale) + 'px;border:none;cursor:pointer',
+            'font-size:' + (11 * fontScale) + 'px;font-family:inherit',
+            'background:' + (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'),
+            'color:' + colors.subtext,
+            'transition:all 0.2s;animation:fadeInUp 0.3s ease-out both',
+            'animation-delay:' + (i * 0.05) + 's'
+          ].join(';');
           hintBtn.textContent = hint;
           hintBtn.onmouseenter = function() {
+            hintBtn.style.background = colors.primary + '20';
             hintBtn.style.color = colors.primary;
+            hintBtn.style.transform = 'translateY(-2px)';
           };
           hintBtn.onmouseleave = function() {
+            hintBtn.style.background = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)';
             hintBtn.style.color = colors.subtext;
+            hintBtn.style.transform = 'translateY(0)';
           };
           hintBtn.onclick = function() {
             inputEl.value = hint;
             inputEl.focus();
           };
-          hintsRow.appendChild(hintBtn);
+          hintsWrap.appendChild(hintBtn);
         });
-        emptyState.appendChild(hintsRow);
+        emptyState.appendChild(hintsWrap);
         msgArea.appendChild(emptyState);
         content.appendChild(msgArea);
 
         // 输入区域
         var inputArea = document.createElement('div');
-        inputArea.style.cssText = 
-          'padding:' + (10 * scale) + 'px ' + (12 * scale) + 'px;' +
-          'border-top:1px solid ' + colors.border + ';';
+        inputArea.style.cssText = [
+          'padding:' + (12 * scale) + 'px',
+          'border-top:1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'),
+          'background:' + (isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.5)')
+        ].join(';');
 
         var inputRow = document.createElement('div');
-        inputRow.className = 'flex items-center gap-2';
+        inputRow.style.cssText = 'display:flex;align-items:center;gap:' + (10 * scale) + 'px;';
 
         var inputEl = document.createElement('input');
         inputEl.type = 'text';
         inputEl.placeholder = t('placeholder');
-        inputEl.className = 'flex-1 outline-none transition-all duration-200';
-        inputEl.style.cssText = 
-          'padding:' + (10 * scale) + 'px ' + (14 * scale) + 'px;' +
-          'border-radius:' + (12 * scale) + 'px;' +
-          'font-size:' + (13 * fontScale) + 'px;' +
-          'background:' + colors.inputBg + ';' +
-          'border:1px solid ' + colors.border + ';' +
-          'color:' + colors.text + ';';
-
+        inputEl.style.cssText = [
+          'flex:1;padding:' + (11 * scale) + 'px ' + (14 * scale) + 'px',
+          'border-radius:' + (12 * scale) + 'px;font-size:' + (13 * fontScale) + 'px',
+          'background:' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)'),
+          'border:1.5px solid ' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'),
+          'color:' + colors.text + ';outline:none;font-family:inherit',
+          'transition:all 0.2s'
+        ].join(';');
         inputEl.onfocus = function() {
           inputEl.style.borderColor = colors.primary;
-          inputEl.style.boxShadow = '0 0 0 3px ' + colors.primary + '20';
+          inputEl.style.boxShadow = '0 0 0 3px ' + colors.primary + '15';
         };
         inputEl.onblur = function() {
-          inputEl.style.borderColor = colors.border;
+          inputEl.style.borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
           inputEl.style.boxShadow = 'none';
         };
         inputRow.appendChild(inputEl);
 
         var sendBtn = document.createElement('button');
-        sendBtn.className = 'flex-shrink-0 flex items-center justify-center border-none cursor-pointer transition-opacity duration-200';
-        sendBtn.style.cssText = 
-          'width:' + (36 * scale) + 'px;height:' + (36 * scale) + 'px;' +
-          'border-radius:' + (10 * scale) + 'px;' +
-          'background:' + colors.primary + ';';
-        sendBtn.innerHTML = '<svg width="' + (14 * scale) + '" height="' + (14 * scale) + '" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
-
-        sendBtn.onmouseenter = function() { sendBtn.style.opacity = '0.85'; };
-        sendBtn.onmouseleave = function() { sendBtn.style.opacity = '1'; };
+        sendBtn.style.cssText = [
+          'width:' + (38 * scale) + 'px;height:' + (38 * scale) + 'px',
+          'border-radius:' + (10 * scale) + 'px;border:none;cursor:pointer',
+          'background:linear-gradient(135deg, ' + colors.primary + ', ' + colors.primary + 'dd)',
+          'display:flex;align-items:center;justify-content:center',
+          'transition:all 0.2s;box-shadow:0 3px 10px ' + colors.primary + '25'
+        ].join(';');
+        sendBtn.innerHTML = '<svg width="' + (16 * scale) + '" height="' + (16 * scale) + '" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
+        sendBtn.onmouseenter = function() { if (!isWidgetSending) sendBtn.style.transform = 'scale(1.08)'; };
+        sendBtn.onmouseleave = function() { sendBtn.style.transform = 'scale(1)'; };
         inputRow.appendChild(sendBtn);
-
         inputArea.appendChild(inputRow);
         content.appendChild(inputArea);
 
-        // Widget 内消息历史
+        // 消息逻辑
         var widgetMessages = [];
         var isWidgetSending = false;
 
-        function addWidgetMessage(role, content) {
-          widgetMessages.push({ role: role, content: content });
-          renderWidgetMessages();
+        function createBubble(msg, animated) {
+          var isUser = msg.role === 'user';
+          var wrapper = document.createElement('div');
+          wrapper.style.cssText = [
+            'display:flex;gap:' + (8 * scale) + 'px;align-items:flex-end',
+            'flex-direction:' + (isUser ? 'row-reverse' : 'row'),
+            animated ? 'animation:' + (isUser ? 'slideInRight' : 'slideInLeft') + ' 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' : ''
+          ].join(';');
+
+          var bubble = document.createElement('div');
+          bubble.style.cssText = [
+            'max-width:85%;padding:' + (10 * scale) + 'px ' + (14 * scale) + 'px',
+            'border-radius:' + (14 * scale) + 'px ' + (14 * scale) + 'px ' + (isUser ? '4px' : (14 * scale) + 'px') + ' ' + (isUser ? (14 * scale) + 'px' : '4px'),
+            'font-size:' + (12 * fontScale) + 'px;line-height:1.5;word-break:break-word',
+            'background:' + (isUser ? 'linear-gradient(135deg, ' + colors.primary + ', ' + colors.primary + 'dd)' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)')),
+            'color:' + (isUser ? 'white' : colors.text),
+            isUser ? 'box-shadow:0 2px 8px ' + colors.primary + '30' : ''
+          ].join(';');
+          bubble.innerHTML = formatMessage(escapeHtml(msg.content));
+          wrapper.appendChild(bubble);
+          return wrapper;
         }
 
-        function renderWidgetMessages() {
-          // 清除空状态
-          if (widgetMessages.length > 0) {
-            msgArea.innerHTML = '';
+        function createTypingIndicator() {
+          var wrapper = document.createElement('div');
+          wrapper.id = 'typing-indicator';
+          wrapper.style.cssText = 'display:flex;gap:' + (8 * scale) + 'px;align-items:flex-end;animation:fadeIn 0.2s ease-out';
+          var bubble = document.createElement('div');
+          bubble.style.cssText = [
+            'padding:' + (12 * scale) + 'px ' + (16 * scale) + 'px',
+            'border-radius:' + (14 * scale) + 'px ' + (14 * scale) + 'px ' + (14 * scale) + 'px 4px',
+            'background:' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)'),
+            'display:flex;gap:4px;align-items:center'
+          ].join(';');
+          bubble.innerHTML = [
+            '<span style="width:7px;height:7px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite"></span>',
+            '<span style="width:7px;height:7px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite;animation-delay:0.2s"></span>',
+            '<span style="width:7px;height:7px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite;animation-delay:0.4s"></span>'
+          ].join('');
+          wrapper.appendChild(bubble);
+          return wrapper;
+        }
+
+        function renderMessages() {
+          msgArea.innerHTML = '';
+          if (widgetMessages.length === 0) {
+            msgArea.appendChild(emptyState);
+            return;
           }
-          
-          // 只显示最近 4 条消息
-          var recentMsgs = widgetMessages.slice(-4);
-          recentMsgs.forEach(function(msg) {
-            var bubble = document.createElement('div');
-            var isUser = msg.role === 'user';
-            bubble.style.cssText = 
-              'max-width:85%;padding:' + (8 * scale) + 'px ' + (12 * scale) + 'px;' +
-              'border-radius:' + (12 * scale) + 'px;' +
-              'font-size:' + (12 * fontScale) + 'px;' +
-              'word-break:break-word;' +
-              'align-self:' + (isUser ? 'flex-end' : 'flex-start') + ';' +
-              'background:' + (isUser ? colors.primary : colors.aiBubble) + ';' +
-              'color:' + (isUser ? 'white' : colors.text) + ';';
-            bubble.innerHTML = formatMessage(escapeHtml(msg.content));
-            msgArea.appendChild(bubble);
+          widgetMessages.slice(-6).forEach(function(msg, i) {
+            msgArea.appendChild(createBubble(msg, i === widgetMessages.length - 1));
           });
-          
           msgArea.scrollTop = msgArea.scrollHeight;
         }
 
@@ -460,45 +542,34 @@ Tapp.widgets['ai-chat'] = {
           if (!text || isWidgetSending) return;
           
           isWidgetSending = true;
-          sendBtn.style.opacity = '0.5';
+          sendBtn.style.opacity = '0.6';
           inputEl.value = '';
           
-          addWidgetMessage('user', text);
-
-          // 添加加载状态
-          var loadingBubble = document.createElement('div');
-          loadingBubble.style.cssText = 
-            'padding:' + (8 * scale) + 'px ' + (12 * scale) + 'px;' +
-            'border-radius:' + (12 * scale) + 'px;' +
-            'font-size:' + (12 * fontScale) + 'px;' +
-            'background:' + colors.aiBubble + ';' +
-            'color:' + colors.subtext + ';' +
-            'align-self:flex-start;';
-          loadingBubble.textContent = t('sending');
-          msgArea.appendChild(loadingBubble);
+          widgetMessages.push({ role: 'user', content: text });
+          renderMessages();
+          
+          msgArea.appendChild(createTypingIndicator());
           msgArea.scrollTop = msgArea.scrollHeight;
 
-          // 构建消息历史
-          var chatMessages = widgetMessages.map(function(m) {
-            return { role: m.role, content: m.content };
-          });
+          var chatMsgs = widgetMessages.map(function(m) { return { role: m.role, content: m.content }; });
 
-          Tapp.ai.chat(chatMessages, {}, { maxTokens: 500 })
+          Tapp.ai.chat(chatMsgs, {}, { maxTokens: 500 })
             .then(function(resp) {
-              console.log('[AI Chat Widget 4x4] Raw Response:', JSON.stringify(resp, null, 2));
-              msgArea.removeChild(loadingBubble);
-              // 兼容两种响应格式
-              var aiMessage = resp?.message || resp;
-              var content = aiMessage?.content;
-              if (content) {
-                addWidgetMessage('assistant', content);
+              var indicator = document.getElementById('typing-indicator');
+              if (indicator) indicator.remove();
+              var aiMsg = resp?.message || resp;
+              if (aiMsg?.content) {
+                widgetMessages.push({ role: 'assistant', content: aiMsg.content });
+                renderMessages();
               } else {
-                throw new Error(resp?.error || 'No content in response');
+                throw new Error(resp?.error || 'No content');
               }
             })
             .catch(function(err) {
-              msgArea.removeChild(loadingBubble);
-              addWidgetMessage('assistant', '❌ ' + (err.message || t('error')));
+              var indicator = document.getElementById('typing-indicator');
+              if (indicator) indicator.remove();
+              widgetMessages.push({ role: 'assistant', content: '❌ ' + (err.message || t('error')) });
+              renderMessages();
             })
             .finally(function() {
               isWidgetSending = false;
@@ -517,20 +588,22 @@ Tapp.widgets['ai-chat'] = {
 
       main.appendChild(content);
 
-      // 编辑模式指示器
+      // 编辑模式
       if (props.isEditMode) {
-        var editIndicator = document.createElement('div');
-        editIndicator.className = 'absolute inset-0 border-2 border-dashed border-violet-400 rounded-xl pointer-events-none';
-        editIndicator.style.zIndex = '100';
-        main.appendChild(editIndicator);
+        var editOverlay = document.createElement('div');
+        editOverlay.style.cssText = [
+          'position:absolute;inset:0;border:2px dashed ' + colors.primary,
+          'border-radius:' + (16 * scale) + 'px;pointer-events:none;z-index:100',
+          'background:' + colors.primary + '08'
+        ].join(';');
+        main.appendChild(editOverlay);
       }
 
       container.appendChild(main);
-      console.log('[AI Chat Widget] 渲染完成');
 
     } catch (err) {
-      console.error('[AI Chat Widget] 渲染错误:', err);
-      container.innerHTML = '<div style="color:red;padding:16px;font-size:12px;">Widget Error: ' + err.message + '</div>';
+      console.error('[AI Chat Widget] Error:', err);
+      container.innerHTML = '<div style="color:#ef4444;padding:16px;font-size:12px;">Error: ' + err.message + '</div>';
     }
   }
 };
