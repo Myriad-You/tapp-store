@@ -227,9 +227,9 @@ Tapp.widgets['ai-chat'] = {
             { maxTokens: 500 }
           ).then(function(resp) {
             console.log('[AI Chat Widget] Response:', resp);
-            if (resp && resp.success && resp.result) {
+            if (resp && resp.success && resp.message) {
               // 显示简短回复
-              var reply = resp.result.content || resp.result;
+              var reply = resp.message.content || resp.message;
               if (typeof reply === 'string' && reply.length > 50) {
                 reply = reply.substring(0, 50) + '...';
               }
@@ -468,8 +468,8 @@ Tapp.widgets['ai-chat'] = {
           Tapp.ai.chat(chatMessages, {}, { maxTokens: 500 })
             .then(function(resp) {
               msgArea.removeChild(loadingBubble);
-              if (resp && resp.success && resp.result) {
-                var reply = resp.result.content || resp.result;
+              if (resp && resp.success && resp.message) {
+                var reply = resp.message.content || resp.message;
                 addWidgetMessage('assistant', reply);
               } else {
                 throw new Error(resp.error || 'Unknown error');
@@ -943,8 +943,8 @@ async function sendMessage() {
     var loadingIndicator = document.getElementById('loading-indicator');
     if (loadingIndicator) loadingIndicator.remove();
 
-    if (response && response.success && response.result) {
-      var aiReply = response.result.content || response.result;
+    if (response && response.success && response.message) {
+      var aiReply = response.message.content || response.message;
       pageState.messages.push({ role: 'assistant', content: aiReply });
       saveHistory();
       renderMessages();
