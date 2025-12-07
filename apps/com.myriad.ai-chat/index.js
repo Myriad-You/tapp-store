@@ -122,8 +122,8 @@ function createKeyframes() {
   document.head.appendChild(style);
 }
 
-// 打字机效果
-function typeWriter(element, text, speed, callback) {
+// 打字机效果（带自动滚动）
+function typeWriter(element, text, speed, scrollContainer, callback) {
   var i = 0;
   element.textContent = '';
   var cursor = document.createElement('span');
@@ -137,9 +137,16 @@ function typeWriter(element, text, speed, callback) {
       element.textContent = text.substring(0, i + 1);
       element.appendChild(cursor);
       i++;
+      // 自动滚动到最新
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
       setTimeout(type, speed);
     } else {
       cursor.remove();
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
       if (callback) callback();
     }
   }
@@ -181,37 +188,46 @@ Tapp.widgets['ai-chat'] = {
       content.style.cssText = 'position:relative;z-index:10;height:100%;display:flex;flex-direction:column;';
 
       if (isCompact) {
-        // ========== 4x2 纯对话框布局 ==========
-        content.style.cssText = 'position:relative;z-index:10;height:100%;display:flex;flex-direction:column;';
+        // ========== 4x2 双浮动条布局 ==========
+        content.style.cssText = 'position:relative;z-index:10;height:100%;';
         
-        // 对话显示区（占满空间，居中显示单条消息）
-        var dialogArea = document.createElement('div');
-        dialogArea.style.cssText = [
-          'flex:1;display:flex;align-items:center;justify-content:center',
-          'padding:' + (12 * scale) + 'px ' + (16 * scale) + 'px',
-          'overflow:hidden'
+        // 浮动用户消息条（顶部）
+        var userBar = document.createElement('div');
+        userBar.style.cssText = [
+          'position:absolute;top:' + (8 * scale) + 'px;left:' + (8 * scale) + 'px;right:' + (8 * scale) + 'px',
+          'padding:' + (10 * scale) + 'px ' + (14 * scale) + 'px',
+          'border-radius:' + (10 * scale) + 'px',
+          'background:' + colors.primary,
+          'color:white;font-size:' + (12 * fontScale) + 'px;line-height:1.4',
+          'text-align:right;opacity:0;transform:translateY(-8px)',
+          'transition:all 0.25s ease-out;pointer-events:none',
+          'max-height:' + (32 * scale) + 'px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'
         ].join(';');
+        content.appendChild(userBar);
 
-        // 消息气泡容器
-        var msgBubble = document.createElement('div');
-        msgBubble.style.cssText = [
-          'width:100%;padding:' + (12 * scale) + 'px ' + (16 * scale) + 'px',
-          'border-radius:' + (12 * scale) + 'px',
-          'background:' + (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'),
-          'font-size:' + (13 * fontScale) + 'px;line-height:1.5',
-          'color:' + colors.subtext + ';text-align:center',
-          'max-height:100%;overflow:hidden;text-overflow:ellipsis'
+        // 浮动AI回复条（底部上方）
+        var aiBar = document.createElement('div');
+        aiBar.style.cssText = [
+          'position:absolute;bottom:' + (56 * scale) + 'px;left:' + (8 * scale) + 'px;right:' + (8 * scale) + 'px',
+          'padding:' + (10 * scale) + 'px ' + (14 * scale) + 'px',
+          'border-radius:' + (10 * scale) + 'px',
+          'background:' + (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'),
+          'backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)',
+          'color:' + colors.text + ';font-size:' + (12 * fontScale) + 'px;line-height:1.4',
+          'opacity:0;transform:translateY(8px)',
+          'transition:all 0.25s ease-out;pointer-events:none',
+          'max-height:' + (48 * scale) + 'px;overflow:hidden'
         ].join(';');
-        msgBubble.textContent = t('placeholder');
-        dialogArea.appendChild(msgBubble);
-        content.appendChild(dialogArea);
+        content.appendChild(aiBar);
 
         // 底部输入栏
         var inputBar = document.createElement('div');
         inputBar.style.cssText = [
+          'position:absolute;bottom:0;left:0;right:0',
           'display:flex;align-items:center;gap:' + (8 * scale) + 'px',
           'padding:' + (10 * scale) + 'px ' + (12 * scale) + 'px',
-          'border-top:1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)')
+          'border-top:1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
+          'background:' + (isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.5)')
         ].join(';');
 
         var input = document.createElement('input');
@@ -251,36 +267,28 @@ Tapp.widgets['ai-chat'] = {
 
         // 状态
         var sending = false;
-        var lastRole = null;
 
-        function showMessage(text, role) {
-          lastRole = role;
-          msgBubble.style.color = colors.text;
-          msgBubble.style.textAlign = role === 'user' ? 'right' : 'left';
-          msgBubble.style.background = role === 'user' 
-            ? colors.primary + '15' 
-            : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)');
-          
-          if (role === 'assistant') {
-            // AI 回复使用打字效果
-            var displayText = text.length > 100 ? text.substring(0, 100) + '...' : text;
-            typeWriter(msgBubble, displayText, 25);
-          } else {
-            msgBubble.textContent = text;
-          }
+        function showUserMsg(text) {
+          userBar.textContent = text;
+          userBar.style.opacity = '1';
+          userBar.style.transform = 'translateY(0)';
         }
 
         function showTyping() {
-          msgBubble.style.color = colors.subtext;
-          msgBubble.style.textAlign = 'center';
-          msgBubble.style.background = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)';
-          msgBubble.innerHTML = '<span style="display:inline-flex;gap:4px;align-items:center"><span style="width:6px;height:6px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite"></span><span style="width:6px;height:6px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite;animation-delay:0.2s"></span><span style="width:6px;height:6px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite;animation-delay:0.4s"></span></span>';
+          aiBar.style.opacity = '1';
+          aiBar.style.transform = 'translateY(0)';
+          aiBar.innerHTML = '<span style="display:inline-flex;gap:4px;align-items:center"><span style="width:6px;height:6px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite"></span><span style="width:6px;height:6px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite;animation-delay:0.2s"></span><span style="width:6px;height:6px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite;animation-delay:0.4s"></span></span>';
+        }
+
+        function showAiReply(text) {
+          var displayText = text.length > 80 ? text.substring(0, 80) + '...' : text;
+          aiBar.innerHTML = '';
+          typeWriter(aiBar, displayText, 20, null);
         }
 
         function showError(msg) {
-          msgBubble.style.color = '#ef4444';
-          msgBubble.style.textAlign = 'center';
-          msgBubble.textContent = '❌ ' + msg;
+          aiBar.style.color = '#ef4444';
+          aiBar.textContent = '❌ ' + msg;
         }
 
         function doSend() {
@@ -290,15 +298,15 @@ Tapp.widgets['ai-chat'] = {
           sending = true;
           sendBtn.style.opacity = '0.5';
           input.value = '';
-          showMessage(text, 'user');
-
-          setTimeout(function() { showTyping(); }, 300);
+          
+          showUserMsg(text);
+          setTimeout(showTyping, 200);
 
           Tapp.ai.chat([{ role: 'user', content: text }], {}, { maxTokens: 300 })
             .then(function(resp) {
               var aiMessage = resp?.message || resp;
               if (aiMessage?.content) {
-                showMessage(aiMessage.content, 'assistant');
+                showAiReply(aiMessage.content);
               } else {
                 throw new Error(resp?.error || t('error'));
               }
@@ -318,14 +326,14 @@ Tapp.widgets['ai-chat'] = {
         };
 
       } else {
-        // ========== 4x4 完整布局（浮动顶栏）==========
+        // ========== 4x4 完整布局（双浮动条）==========
+        content.style.cssText = 'position:relative;z-index:10;height:100%;';
         
-        // 消息区域（全屏）
+        // 消息区域（全屏，上下留空间给浮动条）
         var msgArea = document.createElement('div');
         msgArea.style.cssText = [
-          'flex:1;overflow-y:auto;overflow-x:hidden',
-          'padding:' + (12 * scale) + 'px',
-          'padding-top:' + (44 * scale) + 'px',
+          'position:absolute;inset:0;overflow-y:auto;overflow-x:hidden',
+          'padding:' + (52 * scale) + 'px ' + (12 * scale) + 'px ' + (60 * scale) + 'px',
           'display:flex;flex-direction:column;gap:' + (8 * scale) + 'px'
         ].join(';');
 
@@ -380,13 +388,17 @@ Tapp.widgets['ai-chat'] = {
         msgArea.appendChild(welcomeMsg);
         content.appendChild(msgArea);
 
-        // 输入区域
-        var inputArea = document.createElement('div');
-        inputArea.style.cssText = [
+        // 浮动输入栏（底部）
+        var floatInput = document.createElement('div');
+        floatInput.style.cssText = [
+          'position:absolute;bottom:' + (8 * scale) + 'px;left:' + (8 * scale) + 'px;right:' + (8 * scale) + 'px;z-index:20',
           'display:flex;align-items:center;gap:' + (8 * scale) + 'px',
-          'padding:' + (10 * scale) + 'px ' + (12 * scale) + 'px',
-          'border-top:1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
-          'background:' + (isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.5)')
+          'padding:' + (8 * scale) + 'px ' + (12 * scale) + 'px',
+          'border-radius:' + (10 * scale) + 'px',
+          'background:' + (isDark ? 'rgba(15,23,42,0.85)' : 'rgba(255,255,255,0.9)'),
+          'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)',
+          'border:1px solid ' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'),
+          'box-shadow:0 -2px 12px ' + (isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.06)')
         ].join(';');
 
         var inputEl = document.createElement('input');
@@ -394,7 +406,7 @@ Tapp.widgets['ai-chat'] = {
         inputEl.placeholder = t('placeholder');
         inputEl.style.cssText = [
           'flex:1;padding:' + (10 * scale) + 'px ' + (14 * scale) + 'px',
-          'border-radius:' + (10 * scale) + 'px;font-size:' + (13 * fontScale) + 'px',
+          'border-radius:' + (8 * scale) + 'px;font-size:' + (13 * fontScale) + 'px',
           'background:' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)'),
           'border:1px solid transparent',
           'color:' + colors.text + ';outline:none;font-family:inherit',
@@ -406,19 +418,21 @@ Tapp.widgets['ai-chat'] = {
         inputEl.onblur = function() {
           inputEl.style.borderColor = 'transparent';
         };
-        inputArea.appendChild(inputEl);
+        floatInput.appendChild(inputEl);
 
         var sendBtn = document.createElement('button');
         sendBtn.style.cssText = [
           'width:' + (36 * scale) + 'px;height:' + (36 * scale) + 'px',
-          'border-radius:' + (10 * scale) + 'px;border:none;cursor:pointer',
+          'border-radius:' + (8 * scale) + 'px;border:none;cursor:pointer',
           'background:' + colors.primary,
           'display:flex;align-items:center;justify-content:center',
           'transition:all 0.2s'
         ].join(';');
         sendBtn.innerHTML = '<svg width="' + (16 * scale) + '" height="' + (16 * scale) + '" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
-        inputArea.appendChild(sendBtn);
-        content.appendChild(inputArea);
+        sendBtn.onmouseenter = function() { if (!isWidgetSending) sendBtn.style.opacity = '0.85'; };
+        sendBtn.onmouseleave = function() { sendBtn.style.opacity = '1'; };
+        floatInput.appendChild(sendBtn);
+        content.appendChild(floatInput);
 
         // 消息逻辑
         var widgetMessages = [];
@@ -442,7 +456,8 @@ Tapp.widgets['ai-chat'] = {
           ].join(';');
           
           if (!isUser && useTypeEffect) {
-            typeWriter(bubble, msg.content, 20);
+            // 使用打字效果并传入滚动容器
+            typeWriter(bubble, msg.content, 18, msgArea);
           } else {
             bubble.innerHTML = formatMessage(escapeHtml(msg.content));
           }
@@ -471,11 +486,9 @@ Tapp.widgets['ai-chat'] = {
         }
 
         function renderMessages(lastIsTyped) {
-          // 清除欢迎消息
           if (widgetMessages.length > 0) {
             welcomeMsg.style.display = 'none';
           }
-          // 只添加最新消息
           var lastMsg = widgetMessages[widgetMessages.length - 1];
           if (lastMsg) {
             var bubble = createBubble(lastMsg, lastIsTyped && lastMsg.role === 'assistant');
