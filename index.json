@@ -46,7 +46,7 @@
     {
       "id": "com.myriad.ai-chat",
       "name": "AI 聊天助手",
-      "version": "2.1.0",
+      "version": "1.0.0",
       "description": "AI 驱动的智能对话助手，支持多轮对话",
       "long_description": "AI 聊天助手让你随时与 AI 进行自然对话。支持上下文理解、多轮会话，并提供便捷的小组件入口。使用混合渲染模式，性能更优。",
       "author": {

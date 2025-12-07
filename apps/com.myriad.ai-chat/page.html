@@ -7,7 +7,7 @@
       <h1 id="page-title">AI 聊天</h1>
       <p id="page-subtitle">智能对话助手</p>
     </div>
-    <button id="page-clear" class="tapp-btn tapp-btn-ghost">新对话</button>
+    <button id="page-clear" class="tapp-btn tapp-btn-ghost" title="开始新对话" aria-label="开始新对话">新对话</button>
   </header>
   
   <!-- 消息区域 -->
@@ -29,10 +29,10 @@
   <!-- 输入区域 -->
   <div class="page-input-area">
     <div class="input-wrapper">
-      <textarea id="page-input" class="page-textarea" rows="1"></textarea>
-      <button id="page-send" class="tapp-btn tapp-btn-primary send-btn">
+      <textarea id="page-input" class="page-textarea" rows="1" placeholder="输入消息..."></textarea>
+      <button id="page-send" class="tapp-btn tapp-btn-primary send-btn" title="发送消息" aria-label="发送消息">
         <span class="send-label">发送</span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
         </svg>
       </button>

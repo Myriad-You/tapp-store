@@ -111,6 +111,7 @@
   gap: calc(12px * var(--tapp-scale, 1));
   padding: calc(16px * var(--tapp-scale, 1)) 0;
   background: var(--tapp-card-bg);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   border-radius: calc(16px * var(--tapp-scale, 1));
   margin-bottom: calc(16px * var(--tapp-scale, 1));
@@ -264,6 +265,7 @@
 .page-input-area {
   padding: calc(16px * var(--tapp-scale, 1)) 0;
   background: var(--tapp-card-bg);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   border-radius: calc(16px * var(--tapp-scale, 1));
   border: 1px solid var(--tapp-border);

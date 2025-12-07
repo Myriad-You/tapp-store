@@ -284,15 +284,12 @@ function init4x4Widget() {
   };
 }
 
-// ========== Widget 入口 ==========
-// 检测当前模式并初始化
-(function() {
-  if (window._TAPP_MODE !== 'widget') return;
-  
+// ========== Widget 初始化函数 ==========
+function initWidget() {
   var props = window._TAPP_WIDGET_PROPS || {};
   currentLocale = normalizeLocale(props.locale);
   
-  // 设置 placeholder 文本
+  // 设置 placeholder 文本（JS 覆盖 HTML 默认值以支持多语言）
   var input = document.getElementById('chat-input');
   if (input) input.placeholder = t('placeholder');
   
@@ -313,7 +310,14 @@ function init4x4Widget() {
   }
   
   console.log('[AI Chat] Widget 初始化完成，尺寸:', size);
-})();
+}
+
+// ========== Widget 入口 ==========
+// 通过生命周期钩子初始化，确保 SDK 和 DOM 都已就绪
+Tapp.lifecycle.onReady(function() {
+  if (window._TAPP_MODE !== 'widget') return;
+  initWidget();
+});
 
 
 // ========== PAGE 逻辑 ==========
