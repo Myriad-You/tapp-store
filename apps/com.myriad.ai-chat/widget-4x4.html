@@ -1,0 +1,32 @@
+<!-- AI Chat Widget 4x4 - 完整对话布局 -->
+<div class="tapp-container-glass widget-4x4">
+  <!-- 浮动头部 -->
+  <div class="tapp-float-bar tapp-float-bar-top header-bar">
+    <div class="tapp-icon tapp-icon-sm tapp-icon-primary">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+    </div>
+    <span id="widget-title" class="header-title">AI 助手</span>
+    <button id="clear-btn" class="tapp-btn tapp-btn-ghost">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 6h18M8 6V4h8v2M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/>
+      </svg>
+    </button>
+  </div>
+  
+  <!-- 消息区域 -->
+  <div id="msg-area" class="tapp-msg-area msg-area-4x4">
+    <div id="welcome-msg" class="tapp-empty welcome-hint">开始对话</div>
+  </div>
+  
+  <!-- 浮动输入栏 -->
+  <div class="tapp-float-bar tapp-float-bar-bottom input-bar">
+    <input type="text" id="chat-input" class="tapp-input" autocomplete="off">
+    <button id="send-btn" class="tapp-btn tapp-btn-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+      </svg>
+    </button>
+  </div>
+</div>

@@ -1,0 +1,41 @@
+<!-- AI Chat Page 完整布局 -->
+<div class="page-container">
+  <!-- 头部 -->
+  <header class="page-header">
+    <div class="header-icon">🤖</div>
+    <div class="header-text">
+      <h1 id="page-title">AI 聊天</h1>
+      <p id="page-subtitle">智能对话助手</p>
+    </div>
+    <button id="page-clear" class="tapp-btn tapp-btn-ghost">新对话</button>
+  </header>
+  
+  <!-- 消息区域 -->
+  <div id="page-messages" class="page-messages">
+    <!-- 欢迎界面 -->
+    <div id="page-welcome" class="page-welcome">
+      <div class="welcome-icon">🤖</div>
+      <div id="welcome-title" class="welcome-title">你好！我是 AI 助手</div>
+      <div id="welcome-subtitle" class="welcome-subtitle">有什么可以帮助你的吗？</div>
+      <div class="example-grid">
+        <button class="example-btn">解释人工智能</button>
+        <button class="example-btn">写一首诗</button>
+        <button class="example-btn">如何学编程</button>
+        <button class="example-btn">推荐电影</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 输入区域 -->
+  <div class="page-input-area">
+    <div class="input-wrapper">
+      <textarea id="page-input" class="page-textarea" rows="1"></textarea>
+      <button id="page-send" class="tapp-btn tapp-btn-primary send-btn">
+        <span class="send-label">发送</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>

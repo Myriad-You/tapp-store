@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.app/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.0",
-  "api_version": "1",
+  "version": "1.1.0",
+  "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2025-12-04T00:00:00Z",
+  "updated_at": "2025-12-07T00:00:00Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.app",
@@ -46,9 +46,9 @@
     {
       "id": "com.myriad.ai-chat",
       "name": "AI 聊天助手",
-      "version": "1.0.0",
+      "version": "2.1.0",
       "description": "AI 驱动的智能对话助手，支持多轮对话",
-      "long_description": "AI 聊天助手让你随时与 AI 进行自然对话。支持上下文理解、多轮会话，并提供便捷的小组件入口。",
+      "long_description": "AI 聊天助手让你随时与 AI 进行自然对话。支持上下文理解、多轮会话，并提供便捷的小组件入口。使用混合渲染模式，性能更优。",
       "author": {
         "name": "Myriad Team",
         "url": "https://github.com/Myriad-You"
@@ -58,22 +58,28 @@
       "repository": "https://github.com/Myriad-You/tapp-store",
       "category": "ai",
       "tags": ["AI", "聊天", "助手", "widget", "GPT"],
-      "permissions": ["storage", "ui:notification", "ui:theme", "widget:register", "ai:generate"],
-      "min_myriad_version": "0.1.0",
+      "permissions": ["storage", "ui:notification", "ui:theme", "ai:chat"],
+      "min_myriad_version": "0.2.0",
       "icon": "🤖",
       "screenshots": [],
       "download": {
         "manifest": "apps/com.myriad.ai-chat/manifest.json",
         "code": "apps/com.myriad.ai-chat/index.js",
-        "readme": "apps/com.myriad.ai-chat/README.md"
+        "readme": "apps/com.myriad.ai-chat/README.md",
+        "styles": "apps/com.myriad.ai-chat/styles.css",
+        "page_template": "apps/com.myriad.ai-chat/page.html",
+        "widget_templates": {
+          "4x2": "apps/com.myriad.ai-chat/widget-4x2.html",
+          "4x4": "apps/com.myriad.ai-chat/widget-4x4.html"
+        }
       },
-      "size": 18432,
+      "size": 25600,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-04T00:00:00Z",
-      "updated_at": "2025-12-04T00:00:00Z"
+      "updated_at": "2025-12-07T00:00:00Z"
     }
   ]
 }

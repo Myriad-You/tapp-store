@@ -1,0 +1,362 @@
+/* AI Chat Tapp 自定义样式 */
+/* 基于 COMPONENT_CSS 扩展 */
+
+/* ========== Widget 4x2 专用 ========== */
+.widget-4x2 {
+  position: absolute;
+  inset: 0;
+}
+
+.widget-4x2 .user-msg-bar {
+  background: var(--tapp-primary);
+  color: white;
+  text-align: right;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: all 0.25s ease-out;
+  pointer-events: none;
+  max-height: calc(32px * var(--tapp-scale, 1));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.widget-4x2 .user-msg-bar.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.widget-4x2 .ai-reply-bar {
+  position: absolute;
+  bottom: calc(56px * var(--tapp-scale, 1));
+  left: calc(8px * var(--tapp-scale, 1));
+  right: calc(8px * var(--tapp-scale, 1));
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.25s ease-out;
+  pointer-events: none;
+  max-height: calc(48px * var(--tapp-scale, 1));
+  overflow: hidden;
+}
+
+.widget-4x2 .ai-reply-bar.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.widget-4x2 .ai-reply-bar.error {
+  color: #ef4444;
+}
+
+.widget-4x2 .input-bar {
+  display: flex;
+  align-items: center;
+  gap: calc(8px * var(--tapp-scale, 1));
+}
+
+/* ========== Widget 4x4 专用 ========== */
+.widget-4x4 {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.widget-4x4 .header-bar {
+  display: flex;
+  align-items: center;
+  gap: calc(8px * var(--tapp-scale, 1));
+}
+
+.widget-4x4 .header-title {
+  flex: 1;
+  font-size: calc(13px * var(--tapp-font-scale, 1));
+  font-weight: 500;
+  color: var(--tapp-text);
+}
+
+.widget-4x4 .msg-area-4x4 {
+  position: absolute;
+  top: calc(52px * var(--tapp-scale, 1));
+  bottom: calc(60px * var(--tapp-scale, 1));
+  left: 0;
+  right: 0;
+}
+
+.widget-4x4 .welcome-hint {
+  text-align: center;
+  padding: calc(20px * var(--tapp-scale, 1));
+}
+
+.widget-4x4 .input-bar {
+  display: flex;
+  align-items: center;
+  gap: calc(8px * var(--tapp-scale, 1));
+}
+
+/* ========== Page 布局 ========== */
+.page-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 calc(16px * var(--tapp-scale, 1));
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: calc(12px * var(--tapp-scale, 1));
+  padding: calc(16px * var(--tapp-scale, 1)) 0;
+  background: var(--tapp-card-bg);
+  backdrop-filter: blur(12px);
+  border-radius: calc(16px * var(--tapp-scale, 1));
+  margin-bottom: calc(16px * var(--tapp-scale, 1));
+  padding-left: calc(16px * var(--tapp-scale, 1));
+  padding-right: calc(16px * var(--tapp-scale, 1));
+  border: 1px solid var(--tapp-border);
+}
+
+.page-header .header-icon {
+  font-size: calc(32px * var(--tapp-scale, 1));
+  width: calc(48px * var(--tapp-scale, 1));
+  height: calc(48px * var(--tapp-scale, 1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: calc(14px * var(--tapp-scale, 1));
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(139, 92, 246, 0.1));
+}
+
+.page-header .header-text {
+  flex: 1;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: calc(20px * var(--tapp-font-scale, 1));
+  font-weight: 600;
+  color: var(--tapp-text);
+}
+
+.page-header p {
+  margin: 4px 0 0 0;
+  font-size: calc(13px * var(--tapp-font-scale, 1));
+  color: var(--tapp-subtext);
+}
+
+/* 消息区域 */
+.page-messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: calc(16px * var(--tapp-scale, 1));
+  padding: calc(8px * var(--tapp-scale, 1)) 0;
+}
+
+/* 欢迎界面 */
+.page-welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: calc(48px * var(--tapp-scale, 1));
+}
+
+.page-welcome .welcome-icon {
+  font-size: calc(56px * var(--tapp-scale, 1));
+  margin-bottom: calc(20px * var(--tapp-scale, 1));
+}
+
+.page-welcome .welcome-title {
+  font-size: calc(24px * var(--tapp-font-scale, 1));
+  font-weight: 600;
+  color: var(--tapp-text);
+  margin-bottom: calc(8px * var(--tapp-scale, 1));
+}
+
+.page-welcome .welcome-subtitle {
+  font-size: calc(15px * var(--tapp-font-scale, 1));
+  color: var(--tapp-subtext);
+  margin-bottom: calc(32px * var(--tapp-scale, 1));
+}
+
+.page-welcome .example-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: calc(12px * var(--tapp-scale, 1));
+  max-width: 500px;
+  width: 100%;
+}
+
+.page-welcome .example-btn {
+  padding: calc(14px * var(--tapp-scale, 1)) calc(18px * var(--tapp-scale, 1));
+  font-size: calc(14px * var(--tapp-font-scale, 1));
+  text-align: left;
+  border: 1px solid var(--tapp-border);
+  border-radius: calc(12px * var(--tapp-scale, 1));
+  background: var(--tapp-card-bg);
+  color: var(--tapp-text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-welcome .example-btn:hover {
+  border-color: var(--tapp-primary);
+  background: rgba(139, 92, 246, 0.1);
+}
+
+/* Page 气泡样式 */
+.tapp-bubble-row-page {
+  display: flex;
+  gap: calc(12px * var(--tapp-scale, 1));
+  align-items: flex-start;
+  animation: tapp-fade-in 0.3s ease-out;
+}
+
+.tapp-bubble-row-page.user {
+  flex-direction: row-reverse;
+}
+
+.tapp-avatar {
+  width: calc(36px * var(--tapp-scale, 1));
+  height: calc(36px * var(--tapp-scale, 1));
+  border-radius: calc(10px * var(--tapp-scale, 1));
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(18px * var(--tapp-scale, 1));
+  background: var(--tapp-card-bg);
+  border: 1px solid var(--tapp-border);
+}
+
+.tapp-bubble-row-page.user .tapp-avatar {
+  background: var(--tapp-primary);
+  border-color: transparent;
+}
+
+.tapp-bubble-page {
+  max-width: 75%;
+  padding: calc(14px * var(--tapp-scale, 1)) calc(18px * var(--tapp-scale, 1));
+  border-radius: calc(16px * var(--tapp-scale, 1));
+  font-size: calc(15px * var(--tapp-font-scale, 1));
+  line-height: 1.6;
+  word-break: break-word;
+  background: var(--tapp-card-bg);
+  color: var(--tapp-text);
+  border: 1px solid var(--tapp-border);
+}
+
+.tapp-bubble-page.user {
+  background: var(--tapp-primary);
+  color: white;
+  border-color: transparent;
+}
+
+/* 输入区域 */
+.page-input-area {
+  padding: calc(16px * var(--tapp-scale, 1)) 0;
+  background: var(--tapp-card-bg);
+  backdrop-filter: blur(12px);
+  border-radius: calc(16px * var(--tapp-scale, 1));
+  border: 1px solid var(--tapp-border);
+  margin-top: calc(16px * var(--tapp-scale, 1));
+  padding-left: calc(16px * var(--tapp-scale, 1));
+  padding-right: calc(16px * var(--tapp-scale, 1));
+}
+
+.page-input-area .input-wrapper {
+  display: flex;
+  gap: calc(12px * var(--tapp-scale, 1));
+  align-items: flex-end;
+}
+
+.page-textarea {
+  flex: 1;
+  padding: calc(14px * var(--tapp-scale, 1)) calc(18px * var(--tapp-scale, 1));
+  font-size: calc(15px * var(--tapp-font-scale, 1));
+  font-family: inherit;
+  border: 2px solid var(--tapp-border);
+  border-radius: calc(14px * var(--tapp-scale, 1));
+  background: var(--tapp-input-bg);
+  resize: none;
+  min-height: 48px;
+  max-height: 150px;
+  color: var(--tapp-text);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.page-textarea:focus {
+  border-color: var(--tapp-primary);
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15);
+}
+
+.page-textarea::placeholder {
+  color: var(--tapp-subtext);
+}
+
+.page-input-area .send-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: calc(14px * var(--tapp-scale, 1)) calc(28px * var(--tapp-scale, 1));
+  font-size: calc(15px * var(--tapp-font-scale, 1));
+  font-weight: 500;
+}
+
+/* ========== 代码块 ========== */
+.tapp-code {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.dark .tapp-code {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ========== 输入框焦点增强 ========== */
+.tapp-input.focused {
+  border-color: var(--tapp-primary);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+.dark .tapp-input.focused {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.light .tapp-input.focused {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* ========== 滚动条美化 ========== */
+.page-messages::-webkit-scrollbar,
+.tapp-msg-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.page-messages::-webkit-scrollbar-track,
+.tapp-msg-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.page-messages::-webkit-scrollbar-thumb,
+.tapp-msg-area::-webkit-scrollbar-thumb {
+  background: var(--tapp-border);
+  border-radius: 3px;
+}
+
+.page-messages::-webkit-scrollbar-thumb:hover,
+.tapp-msg-area::-webkit-scrollbar-thumb:hover {
+  background: var(--tapp-subtext);
+}
