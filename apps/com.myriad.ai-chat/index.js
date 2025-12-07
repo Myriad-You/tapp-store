@@ -113,6 +113,9 @@ console.log('[AI Chat] 注册 Widget...');
 Tapp.widgets['ai-chat'] = {
   render: function(container, props) {
     console.log('[AI Chat Widget] 渲染, 尺寸:', props.size);
+    console.log('[AI Chat Widget] props:', JSON.stringify(props));
+    console.log('[AI Chat Widget] container 尺寸:', container.offsetWidth, 'x', container.offsetHeight);
+    console.log('[AI Chat Widget] _TAPP_DIMENSIONS:', JSON.stringify(window._TAPP_DIMENSIONS));
     
     try {
       var isDark = props.theme === 'dark';
@@ -124,17 +127,23 @@ Tapp.widgets['ai-chat'] = {
       var scale = dims.scale || props.scale || 1;
       var fontScale = dims.fontScale || props.fontScale || 1;
       
+      console.log('[AI Chat Widget] isDark:', isDark, 'scale:', scale, 'fontScale:', fontScale);
+      
       currentLocale = normalizeLocale(props.locale);
       var colors = getThemeColors(isDark, themeColor);
 
       container.innerHTML = '';
-      container.style.cssText = 'width:100%;height:100%;position:relative;overflow:hidden;';
+      // 不覆盖容器的定位样式，只设置必要的属性
+      // container 已经由 TappSandbox 设置好了 position 和尺寸
 
       // 主容器 - 使用 Tailwind (Widget 模式可用)
       var main = document.createElement('div');
       main.className = 'relative h-full w-full rounded-xl overflow-hidden';
+      // 使用更明显的背景色（调试用，确保可见性）
+      var bgColor = isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(248, 250, 252, 0.95)';
       main.style.cssText = 
-        'background:' + colors.glassBg + ';' +
+        'position:absolute;inset:0;' +
+        'background:' + bgColor + ';' +
         'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);' +
         'border:1px solid ' + colors.border + ';';
 
