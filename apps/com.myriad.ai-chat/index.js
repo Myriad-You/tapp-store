@@ -112,19 +112,38 @@ function createKeyframes() {
   var style = document.createElement('style');
   style.id = 'ai-chat-keyframes';
   style.textContent = [
-    '@keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }',
     '@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }',
-    '@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }',
-    '@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }',
-    '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }',
-    '@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }',
+    '@keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }',
     '@keyframes typingDot { 0%, 60%, 100% { opacity: 0.3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-4px); } }',
-    '@keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }',
     '@keyframes slideInRight { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }',
     '@keyframes slideInLeft { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }',
-    '@keyframes glowPulse { 0%, 100% { box-shadow: 0 0 0 0 var(--glow-color, rgba(139, 92, 246, 0.4)); } 50% { box-shadow: 0 0 20px 4px var(--glow-color, rgba(139, 92, 246, 0.2)); } }',
+    '@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }',
   ].join('\n');
   document.head.appendChild(style);
+}
+
+// 打字机效果
+function typeWriter(element, text, speed, callback) {
+  var i = 0;
+  element.textContent = '';
+  var cursor = document.createElement('span');
+  cursor.textContent = '▌';
+  cursor.style.cssText = 'animation:blink 0.8s infinite;opacity:0.7;';
+  element.appendChild(cursor);
+  
+  function type() {
+    if (i < text.length) {
+      cursor.remove();
+      element.textContent = text.substring(0, i + 1);
+      element.appendChild(cursor);
+      i++;
+      setTimeout(type, speed);
+    } else {
+      cursor.remove();
+      if (callback) callback();
+    }
+  }
+  type();
 }
 
 // ========== WIDGET ==========
@@ -148,147 +167,120 @@ Tapp.widgets['ai-chat'] = {
 
       container.innerHTML = '';
 
-      // ========== 主容器 ==========
+      // ========== 主容器（微透明背景）==========
       var main = document.createElement('div');
       main.style.cssText = [
         'position:absolute;inset:0;border-radius:' + (16 * scale) + 'px;overflow:hidden',
-        'background:' + (isDark ? 'linear-gradient(145deg, rgba(15,23,42,0.95), rgba(30,41,59,0.9))' : 'linear-gradient(145deg, rgba(255,255,255,0.98), rgba(248,250,252,0.95))'),
-        'backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)',
-        'border:1px solid ' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'),
-        'box-shadow:' + (isDark ? '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)' : '0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)'),
-        'animation:scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
+        'background:' + (isDark ? 'rgba(15,23,42,0.75)' : 'rgba(255,255,255,0.8)'),
+        'backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)',
+        'border:1px solid ' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'),
+        'box-shadow:' + (isDark ? '0 4px 24px rgba(0,0,0,0.3)' : '0 4px 24px rgba(0,0,0,0.06)')
       ].join(';');
-
-      // 装饰渐变
-      var gradient = document.createElement('div');
-      gradient.style.cssText = [
-        'position:absolute;inset:0;pointer-events:none;opacity:0.6',
-        'background:radial-gradient(ellipse at top right, ' + colors.primary + '15 0%, transparent 50%), radial-gradient(ellipse at bottom left, ' + colors.primary + '08 0%, transparent 40%)'
-      ].join(';');
-      main.appendChild(gradient);
-
-      // 顶部光效线
-      var glowLine = document.createElement('div');
-      glowLine.style.cssText = [
-        'position:absolute;top:0;left:10%;right:10%;height:1px',
-        'background:linear-gradient(90deg, transparent, ' + colors.primary + '60, transparent)',
-        'opacity:0.8'
-      ].join(';');
-      main.appendChild(glowLine);
 
       var content = document.createElement('div');
       content.style.cssText = 'position:relative;z-index:10;height:100%;display:flex;flex-direction:column;';
 
       if (isCompact) {
-        // ========== 4x2 紧凑布局 ==========
-        content.style.cssText = 'position:relative;z-index:10;height:100%;display:flex;align-items:center;gap:' + (12 * scale) + 'px;padding:' + (14 * scale) + 'px ' + (16 * scale) + 'px;';
-
-        // AI 图标（带呼吸动画）
-        var iconWrap = document.createElement('div');
-        iconWrap.style.cssText = [
-          'flex-shrink:0;width:' + (44 * scale) + 'px;height:' + (44 * scale) + 'px',
-          'border-radius:' + (14 * scale) + 'px;display:flex;align-items:center;justify-content:center',
-          'background:linear-gradient(135deg, ' + colors.primary + ', ' + colors.primary + 'cc)',
-          'box-shadow:0 4px 16px ' + colors.primary + '40',
-          'animation:glowPulse 3s ease-in-out infinite',
-          '--glow-color:' + colors.primary + '40'
+        // ========== 4x2 纯对话框布局 ==========
+        content.style.cssText = 'position:relative;z-index:10;height:100%;display:flex;flex-direction:column;';
+        
+        // 对话显示区（占满空间，居中显示单条消息）
+        var dialogArea = document.createElement('div');
+        dialogArea.style.cssText = [
+          'flex:1;display:flex;align-items:center;justify-content:center',
+          'padding:' + (12 * scale) + 'px ' + (16 * scale) + 'px',
+          'overflow:hidden'
         ].join(';');
-        iconWrap.innerHTML = '<svg width="' + (22 * scale) + '" height="' + (22 * scale) + '" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M12 8V4H8"/><rect x="8" y="8" width="8" height="8" rx="2"/><path d="M12 16v4h4"/><circle cx="12" cy="12" r="2"/></svg>';
-        content.appendChild(iconWrap);
 
-        // 输入区域容器
-        var inputContainer = document.createElement('div');
-        inputContainer.style.cssText = 'flex:1;min-width:0;position:relative;';
+        // 消息气泡容器
+        var msgBubble = document.createElement('div');
+        msgBubble.style.cssText = [
+          'width:100%;padding:' + (12 * scale) + 'px ' + (16 * scale) + 'px',
+          'border-radius:' + (12 * scale) + 'px',
+          'background:' + (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'),
+          'font-size:' + (13 * fontScale) + 'px;line-height:1.5',
+          'color:' + colors.subtext + ';text-align:center',
+          'max-height:100%;overflow:hidden;text-overflow:ellipsis'
+        ].join(';');
+        msgBubble.textContent = t('placeholder');
+        dialogArea.appendChild(msgBubble);
+        content.appendChild(dialogArea);
 
-        // 输入框
+        // 底部输入栏
+        var inputBar = document.createElement('div');
+        inputBar.style.cssText = [
+          'display:flex;align-items:center;gap:' + (8 * scale) + 'px',
+          'padding:' + (10 * scale) + 'px ' + (12 * scale) + 'px',
+          'border-top:1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)')
+        ].join(';');
+
         var input = document.createElement('input');
         input.type = 'text';
         input.placeholder = t('placeholder');
         input.style.cssText = [
-          'width:100%;padding:' + (12 * scale) + 'px ' + (16 * scale) + 'px',
-          'border-radius:' + (12 * scale) + 'px;font-size:' + (14 * fontScale) + 'px',
+          'flex:1;padding:' + (10 * scale) + 'px ' + (14 * scale) + 'px',
+          'border-radius:' + (10 * scale) + 'px;font-size:' + (13 * fontScale) + 'px',
           'background:' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)'),
-          'border:1.5px solid ' + (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'),
-          'color:' + colors.text + ';outline:none',
-          'transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-          'font-family:inherit'
+          'border:1px solid transparent',
+          'color:' + colors.text + ';outline:none;font-family:inherit',
+          'transition:all 0.2s'
         ].join(';');
-        
         input.onfocus = function() {
-          input.style.borderColor = colors.primary;
-          input.style.boxShadow = '0 0 0 4px ' + colors.primary + '20, 0 2px 8px ' + colors.primary + '15';
+          input.style.borderColor = colors.primary + '60';
           input.style.background = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.9)';
         };
         input.onblur = function() {
-          input.style.borderColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)';
-          input.style.boxShadow = 'none';
+          input.style.borderColor = 'transparent';
           input.style.background = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)';
         };
-        inputContainer.appendChild(input);
+        inputBar.appendChild(input);
 
-        // 回复显示区（初始隐藏）
-        var replyArea = document.createElement('div');
-        replyArea.style.cssText = [
-          'display:none;padding:' + (10 * scale) + 'px ' + (14 * scale) + 'px',
-          'background:' + (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)'),
-          'border-radius:' + (10 * scale) + 'px;font-size:' + (13 * fontScale) + 'px',
-          'color:' + colors.text + ';line-height:1.5;max-height:100%;overflow:hidden',
-          'animation:fadeIn 0.3s ease-out'
-        ].join(';');
-        inputContainer.appendChild(replyArea);
-        content.appendChild(inputContainer);
-
-        // 发送按钮
         var sendBtn = document.createElement('button');
         sendBtn.style.cssText = [
-          'flex-shrink:0;width:' + (44 * scale) + 'px;height:' + (44 * scale) + 'px',
-          'border-radius:' + (12 * scale) + 'px;border:none;cursor:pointer',
-          'background:linear-gradient(135deg, ' + colors.primary + ', ' + colors.primary + 'dd)',
+          'width:' + (36 * scale) + 'px;height:' + (36 * scale) + 'px',
+          'border-radius:' + (10 * scale) + 'px;border:none;cursor:pointer',
+          'background:' + colors.primary,
           'display:flex;align-items:center;justify-content:center',
-          'transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-          'box-shadow:0 4px 12px ' + colors.primary + '30'
+          'transition:all 0.2s'
         ].join(';');
-        sendBtn.innerHTML = '<svg width="' + (18 * scale) + '" height="' + (18 * scale) + '" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
-        
-        sendBtn.onmouseenter = function() {
-          if (!sending) {
-            sendBtn.style.transform = 'scale(1.05)';
-            sendBtn.style.boxShadow = '0 6px 20px ' + colors.primary + '50';
-          }
-        };
-        sendBtn.onmouseleave = function() {
-          sendBtn.style.transform = 'scale(1)';
-          sendBtn.style.boxShadow = '0 4px 12px ' + colors.primary + '30';
-        };
-        content.appendChild(sendBtn);
+        sendBtn.innerHTML = '<svg width="' + (16 * scale) + '" height="' + (16 * scale) + '" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
+        sendBtn.onmouseenter = function() { if (!sending) sendBtn.style.opacity = '0.85'; };
+        sendBtn.onmouseleave = function() { sendBtn.style.opacity = '1'; };
+        inputBar.appendChild(sendBtn);
+        content.appendChild(inputBar);
 
-        // 状态逻辑
+        // 状态
         var sending = false;
-        
-        function showLoading() {
-          input.style.display = 'none';
-          replyArea.style.display = 'block';
-          replyArea.innerHTML = '<div style="display:flex;align-items:center;gap:' + (6 * scale) + 'px;color:' + colors.subtext + '"><div style="display:flex;gap:3px;"><span style="width:6px;height:6px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite;animation-delay:0s"></span><span style="width:6px;height:6px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite;animation-delay:0.2s"></span><span style="width:6px;height:6px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite;animation-delay:0.4s"></span></div><span>' + t('sending') + '</span></div>';
+        var lastRole = null;
+
+        function showMessage(text, role) {
+          lastRole = role;
+          msgBubble.style.color = colors.text;
+          msgBubble.style.textAlign = role === 'user' ? 'right' : 'left';
+          msgBubble.style.background = role === 'user' 
+            ? colors.primary + '15' 
+            : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)');
+          
+          if (role === 'assistant') {
+            // AI 回复使用打字效果
+            var displayText = text.length > 100 ? text.substring(0, 100) + '...' : text;
+            typeWriter(msgBubble, displayText, 25);
+          } else {
+            msgBubble.textContent = text;
+          }
         }
 
-        function showReply(text) {
-          var displayText = text.length > 80 ? text.substring(0, 80) + '...' : text;
-          replyArea.innerHTML = '';
-          replyArea.style.animation = 'fadeIn 0.3s ease-out';
-          replyArea.textContent = displayText;
-          setTimeout(function() { resetInput(); }, 5000);
+        function showTyping() {
+          msgBubble.style.color = colors.subtext;
+          msgBubble.style.textAlign = 'center';
+          msgBubble.style.background = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)';
+          msgBubble.innerHTML = '<span style="display:inline-flex;gap:4px;align-items:center"><span style="width:6px;height:6px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite"></span><span style="width:6px;height:6px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite;animation-delay:0.2s"></span><span style="width:6px;height:6px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite;animation-delay:0.4s"></span></span>';
         }
 
         function showError(msg) {
-          replyArea.innerHTML = '<span style="color:#ef4444">❌ ' + msg + '</span>';
-          setTimeout(function() { resetInput(); }, 3000);
-        }
-
-        function resetInput() {
-          replyArea.style.display = 'none';
-          input.style.display = 'block';
-          input.style.animation = 'fadeIn 0.2s ease-out';
-          input.focus();
+          msgBubble.style.color = '#ef4444';
+          msgBubble.style.textAlign = 'center';
+          msgBubble.textContent = '❌ ' + msg;
         }
 
         function doSend() {
@@ -296,19 +288,19 @@ Tapp.widgets['ai-chat'] = {
           if (!text || sending) return;
           
           sending = true;
-          sendBtn.style.opacity = '0.6';
-          sendBtn.style.pointerEvents = 'none';
+          sendBtn.style.opacity = '0.5';
           input.value = '';
-          showLoading();
+          showMessage(text, 'user');
 
-          Tapp.ai.chat([{ role: 'user', content: text }], {}, { maxTokens: 500 })
+          setTimeout(function() { showTyping(); }, 300);
+
+          Tapp.ai.chat([{ role: 'user', content: text }], {}, { maxTokens: 300 })
             .then(function(resp) {
               var aiMessage = resp?.message || resp;
-              var replyContent = aiMessage?.content;
-              if (replyContent) {
-                showReply(replyContent);
+              if (aiMessage?.content) {
+                showMessage(aiMessage.content, 'assistant');
               } else {
-                throw new Error(resp?.error || 'No content');
+                throw new Error(resp?.error || t('error'));
               }
             })
             .catch(function(err) {
@@ -317,224 +309,179 @@ Tapp.widgets['ai-chat'] = {
             .finally(function() {
               sending = false;
               sendBtn.style.opacity = '1';
-              sendBtn.style.pointerEvents = 'auto';
             });
         }
 
         sendBtn.onclick = doSend;
         input.onkeydown = function(e) {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            doSend();
-          }
+          if (e.key === 'Enter') { e.preventDefault(); doSend(); }
         };
 
       } else {
-        // ========== 4x4 完整布局 ==========
+        // ========== 4x4 完整布局（浮动顶栏）==========
         
-        // 头部
-        var header = document.createElement('div');
-        header.style.cssText = [
-          'display:flex;align-items:center;gap:' + (10 * scale) + 'px',
-          'padding:' + (14 * scale) + 'px ' + (16 * scale) + 'px',
-          'border-bottom:1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)')
-        ].join(';');
-
-        // 头部图标
-        var headerIcon = document.createElement('div');
-        headerIcon.style.cssText = [
-          'width:' + (34 * scale) + 'px;height:' + (34 * scale) + 'px',
-          'border-radius:' + (10 * scale) + 'px;display:flex;align-items:center;justify-content:center',
-          'background:linear-gradient(135deg, ' + colors.primary + '25, ' + colors.primary + '10)'
-        ].join(';');
-        headerIcon.innerHTML = '<svg width="' + (18 * scale) + '" height="' + (18 * scale) + '" viewBox="0 0 24 24" fill="none" stroke="' + colors.primary + '" stroke-width="2"><path d="M12 8V4H8"/><rect x="8" y="8" width="8" height="8" rx="2"/><path d="M12 16v4h4"/></svg>';
-        header.appendChild(headerIcon);
-
-        var headerTitle = document.createElement('span');
-        headerTitle.style.cssText = 'flex:1;font-size:' + (15 * fontScale) + 'px;font-weight:600;color:' + colors.text;
-        headerTitle.textContent = t('widgetTitle');
-        header.appendChild(headerTitle);
-
-        // 状态指示器
-        var statusIndicator = document.createElement('div');
-        statusIndicator.style.cssText = [
-          'display:flex;align-items:center;gap:' + (6 * scale) + 'px',
-          'padding:' + (4 * scale) + 'px ' + (10 * scale) + 'px',
-          'background:' + (isDark ? 'rgba(34,197,94,0.15)' : 'rgba(34,197,94,0.1)'),
-          'border-radius:' + (20 * scale) + 'px;font-size:' + (11 * fontScale) + 'px;color:#22c55e'
-        ].join(';');
-        statusIndicator.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite"></span><span>Online</span>';
-        header.appendChild(statusIndicator);
-        content.appendChild(header);
-
-        // 消息区域
+        // 消息区域（全屏）
         var msgArea = document.createElement('div');
         msgArea.style.cssText = [
-          'flex:1;overflow-y:auto;overflow-x:hidden;padding:' + (12 * scale) + 'px',
-          'display:flex;flex-direction:column;gap:' + (10 * scale) + 'px',
-          'scroll-behavior:smooth'
+          'flex:1;overflow-y:auto;overflow-x:hidden',
+          'padding:' + (12 * scale) + 'px',
+          'padding-top:' + (44 * scale) + 'px',
+          'display:flex;flex-direction:column;gap:' + (8 * scale) + 'px'
         ].join(';');
 
-        // 空状态
-        var emptyState = document.createElement('div');
-        emptyState.style.cssText = [
-          'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center',
-          'padding:' + (12 * scale) + 'px;animation:fadeIn 0.5s ease-out'
+        // 浮动顶栏
+        var floatHeader = document.createElement('div');
+        floatHeader.style.cssText = [
+          'position:absolute;top:' + (8 * scale) + 'px;left:' + (8 * scale) + 'px;right:' + (8 * scale) + 'px;z-index:20',
+          'display:flex;align-items:center;gap:' + (8 * scale) + 'px',
+          'padding:' + (8 * scale) + 'px ' + (12 * scale) + 'px',
+          'border-radius:' + (10 * scale) + 'px',
+          'background:' + (isDark ? 'rgba(15,23,42,0.85)' : 'rgba(255,255,255,0.9)'),
+          'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)',
+          'border:1px solid ' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'),
+          'box-shadow:0 2px 12px ' + (isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.06)')
         ].join(';');
 
-        var emptyIcon = document.createElement('div');
-        emptyIcon.style.cssText = [
-          'width:' + (48 * scale) + 'px;height:' + (48 * scale) + 'px;margin-bottom:' + (10 * scale) + 'px',
-          'border-radius:' + (14 * scale) + 'px;display:flex;align-items:center;justify-content:center',
-          'background:linear-gradient(135deg, ' + colors.primary + '20, ' + colors.primary + '08)'
+        var headerIcon = document.createElement('div');
+        headerIcon.style.cssText = [
+          'width:' + (24 * scale) + 'px;height:' + (24 * scale) + 'px',
+          'border-radius:' + (6 * scale) + 'px;display:flex;align-items:center;justify-content:center',
+          'background:' + colors.primary
         ].join(';');
-        emptyIcon.innerHTML = '<svg width="' + (24 * scale) + '" height="' + (24 * scale) + '" viewBox="0 0 24 24" fill="none" stroke="' + colors.primary + '" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>';
-        emptyState.appendChild(emptyIcon);
+        headerIcon.innerHTML = '<svg width="' + (14 * scale) + '" height="' + (14 * scale) + '" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+        floatHeader.appendChild(headerIcon);
 
-        var emptyText = document.createElement('div');
-        emptyText.style.cssText = 'font-size:' + (12 * fontScale) + 'px;color:' + colors.subtext + ';margin-bottom:' + (12 * scale) + 'px;';
-        emptyText.textContent = t('startChat');
-        emptyState.appendChild(emptyText);
+        var headerTitle = document.createElement('span');
+        headerTitle.style.cssText = 'flex:1;font-size:' + (13 * fontScale) + 'px;font-weight:500;color:' + colors.text;
+        headerTitle.textContent = t('widgetTitle');
+        floatHeader.appendChild(headerTitle);
 
-        // 快捷提示
-        var hintsWrap = document.createElement('div');
-        hintsWrap.style.cssText = 'display:flex;flex-wrap:wrap;justify-content:center;gap:' + (6 * scale) + 'px;';
-        t('hints').forEach(function(hint, i) {
-          var hintBtn = document.createElement('button');
-          hintBtn.style.cssText = [
-            'padding:' + (6 * scale) + 'px ' + (12 * scale) + 'px',
-            'border-radius:' + (8 * scale) + 'px;border:none;cursor:pointer',
-            'font-size:' + (11 * fontScale) + 'px;font-family:inherit',
-            'background:' + (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'),
-            'color:' + colors.subtext,
-            'transition:all 0.2s;animation:fadeInUp 0.3s ease-out both',
-            'animation-delay:' + (i * 0.05) + 's'
-          ].join(';');
-          hintBtn.textContent = hint;
-          hintBtn.onmouseenter = function() {
-            hintBtn.style.background = colors.primary + '20';
-            hintBtn.style.color = colors.primary;
-            hintBtn.style.transform = 'translateY(-2px)';
-          };
-          hintBtn.onmouseleave = function() {
-            hintBtn.style.background = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)';
-            hintBtn.style.color = colors.subtext;
-            hintBtn.style.transform = 'translateY(0)';
-          };
-          hintBtn.onclick = function() {
-            inputEl.value = hint;
-            inputEl.focus();
-          };
-          hintsWrap.appendChild(hintBtn);
-        });
-        emptyState.appendChild(hintsWrap);
-        msgArea.appendChild(emptyState);
+        // 清除按钮
+        var clearBtn = document.createElement('button');
+        clearBtn.style.cssText = [
+          'width:' + (24 * scale) + 'px;height:' + (24 * scale) + 'px;border:none;cursor:pointer',
+          'border-radius:' + (6 * scale) + 'px;background:transparent',
+          'display:flex;align-items:center;justify-content:center',
+          'transition:all 0.2s;opacity:0.6'
+        ].join(';');
+        clearBtn.innerHTML = '<svg width="' + (14 * scale) + '" height="' + (14 * scale) + '" viewBox="0 0 24 24" fill="none" stroke="' + colors.text + '" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>';
+        clearBtn.onmouseenter = function() { clearBtn.style.opacity = '1'; clearBtn.style.background = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'; };
+        clearBtn.onmouseleave = function() { clearBtn.style.opacity = '0.6'; clearBtn.style.background = 'transparent'; };
+        floatHeader.appendChild(clearBtn);
+        content.appendChild(floatHeader);
+
+        // 欢迎消息
+        var welcomeMsg = document.createElement('div');
+        welcomeMsg.style.cssText = [
+          'text-align:center;padding:' + (20 * scale) + 'px ' + (16 * scale) + 'px',
+          'color:' + colors.subtext + ';font-size:' + (12 * fontScale) + 'px'
+        ].join(';');
+        welcomeMsg.textContent = t('startChat');
+        msgArea.appendChild(welcomeMsg);
         content.appendChild(msgArea);
 
         // 输入区域
         var inputArea = document.createElement('div');
         inputArea.style.cssText = [
-          'padding:' + (12 * scale) + 'px',
-          'border-top:1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'),
+          'display:flex;align-items:center;gap:' + (8 * scale) + 'px',
+          'padding:' + (10 * scale) + 'px ' + (12 * scale) + 'px',
+          'border-top:1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
           'background:' + (isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.5)')
         ].join(';');
-
-        var inputRow = document.createElement('div');
-        inputRow.style.cssText = 'display:flex;align-items:center;gap:' + (10 * scale) + 'px;';
 
         var inputEl = document.createElement('input');
         inputEl.type = 'text';
         inputEl.placeholder = t('placeholder');
         inputEl.style.cssText = [
-          'flex:1;padding:' + (11 * scale) + 'px ' + (14 * scale) + 'px',
-          'border-radius:' + (12 * scale) + 'px;font-size:' + (13 * fontScale) + 'px',
+          'flex:1;padding:' + (10 * scale) + 'px ' + (14 * scale) + 'px',
+          'border-radius:' + (10 * scale) + 'px;font-size:' + (13 * fontScale) + 'px',
           'background:' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)'),
-          'border:1.5px solid ' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'),
+          'border:1px solid transparent',
           'color:' + colors.text + ';outline:none;font-family:inherit',
           'transition:all 0.2s'
         ].join(';');
         inputEl.onfocus = function() {
-          inputEl.style.borderColor = colors.primary;
-          inputEl.style.boxShadow = '0 0 0 3px ' + colors.primary + '15';
+          inputEl.style.borderColor = colors.primary + '60';
         };
         inputEl.onblur = function() {
-          inputEl.style.borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
-          inputEl.style.boxShadow = 'none';
+          inputEl.style.borderColor = 'transparent';
         };
-        inputRow.appendChild(inputEl);
+        inputArea.appendChild(inputEl);
 
         var sendBtn = document.createElement('button');
         sendBtn.style.cssText = [
-          'width:' + (38 * scale) + 'px;height:' + (38 * scale) + 'px',
+          'width:' + (36 * scale) + 'px;height:' + (36 * scale) + 'px',
           'border-radius:' + (10 * scale) + 'px;border:none;cursor:pointer',
-          'background:linear-gradient(135deg, ' + colors.primary + ', ' + colors.primary + 'dd)',
+          'background:' + colors.primary,
           'display:flex;align-items:center;justify-content:center',
-          'transition:all 0.2s;box-shadow:0 3px 10px ' + colors.primary + '25'
+          'transition:all 0.2s'
         ].join(';');
         sendBtn.innerHTML = '<svg width="' + (16 * scale) + '" height="' + (16 * scale) + '" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
-        sendBtn.onmouseenter = function() { if (!isWidgetSending) sendBtn.style.transform = 'scale(1.08)'; };
-        sendBtn.onmouseleave = function() { sendBtn.style.transform = 'scale(1)'; };
-        inputRow.appendChild(sendBtn);
-        inputArea.appendChild(inputRow);
+        inputArea.appendChild(sendBtn);
         content.appendChild(inputArea);
 
         // 消息逻辑
         var widgetMessages = [];
         var isWidgetSending = false;
 
-        function createBubble(msg, animated) {
+        function createBubble(msg, useTypeEffect) {
           var isUser = msg.role === 'user';
           var wrapper = document.createElement('div');
           wrapper.style.cssText = [
-            'display:flex;gap:' + (8 * scale) + 'px;align-items:flex-end',
-            'flex-direction:' + (isUser ? 'row-reverse' : 'row'),
-            animated ? 'animation:' + (isUser ? 'slideInRight' : 'slideInLeft') + ' 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' : ''
+            'display:flex;flex-direction:' + (isUser ? 'row-reverse' : 'row'),
+            'animation:' + (isUser ? 'slideInRight' : 'slideInLeft') + ' 0.25s ease-out'
           ].join(';');
 
           var bubble = document.createElement('div');
           bubble.style.cssText = [
-            'max-width:85%;padding:' + (10 * scale) + 'px ' + (14 * scale) + 'px',
-            'border-radius:' + (14 * scale) + 'px ' + (14 * scale) + 'px ' + (isUser ? '4px' : (14 * scale) + 'px') + ' ' + (isUser ? (14 * scale) + 'px' : '4px'),
+            'max-width:80%;padding:' + (10 * scale) + 'px ' + (14 * scale) + 'px',
+            'border-radius:' + (12 * scale) + 'px',
             'font-size:' + (12 * fontScale) + 'px;line-height:1.5;word-break:break-word',
-            'background:' + (isUser ? 'linear-gradient(135deg, ' + colors.primary + ', ' + colors.primary + 'dd)' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)')),
-            'color:' + (isUser ? 'white' : colors.text),
-            isUser ? 'box-shadow:0 2px 8px ' + colors.primary + '30' : ''
+            'background:' + (isUser ? colors.primary : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)')),
+            'color:' + (isUser ? 'white' : colors.text)
           ].join(';');
-          bubble.innerHTML = formatMessage(escapeHtml(msg.content));
+          
+          if (!isUser && useTypeEffect) {
+            typeWriter(bubble, msg.content, 20);
+          } else {
+            bubble.innerHTML = formatMessage(escapeHtml(msg.content));
+          }
           wrapper.appendChild(bubble);
           return wrapper;
         }
 
         function createTypingIndicator() {
           var wrapper = document.createElement('div');
-          wrapper.id = 'typing-indicator';
-          wrapper.style.cssText = 'display:flex;gap:' + (8 * scale) + 'px;align-items:flex-end;animation:fadeIn 0.2s ease-out';
+          wrapper.id = 'widget-typing';
+          wrapper.style.cssText = 'display:flex;animation:fadeIn 0.2s ease-out';
           var bubble = document.createElement('div');
           bubble.style.cssText = [
-            'padding:' + (12 * scale) + 'px ' + (16 * scale) + 'px',
-            'border-radius:' + (14 * scale) + 'px ' + (14 * scale) + 'px ' + (14 * scale) + 'px 4px',
+            'padding:' + (10 * scale) + 'px ' + (16 * scale) + 'px',
+            'border-radius:' + (12 * scale) + 'px',
             'background:' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)'),
-            'display:flex;gap:4px;align-items:center'
+            'display:flex;gap:4px'
           ].join(';');
           bubble.innerHTML = [
-            '<span style="width:7px;height:7px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite"></span>',
-            '<span style="width:7px;height:7px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite;animation-delay:0.2s"></span>',
-            '<span style="width:7px;height:7px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite;animation-delay:0.4s"></span>'
+            '<span style="width:6px;height:6px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite"></span>',
+            '<span style="width:6px;height:6px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite;animation-delay:0.2s"></span>',
+            '<span style="width:6px;height:6px;border-radius:50%;background:' + colors.primary + ';animation:typingDot 1.4s infinite;animation-delay:0.4s"></span>'
           ].join('');
           wrapper.appendChild(bubble);
           return wrapper;
         }
 
-        function renderMessages() {
-          msgArea.innerHTML = '';
-          if (widgetMessages.length === 0) {
-            msgArea.appendChild(emptyState);
-            return;
+        function renderMessages(lastIsTyped) {
+          // 清除欢迎消息
+          if (widgetMessages.length > 0) {
+            welcomeMsg.style.display = 'none';
           }
-          widgetMessages.slice(-6).forEach(function(msg, i) {
-            msgArea.appendChild(createBubble(msg, i === widgetMessages.length - 1));
-          });
-          msgArea.scrollTop = msgArea.scrollHeight;
+          // 只添加最新消息
+          var lastMsg = widgetMessages[widgetMessages.length - 1];
+          if (lastMsg) {
+            var bubble = createBubble(lastMsg, lastIsTyped && lastMsg.role === 'assistant');
+            msgArea.appendChild(bubble);
+            msgArea.scrollTop = msgArea.scrollHeight;
+          }
         }
 
         function doWidgetSend() {
@@ -542,34 +489,35 @@ Tapp.widgets['ai-chat'] = {
           if (!text || isWidgetSending) return;
           
           isWidgetSending = true;
-          sendBtn.style.opacity = '0.6';
+          sendBtn.style.opacity = '0.5';
           inputEl.value = '';
           
           widgetMessages.push({ role: 'user', content: text });
-          renderMessages();
+          renderMessages(false);
           
-          msgArea.appendChild(createTypingIndicator());
+          var typing = createTypingIndicator();
+          msgArea.appendChild(typing);
           msgArea.scrollTop = msgArea.scrollHeight;
 
           var chatMsgs = widgetMessages.map(function(m) { return { role: m.role, content: m.content }; });
 
           Tapp.ai.chat(chatMsgs, {}, { maxTokens: 500 })
             .then(function(resp) {
-              var indicator = document.getElementById('typing-indicator');
-              if (indicator) indicator.remove();
+              var ind = document.getElementById('widget-typing');
+              if (ind) ind.remove();
               var aiMsg = resp?.message || resp;
               if (aiMsg?.content) {
                 widgetMessages.push({ role: 'assistant', content: aiMsg.content });
-                renderMessages();
+                renderMessages(true);
               } else {
-                throw new Error(resp?.error || 'No content');
+                throw new Error(resp?.error || t('error'));
               }
             })
             .catch(function(err) {
-              var indicator = document.getElementById('typing-indicator');
-              if (indicator) indicator.remove();
+              var ind = document.getElementById('widget-typing');
+              if (ind) ind.remove();
               widgetMessages.push({ role: 'assistant', content: '❌ ' + (err.message || t('error')) });
-              renderMessages();
+              renderMessages(false);
             })
             .finally(function() {
               isWidgetSending = false;
@@ -577,12 +525,16 @@ Tapp.widgets['ai-chat'] = {
             });
         }
 
+        clearBtn.onclick = function() {
+          widgetMessages = [];
+          msgArea.innerHTML = '';
+          welcomeMsg.style.display = 'block';
+          msgArea.appendChild(welcomeMsg);
+        };
+
         sendBtn.onclick = doWidgetSend;
         inputEl.onkeydown = function(e) {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            doWidgetSend();
-          }
+          if (e.key === 'Enter') { e.preventDefault(); doWidgetSend(); }
         };
       }
 
@@ -593,8 +545,7 @@ Tapp.widgets['ai-chat'] = {
         var editOverlay = document.createElement('div');
         editOverlay.style.cssText = [
           'position:absolute;inset:0;border:2px dashed ' + colors.primary,
-          'border-radius:' + (16 * scale) + 'px;pointer-events:none;z-index:100',
-          'background:' + colors.primary + '08'
+          'border-radius:' + (16 * scale) + 'px;pointer-events:none;z-index:100'
         ].join(';');
         main.appendChild(editOverlay);
       }
