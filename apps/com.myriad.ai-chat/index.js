@@ -119,8 +119,10 @@ Tapp.widgets['ai-chat'] = {
       var themeColor = props.primaryColor || '#8b5cf6';
       var size = props.size || '4x2';
       var isCompact = size === '4x2';
-      var scale = props.scale || 1;
-      var fontScale = props.fontScale || 1;
+      // 从全局尺寸对象获取 scale（由 TappSandbox 自动计算并注入）
+      var dims = window._TAPP_DIMENSIONS || {};
+      var scale = dims.scale || props.scale || 1;
+      var fontScale = dims.fontScale || props.fontScale || 1;
       
       currentLocale = normalizeLocale(props.locale);
       var colors = getThemeColors(isDark, themeColor);
