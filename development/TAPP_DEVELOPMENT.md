@@ -13,6 +13,7 @@ Tapp (Third-party App) 是 Myriad 的扩展应用系统，允许开发者创建�
   - [存储 API](#存储-api)
   - [设置 API](#设置-api)
   - [UI API](#ui-api)
+  - [动画 API](#动画-api)
   - [平台 API](#平台-api)
   - [AI API](#ai-api)
   - [小组件 API](#小组件-api)
@@ -664,6 +665,93 @@ function applyThemeColor(color) {
 }
 ```
 
+### 动画 API
+
+**权限**: 无需特殊权限
+
+动画 API 允许 Tapp 获取当前系统的动画配置，以便根据用户的动画偏好设置调整 UI 行为。这确保了 Tapp 与系统整体动画体验保持一致。
+
+```javascript
+// 获取当前动画级别
+const level = await Tapp.animation.getLevel();
+// 返回: 'none' | 'light' | 'standard'
+// - 'none': 无动画（适合节省资源或无障碍需求）
+// - 'light': 轻量动画（简化的过渡效果）
+// - 'standard': 标准动画（完整动画体验）
+
+// 检查是否应该显示动画
+const shouldAnimate = await Tapp.animation.shouldAnimate();
+// 返回: boolean
+// 当动画级别为 'none' 时返回 false，否则返回 true
+
+// 获取完整动画配置
+const config = await Tapp.animation.getConfig();
+// 返回: {
+//   level: 'standard',           // 动画级别
+//   loop: true,                  // 是否允许循环动画
+//   spring: { tension: 280, friction: 20 },  // 弹簧动画参数
+//   durationScale: 1             // 动画时长缩放系数
+// }
+
+// 获取推荐的交错延迟（用于列表动画）
+const delay = await Tapp.animation.getStaggerDelay(index, baseDelay);
+// index: 元素索引（从 0 开始）
+// baseDelay: 基础延迟（毫秒），默认 50ms
+// 返回: number（计算后的延迟毫秒数）
+// 根据动画级别自动调整：
+// - 'none': 返回 0
+// - 'light': 返回 index * (baseDelay * 0.5) * durationScale
+// - 'standard': 返回 index * baseDelay * durationScale
+
+// 监听动画级别变化
+const unsubscribe = Tapp.animation.onLevelChange((level) => {
+  console.log("动画级别变化:", level);
+  // 根据新的动画级别调整 UI
+});
+
+// 取消监听
+unsubscribe();
+```
+
+#### 动画 API 使用示例
+
+```javascript
+// 根据动画设置创建列表动画
+async function animateListItems(items) {
+  const shouldAnimate = await Tapp.animation.shouldAnimate();
+
+  for (let i = 0; i < items.length; i++) {
+    const delay = await Tapp.animation.getStaggerDelay(i);
+
+    if (shouldAnimate) {
+      // 使用延迟显示动画
+      setTimeout(() => {
+        items[i].classList.add("visible");
+      }, delay);
+    } else {
+      // 无动画模式：直接显示
+      items[i].classList.add("visible");
+    }
+  }
+}
+
+// 根据配置调整动画时长
+async function getAnimationDuration(baseDuration = 300) {
+  const config = await Tapp.animation.getConfig();
+  return baseDuration * config.durationScale;
+}
+
+// 响应动画级别变化
+Tapp.animation.onLevelChange(async (level) => {
+  if (level === "none") {
+    // 停止所有正在进行的动画
+    document.querySelectorAll(".animating").forEach((el) => {
+      el.style.animation = "none";
+    });
+  }
+});
+```
+
 ### 平台 API
 
 **权限**: `platform:read`, `platform:write`
@@ -714,7 +802,7 @@ await Tapp.platform.registerPlatform({
 
 ### AI API
 
-**权限**: `ai:generate`, `ai:analyze`, `ai:chat`
+**权限**: `ai:generate`, `ai:analyze`, `ai:chat`, `ai:image`
 
 ```javascript
 // AI 生成
@@ -738,6 +826,17 @@ const chat = await Tapp.ai.chat(
   { includePlatformStats: true }, // context: 上下文（可选）
   { maxTokens: 1000 } // options: 选项（可选）
 );
+
+// AI 图片生成（需要 ai:image 权限）
+const image = await Tapp.ai.image({
+  prompt: "一只可爱的猫咪，动漫风格",
+  width: 512, // 可选，256-2048
+  height: 768, // 可选，256-2048
+  model: "flux-anime", // 可选，flux/flux-anime/flux-realism/flux-3d
+  enhance: true, // 可选，是否增强提示词
+  seed: 12345, // 可选，固定随机种子
+});
+// 返回: { success: true, provider: 'pollinations', url: '...', width, height }
 
 // 获取 AI 配额
 const quota = await Tapp.ai.getQuota();
@@ -1492,6 +1591,7 @@ Tapp 使用细粒度权限控制，每个 API 调用都需要相应权限。
 | `ai:generate`       | 提升 | AI 文本生成    | ❌       | ✅     |
 | `ai:analyze`        | 提升 | AI 数据分析    | ❌       | ✅     |
 | `ai:chat`           | 提升 | AI 对话        | ❌       | ✅     |
+| `ai:image`          | 提升 | AI 图片生成    | ❌       | ✅     |
 | `report:write`      | 提升 | 创建/修改报告  | ❌       | ✅     |
 | `network:fetch`     | 提升 | 发送 HTTP 请求 | ❌       | ✅     |
 | `media:control`     | 提升 | 控制媒体播放   | ❌       | ✅     |
@@ -2745,11 +2845,42 @@ function getElement(id) {
 
 ```javascript
 Tapp.lifecycle.onReady(async () => {
+  // 获取动画配置，适配用户偏好
+  const animConfig = await Tapp.animation.getConfig();
+  const shouldAnimate = animConfig.level !== "none";
+
+  // 显示欢迎通知
   await Tapp.ui.showNotification({
     title: "Hello!",
     message: "Tapp 已启动",
     type: "success",
   });
+
+  // 根据动画设置创建入场效果
+  const container = document.getElementById("app");
+  if (container) {
+    const duration = 300 * animConfig.durationScale;
+
+    if (shouldAnimate) {
+      container.style.opacity = "0";
+      container.style.transform = "translateY(10px)";
+      container.style.transition = `all ${duration}ms ease-out`;
+
+      requestAnimationFrame(() => {
+        container.style.opacity = "1";
+        container.style.transform = "translateY(0)";
+      });
+    }
+  }
+});
+
+// 监听动画级别变化
+Tapp.animation.onLevelChange((level) => {
+  console.log("动画级别变化:", level);
+});
+
+Tapp.lifecycle.onDestroy(() => {
+  console.log("Tapp 已停止");
 });
 ```
 
@@ -3331,6 +3462,7 @@ var borderColor = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)";
 | `platform:write`  | `Tapp.platform.addItem()`                 | 仅管理员 |
 | `ai:generate`     | `Tapp.ai.generate()`                      | 仅管理员 |
 | `ai:chat`         | `Tapp.ai.chat()`                          | 仅管理员 |
+| `ai:image`        | `Tapp.ai.image()`                         | 仅管理员 |
 | `network:fetch`   | `Tapp.fetch.proxy()`                      | 仅管理员 |
 | `widget:register` | `Tapp.widget.register()`                  | 所有用户 |
 
@@ -3442,13 +3574,17 @@ Tapp.widgets["my-widget"] = {
     var scale = props.scale || 1;
     var fontScale = props.fontScale || 1;
 
+    // 获取动画配置
+    var animConfig = await Tapp.animation.getConfig();
+    var shouldAnimate = animConfig.level !== "none";
+
     container.innerHTML =
       '<div class="relative h-full w-full rounded-xl overflow-hidden glass">' +
       '<div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent"></div>' +
       '<div class="relative z-10 h-full flex items-center justify-center p-3" style="padding:' +
       12 * scale +
       'px;">' +
-      '<span class="font-bold" style="font-size:' +
+      '<span class="font-bold widget-text" style="font-size:' +
       24 * fontScale +
       "px;color:" +
       (isDark ? "#f3f4f6" : "#1f2937") +
@@ -3460,6 +3596,22 @@ Tapp.widgets["my-widget"] = {
         ? '<div class="absolute inset-0 border-2 border-dashed border-blue-400 rounded-xl pointer-events-none"></div>'
         : "") +
       "</div>";
+
+    // 入场动画（尊重用户动画偏好）
+    if (shouldAnimate) {
+      var text = container.querySelector(".widget-text");
+      if (text) {
+        text.style.opacity = "0";
+        text.style.transform = "scale(0.9)";
+        text.style.transition =
+          "all " + 200 * animConfig.durationScale + "ms ease-out";
+        requestAnimationFrame(function () {
+          text.style.opacity = "1";
+          text.style.transform = "scale(1)";
+        });
+      }
+    }
+    ("</div>");
   },
 };
 
@@ -3490,9 +3642,13 @@ function t(key, locale) {
 
 // === PAGE_CODE ===
 Tapp.pages["my-page"] = {
-  render: function (container, locale, isDark, primaryColor) {
+  render: async function (container, locale, isDark, primaryColor) {
     var bgLayer = document.getElementById("tapp-background");
     var contentLayer = document.getElementById("tapp-content");
+
+    // 获取动画配置
+    var animConfig = await Tapp.animation.getConfig();
+    var shouldAnimate = animConfig.level !== "none";
 
     // 背景层
     if (bgLayer) {
@@ -3502,7 +3658,7 @@ Tapp.pages["my-page"] = {
     // 内容层
     if (contentLayer) {
       contentLayer.innerHTML =
-        '<div style="max-width:900px;margin:0 auto;padding:24px;">' +
+        '<div class="page-content" style="max-width:900px;margin:0 auto;padding:24px;">' +
         '<h1 style="font-size:32px;color:' +
         (isDark ? "#f9fafb" : "#1f2937") +
         ';">' +
@@ -3514,6 +3670,21 @@ Tapp.pages["my-page"] = {
         Tapp.dom.escapeHtml(t("greeting", locale)) +
         "</p>" +
         "</div>";
+
+      // 入场动画
+      if (shouldAnimate) {
+        var content = contentLayer.querySelector(".page-content");
+        if (content) {
+          var duration = 300 * animConfig.durationScale;
+          content.style.opacity = "0";
+          content.style.transform = "translateY(16px)";
+          content.style.transition = "all " + duration + "ms ease-out";
+          requestAnimationFrame(function () {
+            content.style.opacity = "1";
+            content.style.transform = "translateY(0)";
+          });
+        }
+      }
     }
   },
 };
@@ -3523,7 +3694,7 @@ Tapp.lifecycle.onReady(async function () {
   var theme = await Tapp.ui.getTheme();
   var primaryColor = await Tapp.ui.getPrimaryColor();
 
-  Tapp.pages["my-page"].render(
+  await Tapp.pages["my-page"].render(
     document.getElementById("tapp-root"),
     locale,
     theme === "dark",
@@ -3543,6 +3714,11 @@ Tapp.lifecycle.onReady(async function () {
   Tapp.ui.onLocaleChange(function (newLocale) {
     locale = newLocale;
     Tapp.pages["my-page"].render(null, locale, theme === "dark", primaryColor);
+  });
+
+  // 监听动画级别变化
+  Tapp.animation.onLevelChange(function (level) {
+    console.log("动画级别变化:", level);
   });
 });
 ```
@@ -3564,6 +3740,13 @@ Tapp.lifecycle.onReady(async function () {
 - [ ] 是否处理了 `props.theme` 暗色模式？
 - [ ] 是否使用了 `props.scale`/`props.fontScale` 进行缩放？
 - [ ] 是否添加了编辑模式边框 `props.isEditMode`？
+
+**动画适配**（⚠️ 重要）：
+
+- [ ] 是否使用 `Tapp.animation.getConfig()` 获取动画配置？
+- [ ] 动画是否尊重用户的动画级别偏好（none/light/standard）？
+- [ ] 动画时长是否乘以 `durationScale` 进行缩放？
+- [ ] 是否监听 `Tapp.animation.onLevelChange` 响应设置变化？
 
 **安全与权限**：
 
