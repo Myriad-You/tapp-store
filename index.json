@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.app/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2025-12-07T00:00:00Z",
+  "updated_at": "2025-12-08T00:00:00Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.app",
@@ -80,6 +80,44 @@
       "verified": true,
       "created_at": "2025-12-04T00:00:00Z",
       "updated_at": "2025-12-07T00:00:00Z"
+    },
+    {
+      "id": "com.myriad.weather",
+      "name": "天气预报",
+      "version": "1.0.0",
+      "description": "显示当前位置的天气信息，支持多种天气 API 服务",
+      "long_description": "天气预报应用使用新的 Tapp API 声明系统，自动获取用户位置并显示实时天气。API 密钥由后端安全管理，支持缓存和速率限制。",
+      "author": {
+        "name": "Myriad Team",
+        "url": "https://github.com/Myriad-You"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/com.myriad.weather",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "utility",
+      "tags": ["天气", "weather", "widget", "位置", "utility"],
+      "permissions": ["storage", "widget:register"],
+      "min_myriad_version": "0.3.0",
+      "icon": "🌤️",
+      "screenshots": [],
+      "download": {
+        "manifest": "apps/com.myriad.weather/manifest.json",
+        "code": "apps/com.myriad.weather/index.js",
+        "readme": "apps/com.myriad.weather/README.md",
+        "styles": "apps/com.myriad.weather/styles.css",
+        "page_template": "apps/com.myriad.weather/page.html",
+        "widget_templates": {
+          "2x2": "apps/com.myriad.weather/widget-2x2.html",
+          "4x2": "apps/com.myriad.weather/widget-4x2.html"
+        }
+      },
+      "size": 12800,
+      "downloads": 0,
+      "rating": 0,
+      "featured": true,
+      "verified": true,
+      "created_at": "2025-12-08T00:00:00Z",
+      "updated_at": "2025-12-08T00:00:00Z"
     }
   ]
 }

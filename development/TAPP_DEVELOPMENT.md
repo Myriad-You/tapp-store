@@ -23,6 +23,7 @@ Tapp (Third-party App) 是 Myriad 的扩展应用系统，允许开发者创建�
   - [数据处理 API](#数据处理-api)
   - [媒体控制 API](#媒体控制-api)
   - [上下文 API](#上下文-api)
+  - [用户角色 API](#用户角色-api)
   - [组件注册 API](#组件注册-api)
   - [快捷键 API](#快捷键-api)
   - [事件总线 API](#事件总线-api)
@@ -31,6 +32,7 @@ Tapp (Third-party App) 是 Myriad 的扩展应用系统，允许开发者创建�
   - [速率限制 API](#速率限制-api)
   - [性能指标 API（管理员）](#性能指标-api管理员)
 - [权限系统](#权限系统)
+- [REST API 端点参考](#rest-api-端点参考)
 - [安全沙箱](#安全沙箱)
 - [自适应尺寸](#自适应尺寸)
 - [页面分层架构](#页面分层架构)
@@ -979,6 +981,194 @@ const response = await Tapp.fetch.proxy({
 
 > 注意：内网地址（localhost, 192.168.x.x 等）被禁止访问
 
+### 声明式 API（推荐）
+
+**权限**: 根据 API 的 `access` 级别
+
+声明式 API 是更安全、更便捷的外部服务调用方式。与 `fetch.proxy` 相比，它将 API 配置预先声明在 manifest 中，由后端统一管理 API 密钥和上下文注入。
+
+#### manifest.apis 配置
+
+在 `manifest.json` 中声明 API：
+
+```json
+{
+  "apis": {
+    "getWeather": {
+      "name": "获取天气数据",
+      "description": "根据用户位置获取当前天气信息",
+      "access": "public",
+      "type": "http",
+      "url": "https://api.openweathermap.org/data/2.5/weather",
+      "method": "GET",
+      "params": {
+        "lat": "{{geo.lat}}",
+        "lon": "{{geo.lon}}",
+        "appid": "{{secrets.openweather_api_key}}",
+        "units": "{{params.units}}",
+        "lang": "zh_cn"
+      },
+      "inject": ["geo", "secrets"],
+      "cache_ttl": 600,
+      "rate_limit": {
+        "calls": 60,
+        "period": 3600
+      }
+    }
+  }
+}
+```
+
+#### API 声明字段
+
+| 字段          | 类型     | 必填 | 说明                                             |
+| ------------- | -------- | ---- | ------------------------------------------------ |
+| `name`        | string   | ✅   | API 名称（用于显示）                             |
+| `description` | string   | ❌   | API 描述                                         |
+| `access`      | string   | ✅   | 访问级别：`public`（公开）或 `protected`（权限） |
+| `type`        | string   | ✅   | API 类型：`http` 或 `builtin`                    |
+| `url`         | string   | ✅   | HTTP 请求的目标 URL（type=http 时）              |
+| `method`      | string   | ❌   | HTTP 方法：GET、POST 等，默认 GET                |
+| `params`      | object   | ❌   | 请求参数，支持模板变量                           |
+| `headers`     | object   | ❌   | 请求头，支持模板变量                             |
+| `body`        | object   | ❌   | 请求体模板（POST/PUT 时使用）                    |
+| `inject`      | string[] | ❌   | 自动注入的上下文：`geo`、`secrets`               |
+| `cache_ttl`   | number   | ❌   | 缓存时间（秒），0 表示不缓存                     |
+| `rate_limit`  | object   | ❌   | 速率限制配置                                     |
+
+#### 访问级别
+
+| 级别        | 说明                                      |
+| ----------- | ----------------------------------------- |
+| `public`    | 所有用户可用，包括游客，无需额外权限      |
+| `protected` | 需要相关权限（如 AI API 需要 `ai:*` 权限）|
+
+> **重要**：AI 相关的 API（如调用 OpenAI、Claude 等）必须使用 `protected` 访问级别。
+
+#### 模板变量
+
+API 声明支持以下模板变量：
+
+| 变量                    | 说明                      | 需要 inject |
+| ----------------------- | ------------------------- | ----------- |
+| `{{geo.lat}}`           | 用户纬度                  | geo         |
+| `{{geo.lon}}`           | 用户经度                  | geo         |
+| `{{geo.city}}`          | 用户城市                  | geo         |
+| `{{geo.region}}`        | 用户地区/省份             | geo         |
+| `{{geo.country}}`       | 用户国家                  | geo         |
+| `{{geo.timezone}}`      | 用户时区                  | geo         |
+| `{{secrets.xxx}}`       | 后端配置的密钥            | secrets     |
+| `{{params.xxx}}`        | 调用时传入的参数          | -           |
+| `{{user.id}}`           | 用户 ID                   | -           |
+| `{{user.role}}`         | 用户角色                  | -           |
+| `{{tapp.id}}`           | Tapp ID                   | -           |
+
+#### 调用 API
+
+```javascript
+// 使用 Tapp.api() 调用声明的 API
+const response = await Tapp.api('getWeather', { 
+  units: 'metric' // 传入参数会替换 {{params.units}}
+});
+
+if (response.success) {
+  console.log('天气数据:', response.data);
+  // response.data 是 API 返回的原始数据
+} else {
+  console.error('错误:', response.error);
+}
+
+// 获取可用 API 列表
+const apis = await Tapp.api.list();
+// 返回: [{ name: 'getWeather', description: '...', access: 'public' }]
+```
+
+#### 获取地理位置上下文
+
+```javascript
+// 直接获取用户地理位置信息
+const geo = await Tapp.context.getGeo();
+// 返回: {
+//   lat: 39.9042,
+//   lon: 116.4074,
+//   city: 'Beijing',
+//   region: 'Beijing',
+//   country: 'CN',
+//   timezone: 'Asia/Shanghai'
+// }
+```
+
+#### 与 fetch.proxy 的对比
+
+| 特性         | `Tapp.api()`（声明式）      | `Tapp.fetch.proxy()`（代理） |
+| ------------ | --------------------------- | ---------------------------- |
+| API 密钥管理 | ✅ 后端安全存储，自动注入   | ❌ 需要前端硬编码或暴露      |
+| 地理位置     | ✅ 自动注入，无需请求权限   | ❌ 需要前端获取并传递        |
+| 缓存         | ✅ 后端统一缓存，避免重复请求| ❌ 需要前端自行实现          |
+| 速率限制     | ✅ 后端统一控制             | ⚠️ 仅全局限制                |
+| 审计日志     | ✅ 完整的调用记录           | ⚠️ 基本日志                  |
+| 配置灵活性   | ⚠️ 需要预先声明             | ✅ 运行时动态配置            |
+| 适用场景     | 固定 API、需要密钥保护      | 临时调试、动态 URL           |
+
+#### 完整示例
+
+```json
+{
+  "id": "com.myriad.weather",
+  "name": "天气预报",
+  "version": "1.0.0",
+  "permissions": ["storage", "widget:register"],
+  "apis": {
+    "getWeather": {
+      "name": "获取天气",
+      "access": "public",
+      "type": "http",
+      "url": "https://api.openweathermap.org/data/2.5/weather",
+      "method": "GET",
+      "params": {
+        "lat": "{{geo.lat}}",
+        "lon": "{{geo.lon}}",
+        "appid": "{{secrets.openweather_api_key}}",
+        "units": "{{params.units}}"
+      },
+      "inject": ["geo", "secrets"],
+      "cache_ttl": 600
+    },
+    "aiAnalysis": {
+      "name": "AI 天气分析",
+      "access": "protected",
+      "type": "builtin",
+      "action": "ai:analyze",
+      "params": {
+        "type": "custom",
+        "instruction": "分析天气数据并给出穿衣建议"
+      }
+    }
+  }
+}
+```
+
+```javascript
+// 应用代码
+async function showWeather() {
+  // 调用公开 API（所有用户可用）
+  const weather = await Tapp.api('getWeather', { units: 'metric' });
+  
+  if (weather.success) {
+    renderWeather(weather.data);
+    
+    // 调用受保护 API（需要 AI 权限）
+    const analysis = await Tapp.api('aiAnalysis', { 
+      data: weather.data 
+    });
+    
+    if (analysis.success) {
+      showAdvice(analysis.data);
+    }
+  }
+}
+```
+
 ### 数据处理 API
 
 **无需权限** - 数据转换管道
@@ -1626,23 +1816,224 @@ Tapp 使用细粒度权限控制，每个 API 调用都需要相应权限。
 
 ---
 
+## REST API 端点参考
+
+以下是 Tapp 系统所有后端 REST API 端点的完整列表。前端 SDK (`Tapp.*` API) 会自动调用这些端点。
+
+### Tapp 管理 API (`/api/tapps`)
+
+| 端点                                     | 方法   | 说明                 | 认证 |
+| ---------------------------------------- | ------ | -------------------- | ---- |
+| `/api/tapps`                             | GET    | 获取 Tapp 列表       | 公开 |
+| `/api/tapps/install`                     | POST   | 从 URL 安装 Tapp     | 需要 |
+| `/api/tapps/install-file`                | POST   | 上传文件安装 Tapp    | 需要 |
+| `/api/tapps/cleanup-temporary`           | POST   | 清理临时 Tapp        | 需要 |
+| `/api/tapps/:tapp_id`                    | GET    | 获取 Tapp 详情       | 公开 |
+| `/api/tapps/:tapp_id`                    | DELETE | 卸载 Tapp            | 需要 |
+| `/api/tapps/:tapp_id/start`              | POST   | 启动 Tapp            | 需要 |
+| `/api/tapps/:tapp_id/stop`               | POST   | 停止 Tapp            | 需要 |
+| `/api/tapps/:tapp_id/code`               | GET    | 获取 Tapp 代码       | 公开 |
+| `/api/tapps/:tapp_id/resources`          | GET    | 获取 Tapp 资源       | 公开 |
+| `/api/tapps/:tapp_id/export`             | GET    | 导出 Tapp            | 需要 |
+| `/api/tapps/widgets`                     | GET    | 获取所有 Widget 列表 | 公开 |
+| `/api/tapps/:tapp_id/widgets`            | GET    | 获取 Tapp 的 Widget  | 公开 |
+| `/api/tapps/:tapp_id/widgets`            | POST   | 注册 Widget          | 需要 |
+| `/api/tapps/:tapp_id/widgets/:widget_id` | DELETE | 注销 Widget          | 需要 |
+
+### Storage API (`/api/tapps/:tapp_id/storage`)
+
+| 端点                               | 方法   | 说明       | 认证 |
+| ---------------------------------- | ------ | ---------- | ---- |
+| `/api/tapps/:tapp_id/storage`      | GET    | 列出存储键 | 需要 |
+| `/api/tapps/:tapp_id/storage`      | DELETE | 清空存储   | 需要 |
+| `/api/tapps/:tapp_id/storage/:key` | GET    | 获取存储值 | 需要 |
+| `/api/tapps/:tapp_id/storage/:key` | POST   | 设置存储值 | 需要 |
+| `/api/tapps/:tapp_id/storage/:key` | DELETE | 删除存储键 | 需要 |
+
+### Store Source API (`/api/tapps/store`)
+
+| 端点                                  | 方法   | 说明           | 认证 |
+| ------------------------------------- | ------ | -------------- | ---- |
+| `/api/tapps/store/sources`            | GET    | 获取商店源列表 | 公开 |
+| `/api/tapps/store/sources`            | POST   | 添加商店源     | 需要 |
+| `/api/tapps/store/sources/:source_id` | POST   | 更新商店源     | 需要 |
+| `/api/tapps/store/sources/:source_id` | DELETE | 删除商店源     | 需要 |
+
+### Platform API (`/api/tapp/platform`)
+
+| 端点                                                   | 方法 | 说明         | 认证 |
+| ------------------------------------------------------ | ---- | ------------ | ---- |
+| `/api/tapp/platform/:platform/data`                    | GET  | 获取平台数据 | 需要 |
+| `/api/tapp/platform/:platform/stats`                   | GET  | 获取平台统计 | 需要 |
+| `/api/tapp/platform/:platform/distribution/:dimension` | GET  | 获取数据分布 | 需要 |
+| `/api/tapp/platform/items`                             | POST | 添加数据条目 | 需要 |
+| `/api/tapp/platform/items/batch`                       | POST | 批量添加条目 | 需要 |
+
+### AI API (`/api/tapp/ai`)
+
+| 端点                    | 方法 | 说明        | 认证 |
+| ----------------------- | ---- | ----------- | ---- |
+| `/api/tapp/ai/generate` | POST | AI 文本生成 | 可选 |
+| `/api/tapp/ai/analyze`  | POST | AI 数据分析 | 可选 |
+| `/api/tapp/ai/chat`     | POST | AI 对话     | 可选 |
+| `/api/tapp/ai/image`    | POST | AI 图片生成 | 可选 |
+
+> **AI 图片生成支持的模型**：`flux`, `flux-anime`, `flux-realism`, `flux-3d`（使用 Pollinations 免费服务）
+
+### HTTP Proxy API
+
+| 端点                    | 方法 | 说明          | 认证 |
+| ----------------------- | ---- | ------------- | ---- |
+| `/api/tapp/fetch/proxy` | POST | HTTP 代理请求 | 可选 |
+
+> **安全限制**：内网地址（localhost, 127.0.0.1, 192.168.x.x, 10.x.x.x 等）被禁止访问
+
+### Data Transform API
+
+| 端点                       | 方法 | 说明         | 认证 |
+| -------------------------- | ---- | ------------ | ---- |
+| `/api/tapp/data/transform` | POST | 数据处理管道 | 需要 |
+
+### Context API (`/api/tapp/context`)
+
+| 端点                           | 方法 | 说明             | 认证 |
+| ------------------------------ | ---- | ---------------- | ---- |
+| `/api/tapp/context/app`        | GET  | 获取应用上下文   | 可选 |
+| `/api/tapp/context/user`       | GET  | 获取用户上下文   | 可选 |
+| `/api/tapp/context/player`     | GET  | 获取播放器上下文 | 可选 |
+| `/api/tapp/context/navigation` | GET  | 获取导航上下文   | 可选 |
+| `/api/tapp/context/system`     | GET  | 获取系统上下文   | 可选 |
+
+### Report API (`/api/tapp/reports`)
+
+| 端点                                    | 方法   | 说明               | 认证 |
+| --------------------------------------- | ------ | ------------------ | ---- |
+| `/api/tapp/reports`                     | POST   | 创建报告           | 需要 |
+| `/api/tapp/reports/tapp/:tapp_id`       | GET    | 获取 Tapp 报告列表 | 需要 |
+| `/api/tapp/reports/:tapp_id/:report_id` | GET    | 获取报告详情       | 需要 |
+| `/api/tapp/reports/:tapp_id/:report_id` | PUT    | 更新报告           | 需要 |
+| `/api/tapp/reports/:tapp_id/:report_id` | DELETE | 删除报告           | 需要 |
+
+### Media Control API (`/api/tapp/media`)
+
+| 端点                      | 方法 | 说明         | 认证 |
+| ------------------------- | ---- | ------------ | ---- |
+| `/api/tapp/media/control` | POST | 媒体播放控制 | 可选 |
+| `/api/tapp/media/status`  | GET  | 获取播放状态 | 可选 |
+
+> **注意**：实际的媒体控制在前端 TappBridge 中完成，此 API 用于权限验证和日志记录
+
+### Component API (`/api/tapp/components`)
+
+| 端点                                       | 方法   | 说明                        | 认证 |
+| ------------------------------------------ | ------ | --------------------------- | ---- |
+| `/api/tapp/components/register`            | POST   | 注册组件 (page/theme/agent) | 需要 |
+| `/api/tapp/components/:tapp_id`            | GET    | 列出 Tapp 已注册组件        | 需要 |
+| `/api/tapp/components/:tapp_id/:type/:id`  | DELETE | 注销组件                    | 需要 |
+| `/api/tapp/components/all/:component_type` | GET    | 按类型列出所有组件          | 需要 |
+
+### Shortcut API (`/api/tapp/shortcuts`)
+
+| 端点                                        | 方法   | 说明           | 认证 |
+| ------------------------------------------- | ------ | -------------- | ---- |
+| `/api/tapp/shortcuts/register`              | POST   | 注册快捷键     | 需要 |
+| `/api/tapp/shortcuts`                       | GET    | 列出所有快捷键 | 需要 |
+| `/api/tapp/shortcuts/:tapp_id/:shortcut_id` | DELETE | 注销快捷键     | 需要 |
+
+### Event Bus API (`/api/tapp/events`)
+
+| 端点                                      | 方法 | 说明         | 认证 |
+| ----------------------------------------- | ---- | ------------ | ---- |
+| `/api/tapp/events/publish`                | POST | 发布事件     | 需要 |
+| `/api/tapp/events/subscriptions/:tapp_id` | GET  | 获取事件订阅 | 需要 |
+| `/api/tapp/events/subscriptions/:tapp_id` | PUT  | 更新事件订阅 | 需要 |
+
+### Metrics & Rate Limit API
+
+| 端点                            | 方法 | 说明                    | 认证 |
+| ------------------------------- | ---- | ----------------------- | ---- |
+| `/api/tapp/metrics`             | GET  | 获取性能指标 (仅管理员) | 需要 |
+| `/api/tapp/metrics/reset`       | POST | 重置性能指标 (仅管理员) | 需要 |
+| `/api/tapp/rate-limit/:tapp_id` | GET  | 获取速率限制状态        | 需要 |
+
+### 认证说明
+
+- **需要**：必须携带有效的 JWT Token
+- **可选**：未登录用户可访问部分功能，但功能受限
+- **公开**：无需认证即可访问
+
+---
+
 ## 安全沙箱
 
 Tapp 运行在严格的沙箱环境中，具有以下安全特性：
 
 ### Content Security Policy (CSP)
 
-- 禁止网络请求（必须通过 API 代理）
-- 禁止嵌套 iframe
-- 禁止加载外部脚本
-- 禁止 WebSocket/EventSource
+沙箱采用严格的 CSP 策略：
 
-### iframe Sandbox
+```
+default-src 'none';
+script-src 'unsafe-inline' 'unsafe-eval';
+style-src 'unsafe-inline';
+img-src data: blob: https:;
+font-src data: https:;
+connect-src 'none';
+frame-src 'none';
+object-src 'none';
+media-src 'none';
+worker-src 'none';
+form-action 'none';
+base-uri 'none';
+manifest-src 'none';
+```
 
-- 禁止表单提交
-- 禁止弹出窗口
-- 禁止导航顶层窗口
-- 禁止下载
+**安全限制说明**：
+
+| 策略                 | 限制内容         | 替代方案                  |
+| -------------------- | ---------------- | ------------------------- |
+| `connect-src 'none'` | 禁止直接网络请求 | 使用 `Tapp.fetch.proxy()` |
+| `frame-src 'none'`   | 禁止嵌套 iframe  | -                         |
+| `worker-src 'none'`  | 禁止 Web Worker  | -                         |
+| `form-action 'none'` | 禁止表单提交     | 使用 `Tapp.fetch.proxy()` |
+
+### iframe Sandbox 属性
+
+```
+allow-scripts allow-same-origin
+```
+
+- ✅ 允许执行脚本
+- ✅ 允许同源访问（用于 postMessage 通信）
+- ❌ 禁止表单提交
+- ❌ 禁止弹出窗口
+- ❌ 禁止导航顶层窗口
+- ❌ 禁止下载
+- ❌ 禁止自动播放
+
+### 全局对象保护
+
+沙箱启动时会冻结和禁用危险的全局对象：
+
+```javascript
+// 被禁用的 API
+window.open(); // → 抛出错误
+window.alert(); // → 抛出错误
+window.confirm(); // → 抛出错误
+window.prompt(); // → 抛出错误
+fetch(); // → 返回被拒绝的 Promise（提示使用 Tapp.platform API）
+XMLHttpRequest; // → 构造函数抛出错误
+WebSocket; // → 构造函数抛出错误
+EventSource; // → 构造函数抛出错误
+
+// 被冻结的对象
+window.parent; // → 只保留 postMessage 方法
+window.top; // → 指向 window 自身
+window.opener; // → null
+localStorage; // → 空操作对象
+sessionStorage; // → 空操作对象
+indexedDB; // → null
+```
 
 ---
 
@@ -1660,6 +2051,23 @@ Tapp 沙箱自动注入自适应尺寸系统，开发者**无需任何配置**�
 ### CSS 变量
 
 沙箱自动注入以下 CSS 变量，Tapp 代码可直接使用：
+
+#### 主题变量
+
+| 变量              | 说明             | 亮色模式                | 暗色模式                 |
+| ----------------- | ---------------- | ----------------------- | ------------------------ |
+| `--tapp-primary`  | 主色调（壁纸色） | 动态                    | 动态                     |
+| `--tapp-text`     | 主文字色         | `#1f2937`               | `#f3f4f6`                |
+| `--tapp-subtext`  | 次要文字色       | `#6b7280`               | `#9ca3af`                |
+| `--tapp-bg`       | 背景色           | `#f8fafc`               | `#0a0a0a`                |
+| `--tapp-card-bg`  | 卡片背景色       | `rgba(255,255,255,0.7)` | `rgba(255,255,255,0.03)` |
+| `--tapp-border`   | 边框色           | `rgba(0,0,0,0.06)`      | `rgba(255,255,255,0.08)` |
+| `--tapp-input-bg` | 输入框背景色     | `rgba(255,255,255,0.9)` | `rgba(255,255,255,0.05)` |
+| `--tapp-shadow`   | 阴影色           | `rgba(0,0,0,0.08)`      | `rgba(0,0,0,0.4)`        |
+
+> **注意**：主题变量会在主题切换时自动更新，Tapp 无需手动处理。
+
+#### 自适应尺寸变量
 
 | 变量                      | 说明                       | 示例值  |
 | ------------------------- | -------------------------- | ------- |
@@ -1785,6 +2193,106 @@ card.className = "tapp-transition"; // 使用内置工具类
 <div class="tapp-transition">平滑过渡（GPU 加速）</div>
 <div class="tapp-animate-fade-in">淡入动画</div>
 <div class="tapp-animate-scale-in">缩放淡入</div>
+```
+
+### 内置组件类（`tapp-*` 前缀）
+
+沙箱预置了常用 UI 组件样式，可直接使用：
+
+#### 容器组件
+
+```html
+<!-- 玻璃效果容器 -->
+<div class="tapp-container">基础容器</div>
+<div class="tapp-container tapp-container-glass">玻璃效果容器</div>
+```
+
+#### 浮动条
+
+```html
+<!-- 顶部浮动条 -->
+<div class="tapp-float-bar tapp-float-bar-top">顶部工具栏</div>
+<!-- 底部浮动条 -->
+<div class="tapp-float-bar tapp-float-bar-bottom">底部输入栏</div>
+```
+
+#### 按钮
+
+```html
+<button class="tapp-btn tapp-btn-primary">主要按钮</button>
+<button class="tapp-btn tapp-btn-icon">🔍</button>
+<button class="tapp-btn tapp-btn-ghost">幽灵按钮</button>
+```
+
+#### 输入框
+
+```html
+<input class="tapp-input" placeholder="请输入..." />
+```
+
+#### 消息气泡
+
+```html
+<div class="tapp-msg-area tapp-scrollbar">
+  <div class="tapp-bubble-row tapp-bubble-row-user">
+    <div class="tapp-bubble tapp-bubble-user">用户消息</div>
+  </div>
+  <div class="tapp-bubble-row">
+    <div class="tapp-bubble tapp-bubble-ai">AI 回复</div>
+  </div>
+</div>
+```
+
+#### 打字指示器
+
+```html
+<div class="tapp-typing">
+  <span class="tapp-typing-dot"></span>
+  <span class="tapp-typing-dot"></span>
+  <span class="tapp-typing-dot"></span>
+</div>
+```
+
+#### 图标容器
+
+```html
+<div class="tapp-icon tapp-icon-sm tapp-icon-primary">🚀</div>
+<div class="tapp-icon tapp-icon-md">📊</div>
+<div class="tapp-icon tapp-icon-lg">🎮</div>
+```
+
+#### 文本样式
+
+```html
+<span class="tapp-text">主文本</span>
+<span class="tapp-text-sub">次要文本</span>
+<span class="tapp-text-primary">主色调文本</span>
+<span class="tapp-text-error">错误文本</span>
+<span class="tapp-text-sm">小号文本</span>
+<span class="tapp-text-base">正常文本</span>
+<span class="tapp-text-lg">大号文本</span>
+```
+
+#### 动画类
+
+| 类名                          | 效果             |
+| ----------------------------- | ---------------- |
+| `tapp-animate-fade-in`        | 淡入 (0.2s)      |
+| `tapp-animate-fade-in-up`     | 向上淡入 (0.25s) |
+| `tapp-animate-fade-in-down`   | 向下淡入 (0.25s) |
+| `tapp-animate-slide-in-left`  | 从左滑入 (0.25s) |
+| `tapp-animate-slide-in-right` | 从右滑入 (0.25s) |
+| `tapp-animate-scale-in`       | 缩放淡入 (0.2s)  |
+| `tapp-animate-spin`           | 旋转 (无限)      |
+| `tapp-animate-pulse`          | 脉冲闪烁 (无限)  |
+
+#### 其他工具类
+
+```html
+<div class="tapp-scrollbar">自定义滚动条样式</div>
+<div class="tapp-empty">空状态/欢迎提示</div>
+<span class="tapp-cursor">|</span>
+<!-- 打字光标 -->
 ```
 
 ### 条件显示/隐藏
@@ -2258,6 +2766,36 @@ var dateStr = formatDate(new Date(), locale);
 - `localStorage`/`sessionStorage` → 使用 `Tapp.storage`
 - `fetch`/`XMLHttpRequest` → 使用 `Tapp.fetch`
 - `window.open`/`alert`/`confirm`/`prompt` → 使用 `Tapp.ui`
+
+---
+
+### Widget SDK vs Full SDK
+
+> ⚠️ **重要**：Widget 模式使用**简化版 SDK**，仅包含以下 API。需要完整功能请使用 Page 模式。
+
+| 分类          | Widget SDK                                                               | Full SDK (Page 模式)                            |
+| ------------- | ------------------------------------------------------------------------ | ----------------------------------------------- |
+| **存储**      | ✅ `storage` (get/set/remove/keys/clear)                                 | ✅ 相同                                         |
+| **设置**      | ✅ `settings` (get/set/getAll)                                           | ✅ 相同                                         |
+| **UI**        | ✅ `ui` (getTheme/getPrimaryColor/getLocale/showNotification + 事件监听) | ✅ 完整 UI API (含 showModal/confirm/prompt 等) |
+| **DOM**       | ✅ `dom` (setText/setHtml/addClass/removeClass/toggleClass)              | ✅ 完整 DOM API (含 renderList 等)              |
+| **生命周期**  | ✅ `lifecycle` (onReady/onDestroy/onPause/onResume)                      | ✅ 完整 lifecycle                               |
+| **AI**        | ⚠️ 仅 `ai.chat`                                                          | ✅ 完整 AI API (chat/generate/analyze/image)    |
+| **平台数据**  | ✅ `platform` (listEnabled/getData/getStats/getDistribution)             | ✅ 完整 platform (含 addItem/addItems 等)       |
+| **上下文**    | ❌ 不可用                                                                | ✅ `context` (getApp/getUser/getPlayer 等)      |
+| **HTTP 代理** | ❌ 不可用                                                                | ✅ `fetch` (request)                            |
+| **数据处理**  | ❌ 不可用                                                                | ✅ `data` (transform)                           |
+| **媒体控制**  | ❌ 不可用                                                                | ✅ `media` (control/status)                     |
+| **报告**      | ✅ `report` (listReports/getReport/getPlatformReport/list/get)           | ✅ 完整 report (含 create/update/delete)        |
+| **用户角色**  | ❌ 不可用                                                                | ✅ `user` (getRole/isAdmin 等)                  |
+| **后台需求**  | ✅ `background` (require/release/list/has)                               | ✅ 相同                                         |
+| **动态内容**  | ❌ 不可用                                                                | ✅ `dynamicContent` (set/update/get/remove)     |
+| **动画**      | ✅ `animation` (getLevel/shouldAnimate/getConfig/getStaggerDelay)        | ✅ 完整 animation (含 onLevelChange)            |
+| **组件注册**  | ❌ 不可用                                                                | ✅ `component` (register/unregister/list)       |
+| **快捷键**    | ❌ 不可用                                                                | ✅ `shortcut` (register/unregister/list)        |
+| **事件总线**  | ❌ 不可用                                                                | ✅ `event` (publish/subscribe/getSubscriptions) |
+
+**设计原因**：Widget 运行在首页卡片中，需要轻量快速，因此仅提供必要的展示和基础交互功能。复杂功能（如数据获取、AI 分析）应在 Page 中完成，Widget 仅用于展示结果。
 
 ---
 
@@ -3785,6 +4323,58 @@ A: 系统会过滤可能的注入攻击。避免在提示词中包含：外部 U
 ---
 
 ## 更新日志
+
+### 2025-12-07 - 沙箱规范文档完善
+
+#### 安全沙箱章节
+
+- 📝 新增完整 CSP 策略代码块及限制说明表格
+- 📝 新增 iframe sandbox 属性详细说明
+- 📝 新增全局对象保护机制文档：被禁用和冻结的 API 列表
+- 📝 补充安全限制的替代方案说明
+
+#### CSS 变量系统
+
+- 🆕 新增「主题变量」表格：8 个主题相关 CSS 变量
+- 📝 包含亮色/暗色模式的具体值
+- 📝 说明主题变量会在切换时自动更新
+
+#### 内置组件类
+
+- 🆕 新增「内置组件类」章节：完整的 `tapp-*` 组件样式文档
+- 📝 容器组件：`tapp-container`, `tapp-container-glass`
+- 📝 浮动条：`tapp-float-bar`, `tapp-float-bar-top`, `tapp-float-bar-bottom`
+- 📝 按钮：`tapp-btn`, `tapp-btn-primary`, `tapp-btn-icon`, `tapp-btn-ghost`
+- 📝 输入框：`tapp-input`
+- 📝 消息气泡：`tapp-msg-area`, `tapp-bubble`, `tapp-bubble-user`, `tapp-bubble-ai`
+- 📝 打字指示器：`tapp-typing`, `tapp-typing-dot`
+- 📝 图标容器：`tapp-icon`, `tapp-icon-sm/md/lg`, `tapp-icon-primary`
+- 📝 文本样式：`tapp-text`, `tapp-text-sub`, `tapp-text-primary`, `tapp-text-error`
+- 📝 动画类表格：8 种预置动画效果
+- 📝 其他工具类：滚动条、空状态、光标动画
+
+### 2025-12-07 - REST API 文档完善
+
+#### REST API 端点参考
+
+- 🆕 新增「REST API 端点参考」章节：完整的后端 API 端点列表
+- 📝 Tapp 管理 API：15 个端点，涵盖安装/卸载/启动/停止
+- 📝 Storage API：5 个端点，完整的 CRUD 操作
+- 📝 Store Source API：4 个端点，商店源管理
+- 📝 Platform API：5 个端点，平台数据读写
+- 📝 AI API：4 个端点，包含图片生成支持的模型列表
+- 📝 Context API：5 个端点，应用/用户/播放器/导航/系统上下文
+- 📝 Report API：5 个端点，报告 CRUD
+- 📝 Media Control API：2 个端点
+- 📝 Component API：4 个端点，组件注册与管理
+- 📝 Shortcut API：3 个端点，快捷键注册
+- 📝 Event Bus API：3 个端点，事件发布订阅
+- 📝 Metrics API：3 个端点，性能监控与速率限制
+- 📝 添加认证说明：需要/可选/公开三种认证级别
+
+#### 目录更新
+
+- 📝 目录新增 REST API 端点参考链接
 
 ### 2025-12-06 - 样式规范文档修正
 

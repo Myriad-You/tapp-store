@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>天气预报</title>
+</head>
+<body>
+  <div class="weather-container">
+    <!-- 当前天气 -->
+    <div id="current-weather">
+      <div class="weather-card">
+        <div class="weather-location">正在加载...</div>
+        <div class="weather-main">
+          <span class="weather-icon">🌤️</span>
+          <span class="weather-temp">--°C</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 天气预报 -->
+    <div id="forecast"></div>
+  </div>
+  
+  <!-- 加载状态 -->
+  <div id="loading">
+    <div class="loading-spinner"></div>
+  </div>
+  
+  <!-- 刷新按钮 -->
+  <button class="refresh-btn" onclick="onRefresh()">🔄</button>
+</body>
+</html>
