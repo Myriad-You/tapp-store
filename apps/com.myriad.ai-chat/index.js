@@ -449,23 +449,30 @@ function render4x4Widget(container, props) {
 }
 
 // Widget 主渲染函数
-Tapp.widgets['ai-chat'] = {
-  render: function(container, props) {
-    currentLocale = normalizeLocale(props.locale);
+// 只在 Widget 模式或 Core 模式下定义
+if (typeof Tapp.widgets !== 'undefined' && Tapp.widgets) {
+  try {
+    Tapp.widgets['ai-chat'] = {
+      render: function(container, props) {
+        currentLocale = normalizeLocale(props.locale);
 
-    var size = props.size || '4x2';
-    if (size === '4x2') {
-      render4x2Widget(container, props);
-    } else if (size === '4x4') {
-      render4x4Widget(container, props);
-    } else {
-      // 其他尺寸默认使用 4x2
-      render4x2Widget(container, props);
-    }
+        var size = props.size || '4x2';
+        if (size === '4x2') {
+          render4x2Widget(container, props);
+        } else if (size === '4x4') {
+          render4x4Widget(container, props);
+        } else {
+          // 其他尺寸默认使用 4x2
+          render4x2Widget(container, props);
+        }
 
-    console.log('[AI Chat] Widget 渲染完成，尺寸:', size);
-  },
-};
+        console.log('[AI Chat] Widget 渲染完成，尺寸:', size);
+      },
+    };
+  } catch (e) {
+    console.log('[AI Chat] Widget 注册跳过（可能在 Page 模式）:', e.message);
+  }
+}
 
 // ========================================
 // PAGE_CODE - 完整页面代码
