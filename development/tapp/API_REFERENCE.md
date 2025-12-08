@@ -272,6 +272,12 @@ const chat = await Tapp.ai.chat(
   { includePlatformStats: true }, // context (可选)
   { maxTokens: 1000 } // options (可选)
 );
+// 返回: {
+//   message: { role: 'assistant', content: 'AI 回复内容' },
+//   usage: { promptTokens: 50, completionTokens: 100, totalTokens: 150 },
+//   sessionId: null  // 会话 ID（可选）
+// }
+// 注意：SDK 会自动解包，直接返回上述对象，不包含外层 success 字段
 
 // AI 图片生成
 const image = await Tapp.ai.image({

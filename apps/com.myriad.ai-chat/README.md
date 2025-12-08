@@ -34,10 +34,10 @@
 
 添加 AI 助手小组件到桌面：
 
-- 支持 2x2、4x2、4x4 三种尺寸
-- 快速发送问题
-- 查看最近对话
-- 紧凑模式自动适配
+- 支持 4x2、4x4 两种尺寸
+- 4x2：紧凑模式，显示最近消息
+- 4x4：完整对话模式，支持消息历史
+- 快速发送问题并获取 AI 回复
 
 ## 权限说明
 
@@ -46,13 +46,13 @@
 | `storage`         | 保存对话历史      |
 | `ui:notification` | 显示系统通知      |
 | `ui:theme`        | 适配深色/浅色主题 |
-| `ai:generate`     | 调用 AI 生成能力  |
+| `ai:chat`         | 调用 AI 对话能力  |
 
 ## 设置选项
 
 - **保存对话历史**: 控制是否在退出后保留对话记录（默认：开启）
-- **最大历史条数**: 设置保留的最大对话条数（默认：100，范围：10-500）
-- **AI 回复长度**: AI 回复的最大 token 数（默认：500，范围：100-2000）
+- **最大历史条数**: 设置保留的最大对话条数（默认：50，范围：10-200）
+- **系统提示词**: 自定义 AI 的行为风格
 
 ## 技术架构
 
@@ -91,9 +91,9 @@
 
 ### API 使用
 - **Widget 自动注册**: 通过 Manifest 的 `widgets` 字段
-- **新 AI API**: `Tapp.ai.generate({ prompt, maxTokens })`
-- **DOM 安全 API**: `Tapp.dom.escapeHtml()` 防止 XSS
-- **设置集成**: `Tapp.settings.get()` 读取配置
+- **AI Chat API**: `Tapp.ai.chat(messages, context, options)`
+  - 返回: `{ message: { role, content }, usage: { ... }, sessionId }`
+- **设置集成**: `Tapp.settings.getAll()` 读取配置
 - **主色调 API**: `Tapp.ui.getPrimaryColor()` 获取壁纸色
 
 ## 📝 版本历史

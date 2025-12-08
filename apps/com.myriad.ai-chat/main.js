@@ -224,14 +224,22 @@ function render4x2Widget(container, props) {
 
     Tapp.ai.chat([{ role: 'user', content: text }], {}, { maxTokens: 300 })
       .then(function(resp) {
-        var msg = resp?.message || resp;
-        if (msg?.content) {
-          showAiReply(msg.content);
+        // resp 是 { success, message: { role, content }, usage }
+        // SDK 已自动解包，直接访问 message
+        if (resp && resp.message && resp.message.content) {
+          showAiReply(resp.message.content);
         } else {
-          throw new Error(resp?.error || t('error'));
+          // 可能是旧格式或直接返回消息对象
+          var content = resp?.content || (resp?.message && resp.message.content);
+          if (content) {
+            showAiReply(content);
+          } else {
+            throw new Error(t('error'));
+          }
         }
       })
       .catch(function(err) {
+        console.error('[AI Chat] Widget error:', err);
         showError(err.message || t('errorNetwork'));
       })
       .finally(function() {
@@ -412,15 +420,23 @@ function render4x4Widget(container, props) {
         var ind = document.getElementById('typing-indicator');
         if (ind) ind.remove();
 
-        var msg = resp?.message || resp;
-        if (msg?.content) {
-          widgetState.messages.push({ role: 'assistant', content: msg.content });
-          addMessage('assistant', msg.content);
+        // resp 是 { success, message: { role, content }, usage }
+        if (resp && resp.message && resp.message.content) {
+          widgetState.messages.push({ role: 'assistant', content: resp.message.content });
+          addMessage('assistant', resp.message.content);
         } else {
-          throw new Error(resp?.error || t('error'));
+          // 兼容旧格式
+          var content = resp?.content || (resp?.message && resp.message.content);
+          if (content) {
+            widgetState.messages.push({ role: 'assistant', content: content });
+            addMessage('assistant', content);
+          } else {
+            throw new Error(t('error'));
+          }
         }
       })
       .catch(function(err) {
+        console.error('[AI Chat] 4x4 Widget error:', err);
         var ind = document.getElementById('typing-indicator');
         if (ind) ind.remove();
         addMessage('assistant', '❌ ' + (err.message || t('errorNetwork')));
@@ -449,29 +465,27 @@ function render4x4Widget(container, props) {
 }
 
 // Widget 主渲染函数
-// 只在 Widget 模式或 Core 模式下定义
-if (typeof Tapp.widgets !== 'undefined' && Tapp.widgets) {
-  try {
-    Tapp.widgets['ai-chat'] = {
-      render: function(container, props) {
-        currentLocale = normalizeLocale(props.locale);
+// 在 Widget 模式下自动注册
+if (window._TAPP_MODE === 'widget' || (typeof Tapp !== 'undefined' && Tapp.widgets)) {
+  Tapp.widgets = Tapp.widgets || {};
+  Tapp.widgets['ai-chat'] = {
+    render: function(container, props) {
+      currentLocale = normalizeLocale(props.locale);
 
-        var size = props.size || '4x2';
-        if (size === '4x2') {
-          render4x2Widget(container, props);
-        } else if (size === '4x4') {
-          render4x4Widget(container, props);
-        } else {
-          // 其他尺寸默认使用 4x2
-          render4x2Widget(container, props);
-        }
+      var size = props.size || '4x2';
+      if (size === '4x2') {
+        render4x2Widget(container, props);
+      } else if (size === '4x4') {
+        render4x4Widget(container, props);
+      } else {
+        // 其他尺寸默认使用 4x2
+        render4x2Widget(container, props);
+      }
 
-        console.log('[AI Chat] Widget 渲染完成，尺寸:', size);
-      },
-    };
-  } catch (e) {
-    console.log('[AI Chat] Widget 注册跳过（可能在 Page 模式）:', e.message);
-  }
+      console.log('[AI Chat] Widget 渲染完成，尺寸:', size);
+    },
+  };
+  console.log('[AI Chat] Widget 已注册');
 }
 
 // ========================================
@@ -606,23 +620,33 @@ async function sendPageMessage() {
     var loadEl = document.getElementById('page-loading');
     if (loadEl) loadEl.remove();
 
-    var aiMsg = resp?.message || resp;
-    if (aiMsg?.content) {
-      pageState.messages.push({ role: 'assistant', content: aiMsg.content });
+    // resp 是 { success, message: { role, content }, usage }
+    var content = null;
+    if (resp && resp.message && resp.message.content) {
+      content = resp.message.content;
+    } else if (resp && resp.content) {
+      // 兼容旧格式
+      content = resp.content;
+    }
+
+    if (content) {
+      pageState.messages.push({ role: 'assistant', content: content });
       saveHistory();
-      area.appendChild(createPageBubble('assistant', aiMsg.content));
+      area.appendChild(createPageBubble('assistant', content));
       area.scrollTop = area.scrollHeight;
     } else {
-      throw new Error(resp?.error || 'No content');
+      throw new Error('AI 响应格式错误');
     }
   } catch (err) {
+    console.error('[AI Chat] Page error:', err);
     var loadEl = document.getElementById('page-loading');
     if (loadEl) loadEl.remove();
 
-    pageState.messages.push({ role: 'assistant', content: '❌ ' + (err.message || t('errorNetwork')) });
-    area.appendChild(createPageBubble('assistant', '❌ ' + err.message));
+    var errorMsg = err.message || t('errorNetwork');
+    pageState.messages.push({ role: 'assistant', content: '❌ ' + errorMsg });
+    area.appendChild(createPageBubble('assistant', '❌ ' + errorMsg));
 
-    Tapp.ui.showNotification({ title: t('error'), message: err.message, type: 'error' });
+    Tapp.ui.showNotification({ title: t('error'), message: errorMsg, type: 'error' });
   } finally {
     pageState.isLoading = false;
     sendBtn.disabled = false;
@@ -692,7 +716,13 @@ function initPage() {
 
 // Page 生命周期
 Tapp.lifecycle.onReady(async function() {
-  if (window._TAPP_MODE !== 'page') return;
+  // 检查是否在 Page 模式
+  // 如果有 HTML 模板加载，或者 _TAPP_MODE 明确为 page，则执行
+  var isPage = window._TAPP_MODE === 'page' || window._TAPP_HAS_HTML;
+  if (!isPage) {
+    console.log('[AI Chat] 跳过 Page 初始化（当前模式:', window._TAPP_MODE, '）');
+    return;
+  }
 
   console.log('[AI Chat] Page onReady');
 
