@@ -1,25 +1,36 @@
 /**
- * AI Chat Tapp Styles v5.0 - 极简浮动版
+ * AI Chat Tapp Styles v5.1 - 全局变量版
  * 
  * 特性：
+ * - 全局 CSS 变量控制颜色
  * - 浮动顶栏与输入栏
  * - 打字光标效果
  * - 动态伸缩输入框
- * - 精简的 Glass 样式
- * - 微交互动效
  */
 
 /* ========================================
- * CSS 变量
+ * CSS 变量 - 使用壁纸色变量
  * ======================================== */
 :root {
-  --ai-primary: #6366f1;
-  --ai-primary-glow: rgba(99, 102, 241, 0.4);
-  --ai-gradient-from: #6366f1;
-  --ai-gradient-to: #8b5cf6;
-  --ai-success: #10b981;
-  --ai-error: #ef4444;
-  --ai-warning: #f59e0b;
+  /* 主色调 - 优先使用系统壁纸色 */
+  --ai-primary: var(--tapp-primary, var(--wallpaper-primary, #6366f1));
+  --ai-primary-rgb: var(--tapp-primary-rgb, var(--wallpaper-primary-rgb, 99, 102, 241));
+  --ai-primary-glow: rgba(var(--ai-primary-rgb), 0.4);
+  --ai-primary-light: rgba(var(--ai-primary-rgb), 0.15);
+  
+  /* 渐变色 */
+  --ai-gradient-from: var(--tapp-primary, var(--wallpaper-primary, #6366f1));
+  --ai-gradient-to: var(--tapp-secondary, var(--wallpaper-secondary, #8b5cf6));
+  
+  /* 状态色 */
+  --ai-success: var(--tapp-success, #10b981);
+  --ai-error: var(--tapp-error, #ef4444);
+  --ai-warning: var(--tapp-warning, #f59e0b);
+  
+  /* 文本色 */
+  --ai-text-primary: var(--tapp-text, #171717);
+  --ai-text-secondary: var(--tapp-text-secondary, #737373);
+  --ai-text-muted: var(--tapp-text-muted, #a3a3a3);
 }
 
 /* ========================================
@@ -346,7 +357,7 @@
   border-color: var(--ai-primary);
   box-shadow: 
     0 0 0 3px var(--ai-primary-glow),
-    0 4px 12px rgba(99, 102, 241, 0.15);
+    0 4px 12px var(--ai-primary-light);
   transform: translateY(-1px);
 }
 
@@ -461,7 +472,7 @@
 }
 
 .gradient-animated {
-  background: linear-gradient(-45deg, #6366f1, #8b5cf6, #a855f7, #6366f1);
+  background: linear-gradient(-45deg, var(--ai-gradient-from), var(--ai-gradient-to), var(--ai-gradient-to), var(--ai-gradient-from));
   background-size: 400% 400%;
   animation: gradient-shift 8s ease infinite;
 }
@@ -554,13 +565,13 @@ code {
   font-size: 0.875em;
   padding: 2px 6px;
   border-radius: 6px;
-  background: rgba(99, 102, 241, 0.1);
-  color: #6366f1;
+  background: var(--ai-primary-light);
+  color: var(--ai-primary);
 }
 
 .dark code {
-  background: rgba(139, 92, 246, 0.15);
-  color: #a78bfa;
+  background: rgba(var(--ai-primary-rgb), 0.15);
+  color: var(--ai-primary);
 }
 
 pre code {
@@ -597,7 +608,7 @@ pre code {
 
 .example-card:hover {
   transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 12px 24px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 12px 24px var(--ai-primary-light);
   border-color: var(--ai-primary);
 }
 

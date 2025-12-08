@@ -1,12 +1,12 @@
-<!-- AI Chat Page - v5.0 极简浮动版 -->
-<!-- 沉浸式对话 · 浮动输入 · 打字效果 -->
+<!-- AI Chat Page - v5.1 壁纸色版 -->
+<!-- 沉浸式对话 · 壁纸色 · 打字效果 -->
 <div class="min-h-screen bg-gradient-to-br from-neutral-50 via-neutral-100 to-neutral-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950">
-  <!-- 背景装饰 -->
+  <!-- 背景装饰 - 使用壁纸色变量 -->
   <div class="fixed inset-0 pointer-events-none overflow-hidden">
     <div class="absolute top-0 right-0 w-[600px] h-[600px] rounded-full glow-breathe opacity-30"
-         style="background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%); filter: blur(60px);"></div>
+         style="background: radial-gradient(circle, var(--ai-primary-light, rgba(99, 102, 241, 0.15)) 0%, transparent 70%); filter: blur(60px);"></div>
     <div class="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full glow-breathe opacity-20"
-         style="background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%); filter: blur(60px); animation-delay: 2s;"></div>
+         style="background: radial-gradient(circle, var(--ai-primary-light, rgba(139, 92, 246, 0.15)) 0%, transparent 70%); filter: blur(60px); animation-delay: 2s;"></div>
   </div>
 
   <!-- 主容器 -->
@@ -15,15 +15,15 @@
     <header id="float-header" class="fixed top-4 left-1/2 -translate-x-1/2 z-30 float-up-enter">
       <div class="flex items-center gap-3 px-4 py-2 glass-pill rounded-full">
         <div id="header-avatar" class="w-8 h-8 rounded-xl gradient-animated flex items-center justify-center text-lg shadow-lg">
-          🤖
+          💬
         </div>
         <div class="flex items-center gap-2">
-          <h1 id="page-title" class="text-sm font-bold text-neutral-800 dark:text-neutral-100">AI 聊天</h1>
-          <div class="w-2 h-2 rounded-full bg-emerald-500 status-online"></div>
+          <h1 id="page-title" class="text-sm font-bold text-neutral-800 dark:text-neutral-100">对话</h1>
+          <div class="w-2 h-2 rounded-full bg-[var(--ai-success)] status-online"></div>
         </div>
         <div class="w-px h-4 bg-neutral-300 dark:bg-neutral-600"></div>
         <button id="page-clear"
-                class="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                class="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 hover:text-[var(--ai-primary)] transition-colors">
           <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
           </svg>
@@ -40,15 +40,15 @@
           <!-- 动态图标 -->
           <div class="welcome-icon-float mb-6">
             <div class="w-20 h-20 mx-auto rounded-2xl gradient-animated flex items-center justify-center text-5xl shadow-2xl welcome-icon-glow">
-              🤖
+              💬
             </div>
           </div>
           
           <h2 id="welcome-title" class="text-3xl font-bold text-neutral-800 dark:text-neutral-100 mb-3">
-            你好！我是 AI 助手
+            开始对话
           </h2>
           <p id="welcome-subtitle" class="text-base text-neutral-600 dark:text-neutral-400 mb-8">
-            选择话题或直接输入问题
+            选择话题或直接输入
           </p>
 
           <!-- 示例话题（精简） -->
@@ -56,25 +56,25 @@
             <button class="example-card group px-4 py-3 rounded-xl bg-white/70 dark:bg-neutral-900/70 border border-neutral-200/50 dark:border-neutral-700/50 text-left">
               <div class="flex items-center gap-2">
                 <span class="text-xl">💡</span>
-                <span class="text-sm font-medium text-neutral-700 dark:text-neutral-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">解释 AI</span>
+                <span class="text-sm font-medium text-neutral-700 dark:text-neutral-200 group-hover:text-[var(--ai-primary)] transition-colors">解释概念</span>
               </div>
             </button>
             <button class="example-card group px-4 py-3 rounded-xl bg-white/70 dark:bg-neutral-900/70 border border-neutral-200/50 dark:border-neutral-700/50 text-left">
               <div class="flex items-center gap-2">
                 <span class="text-xl">✍️</span>
-                <span class="text-sm font-medium text-neutral-700 dark:text-neutral-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">写一首诗</span>
+                <span class="text-sm font-medium text-neutral-700 dark:text-neutral-200 group-hover:text-[var(--ai-primary)] transition-colors">写一首诗</span>
               </div>
             </button>
             <button class="example-card group px-4 py-3 rounded-xl bg-white/70 dark:bg-neutral-900/70 border border-neutral-200/50 dark:border-neutral-700/50 text-left">
               <div class="flex items-center gap-2">
                 <span class="text-xl">💻</span>
-                <span class="text-sm font-medium text-neutral-700 dark:text-neutral-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">学编程</span>
+                <span class="text-sm font-medium text-neutral-700 dark:text-neutral-200 group-hover:text-[var(--ai-primary)] transition-colors">学编程</span>
               </div>
             </button>
             <button class="example-card group px-4 py-3 rounded-xl bg-white/70 dark:bg-neutral-900/70 border border-neutral-200/50 dark:border-neutral-700/50 text-left">
               <div class="flex items-center gap-2">
                 <span class="text-xl">🎬</span>
-                <span class="text-sm font-medium text-neutral-700 dark:text-neutral-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">推荐电影</span>
+                <span class="text-sm font-medium text-neutral-700 dark:text-neutral-200 group-hover:text-[var(--ai-primary)] transition-colors">推荐电影</span>
               </div>
             </button>
           </div>
@@ -89,13 +89,14 @@
           <div class="flex-1 relative">
             <textarea id="page-input"
                       rows="1"
-                      placeholder="输入消息..."
+                      placeholder="输入..."
                       class="input-float-expand w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-neutral-900/50 
                              text-neutral-800 dark:text-neutral-100 placeholder-neutral-400 text-base
                              outline-none resize-none min-h-[48px] max-h-[160px] transition-all duration-300"></textarea>
           </div>
           <button id="page-send"
-                  class="btn-float flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600
+                  title="发送"
+                  class="btn-float flex items-center justify-center w-12 h-12 rounded-xl gradient-animated
                          text-white font-semibold shadow-lg
                          disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300">
             <svg id="page-send-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="transition-transform">

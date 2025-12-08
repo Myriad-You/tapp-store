@@ -1,8 +1,8 @@
-// AI Chat Tapp v5.0 - 极简浮动版
-// 浮动 UI · 打字效果 · 动态输入
+// AI Chat Tapp v5.1 - 壁纸色版
+// 全局颜色变量 · 极简 UI · 打字效果
 // 2025-12-08
 
-console.log('[AI Chat] v5.0 极简浮动版初始化...');
+console.log('[AI Chat] v5.1 壁纸色版初始化...');
 
 // ========================================
 // 国际化
@@ -10,22 +10,22 @@ console.log('[AI Chat] v5.0 极简浮动版初始化...');
 
 var i18n = {
   'zh-CN': {
-    widgetTitle: 'AI',
-    placeholder: '问点什么...',
-    placeholderPage: '输入消息...',
+    widgetTitle: '对话',
+    placeholder: '输入...',
+    placeholderPage: '输入...',
     send: '发送',
-    startChat: '开始对话',
-    title: 'AI 聊天',
+    startChat: '开始',
+    title: '对话',
     subtitle: '智能助手',
-    welcome: '你好！我是 AI 助手',
+    welcome: '开始对话',
     welcomeSubtitle: '选择话题或直接输入',
     clearChat: '新对话',
     thinking: '思考中...',
     error: '出错了',
-    errorNetwork: '网络错误，请重试',
+    errorNetwork: '网络错误',
     online: '在线',
     examples: [
-      { icon: '💡', title: '解释 AI', desc: '' },
+      { icon: '💡', title: '解释概念', desc: '' },
       { icon: '✍️', title: '写一首诗', desc: '' },
       { icon: '💻', title: '学编程', desc: '' },
       { icon: '🎬', title: '推荐电影', desc: '' }
@@ -33,22 +33,22 @@ var i18n = {
     quickExamples: ['你好', '笑话', '天气'],
   },
   'en-US': {
-    widgetTitle: 'AI',
-    placeholder: 'Ask anything...',
-    placeholderPage: 'Type a message...',
+    widgetTitle: 'Chat',
+    placeholder: 'Type...',
+    placeholderPage: 'Type...',
     send: 'Send',
-    startChat: 'Start chatting',
-    title: 'AI Chat',
-    subtitle: 'Smart assistant',
-    welcome: "Hello! I'm AI",
+    startChat: 'Start',
+    title: 'Chat',
+    subtitle: 'Assistant',
+    welcome: 'Start chatting',
     welcomeSubtitle: 'Pick a topic or ask',
-    clearChat: 'New chat',
+    clearChat: 'New',
     thinking: 'Thinking...',
     error: 'Error',
     errorNetwork: 'Network error',
     online: 'Online',
     examples: [
-      { icon: '💡', title: 'Explain AI', desc: '' },
+      { icon: '💡', title: 'Explain', desc: '' },
       { icon: '✍️', title: 'Write poem', desc: '' },
       { icon: '💻', title: 'Learn code', desc: '' },
       { icon: '🎬', title: 'Movies', desc: '' }
@@ -777,4 +777,4 @@ function initPage() {
   }
 })();
 
-console.log('[AI Chat] v5.0 已加载');
+console.log('[AI Chat] v5.1 已加载');

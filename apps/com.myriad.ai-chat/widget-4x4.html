@@ -1,51 +1,42 @@
-<!-- AI Chat Widget 4x4 - v5.0 极简浮动版 -->
-<!-- 完整对话 · 浮动 UI · 打字效果 -->
+<!-- AI Chat Widget 4x4 - v5.1 极简版 -->
+<!-- 完整对话 · 壁纸色 · 精简 UI -->
 <div class="relative h-full w-full rounded-xl overflow-hidden glass flex flex-col" data-widget-root="true">
-  <!-- 动态呼吸光晕 -->
+  <!-- 动态呼吸光晕 - 使用壁纸色 -->
   <div id="widget-glow" class="absolute -right-8 -top-8 w-40 h-40 rounded-full glow-breathe pointer-events-none"
-       style="background: linear-gradient(135deg, var(--ai-gradient-from, #6366f1), var(--ai-gradient-to, #8b5cf6)); filter: blur(50px);"></div>
+       style="background: linear-gradient(135deg, var(--ai-gradient-from), var(--ai-gradient-to)); filter: blur(50px);"></div>
   <div class="absolute -left-8 -bottom-8 w-32 h-32 rounded-full glow-breathe pointer-events-none" 
-       style="background: linear-gradient(135deg, #8b5cf6, #a855f7); filter: blur(50px); animation-delay: 2s;"></div>
+       style="background: linear-gradient(135deg, var(--ai-gradient-to), var(--ai-gradient-from)); filter: blur(50px); animation-delay: 2s;"></div>
   
   <!-- 微光装饰 -->
   <div class="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-white/10 dark:from-white/[0.03] dark:to-white/[0.01]"></div>
 
   <!-- 内容层 -->
   <div class="relative h-full flex flex-col p-3 z-10">
-    <!-- 浮动顶栏 -->
+    <!-- 浮动顶栏（极简） -->
     <div id="float-header" class="absolute top-2 left-2 right-2 z-20 flex items-center justify-between">
-      <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-full glass-pill">
-        <div id="ai-avatar" class="w-6 h-6 rounded-lg gradient-animated flex items-center justify-center text-sm">🤖</div>
-        <span id="widget-title" class="text-xs font-semibold text-neutral-700 dark:text-neutral-200">AI</span>
-        <div class="w-2 h-2 rounded-full bg-emerald-500 status-online"></div>
+      <div class="flex items-center gap-1.5 px-2 py-1 rounded-full glass-pill opacity-70">
+        <div class="w-2 h-2 rounded-full bg-[var(--ai-success)] status-online"></div>
+        <span id="widget-title" class="text-[10px] font-medium text-neutral-600 dark:text-neutral-300">对话</span>
       </div>
       <button id="widget-clear"
-              class="px-2.5 py-1 text-[10px] font-medium rounded-full glass-pill text-neutral-500 dark:text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-        🔄 新对话
+              class="px-2 py-1 text-[10px] rounded-full glass-pill text-neutral-400 dark:text-neutral-500 hover:text-[var(--ai-primary)] transition-colors opacity-70 hover:opacity-100">
+        ↻
       </button>
     </div>
 
     <!-- 消息区域 -->
-    <div id="widget-messages" class="flex-1 overflow-y-auto overflow-x-hidden pt-10 pb-2 space-y-2.5 custom-scrollbar">
+    <div id="widget-messages" class="flex-1 overflow-y-auto overflow-x-hidden pt-8 pb-2 space-y-2 custom-scrollbar">
       <!-- 欢迎界面（极简） -->
       <div id="widget-welcome" class="flex flex-col items-center justify-center h-full text-center px-4">
-        <div class="welcome-icon-float mb-3">
-          <div class="w-12 h-12 rounded-xl gradient-animated flex items-center justify-center text-2xl shadow-lg welcome-icon-glow">
-            💬
-          </div>
-        </div>
-        <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-3">
-          有什么可以帮你的？
-        </p>
         <!-- 快捷示例 -->
         <div class="flex flex-wrap gap-1.5 justify-center">
-          <button class="quick-example px-2.5 py-1 text-[10px] rounded-full glass-pill text-neutral-500 dark:text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" data-example="你好">
+          <button class="quick-example px-2.5 py-1 text-[10px] rounded-full glass-pill text-neutral-500 dark:text-neutral-400 hover:text-[var(--ai-primary)] transition-colors" data-example="你好">
             👋 你好
           </button>
-          <button class="quick-example px-2.5 py-1 text-[10px] rounded-full glass-pill text-neutral-500 dark:text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" data-example="讲个笑话">
+          <button class="quick-example px-2.5 py-1 text-[10px] rounded-full glass-pill text-neutral-500 dark:text-neutral-400 hover:text-[var(--ai-primary)] transition-colors" data-example="讲个笑话">
             😄 笑话
           </button>
-          <button class="quick-example px-2.5 py-1 text-[10px] rounded-full glass-pill text-neutral-500 dark:text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" data-example="今天天气">
+          <button class="quick-example px-2.5 py-1 text-[10px] rounded-full glass-pill text-neutral-500 dark:text-neutral-400 hover:text-[var(--ai-primary)] transition-colors" data-example="今天天气">
             🌤️ 天气
           </button>
         </div>
@@ -57,12 +48,13 @@
       <div class="flex items-center gap-2">
         <input type="text"
                id="widget-input"
-               placeholder="输入消息..."
+               placeholder="输入..."
                autocomplete="off"
                class="input-float flex-1 px-3 py-2 rounded-xl bg-transparent text-neutral-800 dark:text-neutral-100 placeholder-neutral-400 text-sm outline-none">
         <button id="widget-send"
-                class="btn-float flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-lg">
-          <svg id="send-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="transition-transform">
+                title="发送"
+                class="btn-float flex items-center justify-center w-8 h-8 rounded-xl gradient-animated text-white shadow-md">
+          <svg id="send-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="transition-transform">
             <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
           </svg>
         </button>

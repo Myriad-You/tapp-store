@@ -1,55 +1,54 @@
-<!-- AI Chat Widget 4x2 - v5.0 极简浮动版 -->
-<!-- 浮动 UI · 打字效果 · 动态输入栏 -->
+<!-- AI Chat Widget 4x2 - v5.1 极简版 -->
+<!-- 无欢迎信息 · 纯对话 · 壁纸色 -->
 <div class="relative h-full w-full rounded-xl overflow-hidden glass widget-compact" data-widget-root="true">
-  <!-- 动态呼吸光晕 -->
+  <!-- 动态呼吸光晕 - 使用壁纸色 -->
   <div id="widget-glow" class="absolute -right-6 -top-6 w-28 h-28 rounded-full glow-breathe pointer-events-none"
-       style="background: linear-gradient(135deg, var(--ai-gradient-from, #6366f1), var(--ai-gradient-to, #8b5cf6)); filter: blur(40px);"></div>
+       style="background: linear-gradient(135deg, var(--ai-gradient-from), var(--ai-gradient-to)); filter: blur(40px);"></div>
   
   <!-- 微光装饰层 -->
   <div class="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent dark:from-white/[0.03]"></div>
 
   <!-- 内容层 -->
-  <div class="relative h-full flex flex-col p-3 z-10">
-    <!-- 浮动顶栏（精简） -->
-    <div id="float-header" class="absolute top-2 left-2 z-20 flex items-center gap-1.5 px-2 py-1 rounded-full glass-pill opacity-80 hover:opacity-100 transition-opacity">
-      <div id="ai-avatar" class="w-5 h-5 rounded-full gradient-animated flex items-center justify-center text-xs">🤖</div>
-      <span id="widget-title" class="text-[10px] font-medium text-neutral-600 dark:text-neutral-300">AI</span>
-      <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 status-online"></div>
+  <div class="relative h-full flex flex-col p-2.5 z-10">
+    <!-- 浮动状态指示器（极简） -->
+    <div id="float-header" class="absolute top-2 right-2 z-20">
+      <div id="ai-avatar" class="w-5 h-5 rounded-full gradient-animated flex items-center justify-center text-[10px] opacity-60 avatar-indicator">
+        <div class="w-2 h-2 rounded-full bg-current status-online"></div>
+      </div>
     </div>
 
-    <!-- 对话区域 -->
-    <div class="flex-1 flex flex-col justify-center gap-1.5 min-h-0 overflow-hidden pt-6">
+    <!-- 对话区域（无欢迎信息） -->
+    <div class="flex-1 flex flex-col justify-center gap-1.5 min-h-0 overflow-hidden">
       <!-- 用户消息 -->
       <div id="user-msg-bar" class="flex justify-end opacity-0 transform translate-x-4 transition-all duration-400">
-        <div class="bubble-user px-3 py-1.5 max-w-[90%]">
+        <div class="bubble-user px-2.5 py-1.5 max-w-[90%]">
           <p id="user-msg-content" class="text-xs truncate"></p>
         </div>
       </div>
       
       <!-- AI 回复 -->
-      <div id="ai-reply-bar" class="flex items-start gap-2 opacity-0 transform -translate-x-4 transition-all duration-400">
-        <div class="bubble-ai px-3 py-1.5 flex-1 min-h-[28px] flex items-center">
+      <div id="ai-reply-bar" class="flex items-start opacity-0 transform -translate-x-4 transition-all duration-400">
+        <div class="bubble-ai px-2.5 py-1.5 flex-1 min-h-[24px] flex items-center">
           <p id="ai-reply-content" class="text-xs text-neutral-700 dark:text-neutral-200 line-clamp-2"></p>
         </div>
       </div>
       
-      <!-- 欢迎提示（极简） -->
-      <div id="widget-welcome" class="flex items-center justify-center">
-        <p class="text-[11px] text-neutral-400 dark:text-neutral-500">💬 输入开始对话</p>
-      </div>
+      <!-- 隐藏的欢迎占位（仅用于初始化逻辑） -->
+      <div id="widget-welcome" class="hidden"></div>
     </div>
 
     <!-- 浮动输入栏 -->
-    <div id="float-input" class="input-float-bar flex items-center gap-2 mt-auto">
+    <div id="float-input" class="input-float-bar flex items-center gap-1.5 mt-auto">
       <input type="text"
              id="widget-input"
-             placeholder="问点什么..."
+             placeholder="输入..."
              autocomplete="off"
-             class="input-float flex-1 px-3 py-2 rounded-full bg-white/90 dark:bg-neutral-900/90 border border-neutral-200/50 dark:border-neutral-700/50
+             class="input-float flex-1 px-2.5 py-1.5 rounded-full bg-white/90 dark:bg-neutral-900/90 border border-neutral-200/50 dark:border-neutral-700/50
                     text-neutral-800 dark:text-neutral-100 placeholder-neutral-400 text-xs outline-none transition-all duration-300">
       <button id="widget-send"
-              class="btn-float flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-lg transition-all duration-300">
-        <svg id="send-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="transition-transform">
+              title="发送"
+              class="btn-float flex items-center justify-center w-7 h-7 rounded-full gradient-animated text-white shadow-md transition-all duration-300">
+        <svg id="send-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="transition-transform">
           <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
         </svg>
       </button>
