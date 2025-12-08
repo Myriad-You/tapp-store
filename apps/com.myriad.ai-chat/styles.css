@@ -1,0 +1,228 @@
+/**
+ * AI Chat Tapp Styles v3.0
+ * 符合最新 Tapp 开发标准（2025-12-08）
+ * 
+ * 基于 Tailwind CSS，提供必要的自定义样式补充
+ */
+
+/* ========================================
+ * Glass 效果样式
+ * ======================================== */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.dark .glass {
+  background: rgba(38, 38, 38, 0.8);
+}
+
+/* ========================================
+ * 通用动画
+ * ======================================== */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce-dot {
+  0%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out;
+}
+
+.animate-bounce-dot {
+  animation: bounce-dot 1.4s infinite ease-in-out both;
+}
+
+/* ========================================
+ * Widget 专用样式
+ * ======================================== */
+
+/* 消息气泡动画 */
+.widget-message-enter {
+  animation: fade-in 0.2s ease-out;
+}
+
+/* 加载指示器 */
+.loading-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.loading-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+  animation: bounce-dot 1.4s infinite ease-in-out both;
+}
+
+.loading-dots span:nth-child(1) { animation-delay: 0ms; }
+.loading-dots span:nth-child(2) { animation-delay: 150ms; }
+.loading-dots span:nth-child(3) { animation-delay: 300ms; }
+
+/* Widget 输入框 */
+.widget-input {
+  transition: all 0.2s ease;
+}
+
+.widget-input:focus {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* Widget 发送按钮 */
+.widget-send-btn {
+  transition: all 0.15s ease;
+}
+
+.widget-send-btn:hover {
+  transform: scale(1.1);
+}
+
+.widget-send-btn:active {
+  transform: scale(0.95);
+}
+
+.widget-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ========================================
+ * Page 专用样式
+ * ======================================== */
+
+/* 滚动条样式 */
+#page-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+#page-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#page-messages::-webkit-scrollbar-thumb {
+  background: rgb(163 163 163 / 0.3);
+  border-radius: 3px;
+}
+
+#page-messages::-webkit-scrollbar-thumb:hover {
+  background: rgb(163 163 163 / 0.5);
+}
+
+/* 深色模式滚动条 */
+.dark #page-messages::-webkit-scrollbar-thumb {
+  background: rgb(115 115 115 / 0.3);
+}
+
+.dark #page-messages::-webkit-scrollbar-thumb:hover {
+  background: rgb(115 115 115 / 0.5);
+}
+
+/* 消息区域 */
+.message-bubble {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* 输入区域 */
+#page-input {
+  transition: all 0.2s ease;
+}
+
+#page-input:focus {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* 发送按钮 */
+#page-send {
+  transition: all 0.15s ease;
+}
+
+#page-send:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+#page-send:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+#page-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 示例按钮 */
+.example-btn {
+  transition: all 0.2s ease;
+}
+
+.example-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ========================================
+ * 代码块样式
+ * ======================================== */
+code {
+  font-family: 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
+  font-size: 0.9em;
+}
+
+pre code {
+  display: block;
+  padding: 1rem;
+  overflow-x: auto;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 0.5rem;
+}
+
+.dark pre code {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ========================================
+ * 响应式调整
+ * ======================================== */
+@media (max-width: 640px) {
+  .example-btn {
+    padding: 0.75rem 1rem;
+  }
+  
+  #page-input {
+    font-size: 16px; /* 防止 iOS 缩放 */
+  }
+}

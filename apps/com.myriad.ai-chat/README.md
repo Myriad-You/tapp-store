@@ -26,7 +26,7 @@
 在导航菜单中点击「AI 聊天助手」进入完整对话界面：
 
 - 支持长文本输入（textarea）
-- 显示完整对话历史和时间戳
+- 显示完整对话历史
 - 提供快捷问题建议
 - Shift+Enter 换行，Enter 发送
 
@@ -56,45 +56,55 @@
 
 ## 技术架构
 
-采用最新的 Tapp 开发标准，完全符合新样式规范：
+采用最新的 Tapp 开发标准，使用**混合渲染模式**：
 
-### Core 代码
-- `formatTime()`: 时间格式化工具
-- `getPrimaryColor()`: 获取全局主色调，带错误处理
+### 文件结构
 
-### Widget 代码
-- ✅ **Tailwind CSS 样式**: 完全使用 Tailwind 类名
-- ✅ **毛玻璃风格**: `glass` 类 + `backdrop-blur`
-- ✅ **渐变装饰层**: `from-violet-500/5 to-transparent`
-- ✅ **响应式 props**: 支持 `scale`, `fontScale`, `isEditMode`
-- ✅ **HTML 模板**: 使用 `innerHTML` + 模板字符串
-- ✅ **独立消息存储**: `widgetMessages`
-- ✅ **编辑模式边框**: 虚线边框指示器
+```
+com.myriad.ai-chat/
+├── manifest.json       # 应用清单
+├── main.js             # 主代码（共用 + Widget + Page 逻辑）
+├── styles.css          # 自定义样式（补充 Tailwind）
+├── page.html           # 页面模式 HTML 模板
+├── widget-4x2.html     # 4x2 小组件 HTML 模板
+├── widget-4x4.html     # 4x4 小组件 HTML 模板
+└── README.md           # 说明文档
+```
 
-### Page 代码
-- ✅ **双层架构**: `#tapp-background` 装饰层 + `#tapp-content` 内容层
-- ✅ **渐变光晕**: 背景层使用 `primaryColor` 生成动态光晕
-- ✅ **Safe Area**: 内容层自动 72px 顶部 padding（全屏模式）
-- ✅ **现代化 UI**: Tailwind + 毛玻璃效果
-- ✅ **响应式布局**: 最大宽度 5xl，居中布局
-- ✅ **自适应 textarea**: 自动调整高度
-- ✅ **生命周期管理**: `onReady`, `onDestroy`
-- ✅ **主题监听**: 主题和主色调变化自动重渲染
+### 混合渲染模式
+
+与纯 JS 渲染不同，本 Tapp 使用混合渲染模式：
+
+1. **HTML 模板**: 定义静态结构（page.html, widget-*.html）
+2. **JS 代码**: 绑定事件、处理逻辑、动态更新
+
+这种模式的优势：
+- ✅ 更好的代码可读性
+- ✅ HTML 和 JS 职责分离
+- ✅ 更容易调试和维护
+- ✅ 更快的首屏渲染
 
 ### 样式特性
-- **毛玻璃背景**: `bg-white/60 dark:bg-white/[0.03] backdrop-blur`
-- **渐变装饰**: `bg-gradient-to-br from-violet-500/5`
-- **颜色系统**: Indigo 主色调 + Gray 文本系统
+
+- **毛玻璃背景**: `glass` 类 + `backdrop-blur`
+- **渐变光晕**: 动态主题色光晕装饰
+- **颜色系统**: Indigo 主色调 + Neutral 文本系统
 - **暗色适配**: 完整的 `dark:` 前缀支持
-- **过渡动画**: `transition-colors`, `transition-all`
-- **自定义滚动条**: `scrollbar-thin scrollbar-thumb-gray-300`
+- **Tailwind CSS**: 完全基于 Tailwind 构建
 
 ### API 使用
-- **Widget 自动注册**: 通过 Manifest 的 `widgets` 字段
+
 - **AI Chat API**: `Tapp.ai.chat(messages, context, options)`
   - 返回: `{ message: { role, content }, usage: { ... }, sessionId }`
 - **设置集成**: `Tapp.settings.getAll()` 读取配置
+- **存储 API**: `Tapp.storage.get/set()` 保存历史
 - **主色调 API**: `Tapp.ui.getPrimaryColor()` 获取壁纸色
+
+### 生命周期
+
+- **Widget 模式**: 通过 `window._TAPP_MODE === 'widget'` 检测
+- **Page 模式**: 使用 `Tapp.lifecycle.onReady()` 初始化
+- **销毁**: `Tapp.lifecycle.onDestroy()` 保存历史
 
 ## 📝 版本历史
 
@@ -103,29 +113,21 @@
 🎉 **完全重构版本 - 符合最新 Tapp 开发标准**
 
 #### 架构改进
-- ✅ **Widget 渲染重构**: 移除 HTML 模板，使用纯 JavaScript + innerHTML 渲染
-- ✅ **CORE/WIDGET/PAGE 代码分离**: 清晰的代码组织结构
-- ✅ **移除 CSS 依赖**: 完全使用 Tailwind CSS，不再需要 styles.css
+- ✅ **混合渲染模式**: HTML 模板 + JS 事件绑定
+- ✅ **文件结构规范化**: 添加缺失的模板文件
+- ✅ **代码组织优化**: 清晰的模式检测和初始化逻辑
 
 #### UI/UX 改进
 - 🎨 **Glass 风格设计**: 使用标准 `glass` 类和毛玻璃效果
 - 🌟 **光晕背景效果**: 动态主题色光晕装饰
-- 🎨 **Neutral 颜色系统**: 深色模式使用纯中性灰（不带蓝色调）
-- 💎 **渐变装饰层**: 丰富的视觉层次
+- 🎨 **Neutral 颜色系统**: 深色模式使用纯中性灰
 - 📐 **响应式设计**: 完整支持 scale 和 fontScale props
-- 🎯 **编辑模式指示器**: 虚线边框提示
 
 #### 功能优化
-- ⚡ **性能优化**: 优化渲染逻辑，减少 DOM 操作
+- ⚡ **性能优化**: HTML 预渲染 + JS 事件绑定
 - 🔒 **安全增强**: 使用 escapeHtml 防止 XSS 攻击
 - 🌐 **国际化**: 完整的中英文支持
 - 🎭 **主题响应**: 实时响应主题和主色调变化
-
-#### 技术细节
-- 使用最新的 Widget SDK 限制（简化版 API）
-- 符合 2025-12-08 最新开发文档标准
-- 移除废弃的 HTML 模板文件
-- 优化代码结构和性能
 
 ### v1.0.0
 

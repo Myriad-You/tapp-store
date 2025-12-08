@@ -1,10 +1,11 @@
 // AI Chat Tapp v3.0 - 完全重构版本
 // 符合最新 Tapp 开发标准（2025-12-08）
+// 使用混合渲染模式：HTML 模板 + JS 事件绑定
 
 console.log('[AI Chat] v3.0 初始化...');
 
 // ========================================
-// CORE_CODE - 核心工具函数（Widget + Page 共用）
+// 核心工具函数（Widget + Page 共用）
 // ========================================
 
 var i18n = {
@@ -77,138 +78,77 @@ function formatMessage(text) {
 }
 
 // ========================================
-// WIDGET_CODE - 小组件渲染代码
+// Widget 模式代码（混合渲染）
 // ========================================
 
-// Widget 状态（独立于 Page）
 var widgetState = {
   messages: [],
   sending: false,
 };
 
-// 渲染光晕背景
-function renderGlow(color, position, size) {
-  var sizes = { sm: '6rem', md: '8rem', lg: '12rem' };
-  var positions = {
-    right: 'right: -2rem; top: -2rem;',
-    left: 'left: -1.5rem; bottom: -1.5rem;',
-  };
-
-  return `<div style="
-    position: absolute;
-    ${positions[position] || positions.right}
-    width: ${sizes[size] || sizes.md};
-    height: ${sizes[size] || sizes.md};
-    border-radius: 9999px;
-    background: ${color};
-    filter: blur(64px);
-    opacity: 0.1;
-    pointer-events: none;
-  "></div>`;
+// 检测当前 Widget 尺寸
+function detectWidgetSize() {
+  var props = window._TAPP_WIDGET_PROPS || {};
+  return props.size || '4x2';
 }
 
-// 4x2 Widget - 紧凑对话模式
-function render4x2Widget(container, props) {
-  var scale = props.scale || 1;
-  var fontScale = props.fontScale || 1;
-  var themeColor = props.primaryColor || '#8b5cf6';
+// 4x2 Widget 事件绑定
+function init4x2Widget() {
+  var input = document.getElementById('widget-input');
+  var sendBtn = document.getElementById('widget-send');
+  var userMsgBar = document.getElementById('user-msg-bar');
+  var userMsgContent = document.getElementById('user-msg-content');
+  var aiReplyBar = document.getElementById('ai-reply-bar');
+  var aiReplyContent = document.getElementById('ai-reply-content');
+  var titleEl = document.getElementById('widget-title');
+  var glowEl = document.getElementById('widget-glow');
 
-  container.innerHTML = `
-    <div class="relative h-full w-full rounded-xl overflow-hidden glass">
-      ${renderGlow(themeColor, 'right', 'md')}
+  if (!input || !sendBtn) {
+    console.error('[AI Chat] 4x2 Widget 元素未找到');
+    return;
+  }
 
-      <!-- 渐变装饰层 -->
-      <div class="absolute inset-0 bg-gradient-to-br from-neutral-50/50 to-transparent dark:from-white/[0.02] dark:to-transparent"></div>
+  // 设置主题色光晕
+  var props = window._TAPP_WIDGET_PROPS || {};
+  if (glowEl && props.primaryColor) {
+    glowEl.style.backgroundColor = props.primaryColor;
+  }
 
-      <!-- 内容层 -->
-      <div class="relative h-full flex flex-col" style="padding: ${12 * scale}px;">
-        <!-- 顶部标题 -->
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider font-bold"
-              style="font-size: ${12 * fontScale}px;">
-            ${t('widgetTitle')}
-          </h3>
-          <span class="text-lg" style="font-size: ${18 * scale}px;">🤖</span>
-        </div>
-
-        <!-- 用户消息栏（动态显示） -->
-        <div id="user-msg-bar" class="mb-2 opacity-0 transition-all duration-300 transform translate-y-[-8px]"
-             style="max-height: ${32 * scale}px; font-size: ${12 * fontScale}px;">
-          <div class="px-3 py-1.5 rounded-lg bg-indigo-500 text-white text-right truncate"
-               style="padding: ${6 * scale}px ${12 * scale}px;">
-          </div>
-        </div>
-
-        <!-- AI回复栏（动态显示） -->
-        <div id="ai-reply-bar" class="flex-1 flex items-center mb-2 opacity-0 transition-all duration-300 transform translate-y-2">
-          <div class="w-full px-3 py-2 rounded-lg bg-white/60 dark:bg-white/[0.03] backdrop-blur-sm"
-               style="padding: ${8 * scale}px ${12 * scale}px; font-size: ${13 * fontScale}px; min-height: ${40 * scale}px;">
-            <span class="text-neutral-600 dark:text-neutral-400"></span>
-          </div>
-        </div>
-
-        <!-- 底部输入栏 -->
-        <div class="flex items-center gap-2" style="gap: ${8 * scale}px;">
-          <input type="text"
-                 id="widget-input-4x2"
-                 placeholder="${t('placeholder')}"
-                 autocomplete="off"
-                 class="flex-1 px-3 py-2 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700
-                        text-neutral-800 dark:text-neutral-100 placeholder-neutral-400
-                        focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-                 style="padding: ${8 * scale}px ${12 * scale}px; font-size: ${14 * fontScale}px;">
-          <button id="widget-send-4x2"
-                  class="flex items-center justify-center rounded-full bg-indigo-600 hover:bg-indigo-700
-                         text-white transition-transform hover:scale-110 active:scale-95"
-                  style="width: ${40 * scale}px; height: ${40 * scale}px;">
-            <svg width="${16 * scale}" height="${16 * scale}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      ${props.isEditMode ? `<div class="absolute inset-0 border-2 border-dashed border-blue-400 rounded-xl pointer-events-none"></div>` : ''}
-    </div>
-  `;
-
-  // 绑定事件
-  var input = container.querySelector('#widget-input-4x2');
-  var sendBtn = container.querySelector('#widget-send-4x2');
-  var userMsgBar = container.querySelector('#user-msg-bar');
-  var aiReplyBar = container.querySelector('#ai-reply-bar');
-
-  if (!input || !sendBtn) return;
+  // 设置标题
+  if (titleEl) titleEl.textContent = t('widgetTitle');
+  if (input) input.placeholder = t('placeholder');
 
   function showUserMsg(text) {
-    var msgEl = userMsgBar.querySelector('div');
-    if (msgEl) {
-      msgEl.textContent = text;
-      userMsgBar.classList.remove('opacity-0', 'translate-y-[-8px]');
+    if (userMsgContent) userMsgContent.textContent = text;
+    if (userMsgBar) {
+      userMsgBar.classList.remove('opacity-0', '-translate-y-2');
       userMsgBar.classList.add('opacity-100', 'translate-y-0');
     }
   }
 
   function showAiReply(text) {
-    var msgEl = aiReplyBar.querySelector('span');
-    if (msgEl) {
-      var display = text.length > 100 ? text.substring(0, 100) + '...' : text;
-      msgEl.textContent = display;
+    var display = text.length > 100 ? text.substring(0, 100) + '...' : text;
+    if (aiReplyContent) aiReplyContent.textContent = display;
+    if (aiReplyBar) {
       aiReplyBar.classList.remove('opacity-0', 'translate-y-2');
       aiReplyBar.classList.add('opacity-100', 'translate-y-0');
     }
   }
 
   function showTyping() {
-    aiReplyBar.querySelector('span').innerHTML = '<span class="animate-pulse">💭 ' + t('sending') + '</span>';
-    aiReplyBar.classList.remove('opacity-0', 'translate-y-2');
-    aiReplyBar.classList.add('opacity-100', 'translate-y-0');
+    if (aiReplyContent) {
+      aiReplyContent.innerHTML = '<span class="animate-pulse">💭 ' + t('sending') + '</span>';
+    }
+    if (aiReplyBar) {
+      aiReplyBar.classList.remove('opacity-0', 'translate-y-2');
+      aiReplyBar.classList.add('opacity-100', 'translate-y-0');
+    }
   }
 
   function showError(msg) {
-    aiReplyBar.querySelector('span').innerHTML = '<span class="text-red-500">❌ ' + msg + '</span>';
-    aiReplyBar.classList.remove('opacity-0', 'translate-y-2');
-    aiReplyBar.classList.add('opacity-100', 'translate-y-0');
+    if (aiReplyContent) {
+      aiReplyContent.innerHTML = '<span class="text-red-500">❌ ' + msg + '</span>';
+    }
   }
 
   function doSend() {
@@ -224,18 +164,12 @@ function render4x2Widget(container, props) {
 
     Tapp.ai.chat([{ role: 'user', content: text }], {}, { maxTokens: 300 })
       .then(function(resp) {
-        // resp 是 { success, message: { role, content }, usage }
-        // SDK 已自动解包，直接访问 message
         if (resp && resp.message && resp.message.content) {
           showAiReply(resp.message.content);
+        } else if (resp && resp.content) {
+          showAiReply(resp.content);
         } else {
-          // 可能是旧格式或直接返回消息对象
-          var content = resp?.content || (resp?.message && resp.message.content);
-          if (content) {
-            showAiReply(content);
-          } else {
-            throw new Error(t('error'));
-          }
+          throw new Error(t('error'));
         }
       })
       .catch(function(err) {
@@ -252,86 +186,37 @@ function render4x2Widget(container, props) {
   input.onkeydown = function(e) {
     if (e.key === 'Enter') { e.preventDefault(); doSend(); }
   };
+
+  console.log('[AI Chat] 4x2 Widget 初始化完成');
 }
 
-// 4x4 Widget - 完整对话模式
-function render4x4Widget(container, props) {
-  var scale = props.scale || 1;
-  var fontScale = props.fontScale || 1;
-  var themeColor = props.primaryColor || '#8b5cf6';
+// 4x4 Widget 事件绑定
+function init4x4Widget() {
+  var input = document.getElementById('widget-input');
+  var sendBtn = document.getElementById('widget-send');
+  var clearBtn = document.getElementById('widget-clear');
+  var messagesArea = document.getElementById('widget-messages');
+  var welcomeEl = document.getElementById('widget-welcome');
+  var welcomeText = document.getElementById('welcome-text');
+  var titleEl = document.getElementById('widget-title');
+  var glowEl = document.getElementById('widget-glow');
 
-  container.innerHTML = `
-    <div class="relative h-full w-full rounded-xl overflow-hidden glass flex flex-col">
-      ${renderGlow(themeColor, 'right', 'lg')}
+  if (!input || !sendBtn || !messagesArea) {
+    console.error('[AI Chat] 4x4 Widget 元素未找到');
+    return;
+  }
 
-      <!-- 渐变装饰层 -->
-      <div class="absolute inset-0 bg-gradient-to-br from-neutral-50/50 to-transparent dark:from-white/[0.02] dark:to-transparent"></div>
+  // 设置主题色光晕
+  var props = window._TAPP_WIDGET_PROPS || {};
+  if (glowEl && props.primaryColor) {
+    glowEl.style.backgroundColor = props.primaryColor;
+  }
 
-      <!-- 内容层 -->
-      <div class="relative h-full flex flex-col" style="padding: ${12 * scale}px;">
-        <!-- 顶部栏 -->
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center gap-2" style="gap: ${8 * scale}px;">
-            <span class="text-2xl" style="font-size: ${24 * scale}px;">🤖</span>
-            <h3 class="text-sm font-bold text-neutral-700 dark:text-neutral-200"
-                style="font-size: ${14 * fontScale}px;">
-              ${t('widgetTitle')}
-            </h3>
-          </div>
-          <button id="widget-clear-4x4"
-                  class="px-2 py-1 text-xs rounded-md bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200
-                         dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-400 transition-colors"
-                  style="padding: ${4 * scale}px ${8 * scale}px; font-size: ${11 * fontScale}px;">
-            ${t('clearChat')}
-          </button>
-        </div>
-
-        <!-- 消息区域 -->
-        <div id="widget-messages-4x4" class="flex-1 overflow-y-auto overflow-x-hidden mb-3 space-y-2"
-             style="margin-bottom: ${12 * scale}px;">
-          <!-- 欢迎消息 -->
-          <div id="widget-welcome-4x4" class="flex flex-col items-center justify-center h-full text-center">
-            <span class="text-3xl mb-3" style="font-size: ${32 * scale}px; margin-bottom: ${12 * scale}px;">💬</span>
-            <p class="text-neutral-500 dark:text-neutral-400"
-               style="font-size: ${13 * fontScale}px;">
-              ${t('startChat')}
-            </p>
-          </div>
-        </div>
-
-        <!-- 底部输入栏 -->
-        <div class="flex items-center gap-2" style="gap: ${8 * scale}px;">
-          <input type="text"
-                 id="widget-input-4x4"
-                 placeholder="${t('placeholder')}"
-                 autocomplete="off"
-                 class="flex-1 px-3 py-2 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700
-                        text-neutral-800 dark:text-neutral-100 placeholder-neutral-400
-                        focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-                 style="padding: ${8 * scale}px ${12 * scale}px; font-size: ${14 * fontScale}px;">
-          <button id="widget-send-4x4"
-                  class="flex items-center justify-center rounded-full bg-indigo-600 hover:bg-indigo-700
-                         text-white transition-transform hover:scale-110 active:scale-95"
-                  style="width: ${40 * scale}px; height: ${40 * scale}px;">
-            <svg width="${16 * scale}" height="${16 * scale}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      ${props.isEditMode ? `<div class="absolute inset-0 border-2 border-dashed border-blue-400 rounded-xl pointer-events-none"></div>` : ''}
-    </div>
-  `;
-
-  // 绑定事件
-  var input = container.querySelector('#widget-input-4x4');
-  var sendBtn = container.querySelector('#widget-send-4x4');
-  var clearBtn = container.querySelector('#widget-clear-4x4');
-  var messagesArea = container.querySelector('#widget-messages-4x4');
-  var welcomeEl = container.querySelector('#widget-welcome-4x4');
-
-  if (!input || !sendBtn || !messagesArea) return;
+  // 设置文本
+  if (titleEl) titleEl.textContent = t('widgetTitle');
+  if (input) input.placeholder = t('placeholder');
+  if (clearBtn) clearBtn.textContent = t('clearChat');
+  if (welcomeText) welcomeText.textContent = t('startChat');
 
   function createBubble(role, content) {
     var bubble = document.createElement('div');
@@ -340,9 +225,6 @@ function render4x4Widget(container, props) {
 
     var avatar = document.createElement('div');
     avatar.className = 'flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs';
-    avatar.style.width = (24 * scale) + 'px';
-    avatar.style.height = (24 * scale) + 'px';
-    avatar.style.fontSize = (12 * scale) + 'px';
 
     if (role === 'user') {
       avatar.className += ' bg-indigo-500 text-white';
@@ -353,9 +235,7 @@ function render4x4Widget(container, props) {
     }
 
     var message = document.createElement('div');
-    message.className = 'px-3 py-2 rounded-lg max-w-[75%] break-words';
-    message.style.padding = (8 * scale) + 'px ' + (12 * scale) + 'px';
-    message.style.fontSize = (13 * fontScale) + 'px';
+    message.className = 'px-3 py-2 rounded-lg max-w-[75%] break-words text-sm';
 
     if (role === 'user') {
       message.className += ' bg-indigo-500 text-white';
@@ -374,18 +254,11 @@ function render4x4Widget(container, props) {
     var indicator = document.createElement('div');
     indicator.id = 'typing-indicator';
     indicator.className = 'flex items-start gap-2';
-    indicator.innerHTML = `
-      <div class="flex-shrink-0 w-6 h-6 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-xs"
-           style="width: ${24 * scale}px; height: ${24 * scale}px; font-size: ${12 * scale}px;">🤖</div>
-      <div class="px-3 py-2 rounded-lg bg-white/60 dark:bg-white/[0.03]"
-           style="padding: ${8 * scale}px ${12 * scale}px;">
-        <div class="flex gap-1">
-          <span class="w-2 h-2 rounded-full bg-neutral-400 animate-bounce" style="animation-delay: 0ms"></span>
-          <span class="w-2 h-2 rounded-full bg-neutral-400 animate-bounce" style="animation-delay: 150ms"></span>
-          <span class="w-2 h-2 rounded-full bg-neutral-400 animate-bounce" style="animation-delay: 300ms"></span>
-        </div>
-      </div>
-    `;
+    indicator.innerHTML = 
+      '<div class="flex-shrink-0 w-6 h-6 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-xs">🤖</div>' +
+      '<div class="px-3 py-2 rounded-lg bg-white/60 dark:bg-white/[0.03]">' +
+        '<div class="loading-dots"><span></span><span></span><span></span></div>' +
+      '</div>';
     return indicator;
   }
 
@@ -420,19 +293,18 @@ function render4x4Widget(container, props) {
         var ind = document.getElementById('typing-indicator');
         if (ind) ind.remove();
 
-        // resp 是 { success, message: { role, content }, usage }
+        var content = null;
         if (resp && resp.message && resp.message.content) {
-          widgetState.messages.push({ role: 'assistant', content: resp.message.content });
-          addMessage('assistant', resp.message.content);
+          content = resp.message.content;
+        } else if (resp && resp.content) {
+          content = resp.content;
+        }
+
+        if (content) {
+          widgetState.messages.push({ role: 'assistant', content: content });
+          addMessage('assistant', content);
         } else {
-          // 兼容旧格式
-          var content = resp?.content || (resp?.message && resp.message.content);
-          if (content) {
-            widgetState.messages.push({ role: 'assistant', content: content });
-            addMessage('assistant', content);
-          } else {
-            throw new Error(t('error'));
-          }
+          throw new Error(t('error'));
         }
       })
       .catch(function(err) {
@@ -462,34 +334,28 @@ function render4x4Widget(container, props) {
   input.onkeydown = function(e) {
     if (e.key === 'Enter') { e.preventDefault(); doSend(); }
   };
+
+  console.log('[AI Chat] 4x4 Widget 初始化完成');
 }
 
-// Widget 主渲染函数
-// 在 Widget 模式下自动注册
-if (window._TAPP_MODE === 'widget' || (typeof Tapp !== 'undefined' && Tapp.widgets)) {
-  Tapp.widgets = Tapp.widgets || {};
-  Tapp.widgets['ai-chat'] = {
-    render: function(container, props) {
-      currentLocale = normalizeLocale(props.locale);
+// Widget 初始化入口
+function initWidget() {
+  var size = detectWidgetSize();
+  console.log('[AI Chat] 初始化 Widget，尺寸:', size);
 
-      var size = props.size || '4x2';
-      if (size === '4x2') {
-        render4x2Widget(container, props);
-      } else if (size === '4x4') {
-        render4x4Widget(container, props);
-      } else {
-        // 其他尺寸默认使用 4x2
-        render4x2Widget(container, props);
-      }
+  // 获取语言设置
+  var props = window._TAPP_WIDGET_PROPS || {};
+  currentLocale = normalizeLocale(props.locale);
 
-      console.log('[AI Chat] Widget 渲染完成，尺寸:', size);
-    },
-  };
-  console.log('[AI Chat] Widget 已注册');
+  if (size === '4x4') {
+    init4x4Widget();
+  } else {
+    init4x2Widget();
+  }
 }
 
 // ========================================
-// PAGE_CODE - 完整页面代码
+// Page 模式代码
 // ========================================
 
 var pageState = {
@@ -557,7 +423,13 @@ function renderPageMessages() {
   var welcome = document.getElementById('page-welcome');
   if (!area) return;
 
-  area.innerHTML = '';
+  // 清除现有消息（保留欢迎界面）
+  var children = Array.from(area.children);
+  children.forEach(function(child) {
+    if (child.id !== 'page-welcome') {
+      child.remove();
+    }
+  });
 
   if (pageState.messages.length === 0) {
     if (welcome) welcome.style.display = 'flex';
@@ -595,16 +467,11 @@ async function sendPageMessage() {
   var loading = document.createElement('div');
   loading.id = 'page-loading';
   loading.className = 'flex items-start gap-3';
-  loading.innerHTML = `
-    <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">🤖</div>
-    <div class="px-4 py-3 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
-      <div class="flex gap-1.5">
-        <span class="w-2 h-2 rounded-full bg-neutral-400 animate-bounce" style="animation-delay: 0ms"></span>
-        <span class="w-2 h-2 rounded-full bg-neutral-400 animate-bounce" style="animation-delay: 150ms"></span>
-        <span class="w-2 h-2 rounded-full bg-neutral-400 animate-bounce" style="animation-delay: 300ms"></span>
-      </div>
-    </div>
-  `;
+  loading.innerHTML = 
+    '<div class="flex-shrink-0 w-8 h-8 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">🤖</div>' +
+    '<div class="px-4 py-3 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">' +
+      '<div class="loading-dots"><span></span><span></span><span></span></div>' +
+    '</div>';
   area.appendChild(loading);
   area.scrollTop = area.scrollHeight;
 
@@ -620,12 +487,10 @@ async function sendPageMessage() {
     var loadEl = document.getElementById('page-loading');
     if (loadEl) loadEl.remove();
 
-    // resp 是 { success, message: { role, content }, usage }
     var content = null;
     if (resp && resp.message && resp.message.content) {
       content = resp.message.content;
     } else if (resp && resp.content) {
-      // 兼容旧格式
       content = resp.content;
     }
 
@@ -692,7 +557,8 @@ function initPage() {
   var examples = t('examples');
   exampleBtns.forEach(function(btn, i) {
     if (examples[i]) {
-      btn.textContent = examples[i];
+      var span = btn.querySelector('span');
+      if (span) span.textContent = examples[i];
       btn.onclick = function() {
         if (input) { input.value = examples[i]; input.focus(); }
       };
@@ -714,44 +580,56 @@ function initPage() {
   console.log('[AI Chat] Page 初始化完成');
 }
 
-// Page 生命周期
-Tapp.lifecycle.onReady(async function() {
-  // 检查是否在 Page 模式
-  // 如果有 HTML 模板加载，或者 _TAPP_MODE 明确为 page，则执行
-  var isPage = window._TAPP_MODE === 'page' || window._TAPP_HAS_HTML;
-  if (!isPage) {
-    console.log('[AI Chat] 跳过 Page 初始化（当前模式:', window._TAPP_MODE, '）');
-    return;
-  }
+// ========================================
+// 生命周期入口
+// ========================================
 
-  console.log('[AI Chat] Page onReady');
+// 检测运行模式并初始化
+(function() {
+  var mode = window._TAPP_MODE;
+  var hasHtml = window._TAPP_HAS_HTML;
 
-  try {
-    var results = await Promise.all([
-      Tapp.ui.getLocale(),
-      Tapp.ui.getTheme(),
-      Tapp.ui.getPrimaryColor()
-    ]);
+  console.log('[AI Chat] 运行模式:', mode, '有 HTML 模板:', hasHtml);
 
-    currentLocale = normalizeLocale(results[0]);
-    await loadPageData();
-    initPage();
+  if (mode === 'widget') {
+    // Widget 模式：等待 DOM 加载完成后初始化
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initWidget);
+    } else {
+      // DOM 已加载，延迟一帧确保元素渲染
+      setTimeout(initWidget, 0);
+    }
+  } else if (mode === 'page' || hasHtml) {
+    // Page 模式：使用 Tapp.lifecycle.onReady
+    Tapp.lifecycle.onReady(async function() {
+      console.log('[AI Chat] Page onReady');
 
-    Tapp.ui.onLocaleChange(function(locale) {
-      currentLocale = normalizeLocale(locale);
-      initPage();
+      try {
+        var results = await Promise.all([
+          Tapp.ui.getLocale(),
+          Tapp.ui.getTheme(),
+          Tapp.ui.getPrimaryColor()
+        ]);
+
+        currentLocale = normalizeLocale(results[0]);
+        await loadPageData();
+        initPage();
+
+        Tapp.ui.onLocaleChange(function(locale) {
+          currentLocale = normalizeLocale(locale);
+          initPage();
+        });
+
+      } catch (err) {
+        console.error('[AI Chat] Page 初始化失败:', err);
+        initPage();
+      }
     });
 
-  } catch (err) {
-    console.error('[AI Chat] Page 初始化失败:', err);
-    initPage();
+    Tapp.lifecycle.onDestroy(async function() {
+      await saveHistory();
+    });
   }
-});
-
-Tapp.lifecycle.onDestroy(async function() {
-  if (window._TAPP_MODE === 'page') {
-    await saveHistory();
-  }
-});
+})();
 
 console.log('[AI Chat] v3.0 已加载');

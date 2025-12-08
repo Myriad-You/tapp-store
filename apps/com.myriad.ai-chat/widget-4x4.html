@@ -1,0 +1,57 @@
+<!-- AI Chat Widget 4x4 - 混合模式 HTML 模板 -->
+<!-- 符合 Tapp 开发标准 v2.0 -->
+<div class="relative h-full w-full rounded-xl overflow-hidden glass flex flex-col">
+  <!-- 光晕装饰 -->
+  <div id="widget-glow" class="absolute -right-8 -top-8 w-48 h-48 rounded-full opacity-10 pointer-events-none" 
+       style="filter: blur(64px);"></div>
+
+  <!-- 渐变装饰层 -->
+  <div class="absolute inset-0 bg-gradient-to-br from-neutral-50/50 to-transparent dark:from-white/[0.02] dark:to-transparent"></div>
+
+  <!-- 内容层 -->
+  <div class="relative h-full flex flex-col p-3">
+    <!-- 顶部栏 -->
+    <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center gap-2">
+        <span class="text-2xl">🤖</span>
+        <h3 id="widget-title" class="text-sm font-bold text-neutral-700 dark:text-neutral-200">
+          AI 助手
+        </h3>
+      </div>
+      <button id="widget-clear"
+              class="px-2 py-1 text-xs rounded-md bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200
+                     dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-400 transition-colors">
+        清空
+      </button>
+    </div>
+
+    <!-- 消息区域 -->
+    <div id="widget-messages" class="flex-1 overflow-y-auto overflow-x-hidden mb-3 space-y-2">
+      <!-- 欢迎消息 -->
+      <div id="widget-welcome" class="flex flex-col items-center justify-center h-full text-center">
+        <span class="text-3xl mb-3">💬</span>
+        <p id="welcome-text" class="text-neutral-500 dark:text-neutral-400 text-sm">
+          开始对话
+        </p>
+      </div>
+    </div>
+
+    <!-- 底部输入栏 -->
+    <div class="flex items-center gap-2">
+      <input type="text"
+             id="widget-input"
+             placeholder="输入消息..."
+             autocomplete="off"
+             class="widget-input flex-1 px-3 py-2 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700
+                    text-neutral-800 dark:text-neutral-100 placeholder-neutral-400
+                    focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all text-sm">
+      <button id="widget-send"
+              class="widget-send-btn flex items-center justify-center w-10 h-10 rounded-full bg-indigo-600 hover:bg-indigo-700
+                     text-white transition-transform hover:scale-110 active:scale-95">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
