@@ -1,10 +1,9 @@
 {
   "id": "com.myriad.ai-chat",
   "name": "AI 聊天助手",
-  "version": "1.0.0",
-  "description": "AI 驱动的智能对话助手，支持多轮对话、对话历史保存和小组件快捷问答",
+  "version": "3.0.0",
+  "description": "AI 驱动的智能对话助手，完全重构版本，使用最新 Glass 风格设计和 Tailwind CSS",
   "main": "index.js",
-  "styles": "styles.css",
   "author": {
     "name": "Myriad Team"
   },
@@ -25,11 +24,7 @@
       "defaultSize": "4x2",
       "sizes": ["4x2", "4x4"],
       "minRefreshInterval": 1000,
-      "category": "utility",
-      "templates": {
-        "4x2": "widget-4x2.html",
-        "4x4": "widget-4x4.html"
-      }
+      "category": "utility"
     }
   ],
   "pageTemplate": "page.html",

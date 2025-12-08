@@ -1,41 +1,144 @@
-<!-- AI Chat Page 完整布局 -->
-<div class="page-container">
-  <!-- 头部 -->
-  <header class="page-header">
-    <div class="header-icon">🤖</div>
-    <div class="header-text">
-      <h1 id="page-title">AI 聊天</h1>
-      <p id="page-subtitle">智能对话助手</p>
+<!-- AI Chat Page - 完全重构版本 v3.0 -->
+<!-- 符合最新 Tapp 开发标准（2025-12-08） -->
+<div class="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+  <!-- 主容器 -->
+  <div class="max-w-5xl mx-auto h-screen flex flex-col px-4 py-6">
+    <!-- 头部 -->
+    <header class="glass rounded-xl p-4 mb-4 border border-neutral-200/50 dark:border-neutral-800/50">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-2xl shadow-lg">
+            🤖
+          </div>
+          <div>
+            <h1 id="page-title" class="text-xl font-bold text-neutral-800 dark:text-neutral-100">AI 聊天</h1>
+            <p id="page-subtitle" class="text-sm text-neutral-600 dark:text-neutral-400">智能对话助手</p>
+          </div>
+        </div>
+        <button id="page-clear"
+                class="px-4 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200
+                       dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300
+                       transition-colors font-medium text-sm">
+          新对话
+        </button>
+      </div>
+    </header>
+
+    <!-- 消息区域 -->
+    <div id="page-messages" class="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
+      <!-- 欢迎界面 -->
+      <div id="page-welcome" class="flex flex-col items-center justify-center h-full text-center px-8">
+        <div class="glass rounded-2xl p-12 max-w-2xl border border-neutral-200/50 dark:border-neutral-800/50">
+          <div class="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-5xl shadow-2xl">
+            🤖
+          </div>
+          <div id="welcome-title" class="text-3xl font-bold text-neutral-800 dark:text-neutral-100 mb-3">
+            你好！我是 AI 助手
+          </div>
+          <div id="welcome-subtitle" class="text-lg text-neutral-600 dark:text-neutral-400 mb-8">
+            有什么可以帮助你的吗？
+          </div>
+
+          <!-- 示例问题 -->
+          <div class="grid grid-cols-2 gap-3 max-w-lg mx-auto">
+            <button class="example-btn group px-4 py-3 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700
+                           hover:border-indigo-500 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950
+                           transition-all text-left">
+              <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                解释人工智能
+              </span>
+            </button>
+            <button class="example-btn group px-4 py-3 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700
+                           hover:border-indigo-500 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950
+                           transition-all text-left">
+              <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                写一首诗
+              </span>
+            </button>
+            <button class="example-btn group px-4 py-3 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700
+                           hover:border-indigo-500 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950
+                           transition-all text-left">
+              <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                如何学编程
+              </span>
+            </button>
+            <button class="example-btn group px-4 py-3 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700
+                           hover:border-indigo-500 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950
+                           transition-all text-left">
+              <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                推荐电影
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
-    <button id="page-clear" class="tapp-btn tapp-btn-ghost" title="开始新对话" aria-label="开始新对话">新对话</button>
-  </header>
-  
-  <!-- 消息区域 -->
-  <div id="page-messages" class="page-messages">
-    <!-- 欢迎界面 -->
-    <div id="page-welcome" class="page-welcome">
-      <div class="welcome-icon">🤖</div>
-      <div id="welcome-title" class="welcome-title">你好！我是 AI 助手</div>
-      <div id="welcome-subtitle" class="welcome-subtitle">有什么可以帮助你的吗？</div>
-      <div class="example-grid">
-        <button class="example-btn">解释人工智能</button>
-        <button class="example-btn">写一首诗</button>
-        <button class="example-btn">如何学编程</button>
-        <button class="example-btn">推荐电影</button>
+
+    <!-- 输入区域 -->
+    <div class="glass rounded-xl p-4 border border-neutral-200/50 dark:border-neutral-800/50">
+      <div class="flex items-end gap-3">
+        <textarea id="page-input"
+                  rows="1"
+                  placeholder="输入消息..."
+                  class="flex-1 px-4 py-3 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700
+                         text-neutral-800 dark:text-neutral-100 placeholder-neutral-400
+                         focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all
+                         resize-none min-h-[48px] max-h-[150px]"></textarea>
+        <button id="page-send"
+                class="flex items-center gap-2 px-5 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700
+                       text-white font-medium transition-all hover:shadow-lg hover:scale-105 active:scale-95
+                       disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
+          <span class="send-label">发送</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+          </svg>
+        </button>
       </div>
     </div>
   </div>
-  
-  <!-- 输入区域 -->
-  <div class="page-input-area">
-    <div class="input-wrapper">
-      <textarea id="page-input" class="page-textarea" rows="1" placeholder="输入消息..."></textarea>
-      <button id="page-send" class="tapp-btn tapp-btn-primary send-btn" title="发送消息" aria-label="发送消息">
-        <span class="send-label">发送</span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-        </svg>
-      </button>
-    </div>
-  </div>
 </div>
+
+<style>
+/* 自定义滚动条 */
+#page-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+#page-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#page-messages::-webkit-scrollbar-thumb {
+  background: rgb(163 163 163 / 0.3);
+  border-radius: 3px;
+}
+
+#page-messages::-webkit-scrollbar-thumb:hover {
+  background: rgb(163 163 163 / 0.5);
+}
+
+/* 深色模式滚动条 */
+.dark #page-messages::-webkit-scrollbar-thumb {
+  background: rgb(115 115 115 / 0.3);
+}
+
+.dark #page-messages::-webkit-scrollbar-thumb:hover {
+  background: rgb(115 115 115 / 0.5);
+}
+
+/* 淡入动画 */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+</style>
