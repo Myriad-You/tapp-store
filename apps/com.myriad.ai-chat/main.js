@@ -1,8 +1,8 @@
-// AI Chat Tapp v4.0 - 彻底革新版
-// 丰富动效 · 微交互反馈 · 现代化体验
+// AI Chat Tapp v5.0 - 极简浮动版
+// 浮动 UI · 打字效果 · 动态输入
 // 2025-12-08
 
-console.log('[AI Chat] v4.0 彻底革新版初始化...');
+console.log('[AI Chat] v5.0 极简浮动版初始化...');
 
 // ========================================
 // 国际化
@@ -10,50 +10,50 @@ console.log('[AI Chat] v4.0 彻底革新版初始化...');
 
 var i18n = {
   'zh-CN': {
-    widgetTitle: 'AI 助手',
+    widgetTitle: 'AI',
     placeholder: '问点什么...',
-    placeholderPage: '输入消息...按 Enter 发送，Shift+Enter 换行',
+    placeholderPage: '输入消息...',
     send: '发送',
     startChat: '开始对话',
     title: 'AI 聊天',
-    subtitle: '智能对话助手 · 随时为你服务',
+    subtitle: '智能助手',
     welcome: '你好！我是 AI 助手',
-    welcomeSubtitle: '有什么可以帮助你的吗？选择下方话题，或直接输入问题',
+    welcomeSubtitle: '选择话题或直接输入',
     clearChat: '新对话',
     thinking: '思考中...',
     error: '出错了',
     errorNetwork: '网络错误，请重试',
-    online: '在线 · 即时响应',
+    online: '在线',
     examples: [
-      { icon: '💡', title: '解释人工智能', desc: '了解 AI 的基本原理' },
-      { icon: '✍️', title: '写一首诗', desc: '发挥创意写作能力' },
-      { icon: '💻', title: '如何学编程', desc: '编程学习路径指南' },
-      { icon: '🎬', title: '推荐电影', desc: '获取个性化推荐' }
+      { icon: '💡', title: '解释 AI', desc: '' },
+      { icon: '✍️', title: '写一首诗', desc: '' },
+      { icon: '💻', title: '学编程', desc: '' },
+      { icon: '🎬', title: '推荐电影', desc: '' }
     ],
-    quickExamples: ['你好', '讲个笑话', '解释量子计算'],
+    quickExamples: ['你好', '笑话', '天气'],
   },
   'en-US': {
-    widgetTitle: 'AI Assistant',
+    widgetTitle: 'AI',
     placeholder: 'Ask anything...',
-    placeholderPage: 'Type a message...Enter to send, Shift+Enter for newline',
+    placeholderPage: 'Type a message...',
     send: 'Send',
     startChat: 'Start chatting',
     title: 'AI Chat',
-    subtitle: 'Smart assistant · Always ready to help',
-    welcome: "Hello! I'm AI Assistant",
-    welcomeSubtitle: 'How can I help you? Pick a topic or just ask',
+    subtitle: 'Smart assistant',
+    welcome: "Hello! I'm AI",
+    welcomeSubtitle: 'Pick a topic or ask',
     clearChat: 'New chat',
     thinking: 'Thinking...',
     error: 'Error',
-    errorNetwork: 'Network error, please retry',
-    online: 'Online · Instant response',
+    errorNetwork: 'Network error',
+    online: 'Online',
     examples: [
-      { icon: '💡', title: 'Explain AI', desc: 'Learn the basics of AI' },
-      { icon: '✍️', title: 'Write a poem', desc: 'Creative writing' },
-      { icon: '💻', title: 'Learn coding', desc: 'Programming guide' },
-      { icon: '🎬', title: 'Movie tips', desc: 'Personalized picks' }
+      { icon: '💡', title: 'Explain AI', desc: '' },
+      { icon: '✍️', title: 'Write poem', desc: '' },
+      { icon: '💻', title: 'Learn code', desc: '' },
+      { icon: '🎬', title: 'Movies', desc: '' }
     ],
-    quickExamples: ['Hello', 'Tell a joke', 'Explain quantum'],
+    quickExamples: ['Hello', 'Joke', 'Weather'],
   },
 };
 
@@ -89,6 +89,44 @@ function formatMessage(text) {
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\n/g, '<br>');
+}
+
+// 打字效果
+function typeWriter(element, text, speed, onComplete) {
+  var formatted = formatMessage(text);
+  var tempDiv = document.createElement('div');
+  tempDiv.innerHTML = formatted;
+  var plainText = tempDiv.textContent || tempDiv.innerText;
+  
+  var i = 0;
+  var cursor = document.createElement('span');
+  cursor.className = 'typing-cursor';
+  cursor.textContent = '▋';
+  
+  element.innerHTML = '';
+  element.appendChild(cursor);
+  
+  function type() {
+    if (i < plainText.length) {
+      cursor.remove();
+      element.innerHTML = formatMessage(text.substring(0, i + 1));
+      element.appendChild(cursor);
+      i++;
+      setTimeout(type, speed);
+    } else {
+      cursor.remove();
+      element.innerHTML = formatted;
+      if (onComplete) onComplete();
+    }
+  }
+  
+  type();
+}
+
+// 快速打字效果（用于小组件）
+function typeWriterFast(element, text, onComplete) {
+  var displayText = text.length > 80 ? text.substring(0, 80) + '...' : text;
+  typeWriter(element, displayText, 15, onComplete);
 }
 
 // 涟漪效果
@@ -159,11 +197,9 @@ function init4x2Widget() {
     }
   }
 
-  // 显示 AI 回复（带动画）
+  // 显示 AI 回复（带打字效果）
   function showAiReply(text) {
-    var display = text.length > 80 ? text.substring(0, 80) + '...' : text;
     if (aiReplyContent) {
-      aiReplyContent.textContent = display;
       aiReplyContent.classList.remove('animate-error-shake');
     }
     if (aiReplyBar) {
@@ -171,8 +207,12 @@ function init4x2Widget() {
       aiReplyBar.style.transform = 'translateX(0)';
       aiReplyBar.classList.add('msg-ai-enter');
     }
-    // 头像停止思考动画
-    if (avatarEl) avatarEl.classList.remove('avatar-thinking');
+    // 打字效果
+    if (aiReplyContent) {
+      typeWriterFast(aiReplyContent, text, function() {
+        if (avatarEl) avatarEl.classList.remove('avatar-thinking');
+      });
+    }
   }
 
   // 显示思考状态
@@ -281,7 +321,7 @@ function init4x4Widget() {
   if (clearBtn) clearBtn.textContent = '🔄 ' + t('clearChat');
 
   // 创建消息气泡
-  function createBubble(role, content, isTyping) {
+  function createBubble(role, content, isTyping, useTypingEffect) {
     var row = document.createElement('div');
     row.className = 'flex items-start gap-2 ' + (role === 'user' ? 'flex-row-reverse msg-user-enter' : 'msg-ai-enter');
 
@@ -304,6 +344,13 @@ function init4x4Widget() {
       bubble.innerHTML = '<div class="thinking-dots"><span></span><span></span><span></span></div>';
     } else if (role === 'user') {
       bubble.textContent = content;
+    } else if (useTypingEffect) {
+      // 延迟启动打字效果
+      setTimeout(function() {
+        typeWriter(bubble, content, 20, function() {
+          avatar.classList.remove('avatar-thinking');
+        });
+      }, 100);
     } else {
       bubble.innerHTML = formatMessage(content);
     }
@@ -314,9 +361,9 @@ function init4x4Widget() {
   }
 
   // 添加消息
-  function addMessage(role, content) {
+  function addMessage(role, content, useTypingEffect) {
     if (welcomeEl) welcomeEl.style.display = 'none';
-    var bubble = createBubble(role, content);
+    var bubble = createBubble(role, content, false, useTypingEffect);
     messagesArea.appendChild(bubble);
     messagesArea.scrollTop = messagesArea.scrollHeight;
     return bubble;
@@ -365,7 +412,7 @@ function init4x4Widget() {
         var content = resp?.message?.content || resp?.content;
         if (content) {
           widgetState.messages.push({ role: 'assistant', content: content });
-          addMessage('assistant', content);
+          addMessage('assistant', content, true); // 使用打字效果
         } else {
           throw new Error(t('error'));
         }
@@ -374,7 +421,7 @@ function init4x4Widget() {
         console.error('[AI Chat] 4x4 Widget error:', err);
         var ind = document.getElementById('typing-indicator');
         if (ind) ind.remove();
-        var errorBubble = addMessage('assistant', '❌ ' + (err.message || t('errorNetwork')));
+        var errorBubble = addMessage('assistant', '❌ ' + (err.message || t('errorNetwork')), false);
         errorBubble.querySelector('.bubble-ai')?.classList.add('animate-error-shake');
       })
       .finally(function() {
@@ -467,7 +514,7 @@ async function saveHistory() {
   } catch (e) {}
 }
 
-function createPageBubble(role, content, isTyping) {
+function createPageBubble(role, content, isTyping, useTypingEffect) {
   var row = document.createElement('div');
   row.className = 'flex items-start gap-4 ' + (role === 'user' ? 'flex-row-reverse msg-user-enter' : 'msg-ai-enter');
 
@@ -480,7 +527,7 @@ function createPageBubble(role, content, isTyping) {
   } else {
     avatar.className += ' bg-white dark:bg-neutral-800 border border-neutral-200/50 dark:border-neutral-700/50';
     avatar.textContent = '🤖';
-    if (isTyping) avatar.classList.add('avatar-thinking');
+    if (isTyping || useTypingEffect) avatar.classList.add('avatar-thinking');
   }
 
   var bubble = document.createElement('div');
@@ -490,6 +537,13 @@ function createPageBubble(role, content, isTyping) {
     bubble.innerHTML = '<div class="thinking-dots"><span></span><span></span><span></span></div>';
   } else if (role === 'user') {
     bubble.textContent = content;
+  } else if (useTypingEffect) {
+    // 打字效果
+    setTimeout(function() {
+      typeWriter(bubble, content, 12, function() {
+        avatar.classList.remove('avatar-thinking');
+      });
+    }, 100);
   } else {
     bubble.innerHTML = formatMessage(content);
   }
@@ -580,7 +634,7 @@ async function sendPageMessage(prefillText) {
     if (content) {
       pageState.messages.push({ role: 'assistant', content: content });
       saveHistory();
-      area.appendChild(createPageBubble('assistant', content));
+      area.appendChild(createPageBubble('assistant', content, false, true)); // 使用打字效果
       area.scrollTop = area.scrollHeight;
     } else {
       throw new Error('AI 响应格式错误');
@@ -592,7 +646,7 @@ async function sendPageMessage(prefillText) {
 
     var errorMsg = err.message || t('errorNetwork');
     pageState.messages.push({ role: 'assistant', content: '❌ ' + errorMsg });
-    var errorBubble = createPageBubble('assistant', '❌ ' + errorMsg);
+    var errorBubble = createPageBubble('assistant', '❌ ' + errorMsg, false, false);
     errorBubble.querySelector('.bubble-ai')?.classList.add('animate-error-shake');
     area.appendChild(errorBubble);
 
@@ -723,4 +777,4 @@ function initPage() {
   }
 })();
 
-console.log('[AI Chat] v4.0 已加载');
+console.log('[AI Chat] v5.0 已加载');

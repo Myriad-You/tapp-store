@@ -1,14 +1,12 @@
 /**
- * AI Chat Tapp Styles v4.0 - 彻底革新版
+ * AI Chat Tapp Styles v5.0 - 极简浮动版
  * 
  * 特性：
- * - 丰富的微交互动效
- * - 呼吸感 / 脉冲动画
- * - 高级 Glass Morphism
- * - 发送涟漪效果
- * - 消息滑入动画
- * - 打字机效果
- * - 主题色呼吸光晕
+ * - 浮动顶栏与输入栏
+ * - 打字光标效果
+ * - 动态伸缩输入框
+ * - 精简的 Glass 样式
+ * - 微交互动效
  */
 
 /* ========================================
@@ -25,7 +23,7 @@
 }
 
 /* ========================================
- * Glass 效果 - 高级版
+ * Glass 效果
  * ======================================== */
 .glass {
   background: rgba(255, 255, 255, 0.72);
@@ -43,6 +41,21 @@
   box-shadow: 
     0 4px 30px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* 浮动元素的 Glass 样式 */
+.glass-pill {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.dark .glass-pill {
+  background: rgba(30, 30, 30, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 .glass-inner {
@@ -176,6 +189,11 @@
   }
 }
 
+@keyframes typing-cursor-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
@@ -203,6 +221,15 @@
 .thinking-dots span:nth-child(1) { animation-delay: 0ms; }
 .thinking-dots span:nth-child(2) { animation-delay: 200ms; }
 .thinking-dots span:nth-child(3) { animation-delay: 400ms; }
+
+/* 打字光标 */
+.typing-cursor {
+  display: inline-block;
+  color: var(--ai-primary);
+  font-weight: bold;
+  animation: typing-cursor-blink 1s step-end infinite;
+  margin-left: 1px;
+}
 
 .shimmer-bg {
   background: linear-gradient(
@@ -279,6 +306,22 @@
   animation: ripple 0.6s ease-out forwards;
 }
 
+/* 浮动按钮样式 */
+.btn-float {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-float:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px var(--ai-primary-glow);
+}
+
+.btn-float:active {
+  transform: scale(0.95);
+}
+
 .send-icon-fly {
   animation: send-fly 0.3s ease-out forwards;
 }
@@ -309,6 +352,40 @@
 
 .input-enhanced:focus::placeholder {
   opacity: 0.5;
+}
+
+/* 浮动输入框样式 */
+.input-float {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input-float:focus {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 2px var(--ai-primary-glow);
+}
+
+.dark .input-float:focus {
+  background: rgba(30, 30, 30, 0.95);
+}
+
+/* 动态伸缩输入框 */
+.input-float-expand {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+}
+
+.input-float-expand:focus {
+  border-color: var(--ai-primary);
+  box-shadow: 0 0 0 2px var(--ai-primary-glow);
+}
+
+/* 浮动输入栏容器 */
+.input-float-bar {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input-float-bar:focus-within {
+  transform: translateY(-2px);
 }
 
 /* ========================================
