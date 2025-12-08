@@ -3,7 +3,7 @@
   "name": "AI 聊天助手",
   "version": "3.0.0",
   "description": "AI 驱动的智能对话助手，完全重构版本，使用最新 Glass 风格设计和 Tailwind CSS",
-  "main": "index.js",
+  "main": "main.js",
   "author": {
     "name": "Myriad Team"
   },
