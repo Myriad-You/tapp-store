@@ -1,49 +1,73 @@
-<!-- AI Chat Widget 4x2 - 混合模式 HTML 模板 -->
-<!-- 符合 Tapp 开发标准 v2.0 -->
-<div class="relative h-full w-full rounded-xl overflow-hidden glass">
-  <!-- 光晕装饰 -->
-  <div id="widget-glow" class="absolute -right-8 -top-8 w-32 h-32 rounded-full opacity-10 pointer-events-none" 
-       style="filter: blur(64px);"></div>
-
-  <!-- 渐变装饰层 -->
-  <div class="absolute inset-0 bg-gradient-to-br from-neutral-50/50 to-transparent dark:from-white/[0.02] dark:to-transparent"></div>
+<!-- AI Chat Widget 4x2 - v4.0 彻底革新版 -->
+<!-- 丰富动效 · 呼吸光晕 · 微交互反馈 -->
+<div class="relative h-full w-full rounded-xl overflow-hidden glass widget-compact" data-widget-root="true">
+  <!-- 动态呼吸光晕 -->
+  <div id="widget-glow" class="absolute -right-6 -top-6 w-28 h-28 rounded-full glow-breathe pointer-events-none"
+       style="background: linear-gradient(135deg, var(--ai-gradient-from, #6366f1), var(--ai-gradient-to, #8b5cf6)); filter: blur(40px);"></div>
+  
+  <!-- 微光装饰层 -->
+  <div class="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent dark:from-white/[0.03]"></div>
+  
+  <!-- 闪烁高光条 -->
+  <div class="absolute top-0 left-0 right-0 h-[1px] shimmer-bg opacity-60"></div>
 
   <!-- 内容层 -->
-  <div class="relative h-full flex flex-col p-3">
-    <!-- 顶部标题 -->
+  <div class="relative h-full flex flex-col p-3 z-10">
+    <!-- 顶部状态栏 -->
     <div class="flex items-center justify-between mb-2">
-      <h3 id="widget-title" class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider font-bold">
-        AI 助手
-      </h3>
-      <span class="text-lg">🤖</span>
-    </div>
-
-    <!-- 用户消息栏（动态显示） -->
-    <div id="user-msg-bar" class="mb-2 opacity-0 transition-all duration-300 transform -translate-y-2 max-h-8">
-      <div id="user-msg-content" class="px-3 py-1.5 rounded-lg bg-indigo-500 text-white text-right truncate text-sm">
+      <div class="flex items-center gap-2">
+        <!-- AI 头像（带状态指示） -->
+        <div class="relative">
+          <div id="ai-avatar" class="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-sm shadow-lg">
+            🤖
+          </div>
+          <!-- 在线状态点 -->
+          <div class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-neutral-900 status-online"></div>
+        </div>
+        <div>
+          <h3 id="widget-title" class="text-xs font-bold text-neutral-700 dark:text-neutral-200 leading-tight">AI 助手</h3>
+          <p id="widget-status" class="text-[10px] text-neutral-400 dark:text-neutral-500">在线 · 即时响应</p>
+        </div>
+      </div>
+      <!-- 发送状态图标 -->
+      <div id="send-status" class="w-6 h-6 rounded-full flex items-center justify-center opacity-0 transition-all duration-300">
+        <!-- 动态填充 -->
       </div>
     </div>
 
-    <!-- AI 回复栏（动态显示） -->
-    <div id="ai-reply-bar" class="flex-1 flex items-center mb-2 opacity-0 transition-all duration-300 transform translate-y-2">
-      <div class="w-full px-3 py-2 rounded-lg bg-white/60 dark:bg-white/[0.03] backdrop-blur-sm min-h-[40px]">
-        <span id="ai-reply-content" class="text-neutral-600 dark:text-neutral-400 text-sm"></span>
+    <!-- 对话预览区 -->
+    <div class="flex-1 flex flex-col justify-center gap-1.5 min-h-0 overflow-hidden">
+      <!-- 用户消息 -->
+      <div id="user-msg-bar" class="flex justify-end opacity-0 transform translate-x-4 transition-all duration-400">
+        <div class="bubble-user px-3 py-1.5 max-w-[85%]">
+          <p id="user-msg-content" class="text-xs truncate"></p>
+        </div>
+      </div>
+      
+      <!-- AI 回复 -->
+      <div id="ai-reply-bar" class="flex items-start gap-2 opacity-0 transform -translate-x-4 transition-all duration-400">
+        <div class="bubble-ai px-3 py-1.5 flex-1 min-h-[32px] flex items-center">
+          <p id="ai-reply-content" class="text-xs text-neutral-700 dark:text-neutral-200 line-clamp-2"></p>
+        </div>
+      </div>
+      
+      <!-- 欢迎提示（初始状态） -->
+      <div id="widget-welcome" class="flex flex-col items-center justify-center py-2 text-center">
+        <p class="text-xs text-neutral-400 dark:text-neutral-500">✨ 输入问题，开始对话</p>
       </div>
     </div>
 
-    <!-- 底部输入栏 -->
-    <div class="flex items-center gap-2">
+    <!-- 输入栏 -->
+    <div class="flex items-center gap-2 mt-2">
       <input type="text"
              id="widget-input"
-             placeholder="输入消息..."
+             placeholder="问点什么..."
              autocomplete="off"
-             class="widget-input flex-1 px-3 py-2 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700
-                    text-neutral-800 dark:text-neutral-100 placeholder-neutral-400
-                    focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all text-sm">
+             class="input-enhanced flex-1 px-3 py-2 rounded-xl bg-white/80 dark:bg-neutral-900/80 border border-neutral-200/50 dark:border-neutral-700/50
+                    text-neutral-800 dark:text-neutral-100 placeholder-neutral-400 text-sm outline-none">
       <button id="widget-send"
-              class="widget-send-btn flex items-center justify-center w-10 h-10 rounded-full bg-indigo-600 hover:bg-indigo-700
-                     text-white transition-transform hover:scale-110 active:scale-95">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              class="btn-interactive flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-lg">
+        <svg id="send-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="transition-transform">
           <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
         </svg>
       </button>

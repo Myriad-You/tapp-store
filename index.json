@@ -46,9 +46,9 @@
     {
       "id": "com.myriad.ai-chat",
       "name": "AI 聊天助手",
-      "version": "3.0.0",
-      "description": "AI 驱动的智能对话助手，支持多轮对话",
-      "long_description": "AI 聊天助手让你随时与 AI 进行自然对话。支持上下文理解、多轮会话，并提供便捷的小组件入口。使用混合渲染模式，性能更优。",
+      "version": "4.0.0",
+      "description": "AI 驱动的智能对话助手 - 彻底革新版！丰富动效、呼吸光晕、微交互反馈",
+      "long_description": "AI 聊天助手 v4.0 彻底革新版！全新设计的 Glass UI，呼吸感光晕动效，涟漪点击反馈，消息滑入动画，打字机思考效果。支持多轮对话和历史记录。",
       "author": {
         "name": "Myriad Team",
         "url": "https://github.com/Myriad-You"
@@ -57,7 +57,7 @@
       "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/com.myriad.ai-chat",
       "repository": "https://github.com/Myriad-You/tapp-store",
       "category": "ai",
-      "tags": ["AI", "聊天", "助手", "widget", "GPT"],
+      "tags": ["AI", "聊天", "助手", "widget", "GPT", "动效"],
       "permissions": ["storage", "ui:notification", "ui:theme", "ai:chat"],
       "min_myriad_version": "0.2.0",
       "icon": "🤖",
@@ -65,7 +65,6 @@
       "download": {
         "manifest": "apps/com.myriad.ai-chat/manifest.json",
         "code": "apps/com.myriad.ai-chat/main.js",
-        "readme": "apps/com.myriad.ai-chat/README.md",
         "styles": "apps/com.myriad.ai-chat/styles.css",
         "page_template": "apps/com.myriad.ai-chat/page.html",
         "widget_templates": {
@@ -73,13 +72,13 @@
           "4x4": "apps/com.myriad.ai-chat/widget-4x4.html"
         }
       },
-      "size": 25600,
+      "size": 35840,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-04T00:00:00Z",
-      "updated_at": "2025-12-07T00:00:00Z"
+      "updated_at": "2025-12-08T00:00:00Z"
     },
     {
       "id": "com.myriad.weather",
