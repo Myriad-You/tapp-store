@@ -81,17 +81,18 @@
   pointer-events: none;
 }
 
-/* 背景基础：透明，让系统壁纸透出 */
+/* 背景基础：透明遮罩，让系统壁纸透出但内容更清晰 */
 .page-bg-base {
   position: absolute;
   inset: 0;
-  /* 浅色模式：轻微遮罩让内容更清晰 */
-  background: rgba(255, 255, 255, 0.1);
+  /* 浅色模式：轻微白色遮罩 */
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(1px);
 }
 
 .dark .page-bg-base {
   /* 深色模式：纯黑遮罩 */
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.4);
 }
 
 /* 背景光效装饰 */
@@ -132,34 +133,24 @@
    ======================================== */
 
 #tapp-content {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 1;
-  width: 100%;
-  height: 100%;
+  overflow: hidden;
 }
 
 /* ========================================
-   Page 容器（兼容旧结构）
+   Page 容器
    ======================================== */
 
 .page-container {
   position: relative;
   width: 100%;
-  min-height: 100vh;
-  height: 100%;
+  height: 100vh;
   overflow: hidden;
   font-family: system-ui, -apple-system, sans-serif;
   /* 透明背景，让壁纸透出 */
   background: transparent;
-}
-
-/* 背景装饰容器（兼容旧结构） */
-.page-bg-decor {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 0;
 }
 
 /* ========================================
@@ -168,10 +159,9 @@
 
 .page-content {
   position: relative;
-  z-index: 1;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
   max-width: 900px;
   margin: 0 auto;
   padding: 20px;
