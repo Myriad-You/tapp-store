@@ -1,8 +1,8 @@
 {
   "id": "com.myriad.ai-chat",
   "name": "AI 聊天助手",
-  "version": "4.0.0",
-  "description": "AI 驱动的智能对话助手 - 彻底革新版！丰富动效、呼吸光晕、微交互反馈、现代化 Glass UI",
+  "version": "6.0.0",
+  "description": "AI 驱动的智能对话助手 - 分离式 CSS 架构，优化加载性能",
   "main": "main.js",
   "author": {
     "name": "Myriad Team"
@@ -15,7 +15,9 @@
   ],
   "icon": "🤖",
   "hasPage": true,
-  "styles": "styles.css",
+  "cssMode": "separated",
+  "widgetStyles": "widget.css",
+  "pageStyles": "page.css",
   "widgets": [
     {
       "id": "ai-chat",

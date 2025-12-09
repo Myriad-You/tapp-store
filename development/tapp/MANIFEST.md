@@ -24,7 +24,10 @@ Manifest 是 Tapp 的核心配置文件，定义了应用的元数据、权限�
 | `minSystemVersion`      | string   | ❌   | 最低系统版本要求                   |
 | `homepage`              | string   | ❌   | 应用主页 URL                       |
 | `repository`            | string   | ❌   | 代码仓库 URL                       |
-| `styles`                | string   | ❌   | 自定义样式文件路径                 |
+| `cssMode`               | string   | ❌   | CSS 架构模式：`unified`（默认）或 `separated` |
+| `styles`                | string   | ❌   | 统一 CSS 文件路径（unified 模式）  |
+| `widgetStyles`          | string   | ❌   | Widget 专用 CSS 文件路径（separated 模式） |
+| `pageStyles`            | string   | ❌   | Page 专用 CSS 文件路径（separated 模式） |
 | `pageTemplate`          | string   | ❌   | 页面 HTML 模板路径                 |
 
 ## 完整示例
@@ -149,6 +152,93 @@ Manifest 是 Tapp 的核心配置文件，定义了应用的元数据、权限�
 | `2x4` | 200×400      | 长列表 / Feed    |
 | `3x3` | 300×300      | 中等复杂组件     |
 | `4x4` | 400×400      | 大型展示         |
+
+---
+
+## cssMode 配置
+
+CSS 架构模式控制样式文件的加载策略。
+
+### 统一模式（默认）
+
+使用单一 CSS 文件，Widget 和 Page 共享样式：
+
+```json
+{
+  "cssMode": "unified",
+  "styles": "styles.css"
+}
+```
+
+**文件结构：**
+```
+my-tapp/
+├── manifest.json
+├── main.js
+├── styles.css        # 所有样式
+├── page.html
+├── widget-4x2.html
+└── widget-4x4.html
+```
+
+**优点：** 简单，适合小型 Tapp
+**缺点：** Widget 和 Page 加载无关样式，增加资源大小
+
+### 分离模式
+
+Widget 和 Page 使用独立的 CSS 文件：
+
+```json
+{
+  "cssMode": "separated",
+  "widgetStyles": "widget.css",
+  "pageStyles": "page.css"
+}
+```
+
+**文件结构：**
+```
+my-tapp/
+├── manifest.json
+├── main.js
+├── widget.css        # Widget 专用样式
+├── page.css          # Page 专用样式
+├── page.html
+├── widget-4x2.html
+└── widget-4x4.html
+```
+
+**优点：**
+- 按需加载：Widget 只加载 widget.css，Page 只加载 page.css
+- 更小的资源体积
+- 更好的缓存效率
+- 避免样式冲突
+
+**缺点：** 需要维护多个 CSS 文件
+
+### 混合模式
+
+可以同时使用 `styles` 作为共享样式：
+
+```json
+{
+  "cssMode": "separated",
+  "styles": "shared.css",
+  "widgetStyles": "widget.css",
+  "pageStyles": "page.css"
+}
+```
+
+**加载策略：**
+- Widget 模式：加载 `shared.css` + `widget.css`
+- Page 模式：加载 `shared.css` + `page.css`
+
+### 最佳实践
+
+1. **小型 Tapp（< 200 行 CSS）：** 使用统一模式
+2. **中大型 Tapp：** 使用分离模式
+3. **共享变量和基础样式：** 放在 `styles`（共享）
+4. **组件特定样式：** 放在对应的分离文件
 
 ---
 

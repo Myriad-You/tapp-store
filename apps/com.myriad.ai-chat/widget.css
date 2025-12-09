@@ -1,0 +1,489 @@
+/**
+ * AI Chat Widget 专用样式
+ * v6.0 - 仅包含 Widget 所需的样式
+ */
+
+/* ========================================
+   CSS 变量（Widget 专用）
+   ======================================== */
+
+:root {
+  --ai-primary: #6366f1;
+  --ai-primary-rgb: 99, 102, 241;
+  --ai-secondary: #8b5cf6;
+  --ai-accent: #a78bfa;
+  --ai-error: #ef4444;
+  --ai-surface: rgba(255, 255, 255, 0.85);
+  --ai-surface-dark: rgba(30, 30, 35, 0.9);
+  --ai-text: #1f2937;
+  --ai-text-secondary: #6b7280;
+  --ai-border: rgba(0, 0, 0, 0.08);
+  --ai-glow: rgba(99, 102, 241, 0.15);
+  --ai-radius: 16px;
+  --ai-radius-sm: 10px;
+  --ai-radius-xs: 6px;
+  --ai-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --ai-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark {
+  --ai-surface: rgba(30, 30, 35, 0.9);
+  --ai-text: #f3f4f6;
+  --ai-text-secondary: #9ca3af;
+  --ai-border: rgba(255, 255, 255, 0.1);
+  --ai-glow: rgba(139, 92, 246, 0.2);
+}
+
+/* ========================================
+   Widget 根容器
+   ======================================== */
+
+.widget-root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.widget-4x2 { border-radius: var(--ai-radius); }
+.widget-4x4 { border-radius: var(--ai-radius); }
+
+/* ========================================
+   背景与光效
+   ======================================== */
+
+.gradient-bg {
+  background: linear-gradient(135deg, var(--ai-primary), var(--ai-secondary));
+}
+
+.widget-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.5;
+  pointer-events: none;
+  animation: glow-breathe 4s ease-in-out infinite;
+}
+
+.widget-glow-1 {
+  width: 120px;
+  height: 120px;
+  top: -30px;
+  right: -30px;
+  background: var(--ai-primary);
+}
+
+.widget-glow-2 {
+  width: 100px;
+  height: 100px;
+  bottom: -20px;
+  left: -20px;
+  background: var(--ai-secondary);
+  animation-delay: 2s;
+}
+
+@keyframes glow-breathe {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.1); }
+}
+
+/* ========================================
+   Glass 效果
+   ======================================== */
+
+.glass {
+  background: var(--ai-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--ai-border);
+}
+
+/* ========================================
+   Widget 内容区
+   ======================================== */
+
+.widget-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 12px;
+  gap: 8px;
+}
+
+/* Widget Header */
+.widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.widget-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.widget-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  box-shadow: var(--ai-shadow);
+  transition: var(--ai-transition);
+}
+
+.widget-avatar.gradient-bg {
+  color: white;
+}
+
+.widget-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ai-text);
+}
+
+.widget-clear-btn {
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--ai-text-secondary);
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  border-radius: var(--ai-radius-xs);
+  cursor: pointer;
+  transition: var(--ai-transition);
+}
+
+.widget-clear-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: var(--ai-text);
+}
+
+/* ========================================
+   消息区域（4x4）
+   ======================================== */
+
+.widget-messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;
+}
+
+.widget-messages::-webkit-scrollbar {
+  width: 3px;
+}
+
+.widget-messages::-webkit-scrollbar-thumb {
+  background: rgba(var(--ai-primary-rgb), 0.3);
+  border-radius: 2px;
+}
+
+/* ========================================
+   欢迎区域
+   ======================================== */
+
+.widget-welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  padding: 8px;
+}
+
+.welcome-icon {
+  font-size: 28px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.welcome-text {
+  font-size: 12px;
+  color: var(--ai-text-secondary);
+  line-height: 1.4;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* 快捷按钮（4x4） */
+.quick-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.quick-btn {
+  padding: 6px 12px;
+  font-size: 11px;
+  color: var(--ai-primary);
+  background: rgba(var(--ai-primary-rgb), 0.1);
+  border: 1px solid rgba(var(--ai-primary-rgb), 0.2);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: var(--ai-transition);
+}
+
+.quick-btn:hover {
+  background: rgba(var(--ai-primary-rgb), 0.2);
+  transform: translateY(-1px);
+}
+
+/* ========================================
+   消息行
+   ======================================== */
+
+.msg-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  animation: msg-in 0.3s ease-out;
+}
+
+.msg-row-user { flex-direction: row-reverse; }
+.msg-row-ai { flex-direction: row; }
+
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 头像 */
+.msg-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.msg-avatar-user {
+  background: linear-gradient(135deg, var(--ai-primary), var(--ai-secondary));
+  color: white;
+}
+
+.msg-avatar-ai {
+  background: var(--ai-surface);
+  border: 1px solid var(--ai-border);
+}
+
+.avatar-thinking {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* 气泡 */
+.bubble {
+  max-width: 75%;
+  padding: 8px 12px;
+  border-radius: var(--ai-radius-sm);
+  font-size: 12px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.bubble-user {
+  background: linear-gradient(135deg, var(--ai-primary), var(--ai-secondary));
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.bubble-ai {
+  background: var(--ai-surface);
+  color: var(--ai-text);
+  border: 1px solid var(--ai-border);
+  border-bottom-left-radius: 4px;
+}
+
+/* ========================================
+   用户/AI 消息条（4x2）
+   ======================================== */
+
+.user-msg-bar,
+.ai-reply-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.3s ease-out;
+}
+
+.user-msg-bar.show,
+.ai-reply-bar.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.user-msg-bar { flex-direction: row-reverse; transform: translateX(10px); }
+
+.user-msg-content,
+.ai-reply-content {
+  flex: 1;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 6px 10px;
+  border-radius: var(--ai-radius-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.user-msg-content {
+  background: linear-gradient(135deg, var(--ai-primary), var(--ai-secondary));
+  color: white;
+  text-align: right;
+}
+
+.ai-reply-content {
+  background: var(--ai-surface);
+  color: var(--ai-text);
+  border: 1px solid var(--ai-border);
+}
+
+/* ========================================
+   输入栏
+   ======================================== */
+
+.widget-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--ai-surface);
+  border: 1px solid var(--ai-border);
+  border-radius: var(--ai-radius-sm);
+  flex-shrink: 0;
+}
+
+.widget-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: var(--ai-text);
+  outline: none;
+}
+
+.widget-input::placeholder {
+  color: var(--ai-text-secondary);
+}
+
+.widget-send-btn {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--ai-primary), var(--ai-secondary));
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: var(--ai-transition);
+  flex-shrink: 0;
+}
+
+.widget-send-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(var(--ai-primary-rgb), 0.4);
+}
+
+.widget-send-btn:active {
+  transform: scale(0.95);
+}
+
+.widget-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.send-flying {
+  animation: send-fly 0.3s ease-out;
+}
+
+@keyframes send-fly {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.9) translateY(-2px); }
+  100% { transform: scale(1); }
+}
+
+/* ========================================
+   思考动画
+   ======================================== */
+
+.thinking-dots {
+  display: flex;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.thinking-dots span {
+  width: 6px;
+  height: 6px;
+  background: var(--ai-primary);
+  border-radius: 50%;
+  animation: dot-bounce 1.4s ease-in-out infinite;
+}
+
+.thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dot-bounce {
+  0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+  40% { transform: scale(1.2); opacity: 1; }
+}
+
+/* ========================================
+   错误动画
+   ======================================== */
+
+.shake-error {
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* ========================================
+   打字光标
+   ======================================== */
+
+.typing-cursor {
+  animation: blink 0.8s step-end infinite;
+  color: var(--ai-primary);
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
