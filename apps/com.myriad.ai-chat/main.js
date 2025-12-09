@@ -12,20 +12,25 @@ var i18n = {
     title: '对话',
     welcome: '有什么可以帮你？',
     welcomeSubtitle: '选择话题开始',
-    clearChat: '新对话',
+    clearChat: '清空',
+    newChat: '新对话',
     thinking: '思考中...',
     error: '出错了',
     errorNetwork: '网络错误',
+    errorFormat: 'AI响应格式错误',
+    messagesCount: '条消息',
+    welcome4x2Title: '开始对话',
+    welcome4x2Subtitle: '输入消息',
     welcomeExamples: [
       { icon: '👋', text: '你好', label: '你好' },
       { icon: '😄', text: '讲个笑话', label: '笑话' },
       { icon: '✍️', text: '写首诗', label: '写诗' }
     ],
     examples: [
-      { icon: '💡', title: '解释概念' },
-      { icon: '✍️', title: '写一首诗' },
-      { icon: '💻', title: '学编程' },
-      { icon: '🎬', title: '推荐电影' }
+      { icon: '💡', title: '解释概念', topic: '请解释一下这个概念' },
+      { icon: '✍️', title: '写诗', topic: '写一首诗' },
+      { icon: '💻', title: '编程', topic: '教我学编程' },
+      { icon: '🎬', title: '电影', topic: '推荐一部电影' }
     ],
   },
   'en-US': {
@@ -35,20 +40,25 @@ var i18n = {
     title: 'Chat',
     welcome: 'How can I help?',
     welcomeSubtitle: 'Pick a topic',
-    clearChat: 'New',
+    clearChat: 'Clear',
+    newChat: 'New',
     thinking: 'Thinking...',
     error: 'Error',
     errorNetwork: 'Network error',
+    errorFormat: 'AI response format error',
+    messagesCount: 'messages',
+    welcome4x2Title: 'Start Chat',
+    welcome4x2Subtitle: 'Type a message',
     welcomeExamples: [
       { icon: '👋', text: 'Hello', label: 'Hello' },
       { icon: '😄', text: 'Tell a joke', label: 'Joke' },
       { icon: '✍️', text: 'Write a poem', label: 'Poem' }
     ],
     examples: [
-      { icon: '💡', title: 'Explain' },
-      { icon: '✍️', title: 'Write poem' },
-      { icon: '💻', title: 'Learn code' },
-      { icon: '🎬', title: 'Movies' }
+      { icon: '💡', title: 'Explain', topic: 'Please explain this concept' },
+      { icon: '✍️', title: 'Poem', topic: 'Write a poem' },
+      { icon: '💻', title: 'Code', topic: 'Teach me programming' },
+      { icon: '🎬', title: 'Movie', topic: 'Recommend a movie' }
     ],
   },
   'ja-JP': {
@@ -58,20 +68,25 @@ var i18n = {
     title: 'チャット',
     welcome: '何かお手伝いしますか？',
     welcomeSubtitle: 'トピックを選択',
-    clearChat: '新規',
+    clearChat: 'クリア',
+    newChat: '新規',
     thinking: '考え中...',
     error: 'エラー',
     errorNetwork: 'ネットワークエラー',
+    errorFormat: 'AI応答フォーマットエラー',
+    messagesCount: '件のメッセージ',
+    welcome4x2Title: 'チャット開始',
+    welcome4x2Subtitle: 'メッセージを入力',
     welcomeExamples: [
       { icon: '👋', text: 'こんにちは', label: '挨拶' },
       { icon: '😄', text: '面白い話して', label: 'ジョーク' },
       { icon: '✍️', text: '詩を書いて', label: '詩' }
     ],
     examples: [
-      { icon: '💡', title: '説明' },
-      { icon: '✍️', title: '詩を書く' },
-      { icon: '💻', title: 'プログラミング' },
-      { icon: '🎬', title: '映画' }
+      { icon: '💡', title: '説明', topic: 'この概念を説明してください' },
+      { icon: '✍️', title: '詩', topic: '詩を書いて' },
+      { icon: '💻', title: 'コード', topic: 'プログラミングを教えて' },
+      { icon: '🎬', title: '映画', topic: '映画をおすすめして' }
     ],
   },
 };
@@ -170,10 +185,16 @@ function init4x2Widget() {
   var aiMsgContent = document.getElementById('ai-msg-content');
   var welcomeEl = document.getElementById('widget-welcome');
   var chatEl = document.getElementById('widget-chat');
+  var welcomeTitle = document.getElementById('welcome-title-mini');
+  var welcomeSubtitle = document.getElementById('welcome-subtitle-mini');
 
   if (!input || !sendBtn) return;
 
+  // 设置多语言文本
   if (input) input.placeholder = t('placeholder');
+  if (sendBtn) sendBtn.title = t('send');
+  if (welcomeTitle) welcomeTitle.textContent = t('welcome4x2Title');
+  if (welcomeSubtitle) welcomeSubtitle.textContent = t('welcome4x2Subtitle');
 
   function showUserMsg(text) {
     // 隐藏欢迎状态，显示对话区
@@ -258,11 +279,32 @@ function init4x4Widget() {
   var messagesArea = document.getElementById('widget-messages');
   var welcomeEl = document.getElementById('widget-welcome');
   var titleEl = document.getElementById('widget-title');
+  var welcomeTitle = document.getElementById('welcome-title');
+  var welcomeSubtitle = document.getElementById('welcome-subtitle');
+  var welcomeBtnsContainer = document.getElementById('welcome-btns');
 
   if (!input || !sendBtn || !messagesArea) return;
 
+  // 设置多语言文本
   if (titleEl) titleEl.textContent = t('widgetTitle');
   if (input) input.placeholder = t('placeholder');
+  if (sendBtn) sendBtn.title = t('send');
+  if (clearBtn) clearBtn.title = t('clearChat');
+  if (welcomeTitle) welcomeTitle.textContent = t('welcome');
+  if (welcomeSubtitle) welcomeSubtitle.textContent = t('welcomeSubtitle');
+
+  // 动态生成欢迎按钮
+  var examples = t('welcomeExamples');
+  if (welcomeBtnsContainer && examples && examples.length) {
+    welcomeBtnsContainer.innerHTML = '';
+    examples.forEach(function(ex) {
+      var btn = document.createElement('button');
+      btn.className = 'welcome-btn';
+      btn.setAttribute('data-example', ex.text);
+      btn.textContent = ex.icon + ' ' + ex.label;
+      welcomeBtnsContainer.appendChild(btn);
+    });
+  }
 
   function createBubble(role, content, isTyping, useTypingEffect) {
     var row = document.createElement('div');
@@ -459,7 +501,7 @@ function updateStatusPill(state, data) {
       pill.classList.remove('thinking');
       var msgCount = pageState.messages.length;
       titleEl.textContent = t('title');
-      subtitleEl.textContent = msgCount + ' ' + (currentLocale === 'zh-CN' ? '条消息' : 'messages');
+      subtitleEl.textContent = msgCount + ' ' + t('messagesCount');
       if (quickTopics) quickTopics.classList.add('hidden');
       break;
     case 'error':
@@ -585,7 +627,7 @@ async function sendPageMessage(prefillText) {
       scrollToBottom();
       updateStatusPill('chatting');
     } else {
-      throw new Error('AI 响应格式错误');
+      throw new Error(t('errorFormat'));
     }
   } catch (err) {
     var loadEl = document.getElementById('page-loading');
@@ -610,10 +652,31 @@ function initPage() {
   var sendBtn = document.getElementById('page-send');
   var clearBtn = document.getElementById('page-clear');
   var charCount = document.getElementById('char-count');
-  var topicBtns = document.querySelectorAll('.topic-btn');
+  var quickTopics = document.getElementById('quick-topics');
+
+  // 设置多语言文本
+  if (input) input.placeholder = t('placeholder');
+  if (sendBtn) sendBtn.title = t('send');
+  if (clearBtn) clearBtn.title = t('newChat');
+
+  // 动态生成快捷话题按钮
+  var examples = t('examples');
+  if (quickTopics && examples && examples.length) {
+    quickTopics.innerHTML = '';
+    examples.forEach(function(ex) {
+      var btn = document.createElement('button');
+      btn.className = 'topic-btn';
+      btn.setAttribute('data-topic', ex.topic);
+      btn.innerHTML = '<span class="topic-icon">' + ex.icon + '</span><span class="topic-text">' + ex.title + '</span>';
+      btn.onclick = function() {
+        if (input) input.value = ex.topic;
+        sendPageMessage(ex.topic);
+      };
+      quickTopics.appendChild(btn);
+    });
+  }
 
   if (input) {
-    input.placeholder = t('placeholder');
     input.oninput = function() {
       input.style.height = 'auto';
       input.style.height = Math.min(input.scrollHeight, 160) + 'px';
@@ -638,17 +701,6 @@ function initPage() {
       renderPageMessages();
     };
   }
-
-  // 快捷话题按钮
-  topicBtns.forEach(function(btn) {
-    btn.onclick = function() {
-      var topic = btn.getAttribute('data-topic');
-      if (topic) {
-        if (input) input.value = topic;
-        sendPageMessage(topic);
-      }
-    };
-  });
 
   renderPageMessages();
 }

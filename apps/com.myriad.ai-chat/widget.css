@@ -776,18 +776,14 @@
    ======================================== */
 
 .avatar-thinking {
-  animation: avatar-glow 1.5s ease-in-out infinite;
+  animation: avatar-pulse 1.5s ease-in-out infinite;
 }
 
-@keyframes avatar-glow {
+@keyframes avatar-pulse {
   0%, 100% {
-    box-shadow: 0 2px 8px var(--w-glow-soft);
     transform: scale(1);
   }
   50% {
-    box-shadow: 
-      0 0 20px var(--w-glow),
-      0 2px 8px var(--w-glow-soft);
     transform: scale(1.05);
   }
 }

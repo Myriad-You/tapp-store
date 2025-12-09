@@ -12,9 +12,9 @@
     <div class="widget-header">
       <div class="widget-pill">
         <div class="pill-dot"></div>
-        <span class="pill-text" id="widget-title">对话</span>
+        <span class="pill-text" id="widget-title"></span>
       </div>
-      <button id="widget-clear" class="widget-btn-icon" title="清空">↻</button>
+      <button id="widget-clear" class="widget-btn-icon">↻</button>
     </div>
 
     <!-- 消息区 -->
@@ -24,22 +24,20 @@
         <div class="welcome-status">
           <div class="welcome-avatar">✨</div>
           <div class="welcome-info">
-            <span class="welcome-title">有什么可以帮你？</span>
-            <span class="welcome-subtitle">选择话题开始</span>
+            <span id="welcome-title" class="welcome-title"></span>
+            <span id="welcome-subtitle" class="welcome-subtitle"></span>
           </div>
         </div>
-        <div class="welcome-btns">
-          <button class="welcome-btn" data-example="你好">👋 你好</button>
-          <button class="welcome-btn" data-example="讲个笑话">😄 笑话</button>
-          <button class="welcome-btn" data-example="写首诗">✍️ 写诗</button>
+        <div id="welcome-btns" class="welcome-btns">
+          <!-- 动态生成按钮 -->
         </div>
       </div>
     </div>
 
     <!-- 输入区 -->
     <div class="widget-input-row">
-      <input type="text" id="widget-input" placeholder="输入..." autocomplete="off">
-      <button id="widget-send" title="发送">
+      <input type="text" id="widget-input" placeholder="..." autocomplete="off">
+      <button id="widget-send" title="Send">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
         </svg>
