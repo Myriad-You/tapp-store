@@ -10,8 +10,8 @@
   <div class="page-content">
     <!-- 状态胶囊（左对齐，动态内容） -->
     <header class="status-header">
-      <div id="status-pill" class="status-pill glass-strong">
-        <div class="status-avatar gradient-bg">💬</div>
+      <div id="status-pill" class="status-pill">
+        <div class="status-avatar">💬</div>
         <div class="status-info">
           <span id="status-title" class="status-title">开始对话</span>
           <span id="status-subtitle" class="status-subtitle">选择话题或直接输入</span>
@@ -50,19 +50,18 @@
 
     <!-- 浮动输入区域 -->
     <div class="float-input-wrap">
-      <div class="input-container glass-strong">
-        <div class="input-row">
-          <textarea id="page-input" class="input-field" rows="1" placeholder="输入..."></textarea>
-          <button id="page-send" class="send-btn gradient-bg" title="发送">
-            <svg id="page-send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-            </svg>
-          </button>
+      <div class="input-card">
+        <div class="input-area">
+          <textarea id="page-input" class="page-input" rows="1" placeholder="输入消息..."></textarea>
+          <div class="input-footer">
+            <span id="char-count" class="char-count">0 / 2000</span>
+          </div>
         </div>
-        <div class="input-hints">
-          <span class="input-hint"><kbd>↵</kbd> 发送</span>
-          <span id="char-count" class="input-hint">0 / 2000</span>
-        </div>
+        <button id="page-send" class="page-send-btn" title="发送">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+          </svg>
+        </button>
       </div>
     </div>
   </div>

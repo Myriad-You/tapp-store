@@ -559,12 +559,17 @@
     padding: 12px;
   }
   
-  .welcome-card {
-    padding: 32px 24px;
+  .status-pill {
+    padding: 8px 12px;
   }
   
-  .examples-grid {
-    grid-template-columns: 1fr;
+  .quick-topics {
+    gap: 6px;
+  }
+  
+  .topic-btn {
+    padding: 6px 10px;
+    font-size: 12px;
   }
   
   .bubble {
@@ -575,5 +580,14 @@
     width: 32px;
     height: 32px;
     font-size: 14px;
+  }
+  
+  .input-card {
+    padding: 10px 12px;
+  }
+  
+  .page-send-btn {
+    width: 40px;
+    height: 40px;
   }
 }
