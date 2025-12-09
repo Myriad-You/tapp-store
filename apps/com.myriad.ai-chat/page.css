@@ -276,6 +276,7 @@
   gap: 16px;
   padding: 8px 0;
   scroll-behavior: smooth;
+  min-height: 0;
 }
 
 .messages-area::-webkit-scrollbar {
@@ -402,7 +403,15 @@
    ======================================== */
 
 .float-input-wrap {
+  position: relative;
+  bottom: auto;
+  left: auto;
+  transform: none;
+  width: 100%;
+  max-width: none;
   padding: 16px 0;
+  z-index: auto;
+  animation: none;
   flex-shrink: 0;
 }
 
