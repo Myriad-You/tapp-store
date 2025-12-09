@@ -2,6 +2,14 @@
 
 本文档基于 Myriad 系统内置小组件的实际实现，提供完整的风格规范和开发指南。
 
+> **✨ 样式推荐**：虽然小组件完全支持 Tailwind CSS，但我们**强烈建议使用语义化的原生 CSS**：
+> - 更好的可维护性，避免冗长的 Tailwind 类名列表
+> - 更小的体积，无需 Tailwind 运行时编译
+> - 更容易实现复杂的 hover/focus/动画效果
+> - 支持 CSS 架构分离模式（Widget 专用样式文件）
+>
+> 详见 [样式规范 - 推荐原生 CSS](STYLING.md#-推荐语义化原生-css)。
+
 > 📌 本文档内容参考系统小组件：QuickStatsWidget、WeatherWidget、WelcomeWidget、QuoteWidget、MusicPlayerWidget 等。
 
 ---
@@ -75,6 +83,50 @@ Tapp.widgets["my-widget"] = {
 | `4x2` | 宽幅展示、图表、音乐播放器 | 横向分区或上下分区  |
 | `4x4` | 大型展示、详细数据         | 自由布局            |
 | `2x4` | 垂直列表、时间线           | 纵向堆叠            |
+
+---
+
+## 原生 CSS 示例（推荐）
+
+相比内联 Tailwind 类，使用语义化原生 CSS 更易维护：
+
+```css
+/* widget.css */
+.stats-widget {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+}
+
+.dark .stats-widget {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.stats-widget-value {
+  font-size: 30px;
+  font-weight: 900;
+  color: #1f1f1f;
+}
+
+.dark .stats-widget-value {
+  color: #f5f5f5;
+}
+```
+
+```javascript
+// 简洁的 JS
+container.innerHTML = `
+  <div class="stats-widget">
+    <span class="stats-widget-value" style="font-size: ${30 * fontScale}px;">
+      ${value}
+    </span>
+  </div>
+`;
+```
 
 ---
 

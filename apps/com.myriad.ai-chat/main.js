@@ -400,6 +400,43 @@ async function saveHistory() {
   } catch (e) {}
 }
 
+// 更新状态胶囊显示
+function updateStatusPill(state, data) {
+  var pill = document.getElementById('status-pill');
+  var titleEl = document.getElementById('status-title');
+  var subtitleEl = document.getElementById('status-subtitle');
+  var quickTopics = document.getElementById('quick-topics');
+  
+  if (!pill || !titleEl || !subtitleEl) return;
+  
+  switch (state) {
+    case 'welcome':
+      pill.classList.remove('thinking');
+      titleEl.textContent = t('welcome');
+      subtitleEl.textContent = t('welcomeSubtitle');
+      if (quickTopics) quickTopics.classList.remove('hidden');
+      break;
+    case 'thinking':
+      pill.classList.add('thinking');
+      titleEl.textContent = t('thinking');
+      subtitleEl.textContent = data?.userMsg ? '"' + data.userMsg.substring(0, 20) + (data.userMsg.length > 20 ? '...' : '') + '"' : '';
+      if (quickTopics) quickTopics.classList.add('hidden');
+      break;
+    case 'chatting':
+      pill.classList.remove('thinking');
+      var msgCount = pageState.messages.length;
+      titleEl.textContent = t('title');
+      subtitleEl.textContent = msgCount + ' ' + (currentLocale === 'zh-CN' ? '条消息' : 'messages');
+      if (quickTopics) quickTopics.classList.add('hidden');
+      break;
+    case 'error':
+      pill.classList.remove('thinking');
+      titleEl.textContent = t('error');
+      subtitleEl.textContent = data?.message || t('errorNetwork');
+      break;
+  }
+}
+
 function createPageBubble(role, content, isTyping, useTypingEffect) {
   var row = document.createElement('div');
   row.className = 'msg-row ' + (role === 'user' ? 'msg-row-user' : 'msg-row-ai');
@@ -426,6 +463,7 @@ function createPageBubble(role, content, isTyping, useTypingEffect) {
     setTimeout(function() {
       typeWriter(bubble, content, 12, function() {
         avatar.classList.remove('avatar-thinking');
+        scrollToBottom();
       });
     }, 100);
   } else {
@@ -437,24 +475,27 @@ function createPageBubble(role, content, isTyping, useTypingEffect) {
   return row;
 }
 
+function scrollToBottom() {
+  var area = document.getElementById('page-messages');
+  if (area) {
+    area.scrollTop = area.scrollHeight;
+  }
+}
+
 function renderPageMessages() {
   var area = document.getElementById('page-messages');
-  var welcome = document.getElementById('page-welcome');
   if (!area) return;
 
-  var children = Array.from(area.children);
-  children.forEach(function(child) {
-    if (child.id !== 'page-welcome') child.remove();
-  });
+  area.innerHTML = '';
 
   if (pageState.messages.length === 0) {
-    if (welcome) welcome.style.display = 'flex';
+    updateStatusPill('welcome');
   } else {
-    if (welcome) welcome.style.display = 'none';
+    updateStatusPill('chatting');
     pageState.messages.forEach(function(msg) {
       area.appendChild(createPageBubble(msg.role, msg.content));
     });
-    setTimeout(function() { area.scrollTop = area.scrollHeight; }, 100);
+    setTimeout(scrollToBottom, 100);
   }
 }
 
@@ -462,7 +503,6 @@ async function sendPageMessage(prefillText) {
   var input = document.getElementById('page-input');
   var sendBtn = document.getElementById('page-send');
   var area = document.getElementById('page-messages');
-  var welcome = document.getElementById('page-welcome');
   var charCount = document.getElementById('char-count');
 
   if (!input || !sendBtn || !area) return;
@@ -478,9 +518,11 @@ async function sendPageMessage(prefillText) {
   input.style.height = 'auto';
   if (charCount) charCount.textContent = '0 / 2000';
 
-  if (welcome) welcome.style.display = 'none';
+  // 更新状态为思考中
+  updateStatusPill('thinking', { userMsg: text });
+
   area.appendChild(createPageBubble('user', text));
-  area.scrollTop = area.scrollHeight;
+  scrollToBottom();
 
   pageState.isLoading = true;
   sendBtn.disabled = true;
@@ -488,7 +530,7 @@ async function sendPageMessage(prefillText) {
   var loading = createPageBubble('assistant', '', true);
   loading.id = 'page-loading';
   area.appendChild(loading);
-  area.scrollTop = area.scrollHeight;
+  scrollToBottom();
 
   try {
     var msgs = pageState.messages.map(function(m) {
@@ -507,7 +549,8 @@ async function sendPageMessage(prefillText) {
       pageState.messages.push({ role: 'assistant', content: content });
       saveHistory();
       area.appendChild(createPageBubble('assistant', content, false, true));
-      area.scrollTop = area.scrollHeight;
+      scrollToBottom();
+      updateStatusPill('chatting');
     } else {
       throw new Error('AI 响应格式错误');
     }
@@ -520,7 +563,8 @@ async function sendPageMessage(prefillText) {
     var errorBubble = createPageBubble('assistant', '❌ ' + errorMsg, false, false);
     errorBubble.querySelector('.bubble-ai')?.classList.add('shake-error');
     area.appendChild(errorBubble);
-
+    
+    updateStatusPill('error', { message: errorMsg });
     Tapp.ui.showNotification({ title: t('error'), message: errorMsg, type: 'error' });
   } finally {
     pageState.isLoading = false;
@@ -533,7 +577,7 @@ function initPage() {
   var sendBtn = document.getElementById('page-send');
   var clearBtn = document.getElementById('page-clear');
   var charCount = document.getElementById('char-count');
-  var exampleBtns = document.querySelectorAll('.example-btn');
+  var topicBtns = document.querySelectorAll('.topic-btn');
 
   if (input) {
     input.placeholder = t('placeholder');
@@ -562,27 +606,16 @@ function initPage() {
     };
   }
 
-  var examples = t('examples');
-  exampleBtns.forEach(function(btn, i) {
-    if (examples[i]) {
-      var iconEl = btn.querySelector('.example-icon');
-      var textEl = btn.querySelector('.example-text');
-      if (iconEl) iconEl.textContent = examples[i].icon;
-      if (textEl) textEl.textContent = examples[i].title;
-      btn.onclick = function() {
-        if (input) input.value = examples[i].title;
-        sendPageMessage(examples[i].title);
-      };
-    }
+  // 快捷话题按钮
+  topicBtns.forEach(function(btn) {
+    btn.onclick = function() {
+      var topic = btn.getAttribute('data-topic');
+      if (topic) {
+        if (input) input.value = topic;
+        sendPageMessage(topic);
+      }
+    };
   });
-
-  var titleEl = document.getElementById('page-title');
-  var welcomeTitle = document.getElementById('welcome-title');
-  var welcomeSub = document.getElementById('welcome-subtitle');
-
-  if (titleEl) titleEl.textContent = t('title');
-  if (welcomeTitle) welcomeTitle.textContent = t('welcome');
-  if (welcomeSub) welcomeSub.textContent = t('welcomeSubtitle');
 
   renderPageMessages();
 }

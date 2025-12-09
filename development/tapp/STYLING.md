@@ -2,6 +2,14 @@
 
 本文档介绍 Tapp 的样式系统、CSS 变量、工具类和最佳实践。
 
+> **✨ 推荐实践**：虽然 Tapp 完全支持 Tailwind CSS，但我们**强烈建议使用语义化的原生 CSS**：
+> - 更好的可维护性和可读性
+> - 更小的样式体积，无需 Tailwind 编译
+> - 更容易实现复杂的 hover/动画效果
+> - 支持 CSS 架构分离模式（`cssMode: separated`）
+>
+> 参考实现：查看 `com.myriad.hello-world` 和 `com.myriad.ai-chat` 示例。
+
 ## CSS 变量系统
 
 Tapp 提供精简的 CSS 变量，主要用于壁纸色适配。其他样式请使用 Tailwind CSS。
