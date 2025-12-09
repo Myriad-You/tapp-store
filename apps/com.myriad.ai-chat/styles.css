@@ -12,25 +12,20 @@
  * CSS 变量 - 使用壁纸色变量
  * ======================================== */
 :root {
-  /* 主色调 - 优先使用系统壁纸色 */
-  --ai-primary: var(--tapp-primary, var(--wallpaper-primary, #6366f1));
-  --ai-primary-rgb: var(--tapp-primary-rgb, var(--wallpaper-primary-rgb, 99, 102, 241));
+  /* 主色调 - 使用系统壁纸色 */
+  --ai-primary: var(--tapp-primary, #6366f1);
+  --ai-primary-rgb: var(--tapp-primary-rgb, 99, 102, 241);
   --ai-primary-glow: rgba(var(--ai-primary-rgb), 0.4);
   --ai-primary-light: rgba(var(--ai-primary-rgb), 0.15);
   
-  /* 渐变色 */
-  --ai-gradient-from: var(--tapp-primary, var(--wallpaper-primary, #6366f1));
-  --ai-gradient-to: var(--tapp-secondary, var(--wallpaper-secondary, #8b5cf6));
+  /* 渐变色 - 基于主色调生成 */
+  --ai-gradient-from: var(--tapp-primary, #6366f1);
+  --ai-gradient-to: color-mix(in srgb, var(--tapp-primary, #6366f1), #8b5cf6 50%);
   
-  /* 状态色 */
-  --ai-success: var(--tapp-success, #10b981);
-  --ai-error: var(--tapp-error, #ef4444);
-  --ai-warning: var(--tapp-warning, #f59e0b);
-  
-  /* 文本色 */
-  --ai-text-primary: var(--tapp-text, #171717);
-  --ai-text-secondary: var(--tapp-text-secondary, #737373);
-  --ai-text-muted: var(--tapp-text-muted, #a3a3a3);
+  /* 状态色 - 直接定义，不依赖 tapp 变量 */
+  --ai-success: #10b981;
+  --ai-error: #ef4444;
+  --ai-warning: #f59e0b;
 }
 
 /* ========================================
