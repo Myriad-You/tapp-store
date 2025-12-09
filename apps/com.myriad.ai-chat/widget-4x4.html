@@ -1,11 +1,11 @@
-<!-- AI Chat Widget 4x4 - v5.1 极简版 -->
+<!-- AI Chat Widget 4x4 - v5.2 规范版 -->
 <!-- 完整对话 · 壁纸色 · 精简 UI -->
 <div class="relative h-full w-full rounded-xl overflow-hidden glass flex flex-col" data-widget-root="true">
-  <!-- 动态呼吸光晕 - 使用壁纸色 -->
-  <div id="widget-glow" class="absolute -right-8 -top-8 w-40 h-40 rounded-full glow-breathe pointer-events-none"
-       style="background: linear-gradient(135deg, var(--ai-gradient-from), var(--ai-gradient-to)); filter: blur(50px);"></div>
-  <div class="absolute -left-8 -bottom-8 w-32 h-32 rounded-full glow-breathe pointer-events-none" 
-       style="background: linear-gradient(135deg, var(--ai-gradient-to), var(--ai-gradient-from)); filter: blur(50px); animation-delay: 2s;"></div>
+  <!-- 动态呼吸光晕 -->
+  <div id="widget-glow" class="absolute -right-8 -top-8 w-40 h-40 rounded-full glow-breathe pointer-events-none opacity-20"
+       style="background: radial-gradient(circle, var(--ai-primary), transparent); filter: blur(50px);"></div>
+  <div class="absolute -left-8 -bottom-8 w-32 h-32 rounded-full glow-breathe pointer-events-none opacity-15" 
+       style="background: radial-gradient(circle, var(--ai-primary), transparent); filter: blur(50px); animation-delay: 2s;"></div>
   
   <!-- 微光装饰 -->
   <div class="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-white/10 dark:from-white/[0.03] dark:to-white/[0.01]"></div>

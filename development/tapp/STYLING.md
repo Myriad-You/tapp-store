@@ -4,75 +4,136 @@
 
 ## CSS 变量系统
 
-Tapp 继承主应用的 CSS 变量，支持亮色/暗色主题自动切换：
+Tapp 提供精简的 CSS 变量，主要用于壁纸色适配。其他样式请使用 Tailwind CSS。
 
-### 主题颜色
+### 系统提供的变量
 
-> **重要**：深色模式使用纯黑色系（`neutral`），不使用带蓝色调的颜色（`gray`, `slate`）。
-
-```css
-:root {
-  /* 背景色 */
-  --tapp-bg-primary: #ffffff;
-  --tapp-bg-secondary: #f9fafb;
-  --tapp-bg-tertiary: #f5f5f5;
-
-  /* 文字色 */
-  --tapp-text-primary: #171717;
-  --tapp-text-secondary: #404040;
-  --tapp-text-muted: #737373;
-
-  /* 强调色 */
-  --tapp-accent: #6366f1;
-  --tapp-accent-hover: #4f46e5;
-
-  /* 边框 */
-  --tapp-border: #e5e5e5;
-  --tapp-border-focus: #6366f1;
-}
-
-.dark {
-  /* 纯黑色系背景 - 不使用带蓝色调的 gray/slate */
-  --tapp-bg-primary: #171717; /* neutral-900 */
-  --tapp-bg-secondary: #0a0a0a; /* neutral-950 */
-  --tapp-bg-tertiary: #000000; /* 纯黑 */
-
-  --tapp-text-primary: #fafafa;
-  --tapp-text-secondary: #e5e5e5;
-  --tapp-text-muted: #a3a3a3;
-
-  --tapp-accent: #818cf8;
-  --tapp-accent-hover: #6366f1;
-
-  --tapp-border: #404040; /* neutral-700 */
-  --tapp-border-focus: #818cf8;
-}
-```
+| 变量 | 说明 | 示例值 |
+|------|------|--------|
+| `--tapp-primary` | 壁纸主色（从系统传入） | `#6366f1` |
+| `--tapp-primary-rgb` | 主色 RGB 分量 | `99, 102, 241` |
+| `--tapp-scale` | 容器缩放因子 | `1` |
+| `--tapp-font-scale` | 字体缩放因子 | `1` |
+| `--tapp-container-width` | 容器宽度 | `200px` |
+| `--tapp-container-height` | 容器高度 | `200px` |
+| `--tapp-base-font-size` | 基础字号 | `14px` |
+| `--tapp-is-compact` | 是否紧凑模式 | `0` 或 `1` |
+| `--tapp-is-mini` | 是否迷你模式 | `0` 或 `1` |
+| `--tapp-safe-inset-top/right/bottom/left` | 安全区域边距 | `0px` |
 
 ### 使用示例
 
 ```css
-.my-card {
-  background: var(--tapp-bg-primary);
-  color: var(--tapp-text-primary);
-  border: 1px solid var(--tapp-border);
-}
-
+/* 使用壁纸主色 */
 .my-button {
-  background: var(--tapp-accent);
+  background: var(--tapp-primary);
   color: white;
 }
 
-.my-button:hover {
-  background: var(--tapp-accent-hover);
+/* 使用 RGB 分量创建透明度 */
+.my-overlay {
+  background: rgba(var(--tapp-primary-rgb), 0.2);
 }
+
+/* 响应缩放 */
+.my-element {
+  padding: calc(12px * var(--tapp-scale, 1));
+  font-size: calc(14px * var(--tapp-font-scale, 1));
+}
+```
+
+### 推荐做法
+
+> **重要**：不再提供预定义的背景色、文字色、边框色等变量。请直接使用 Tailwind CSS 类。
+
+```html
+<!-- ✅ 推荐：使用 Tailwind CSS -->
+<div class="bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-100">
+  内容
+</div>
+
+<!-- ✅ 使用壁纸主色 -->
+<button style="background: var(--tapp-primary);">按钮</button>
 ```
 
 ---
 
 ## Tailwind CSS 集成
 
-Tapp 完整支持 Tailwind CSS，可直接使用所有工具类：
+Tapp 沙箱支持 Tailwind CSS，系统会**按需自动构建** CSS 样式。
+
+### ✅ 支持的功能
+
+- **布局类**：`flex`, `grid`, `block`, `hidden`, `relative`, `absolute` 等
+- **Flex/Grid**：`items-center`, `justify-between`, `gap-*`, `grid-cols-*` 等
+- **间距**：`p-*`, `m-*`, `px-*`, `py-*`, `gap-*` 等
+- **尺寸**：`w-full`, `h-full`, `w-*`, `h-*`, `min-w-*`, `max-w-*` 等
+- **文字**：`text-sm`, `text-lg`, `font-bold`, `text-center` 等
+- **颜色**：`bg-white`, `text-neutral-800`, `border-gray-200` 等
+- **圆角**：`rounded`, `rounded-lg`, `rounded-xl`, `rounded-full` 等
+- **边框**：`border`, `border-2`, `border-neutral-200` 等
+- **阴影**：`shadow`, `shadow-lg`, `shadow-xl` 等
+- **透明度**：`opacity-50`, `bg-white/50`, `text-black/80` 等
+- **暗色模式**：`dark:bg-neutral-800`, `dark:text-white` 等
+- **状态变体**：`hover:bg-gray-100`, `focus:ring-2` 等
+
+### ⚠️ 部分支持/不支持的功能
+
+> **重要**：以下是 Tailwind 功能的支持情况：
+
+| 功能               | 支持情况       | 说明                                                |
+| ------------------ | -------------- | --------------------------------------------------- |
+| **尺寸任意值**     | ✅ 支持        | `w-[200px]`, `h-[100%]`, `gap-[10px]`               |
+| **间距任意值**     | ✅ 支持        | `p-[20px]`, `m-[1rem]`, `px-[10px]`                 |
+| **圆角任意值**     | ✅ 支持        | `rounded-[10px]`                                    |
+| **最大/最小尺寸**  | ✅ 支持        | `max-w-[300px]`, `min-h-[100px]`, `max-h-[50vh]`    |
+| **CSS 变量任意值** | ✅ 支持        | `bg-[var(--my-color)]`, `text-[var(--size)]`        |
+| **任意颜色**       | ⚠️ 部分支持   | 支持 CSS 变量，不支持直接 hex 如 `bg-[#1da1f2]`    |
+| **任意属性**       | ❌ 不支持      | `[mask-type:luminance]`，在 `styles.css` 中定义    |
+| **响应式断点**     | ❌ 不支持      | `sm:`, `md:`, `lg:`，使用 CSS 媒体查询或 JS 判断   |
+| **@apply**         | ❌ 不支持      | Tailwind 指令，直接写 CSS                          |
+
+### 🎯 推荐实践
+
+```html
+<!-- ✅ 推荐：标准 Tailwind 类 -->
+<div
+  class="flex items-center gap-4 p-4 bg-white dark:bg-neutral-800 rounded-xl"
+>
+  <span class="text-lg font-semibold text-neutral-800 dark:text-white"
+    >标题</span
+  >
+</div>
+
+<!-- ✅ 任意值语法（支持） -->
+<div class="w-[200px] h-[100px] p-[20px] rounded-[10px]">
+  任意尺寸和间距
+</div>
+
+<!-- ✅ CSS 变量（支持） -->
+<div class="bg-[var(--tapp-primary)] text-[var(--my-text-size)]">
+  使用 CSS 变量
+</div>
+
+<!-- ✅ 使用 CSS 变量（壁纸主色） -->
+<button
+  class="text-white px-4 py-2 rounded-lg"
+  style="background: var(--tapp-primary)"
+>
+  使用壁纸主色
+</button>
+
+<!-- ⚠️ 不支持：直接 hex 颜色任意值 -->
+<!-- <div class="bg-[#1da1f2]">...</div> -->
+<!-- 替代方案：在 styles.css 中定义或使用 style 属性 -->
+```
+
+```css
+/* styles.css - 不支持的样式写在这里 */
+.my-custom-container {
+  background: #1da1f2;
+}
+```
 
 ### 布局
 
@@ -92,10 +153,25 @@ Tapp 完整支持 Tailwind CSS，可直接使用所有工具类：
 
 ### 响应式
 
-```html
-<div class="flex flex-col md:flex-row">
-  <!-- 移动端纵向，桌面端横向 -->
-</div>
+> **注意**：不支持 Tailwind 响应式断点（`sm:`, `md:`, `lg:`）。使用 CSS 媒体查询或 JS 判断尺寸。
+
+```css
+/* styles.css - 使用 CSS 媒体查询 */
+.my-layout {
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .my-layout {
+    flex-direction: row;
+  }
+}
+```
+
+```javascript
+// 或使用 JS 判断容器尺寸
+const isWide = container.offsetWidth > 400;
+container.className = isWide ? "flex flex-row" : "flex flex-col";
 ```
 
 ### 暗色模式
@@ -205,7 +281,7 @@ Myriad 使用统一的 Glass（毛玻璃）设计语言：
 | 正文     | `text-base`   | 16px     |
 | 小文本   | `text-sm`     | 14px     |
 | 辅助文本 | `text-xs`     | 12px     |
-| 微型文本 | `text-[10px]` | 10px     |
+| 微型文本 | `text-[10px]` | 10px ✅  |
 
 ### 字重
 

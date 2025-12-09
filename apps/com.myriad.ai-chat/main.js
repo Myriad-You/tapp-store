@@ -1,8 +1,8 @@
-// AI Chat Tapp v5.1 - 壁纸色版
-// 全局颜色变量 · 极简 UI · 打字效果
-// 2025-12-08
+// AI Chat Tapp v5.2 - 规范版
+// 壁纸色 · 极简 UI · 打字效果
+// 2025-12-09
 
-console.log('[AI Chat] v5.1 壁纸色版初始化...');
+console.log('[AI Chat] v5.2 规范版初始化...');
 
 // ========================================
 // 国际化
@@ -777,4 +777,4 @@ function initPage() {
   }
 })();
 
-console.log('[AI Chat] v5.1 已加载');
+console.log('[AI Chat] v5.2 已加载');
