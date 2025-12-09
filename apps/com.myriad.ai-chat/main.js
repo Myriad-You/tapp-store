@@ -207,10 +207,10 @@ function init4x2Widget() {
       });
   }
 
-  sendBtn.onclick = doSend;
-  input.onkeydown = function(e) {
+  sendBtn.addEventListener('click', doSend);
+  input.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') { e.preventDefault(); doSend(); }
-  };
+  });
 }
 
 // ========================================
@@ -224,7 +224,6 @@ function init4x4Widget() {
   var messagesArea = document.getElementById('widget-messages');
   var welcomeEl = document.getElementById('widget-welcome');
   var titleEl = document.getElementById('widget-title');
-  var quickBtns = document.querySelectorAll('.quick-btn');
 
   if (!input || !sendBtn || !messagesArea) return;
 
@@ -328,30 +327,32 @@ function init4x4Widget() {
   }
 
   if (clearBtn) {
-    clearBtn.onclick = function() {
+    clearBtn.addEventListener('click', function() {
       widgetState.messages = [];
       messagesArea.innerHTML = '';
       if (welcomeEl) {
         messagesArea.appendChild(welcomeEl);
         welcomeEl.style.display = 'flex';
       }
-    };
+    });
   }
 
-  quickBtns.forEach(function(btn) {
-    btn.onclick = function() {
+  // 绑定欢迎按钮事件 (使用 welcome-btn 类)
+  var welcomeBtns = document.querySelectorAll('.welcome-btn');
+  welcomeBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
       var example = btn.getAttribute('data-example');
       if (example) {
         input.value = example;
         doSend(example);
       }
-    };
+    });
   });
 
-  sendBtn.onclick = function() { doSend(); };
-  input.onkeydown = function(e) {
+  sendBtn.addEventListener('click', function() { doSend(); });
+  input.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') { e.preventDefault(); doSend(); }
-  };
+  });
 }
 
 // Widget 初始化入口
