@@ -46,9 +46,9 @@
     {
       "id": "com.myriad.ai-chat",
       "name": "AI 聊天助手",
-      "version": "4.0.0",
-      "description": "AI 驱动的智能对话助手 - 彻底革新版！丰富动效、呼吸光晕、微交互反馈",
-      "long_description": "AI 聊天助手 v4.0 彻底革新版！全新设计的 Glass UI，呼吸感光晕动效，涟漪点击反馈，消息滑入动画，打字机思考效果。支持多轮对话和历史记录。",
+      "version": "1.0.0",
+      "description": "AI 驱动的智能对话助手",
+      "long_description": "AI 聊天助手。支持多轮对话和历史记录。",
       "author": {
         "name": "Myriad Team",
         "url": "https://github.com/Myriad-You"
@@ -59,7 +59,7 @@
       "category": "ai",
       "tags": ["AI", "聊天", "助手", "widget", "GPT", "动效"],
       "permissions": ["storage", "ui:notification", "ui:theme", "ai:chat"],
-      "min_myriad_version": "0.2.0",
+      "min_myriad_version": "0.1.0",
       "icon": "🤖",
       "screenshots": [],
       "download": {
@@ -73,7 +73,7 @@
           "4x4": "apps/com.myriad.ai-chat/widget-4x4.html"
         }
       },
-      "size": 35840,
+      "size": 25840,
       "downloads": 0,
       "rating": 0,
       "featured": true,

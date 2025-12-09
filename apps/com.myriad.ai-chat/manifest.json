@@ -1,8 +1,8 @@
 {
   "id": "com.myriad.ai-chat",
   "name": "AI 聊天助手",
-  "version": "6.0.0",
-  "description": "AI 驱动的智能对话助手 - 分离式 CSS 架构，优化加载性能",
+  "version": "1.0.0",
+  "description": "AI 驱动的智能对话助手",
   "main": "main.js",
   "author": {
     "name": "Myriad Team"

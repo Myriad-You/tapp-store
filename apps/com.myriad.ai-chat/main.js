@@ -1,6 +1,4 @@
-// AI Chat Tapp v6.0 - 重构版
-// 语义化 CSS · 优雅动效 · 精简代码
-// 2025-12-09
+// AI Chat Tapp v1.0.0
 
 // ========================================
 // 国际化
@@ -12,12 +10,17 @@ var i18n = {
     placeholder: '输入...',
     send: '发送',
     title: '对话',
-    welcome: '开始对话',
-    welcomeSubtitle: '选择话题或直接输入',
+    welcome: '有什么可以帮你？',
+    welcomeSubtitle: '选择话题开始',
     clearChat: '新对话',
     thinking: '思考中...',
     error: '出错了',
     errorNetwork: '网络错误',
+    welcomeExamples: [
+      { icon: '👋', text: '你好', label: '你好' },
+      { icon: '😄', text: '讲个笑话', label: '笑话' },
+      { icon: '✍️', text: '写首诗', label: '写诗' }
+    ],
     examples: [
       { icon: '💡', title: '解释概念' },
       { icon: '✍️', title: '写一首诗' },
@@ -30,17 +33,45 @@ var i18n = {
     placeholder: 'Type...',
     send: 'Send',
     title: 'Chat',
-    welcome: 'Start chatting',
-    welcomeSubtitle: 'Pick a topic or ask',
+    welcome: 'How can I help?',
+    welcomeSubtitle: 'Pick a topic',
     clearChat: 'New',
     thinking: 'Thinking...',
     error: 'Error',
     errorNetwork: 'Network error',
+    welcomeExamples: [
+      { icon: '👋', text: 'Hello', label: 'Hello' },
+      { icon: '😄', text: 'Tell a joke', label: 'Joke' },
+      { icon: '✍️', text: 'Write a poem', label: 'Poem' }
+    ],
     examples: [
       { icon: '💡', title: 'Explain' },
       { icon: '✍️', title: 'Write poem' },
       { icon: '💻', title: 'Learn code' },
       { icon: '🎬', title: 'Movies' }
+    ],
+  },
+  'ja-JP': {
+    widgetTitle: 'チャット',
+    placeholder: '入力...',
+    send: '送信',
+    title: 'チャット',
+    welcome: '何かお手伝いしますか？',
+    welcomeSubtitle: 'トピックを選択',
+    clearChat: '新規',
+    thinking: '考え中...',
+    error: 'エラー',
+    errorNetwork: 'ネットワークエラー',
+    welcomeExamples: [
+      { icon: '👋', text: 'こんにちは', label: '挨拶' },
+      { icon: '😄', text: '面白い話して', label: 'ジョーク' },
+      { icon: '✍️', text: '詩を書いて', label: '詩' }
+    ],
+    examples: [
+      { icon: '💡', title: '説明' },
+      { icon: '✍️', title: '詩を書く' },
+      { icon: '💻', title: 'プログラミング' },
+      { icon: '🎬', title: '映画' }
     ],
   },
 };
@@ -49,7 +80,10 @@ var currentLocale = 'zh-CN';
 
 function normalizeLocale(locale) {
   if (!locale) return 'zh-CN';
-  return locale.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en-US';
+  var l = locale.toLowerCase();
+  if (l.startsWith('zh')) return 'zh-CN';
+  if (l.startsWith('ja')) return 'ja-JP';
+  return 'en-US';
 }
 
 function t(key) {

@@ -1,11 +1,5 @@
 /**
- * AI Chat Page 专用样式
- * v8.0 - 分层架构 + 壁纸色适配版
- * 
- * 🎯 设计原则：
- * - 所有颜色使用系统壁纸色变量 (--tapp-primary, --tapp-primary-rgb)
- * - 分层架构：背景层 (tapp-background) + 内容层 (tapp-content)
- * - 深色模式使用纯黑色系 (black, neutral)，不使用带蓝色调的颜色
+ * AI Chat Page v1.0.0
  */
 
 /* ========================================
@@ -13,52 +7,52 @@
    ======================================== */
 
 :root {
-  /* 🎨 主色：继承系统壁纸色 */
+  /* 主色：继承系统壁纸色 */
   --ai-primary: var(--tapp-primary, #6366f1);
   --ai-primary-rgb: var(--tapp-primary-rgb, 99, 102, 241);
   
-  /* 🎨 派生色：基于主色计算 */
+  /* 派生色：基于主色计算 */
   --ai-secondary: color-mix(in srgb, var(--ai-primary) 80%, #8b5cf6);
   --ai-accent: color-mix(in srgb, var(--ai-primary) 60%, #a78bfa);
   
-  /* 🎨 功能色 */
+  /* 功能色 */
   --ai-error: #ef4444;
   
-  /* 🎨 背景色（沙箱实色） */
+  /* 背景色 */
   --ai-bg-solid: #f8f9fa;
   
-  /* 🎨 表面色：浅色模式 */
+  /* 表面色 */
   --ai-surface: rgba(255, 255, 255, 0.85);
   --ai-surface-elevated: rgba(255, 255, 255, 0.95);
   
-  /* 🎨 文字色 */
+  /* 文字色 */
   --ai-text: #1f2937;
   --ai-text-secondary: #6b7280;
   
-  /* 🎨 边框色 */
+  /* 边框色 */
   --ai-border: rgba(0, 0, 0, 0.08);
   --ai-border-strong: rgba(0, 0, 0, 0.15);
   
-  /* 🎨 光效色：基于主色 */
+  /* 光效色 */
   --ai-glow: rgba(var(--ai-primary-rgb), 0.15);
   --ai-glow-strong: rgba(var(--ai-primary-rgb), 0.25);
   
-  /* 📐 尺寸变量 */
+  /* 尺寸变量 */
   --ai-radius: 20px;
   --ai-radius-lg: 24px;
   --ai-radius-sm: 12px;
   --ai-radius-xs: 8px;
   
-  /* 📐 阴影 */
+  /* 阴影 */
   --ai-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   --ai-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.15);
   --ai-shadow-glow: 0 0 20px rgba(var(--ai-primary-rgb), 0.2);
   
-  /* ⏱️ 过渡 */
+  /* 过渡 */
   --ai-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 🌙 深色模式变量（纯黑色系） */
+/* 深色模式变量 */
 .dark {
   --ai-bg-solid: #0a0a0a;
   --ai-surface: rgba(0, 0, 0, 0.85);

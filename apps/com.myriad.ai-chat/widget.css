@@ -1,12 +1,5 @@
 /**
- * AI Chat Widget v9.0
- * 🎨 生动设计 · 动态光效 · 精致交互
- * 
- * 设计理念：
- * - 动态渐变背景营造科技感
- * - 微妙的光晕效果增添生命力
- * - 流畅的过渡动画提升交互体验
- * - 保持与系统壁纸色的协调
+ * AI Chat Widget v1.0.0
  */
 
 /* ========================================
@@ -14,50 +7,50 @@
    ======================================== */
 
 :root {
-  /* 🎨 主色系：从系统继承 */
+  /* 主色系 */
   --w-primary: var(--tapp-primary, #6366f1);
   --w-primary-rgb: var(--tapp-primary-rgb, 99, 102, 241);
   
-  /* 🎨 派生色：创造层次感 */
+  /* 派生色 */
   --w-secondary: color-mix(in srgb, var(--w-primary) 70%, #a855f7);
   --w-accent: color-mix(in srgb, var(--w-primary) 50%, #ec4899);
   --w-tertiary: color-mix(in srgb, var(--w-primary) 60%, #06b6d4);
   
-  /* 🌟 光效色 */
+  /* 光效色 */
   --w-glow: rgba(var(--w-primary-rgb), 0.4);
   --w-glow-soft: rgba(var(--w-primary-rgb), 0.15);
   --w-shimmer: rgba(255, 255, 255, 0.08);
   
-  /* 📦 容器色 */
-  --w-bg: rgba(255, 255, 255, 0.92);
-  --w-bg-elevated: rgba(255, 255, 255, 0.98);
+  /* 容器色 */
+  --w-bg: rgba(255, 255, 255, 0.7);
+  --w-bg-elevated: rgba(255, 255, 255, 0.85);
   --w-surface: rgba(var(--w-primary-rgb), 0.06);
   
-  /* ✏️ 文字色 */
+  /* 文字色 */
   --w-text: #1f2937;
   --w-text-2: #6b7280;
   --w-text-muted: #9ca3af;
   
-  /* 📏 边框 */
+  /* 边框 */
   --w-border: rgba(0, 0, 0, 0.06);
   --w-border-hover: rgba(var(--w-primary-rgb), 0.3);
   
-  /* 📐 圆角 */
+  /* 圆角 */
   --w-radius: 18px;
   --w-radius-md: 14px;
   --w-radius-sm: 10px;
   --w-radius-xs: 6px;
   
-  /* ⏱️ 动画 */
+  /* 动画 */
   --w-transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --w-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   --w-transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 🌙 深色模式 */
+/* 深色模式 */
 .dark {
-  --w-bg: rgba(15, 15, 15, 0.95);
-  --w-bg-elevated: rgba(26, 26, 26, 0.98);
+  --w-bg: rgba(15, 15, 15, 0.7);
+  --w-bg-elevated: rgba(26, 26, 26, 0.85);
   --w-surface: rgba(255, 255, 255, 0.05);
   --w-text: #f9fafb;
   --w-text-2: #9ca3af;
@@ -275,11 +268,31 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 8px;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
   position: relative;
   z-index: 1;
+}
+
+/* 4x2 对话区滚动条 */
+.widget-chat::-webkit-scrollbar {
+  width: 3px;
+}
+
+.widget-chat::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.widget-chat::-webkit-scrollbar-thumb {
+  background: rgba(var(--w-primary-rgb), 0.3);
+  border-radius: 3px;
+}
+
+.widget-chat::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--w-primary-rgb), 0.5);
 }
 
 /* ========================================
@@ -616,6 +629,17 @@
   transform: translateY(0) scale(0.97);
 }
 
+.dark .welcome-btn {
+  color: var(--w-text);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.dark .welcome-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
 /* ========================================
    输入区 - 精致交互
    ======================================== */
@@ -671,37 +695,12 @@
   box-shadow: 
     0 4px 12px rgba(var(--w-primary-rgb), 0.35),
     0 1px 3px rgba(0, 0, 0, 0.1);
-  position: relative;
-  overflow: hidden;
-}
-
-/* 按钮光效 */
-.widget-input-row button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.3),
-    transparent
-  );
-  transition: left 0.5s;
-}
-
-.widget-input-row button:hover::before {
-  left: 100%;
 }
 
 .widget-input-row button svg {
   width: 16px;
   height: 16px;
   stroke: white;
-  position: relative;
-  z-index: 1;
 }
 
 .widget-input-row button:hover {
