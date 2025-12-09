@@ -1,19 +1,21 @@
-<!-- AI Chat Widget 4x4 v6.0 - 重构版 -->
-<!-- 语义化 CSS · 完整对话 · 优雅布局 -->
-<div class="widget-root widget-4x4 glass" data-widget-root="true">
-  <!-- 呼吸光晕 -->
-  <div class="widget-glow widget-glow-1"></div>
-  <div class="widget-glow widget-glow-2"></div>
+<!-- AI Chat Widget 4x4 v7.0 - 分层架构版 -->
+<!-- 壁纸色彩 · 分层架构 · 完整对话 -->
+<div class="widget-root widget-4x4" data-widget-root="true">
+  <!-- 背景层 -->
+  <div id="widget-background" class="widget-background">
+    <div class="widget-glow widget-glow-1"></div>
+    <div class="widget-glow widget-glow-2"></div>
+  </div>
 
   <!-- 内容层 -->
-  <div class="widget-content">
+  <div id="widget-content" class="widget-content glass">
     <!-- 头部 -->
     <div class="widget-header">
-      <div class="widget-status glass">
+      <div class="widget-status">
         <div class="widget-status-dot"></div>
         <span id="widget-title" class="widget-status-text">对话</span>
       </div>
-      <button id="widget-clear" class="widget-action glass">↻</button>
+      <button id="widget-clear" class="widget-action">↻</button>
     </div>
 
     <!-- 消息区域 -->
@@ -21,15 +23,15 @@
       <!-- 欢迎界面 -->
       <div id="widget-welcome" class="widget-welcome">
         <div class="quick-btns">
-          <button class="quick-btn glass" data-example="你好">👋 你好</button>
-          <button class="quick-btn glass" data-example="讲个笑话">😄 笑话</button>
-          <button class="quick-btn glass" data-example="今天天气">🌤️ 天气</button>
+          <button class="quick-btn" data-example="你好">👋 你好</button>
+          <button class="quick-btn" data-example="讲个笑话">😄 笑话</button>
+          <button class="quick-btn" data-example="今天天气">🌤️ 天气</button>
         </div>
       </div>
     </div>
 
     <!-- 输入区域 -->
-    <div class="widget-input-bar glass">
+    <div class="widget-input-bar">
       <input type="text" id="widget-input" class="widget-input" placeholder="输入..." autocomplete="off">
       <button id="widget-send" class="widget-send-btn gradient-bg" title="发送">
         <svg id="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">

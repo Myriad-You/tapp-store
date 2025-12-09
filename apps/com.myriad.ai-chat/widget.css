@@ -1,41 +1,51 @@
 /**
  * AI Chat Widget 专用样式
- * v6.0 - 仅包含 Widget 所需的样式
+ * v7.0 - 分层架构 · 壁纸色彩
  */
 
 /* ========================================
-   CSS 变量（Widget 专用）
+   CSS 变量 - 壁纸色彩系统
    ======================================== */
 
 :root {
-  --ai-primary: #6366f1;
-  --ai-primary-rgb: 99, 102, 241;
-  --ai-secondary: #8b5cf6;
-  --ai-accent: #a78bfa;
+  /* 主色调 - 继承自壁纸 */
+  --ai-primary: var(--tapp-primary, #6366f1);
+  --ai-primary-rgb: var(--tapp-primary-rgb, 99, 102, 241);
+  
+  /* 派生色彩 */
+  --ai-secondary: color-mix(in srgb, var(--ai-primary) 80%, #8b5cf6);
+  --ai-glow: rgba(var(--ai-primary-rgb), 0.4);
+  --ai-soft: rgba(var(--ai-primary-rgb), 0.15);
+  
+  /* 语义色彩 */
   --ai-error: #ef4444;
+  
+  /* 表面色 - 纯白/纯黑 */
   --ai-surface: rgba(255, 255, 255, 0.85);
-  --ai-surface-dark: rgba(30, 30, 35, 0.9);
-  --ai-text: #1f2937;
-  --ai-text-secondary: #6b7280;
-  --ai-border: rgba(0, 0, 0, 0.08);
-  --ai-glow: rgba(99, 102, 241, 0.15);
+  --ai-text: #171717;
+  --ai-text-secondary: #525252;
+  --ai-border: rgba(var(--ai-primary-rgb), 0.12);
+  
+  /* 圆角 */
   --ai-radius: 16px;
   --ai-radius-sm: 10px;
   --ai-radius-xs: 6px;
+  
+  /* 阴影与过渡 */
   --ai-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   --ai-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dark {
-  --ai-surface: rgba(30, 30, 35, 0.9);
-  --ai-text: #f3f4f6;
-  --ai-text-secondary: #9ca3af;
-  --ai-border: rgba(255, 255, 255, 0.1);
-  --ai-glow: rgba(139, 92, 246, 0.2);
+  /* 纯黑深色模式 (neutral 色系) */
+  --ai-surface: rgba(23, 23, 23, 0.9);
+  --ai-text: #f5f5f5;
+  --ai-text-secondary: #a3a3a3;
+  --ai-border: rgba(var(--ai-primary-rgb), 0.18);
 }
 
 /* ========================================
-   Widget 根容器
+   Widget 根容器 - 分层架构
    ======================================== */
 
 .widget-root {
@@ -50,7 +60,18 @@
 .widget-4x4 { border-radius: var(--ai-radius); }
 
 /* ========================================
-   背景与光效
+   背景层
+   ======================================== */
+
+.widget-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ========================================
+   光效
    ======================================== */
 
 .gradient-bg {
@@ -64,6 +85,14 @@
   opacity: 0.5;
   pointer-events: none;
   animation: glow-breathe 4s ease-in-out infinite;
+}
+
+.widget-4x2 .widget-glow {
+  width: 100px;
+  height: 100px;
+  top: -25px;
+  right: -25px;
+  background: var(--ai-primary);
 }
 
 .widget-glow-1 {
@@ -89,7 +118,7 @@
 }
 
 /* ========================================
-   Glass 效果
+   Glass 效果 (内容层)
    ======================================== */
 
 .glass {
@@ -100,7 +129,7 @@
 }
 
 /* ========================================
-   Widget 内容区
+   内容层
    ======================================== */
 
 .widget-content {
@@ -111,9 +140,12 @@
   height: 100%;
   padding: 12px;
   gap: 8px;
+  border-radius: var(--ai-radius);
 }
 
-/* Widget Header */
+/* ========================================
+   Widget Header
+   ======================================== */
 .widget-header {
   display: flex;
   align-items: center;
@@ -153,7 +185,7 @@
   padding: 4px 10px;
   font-size: 11px;
   color: var(--ai-text-secondary);
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--ai-soft);
   border: none;
   border-radius: var(--ai-radius-xs);
   cursor: pointer;
@@ -161,8 +193,8 @@
 }
 
 .widget-clear-btn:hover {
-  background: rgba(0, 0, 0, 0.1);
-  color: var(--ai-text);
+  background: rgba(var(--ai-primary-rgb), 0.2);
+  color: var(--ai-primary);
 }
 
 /* ========================================
@@ -231,7 +263,7 @@
   padding: 6px 12px;
   font-size: 11px;
   color: var(--ai-primary);
-  background: rgba(var(--ai-primary-rgb), 0.1);
+  background: var(--ai-soft);
   border: 1px solid rgba(var(--ai-primary-rgb), 0.2);
   border-radius: 20px;
   cursor: pointer;
@@ -239,12 +271,109 @@
 }
 
 .quick-btn:hover {
-  background: rgba(var(--ai-primary-rgb), 0.2);
+  background: rgba(var(--ai-primary-rgb), 0.25);
+  border-color: var(--ai-primary);
   transform: translateY(-1px);
 }
 
 /* ========================================
-   消息行
+   Widget 状态指示器
+   ======================================== */
+
+.widget-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: var(--ai-soft);
+}
+
+.widget-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.widget-status-text {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ai-text-secondary);
+}
+
+.widget-action {
+  padding: 4px 8px;
+  border-radius: 9999px;
+  border: none;
+  background: var(--ai-soft);
+  font-size: 10px;
+  color: var(--ai-text-secondary);
+  cursor: pointer;
+  transition: var(--ai-transition);
+}
+
+.widget-action:hover {
+  color: var(--ai-primary);
+  background: rgba(var(--ai-primary-rgb), 0.2);
+}
+
+/* ========================================
+   4x2 聊天区域
+   ======================================== */
+
+.widget-chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 24px 0 8px;
+}
+
+/* ========================================
+   消息条 (4x2)
+   ======================================== */
+
+.msg-bar {
+  display: flex;
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.3s ease-out;
+}
+
+.msg-bar.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.msg-bar-user {
+  justify-content: flex-end;
+  transform: translateX(10px);
+}
+
+.msg-bar-user.show {
+  transform: translateX(0);
+}
+
+.mini-bubble {
+  padding: 6px 10px;
+  font-size: 11px;
+  max-width: 90%;
+  line-height: 1.4;
+}
+
+.mini-bubble-user {
+  border-radius: 12px 12px 4px 12px;
+}
+
+.mini-bubble-ai {
+  border-radius: 12px 12px 12px 4px;
+}
+
+/* ========================================
+   消息行 (4x4)
    ======================================== */
 
 .msg-row {
@@ -317,54 +446,6 @@
 }
 
 /* ========================================
-   用户/AI 消息条（4x2）
-   ======================================== */
-
-.user-msg-bar,
-.ai-reply-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  opacity: 0;
-  transform: translateX(-10px);
-  transition: all 0.3s ease-out;
-}
-
-.user-msg-bar.show,
-.ai-reply-bar.show {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.user-msg-bar { flex-direction: row-reverse; transform: translateX(10px); }
-
-.user-msg-content,
-.ai-reply-content {
-  flex: 1;
-  font-size: 12px;
-  line-height: 1.4;
-  padding: 6px 10px;
-  border-radius: var(--ai-radius-sm);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.user-msg-content {
-  background: linear-gradient(135deg, var(--ai-primary), var(--ai-secondary));
-  color: white;
-  text-align: right;
-}
-
-.ai-reply-content {
-  background: var(--ai-surface);
-  color: var(--ai-text);
-  border: 1px solid var(--ai-border);
-}
-
-/* ========================================
    输入栏
    ======================================== */
 
@@ -377,6 +458,12 @@
   border: 1px solid var(--ai-border);
   border-radius: var(--ai-radius-sm);
   flex-shrink: 0;
+  transition: var(--ai-transition);
+}
+
+.widget-input-bar:focus-within {
+  border-color: var(--ai-primary);
+  box-shadow: 0 0 0 2px var(--ai-soft);
 }
 
 .widget-input {
@@ -412,7 +499,7 @@
 
 .widget-send-btn:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(var(--ai-primary-rgb), 0.4);
+  box-shadow: 0 4px 12px var(--ai-glow);
 }
 
 .widget-send-btn:active {

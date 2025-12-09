@@ -1,15 +1,17 @@
-<!-- AI Chat Widget 4x2 v6.0 - 重构版 -->
-<!-- 语义化 CSS · 极简交互 · 紧凑布局 -->
-<div class="widget-root widget-4x2 glass" data-widget-root="true">
-  <!-- 呼吸光晕 -->
-  <div class="widget-glow"></div>
+<!-- AI Chat Widget 4x2 v7.0 - 分层架构版 -->
+<!-- 壁纸色彩 · 分层架构 · 极简交互 -->
+<div class="widget-root widget-4x2" data-widget-root="true">
+  <!-- 背景层 -->
+  <div id="widget-background" class="widget-background">
+    <div class="widget-glow"></div>
+  </div>
 
   <!-- 内容层 -->
-  <div class="widget-content">
+  <div id="widget-content" class="widget-content glass">
     <!-- 状态指示器 -->
     <div class="widget-header">
       <div></div>
-      <div id="ai-avatar" class="widget-status glass">
+      <div id="ai-avatar" class="widget-status">
         <div class="widget-status-dot"></div>
       </div>
     </div>
