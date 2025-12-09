@@ -173,22 +173,18 @@ var widgetState = {
 };
 
 // ========================================
-// 4x2 Widget
+// 4x2 Widget - 和 4x4 一样动态添加消息
 // ========================================
 
 function init4x2Widget() {
   var input = document.getElementById('widget-input');
   var sendBtn = document.getElementById('widget-send');
-  var userMsg = document.getElementById('user-msg');
-  var userMsgContent = document.getElementById('user-msg-content');
-  var aiMsg = document.getElementById('ai-msg');
-  var aiMsgContent = document.getElementById('ai-msg-content');
+  var messagesArea = document.getElementById('widget-messages');
   var welcomeEl = document.getElementById('widget-welcome');
-  var chatEl = document.getElementById('widget-chat');
   var welcomeTitle = document.getElementById('welcome-title-mini');
   var welcomeSubtitle = document.getElementById('welcome-subtitle-mini');
 
-  if (!input || !sendBtn) return;
+  if (!input || !sendBtn || !messagesArea) return;
 
   // 设置多语言文本
   if (input) input.placeholder = t('placeholder');
@@ -196,40 +192,55 @@ function init4x2Widget() {
   if (welcomeTitle) welcomeTitle.textContent = t('welcome4x2Title');
   if (welcomeSubtitle) welcomeSubtitle.textContent = t('welcome4x2Subtitle');
 
-  function showUserMsg(text) {
-    // 隐藏欢迎状态，显示对话区
+  function createBubble(role, content, isTyping, useTypingEffect) {
+    var row = document.createElement('div');
+    row.className = 'msg-row ' + (role === 'user' ? 'msg-row-user' : 'msg-row-ai');
+
+    var avatar = document.createElement('div');
+    avatar.className = 'msg-avatar';
+    avatar.textContent = role === 'user' ? '👤' : '🤖';
+    if (role === 'user') {
+      avatar.classList.add('msg-avatar-user');
+    } else {
+      avatar.classList.add('msg-avatar-ai');
+      if (isTyping || useTypingEffect) avatar.classList.add('avatar-thinking');
+    }
+
+    var bubble = document.createElement('div');
+    bubble.className = 'bubble ' + (role === 'user' ? 'bubble-user' : 'bubble-ai');
+
+    if (isTyping) {
+      bubble.innerHTML = '<div class="thinking-dots"><span></span><span></span><span></span></div>';
+    } else if (role === 'user') {
+      bubble.textContent = content;
+    } else if (useTypingEffect) {
+      setTimeout(function() {
+        typeWriter(bubble, content, 15, function() {
+          avatar.classList.remove('avatar-thinking');
+        });
+      }, 100);
+    } else {
+      bubble.innerHTML = formatMessage(content);
+    }
+
+    row.appendChild(avatar);
+    row.appendChild(bubble);
+    return row;
+  }
+
+  function addMessage(role, content, useTypingEffect) {
     if (welcomeEl) welcomeEl.style.display = 'none';
-    if (chatEl) chatEl.style.display = 'flex';
-    
-    if (userMsgContent) userMsgContent.textContent = text;
-    if (userMsg) userMsg.classList.add('show');
+    var bubble = createBubble(role, content, false, useTypingEffect);
+    messagesArea.appendChild(bubble);
+    messagesArea.scrollTop = messagesArea.scrollHeight;
+    return bubble;
   }
 
-  function showAiReply(text) {
-    if (aiMsg) aiMsg.classList.add('show');
-    if (aiMsgContent) {
-      typeWriterFast(aiMsgContent, text, function() {});
-    }
-  }
-
-  function showThinking() {
-    if (aiMsgContent) {
-      aiMsgContent.innerHTML = '<div class="thinking-dots"><span></span><span></span><span></span></div>';
-    }
-    if (aiMsg) aiMsg.classList.add('show');
-  }
-
-  function showError(msg) {
-    if (aiMsgContent) {
-      aiMsgContent.innerHTML = '<span style="color:#ef4444">❌ ' + escapeHtml(msg) + '</span>';
-      if (aiMsg) aiMsg.classList.add('shake-error');
-      setTimeout(function() { if (aiMsg) aiMsg.classList.remove('shake-error'); }, 400);
-    }
-  }
-
-  function animateSend() {
-    if (sendBtn) sendBtn.classList.add('send-flying');
-    setTimeout(function() { if (sendBtn) sendBtn.classList.remove('send-flying'); }, 300);
+  function addTypingIndicator() {
+    var indicator = createBubble('assistant', '', true);
+    indicator.id = 'typing-indicator-4x2';
+    messagesArea.appendChild(indicator);
+    messagesArea.scrollTop = messagesArea.scrollHeight;
   }
 
   function doSend() {
@@ -240,21 +251,31 @@ function init4x2Widget() {
     sendBtn.disabled = true;
     input.value = '';
 
-    animateSend();
-    showUserMsg(text);
-    setTimeout(showThinking, 200);
+    if (sendBtn) sendBtn.classList.add('send-flying');
+    setTimeout(function() { if (sendBtn) sendBtn.classList.remove('send-flying'); }, 300);
+
+    widgetState.messages.push({ role: 'user', content: text });
+    addMessage('user', text);
+    setTimeout(addTypingIndicator, 150);
 
     Tapp.ai.chat([{ role: 'user', content: text }], {}, { maxTokens: 300 })
       .then(function(resp) {
+        var ind = document.getElementById('typing-indicator-4x2');
+        if (ind) ind.remove();
+
         var content = resp?.message?.content || resp?.content;
         if (content) {
-          showAiReply(content);
+          widgetState.messages.push({ role: 'assistant', content: content });
+          addMessage('assistant', content, true);
         } else {
           throw new Error(t('error'));
         }
       })
       .catch(function(err) {
-        showError(err.message || t('errorNetwork'));
+        var ind = document.getElementById('typing-indicator-4x2');
+        if (ind) ind.remove();
+        var errorBubble = addMessage('assistant', '❌ ' + (err.message || t('errorNetwork')), false);
+        errorBubble.querySelector('.bubble-ai')?.classList.add('shake-error');
       })
       .finally(function() {
         widgetState.sending = false;

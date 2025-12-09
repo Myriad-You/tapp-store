@@ -260,47 +260,6 @@
 }
 
 /* ========================================
-   4x2 对话区 - 紧凑布局
-   ======================================== */
-
-.widget-chat {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  min-height: 0;
-  position: relative;
-  z-index: 1;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* 内容包裹器 - 确保从底部开始 */
-.widget-chat::before {
-  content: '';
-  flex: 1;
-}
-
-/* 4x2 对话区滚动条 */
-.widget-chat::-webkit-scrollbar {
-  width: 3px;
-}
-
-.widget-chat::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.widget-chat::-webkit-scrollbar-thumb {
-  background: rgba(var(--w-primary-rgb), 0.3);
-  border-radius: 3px;
-}
-
-.widget-chat::-webkit-scrollbar-thumb:hover {
-  background: rgba(var(--w-primary-rgb), 0.5);
-}
-
-/* ========================================
    4x2 欢迎状态 - 紧凑胶囊
    ======================================== */
 
@@ -351,60 +310,6 @@
 .welcome-subtitle-mini {
   font-size: 10px;
   color: var(--w-text-2);
-}
-
-/* ========================================
-   气泡样式
-   ======================================== */
-
-.chat-bubble {
-  padding: 8px 14px;
-  font-size: 12px;
-  line-height: 1.5;
-  max-width: 92%;
-  opacity: 0;
-  transition: var(--w-transition-slow);
-  word-break: break-word;
-  flex-shrink: 0;
-}
-
-.chat-bubble.show {
-  opacity: 1;
-}
-
-/* 用户消息气泡 */
-.chat-user {
-  align-self: flex-end;
-  background: linear-gradient(
-    135deg,
-    var(--w-primary) 0%,
-    var(--w-secondary) 100%
-  );
-  color: white;
-  border-radius: 14px 14px 4px 14px;
-  transform: translateX(15px) scale(0.95);
-  box-shadow: 
-    0 4px 12px rgba(var(--w-primary-rgb), 0.3),
-    0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.chat-user.show {
-  transform: translateX(0) scale(1);
-}
-
-/* AI 回复气泡 */
-.chat-ai {
-  align-self: flex-start;
-  background: var(--w-bg-elevated);
-  color: var(--w-text);
-  border: 1px solid var(--w-border);
-  border-radius: 14px 14px 14px 4px;
-  transform: translateX(-15px) scale(0.95);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.chat-ai.show {
-  transform: translateX(0) scale(1);
 }
 
 /* ========================================
