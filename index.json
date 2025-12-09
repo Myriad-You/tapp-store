@@ -65,7 +65,8 @@
       "download": {
         "manifest": "apps/com.myriad.ai-chat/manifest.json",
         "code": "apps/com.myriad.ai-chat/main.js",
-        "styles": "apps/com.myriad.ai-chat/styles.css",
+        "widget_styles": "apps/com.myriad.ai-chat/widget.css",
+        "page_styles": "apps/com.myriad.ai-chat/page.css",
         "page_template": "apps/com.myriad.ai-chat/page.html",
         "widget_templates": {
           "4x2": "apps/com.myriad.ai-chat/widget-4x2.html",
