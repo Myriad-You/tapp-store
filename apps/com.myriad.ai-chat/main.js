@@ -192,13 +192,17 @@ function init4x2Widget() {
   if (welcomeTitle) welcomeTitle.textContent = t('welcome4x2Title');
   if (welcomeSubtitle) welcomeSubtitle.textContent = t('welcome4x2Subtitle');
 
+  // SVG 图标
+  var userSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+  var aiSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2zM7.5 13a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm9 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/></svg>';
+
   function createBubble(role, content, isTyping, useTypingEffect) {
     var row = document.createElement('div');
     row.className = 'msg-row ' + (role === 'user' ? 'msg-row-user' : 'msg-row-ai');
 
     var avatar = document.createElement('div');
     avatar.className = 'msg-avatar';
-    avatar.textContent = role === 'user' ? '👤' : '🤖';
+    avatar.innerHTML = role === 'user' ? userSvg : aiSvg;
     if (role === 'user') {
       avatar.classList.add('msg-avatar-user');
     } else {
@@ -327,15 +331,18 @@ function init4x4Widget() {
     });
   }
 
+  // SVG 图标
+  var userSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+  var aiSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2zM7.5 13a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm9 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/></svg>';
+
   function createBubble(role, content, isTyping, useTypingEffect) {
     var row = document.createElement('div');
     row.className = 'msg-row ' + (role === 'user' ? 'msg-row-user' : 'msg-row-ai');
 
     var avatar = document.createElement('div');
-    avatar.className = 'msg-avatar gradient-bg';
-    avatar.textContent = role === 'user' ? '👤' : '🤖';
+    avatar.className = 'msg-avatar';
+    avatar.innerHTML = role === 'user' ? userSvg : aiSvg;
     if (role !== 'user') {
-      avatar.classList.remove('gradient-bg');
       avatar.classList.add('msg-avatar-ai');
       if (isTyping || useTypingEffect) avatar.classList.add('avatar-thinking');
     } else {
@@ -533,16 +540,20 @@ function updateStatusPill(state, data) {
   }
 }
 
+// SVG 图标
+var userSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+var aiSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2zM7.5 13a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm9 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/></svg>';
+
 function createPageBubble(role, content, isTyping, useTypingEffect) {
   var row = document.createElement('div');
   row.className = 'msg-row ' + (role === 'user' ? 'msg-row-user' : 'msg-row-ai');
 
   var avatar = document.createElement('div');
   avatar.className = 'msg-avatar';
-  avatar.textContent = role === 'user' ? '👤' : '🤖';
+  avatar.innerHTML = role === 'user' ? userSvg : aiSvg;
 
   if (role === 'user') {
-    avatar.classList.add('gradient-bg', 'msg-avatar-user');
+    avatar.classList.add('msg-avatar-user');
   } else {
     avatar.classList.add('msg-avatar-ai');
     if (isTyping || useTypingEffect) avatar.classList.add('avatar-thinking');

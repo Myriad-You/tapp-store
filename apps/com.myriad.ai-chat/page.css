@@ -388,19 +388,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
   flex-shrink: 0;
   box-shadow: var(--ai-shadow);
+}
+
+.msg-avatar svg {
+  width: 22px;
+  height: 22px;
 }
 
 .msg-avatar-user {
   /* 使用壁纸主色渐变 */
   background: linear-gradient(135deg, var(--ai-primary), var(--ai-secondary));
-  color: white;
+  color: #fff;
+}
+
+.dark .msg-avatar-user {
+  color: #000;
 }
 
 .msg-avatar-ai {
   background: var(--ai-surface);
+  color: var(--ai-text-secondary);
   border: 1px solid var(--ai-border);
 }
 
