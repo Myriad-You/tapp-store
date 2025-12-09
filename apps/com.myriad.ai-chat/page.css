@@ -43,9 +43,15 @@
 .page-container {
   position: relative;
   width: 100%;
+  min-height: 100vh;
   height: 100%;
   overflow: hidden;
   font-family: system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg, #fafafa 0%, #f0f0f0 50%, #fafafa 100%);
+}
+
+.dark .page-container {
+  background: linear-gradient(135deg, #0a0a0a 0%, #141414 50%, #0a0a0a 100%);
 }
 
 .page-bg-decor {
@@ -94,7 +100,7 @@
   z-index: 1;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100vh;
   max-width: 900px;
   margin: 0 auto;
   padding: 20px;
@@ -470,6 +476,12 @@
   transition: var(--ai-transition);
   flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(var(--ai-primary-rgb), 0.3);
+}
+
+.page-send-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke: white;
 }
 
 .page-send-btn:hover {

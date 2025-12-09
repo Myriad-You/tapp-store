@@ -16,6 +16,7 @@
   "icon": "🤖",
   "hasPage": true,
   "cssMode": "separated",
+  "styles": "styles.css",
   "widgetStyles": "widget.css",
   "pageStyles": "page.css",
   "widgets": [
