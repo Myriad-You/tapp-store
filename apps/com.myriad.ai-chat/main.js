@@ -1,8 +1,6 @@
-// AI Chat Tapp v5.2 - 规范版
-// 壁纸色 · 极简 UI · 打字效果
+// AI Chat Tapp v6.0 - 重构版
+// 语义化 CSS · 优雅动效 · 精简代码
 // 2025-12-09
-
-console.log('[AI Chat] v5.2 规范版初始化...');
 
 // ========================================
 // 国际化
@@ -12,48 +10,38 @@ var i18n = {
   'zh-CN': {
     widgetTitle: '对话',
     placeholder: '输入...',
-    placeholderPage: '输入...',
     send: '发送',
-    startChat: '开始',
     title: '对话',
-    subtitle: '智能助手',
     welcome: '开始对话',
     welcomeSubtitle: '选择话题或直接输入',
     clearChat: '新对话',
     thinking: '思考中...',
     error: '出错了',
     errorNetwork: '网络错误',
-    online: '在线',
     examples: [
-      { icon: '💡', title: '解释概念', desc: '' },
-      { icon: '✍️', title: '写一首诗', desc: '' },
-      { icon: '💻', title: '学编程', desc: '' },
-      { icon: '🎬', title: '推荐电影', desc: '' }
+      { icon: '💡', title: '解释概念' },
+      { icon: '✍️', title: '写一首诗' },
+      { icon: '💻', title: '学编程' },
+      { icon: '🎬', title: '推荐电影' }
     ],
-    quickExamples: ['你好', '笑话', '天气'],
   },
   'en-US': {
     widgetTitle: 'Chat',
     placeholder: 'Type...',
-    placeholderPage: 'Type...',
     send: 'Send',
-    startChat: 'Start',
     title: 'Chat',
-    subtitle: 'Assistant',
     welcome: 'Start chatting',
     welcomeSubtitle: 'Pick a topic or ask',
     clearChat: 'New',
     thinking: 'Thinking...',
     error: 'Error',
     errorNetwork: 'Network error',
-    online: 'Online',
     examples: [
-      { icon: '💡', title: 'Explain', desc: '' },
-      { icon: '✍️', title: 'Write poem', desc: '' },
-      { icon: '💻', title: 'Learn code', desc: '' },
-      { icon: '🎬', title: 'Movies', desc: '' }
+      { icon: '💡', title: 'Explain' },
+      { icon: '✍️', title: 'Write poem' },
+      { icon: '💻', title: 'Learn code' },
+      { icon: '🎬', title: 'Movies' }
     ],
-    quickExamples: ['Hello', 'Joke', 'Weather'],
   },
 };
 
@@ -61,9 +49,7 @@ var currentLocale = 'zh-CN';
 
 function normalizeLocale(locale) {
   if (!locale) return 'zh-CN';
-  var l = locale.toLowerCase();
-  if (l.startsWith('zh')) return 'zh-CN';
-  return 'en-US';
+  return locale.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en-US';
 }
 
 function t(key) {
@@ -119,34 +105,13 @@ function typeWriter(element, text, speed, onComplete) {
       if (onComplete) onComplete();
     }
   }
-  
   type();
 }
 
-// 快速打字效果（用于小组件）
+// 快速打字（小组件用）
 function typeWriterFast(element, text, onComplete) {
   var displayText = text.length > 80 ? text.substring(0, 80) + '...' : text;
   typeWriter(element, displayText, 15, onComplete);
-}
-
-// 涟漪效果
-function createRipple(event, element) {
-  var rect = element.getBoundingClientRect();
-  var ripple = document.createElement('span');
-  var size = Math.max(rect.width, rect.height);
-  ripple.style.width = ripple.style.height = size + 'px';
-  ripple.style.left = (event.clientX - rect.left - size / 2) + 'px';
-  ripple.style.top = (event.clientY - rect.top - size / 2) + 'px';
-  ripple.className = 'ripple';
-  element.appendChild(ripple);
-  setTimeout(function() { ripple.remove(); }, 600);
-}
-
-// 震动反馈（如果支持）
-function hapticFeedback() {
-  if (navigator.vibrate) {
-    navigator.vibrate(10);
-  }
 }
 
 // ========================================
@@ -171,43 +136,20 @@ function init4x2Widget() {
   var aiReplyBar = document.getElementById('ai-reply-bar');
   var aiReplyContent = document.getElementById('ai-reply-content');
   var welcomeEl = document.getElementById('widget-welcome');
-  var titleEl = document.getElementById('widget-title');
-  var statusEl = document.getElementById('widget-status');
   var avatarEl = document.getElementById('ai-avatar');
-  var sendStatus = document.getElementById('send-status');
 
-  if (!input || !sendBtn) {
-    console.error('[AI Chat] 4x2 Widget 元素未找到');
-    return;
-  }
+  if (!input || !sendBtn) return;
 
-  // 设置文本
-  if (titleEl) titleEl.textContent = t('widgetTitle');
-  if (statusEl) statusEl.textContent = t('online');
   if (input) input.placeholder = t('placeholder');
 
-  // 显示用户消息（带动画）
   function showUserMsg(text) {
     if (welcomeEl) welcomeEl.style.display = 'none';
     if (userMsgContent) userMsgContent.textContent = text;
-    if (userMsgBar) {
-      userMsgBar.style.opacity = '1';
-      userMsgBar.style.transform = 'translateX(0)';
-      userMsgBar.classList.add('msg-user-enter');
-    }
+    if (userMsgBar) userMsgBar.classList.add('show');
   }
 
-  // 显示 AI 回复（带打字效果）
   function showAiReply(text) {
-    if (aiReplyContent) {
-      aiReplyContent.classList.remove('animate-error-shake');
-    }
-    if (aiReplyBar) {
-      aiReplyBar.style.opacity = '1';
-      aiReplyBar.style.transform = 'translateX(0)';
-      aiReplyBar.classList.add('msg-ai-enter');
-    }
-    // 打字效果
+    if (aiReplyBar) aiReplyBar.classList.add('show');
     if (aiReplyContent) {
       typeWriterFast(aiReplyContent, text, function() {
         if (avatarEl) avatarEl.classList.remove('avatar-thinking');
@@ -215,43 +157,29 @@ function init4x2Widget() {
     }
   }
 
-  // 显示思考状态
   function showThinking() {
     if (aiReplyContent) {
       aiReplyContent.innerHTML = '<div class="thinking-dots"><span></span><span></span><span></span></div>';
     }
-    if (aiReplyBar) {
-      aiReplyBar.style.opacity = '1';
-      aiReplyBar.style.transform = 'translateX(0)';
-    }
-    // 头像思考动画
+    if (aiReplyBar) aiReplyBar.classList.add('show');
     if (avatarEl) avatarEl.classList.add('avatar-thinking');
   }
 
-  // 显示错误
   function showError(msg) {
     if (aiReplyContent) {
-      aiReplyContent.innerHTML = '<span class="text-red-500">❌ ' + escapeHtml(msg) + '</span>';
-      aiReplyContent.classList.add('animate-error-shake');
+      aiReplyContent.innerHTML = '<span style="color:var(--ai-error)">❌ ' + escapeHtml(msg) + '</span>';
+      aiReplyContent.parentElement.classList.add('shake-error');
+      setTimeout(function() { aiReplyContent.parentElement.classList.remove('shake-error'); }, 400);
     }
     if (avatarEl) avatarEl.classList.remove('avatar-thinking');
   }
 
-  // 发送动画
   function animateSend() {
-    if (sendIcon) {
-      sendIcon.classList.add('send-icon-fly');
-      setTimeout(function() {
-        sendIcon.classList.remove('send-icon-fly');
-      }, 300);
-    }
+    if (sendBtn) sendBtn.classList.add('send-flying');
+    setTimeout(function() { if (sendBtn) sendBtn.classList.remove('send-flying'); }, 300);
   }
 
-  // 发送消息
-  function doSend(e) {
-    if (e) createRipple(e, sendBtn);
-    hapticFeedback();
-    
+  function doSend() {
     var text = input.value.trim();
     if (!text || widgetState.sending) return;
 
@@ -273,7 +201,6 @@ function init4x2Widget() {
         }
       })
       .catch(function(err) {
-        console.error('[AI Chat] Widget error:', err);
         showError(err.message || t('errorNetwork'));
       })
       .finally(function() {
@@ -284,13 +211,8 @@ function init4x2Widget() {
 
   sendBtn.onclick = doSend;
   input.onkeydown = function(e) {
-    if (e.key === 'Enter') { 
-      e.preventDefault(); 
-      doSend(e); 
-    }
+    if (e.key === 'Enter') { e.preventDefault(); doSend(); }
   };
-
-  console.log('[AI Chat] 4x2 Widget 初始化完成');
 }
 
 // ========================================
@@ -300,52 +222,40 @@ function init4x2Widget() {
 function init4x4Widget() {
   var input = document.getElementById('widget-input');
   var sendBtn = document.getElementById('widget-send');
-  var sendIcon = document.getElementById('send-icon');
   var clearBtn = document.getElementById('widget-clear');
   var messagesArea = document.getElementById('widget-messages');
   var welcomeEl = document.getElementById('widget-welcome');
   var titleEl = document.getElementById('widget-title');
-  var statusEl = document.getElementById('widget-status');
-  var avatarEl = document.getElementById('ai-avatar');
-  var quickExamples = document.querySelectorAll('.quick-example');
+  var quickBtns = document.querySelectorAll('.quick-btn');
 
-  if (!input || !sendBtn || !messagesArea) {
-    console.error('[AI Chat] 4x4 Widget 元素未找到');
-    return;
-  }
+  if (!input || !sendBtn || !messagesArea) return;
 
-  // 设置文本
   if (titleEl) titleEl.textContent = t('widgetTitle');
-  if (statusEl) statusEl.textContent = '🟢 ' + t('online');
   if (input) input.placeholder = t('placeholder');
-  if (clearBtn) clearBtn.textContent = '🔄 ' + t('clearChat');
 
-  // 创建消息气泡
   function createBubble(role, content, isTyping, useTypingEffect) {
     var row = document.createElement('div');
-    row.className = 'flex items-start gap-2 ' + (role === 'user' ? 'flex-row-reverse msg-user-enter' : 'msg-ai-enter');
+    row.className = 'msg-row ' + (role === 'user' ? 'msg-row-user' : 'msg-row-ai');
 
     var avatar = document.createElement('div');
-    avatar.className = 'flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm shadow-md';
-    
-    if (role === 'user') {
-      avatar.className += ' gradient-animated text-white';
-      avatar.textContent = '👤';
+    avatar.className = 'msg-avatar gradient-bg';
+    avatar.textContent = role === 'user' ? '👤' : '🤖';
+    if (role !== 'user') {
+      avatar.classList.remove('gradient-bg');
+      avatar.classList.add('msg-avatar-ai');
+      if (isTyping || useTypingEffect) avatar.classList.add('avatar-thinking');
     } else {
-      avatar.className += ' bg-white/80 dark:bg-neutral-800';
-      avatar.textContent = '🤖';
-      if (isTyping) avatar.classList.add('avatar-thinking');
+      avatar.classList.add('msg-avatar-user');
     }
 
     var bubble = document.createElement('div');
-    bubble.className = 'px-3 py-2 max-w-[75%] break-words text-sm ' + (role === 'user' ? 'bubble-user' : 'bubble-ai');
-    
+    bubble.className = 'bubble ' + (role === 'user' ? 'bubble-user' : 'bubble-ai');
+
     if (isTyping) {
       bubble.innerHTML = '<div class="thinking-dots"><span></span><span></span><span></span></div>';
     } else if (role === 'user') {
       bubble.textContent = content;
     } else if (useTypingEffect) {
-      // 延迟启动打字效果
       setTimeout(function() {
         typeWriter(bubble, content, 20, function() {
           avatar.classList.remove('avatar-thinking');
@@ -360,7 +270,6 @@ function init4x4Widget() {
     return row;
   }
 
-  // 添加消息
   function addMessage(role, content, useTypingEffect) {
     if (welcomeEl) welcomeEl.style.display = 'none';
     var bubble = createBubble(role, content, false, useTypingEffect);
@@ -369,7 +278,6 @@ function init4x4Widget() {
     return bubble;
   }
 
-  // 添加思考指示器
   function addTypingIndicator() {
     var indicator = createBubble('assistant', '', true);
     indicator.id = 'typing-indicator';
@@ -377,11 +285,7 @@ function init4x4Widget() {
     messagesArea.scrollTop = messagesArea.scrollHeight;
   }
 
-  // 发送消息
-  function doSend(e, prefillText) {
-    if (e) createRipple(e, sendBtn);
-    hapticFeedback();
-    
+  function doSend(prefillText) {
     var text = prefillText || input.value.trim();
     if (!text || widgetState.sending) return;
 
@@ -389,15 +293,11 @@ function init4x4Widget() {
     sendBtn.disabled = true;
     input.value = '';
 
-    // 发送动画
-    if (sendIcon) {
-      sendIcon.classList.add('send-icon-fly');
-      setTimeout(function() { sendIcon.classList.remove('send-icon-fly'); }, 300);
-    }
+    if (sendBtn) sendBtn.classList.add('send-flying');
+    setTimeout(function() { if (sendBtn) sendBtn.classList.remove('send-flying'); }, 300);
 
     widgetState.messages.push({ role: 'user', content: text });
     addMessage('user', text);
-
     setTimeout(addTypingIndicator, 150);
 
     var chatMsgs = widgetState.messages.map(function(m) {
@@ -412,17 +312,16 @@ function init4x4Widget() {
         var content = resp?.message?.content || resp?.content;
         if (content) {
           widgetState.messages.push({ role: 'assistant', content: content });
-          addMessage('assistant', content, true); // 使用打字效果
+          addMessage('assistant', content, true);
         } else {
           throw new Error(t('error'));
         }
       })
       .catch(function(err) {
-        console.error('[AI Chat] 4x4 Widget error:', err);
         var ind = document.getElementById('typing-indicator');
         if (ind) ind.remove();
         var errorBubble = addMessage('assistant', '❌ ' + (err.message || t('errorNetwork')), false);
-        errorBubble.querySelector('.bubble-ai')?.classList.add('animate-error-shake');
+        errorBubble.querySelector('.bubble-ai')?.classList.add('shake-error');
       })
       .finally(function() {
         widgetState.sending = false;
@@ -430,40 +329,31 @@ function init4x4Widget() {
       });
   }
 
-  // 清空对话
   if (clearBtn) {
-    clearBtn.onclick = function(e) {
-      createRipple(e, clearBtn);
+    clearBtn.onclick = function() {
       widgetState.messages = [];
       messagesArea.innerHTML = '';
       if (welcomeEl) {
         messagesArea.appendChild(welcomeEl);
         welcomeEl.style.display = 'flex';
-        welcomeEl.classList.add('float-up-enter');
       }
     };
   }
 
-  // 快捷示例
-  quickExamples.forEach(function(btn) {
-    btn.onclick = function(e) {
+  quickBtns.forEach(function(btn) {
+    btn.onclick = function() {
       var example = btn.getAttribute('data-example');
       if (example) {
         input.value = example;
-        doSend(e, example);
+        doSend(example);
       }
     };
   });
 
-  sendBtn.onclick = doSend;
+  sendBtn.onclick = function() { doSend(); };
   input.onkeydown = function(e) {
-    if (e.key === 'Enter') { 
-      e.preventDefault(); 
-      doSend(e); 
-    }
+    if (e.key === 'Enter') { e.preventDefault(); doSend(); }
   };
-
-  console.log('[AI Chat] 4x4 Widget 初始化完成');
 }
 
 // Widget 初始化入口
@@ -471,8 +361,6 @@ function initWidget() {
   var props = window._TAPP_WIDGET_PROPS || {};
   var size = props.size || '4x2';
   currentLocale = normalizeLocale(props.locale);
-
-  console.log('[AI Chat] 初始化 Widget，尺寸:', size, '语言:', currentLocale);
 
   if (size === '4x4') {
     init4x4Widget();
@@ -502,9 +390,7 @@ async function loadPageData() {
         pageState.messages = history.slice(-pageState.settings.maxHistory);
       }
     }
-  } catch (e) {
-    console.error('[AI Chat] 加载数据失败:', e);
-  }
+  } catch (e) {}
 }
 
 async function saveHistory() {
@@ -516,29 +402,27 @@ async function saveHistory() {
 
 function createPageBubble(role, content, isTyping, useTypingEffect) {
   var row = document.createElement('div');
-  row.className = 'flex items-start gap-4 ' + (role === 'user' ? 'flex-row-reverse msg-user-enter' : 'msg-ai-enter');
+  row.className = 'msg-row ' + (role === 'user' ? 'msg-row-user' : 'msg-row-ai');
 
   var avatar = document.createElement('div');
-  avatar.className = 'flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow-lg';
+  avatar.className = 'msg-avatar';
+  avatar.textContent = role === 'user' ? '👤' : '🤖';
 
   if (role === 'user') {
-    avatar.className += ' gradient-animated text-white';
-    avatar.textContent = '👤';
+    avatar.classList.add('gradient-bg', 'msg-avatar-user');
   } else {
-    avatar.className += ' bg-white dark:bg-neutral-800 border border-neutral-200/50 dark:border-neutral-700/50';
-    avatar.textContent = '🤖';
+    avatar.classList.add('msg-avatar-ai');
     if (isTyping || useTypingEffect) avatar.classList.add('avatar-thinking');
   }
 
   var bubble = document.createElement('div');
-  bubble.className = 'px-5 py-4 max-w-[75%] break-words ' + (role === 'user' ? 'bubble-user' : 'bubble-ai');
+  bubble.className = 'bubble ' + (role === 'user' ? 'bubble-user' : 'bubble-ai');
 
   if (isTyping) {
     bubble.innerHTML = '<div class="thinking-dots"><span></span><span></span><span></span></div>';
   } else if (role === 'user') {
     bubble.textContent = content;
   } else if (useTypingEffect) {
-    // 打字效果
     setTimeout(function() {
       typeWriter(bubble, content, 12, function() {
         avatar.classList.remove('avatar-thinking');
@@ -558,23 +442,17 @@ function renderPageMessages() {
   var welcome = document.getElementById('page-welcome');
   if (!area) return;
 
-  // 清除现有消息
   var children = Array.from(area.children);
   children.forEach(function(child) {
     if (child.id !== 'page-welcome') child.remove();
   });
 
   if (pageState.messages.length === 0) {
-    if (welcome) {
-      welcome.style.display = 'flex';
-      welcome.classList.add('float-up-enter');
-    }
+    if (welcome) welcome.style.display = 'flex';
   } else {
     if (welcome) welcome.style.display = 'none';
-    pageState.messages.forEach(function(msg, i) {
-      var bubble = createPageBubble(msg.role, msg.content);
-      bubble.style.animationDelay = (i * 50) + 'ms';
-      area.appendChild(bubble);
+    pageState.messages.forEach(function(msg) {
+      area.appendChild(createPageBubble(msg.role, msg.content));
     });
     setTimeout(function() { area.scrollTop = area.scrollHeight; }, 100);
   }
@@ -583,7 +461,6 @@ function renderPageMessages() {
 async function sendPageMessage(prefillText) {
   var input = document.getElementById('page-input');
   var sendBtn = document.getElementById('page-send');
-  var sendIcon = document.getElementById('page-send-icon');
   var area = document.getElementById('page-messages');
   var welcome = document.getElementById('page-welcome');
   var charCount = document.getElementById('char-count');
@@ -593,18 +470,14 @@ async function sendPageMessage(prefillText) {
   var text = prefillText || input.value.trim();
   if (!text || pageState.isLoading) return;
 
-  // 发送动画
-  hapticFeedback();
-  if (sendIcon) {
-    sendIcon.classList.add('send-icon-fly');
-    setTimeout(function() { sendIcon.classList.remove('send-icon-fly'); }, 300);
-  }
+  if (sendBtn) sendBtn.classList.add('send-flying');
+  setTimeout(function() { if (sendBtn) sendBtn.classList.remove('send-flying'); }, 300);
 
   pageState.messages.push({ role: 'user', content: text });
   input.value = '';
   input.style.height = 'auto';
   if (charCount) charCount.textContent = '0 / 2000';
-  
+
   if (welcome) welcome.style.display = 'none';
   area.appendChild(createPageBubble('user', text));
   area.scrollTop = area.scrollHeight;
@@ -612,7 +485,6 @@ async function sendPageMessage(prefillText) {
   pageState.isLoading = true;
   sendBtn.disabled = true;
 
-  // 添加思考指示器
   var loading = createPageBubble('assistant', '', true);
   loading.id = 'page-loading';
   area.appendChild(loading);
@@ -634,20 +506,19 @@ async function sendPageMessage(prefillText) {
     if (content) {
       pageState.messages.push({ role: 'assistant', content: content });
       saveHistory();
-      area.appendChild(createPageBubble('assistant', content, false, true)); // 使用打字效果
+      area.appendChild(createPageBubble('assistant', content, false, true));
       area.scrollTop = area.scrollHeight;
     } else {
       throw new Error('AI 响应格式错误');
     }
   } catch (err) {
-    console.error('[AI Chat] Page error:', err);
     var loadEl = document.getElementById('page-loading');
     if (loadEl) loadEl.remove();
 
     var errorMsg = err.message || t('errorNetwork');
     pageState.messages.push({ role: 'assistant', content: '❌ ' + errorMsg });
     var errorBubble = createPageBubble('assistant', '❌ ' + errorMsg, false, false);
-    errorBubble.querySelector('.bubble-ai')?.classList.add('animate-error-shake');
+    errorBubble.querySelector('.bubble-ai')?.classList.add('shake-error');
     area.appendChild(errorBubble);
 
     Tapp.ui.showNotification({ title: t('error'), message: errorMsg, type: 'error' });
@@ -662,17 +533,14 @@ function initPage() {
   var sendBtn = document.getElementById('page-send');
   var clearBtn = document.getElementById('page-clear');
   var charCount = document.getElementById('char-count');
-  var exampleCards = document.querySelectorAll('.example-card');
+  var exampleBtns = document.querySelectorAll('.example-btn');
 
-  // 输入框
   if (input) {
-    input.placeholder = t('placeholderPage');
+    input.placeholder = t('placeholder');
     input.oninput = function() {
       input.style.height = 'auto';
-      input.style.height = Math.min(input.scrollHeight, 200) + 'px';
-      if (charCount) {
-        charCount.textContent = input.value.length + ' / 2000';
-      }
+      input.style.height = Math.min(input.scrollHeight, 160) + 'px';
+      if (charCount) charCount.textContent = input.value.length + ' / 2000';
     };
     input.onkeydown = function(e) {
       if (e.key === 'Enter' && !e.shiftKey) {
@@ -682,51 +550,41 @@ function initPage() {
     };
   }
 
-  // 发送按钮
   if (sendBtn) {
-    sendBtn.onclick = function(e) {
-      createRipple(e, sendBtn);
-      sendPageMessage();
-    };
-    var sendLabel = sendBtn.querySelector('.send-label');
-    if (sendLabel) sendLabel.textContent = t('send');
+    sendBtn.onclick = function() { sendPageMessage(); };
   }
 
-  // 清空按钮
   if (clearBtn) {
-    clearBtn.onclick = function(e) {
-      createRipple(e, clearBtn);
+    clearBtn.onclick = function() {
       pageState.messages = [];
       saveHistory();
       renderPageMessages();
     };
   }
 
-  // 示例卡片
   var examples = t('examples');
-  exampleCards.forEach(function(card, i) {
+  exampleBtns.forEach(function(btn, i) {
     if (examples[i]) {
-      card.onclick = function(e) {
-        createRipple(e, card);
+      var iconEl = btn.querySelector('.example-icon');
+      var textEl = btn.querySelector('.example-text');
+      if (iconEl) iconEl.textContent = examples[i].icon;
+      if (textEl) textEl.textContent = examples[i].title;
+      btn.onclick = function() {
         if (input) input.value = examples[i].title;
         sendPageMessage(examples[i].title);
       };
     }
   });
 
-  // 设置标题
   var titleEl = document.getElementById('page-title');
-  var subtitleEl = document.getElementById('page-subtitle');
   var welcomeTitle = document.getElementById('welcome-title');
   var welcomeSub = document.getElementById('welcome-subtitle');
 
   if (titleEl) titleEl.textContent = t('title');
-  if (subtitleEl) subtitleEl.innerHTML = '<span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> ' + t('subtitle');
   if (welcomeTitle) welcomeTitle.textContent = t('welcome');
   if (welcomeSub) welcomeSub.textContent = t('welcomeSubtitle');
 
   renderPageMessages();
-  console.log('[AI Chat] Page 初始化完成');
 }
 
 // ========================================
@@ -737,8 +595,6 @@ function initPage() {
   var mode = window._TAPP_MODE;
   var hasHtml = window._TAPP_HAS_HTML;
 
-  console.log('[AI Chat] 运行模式:', mode, '有 HTML 模板:', hasHtml);
-
   if (mode === 'widget') {
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initWidget);
@@ -747,8 +603,6 @@ function initPage() {
     }
   } else if (mode === 'page' || hasHtml) {
     Tapp.lifecycle.onReady(async function() {
-      console.log('[AI Chat] Page onReady');
-
       try {
         var results = await Promise.all([
           Tapp.ui.getLocale(),
@@ -764,9 +618,7 @@ function initPage() {
           currentLocale = normalizeLocale(locale);
           initPage();
         });
-
       } catch (err) {
-        console.error('[AI Chat] Page 初始化失败:', err);
         initPage();
       }
     });
@@ -776,5 +628,3 @@ function initPage() {
     });
   }
 })();
-
-console.log('[AI Chat] v5.2 已加载');
