@@ -1,40 +1,39 @@
-<!-- AI Chat Widget 4x4 v7.0 - 分层架构版 -->
-<!-- 壁纸色彩 · 分层架构 · 完整对话 -->
+<!-- AI Chat Widget 4x4 v8.0 -->
 <div class="widget-root widget-4x4" data-widget-root="true">
   <!-- 背景层 -->
-  <div id="widget-background" class="widget-background">
-    <div class="widget-glow widget-glow-1"></div>
-    <div class="widget-glow widget-glow-2"></div>
+  <div class="widget-bg">
+    <div class="widget-glow glow-1"></div>
+    <div class="widget-glow glow-2"></div>
   </div>
 
   <!-- 内容层 -->
-  <div id="widget-content" class="widget-content glass">
+  <div class="widget-body">
     <!-- 头部 -->
     <div class="widget-header">
-      <div class="widget-status">
-        <div class="widget-status-dot"></div>
-        <span id="widget-title" class="widget-status-text">对话</span>
+      <div class="widget-pill">
+        <div class="pill-dot"></div>
+        <span class="pill-text">对话</span>
       </div>
-      <button id="widget-clear" class="widget-action">↻</button>
+      <button id="widget-clear" class="widget-btn-icon" title="清空">↻</button>
     </div>
 
-    <!-- 消息区域 -->
+    <!-- 消息区 -->
     <div id="widget-messages" class="widget-messages">
-      <!-- 欢迎界面 -->
+      <!-- 欢迎 -->
       <div id="widget-welcome" class="widget-welcome">
-        <div class="quick-btns">
-          <button class="quick-btn" data-example="你好">👋 你好</button>
-          <button class="quick-btn" data-example="讲个笑话">😄 笑话</button>
-          <button class="quick-btn" data-example="今天天气">🌤️ 天气</button>
+        <div class="welcome-btns">
+          <button class="welcome-btn" data-example="你好">👋 你好</button>
+          <button class="welcome-btn" data-example="讲个笑话">😄 笑话</button>
+          <button class="welcome-btn" data-example="今天天气">🌤️ 天气</button>
         </div>
       </div>
     </div>
 
-    <!-- 输入区域 -->
-    <div class="widget-input-bar">
-      <input type="text" id="widget-input" class="widget-input" placeholder="输入..." autocomplete="off">
-      <button id="widget-send" class="widget-send-btn gradient-bg" title="发送">
-        <svg id="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <!-- 输入区 -->
+    <div class="widget-input-row">
+      <input type="text" id="widget-input" placeholder="输入..." autocomplete="off">
+      <button id="widget-send" title="发送">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
         </svg>
       </button>

@@ -1,51 +1,38 @@
 /**
- * AI Chat Widget 专用样式
- * v7.0 - 分层架构 · 壁纸色彩
+ * AI Chat Widget v8.0
+ * 分层架构 · 壁纸色彩 · 简洁设计
  */
 
 /* ========================================
-   CSS 变量 - 壁纸色彩系统
+   变量
    ======================================== */
 
 :root {
-  /* 主色调 - 继承自壁纸 */
-  --ai-primary: var(--tapp-primary, #6366f1);
-  --ai-primary-rgb: var(--tapp-primary-rgb, 99, 102, 241);
+  --w-primary: var(--tapp-primary, #6366f1);
+  --w-primary-rgb: var(--tapp-primary-rgb, 99, 102, 241);
+  --w-secondary: color-mix(in srgb, var(--w-primary) 75%, #8b5cf6);
+  --w-glow: rgba(var(--w-primary-rgb), 0.35);
+  --w-soft: rgba(var(--w-primary-rgb), 0.12);
   
-  /* 派生色彩 */
-  --ai-secondary: color-mix(in srgb, var(--ai-primary) 80%, #8b5cf6);
-  --ai-glow: rgba(var(--ai-primary-rgb), 0.4);
-  --ai-soft: rgba(var(--ai-primary-rgb), 0.15);
+  --w-bg: rgba(255, 255, 255, 0.88);
+  --w-text: #171717;
+  --w-text-2: #525252;
+  --w-border: rgba(0, 0, 0, 0.08);
   
-  /* 语义色彩 */
-  --ai-error: #ef4444;
-  
-  /* 表面色 - 纯白/纯黑 */
-  --ai-surface: rgba(255, 255, 255, 0.85);
-  --ai-text: #171717;
-  --ai-text-secondary: #525252;
-  --ai-border: rgba(var(--ai-primary-rgb), 0.12);
-  
-  /* 圆角 */
-  --ai-radius: 16px;
-  --ai-radius-sm: 10px;
-  --ai-radius-xs: 6px;
-  
-  /* 阴影与过渡 */
-  --ai-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  --ai-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --w-radius: 16px;
+  --w-radius-sm: 10px;
+  --w-transition: 0.2s ease;
 }
 
 .dark {
-  /* 纯黑深色模式 (neutral 色系) */
-  --ai-surface: rgba(23, 23, 23, 0.9);
-  --ai-text: #f5f5f5;
-  --ai-text-secondary: #a3a3a3;
-  --ai-border: rgba(var(--ai-primary-rgb), 0.18);
+  --w-bg: rgba(23, 23, 23, 0.92);
+  --w-text: #f5f5f5;
+  --w-text-2: #a3a3a3;
+  --w-border: rgba(255, 255, 255, 0.1);
 }
 
 /* ========================================
-   Widget 根容器 - 分层架构
+   根容器
    ======================================== */
 
 .widget-root {
@@ -54,151 +41,191 @@
   height: 100%;
   overflow: hidden;
   font-family: system-ui, -apple-system, sans-serif;
+  border-radius: var(--w-radius);
 }
-
-.widget-4x2 { border-radius: var(--ai-radius); }
-.widget-4x4 { border-radius: var(--ai-radius); }
 
 /* ========================================
    背景层
    ======================================== */
 
-.widget-background {
+.widget-bg {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
 }
 
-/* ========================================
-   光效
-   ======================================== */
-
-.gradient-bg {
-  background: linear-gradient(135deg, var(--ai-primary), var(--ai-secondary));
-}
-
 .widget-glow {
   position: absolute;
   border-radius: 50%;
+  background: var(--w-primary);
   filter: blur(40px);
-  opacity: 0.5;
-  pointer-events: none;
-  animation: glow-breathe 4s ease-in-out infinite;
+  opacity: 0.4;
+  animation: glow 4s ease-in-out infinite;
 }
 
 .widget-4x2 .widget-glow {
+  width: 80px;
+  height: 80px;
+  top: -20px;
+  right: -20px;
+}
+
+.glow-1 {
   width: 100px;
   height: 100px;
   top: -25px;
   right: -25px;
-  background: var(--ai-primary);
 }
 
-.widget-glow-1 {
-  width: 120px;
-  height: 120px;
-  top: -30px;
-  right: -30px;
-  background: var(--ai-primary);
-}
-
-.widget-glow-2 {
-  width: 100px;
-  height: 100px;
+.glow-2 {
+  width: 80px;
+  height: 80px;
   bottom: -20px;
   left: -20px;
-  background: var(--ai-secondary);
+  background: var(--w-secondary);
   animation-delay: 2s;
 }
 
-@keyframes glow-breathe {
-  0%, 100% { opacity: 0.4; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.1); }
-}
-
-/* ========================================
-   Glass 效果 (内容层)
-   ======================================== */
-
-.glass {
-  background: var(--ai-surface);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--ai-border);
+@keyframes glow {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.1); }
 }
 
 /* ========================================
    内容层
    ======================================== */
 
-.widget-content {
+.widget-body {
   position: relative;
   z-index: 1;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  padding: 12px;
-  gap: 8px;
-  border-radius: var(--ai-radius);
+  padding: 10px;
+  background: var(--w-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--w-border);
+  border-radius: var(--w-radius);
 }
 
 /* ========================================
-   Widget Header
+   状态胶囊 (来自 page.css)
    ======================================== */
+
+.widget-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--w-soft);
+  border-radius: 20px;
+}
+
+.pill-dot {
+  width: 6px;
+  height: 6px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.pill-text {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--w-text-2);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ========================================
+   头部 (4x4)
+   ======================================== */
+
 .widget-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-shrink: 0;
+  margin-bottom: 8px;
 }
 
-.widget-title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.widget-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+.widget-btn-icon {
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  box-shadow: var(--ai-shadow);
-  transition: var(--ai-transition);
-}
-
-.widget-avatar.gradient-bg {
-  color: white;
-}
-
-.widget-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ai-text);
-}
-
-.widget-clear-btn {
-  padding: 4px 10px;
-  font-size: 11px;
-  color: var(--ai-text-secondary);
-  background: var(--ai-soft);
+  background: var(--w-soft);
   border: none;
-  border-radius: var(--ai-radius-xs);
+  border-radius: 50%;
+  color: var(--w-text-2);
+  font-size: 12px;
   cursor: pointer;
-  transition: var(--ai-transition);
+  transition: var(--w-transition);
 }
 
-.widget-clear-btn:hover {
-  background: rgba(var(--ai-primary-rgb), 0.2);
-  color: var(--ai-primary);
+.widget-btn-icon:hover {
+  background: rgba(var(--w-primary-rgb), 0.2);
+  color: var(--w-primary);
 }
 
 /* ========================================
-   消息区域（4x4）
+   4x2 对话区
+   ======================================== */
+
+.widget-chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.chat-bubble {
+  padding: 6px 10px;
+  font-size: 11px;
+  line-height: 1.4;
+  max-width: 90%;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.chat-bubble.show {
+  opacity: 1;
+}
+
+.chat-user {
+  align-self: flex-end;
+  background: linear-gradient(135deg, var(--w-primary), var(--w-secondary));
+  color: white;
+  border-radius: 12px 12px 4px 12px;
+  transform: translateX(10px);
+}
+
+.chat-user.show {
+  transform: translateX(0);
+}
+
+.chat-ai {
+  align-self: flex-start;
+  background: var(--w-bg);
+  color: var(--w-text);
+  border: 1px solid var(--w-border);
+  border-radius: 12px 12px 12px 4px;
+  transform: translateX(-10px);
+}
+
+.chat-ai.show {
+  transform: translateX(0);
+}
+
+/* ========================================
+   4x4 消息区
    ======================================== */
 
 .widget-messages {
@@ -208,183 +235,22 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-right: 4px;
 }
 
-.widget-messages::-webkit-scrollbar {
-  width: 3px;
-}
-
+.widget-messages::-webkit-scrollbar { width: 3px; }
 .widget-messages::-webkit-scrollbar-thumb {
-  background: rgba(var(--ai-primary-rgb), 0.3);
+  background: rgba(var(--w-primary-rgb), 0.25);
   border-radius: 2px;
 }
 
-/* ========================================
-   欢迎区域
-   ======================================== */
-
-.widget-welcome {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  text-align: center;
-  padding: 8px;
-}
-
-.welcome-icon {
-  font-size: 28px;
-  animation: float 3s ease-in-out infinite;
-}
-
-.welcome-text {
-  font-size: 12px;
-  color: var(--ai-text-secondary);
-  line-height: 1.4;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
-
-/* 快捷按钮（4x4） */
-.quick-btns {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.quick-btn {
-  padding: 6px 12px;
-  font-size: 11px;
-  color: var(--ai-primary);
-  background: var(--ai-soft);
-  border: 1px solid rgba(var(--ai-primary-rgb), 0.2);
-  border-radius: 20px;
-  cursor: pointer;
-  transition: var(--ai-transition);
-}
-
-.quick-btn:hover {
-  background: rgba(var(--ai-primary-rgb), 0.25);
-  border-color: var(--ai-primary);
-  transform: translateY(-1px);
-}
-
-/* ========================================
-   Widget 状态指示器
-   ======================================== */
-
-.widget-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 9999px;
-  background: var(--ai-soft);
-}
-
-.widget-status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #10b981;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-.widget-status-text {
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--ai-text-secondary);
-}
-
-.widget-action {
-  padding: 4px 8px;
-  border-radius: 9999px;
-  border: none;
-  background: var(--ai-soft);
-  font-size: 10px;
-  color: var(--ai-text-secondary);
-  cursor: pointer;
-  transition: var(--ai-transition);
-}
-
-.widget-action:hover {
-  color: var(--ai-primary);
-  background: rgba(var(--ai-primary-rgb), 0.2);
-}
-
-/* ========================================
-   4x2 聊天区域
-   ======================================== */
-
-.widget-chat-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 6px;
-  padding: 24px 0 8px;
-}
-
-/* ========================================
-   消息条 (4x2)
-   ======================================== */
-
-.msg-bar {
-  display: flex;
-  opacity: 0;
-  transform: translateX(-10px);
-  transition: all 0.3s ease-out;
-}
-
-.msg-bar.show {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.msg-bar-user {
-  justify-content: flex-end;
-  transform: translateX(10px);
-}
-
-.msg-bar-user.show {
-  transform: translateX(0);
-}
-
-.mini-bubble {
-  padding: 6px 10px;
-  font-size: 11px;
-  max-width: 90%;
-  line-height: 1.4;
-}
-
-.mini-bubble-user {
-  border-radius: 12px 12px 4px 12px;
-}
-
-.mini-bubble-ai {
-  border-radius: 12px 12px 12px 4px;
-}
-
-/* ========================================
-   消息行 (4x4)
-   ======================================== */
-
+/* 消息行 */
 .msg-row {
   display: flex;
-  align-items: flex-start;
   gap: 8px;
   animation: msg-in 0.3s ease-out;
 }
 
 .msg-row-user { flex-direction: row-reverse; }
-.msg-row-ai { flex-direction: row; }
 
 @keyframes msg-in {
   from { opacity: 0; transform: translateY(8px); }
@@ -404,122 +270,139 @@
 }
 
 .msg-avatar-user {
-  background: linear-gradient(135deg, var(--ai-primary), var(--ai-secondary));
+  background: linear-gradient(135deg, var(--w-primary), var(--w-secondary));
   color: white;
 }
 
 .msg-avatar-ai {
-  background: var(--ai-surface);
-  border: 1px solid var(--ai-border);
-}
-
-.avatar-thinking {
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  background: var(--w-bg);
+  border: 1px solid var(--w-border);
 }
 
 /* 气泡 */
 .bubble {
   max-width: 75%;
   padding: 8px 12px;
-  border-radius: var(--ai-radius-sm);
   font-size: 12px;
   line-height: 1.5;
-  word-break: break-word;
+  border-radius: var(--w-radius-sm);
 }
 
 .bubble-user {
-  background: linear-gradient(135deg, var(--ai-primary), var(--ai-secondary));
+  background: linear-gradient(135deg, var(--w-primary), var(--w-secondary));
   color: white;
   border-bottom-right-radius: 4px;
 }
 
 .bubble-ai {
-  background: var(--ai-surface);
-  color: var(--ai-text);
-  border: 1px solid var(--ai-border);
+  background: var(--w-bg);
+  color: var(--w-text);
+  border: 1px solid var(--w-border);
   border-bottom-left-radius: 4px;
 }
 
 /* ========================================
-   输入栏
+   欢迎区 (4x4)
    ======================================== */
 
-.widget-input-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  background: var(--ai-surface);
-  border: 1px solid var(--ai-border);
-  border-radius: var(--ai-radius-sm);
-  flex-shrink: 0;
-  transition: var(--ai-transition);
-}
-
-.widget-input-bar:focus-within {
-  border-color: var(--ai-primary);
-  box-shadow: 0 0 0 2px var(--ai-soft);
-}
-
-.widget-input {
+.widget-welcome {
   flex: 1;
-  min-width: 0;
-  border: none;
-  background: transparent;
-  font-size: 13px;
-  color: var(--ai-text);
-  outline: none;
-}
-
-.widget-input::placeholder {
-  color: var(--ai-text-secondary);
-}
-
-.widget-send-btn {
-  width: 30px;
-  height: 30px;
-  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--ai-primary), var(--ai-secondary));
-  color: white;
-  border: none;
-  border-radius: 8px;
+}
+
+.welcome-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.welcome-btn {
+  padding: 6px 12px;
+  font-size: 11px;
+  color: var(--w-primary);
+  background: var(--w-soft);
+  border: 1px solid rgba(var(--w-primary-rgb), 0.2);
+  border-radius: 16px;
   cursor: pointer;
-  font-size: 14px;
-  transition: var(--ai-transition);
+  transition: var(--w-transition);
+}
+
+.welcome-btn:hover {
+  background: rgba(var(--w-primary-rgb), 0.2);
+  border-color: var(--w-primary);
+  transform: translateY(-1px);
+}
+
+/* ========================================
+   输入区
+   ======================================== */
+
+.widget-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.widget-input-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  background: rgba(var(--w-primary-rgb), 0.06);
+  border: 1px solid var(--w-border);
+  border-radius: 20px;
+  font-size: 12px;
+  color: var(--w-text);
+  outline: none;
+  transition: var(--w-transition);
+}
+
+.widget-input-row input::placeholder {
+  color: var(--w-text-2);
+}
+
+.widget-input-row input:focus {
+  border-color: var(--w-primary);
+  box-shadow: 0 0 0 2px var(--w-soft);
+}
+
+.widget-input-row button {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--w-primary), var(--w-secondary));
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
   flex-shrink: 0;
+  transition: var(--w-transition);
+  box-shadow: 0 2px 8px var(--w-glow);
 }
 
-.widget-send-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px var(--ai-glow);
+.widget-input-row button svg {
+  width: 14px;
+  height: 14px;
+  stroke: white;
 }
 
-.widget-send-btn:active {
+.widget-input-row button:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px var(--w-glow);
+}
+
+.widget-input-row button:active {
   transform: scale(0.95);
 }
 
-.widget-send-btn:disabled {
+.widget-input-row button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
-}
-
-.send-flying {
-  animation: send-fly 0.3s ease-out;
-}
-
-@keyframes send-fly {
-  0% { transform: scale(1); }
-  50% { transform: scale(0.9) translateY(-2px); }
-  100% { transform: scale(1); }
 }
 
 /* ========================================
@@ -533,9 +416,9 @@
 }
 
 .thinking-dots span {
-  width: 6px;
-  height: 6px;
-  background: var(--ai-primary);
+  width: 5px;
+  height: 5px;
+  background: var(--w-primary);
   border-radius: 50%;
   animation: dot-bounce 1.4s ease-in-out infinite;
 }
@@ -549,7 +432,7 @@
 }
 
 /* ========================================
-   错误动画
+   动画
    ======================================== */
 
 .shake-error {
@@ -562,15 +445,15 @@
   75% { transform: translateX(4px); }
 }
 
-/* ========================================
-   打字光标
-   ======================================== */
-
 .typing-cursor {
+  color: var(--w-primary);
   animation: blink 0.8s step-end infinite;
-  color: var(--ai-primary);
 }
 
 @keyframes blink {
   50% { opacity: 0; }
+}
+
+.avatar-thinking {
+  animation: pulse 1.5s ease-in-out infinite;
 }
