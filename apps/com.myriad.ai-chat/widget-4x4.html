@@ -1,66 +1,38 @@
-<!-- AI Chat Widget 4x4 v9.0 - Enhanced Visual Design -->
+<!-- AI Chat Widget 4x4 v8.0 -->
 <div class="widget-root widget-4x4" data-widget-root="true">
-  <!-- 背景层 - 增强光效 -->
+  <!-- 背景层 -->
   <div class="widget-bg">
     <div class="widget-glow glow-1"></div>
     <div class="widget-glow glow-2"></div>
-    <div class="widget-glow glow-3"></div>
   </div>
 
   <!-- 内容层 -->
   <div class="widget-body">
-    <!-- 头部 - 增强视觉 -->
+    <!-- 头部 -->
     <div class="widget-header">
       <div class="widget-pill">
-        <div class="pill-avatar">💬</div>
-        <div class="pill-info">
-          <span class="pill-text">AI 对话</span>
-          <span class="pill-status">准备就绪</span>
-        </div>
+        <div class="pill-dot"></div>
+        <span class="pill-text">对话</span>
       </div>
-      <button id="widget-clear" class="widget-btn-icon" title="清空对话">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-        </svg>
-      </button>
+      <button id="widget-clear" class="widget-btn-icon" title="清空">↻</button>
     </div>
 
     <!-- 消息区 -->
     <div id="widget-messages" class="widget-messages">
-      <!-- 欢迎区 - 更生动的设计 -->
+      <!-- 欢迎 -->
       <div id="widget-welcome" class="widget-welcome">
-        <div class="welcome-hero">
-          <div class="welcome-icon">✨</div>
-          <div class="welcome-title">开始对话</div>
-          <div class="welcome-subtitle">选择话题或直接输入</div>
-        </div>
         <div class="welcome-btns">
-          <button class="welcome-btn" data-example="你好，介绍一下自己">
-            <span class="btn-icon">👋</span>
-            <span class="btn-text">打招呼</span>
-          </button>
-          <button class="welcome-btn" data-example="讲个有趣的笑话">
-            <span class="btn-icon">😄</span>
-            <span class="btn-text">讲笑话</span>
-          </button>
-          <button class="welcome-btn" data-example="今天适合做什么">
-            <span class="btn-icon">💡</span>
-            <span class="btn-text">给建议</span>
-          </button>
-          <button class="welcome-btn" data-example="帮我写一首诗">
-            <span class="btn-icon">✍️</span>
-            <span class="btn-text">写诗歌</span>
-          </button>
+          <button class="welcome-btn" data-example="你好">👋 你好</button>
+          <button class="welcome-btn" data-example="讲个笑话">😄 笑话</button>
+          <button class="welcome-btn" data-example="今天天气">🌤️ 天气</button>
         </div>
       </div>
     </div>
 
-    <!-- 输入区 - 增强设计 -->
+    <!-- 输入区 -->
     <div class="widget-input-row">
-      <div class="widget-input-wrapper">
-        <input type="text" id="widget-input" placeholder="输入消息..." autocomplete="off">
-      </div>
-      <button id="widget-send" class="widget-send-btn" title="发送消息">
+      <input type="text" id="widget-input" placeholder="输入..." autocomplete="off">
+      <button id="widget-send" title="发送">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
         </svg>

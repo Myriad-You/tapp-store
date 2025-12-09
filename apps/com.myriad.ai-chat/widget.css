@@ -1,6 +1,6 @@
 /**
- * AI Chat Widget v9.0
- * 分层架构 · 壁纸色彩 · 生动设计 · 增强动画
+ * AI Chat Widget v8.0
+ * 分层架构 · 壁纸色彩 · 简洁设计
  */
 
 /* ========================================
@@ -11,42 +11,24 @@
   --w-primary: var(--tapp-primary, #6366f1);
   --w-primary-rgb: var(--tapp-primary-rgb, 99, 102, 241);
   --w-secondary: color-mix(in srgb, var(--w-primary) 75%, #8b5cf6);
-  --w-accent: color-mix(in srgb, var(--w-primary) 60%, #a78bfa);
-
   --w-glow: rgba(var(--w-primary-rgb), 0.35);
-  --w-glow-strong: rgba(var(--w-primary-rgb), 0.5);
   --w-soft: rgba(var(--w-primary-rgb), 0.12);
-  --w-soft-hover: rgba(var(--w-primary-rgb), 0.2);
-
-  --w-bg: rgba(255, 255, 255, 0.9);
-  --w-bg-elevated: rgba(255, 255, 255, 0.95);
+  
+  --w-bg: rgba(255, 255, 255, 0.88);
   --w-text: #171717;
   --w-text-2: #525252;
-  --w-text-3: #737373;
   --w-border: rgba(0, 0, 0, 0.08);
-  --w-border-strong: rgba(0, 0, 0, 0.12);
-
-  --w-radius: 18px;
-  --w-radius-lg: 20px;
-  --w-radius-sm: 12px;
-  --w-radius-xs: 8px;
-  --w-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --w-transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-
-  --w-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --w-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+  
+  --w-radius: 16px;
+  --w-radius-sm: 10px;
+  --w-transition: 0.2s ease;
 }
 
 .dark {
-  --w-bg: rgba(10, 10, 10, 0.92);
-  --w-bg-elevated: rgba(23, 23, 23, 0.95);
+  --w-bg: rgba(23, 23, 23, 0.92);
   --w-text: #f5f5f5;
   --w-text-2: #a3a3a3;
-  --w-text-3: #737373;
   --w-border: rgba(255, 255, 255, 0.1);
-  --w-border-strong: rgba(255, 255, 255, 0.15);
-  --w-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  --w-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 /* ========================================
@@ -63,7 +45,7 @@
 }
 
 /* ========================================
-   背景层 - 增强光效动画
+   背景层
    ======================================== */
 
 .widget-bg {
@@ -71,14 +53,15 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  overflow: hidden;
 }
 
 .widget-glow {
   position: absolute;
   border-radius: 50%;
-  filter: blur(50px);
-  animation: glow-breathe 6s ease-in-out infinite;
+  background: var(--w-primary);
+  filter: blur(40px);
+  opacity: 0.4;
+  animation: glow 4s ease-in-out infinite;
 }
 
 .widget-4x2 .widget-glow {
@@ -86,52 +69,27 @@
   height: 80px;
   top: -20px;
   right: -20px;
-  filter: blur(40px);
 }
 
 .glow-1 {
-  width: 120px;
-  height: 120px;
-  top: -30px;
-  right: -30px;
-  background: linear-gradient(135deg, var(--w-primary), var(--w-secondary));
-  opacity: 0.4;
+  width: 100px;
+  height: 100px;
+  top: -25px;
+  right: -25px;
 }
 
 .glow-2 {
-  width: 100px;
-  height: 100px;
-  bottom: -25px;
-  left: -25px;
-  background: linear-gradient(135deg, var(--w-secondary), var(--w-accent));
-  opacity: 0.35;
+  width: 80px;
+  height: 80px;
+  bottom: -20px;
+  left: -20px;
+  background: var(--w-secondary);
   animation-delay: 2s;
 }
 
-.glow-3 {
-  width: 80px;
-  height: 80px;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--w-accent);
-  opacity: 0.2;
-  animation-delay: 4s;
-}
-
-@keyframes glow-breathe {
-  0%, 100% {
-    opacity: 0.3;
-    transform: scale(1) translate(0, 0);
-  }
-  33% {
-    opacity: 0.45;
-    transform: scale(1.15) translate(-5px, 5px);
-  }
-  66% {
-    opacity: 0.35;
-    transform: scale(1.1) translate(5px, -5px);
-  }
+@keyframes glow {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.1); }
 }
 
 /* ========================================
@@ -153,54 +111,16 @@
 }
 
 /* ========================================
-   状态胶囊 - 增强设计
+   状态胶囊 (来自 page.css)
    ======================================== */
 
 .widget-pill {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px 6px 6px;
-  background: var(--w-bg-elevated);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--w-border);
-  border-radius: 24px;
-  box-shadow: var(--w-shadow);
-  transition: var(--w-transition);
-}
-
-.pill-avatar {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--w-primary), var(--w-secondary));
-  border-radius: 50%;
-  font-size: 12px;
-  flex-shrink: 0;
-}
-
-.pill-info {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-}
-
-.pill-text {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--w-text);
-  line-height: 1.2;
-}
-
-.pill-status {
-  font-size: 9px;
-  font-weight: 500;
-  color: var(--w-text-3);
-  line-height: 1.2;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--w-soft);
+  border-radius: 20px;
 }
 
 .pill-dot {
@@ -208,12 +128,18 @@
   height: 6px;
   background: #10b981;
   border-radius: 50%;
-  animation: pulse-dot 2s ease-in-out infinite;
+  animation: pulse 2s ease-in-out infinite;
 }
 
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(0.85); }
+.pill-text {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--w-text-2);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 /* ========================================
@@ -376,205 +302,107 @@
 }
 
 /* ========================================
-   欢迎区 (4x4) - 生动设计
+   欢迎区 (4x4)
    ======================================== */
 
 .widget-welcome {
   flex: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  padding: 12px;
-  animation: welcome-fade-in 0.5s ease-out;
-}
-
-@keyframes welcome-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.welcome-hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  text-align: center;
-}
-
-.welcome-icon {
-  font-size: 32px;
-  line-height: 1;
-  animation: icon-float 3s ease-in-out infinite;
-}
-
-@keyframes icon-float {
-  0%, 100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-6px) rotate(5deg);
-  }
-}
-
-.welcome-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--w-text);
-  line-height: 1.2;
-}
-
-.welcome-subtitle {
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--w-text-2);
-  line-height: 1.2;
 }
 
 .welcome-btns {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 6px;
-  width: 100%;
+  justify-content: center;
 }
 
 .welcome-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 10px;
-  background: var(--w-bg-elevated);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  border: 1px solid var(--w-border);
-  border-radius: var(--w-radius-sm);
+  padding: 6px 12px;
+  font-size: 11px;
+  color: var(--w-primary);
+  background: var(--w-soft);
+  border: 1px solid rgba(var(--w-primary-rgb), 0.2);
+  border-radius: 16px;
   cursor: pointer;
   transition: var(--w-transition);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .welcome-btn:hover {
-  background: rgba(var(--w-primary-rgb), 0.08);
-  border-color: rgba(var(--w-primary-rgb), 0.3);
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 4px 12px rgba(var(--w-primary-rgb), 0.15);
-}
-
-.welcome-btn:active {
-  transform: translateY(0) scale(0.98);
-}
-
-.btn-icon {
-  font-size: 18px;
-  line-height: 1;
-}
-
-.btn-text {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--w-text);
-  line-height: 1.2;
+  background: rgba(var(--w-primary-rgb), 0.2);
+  border-color: var(--w-primary);
+  transform: translateY(-1px);
 }
 
 /* ========================================
-   输入区 - 增强设计
+   输入区
    ======================================== */
 
 .widget-input-row {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 8px;
   margin-top: auto;
-  padding-top: 8px;
 }
 
-.widget-input-wrapper {
+.widget-input-row input {
   flex: 1;
   min-width: 0;
-  position: relative;
-}
-
-.widget-input-wrapper input {
-  width: 100%;
-  padding: 10px 14px;
-  background: var(--w-bg-elevated);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  padding: 8px 12px;
+  background: rgba(var(--w-primary-rgb), 0.06);
   border: 1px solid var(--w-border);
-  border-radius: var(--w-radius-lg);
+  border-radius: 20px;
   font-size: 12px;
   color: var(--w-text);
   outline: none;
   transition: var(--w-transition);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.widget-input-wrapper input::placeholder {
+.widget-input-row input::placeholder {
   color: var(--w-text-2);
 }
 
-.widget-input-wrapper input:focus {
-  border-color: rgba(var(--w-primary-rgb), 0.4);
-  box-shadow: 0 0 0 3px rgba(var(--w-primary-rgb), 0.1),
-              0 4px 12px rgba(0, 0, 0, 0.08);
+.widget-input-row input:focus {
+  border-color: var(--w-primary);
+  box-shadow: 0 0 0 2px var(--w-soft);
 }
 
-.widget-send-btn {
-  width: 36px;
-  height: 36px;
+.widget-input-row button {
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, var(--w-primary), var(--w-secondary));
   border: none;
-  border-radius: var(--w-radius-sm);
+  border-radius: 50%;
   cursor: pointer;
   flex-shrink: 0;
   transition: var(--w-transition);
-  box-shadow: 0 4px 12px rgba(var(--w-primary-rgb), 0.3);
+  box-shadow: 0 2px 8px var(--w-glow);
 }
 
-.widget-send-btn svg {
-  width: 16px;
-  height: 16px;
+.widget-input-row button svg {
+  width: 14px;
+  height: 14px;
   stroke: white;
 }
 
-.widget-send-btn:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 20px rgba(var(--w-primary-rgb), 0.4);
+.widget-input-row button:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px var(--w-glow);
 }
 
-.widget-send-btn:active {
-  transform: translateY(0) scale(0.95);
+.widget-input-row button:active {
+  transform: scale(0.95);
 }
 
-.widget-send-btn:disabled {
+.widget-input-row button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
-  box-shadow: 0 2px 8px rgba(var(--w-primary-rgb), 0.2);
-}
-
-.widget-send-btn.sending {
-  animation: send-pulse 0.6s ease-out;
-}
-
-@keyframes send-pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(0.9);
-  }
 }
 
 /* ========================================
