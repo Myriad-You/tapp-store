@@ -1,0 +1,590 @@
+/**
+ * Quick Notes Page v1.0.0
+ * 便携便签 - 页面样式
+ */
+
+/* ========================================
+   CSS 变量（Page 专用 - 基于壁纸色）
+   ======================================== */
+
+:root {
+  /* 主色：继承系统壁纸色 */
+  --notes-primary: var(--tapp-primary, #6366f1);
+  --notes-primary-rgb: var(--tapp-primary-rgb, 99, 102, 241);
+  
+  /* 派生色：基于主色计算 */
+  --notes-secondary: color-mix(in srgb, var(--notes-primary) 80%, #8b5cf6);
+  --notes-accent: color-mix(in srgb, var(--notes-primary) 60%, #a78bfa);
+  
+  /* 功能色 */
+  --notes-error: #ef4444;
+  --notes-success: #10b981;
+  
+  /* 背景色 */
+  --notes-bg-solid: #f8f9fa;
+  
+  /* 表面色 */
+  --notes-surface: rgba(255, 255, 255, 0.85);
+  --notes-surface-elevated: rgba(255, 255, 255, 0.95);
+  
+  /* 文字色 */
+  --notes-text: #1f2937;
+  --notes-text-secondary: #6b7280;
+  
+  /* 边框色 */
+  --notes-border: rgba(0, 0, 0, 0.08);
+  --notes-border-strong: rgba(0, 0, 0, 0.15);
+  
+  /* 光效色 */
+  --notes-glow: rgba(var(--notes-primary-rgb), 0.15);
+  --notes-glow-strong: rgba(var(--notes-primary-rgb), 0.25);
+  
+  /* 尺寸变量 */
+  --notes-radius: 20px;
+  --notes-radius-lg: 24px;
+  --notes-radius-sm: 12px;
+  --notes-radius-xs: 8px;
+  
+  /* 阴影 */
+  --notes-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --notes-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.15);
+  --notes-shadow-glow: 0 0 20px rgba(var(--notes-primary-rgb), 0.2);
+  
+  /* 过渡 */
+  --notes-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 深色模式变量 */
+.dark {
+  --notes-bg-solid: #0a0a0a;
+  --notes-surface: rgba(0, 0, 0, 0.85);
+  --notes-surface-elevated: rgba(23, 23, 23, 0.95);
+  --notes-text: #f3f4f6;
+  --notes-text-secondary: #9ca3af;
+  --notes-border: rgba(255, 255, 255, 0.1);
+  --notes-border-strong: rgba(255, 255, 255, 0.15);
+  --notes-glow: rgba(var(--notes-primary-rgb), 0.2);
+  --notes-glow-strong: rgba(var(--notes-primary-rgb), 0.35);
+  --notes-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --notes-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+/* ========================================
+   分层架构 - 背景层
+   ======================================== */
+
+#tapp-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* 背景基础 */
+.page-bg-base {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #f8f9fa 100%);
+}
+
+.dark .page-bg-base {
+  background: linear-gradient(135deg, #0a0a0a 0%, #171717 50%, #0a0a0a 100%);
+}
+
+/* 背景光效装饰 */
+.page-bg-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.3;
+  animation: page-glow-breathe 6s ease-in-out infinite;
+  background: var(--notes-primary);
+}
+
+.page-bg-glow-1 {
+  width: 400px;
+  height: 400px;
+  top: -100px;
+  right: -100px;
+}
+
+.page-bg-glow-2 {
+  width: 300px;
+  height: 300px;
+  bottom: -50px;
+  left: -50px;
+  background: var(--notes-secondary);
+  animation-delay: 3s;
+}
+
+@keyframes page-glow-breathe {
+  0%, 100% { opacity: 0.25; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.15); }
+}
+
+/* ========================================
+   分层架构 - 内容层
+   ======================================== */
+
+#tapp-content {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* ========================================
+   Page 内容区
+   ======================================== */
+
+.page-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 20px 20px 20px;
+}
+
+/* ========================================
+   状态头部
+   ======================================== */
+
+.status-header {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px 0 16px 0;
+  flex-shrink: 0;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--notes-surface-elevated);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--notes-border);
+  border-radius: 50px;
+  box-shadow: var(--notes-shadow-lg);
+  transition: var(--notes-transition);
+}
+
+.status-avatar {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--notes-primary), var(--notes-secondary));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: white;
+  flex-shrink: 0;
+  transition: var(--notes-transition);
+}
+
+.status-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.status-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--notes-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-subtitle {
+  font-size: 12px;
+  color: var(--notes-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: var(--notes-transition);
+}
+
+.status-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 4px;
+}
+
+.status-action-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--notes-primary-rgb), 0.08);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--notes-text-secondary);
+  transition: var(--notes-transition);
+}
+
+.status-action-btn:hover {
+  background: rgba(var(--notes-primary-rgb), 0.15);
+  color: var(--notes-primary);
+}
+
+.dark .status-action-btn {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dark .status-action-btn:hover {
+  background: rgba(var(--notes-primary-rgb), 0.2);
+  color: var(--notes-primary);
+}
+
+/* ========================================
+   笔记列表区域
+   ======================================== */
+
+.notes-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+  scroll-behavior: smooth;
+  min-height: 0;
+}
+
+.notes-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notes-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.notes-area::-webkit-scrollbar-thumb {
+  background: rgba(var(--notes-primary-rgb), 0.2);
+  border-radius: 3px;
+}
+
+.notes-area::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--notes-primary-rgb), 0.4);
+}
+
+/* ========================================
+   笔记卡片
+   ======================================== */
+
+.note-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--notes-surface);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--notes-border);
+  border-radius: var(--notes-radius-sm);
+  box-shadow: var(--notes-shadow);
+  transition: var(--notes-transition);
+  animation: note-fade-in 0.4s ease-out;
+}
+
+.note-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--notes-shadow-lg);
+  border-color: rgba(var(--notes-primary-rgb), 0.2);
+}
+
+@keyframes note-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.note-card-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.note-card-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--notes-text);
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.note-card-time {
+  font-size: 13px;
+  color: var(--notes-text-secondary);
+}
+
+.note-card-delete {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--notes-radius-xs);
+  background: transparent;
+  color: var(--notes-text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--notes-transition);
+  flex-shrink: 0;
+}
+
+.note-card-delete:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--notes-error);
+}
+
+/* ========================================
+   空状态
+   ======================================== */
+
+.notes-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 60px 20px;
+  background: var(--notes-surface);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--notes-border);
+  border-radius: var(--notes-radius);
+  text-align: center;
+  color: var(--notes-text-secondary);
+  animation: empty-fade 0.5s ease-out;
+}
+
+@keyframes empty-fade {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.empty-icon {
+  font-size: 48px;
+  opacity: 0.6;
+}
+
+.empty-text {
+  font-size: 16px;
+  color: var(--notes-text-secondary);
+}
+
+/* ========================================
+   浮动输入区域
+   ======================================== */
+
+.float-input-wrap {
+  position: relative;
+  width: 100%;
+  padding: 16px 0;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.input-card {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--notes-surface-elevated);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--notes-border);
+  border-radius: var(--notes-radius);
+  box-shadow: var(--notes-shadow-lg);
+  transition: var(--notes-transition);
+}
+
+.input-card:focus-within {
+  border-color: rgba(var(--notes-primary-rgb), 0.4);
+  box-shadow: var(--notes-shadow-lg), 0 0 0 3px rgba(var(--notes-primary-rgb), 0.1);
+}
+
+.input-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.page-input {
+  width: 100%;
+  min-height: 24px;
+  max-height: 120px;
+  border: none;
+  background: transparent;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--notes-text);
+  resize: none;
+  outline: none;
+  font-family: inherit;
+}
+
+.page-input::placeholder {
+  color: var(--notes-text-secondary);
+}
+
+.input-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.char-count {
+  font-size: 11px;
+  color: var(--notes-text-secondary);
+}
+
+.page-send-btn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--notes-primary), var(--notes-secondary));
+  color: white;
+  border: none;
+  border-radius: var(--notes-radius-sm);
+  cursor: pointer;
+  font-size: 20px;
+  transition: var(--notes-transition);
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(var(--notes-primary-rgb), 0.3);
+}
+
+.page-send-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke: white;
+}
+
+.page-send-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(var(--notes-primary-rgb), 0.4);
+}
+
+.page-send-btn:active {
+  transform: translateY(0);
+}
+
+.page-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.send-flying {
+  animation: page-send-fly 0.3s ease-out;
+}
+
+@keyframes page-send-fly {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-4px) scale(0.95); }
+  100% { transform: translateY(0); }
+}
+
+/* ========================================
+   搜索栏
+   ======================================== */
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--notes-surface);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--notes-border);
+  border-radius: 28px;
+  margin-bottom: 16px;
+  transition: var(--notes-transition);
+}
+
+.search-bar:focus-within {
+  border-color: rgba(var(--notes-primary-rgb), 0.4);
+  box-shadow: 0 0 0 3px rgba(var(--notes-primary-rgb), 0.1);
+}
+
+.search-icon {
+  color: var(--notes-text-secondary);
+  font-size: 16px;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--notes-text);
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: var(--notes-text-secondary);
+}
+
+/* ========================================
+   响应式
+   ======================================== */
+
+@media (max-width: 640px) {
+  .page-content {
+    padding: 12px;
+  }
+  
+  .status-pill {
+    padding: 8px 12px;
+  }
+  
+  .note-card {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+  
+  .note-card-text {
+    font-size: 14px;
+  }
+  
+  .input-card {
+    padding: 10px 12px;
+  }
+  
+  .page-send-btn {
+    width: 40px;
+    height: 40px;
+  }
+}

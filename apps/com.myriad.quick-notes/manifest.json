@@ -1,20 +1,23 @@
 {
   "id": "com.myriad.quick-notes",
   "name": "便携便签",
-  "version": "0.1.0",
-  "description": "简单的笔记工具，快速记录想法和灵感",
-  "main": "index.js",
+  "version": "1.0.0",
+  "description": "简单高效的笔记工具，快速记录想法和灵感",
+  "main": "main.js",
   "author": {
     "name": "Myriad Team"
   },
   "permissions": [
     "storage",
     "ui:notification",
-    "ui:theme",
-    "widget:register",
-    "component:page"
+    "ui:theme"
   ],
   "icon": "📝",
+  "hasPage": true,
+  "cssMode": "separated",
+  "widgetStyles": "widget.css",
+  "pageStyles": "page.css",
+  "pageTemplate": "page.html",
   "widgets": [
     {
       "id": "notes",
@@ -23,7 +26,13 @@
       "icon": "📝",
       "defaultSize": "2x2",
       "sizes": ["2x2", "4x2", "4x4"],
-      "category": "utility"
+      "minRefreshInterval": 1000,
+      "category": "utility",
+      "templates": {
+        "2x2": "widget-2x2.html",
+        "4x2": "widget-4x2.html",
+        "4x4": "widget-4x4.html"
+      }
     }
   ],
   "settings": [
@@ -41,6 +50,13 @@
       "label": "显示时间戳",
       "type": "toggle",
       "description": "在笔记下方显示创建时间",
+      "defaultValue": true
+    },
+    {
+      "key": "saveHistory",
+      "label": "保存历史",
+      "type": "toggle",
+      "description": "关闭后清空历史便签",
       "defaultValue": true
     }
   ]

@@ -1,0 +1,58 @@
+<!-- Quick Notes Page v1.0.0 -->
+
+<!-- 背景层 -->
+<div id="tapp-background">
+  <div class="page-bg-base"></div>
+  <!-- 壁纸色光效装饰 -->
+  <div class="page-bg-glow page-bg-glow-1"></div>
+  <div class="page-bg-glow page-bg-glow-2"></div>
+</div>
+
+<!-- 内容层 -->
+<div id="tapp-content">
+  <!-- 内容容器 -->
+  <div class="page-content">
+    <!-- 浮动状态胶囊 -->
+    <header class="status-header">
+      <div id="status-pill" class="status-pill">
+        <div class="status-avatar">📝</div>
+        <div class="status-info">
+          <span id="status-title" class="status-title"></span>
+          <span id="status-subtitle" class="status-subtitle"></span>
+        </div>
+        <div class="status-actions">
+          <button id="page-clear" class="status-action-btn" title="Clear All">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <!-- 搜索栏 -->
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" class="search-input" placeholder="..." autocomplete="off">
+      </div>
+    </header>
+
+    <!-- 笔记区域 -->
+    <div id="notes-area" class="notes-area"></div>
+
+    <!-- 浮动输入区域 -->
+    <div class="float-input-wrap">
+      <div class="input-card">
+        <div class="input-area">
+          <textarea id="page-input" class="page-input" rows="1" placeholder="..."></textarea>
+          <div class="input-footer">
+            <span id="char-count" class="char-count">0 / 500</span>
+          </div>
+        </div>
+        <button id="page-send" class="page-send-btn" title="Add">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
