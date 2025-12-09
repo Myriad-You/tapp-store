@@ -81,18 +81,17 @@
   pointer-events: none;
 }
 
-/* 背景基础：透明遮罩，让系统壁纸透出但内容更清晰 */
+/* 背景基础：沙箱环境需要实色背景 */
 .page-bg-base {
   position: absolute;
   inset: 0;
-  /* 浅色模式：轻微白色遮罩 */
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(1px);
+  /* 浅色模式：浅灰渐变背景 */
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #f8f9fa 100%);
 }
 
 .dark .page-bg-base {
-  /* 深色模式：纯黑遮罩 */
-  background: rgba(0, 0, 0, 0.4);
+  /* 深色模式：纯黑渐变背景 */
+  background: linear-gradient(135deg, #0a0a0a 0%, #171717 50%, #0a0a0a 100%);
 }
 
 /* 背景光效装饰 */
@@ -151,6 +150,8 @@
   max-width: 900px;
   margin: 0 auto;
   padding: 20px;
+  /* 为顶部浮动胶囊留出空间 */
+  padding-top: 100px;
 }
 
 /* ========================================
@@ -158,11 +159,18 @@
    ======================================== */
 
 .status-header {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 12px;
-  padding-bottom: 16px;
-  flex-shrink: 0;
+  max-width: 900px;
+  width: calc(100% - 40px);
+  pointer-events: none;
 }
 
 .status-pill {
@@ -170,13 +178,13 @@
   align-items: center;
   gap: 12px;
   padding: 10px 16px;
-  background: var(--ai-surface);
+  background: var(--ai-surface-elevated);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   border: 1px solid var(--ai-border);
   border-radius: 50px;
-  box-shadow: var(--ai-shadow);
-  align-self: flex-start;
+  box-shadow: var(--ai-shadow-lg);
+  pointer-events: auto;
   transition: var(--ai-transition);
 }
 
@@ -273,6 +281,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  justify-content: center;
+  pointer-events: auto;
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
@@ -280,7 +290,6 @@
   opacity: 0;
   transform: translateY(-10px);
   pointer-events: none;
-  position: absolute;
 }
 
 .topic-btn {
