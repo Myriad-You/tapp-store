@@ -151,7 +151,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  max-width: 900px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 0 20px 20px 20px;
   overflow: hidden;
@@ -162,7 +162,7 @@
    ======================================== */
 
 .status-header {
-  position: sticky;
+  position: absolute;
   top: 0;
   z-index: 10;
   display: flex;
@@ -331,7 +331,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 8px 0;
+  padding: 24px 0 8px 0;
   scroll-behavior: smooth;
   min-height: 0;
 }
