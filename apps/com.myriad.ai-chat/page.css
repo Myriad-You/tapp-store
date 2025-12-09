@@ -140,20 +140,6 @@
 }
 
 /* ========================================
-   Page 容器
-   ======================================== */
-
-.page-container {
-  position: relative;
-  width: 100%;
-  height: 100vh;
-  overflow: hidden;
-  font-family: system-ui, -apple-system, sans-serif;
-  /* 透明背景，让壁纸透出 */
-  background: transparent;
-}
-
-/* ========================================
    Page 内容区
    ======================================== */
 
