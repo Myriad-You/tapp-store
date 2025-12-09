@@ -11,45 +11,45 @@
 
 <!-- ========== 内容层（z-index: 1）========== -->
 <div id="tapp-content">
-  <!-- 浮动状态胶囊 -->
-  <header class="status-header">
-    <div id="status-pill" class="status-pill">
-      <div class="status-avatar">💬</div>
-      <div class="status-info">
-        <span id="status-title" class="status-title">开始对话</span>
-        <span id="status-subtitle" class="status-subtitle">选择话题或直接输入</span>
-      </div>
-      <div class="status-actions">
-        <button id="page-clear" class="status-action-btn" title="新对话">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-    <!-- 快捷话题（初始状态显示） -->
-    <div id="quick-topics" class="quick-topics">
-      <button class="topic-btn" data-topic="解释一个概念">
-        <span class="topic-icon">💡</span>
-        <span class="topic-text">解释概念</span>
-      </button>
-      <button class="topic-btn" data-topic="写一首诗">
-        <span class="topic-icon">✍️</span>
-        <span class="topic-text">写诗</span>
-      </button>
-      <button class="topic-btn" data-topic="学习编程">
-        <span class="topic-icon">💻</span>
-        <span class="topic-text">编程</span>
-      </button>
-      <button class="topic-btn" data-topic="推荐电影">
-        <span class="topic-icon">🎬</span>
-        <span class="topic-text">电影</span>
-      </button>
-    </div>
-  </header>
-
   <!-- 内容容器 -->
   <div class="page-content">
+    <!-- 浮动状态胶囊 -->
+    <header class="status-header">
+      <div id="status-pill" class="status-pill">
+        <div class="status-avatar">💬</div>
+        <div class="status-info">
+          <span id="status-title" class="status-title">开始对话</span>
+          <span id="status-subtitle" class="status-subtitle">选择话题或直接输入</span>
+        </div>
+        <div class="status-actions">
+          <button id="page-clear" class="status-action-btn" title="新对话">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <!-- 快捷话题（初始状态显示） -->
+      <div id="quick-topics" class="quick-topics">
+        <button class="topic-btn" data-topic="解释一个概念">
+          <span class="topic-icon">💡</span>
+          <span class="topic-text">解释概念</span>
+        </button>
+        <button class="topic-btn" data-topic="写一首诗">
+          <span class="topic-icon">✍️</span>
+          <span class="topic-text">写诗</span>
+        </button>
+        <button class="topic-btn" data-topic="学习编程">
+          <span class="topic-icon">💻</span>
+          <span class="topic-text">编程</span>
+        </button>
+        <button class="topic-btn" data-topic="推荐电影">
+          <span class="topic-icon">🎬</span>
+          <span class="topic-text">电影</span>
+        </button>
+      </div>
+    </header>
+
     <!-- 消息区域 -->
     <div id="page-messages" class="messages-area"></div>
 
