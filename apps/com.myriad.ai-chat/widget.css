@@ -1,34 +1,69 @@
 /**
- * AI Chat Widget v8.0
- * 分层架构 · 壁纸色彩 · 简洁设计
+ * AI Chat Widget v9.0
+ * 🎨 生动设计 · 动态光效 · 精致交互
+ * 
+ * 设计理念：
+ * - 动态渐变背景营造科技感
+ * - 微妙的光晕效果增添生命力
+ * - 流畅的过渡动画提升交互体验
+ * - 保持与系统壁纸色的协调
  */
 
 /* ========================================
-   变量
+   CSS 变量系统
    ======================================== */
 
 :root {
+  /* 🎨 主色系：从系统继承 */
   --w-primary: var(--tapp-primary, #6366f1);
   --w-primary-rgb: var(--tapp-primary-rgb, 99, 102, 241);
-  --w-secondary: color-mix(in srgb, var(--w-primary) 75%, #8b5cf6);
-  --w-glow: rgba(var(--w-primary-rgb), 0.35);
-  --w-soft: rgba(var(--w-primary-rgb), 0.12);
   
-  --w-bg: rgba(255, 255, 255, 0.88);
-  --w-text: #171717;
-  --w-text-2: #525252;
-  --w-border: rgba(0, 0, 0, 0.08);
+  /* 🎨 派生色：创造层次感 */
+  --w-secondary: color-mix(in srgb, var(--w-primary) 70%, #a855f7);
+  --w-accent: color-mix(in srgb, var(--w-primary) 50%, #ec4899);
+  --w-tertiary: color-mix(in srgb, var(--w-primary) 60%, #06b6d4);
   
-  --w-radius: 16px;
+  /* 🌟 光效色 */
+  --w-glow: rgba(var(--w-primary-rgb), 0.4);
+  --w-glow-soft: rgba(var(--w-primary-rgb), 0.15);
+  --w-shimmer: rgba(255, 255, 255, 0.08);
+  
+  /* 📦 容器色 */
+  --w-bg: rgba(255, 255, 255, 0.92);
+  --w-bg-elevated: rgba(255, 255, 255, 0.98);
+  --w-surface: rgba(var(--w-primary-rgb), 0.06);
+  
+  /* ✏️ 文字色 */
+  --w-text: #1f2937;
+  --w-text-2: #6b7280;
+  --w-text-muted: #9ca3af;
+  
+  /* 📏 边框 */
+  --w-border: rgba(0, 0, 0, 0.06);
+  --w-border-hover: rgba(var(--w-primary-rgb), 0.3);
+  
+  /* 📐 圆角 */
+  --w-radius: 18px;
+  --w-radius-md: 14px;
   --w-radius-sm: 10px;
-  --w-transition: 0.2s ease;
+  --w-radius-xs: 6px;
+  
+  /* ⏱️ 动画 */
+  --w-transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --w-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --w-transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* 🌙 深色模式 */
 .dark {
-  --w-bg: rgba(23, 23, 23, 0.92);
-  --w-text: #f5f5f5;
-  --w-text-2: #a3a3a3;
-  --w-border: rgba(255, 255, 255, 0.1);
+  --w-bg: rgba(15, 15, 15, 0.95);
+  --w-bg-elevated: rgba(26, 26, 26, 0.98);
+  --w-surface: rgba(255, 255, 255, 0.05);
+  --w-text: #f9fafb;
+  --w-text-2: #9ca3af;
+  --w-text-muted: #6b7280;
+  --w-border: rgba(255, 255, 255, 0.08);
+  --w-shimmer: rgba(255, 255, 255, 0.03);
 }
 
 /* ========================================
@@ -40,12 +75,13 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   border-radius: var(--w-radius);
+  container-type: inline-size;
 }
 
 /* ========================================
-   背景层
+   背景层 - 动态光效
    ======================================== */
 
 .widget-bg {
@@ -53,43 +89,55 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  overflow: hidden;
 }
 
+/* 主光晕 - 动态呼吸效果 */
 .widget-glow {
   position: absolute;
   border-radius: 50%;
-  background: var(--w-primary);
-  filter: blur(40px);
-  opacity: 0.4;
-  animation: glow 4s ease-in-out infinite;
+  filter: blur(35px);
+  opacity: 0;
+  animation: glow-breathe 5s ease-in-out infinite;
 }
 
+/* 4x2 尺寸的光效 */
 .widget-4x2 .widget-glow {
-  width: 80px;
-  height: 80px;
-  top: -20px;
-  right: -20px;
-}
-
-.glow-1 {
   width: 100px;
   height: 100px;
-  top: -25px;
-  right: -25px;
+  top: -30px;
+  right: -20px;
+  background: linear-gradient(135deg, var(--w-primary), var(--w-secondary));
+}
+
+/* 4x4 尺寸的多层光效 */
+.glow-1 {
+  width: 140px;
+  height: 140px;
+  top: -40px;
+  right: -30px;
+  background: linear-gradient(135deg, var(--w-primary), var(--w-accent));
 }
 
 .glow-2 {
-  width: 80px;
-  height: 80px;
-  bottom: -20px;
-  left: -20px;
-  background: var(--w-secondary);
-  animation-delay: 2s;
+  width: 100px;
+  height: 100px;
+  bottom: -25px;
+  left: -25px;
+  background: linear-gradient(135deg, var(--w-secondary), var(--w-tertiary));
+  animation-delay: 2.5s;
 }
 
-@keyframes glow {
-  0%, 100% { opacity: 0.35; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.1); }
+/* 光晕呼吸动画 */
+@keyframes glow-breathe {
+  0%, 100% { 
+    opacity: 0.35; 
+    transform: scale(1) rotate(0deg);
+  }
+  50% { 
+    opacity: 0.55; 
+    transform: scale(1.15) rotate(5deg);
+  }
 }
 
 /* ========================================
@@ -102,79 +150,125 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 10px;
+  padding: 12px;
   background: var(--w-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--w-border);
   border-radius: var(--w-radius);
+  overflow: hidden;
+}
+
+/* 容器内微光装饰 */
+.widget-body::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60%;
+  background: linear-gradient(
+    180deg,
+    var(--w-shimmer) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+  border-radius: var(--w-radius) var(--w-radius) 0 0;
 }
 
 /* ========================================
-   状态胶囊 (来自 page.css)
+   状态胶囊 - 精致设计
    ======================================== */
 
 .widget-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  background: var(--w-soft);
-  border-radius: 20px;
+  gap: 8px;
+  padding: 6px 12px;
+  background: linear-gradient(
+    135deg,
+    var(--w-surface) 0%,
+    rgba(var(--w-primary-rgb), 0.1) 100%
+  );
+  border: 1px solid var(--w-border);
+  border-radius: 24px;
+  transition: var(--w-transition);
 }
 
+.widget-pill:hover {
+  border-color: var(--w-border-hover);
+  box-shadow: 0 0 12px var(--w-glow-soft);
+}
+
+/* 状态指示点 - 动态脉冲 */
 .pill-dot {
-  width: 6px;
-  height: 6px;
-  background: #10b981;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  animation: pulse 2s ease-in-out infinite;
+  background: linear-gradient(135deg, #10b981, #34d399);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+  animation: status-pulse 2s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+  }
+  50% { 
+    transform: scale(1.2);
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.8);
+  }
 }
 
 .pill-text {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--w-text-2);
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--w-text);
+  letter-spacing: 0.02em;
 }
 
 /* ========================================
-   头部 (4x4)
+   头部区域 (4x4)
    ======================================== */
 
 .widget-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 2;
 }
 
 .widget-btn-icon {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--w-soft);
-  border: none;
+  background: var(--w-surface);
+  border: 1px solid var(--w-border);
   border-radius: 50%;
   color: var(--w-text-2);
-  font-size: 12px;
+  font-size: 14px;
   cursor: pointer;
   transition: var(--w-transition);
 }
 
 .widget-btn-icon:hover {
-  background: rgba(var(--w-primary-rgb), 0.2);
+  background: rgba(var(--w-primary-rgb), 0.15);
+  border-color: var(--w-border-hover);
   color: var(--w-primary);
+  transform: rotate(180deg);
+}
+
+.widget-btn-icon:active {
+  transform: rotate(180deg) scale(0.92);
 }
 
 /* ========================================
-   4x2 对话区
+   4x2 对话区 - 紧凑布局
    ======================================== */
 
 .widget-chat {
@@ -182,50 +276,63 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 .chat-bubble {
-  padding: 6px 10px;
-  font-size: 11px;
-  line-height: 1.4;
-  max-width: 90%;
+  padding: 8px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  max-width: 92%;
   opacity: 0;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: var(--w-transition-slow);
+  word-break: break-word;
 }
 
 .chat-bubble.show {
   opacity: 1;
 }
 
+/* 用户消息气泡 */
 .chat-user {
   align-self: flex-end;
-  background: linear-gradient(135deg, var(--w-primary), var(--w-secondary));
+  background: linear-gradient(
+    135deg,
+    var(--w-primary) 0%,
+    var(--w-secondary) 100%
+  );
   color: white;
-  border-radius: 12px 12px 4px 12px;
-  transform: translateX(10px);
+  border-radius: 14px 14px 4px 14px;
+  transform: translateX(15px) scale(0.95);
+  box-shadow: 
+    0 4px 12px rgba(var(--w-primary-rgb), 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .chat-user.show {
-  transform: translateX(0);
+  transform: translateX(0) scale(1);
 }
 
+/* AI 回复气泡 */
 .chat-ai {
   align-self: flex-start;
-  background: var(--w-bg);
+  background: var(--w-bg-elevated);
   color: var(--w-text);
   border: 1px solid var(--w-border);
-  border-radius: 12px 12px 12px 4px;
-  transform: translateX(-10px);
+  border-radius: 14px 14px 14px 4px;
+  transform: translateX(-15px) scale(0.95);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .chat-ai.show {
-  transform: translateX(0);
+  transform: translateX(0) scale(1);
 }
 
 /* ========================================
-   4x4 消息区
+   4x4 消息区 - 完整对话
    ======================================== */
 
 .widget-messages {
@@ -234,144 +341,226 @@
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  padding: 4px 2px;
+  position: relative;
+  z-index: 1;
 }
 
-.widget-messages::-webkit-scrollbar { width: 3px; }
+/* 自定义滚动条 */
+.widget-messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.widget-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 .widget-messages::-webkit-scrollbar-thumb {
-  background: rgba(var(--w-primary-rgb), 0.25);
-  border-radius: 2px;
+  background: linear-gradient(
+    180deg,
+    var(--w-primary) 0%,
+    var(--w-secondary) 100%
+  );
+  border-radius: 4px;
+  opacity: 0.6;
+}
+
+.widget-messages::-webkit-scrollbar-thumb:hover {
+  opacity: 1;
 }
 
 /* 消息行 */
 .msg-row {
   display: flex;
-  gap: 8px;
-  animation: msg-in 0.3s ease-out;
+  gap: 10px;
+  animation: msg-slide-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.msg-row-user { flex-direction: row-reverse; }
+.msg-row-user {
+  flex-direction: row-reverse;
+}
 
-@keyframes msg-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes msg-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* 头像 */
 .msg-avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 14px;
   flex-shrink: 0;
+  transition: var(--w-transition);
 }
 
 .msg-avatar-user {
   background: linear-gradient(135deg, var(--w-primary), var(--w-secondary));
   color: white;
+  box-shadow: 0 2px 8px rgba(var(--w-primary-rgb), 0.35);
 }
 
 .msg-avatar-ai {
-  background: var(--w-bg);
+  background: var(--w-bg-elevated);
   border: 1px solid var(--w-border);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
 /* 气泡 */
 .bubble {
-  max-width: 75%;
-  padding: 8px 12px;
+  max-width: 78%;
+  padding: 10px 14px;
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 1.55;
   border-radius: var(--w-radius-sm);
+  word-break: break-word;
 }
 
 .bubble-user {
   background: linear-gradient(135deg, var(--w-primary), var(--w-secondary));
   color: white;
   border-bottom-right-radius: 4px;
+  box-shadow: 0 3px 10px rgba(var(--w-primary-rgb), 0.3);
 }
 
 .bubble-ai {
-  background: var(--w-bg);
+  background: var(--w-bg-elevated);
   color: var(--w-text);
   border: 1px solid var(--w-border);
   border-bottom-left-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 /* ========================================
-   欢迎区 (4x4)
+   欢迎区 (4x4) - 生动引导
    ======================================== */
 
 .widget-welcome {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 12px;
+  text-align: center;
+}
+
+/* 欢迎图标 */
+.welcome-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  background: linear-gradient(
+    135deg,
+    rgba(var(--w-primary-rgb), 0.15) 0%,
+    rgba(var(--w-primary-rgb), 0.05) 100%
+  );
+  border-radius: 16px;
+  animation: icon-float 3s ease-in-out infinite;
+}
+
+@keyframes icon-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
 
 .welcome-btns {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   justify-content: center;
+  max-width: 100%;
 }
 
 .welcome-btn {
-  padding: 6px 12px;
+  padding: 8px 14px;
   font-size: 11px;
+  font-weight: 500;
   color: var(--w-primary);
-  background: var(--w-soft);
+  background: linear-gradient(
+    135deg,
+    rgba(var(--w-primary-rgb), 0.08) 0%,
+    rgba(var(--w-primary-rgb), 0.04) 100%
+  );
   border: 1px solid rgba(var(--w-primary-rgb), 0.2);
-  border-radius: 16px;
+  border-radius: 20px;
   cursor: pointer;
   transition: var(--w-transition);
+  white-space: nowrap;
 }
 
 .welcome-btn:hover {
-  background: rgba(var(--w-primary-rgb), 0.2);
+  background: linear-gradient(
+    135deg,
+    rgba(var(--w-primary-rgb), 0.18) 0%,
+    rgba(var(--w-primary-rgb), 0.1) 100%
+  );
   border-color: var(--w-primary);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--w-glow-soft);
+}
+
+.welcome-btn:active {
+  transform: translateY(0) scale(0.97);
 }
 
 /* ========================================
-   输入区
+   输入区 - 精致交互
    ======================================== */
 
 .widget-input-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin-top: auto;
+  padding-top: 10px;
+  position: relative;
+  z-index: 2;
 }
 
 .widget-input-row input {
   flex: 1;
   min-width: 0;
-  padding: 8px 12px;
-  background: rgba(var(--w-primary-rgb), 0.06);
+  padding: 10px 16px;
+  background: var(--w-surface);
   border: 1px solid var(--w-border);
-  border-radius: 20px;
-  font-size: 12px;
+  border-radius: 24px;
+  font-size: 13px;
   color: var(--w-text);
   outline: none;
   transition: var(--w-transition);
 }
 
 .widget-input-row input::placeholder {
-  color: var(--w-text-2);
+  color: var(--w-text-muted);
 }
 
 .widget-input-row input:focus {
+  background: var(--w-bg-elevated);
   border-color: var(--w-primary);
-  box-shadow: 0 0 0 2px var(--w-soft);
+  box-shadow: 
+    0 0 0 3px var(--w-glow-soft),
+    0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
+/* 发送按钮 */
 .widget-input-row button {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -381,18 +570,47 @@
   cursor: pointer;
   flex-shrink: 0;
   transition: var(--w-transition);
-  box-shadow: 0 2px 8px var(--w-glow);
+  box-shadow: 
+    0 4px 12px rgba(var(--w-primary-rgb), 0.35),
+    0 1px 3px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 按钮光效 */
+.widget-input-row button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.widget-input-row button:hover::before {
+  left: 100%;
 }
 
 .widget-input-row button svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   stroke: white;
+  position: relative;
+  z-index: 1;
 }
 
 .widget-input-row button:hover {
-  transform: scale(1.08);
-  box-shadow: 0 4px 12px var(--w-glow);
+  transform: scale(1.1);
+  box-shadow: 
+    0 6px 20px rgba(var(--w-primary-rgb), 0.45),
+    0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .widget-input-row button:active {
@@ -403,57 +621,185 @@
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
+}
+
+/* 发送动画 */
+.send-flying {
+  animation: send-rocket 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes send-rocket {
+  0% { transform: scale(1); }
+  30% { transform: scale(0.85) rotate(-5deg); }
+  60% { transform: scale(1.15) rotate(5deg); }
+  100% { transform: scale(1) rotate(0deg); }
 }
 
 /* ========================================
-   思考动画
+   思考动画 - 生动波动
    ======================================== */
 
 .thinking-dots {
   display: flex;
-  gap: 4px;
-  padding: 4px 0;
+  gap: 5px;
+  padding: 6px 0;
 }
 
 .thinking-dots span {
-  width: 5px;
-  height: 5px;
-  background: var(--w-primary);
+  width: 6px;
+  height: 6px;
+  background: linear-gradient(135deg, var(--w-primary), var(--w-secondary));
   border-radius: 50%;
-  animation: dot-bounce 1.4s ease-in-out infinite;
+  animation: dot-wave 1.2s ease-in-out infinite;
 }
 
-.thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
-.thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+.thinking-dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
 
-@keyframes dot-bounce {
-  0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
-  40% { transform: scale(1.2); opacity: 1; }
+.thinking-dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes dot-wave {
+  0%, 60%, 100% {
+    transform: translateY(0) scale(0.85);
+    opacity: 0.5;
+  }
+  30% {
+    transform: translateY(-6px) scale(1.1);
+    opacity: 1;
+    box-shadow: 0 4px 8px var(--w-glow);
+  }
 }
 
 /* ========================================
-   动画
+   头像思考动画
+   ======================================== */
+
+.avatar-thinking {
+  animation: avatar-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes avatar-glow {
+  0%, 100% {
+    box-shadow: 0 2px 8px var(--w-glow-soft);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 
+      0 0 20px var(--w-glow),
+      0 2px 8px var(--w-glow-soft);
+    transform: scale(1.05);
+  }
+}
+
+/* ========================================
+   错误状态
    ======================================== */
 
 .shake-error {
-  animation: shake 0.4s ease-in-out;
+  animation: shake-bounce 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
 
-@keyframes shake {
+@keyframes shake-bounce {
   0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  75% { transform: translateX(4px); }
+  20% { transform: translateX(-8px) rotate(-1deg); }
+  40% { transform: translateX(8px) rotate(1deg); }
+  60% { transform: translateX(-6px) rotate(-0.5deg); }
+  80% { transform: translateX(6px) rotate(0.5deg); }
 }
+
+/* ========================================
+   打字光标
+   ======================================== */
 
 .typing-cursor {
-  color: var(--w-primary);
-  animation: blink 0.8s step-end infinite;
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--w-primary);
+  margin-left: 2px;
+  animation: cursor-blink 0.7s step-end infinite;
+  vertical-align: text-bottom;
 }
 
-@keyframes blink {
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
 
-.avatar-thinking {
-  animation: pulse 1.5s ease-in-out infinite;
+/* ========================================
+   响应式 - 紧凑模式
+   ======================================== */
+
+@container (max-width: 180px) {
+  .widget-body {
+    padding: 8px;
+  }
+  
+  .widget-pill {
+    padding: 4px 8px;
+    gap: 6px;
+  }
+  
+  .pill-dot {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .pill-text {
+    font-size: 10px;
+  }
+  
+  .welcome-btns {
+    gap: 4px;
+  }
+  
+  .welcome-btn {
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+  
+  .widget-input-row input {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  
+  .widget-input-row button {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .widget-input-row button svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* ========================================
+   减少动画 (辅助功能)
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .widget-glow,
+  .pill-dot,
+  .welcome-icon,
+  .thinking-dots span,
+  .avatar-thinking {
+    animation: none;
+  }
+  
+  .chat-bubble,
+  .msg-row {
+    transition: opacity 0.2s ease;
+    transform: none !important;
+  }
+  
+  .chat-bubble.show,
+  .chat-user.show,
+  .chat-ai.show {
+    transform: none !important;
+  }
 }
