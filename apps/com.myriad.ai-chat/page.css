@@ -170,10 +170,6 @@
   align-items: flex-start;
   gap: 12px;
   padding: 20px 0 16px 0;
-  background: linear-gradient(to bottom, 
-    var(--ai-bg-solid) 0%, 
-    var(--ai-bg-solid) 70%, 
-    transparent 100%);
   flex-shrink: 0;
 }
 
