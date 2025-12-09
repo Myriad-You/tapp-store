@@ -130,48 +130,46 @@ var widgetState = {
 function init4x2Widget() {
   var input = document.getElementById('widget-input');
   var sendBtn = document.getElementById('widget-send');
-  var sendIcon = document.getElementById('send-icon');
-  var userMsgBar = document.getElementById('user-msg-bar');
+  var userMsg = document.getElementById('user-msg');
   var userMsgContent = document.getElementById('user-msg-content');
-  var aiReplyBar = document.getElementById('ai-reply-bar');
-  var aiReplyContent = document.getElementById('ai-reply-content');
+  var aiMsg = document.getElementById('ai-msg');
+  var aiMsgContent = document.getElementById('ai-msg-content');
   var welcomeEl = document.getElementById('widget-welcome');
-  var avatarEl = document.getElementById('ai-avatar');
+  var chatEl = document.getElementById('widget-chat');
 
   if (!input || !sendBtn) return;
 
   if (input) input.placeholder = t('placeholder');
 
   function showUserMsg(text) {
+    // 隐藏欢迎状态，显示对话区
     if (welcomeEl) welcomeEl.style.display = 'none';
+    if (chatEl) chatEl.style.display = 'flex';
+    
     if (userMsgContent) userMsgContent.textContent = text;
-    if (userMsgBar) userMsgBar.classList.add('show');
+    if (userMsg) userMsg.classList.add('show');
   }
 
   function showAiReply(text) {
-    if (aiReplyBar) aiReplyBar.classList.add('show');
-    if (aiReplyContent) {
-      typeWriterFast(aiReplyContent, text, function() {
-        if (avatarEl) avatarEl.classList.remove('avatar-thinking');
-      });
+    if (aiMsg) aiMsg.classList.add('show');
+    if (aiMsgContent) {
+      typeWriterFast(aiMsgContent, text, function() {});
     }
   }
 
   function showThinking() {
-    if (aiReplyContent) {
-      aiReplyContent.innerHTML = '<div class="thinking-dots"><span></span><span></span><span></span></div>';
+    if (aiMsgContent) {
+      aiMsgContent.innerHTML = '<div class="thinking-dots"><span></span><span></span><span></span></div>';
     }
-    if (aiReplyBar) aiReplyBar.classList.add('show');
-    if (avatarEl) avatarEl.classList.add('avatar-thinking');
+    if (aiMsg) aiMsg.classList.add('show');
   }
 
   function showError(msg) {
-    if (aiReplyContent) {
-      aiReplyContent.innerHTML = '<span style="color:var(--ai-error)">❌ ' + escapeHtml(msg) + '</span>';
-      aiReplyContent.parentElement.classList.add('shake-error');
-      setTimeout(function() { aiReplyContent.parentElement.classList.remove('shake-error'); }, 400);
+    if (aiMsgContent) {
+      aiMsgContent.innerHTML = '<span style="color:#ef4444">❌ ' + escapeHtml(msg) + '</span>';
+      if (aiMsg) aiMsg.classList.add('shake-error');
+      setTimeout(function() { if (aiMsg) aiMsg.classList.remove('shake-error'); }, 400);
     }
-    if (avatarEl) avatarEl.classList.remove('avatar-thinking');
   }
 
   function animateSend() {

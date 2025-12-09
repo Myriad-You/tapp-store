@@ -7,14 +7,19 @@
 
   <!-- 内容层 -->
   <div class="widget-body">
-    <!-- 状态胶囊 -->
-    <div class="widget-pill">
-      <div class="pill-dot"></div>
-      <span class="pill-text">AI</span>
+    <!-- 欢迎状态（无对话时显示） -->
+    <div id="widget-welcome" class="widget-welcome-4x2">
+      <div class="welcome-status-mini">
+        <div class="welcome-avatar-mini">💬</div>
+        <div class="welcome-info-mini">
+          <span class="welcome-title-mini">开始对话</span>
+          <span class="welcome-subtitle-mini">输入消息</span>
+        </div>
+      </div>
     </div>
 
-    <!-- 对话区 -->
-    <div class="widget-chat">
+    <!-- 对话区（有对话时显示） -->
+    <div id="widget-chat" class="widget-chat" style="display: none;">
       <div id="user-msg" class="chat-bubble chat-user">
         <span id="user-msg-content"></span>
       </div>

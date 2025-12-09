@@ -282,6 +282,63 @@
   z-index: 1;
 }
 
+/* ========================================
+   4x2 欢迎状态 - 紧凑胶囊
+   ======================================== */
+
+.widget-welcome-4x2 {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: welcome-fade-in 0.4s ease-out;
+}
+
+.welcome-status-mini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--w-bg-elevated);
+  border: 1px solid var(--w-border);
+  border-radius: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.welcome-avatar-mini {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  background: linear-gradient(135deg, var(--w-primary), var(--w-secondary));
+  border-radius: 50%;
+  animation: avatar-float 3s ease-in-out infinite;
+}
+
+.welcome-info-mini {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.welcome-title-mini {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--w-text);
+}
+
+.welcome-subtitle-mini {
+  font-size: 10px;
+  color: var(--w-text-2);
+}
+
+/* ========================================
+   气泡样式
+   ======================================== */
+
 .chat-bubble {
   padding: 8px 14px;
   font-size: 12px;
@@ -443,7 +500,7 @@
 }
 
 /* ========================================
-   欢迎区 (4x4) - 生动引导
+   欢迎区 (4x4) - 状态胶囊风格
    ======================================== */
 
 .widget-welcome {
@@ -452,32 +509,73 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 16px;
   text-align: center;
+  animation: welcome-fade-in 0.4s ease-out;
 }
 
-/* 欢迎图标 */
-.welcome-icon {
-  width: 48px;
-  height: 48px;
+@keyframes welcome-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 欢迎状态胶囊 - 模仿 page 的 status-pill */
+.welcome-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--w-bg-elevated);
+  border: 1px solid var(--w-border);
+  border-radius: 28px;
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 0 0 1px var(--w-shimmer);
+}
+
+.welcome-avatar {
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
-  background: linear-gradient(
-    135deg,
-    rgba(var(--w-primary-rgb), 0.15) 0%,
-    rgba(var(--w-primary-rgb), 0.05) 100%
-  );
-  border-radius: 16px;
-  animation: icon-float 3s ease-in-out infinite;
+  font-size: 18px;
+  background: linear-gradient(135deg, var(--w-primary), var(--w-secondary));
+  border-radius: 50%;
+  animation: avatar-float 3s ease-in-out infinite;
 }
 
-@keyframes icon-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+@keyframes avatar-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-2px) scale(1.05); }
 }
 
+.welcome-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.welcome-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--w-text);
+  letter-spacing: 0.01em;
+}
+
+.welcome-subtitle {
+  font-size: 11px;
+  color: var(--w-text-2);
+}
+
+/* 欢迎按钮组 */
 .welcome-btns {
   display: flex;
   flex-wrap: wrap;
