@@ -236,29 +236,27 @@ function renderLyrics(lyrics, currentIndex) {
     // 绑定点击事件 - 使用事件委托
     bindLyricClickEvents(container);
   } else {
-    // 增量更新 - 使用 requestAnimationFrame 批量更新
-    requestAnimationFrame(function() {
-      existingLines.forEach(function(el, i) {
-        var newClassName = getLyricLineClasses(i, currentIndex);
-        
-        // 只在类名实际变化时更新
-        if (el.className !== newClassName) {
-          // 处理进入/离开动画
-          if (isIndexChange) {
-            if (i === currentIndex && i !== prevIndex) {
-              // 新的当前行 - 添加进入动画
-              el.classList.add('entering');
-              setTimeout(function() { el.classList.remove('entering'); }, 600);
-            } else if (i === prevIndex) {
-              // 离开的行 - 添加离开动画
-              el.classList.add('leaving');
-              setTimeout(function() { el.classList.remove('leaving'); }, 500);
-            }
+    // 增量更新 - 直接更新，不使用 requestAnimationFrame 以减少延迟
+    existingLines.forEach(function(el, i) {
+      var newClassName = getLyricLineClasses(i, currentIndex);
+      
+      // 只在类名实际变化时更新
+      if (el.className !== newClassName) {
+        // 处理进入/离开动画
+        if (isIndexChange) {
+          if (i === currentIndex && i !== prevIndex) {
+            // 新的当前行 - 添加进入动画
+            el.classList.add('entering');
+            setTimeout(function() { el.classList.remove('entering'); }, 600);
+          } else if (i === prevIndex) {
+            // 离开的行 - 添加离开动画
+            el.classList.add('leaving');
+            setTimeout(function() { el.classList.remove('leaving'); }, 500);
           }
-          
-          el.className = newClassName;
         }
-      });
+        
+        el.className = newClassName;
+      }
     });
   }
 
@@ -367,7 +365,6 @@ function renderPlaylist(playlist, currentTrack, searchQuery) {
               '<div class="playlist-item-name">' + escapeHtml(song.name) + '</div>' +
               '<div class="playlist-item-artist">' + escapeHtml(song.artist) + '</div>' +
             '</div>' +
-            (isActive ? '<div class="playlist-item-playing"><span></span><span></span><span></span></div>' : '') +
             '</div>';
   }
   container.innerHTML = html;
@@ -376,13 +373,13 @@ function renderPlaylist(playlist, currentTrack, searchQuery) {
   var badge = $('playlist-badge');
   if (badge) badge.textContent = playlist.length;
 
-  // 绑定点击事件
+  // 绑定点击事件 - 跳转到指定歌曲
   var items = container.querySelectorAll('.playlist-item');
   items.forEach(function(item) {
     item.addEventListener('click', function() {
-      var id = item.getAttribute('data-id');
       var index = parseInt(item.getAttribute('data-index'), 10);
-      Tapp.media.playTrack(id, index);
+      // 使用 skipTo 在当前播放列表中跳转，而非 playTrack 临时播放
+      Tapp.media.skipTo(index);
     });
   });
 
@@ -536,13 +533,19 @@ function updatePlayerUI(status) {
   // 注意：暂停时动画会自动缓慢停止，不需要立即停止
 }
 
-// 更新歌词索引
+// 歌词提前量（秒）- 补偿各种延迟
+var LYRIC_ADVANCE_TIME = 0.15;
+
+// 更新歌词索引 - 带提前量补偿
 function updateLyricIndex(position, lyrics) {
   if (!lyrics || lyrics.length === 0) return -1;
   
+  // 增加提前量补偿延迟
+  var adjustedPosition = position + LYRIC_ADVANCE_TIME;
+  
   var index = -1;
   for (var i = 0; i < lyrics.length; i++) {
-    if (lyrics[i].time <= position) {
+    if (lyrics[i].time <= adjustedPosition) {
       index = i;
     } else {
       break;
@@ -646,7 +649,9 @@ async function initPage() {
 
     // 更新歌词 - 歌词数据在 state.lyrics 中
     var lyrics = state.lyrics || [];
-    var currentLyricIdx = state.currentLyricIndex;
+    // 使用本地计算的歌词索引（带提前量补偿），而不是服务端的索引
+    var position = state.position || (state.progress ? state.progress.current : 0) || 0;
+    var currentLyricIdx = updateLyricIndex(position, lyrics);
     
     if (lyrics.length > 0) {
       // 如果歌词变化了，重新渲染
@@ -672,16 +677,8 @@ async function initPage() {
       var id = item.getAttribute('data-id');
       if (state.currentTrack && id === state.currentTrack.id) {
         item.classList.add('active');
-        if (!item.querySelector('.playlist-item-playing')) {
-          var playingEl = document.createElement('div');
-          playingEl.className = 'playlist-item-playing';
-          playingEl.innerHTML = '<span></span><span></span><span></span>';
-          item.appendChild(playingEl);
-        }
       } else {
         item.classList.remove('active');
-        var existingPlaying = item.querySelector('.playlist-item-playing');
-        if (existingPlaying) existingPlaying.remove();
       }
     });
   });
