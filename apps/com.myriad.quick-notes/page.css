@@ -507,6 +507,48 @@
 }
 
 /* ========================================
+   无权限状态
+   ======================================== */
+
+.notes-no-permission {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 60px 20px;
+  background: var(--notes-surface);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--notes-border);
+  border-radius: var(--notes-radius);
+  text-align: center;
+  color: var(--notes-text-secondary);
+  animation: no-perm-fade 0.5s ease-out;
+}
+
+@keyframes no-perm-fade {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.no-perm-icon {
+  font-size: 48px;
+  opacity: 0.6;
+}
+
+.no-perm-text {
+  font-size: 16px;
+  color: var(--notes-text-secondary);
+}
+
+/* ========================================
    浮动输入区域
    ======================================== */
 
