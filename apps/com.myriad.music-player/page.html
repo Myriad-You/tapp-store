@@ -39,7 +39,16 @@
     </div>
     
     <!-- 右侧：歌词和列表 -->
-    <div class="player-right">
+    <div class="player-right" id="player-right">
+      <!-- 移动端关闭按钮 -->
+      <button class="mobile-close-btn" id="mobile-close-btn" aria-label="关闭">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </svg>
+      </button>
+      <!-- 移动端面板标题 -->
+      <span class="mobile-panel-title" id="mobile-panel-title">歌词</span>
+      
       <!-- 歌词面板 -->
       <section class="panel panel-lyrics active" id="panel-lyrics">
         <div class="lyrics-scroll" id="lyrics-container">

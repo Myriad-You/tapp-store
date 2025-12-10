@@ -619,6 +619,16 @@ function updatePlayerUI(status) {
     playBtn.setAttribute('aria-label', status.isPlaying ? t('pause') : t('play'));
   }
 
+  // 封面播放/暂停状态效果
+  var artworkWrapper = $('artwork-wrapper');
+  if (artworkWrapper) {
+    if (status.isPlaying) {
+      artworkWrapper.classList.remove('paused');
+    } else {
+      artworkWrapper.classList.add('paused');
+    }
+  }
+
   // 进度条
   var progressBar = $('progress-bar');
   var progressFill = $('progress-fill');
@@ -825,11 +835,27 @@ async function initPage() {
 
 // 绑定控制按钮事件
 function bindControls() {
+  // 检测是否移动端
+  var isMobile = function() {
+    return window.innerWidth <= 768;
+  };
+  
   // Tab 切换
   var tabBtns = document.querySelectorAll('.tab-btn');
+  var playerRight = document.getElementById('player-right');
+  var mobileCloseBtn = document.getElementById('mobile-close-btn');
+  var mobilePanelTitle = document.getElementById('mobile-panel-title');
+  
+  // 面板标题映射
+  var panelTitles = {
+    'lyrics': '歌词',
+    'playlist': '播放列表'
+  };
+  
   tabBtns.forEach(function(btn) {
     btn.addEventListener('click', function() {
       var tab = btn.getAttribute('data-tab');
+      var wasActive = btn.classList.contains('active');
       
       // 更新 tab 按钮状态
       tabBtns.forEach(function(b) { b.classList.remove('active'); });
@@ -840,7 +866,44 @@ function bindControls() {
       panels.forEach(function(p) { p.classList.remove('active'); });
       var targetPanel = document.getElementById('panel-' + tab);
       if (targetPanel) targetPanel.classList.add('active');
+      
+      // 移动端：显示面板或切换
+      if (isMobile() && playerRight) {
+        if (wasActive && playerRight.classList.contains('mobile-visible')) {
+          // 再次点击同一个按钮，关闭面板
+          playerRight.classList.remove('mobile-visible');
+          btn.classList.remove('active');
+        } else {
+          // 显示面板
+          playerRight.classList.add('mobile-visible');
+          // 更新面板标题
+          if (mobilePanelTitle) {
+            mobilePanelTitle.textContent = panelTitles[tab] || tab;
+          }
+        }
+      }
     });
+  });
+  
+  // 移动端关闭按钮
+  if (mobileCloseBtn && playerRight) {
+    mobileCloseBtn.addEventListener('click', function() {
+      playerRight.classList.remove('mobile-visible');
+      // 取消所有tab按钮的active状态
+      tabBtns.forEach(function(b) { b.classList.remove('active'); });
+    });
+  }
+  
+  // 窗口大小变化时重置状态
+  window.addEventListener('resize', function() {
+    if (!isMobile() && playerRight) {
+      playerRight.classList.remove('mobile-visible');
+      // 桌面端恢复默认active状态
+      var lyricsTab = document.getElementById('tab-lyrics');
+      if (lyricsTab && !document.querySelector('.tab-btn.active')) {
+        lyricsTab.classList.add('active');
+      }
+    }
   });
   
   // 播放/暂停

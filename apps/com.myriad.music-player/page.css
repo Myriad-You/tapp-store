@@ -186,11 +186,25 @@ html, body {
   box-shadow: 
     0 20px 60px color-mix(in srgb, var(--music-primary) 30%, transparent),
     0 8px 20px rgba(0, 0, 0, 0.2);
-  transition: transform var(--transition-spring), box-shadow var(--transition-smooth);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 暂停状态 - 封面缩小 */
+.artwork-wrapper.paused {
+  transform: scale(0.88);
+  box-shadow: 
+    0 12px 40px color-mix(in srgb, var(--music-primary) 20%, transparent),
+    0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .artwork-wrapper:hover {
   transform: scale(1.02);
+}
+
+/* 暂停时hover也保持缩小 */
+.artwork-wrapper.paused:hover {
+  transform: scale(0.9);
 }
 
 .artwork-image {
@@ -953,53 +967,230 @@ html, body {
 /* ========================================
    滚动条样式 - 只有歌词和列表可以滚动
    ======================================== */
-.lyrics-scroll::-webkit-scrollbar,
+/* 歌词滚动条隐藏但保留滚动功能 */
+.lyrics-scroll {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.lyrics-scroll::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Opera */
+}
+
+/* 播放列表保留滚动条 */
 .playlist-scroll::-webkit-scrollbar {
   width: 4px;
 }
 
-.lyrics-scroll::-webkit-scrollbar-track,
 .playlist-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.lyrics-scroll::-webkit-scrollbar-thumb,
 .playlist-scroll::-webkit-scrollbar-thumb {
   background: rgba(120, 120, 128, 0.2);
   border-radius: 2px;
 }
 
-.lyrics-scroll::-webkit-scrollbar-thumb:hover,
 .playlist-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(120, 120, 128, 0.4);
 }
 
 /* ========================================
-   响应式设计
+   响应式设计 - 移动端优先
    ======================================== */
 @media (max-width: 768px) {
   #tapp-content {
-    grid-template-rows: 5fr 2fr;
-    padding: 12px;
-    gap: 12px;
-  }
-  
-  .content-area {
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr 1fr;
-  }
-  
-  .player-left {
+    grid-template-rows: 1fr auto;
     padding: 16px;
     gap: 12px;
   }
   
+  /* 内容区只显示左侧（封面信息） */
+  .content-area {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* 左侧区域全屏显示 */
+  .player-left {
+    flex: 1;
+    padding: 20px;
+    gap: 20px;
+    justify-content: center;
+  }
+  
   .artwork-wrapper {
-    max-width: 160px;
+    max-width: 280px;
+    width: 70%;
+  }
+  
+  .track-info {
+    text-align: center;
+    align-items: center;
+  }
+  
+  .track-title-row {
+    justify-content: center;
   }
   
   .track-title {
+    font-size: 20px;
+  }
+  
+  .track-artist {
     font-size: 16px;
+  }
+  
+  /* 右侧面板默认隐藏 */
+  .player-right {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(40px) saturate(1.8);
+    backdrop-filter: blur(40px) saturate(1.8);
+    padding: 20px;
+    padding-top: 60px;
+    animation: slideUp 0.3s ease;
+  }
+  
+  /* 移动端面板显示时 */
+  .player-right.mobile-visible {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .player-right.mobile-visible .panel {
+    flex: 1;
+    display: none;
+    border-radius: 0;
+  }
+  
+  .player-right.mobile-visible .panel.active {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* 面板关闭按钮 */
+  .mobile-close-btn {
+    display: flex;
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.1);
+    border: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+  }
+  
+  .mobile-close-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: var(--text-secondary);
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    .mobile-close-btn {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+  
+  /* 面板标题 */
+  .mobile-panel-title {
+    display: block;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  
+  /* 控制栏适配 */
+  .controls-bar {
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    gap: 12px;
+    border-radius: var(--radius-lg);
+  }
+  
+  .controls-group {
+    order: 1;
+  }
+  
+  .progress-section {
+    order: 3;
+    width: 100%;
+    max-width: none;
+  }
+  
+  .volume-section {
+    display: none; /* 移动端隐藏音量控制 */
+  }
+  
+  .right-controls {
+    order: 2;
+  }
+  
+  .control-play {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .control-play svg {
+    width: 22px;
+    height: 22px;
+  }
+  
+  /* Tab按钮在移动端更明显 */
+  .tab-btn {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .tab-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* 滑入动画 */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 超小屏幕 */
+@media (max-width: 480px) {
+  #tapp-content {
+    padding: 12px;
+    gap: 10px;
+  }
+  
+  .player-left {
+    padding: 16px;
+    gap: 16px;
+  }
+  
+  .artwork-wrapper {
+    max-width: 200px;
+    width: 60%;
+  }
+  
+  .track-title {
+    font-size: 18px;
   }
   
   .track-artist {
@@ -1007,15 +1198,13 @@ html, body {
   }
   
   .controls-bar {
-    flex-wrap: wrap;
-    padding: 10px 16px;
+    padding: 10px 12px;
     gap: 10px;
   }
   
-  .progress-section {
-    order: 3;
-    width: 100%;
-    max-width: none;
+  .control-main svg {
+    width: 20px;
+    height: 20px;
   }
   
   .control-play {
@@ -1027,40 +1216,10 @@ html, body {
     width: 20px;
     height: 20px;
   }
-  
-  .volume-section {
-    min-width: 100px;
-  }
 }
 
-@media (max-width: 480px) {
-  .content-area {
-    grid-template-rows: 2fr 3fr;
-  }
-  
-  .artwork-wrapper {
-    max-width: 120px;
-  }
-  
-  .track-title {
-    font-size: 14px;
-  }
-  
-  .track-artist {
-    font-size: 12px;
-  }
-  
-  .controls-bar {
-    padding: 8px 12px;
-  }
-  
-  .control-main svg {
-    width: 20px;
-    height: 20px;
-  }
-  
-  .control-secondary svg {
-    width: 16px;
-    height: 16px;
-  }
+/* 桌面端隐藏移动端专用元素 */
+.mobile-close-btn,
+.mobile-panel-title {
+  display: none;
 }
