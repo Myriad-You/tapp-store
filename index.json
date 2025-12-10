@@ -1,16 +1,50 @@
 {
   "$schema": "https://myriad.app/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2025-12-09T00:00:00Z",
+  "updated_at": "2025-12-10T00:00:00Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.app",
     "url": "https://github.com/Myriad-You/tapp-store"
   },
   "apps": [
+    {
+      "id": "com.myriad.music-player",
+      "name": "音乐播放器",
+      "version": "1.0.0",
+      "description": "功能完整的音乐播放器，支持歌词显示、播放列表和多种播放模式",
+      "long_description": "音乐播放器 Tapp 提供完整的音乐控制体验。左侧显示专辑封面和歌曲信息，右侧显示同步滚动歌词，底部是可搜索的播放列表。支持列表循环、单曲循环、随机播放等多种模式，完美适配深色模式。",
+      "author": {
+        "name": "Myriad Team",
+        "url": "https://github.com/Myriad-You"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/com.myriad.music-player",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "utility",
+      "tags": ["音乐", "播放器", "歌词", "media", "多语言"],
+      "permissions": ["storage", "ui:notification", "ui:theme", "media:control", "media:read"],
+      "min_myriad_version": "0.1.0",
+      "icon": "🎵",
+      "screenshots": [],
+      "download": {
+        "manifest": "apps/com.myriad.music-player/manifest.json",
+        "code": "apps/com.myriad.music-player/main.js",
+        "readme": "apps/com.myriad.music-player/README.md",
+        "page_styles": "apps/com.myriad.music-player/page.css",
+        "page_template": "apps/com.myriad.music-player/page.html"
+      },
+      "size": 18432,
+      "downloads": 0,
+      "rating": 0,
+      "featured": true,
+      "verified": true,
+      "created_at": "2025-12-10T00:00:00Z",
+      "updated_at": "2025-12-10T00:00:00Z"
+    },
     {
       "id": "com.myriad.quick-notes",
       "name": "便携便签",

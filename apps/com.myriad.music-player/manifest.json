@@ -1,0 +1,45 @@
+{
+  "id": "com.myriad.music-player",
+  "name": "音乐播放器",
+  "version": "1.0.0",
+  "description": "功能完整的音乐播放器，支持歌词显示、播放列表和多种播放模式",
+  "main": "main.js",
+  "author": {
+    "name": "Myriad Team"
+  },
+  "permissions": [
+    "storage",
+    "ui:notification",
+    "ui:theme",
+    "media:control",
+    "media:read"
+  ],
+  "icon": "🎵",
+  "hasPage": true,
+  "cssMode": "separated",
+  "pageStyles": "page.css",
+  "pageTemplate": "page.html",
+  "settings": [
+    {
+      "key": "showLyrics",
+      "label": "显示歌词",
+      "type": "toggle",
+      "description": "在页面模式中显示歌词面板",
+      "defaultValue": true
+    },
+    {
+      "key": "autoScroll",
+      "label": "歌词自动滚动",
+      "type": "toggle",
+      "description": "歌词自动跟随播放进度滚动",
+      "defaultValue": true
+    },
+    {
+      "key": "showSpectrum",
+      "label": "显示频谱动画",
+      "type": "toggle",
+      "description": "在播放时显示音频频谱动画效果",
+      "defaultValue": true
+    }
+  ]
+}
