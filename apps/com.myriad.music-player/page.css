@@ -353,6 +353,7 @@ html, body {
 .lyric-line {
   width: 100%;
   padding: 10px 0;
+  font-family: "Noto Sans SC", "Noto Sans TC", "Noto Sans JP", "Noto Sans", sans-serif;
   font-size: 22px;
   line-height: 1.4;
   color: var(--text-secondary);
