@@ -136,6 +136,7 @@ function debounce(fn, delay) {
 var pageState = {
   status: null,
   playlist: [],
+  lyrics: [],
   currentLyricIndex: -1,
   searchQuery: '',
   isSearching: false,
@@ -423,9 +424,11 @@ async function initPage() {
     pageState.status = status;
     updatePlayerUI(status);
 
-    // 获取歌词（如果有）
-    if (status.currentTrack && status.currentTrack.lyrics) {
-      renderLyrics(status.currentTrack.lyrics, -1);
+    // 获取歌词（歌词在 status.lyrics 中）
+    if (status.lyrics && status.lyrics.length > 0) {
+      pageState.lyrics = status.lyrics;
+      pageState.currentLyricIndex = status.currentLyricIndex || -1;
+      renderLyrics(status.lyrics, status.currentLyricIndex || -1);
     }
   } catch (e) {
     console.error('Failed to get media status:', e);
@@ -483,13 +486,26 @@ async function initPage() {
     pageState.status = state;
     updatePlayerUI(state);
 
-    // 更新歌词
-    if (state.currentTrack && state.currentTrack.lyrics) {
-      var newIndex = updateLyricIndex(state.position, state.currentTrack.lyrics);
-      if (newIndex !== pageState.currentLyricIndex) {
-        pageState.currentLyricIndex = newIndex;
-        renderLyrics(state.currentTrack.lyrics, newIndex);
+    // 更新歌词 - 歌词数据在 state.lyrics 中
+    var lyrics = state.lyrics || [];
+    var currentLyricIdx = state.currentLyricIndex;
+    
+    if (lyrics.length > 0) {
+      // 如果歌词变化了，重新渲染
+      if (!pageState.lyrics || pageState.lyrics.length !== lyrics.length || 
+          (pageState.lyrics[0] && lyrics[0] && pageState.lyrics[0].text !== lyrics[0].text)) {
+        pageState.lyrics = lyrics;
+        renderLyrics(lyrics, currentLyricIdx);
+      } else if (currentLyricIdx !== pageState.currentLyricIndex) {
+        // 只更新当前歌词高亮
+        pageState.currentLyricIndex = currentLyricIdx;
+        renderLyrics(lyrics, currentLyricIdx);
       }
+    } else if (pageState.lyrics && pageState.lyrics.length > 0) {
+      // 歌词清空了
+      pageState.lyrics = [];
+      pageState.currentLyricIndex = -1;
+      renderLyrics([], -1);
     }
 
     // 更新播放列表高亮
