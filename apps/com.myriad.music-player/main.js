@@ -147,6 +147,12 @@ var pageState = {
   },
   unsubscribe: null,
   animationFrame: null,
+  // 背景动画状态
+  bgAnimationFrame: null,
+  energyHistory: [],
+  lastBeatTime: 0,
+  beatIntensity: 0,
+  bgPhase: 0,
 };
 
 // DOM 元素缓存
@@ -472,7 +478,7 @@ function updatePlayerUI(status) {
   var progressBar = $('progress-bar');
   var progressFill = $('progress-fill');
   var currentTimeEl = $('current-time');
-  var totalTimeEl = $('total-time');
+  var remainingTimeEl = $('remaining-time');
   var duration = track ? (track.duration || 0) : 0;
   var position = status.position || (status.progress ? status.progress.current : 0) || 0;
   
@@ -485,7 +491,11 @@ function updatePlayerUI(status) {
     progressFill.style.width = percent + '%';
   }
   if (currentTimeEl) currentTimeEl.textContent = formatTime(position);
-  if (totalTimeEl) totalTimeEl.textContent = formatTime(duration);
+  // 显示剩余时长（负数形式）
+  if (remainingTimeEl) {
+    var remaining = Math.max(0, duration - position);
+    remainingTimeEl.textContent = '-' + formatTime(remaining);
+  }
 
   // 音量
   var volumeBar = $('volume-bar');
@@ -518,6 +528,12 @@ function updatePlayerUI(status) {
       modeBtn.classList.remove('active');
     }
   }
+  
+  // 根据播放状态控制背景动画
+  if (status.isPlaying) {
+    startBackgroundAnimation();
+  }
+  // 注意：暂停时动画会自动缓慢停止，不需要立即停止
 }
 
 // 更新歌词索引
@@ -802,6 +818,128 @@ function bindControls() {
   }
 }
 
+// ========================================
+// 动态背景动画
+// ========================================
+
+// 节奏检测参数
+var BG_ENERGY_HISTORY_SIZE = 8;
+var BG_BEAT_THRESHOLD = 1.3;
+var BG_BEAT_COOLDOWN = 150;
+
+// 启动背景动画
+function startBackgroundAnimation() {
+  if (pageState.bgAnimationFrame) return;
+  
+  var lastUpdateTime = 0;
+  var UPDATE_INTERVAL = 33; // ~30fps
+  
+  function updateBackground(timestamp) {
+    // 检查是否正在播放
+    var isPlaying = pageState.status && pageState.status.isPlaying;
+    
+    if (!isPlaying) {
+      // 暂停时缓慢重置动画
+      pageState.beatIntensity *= 0.95;
+      if (pageState.beatIntensity < 0.01) {
+        pageState.beatIntensity = 0;
+        applyBackgroundTransform(0, 0, pageState.bgPhase);
+        pageState.bgAnimationFrame = null;
+        return;
+      }
+      applyBackgroundTransform(pageState.beatIntensity, 0, pageState.bgPhase);
+      pageState.bgAnimationFrame = requestAnimationFrame(updateBackground);
+      return;
+    }
+    
+    if (timestamp - lastUpdateTime >= UPDATE_INTERVAL) {
+      lastUpdateTime = timestamp;
+      pageState.bgPhase += 0.008; // 缓慢相位变化
+      
+      // 请求频谱数据
+      Tapp.media.getSpectrum().then(function(spectrum) {
+        if (!spectrum || spectrum.length < 4) {
+          spectrum = [0, 0, 0, 0];
+        }
+        
+        // 计算当前能量
+        var currentEnergy = (spectrum[0] + spectrum[1] + spectrum[2] + spectrum[3]) / 4;
+        
+        // 维护能量历史
+        pageState.energyHistory.push(currentEnergy);
+        if (pageState.energyHistory.length > BG_ENERGY_HISTORY_SIZE) {
+          pageState.energyHistory.shift();
+        }
+        
+        // 计算平均能量
+        var avgEnergy = pageState.energyHistory.reduce(function(a, b) { return a + b; }, 0) / 
+                        pageState.energyHistory.length;
+        
+        // 节拍检测
+        var isBeat = currentEnergy > avgEnergy * BG_BEAT_THRESHOLD && 
+                     currentEnergy > 0.15 && 
+                     (timestamp - pageState.lastBeatTime) > BG_BEAT_COOLDOWN;
+        
+        if (isBeat) {
+          pageState.lastBeatTime = timestamp;
+          pageState.beatIntensity = Math.min(1, pageState.beatIntensity + 0.4);
+        } else {
+          pageState.beatIntensity *= 0.92;
+        }
+        
+        // 应用背景变换
+        applyBackgroundTransform(pageState.beatIntensity, currentEnergy, pageState.bgPhase);
+      }).catch(function() {
+        // 如果获取频谱失败，使用默认动画
+        pageState.bgPhase += 0.005;
+        applyBackgroundTransform(0.1, 0.1, pageState.bgPhase);
+      });
+    }
+    
+    pageState.bgAnimationFrame = requestAnimationFrame(updateBackground);
+  }
+  
+  pageState.bgAnimationFrame = requestAnimationFrame(updateBackground);
+}
+
+// 应用背景变换
+function applyBackgroundTransform(beatIntensity, energy, phase) {
+  var bgArtwork = $('bg-artwork');
+  if (!bgArtwork) return;
+  
+  // 基础参数
+  var baseScale = 1.1;
+  var baseRotate = 0;
+  
+  // 根据节拍强度计算缩放 (1.1 ~ 1.25)
+  var scale = baseScale + beatIntensity * 0.15;
+  
+  // 根据相位计算缓慢位移 (柔和的漂浮效果)
+  var translateX = Math.sin(phase) * 15 + beatIntensity * Math.sin(phase * 3) * 10;
+  var translateY = Math.cos(phase * 0.7) * 15 + beatIntensity * Math.cos(phase * 2.5) * 10;
+  
+  // 根据能量和相位计算微小旋转 (-3deg ~ 3deg)
+  var rotate = Math.sin(phase * 0.5) * 2 + beatIntensity * Math.sin(phase * 2) * 1;
+  
+  // 应用变换
+  bgArtwork.style.transform = 'scale(' + scale.toFixed(3) + ') ' +
+                              'translate(' + translateX.toFixed(1) + 'px, ' + translateY.toFixed(1) + 'px) ' +
+                              'rotate(' + rotate.toFixed(2) + 'deg)';
+}
+
+// 停止背景动画
+function stopBackgroundAnimation() {
+  if (pageState.bgAnimationFrame) {
+    cancelAnimationFrame(pageState.bgAnimationFrame);
+    pageState.bgAnimationFrame = null;
+  }
+  // 重置背景变换
+  var bgArtwork = $('bg-artwork');
+  if (bgArtwork) {
+    bgArtwork.style.transform = 'scale(1.1)';
+  }
+}
+
 // 清理
 function cleanup() {
   if (pageState.unsubscribe) {
@@ -812,6 +950,8 @@ function cleanup() {
     cancelAnimationFrame(pageState.animationFrame);
     pageState.animationFrame = null;
   }
+  // 清理背景动画
+  stopBackgroundAnimation();
 }
 
 // ========================================

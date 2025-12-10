@@ -78,6 +78,10 @@ html, body {
   filter: blur(60px) saturate(1.8) brightness(0.9);
   transform: scale(1.1);
   transition: background-image 0.8s ease;
+  /* GPU 加速和平滑动画 */
+  will-change: transform;
+  transform-origin: center center;
+  backface-visibility: hidden;
 }
 
 .bg-overlay {
@@ -669,17 +673,18 @@ html, body {
   text-align: center;
 }
 
-/* 进度条区域 */
+/* 进度条区域 - 与控制元素在同一行 */
 .progress-section {
   flex: 1;
   max-width: 500px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 10px;
 }
 
 .progress-track {
   position: relative;
+  flex: 1;
   height: 4px;
   background: rgba(120, 120, 128, 0.2);
   border-radius: 2px;
@@ -736,17 +741,23 @@ html, body {
   transition: width 0.1s linear;
 }
 
-.progress-times {
-  display: flex;
-  justify-content: space-between;
-}
-
-.time-current,
-.time-total {
-  font-size: 10px;
+/* 时间显示 */
+.time-display {
+  font-size: 11px;
   font-weight: 500;
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
+  min-width: 40px;
+  flex-shrink: 0;
+}
+
+.time-display:first-child {
+  text-align: right;
+}
+
+.time-remaining {
+  text-align: left;
+  opacity: 0.7;
 }
 
 /* 控制按钮组 */

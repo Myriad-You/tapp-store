@@ -99,14 +99,12 @@
     
     <!-- 进度条 -->
     <div class="progress-section">
+      <span id="current-time" class="time-display">0:00</span>
       <div class="progress-track">
         <input type="range" id="progress-bar" class="progress-slider" min="0" max="100" value="0" aria-label="播放进度" />
         <div class="progress-fill" id="progress-fill"></div>
       </div>
-      <div class="progress-times">
-        <span id="current-time" class="time-current">0:00</span>
-        <span id="total-time" class="time-total">0:00</span>
-      </div>
+      <span id="remaining-time" class="time-display time-remaining">-0:00</span>
     </div>
     
     <!-- 音量控制 -->
