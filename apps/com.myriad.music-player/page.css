@@ -256,7 +256,10 @@ html, body {
 .track-artist {
   font-size: 16px;
   font-weight: 500;
-  color: var(--accent-color);
+  background: linear-gradient(135deg, var(--music-primary), var(--music-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-top: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -371,13 +374,13 @@ html, body {
 .lyric-line.active {
   font-size: 32px;
   font-weight: 600;
-  color: var(--accent-color);
+  background: linear-gradient(135deg, var(--music-primary), var(--music-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   opacity: 1;
   transform: scale(1) translateZ(0);
-  filter: blur(0);
-  text-shadow: 
-    0 0 20px var(--accent-glow),
-    0 2px 10px rgba(0, 0, 0, 0.1);
+  filter: blur(0) drop-shadow(0 0 20px var(--accent-glow));
 }
 
 /* 当前歌词前后的过渡效果 - 距离渐变 */
@@ -615,7 +618,7 @@ html, body {
   padding: 12px 24px;
 }
 
-/* Tab 按钮 - 在右侧控制组，渐变背景 */
+/* Tab 按钮 - 在右侧控制组，hover显示背景 */
 .tab-btn {
   display: flex;
   align-items: center;
@@ -627,9 +630,9 @@ html, body {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
-  background: var(--btn-gradient);
-  border: 1px solid var(--btn-border);
-  border-radius: var(--radius-md);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -647,8 +650,6 @@ html, body {
 
 .tab-btn.active {
   color: var(--accent-color);
-  background: var(--btn-gradient-hover);
-  border-color: var(--btn-border-hover);
 }
 
 .tab-badge {
@@ -785,13 +786,13 @@ html, body {
   transition: inherit;
 }
 
-/* 次要按钮 - 模式/音量，渐变背景 */
+/* 次要按钮 - 模式/音量，hover显示背景 */
 .control-secondary {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
-  background: var(--btn-gradient);
-  border: 1px solid var(--btn-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid transparent;
 }
 
 .control-secondary:hover {
@@ -806,7 +807,6 @@ html, body {
 
 .control-secondary.active {
   color: var(--accent-color);
-  background: var(--btn-gradient-hover);
 }
 
 /* 播放模式按钮 - 默认白色 */
@@ -880,6 +880,22 @@ html, body {
   align-items: center;
   gap: 8px;
   min-width: 120px;
+}
+
+/* 音量图标（装饰用） */
+.volume-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.volume-icon svg {
+  width: 18px;
+  height: 18px;
 }
 
 .volume-track {

@@ -645,22 +645,10 @@ function updatePlayerUI(status) {
   // 音量
   var volumeBar = $('volume-bar');
   var volumeFill = $('volume-fill');
-  var volumeBtn = $('volume-btn');
   var volumeValue = status.volume || 0;
   var normalizedVolume = volumeValue > 1 ? volumeValue / 100 : volumeValue;
   if (volumeBar) volumeBar.value = normalizedVolume;
   if (volumeFill) volumeFill.style.width = (normalizedVolume * 100) + '%';
-  
-  // 音量图标切换
-  if (volumeBtn) {
-    var iconVolume = volumeBtn.querySelector('.icon-volume');
-    var iconMuted = volumeBtn.querySelector('.icon-muted');
-    if (iconVolume && iconMuted) {
-      var isMuted = status.muted || volumeValue === 0;
-      iconVolume.style.display = isMuted ? 'none' : 'block';
-      iconMuted.style.display = isMuted ? 'block' : 'none';
-    }
-  }
 
   // 播放模式
   var modeBtn = $('mode-btn');
@@ -894,18 +882,6 @@ function bindControls() {
         progressFill.style.width = (value / max * 100) + '%';
       }
       Tapp.media.seek(value);
-    });
-  }
-
-  // 音量按钮 - 切换静音
-  var volumeBtn = document.getElementById('volume-btn');
-  if (volumeBtn) {
-    volumeBtn.addEventListener('click', function() {
-      if (pageState.status && pageState.status.muted) {
-        Tapp.media.unmute();
-      } else {
-        Tapp.media.mute();
-      }
     });
   }
 
