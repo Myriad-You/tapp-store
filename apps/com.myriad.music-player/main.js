@@ -153,23 +153,28 @@ var pageState = {
 // ========================================
 
 // 获取播放模式图标
+// 后端模式值: 'sequence' | 'loop' | 'shuffle' | 'single'
 function getModeIcon(mode) {
   switch (mode) {
     case 'shuffle':
       return '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>';
     case 'single':
       return '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/><text x="12" y="14.5" font-size="7" text-anchor="middle" font-weight="bold">1</text></svg>';
-    default:
+    case 'loop':
       return '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>';
+    default: // sequence (顺序播放)
+      return '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z"/></svg>';
   }
 }
 
 // 获取播放模式提示文字
+// 后端模式值: 'sequence' | 'loop' | 'shuffle' | 'single'
 function getModeTooltip(mode) {
   switch (mode) {
     case 'shuffle': return t('shuffle');
     case 'single': return t('repeatOne');
-    default: return t('repeat');
+    case 'loop': return t('repeat');
+    default: return t('normal'); // sequence
   }
 }
 
@@ -551,7 +556,9 @@ function bindControls() {
   var volumeBar = document.getElementById('volume-bar');
   if (volumeBar) {
     volumeBar.addEventListener('input', function(e) {
-      Tapp.media.setVolume(parseFloat(e.target.value));
+      // 后端期望 0-100，HTML slider 是 0-1，需要转换
+      var volumeValue = parseFloat(e.target.value) * 100;
+      Tapp.media.setVolume(volumeValue);
     });
   }
 
@@ -571,8 +578,9 @@ function bindControls() {
   var modeBtn = document.getElementById('mode-btn');
   if (modeBtn) {
     modeBtn.addEventListener('click', function() {
-      var currentMode = pageState.status ? pageState.status.mode : 'repeat';
-      var modes = ['repeat', 'single', 'shuffle'];
+      // 后端期望的模式值: 'sequence' | 'loop' | 'shuffle' | 'single'
+      var currentMode = pageState.status ? pageState.status.mode : 'sequence';
+      var modes = ['sequence', 'loop', 'shuffle', 'single'];
       var nextIndex = (modes.indexOf(currentMode) + 1) % modes.length;
       Tapp.media.setMode(modes[nextIndex]);
     });
