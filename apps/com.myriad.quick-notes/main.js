@@ -23,9 +23,7 @@ var i18n = {
     daysAgo: '天前',
     noteAdded: '笔记已添加',
     noteDeleted: '笔记已删除',
-    allCleared: '已清空所有笔记',
-    noPermission: '无权限查看便签内容',
-    hiddenContent: '内容已隐藏'
+    allCleared: '已清空所有笔记'
   },
   'en-US': {
     title: 'Notes',
@@ -44,9 +42,7 @@ var i18n = {
     daysAgo: 'd ago',
     noteAdded: 'Note added',
     noteDeleted: 'Note deleted',
-    allCleared: 'All notes cleared',
-    noPermission: 'No permission to view notes',
-    hiddenContent: 'Content hidden'
+    allCleared: 'All notes cleared'
   },
   'ja-JP': {
     title: 'メモ',
@@ -65,9 +61,7 @@ var i18n = {
     daysAgo: '日前',
     noteAdded: 'メモを追加しました',
     noteDeleted: 'メモを削除しました',
-    allCleared: 'すべてのメモを削除しました',
-    noPermission: 'メモを見る権限がありません',
-    hiddenContent: '内容は非表示です'
+    allCleared: 'すべてのメモを削除しました'
   }
 };
 
@@ -117,40 +111,8 @@ function escapeHtml(text) {
 
 var widgetState = {
   notes: [],
-  settings: { maxNotes: 100, showTimestamp: true, contentVisibility: 'all' },
-  canViewContent: true // 是否有权限查看内容
+  settings: { maxNotes: 100, showTimestamp: true }
 };
-
-// ========================================
-// Widget 用户权限检查
-// ========================================
-
-async function checkWidgetUserPermission() {
-  try {
-    var visibility = widgetState.settings.contentVisibility || 'all';
-    
-    switch (visibility) {
-      case 'all':
-        widgetState.canViewContent = true;
-        break;
-      case 'owner':
-      case 'admin':
-        widgetState.canViewContent = await Tapp.user.isAdmin();
-        break;
-      case 'member':
-        widgetState.canViewContent = await Tapp.user.isLoggedIn();
-        break;
-      default:
-        widgetState.canViewContent = true;
-    }
-    
-    return widgetState.canViewContent;
-  } catch (e) {
-    console.error('[Notes] 检查用户权限失败:', e);
-    widgetState.canViewContent = true;
-    return true;
-  }
-}
 
 // ========================================
 // Widget 初始化 - 通用
@@ -171,9 +133,6 @@ async function initWidget() {
   } catch (e) {
     console.error('[Notes] 加载数据失败:', e);
   }
-  
-  // 检查用户权限
-  await checkWidgetUserPermission();
   
   // 设置 UI 文本
   var titleEl = document.getElementById('widget-title');
@@ -214,12 +173,6 @@ function renderWidgetNotes(size) {
   listEl.innerHTML = '';
   
   if (countEl) countEl.textContent = widgetState.notes.length;
-  
-  // 检查权限：无权限时显示锁定提示
-  if (!widgetState.canViewContent) {
-    listEl.innerHTML = '<div class="notes-empty notes-locked"><span class="empty-icon">🔒</span><span class="empty-text">' + escapeHtml(t('hiddenContent')) + '</span></div>';
-    return;
-  }
   
   if (widgetState.notes.length === 0) {
     listEl.innerHTML = '<div class="notes-empty"><span class="empty-icon">📝</span><span class="empty-text">' + escapeHtml(t('emptyTitle')) + '</span></div>';
@@ -325,52 +278,8 @@ var pageState = {
   notes: [],
   filteredNotes: [],
   searchQuery: '',
-  settings: { maxNotes: 100, showTimestamp: true, saveHistory: true, contentVisibility: 'all' },
-  userRole: 'guest', // guest | user | admin
-  canViewContent: true // 是否有权限查看内容
+  settings: { maxNotes: 100, showTimestamp: true, saveHistory: true }
 };
-
-// ========================================
-// 用户角色检查
-// ========================================
-
-async function checkUserPermission() {
-  try {
-    // 获取用户角色
-    var role = await Tapp.user.getRole();
-    pageState.userRole = role || 'guest';
-    
-    // 获取可见性设置
-    var visibility = pageState.settings.contentVisibility || 'all';
-    
-    // 根据设置和角色判断权限
-    switch (visibility) {
-      case 'all':
-        pageState.canViewContent = true;
-        break;
-      case 'owner':
-        // 只有管理员可以查看（owner在这个上下文中等同于admin）
-        pageState.canViewContent = await Tapp.user.isAdmin();
-        break;
-      case 'admin':
-        pageState.canViewContent = await Tapp.user.isAdmin();
-        break;
-      case 'member':
-        // 成员及以上 = 已登录用户
-        pageState.canViewContent = await Tapp.user.isLoggedIn();
-        break;
-      default:
-        pageState.canViewContent = true;
-    }
-    
-    return pageState.canViewContent;
-  } catch (e) {
-    console.error('[Notes] 检查用户权限失败:', e);
-    // 默认允许查看
-    pageState.canViewContent = true;
-    return true;
-  }
-}
 
 // ========================================
 // Page 初始化
@@ -428,16 +337,6 @@ function renderPageNotes() {
   
   area.innerHTML = '';
   updateStatusPill();
-  
-  // 检查权限：无权限时显示提示
-  if (!pageState.canViewContent) {
-    area.classList.remove('empty');
-    var noPermDiv = document.createElement('div');
-    noPermDiv.className = 'notes-no-permission';
-    noPermDiv.innerHTML = '<span class="no-perm-icon">🔒</span><span class="no-perm-text">' + escapeHtml(t('noPermission')) + '</span>';
-    area.appendChild(noPermDiv);
-    return;
-  }
   
   var notesToRender = pageState.searchQuery ? pageState.filteredNotes : pageState.notes;
   
@@ -711,10 +610,6 @@ function initPage() {
         
         currentLocale = normalizeLocale(results[0]);
         await loadPageData();
-        
-        // 检查用户权限
-        await checkUserPermission();
-        
         initPage();
         
         Tapp.ui.onLocaleChange(function(locale) {

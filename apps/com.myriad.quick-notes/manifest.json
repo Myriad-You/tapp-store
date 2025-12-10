@@ -59,19 +59,6 @@
       "type": "toggle",
       "description": "关闭后清空历史便签",
       "defaultValue": true
-    },
-    {
-      "key": "contentVisibility",
-      "label": "便签内容可见性",
-      "type": "select",
-      "description": "设置哪些用户类型可以查看便签内容",
-      "defaultValue": "all",
-      "options": [
-        { "value": "all", "label": "所有用户" },
-        { "value": "owner", "label": "仅所有者" },
-        { "value": "admin", "label": "管理员及以上" },
-        { "value": "member", "label": "成员及以上" }
-      ]
     }
   ]
 }
