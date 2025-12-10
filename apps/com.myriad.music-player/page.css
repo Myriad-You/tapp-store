@@ -116,9 +116,10 @@ html, body {
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
+  padding: 0;
   display: grid;
   grid-template-rows: 6fr 1fr;
-  gap: 16px;
+  gap: 0;
   overflow: hidden;
 }
 
@@ -128,7 +129,7 @@ html, body {
 .content-area {
   display: grid;
   grid-template-columns: 2fr 3fr;
-  gap: 16px;
+  gap: 0;
   min-height: 0;
   overflow: hidden;
 }
@@ -141,9 +142,9 @@ html, body {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  padding: 24px;
+  padding: 24px 32px;
   overflow: hidden;
-  gap: 12px;
+  gap: 8px;
 }
 
 /* 封面容器 - 自适应大小 */
@@ -314,15 +315,20 @@ html, body {
 
 .lyric-line {
   width: 100%;
-  padding: 12px 0;
-  font-size: 20px;
+  padding: 14px 0;
+  font-size: 24px;
   line-height: 1.5;
   color: var(--text-secondary);
   text-align: left;
-  opacity: 0.6;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0.5;
+  transition: 
+    opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1),
+    transform 0.6s cubic-bezier(0.23, 1, 0.32, 1),
+    filter 0.6s cubic-bezier(0.23, 1, 0.32, 1),
+    font-size 0.4s cubic-bezier(0.23, 1, 0.32, 1),
+    color 0.3s ease;
   cursor: pointer;
-  transform: scale(0.92);
+  transform: scale(0.88) translateX(0);
   transform-origin: left;
   word-wrap: break-word;
   white-space: pre-wrap;
@@ -330,31 +336,68 @@ html, body {
 }
 
 .lyric-line:hover {
-  opacity: 0.8;
+  opacity: 0.7;
   filter: blur(3px);
+  transform: scale(0.92) translateX(4px);
 }
 
 .lyric-line.passed {
-  opacity: 0.4;
-  transform: scale(0.88);
+  opacity: 0.3;
+  transform: scale(0.85) translateX(-8px);
   filter: blur(8px);
 }
 
+/* 进入动画 - 从下方滑入 */
+.lyric-line.entering {
+  animation: lyricEnter 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+/* 离开动画 - 滑出 */
+.lyric-line.leaving {
+  animation: lyricLeave 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+@keyframes lyricEnter {
+  0% {
+    opacity: 0.5;
+    transform: scale(0.92) translateX(20px);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateX(0);
+    filter: blur(1px);
+  }
+}
+
+@keyframes lyricLeave {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateX(0);
+    filter: blur(1px);
+  }
+  100% {
+    opacity: 0.3;
+    transform: scale(0.85) translateX(-15px);
+    filter: blur(8px);
+  }
+}
+
 .lyric-line.active {
-  font-size: 26px;
-  font-weight: 600;
+  font-size: 32px;
+  font-weight: 700;
   color: var(--accent-color);
   opacity: 1;
-  transform: scale(1);
-  filter: blur(0);
-  text-shadow: 0 0 30px var(--accent-glow);
+  transform: scale(1) translateX(0);
+  filter: blur(1px);
+  text-shadow: 0 0 40px var(--accent-glow);
 }
 
 /* 当前歌词前后的过渡效果 */
 .lyric-line.near-active {
-  opacity: 0.7;
-  transform: scale(0.95);
-  filter: blur(3px);
+  opacity: 0.6;
+  transform: scale(0.94) translateX(0);
+  filter: blur(4px);
 }
 
 /* 播放列表面板 */
@@ -560,9 +603,9 @@ html, body {
 .controls-bar {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 16px;
-  padding: 12px 24px;
+  padding: 12px 32px;
 }
 
 /* Tab 导航栏 - 在控制区 */
@@ -876,8 +919,8 @@ html, body {
 @media (max-width: 768px) {
   #tapp-content {
     grid-template-rows: 5fr 2fr;
-    padding: 12px;
-    gap: 12px;
+    padding: 0;
+    gap: 0;
   }
   
   .content-area {
