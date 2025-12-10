@@ -149,6 +149,20 @@ var pageState = {
   animationFrame: null,
 };
 
+// DOM 元素缓存
+var domCache = {};
+
+function $(id) {
+  if (!domCache[id]) {
+    domCache[id] = document.getElementById(id);
+  }
+  return domCache[id];
+}
+
+function clearDomCache() {
+  domCache = {};
+}
+
 // ========================================
 // 页面模式
 // ========================================
@@ -179,10 +193,9 @@ function getModeTooltip(mode) {
   }
 }
 
-// 渲染歌词 - 增强动效版本
+// 渲染歌词 - 高性能版本
 function renderLyrics(lyrics, currentIndex) {
-  var container = document.getElementById('lyrics-container');
-  var emptyEl = document.getElementById('lyrics-empty');
+  var container = $('lyrics-container');
   if (!container) return;
 
   if (!lyrics || lyrics.length === 0) {
@@ -198,84 +211,88 @@ function renderLyrics(lyrics, currentIndex) {
   var needsFullRender = existingLines.length !== lyrics.length;
 
   if (needsFullRender) {
-    // 完整渲染
-    var html = '';
+    // 使用 DocumentFragment 批量渲染，减少重排
+    var fragment = document.createDocumentFragment();
+    
     for (var i = 0; i < lyrics.length; i++) {
       var line = lyrics[i];
-      var classes = 'lyric-line';
-      var distance = currentIndex >= 0 ? Math.abs(i - currentIndex) : 999;
-      
-      if (i === currentIndex) {
-        classes += ' active';
-      } else if (currentIndex >= 0 && i < currentIndex) {
-        classes += ' passed';
-      }
-      
-      // 根据距离添加不同的过渡类
-      if (distance === 1) {
-        classes += ' near-1';
-      } else if (distance === 2) {
-        classes += ' near-2';
-      } else if (distance === 3) {
-        classes += ' near-3';
-      }
-      
-      html += '<div class="' + classes + '" data-index="' + i + '">' + 
-              escapeHtml(line.text || '') + '</div>';
+      var el = document.createElement('div');
+      el.className = getLyricLineClasses(i, currentIndex);
+      el.setAttribute('data-index', i);
+      el.textContent = line.text || '';
+      fragment.appendChild(el);
     }
-    container.innerHTML = html;
+    
+    container.innerHTML = '';
+    container.appendChild(fragment);
   } else {
-    // 增量更新 - 只更新 class，使用动画过渡
-    existingLines.forEach(function(el, i) {
-      var distance = currentIndex >= 0 ? Math.abs(i - currentIndex) : 999;
-      var newClasses = ['lyric-line'];
-      
-      if (i === currentIndex) {
-        newClasses.push('active');
-        // 触发动画：先添加 entering 类，然后移除
-        if (isIndexChange && i !== prevIndex) {
-          el.classList.add('entering');
-          setTimeout(function() { el.classList.remove('entering'); }, 50);
+    // 增量更新 - 使用 requestAnimationFrame 批量更新
+    requestAnimationFrame(function() {
+      existingLines.forEach(function(el, i) {
+        var newClassName = getLyricLineClasses(i, currentIndex);
+        
+        // 只在类名实际变化时更新
+        if (el.className !== newClassName) {
+          // 处理进入/离开动画
+          if (isIndexChange) {
+            if (i === currentIndex && i !== prevIndex) {
+              // 新的当前行 - 添加进入动画
+              el.classList.add('entering');
+              setTimeout(function() { el.classList.remove('entering'); }, 600);
+            } else if (i === prevIndex) {
+              // 离开的行 - 添加离开动画
+              el.classList.add('leaving');
+              setTimeout(function() { el.classList.remove('leaving'); }, 500);
+            }
+          }
+          
+          el.className = newClassName;
         }
-      } else if (currentIndex >= 0 && i < currentIndex) {
-        newClasses.push('passed');
-      }
-      
-      // 距离渐变效果
-      if (distance === 1) newClasses.push('near-1');
-      else if (distance === 2) newClasses.push('near-2');
-      else if (distance === 3) newClasses.push('near-3');
-      
-      // 离开动画
-      if (isIndexChange && i === prevIndex) {
-        newClasses.push('leaving');
-        setTimeout(function() { el.classList.remove('leaving'); }, 500);
-      }
-      
-      el.className = newClasses.join(' ');
+      });
     });
   }
 
-  // 自动滚动到当前歌词 - 居中显示
+  // 使用 requestAnimationFrame 优化滚动
   if (pageState.settings.autoScroll && currentIndex >= 0) {
-    var activeLine = container.querySelector('.lyric-line.active');
-    if (activeLine) {
-      var containerHeight = container.clientHeight;
-      var lineTop = activeLine.offsetTop;
-      var lineHeight = activeLine.clientHeight;
-      // 滚动到让当前歌词居中
-      var scrollTop = lineTop - (containerHeight / 2) + (lineHeight / 2);
-      container.scrollTo({
-        top: Math.max(0, scrollTop),
-        behavior: 'smooth'
-      });
-    }
+    requestAnimationFrame(function() {
+      var activeLine = container.querySelector('.lyric-line.active');
+      if (activeLine) {
+        var containerHeight = container.clientHeight;
+        var lineTop = activeLine.offsetTop;
+        var lineHeight = activeLine.clientHeight;
+        var scrollTop = lineTop - (containerHeight / 2) + (lineHeight / 2);
+        
+        container.scrollTo({
+          top: Math.max(0, scrollTop),
+          behavior: 'smooth'
+        });
+      }
+    });
   }
+}
+
+// 获取歌词行的类名
+function getLyricLineClasses(index, currentIndex) {
+  var classes = ['lyric-line'];
+  var distance = currentIndex >= 0 ? Math.abs(index - currentIndex) : 999;
+  
+  if (index === currentIndex) {
+    classes.push('active');
+  } else if (currentIndex >= 0 && index < currentIndex) {
+    classes.push('passed');
+  }
+  
+  // 距离渐变效果
+  if (distance === 1) classes.push('near-1');
+  else if (distance === 2) classes.push('near-2');
+  else if (distance === 3) classes.push('near-3');
+  
+  return classes.join(' ');
 }
 
 // 渲染播放列表
 function renderPlaylist(playlist, currentTrack, searchQuery) {
-  var container = document.getElementById('playlist-container');
+  var container = $('playlist-container');
   if (!container) return;
 
   var filteredList = playlist;
@@ -315,7 +332,7 @@ function renderPlaylist(playlist, currentTrack, searchQuery) {
   container.innerHTML = html;
   
   // 更新 Tab badge
-  var badge = document.getElementById('playlist-badge');
+  var badge = $('playlist-badge');
   if (badge) badge.textContent = playlist.length;
 
   // 绑定点击事件
@@ -346,7 +363,7 @@ function updatePlayerUI(status) {
   var track = status.currentTrack;
   
   // 动态背景 - 使用封面作为模糊背景
-  var bgArtwork = document.getElementById('bg-artwork');
+  var bgArtwork = $('bg-artwork');
   if (bgArtwork && track && track.cover) {
     bgArtwork.style.backgroundImage = 'url(' + track.cover + ')';
   }
@@ -354,20 +371,19 @@ function updatePlayerUI(status) {
   // 同步音乐播放器的动态封面颜色
   if (status.primaryColor) {
     var color = status.primaryColor;
-    document.documentElement.style.setProperty('--music-primary', color);
-    // 同步更新派生色（因为CSS变量引用在计算时确定）
-    document.documentElement.style.setProperty('--accent-color', color);
-    // 使用 hex 颜色添加透明度
-    document.documentElement.style.setProperty('--accent-light', color + '26'); // 15% opacity
-    document.documentElement.style.setProperty('--accent-glow', color + '66'); // 40% opacity
+    var root = document.documentElement;
+    root.style.setProperty('--music-primary', color);
+    root.style.setProperty('--accent-color', color);
+    root.style.setProperty('--accent-light', color + '26');
+    root.style.setProperty('--accent-glow', color + '66');
   }
   if (status.secondaryColor) {
     document.documentElement.style.setProperty('--music-secondary', status.secondaryColor);
   }
   
   // 封面
-  var coverEl = document.getElementById('album-cover');
-  var coverPlaceholder = document.getElementById('cover-placeholder');
+  var coverEl = $('album-cover');
+  var coverPlaceholder = $('cover-placeholder');
   if (coverEl && coverPlaceholder) {
     if (track && track.cover) {
       coverEl.src = track.cover;
@@ -384,13 +400,13 @@ function updatePlayerUI(status) {
   }
 
   // 歌曲信息
-  var nameEl = document.getElementById('song-name');
-  var artistEl = document.getElementById('song-artist');
+  var nameEl = $('song-name');
+  var artistEl = $('song-artist');
   if (nameEl) nameEl.textContent = track ? track.name : t('noPlaying');
   if (artistEl) artistEl.textContent = track ? track.artist : '-';
 
   // VIP 标签
-  var vipEl = document.getElementById('vip-badge');
+  var vipEl = $('vip-badge');
   if (vipEl) {
     if (track && track.isVip) {
       vipEl.textContent = t('vip');
@@ -405,8 +421,8 @@ function updatePlayerUI(status) {
     }
   }
 
-  // 播放/暂停按钮 - 使用 icon-play 和 icon-pause
-  var playBtn = document.getElementById('play-btn');
+  // 播放/暂停按钮
+  var playBtn = $('play-btn');
   if (playBtn) {
     var iconPlay = playBtn.querySelector('.icon-play');
     var iconPause = playBtn.querySelector('.icon-pause');
@@ -418,10 +434,10 @@ function updatePlayerUI(status) {
   }
 
   // 进度条
-  var progressBar = document.getElementById('progress-bar');
-  var progressFill = document.getElementById('progress-fill');
-  var currentTimeEl = document.getElementById('current-time');
-  var totalTimeEl = document.getElementById('total-time');
+  var progressBar = $('progress-bar');
+  var progressFill = $('progress-fill');
+  var currentTimeEl = $('current-time');
+  var totalTimeEl = $('total-time');
   var duration = track ? (track.duration || 0) : 0;
   var position = status.position || (status.progress ? status.progress.current : 0) || 0;
   
@@ -436,12 +452,11 @@ function updatePlayerUI(status) {
   if (currentTimeEl) currentTimeEl.textContent = formatTime(position);
   if (totalTimeEl) totalTimeEl.textContent = formatTime(duration);
 
-  // 音量 - API 返回 0-100，HTML slider 是 0-1
-  var volumeBar = document.getElementById('volume-bar');
-  var volumeFill = document.getElementById('volume-fill');
-  var volumeBtn = document.getElementById('volume-btn');
+  // 音量
+  var volumeBar = $('volume-bar');
+  var volumeFill = $('volume-fill');
+  var volumeBtn = $('volume-btn');
   var volumeValue = status.volume || 0;
-  // 规范化音量为 0-1
   var normalizedVolume = volumeValue > 1 ? volumeValue / 100 : volumeValue;
   if (volumeBar) volumeBar.value = normalizedVolume;
   if (volumeFill) volumeFill.style.width = (normalizedVolume * 100) + '%';
@@ -458,11 +473,10 @@ function updatePlayerUI(status) {
   }
 
   // 播放模式
-  var modeBtn = document.getElementById('mode-btn');
+  var modeBtn = $('mode-btn');
   if (modeBtn) {
     modeBtn.innerHTML = getModeIcon(status.mode);
     modeBtn.setAttribute('aria-label', getModeTooltip(status.mode));
-    // 高亮非顺序模式
     if (status.mode && status.mode !== 'sequence') {
       modeBtn.classList.add('active');
     } else {

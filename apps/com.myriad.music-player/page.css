@@ -316,89 +316,102 @@ html, body {
 
 .lyric-line {
   width: 100%;
-  padding: 12px 0;
-  font-size: 23px;
-  line-height: 1.5;
+  padding: 10px 0;
+  font-size: 22px;
+  line-height: 1.4;
   color: var(--text-secondary);
   text-align: left;
-  opacity: 0.6;
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0.5;
   cursor: pointer;
-  transform: scale(0.92);
-  transform-origin: left;
+  transform: scale(0.92) translateZ(0);
+  transform-origin: left center;
   word-wrap: break-word;
   white-space: pre-wrap;
-  filter: blur(6px);
+  filter: blur(5px);
+  will-change: transform, opacity, filter;
+  transition: 
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.5s ease-out,
+    filter 0.5s ease-out,
+    color 0.4s ease-out,
+    font-size 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .lyric-line:hover {
-  opacity: 0.8;
+  opacity: 0.7;
   filter: blur(3px);
+  transform: scale(0.94) translateZ(0);
 }
 
 .lyric-line.passed {
-  opacity: 0.4;
-  transform: scale(0.88);
-  filter: blur(8px);
+  opacity: 0.3;
+  transform: scale(0.88) translateZ(0);
+  filter: blur(6px);
 }
 
 .lyric-line.active {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 600;
   color: var(--accent-color);
   opacity: 1;
-  transform: scale(1.05);
-  filter: blur(0.5px);
-  text-shadow: 0 0 40px var(--accent-glow);
+  transform: scale(1) translateZ(0);
+  filter: blur(0);
+  text-shadow: 
+    0 0 20px var(--accent-glow),
+    0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 /* 当前歌词前后的过渡效果 - 距离渐变 */
 .lyric-line.near-1 {
-  opacity: 0.75;
-  transform: scale(0.97);
-  filter: blur(2px);
+  opacity: 0.8;
+  transform: scale(0.96) translateZ(0);
+  filter: blur(1px);
 }
 
 .lyric-line.near-2 {
-  opacity: 0.55;
-  transform: scale(0.94);
-  filter: blur(4px);
+  opacity: 0.6;
+  transform: scale(0.93) translateZ(0);
+  filter: blur(3px);
 }
 
 .lyric-line.near-3 {
   opacity: 0.45;
-  transform: scale(0.91);
-  filter: blur(5px);
+  transform: scale(0.90) translateZ(0);
+  filter: blur(4px);
 }
 
-/* 歌词切换动画 */
+/* 歌词切换动画 - GPU加速 */
 .lyric-line.entering {
-  animation: lyricEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: lyricEnter 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .lyric-line.leaving {
-  animation: lyricLeave 0.4s ease-out forwards;
+  animation: lyricLeave 0.5s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
 @keyframes lyricEnter {
   0% {
-    transform: scale(0.9) translateY(10px);
+    transform: scale(0.92) translateY(8px) translateZ(0);
+    opacity: 0.5;
     filter: blur(4px);
   }
   100% {
-    transform: scale(1.05);
-    filter: blur(0.5px);
+    transform: scale(1) translateY(0) translateZ(0);
+    opacity: 1;
+    filter: blur(0);
   }
 }
 
 @keyframes lyricLeave {
   0% {
-    transform: scale(1.05);
-    filter: blur(0.5px);
+    transform: scale(1) translateZ(0);
+    opacity: 1;
+    filter: blur(0);
   }
   100% {
-    transform: scale(0.88);
-    filter: blur(8px);
+    transform: scale(0.88) translateY(-5px) translateZ(0);
+    opacity: 0.3;
+    filter: blur(6px);
   }
 }
 
@@ -610,18 +623,12 @@ html, body {
   padding: 12px 24px;
 }
 
-/* Tab 导航栏 - 在控制区 */
-.tab-bar {
-  display: flex;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
+/* Tab 按钮 - 在右侧控制组 */
 .tab-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  position: relative;
   width: 36px;
   height: 36px;
   padding: 0;
@@ -660,10 +667,6 @@ html, body {
   border-radius: 8px;
   min-width: 14px;
   text-align: center;
-}
-
-.tab-btn {
-  position: relative;
 }
 
 /* 进度条区域 */
@@ -793,6 +796,24 @@ html, body {
 
 .control-secondary.active {
   color: var(--accent-color);
+}
+
+/* 播放模式按钮 - 默认白色 */
+.control-mode {
+  color: var(--text-primary);
+}
+
+.control-mode.active {
+  color: var(--text-primary);
+  opacity: 0.7;
+}
+
+/* 右侧控制组 */
+.right-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 /* 主按钮 - 上一首/下一首 */

@@ -73,29 +73,6 @@
   <!-- 底部控制区 - 1/7高度 -->
   <div class="controls-bar">
     
-    <!-- Tab 切换 -->
-    <nav class="tab-bar">
-      <button class="tab-btn active" data-tab="lyrics" id="tab-lyrics">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/>
-          <path d="M8 12h8v2H8zm0 4h5v2H8z"/>
-        </svg>
-      </button>
-      <button class="tab-btn" data-tab="playlist" id="tab-playlist">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M4 10h12v2H4zm0-4h12v2H4zm0 8h8v2H4zm10 0v6l5-3z"/>
-        </svg>
-        <span class="tab-badge" id="playlist-badge">0</span>
-      </button>
-    </nav>
-    
-    <!-- 播放模式按钮 -->
-    <button id="mode-btn" class="control-btn control-secondary" aria-label="播放模式">
-      <svg viewBox="0 0 24 24" fill="currentColor">
-        <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
-      </svg>
-    </button>
-    
     <!-- 主控制按钮组 -->
     <div class="controls-group">
       <button id="prev-btn" class="control-btn control-main" aria-label="上一首">
@@ -146,6 +123,26 @@
         <input type="range" id="volume-bar" class="volume-slider" min="0" max="1" step="0.01" value="0.7" aria-label="音量" />
         <div class="volume-fill" id="volume-fill"></div>
       </div>
+    </div>
+    
+    <!-- 右侧控制组：歌词、播放列表、播放模式 -->
+    <div class="right-controls">
+      <button class="tab-btn active" data-tab="lyrics" id="tab-lyrics" aria-label="歌词">
+        <svg viewBox="0 0 20 20" fill="currentColor">
+          <path d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM5 7a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h3a1 1 0 100-2H6z" />
+        </svg>
+      </button>
+      <button class="tab-btn" data-tab="playlist" id="tab-playlist" aria-label="播放列表">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M4 10h12v2H4zm0-4h12v2H4zm0 8h8v2H4zm10 0v6l5-3z"/>
+        </svg>
+        <span class="tab-badge" id="playlist-badge">0</span>
+      </button>
+      <button id="mode-btn" class="control-btn control-secondary control-mode" aria-label="播放模式">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
+        </svg>
+      </button>
     </div>
     
   </div>
