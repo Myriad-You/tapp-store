@@ -179,14 +179,7 @@ function getModeTooltip(mode) {
   }
 }
 
-// 歌词动画状态
-var lyricsAnimState = {
-  lastIndex: -1,
-  isAnimating: false,
-  elements: new Map(), // 缓存 DOM 元素
-};
-
-// 渲染歌词
+// 渲染歌词 - 增强动效版本
 function renderLyrics(lyrics, currentIndex) {
   var container = document.getElementById('lyrics-container');
   var emptyEl = document.getElementById('lyrics-empty');
@@ -194,142 +187,90 @@ function renderLyrics(lyrics, currentIndex) {
 
   if (!lyrics || lyrics.length === 0) {
     container.innerHTML = '<div class="lyrics-empty">' + t('noLyrics') + '</div>';
-    lyricsAnimState.elements.clear();
-    lyricsAnimState.lastIndex = -1;
     return;
   }
 
-  // 检查是否需要完全重新渲染
-  var needFullRender = container.children.length !== lyrics.length ||
-    !container.querySelector('.lyric-line');
+  var prevIndex = pageState.currentLyricIndex;
+  var isIndexChange = prevIndex !== currentIndex && prevIndex >= 0 && currentIndex >= 0;
 
-  if (needFullRender) {
+  // 检查是否需要重新渲染整个列表
+  var existingLines = container.querySelectorAll('.lyric-line');
+  var needsFullRender = existingLines.length !== lyrics.length;
+
+  if (needsFullRender) {
+    // 完整渲染
     var html = '';
     for (var i = 0; i < lyrics.length; i++) {
       var line = lyrics[i];
-      html += '<div class="lyric-line" data-index="' + i + '">' + 
+      var classes = 'lyric-line';
+      var distance = currentIndex >= 0 ? Math.abs(i - currentIndex) : 999;
+      
+      if (i === currentIndex) {
+        classes += ' active';
+      } else if (currentIndex >= 0 && i < currentIndex) {
+        classes += ' passed';
+      }
+      
+      // 根据距离添加不同的过渡类
+      if (distance === 1) {
+        classes += ' near-1';
+      } else if (distance === 2) {
+        classes += ' near-2';
+      } else if (distance === 3) {
+        classes += ' near-3';
+      }
+      
+      html += '<div class="' + classes + '" data-index="' + i + '">' + 
               escapeHtml(line.text || '') + '</div>';
     }
     container.innerHTML = html;
-    lyricsAnimState.elements.clear();
-    
-    // 缓存所有歌词行元素
-    var allLines = container.querySelectorAll('.lyric-line');
-    allLines.forEach(function(el, idx) {
-      lyricsAnimState.elements.set(idx, el);
+  } else {
+    // 增量更新 - 只更新 class，使用动画过渡
+    existingLines.forEach(function(el, i) {
+      var distance = currentIndex >= 0 ? Math.abs(i - currentIndex) : 999;
+      var newClasses = ['lyric-line'];
+      
+      if (i === currentIndex) {
+        newClasses.push('active');
+        // 触发动画：先添加 entering 类，然后移除
+        if (isIndexChange && i !== prevIndex) {
+          el.classList.add('entering');
+          setTimeout(function() { el.classList.remove('entering'); }, 50);
+        }
+      } else if (currentIndex >= 0 && i < currentIndex) {
+        newClasses.push('passed');
+      }
+      
+      // 距离渐变效果
+      if (distance === 1) newClasses.push('near-1');
+      else if (distance === 2) newClasses.push('near-2');
+      else if (distance === 3) newClasses.push('near-3');
+      
+      // 离开动画
+      if (isIndexChange && i === prevIndex) {
+        newClasses.push('leaving');
+        setTimeout(function() { el.classList.remove('leaving'); }, 500);
+      }
+      
+      el.className = newClasses.join(' ');
     });
   }
 
-  // 更新歌词状态 - 带动画
-  updateLyricsWithAnimation(container, lyrics, currentIndex);
-}
-
-// 带动画更新歌词高亮
-function updateLyricsWithAnimation(container, lyrics, currentIndex) {
-  var lastIndex = lyricsAnimState.lastIndex;
-  var direction = currentIndex > lastIndex ? 1 : (currentIndex < lastIndex ? -1 : 0);
-  
-  // 遍历所有歌词行，更新状态
-  for (var i = 0; i < lyrics.length; i++) {
-    var el = lyricsAnimState.elements.get(i) || container.querySelector('[data-index="' + i + '"]');
-    if (!el) continue;
-    
-    // 先移除所有状态类
-    el.classList.remove('active', 'passed', 'near-active', 'entering', 'leaving');
-    
-    // 根据位置添加类
-    if (i === currentIndex) {
-      // 当前播放的歌词 - 添加进入动画
-      if (lastIndex !== currentIndex) {
-        el.classList.add('entering');
-        // 强制重绘后移除 entering，添加 active
-        requestAnimationFrame(function() {
-          requestAnimationFrame(function() {
-            el.classList.remove('entering');
-            el.classList.add('active');
-          });
-        });
-      } else {
-        el.classList.add('active');
-      }
-    } else if (currentIndex >= 0 && i < currentIndex) {
-      // 已播放的歌词
-      if (i === lastIndex && direction === 1) {
-        // 刚刚离开的歌词 - 添加离开动画
-        el.classList.add('leaving');
-        (function(element) {
-          setTimeout(function() {
-            element.classList.remove('leaving');
-            element.classList.add('passed');
-          }, 300);
-        })(el);
-      } else {
-        el.classList.add('passed');
-      }
-    } else if (currentIndex >= 0 && Math.abs(i - currentIndex) <= 2) {
-      // 当前歌词前后2行
-      el.classList.add('near-active');
-    }
-  }
-  
-  // 更新状态
-  lyricsAnimState.lastIndex = currentIndex;
-
-  // 自动滚动到当前歌词 - 居中显示，使用更平滑的滚动
+  // 自动滚动到当前歌词 - 居中显示
   if (pageState.settings.autoScroll && currentIndex >= 0) {
-    smoothScrollToLyric(container, currentIndex);
-  }
-}
-
-// 平滑滚动到当前歌词
-function smoothScrollToLyric(container, index) {
-  var activeLine = lyricsAnimState.elements.get(index) || 
-    container.querySelector('[data-index="' + index + '"]');
-  
-  if (!activeLine) return;
-  
-  var containerHeight = container.clientHeight;
-  var lineTop = activeLine.offsetTop;
-  var lineHeight = activeLine.clientHeight;
-  
-  // 目标滚动位置 - 让当前歌词居中
-  var targetScroll = lineTop - (containerHeight / 2) + (lineHeight / 2);
-  targetScroll = Math.max(0, targetScroll);
-  
-  // 使用自定义缓动的滚动动画
-  animateScroll(container, targetScroll, 500);
-}
-
-// 自定义缓动滚动动画
-function animateScroll(element, to, duration) {
-  var start = element.scrollTop;
-  var change = to - start;
-  var startTime = performance.now();
-  
-  // 如果已有动画在运行，取消它
-  if (lyricsAnimState.scrollAnimationId) {
-    cancelAnimationFrame(lyricsAnimState.scrollAnimationId);
-  }
-  
-  function easeOutExpo(t) {
-    return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
-  }
-  
-  function animate(currentTime) {
-    var elapsed = currentTime - startTime;
-    var progress = Math.min(elapsed / duration, 1);
-    var eased = easeOutExpo(progress);
-    
-    element.scrollTop = start + change * eased;
-    
-    if (progress < 1) {
-      lyricsAnimState.scrollAnimationId = requestAnimationFrame(animate);
-    } else {
-      lyricsAnimState.scrollAnimationId = null;
+    var activeLine = container.querySelector('.lyric-line.active');
+    if (activeLine) {
+      var containerHeight = container.clientHeight;
+      var lineTop = activeLine.offsetTop;
+      var lineHeight = activeLine.clientHeight;
+      // 滚动到让当前歌词居中
+      var scrollTop = lineTop - (containerHeight / 2) + (lineHeight / 2);
+      container.scrollTo({
+        top: Math.max(0, scrollTop),
+        behavior: 'smooth'
+      });
     }
   }
-  
-  lyricsAnimState.scrollAnimationId = requestAnimationFrame(animate);
 }
 
 // 渲染播放列表

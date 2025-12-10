@@ -114,12 +114,12 @@ html, body {
   position: relative;
   height: 100vh;
   width: 100%;
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0;
   display: grid;
   grid-template-rows: 6fr 1fr;
-  gap: 0;
+  gap: 16px;
+  padding: 0 !important;
   overflow: hidden;
 }
 
@@ -129,7 +129,7 @@ html, body {
 .content-area {
   display: grid;
   grid-template-columns: 2fr 3fr;
-  gap: 0;
+  gap: 16px;
   min-height: 0;
   overflow: hidden;
 }
@@ -142,9 +142,10 @@ html, body {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  padding: 24px 32px;
+  padding: 24px;
+  padding-left: 15%;
   overflow: hidden;
-  gap: 8px;
+  gap: 12px;
 }
 
 /* 封面容器 - 自适应大小 */
@@ -201,7 +202,7 @@ html, body {
   width: 100%;
   text-align: left;
   flex-shrink: 0;
-  margin-top: -4px;
+  margin-top: 10px;
 }
 
 .track-title-row {
@@ -315,20 +316,15 @@ html, body {
 
 .lyric-line {
   width: 100%;
-  padding: 14px 0;
-  font-size: 24px;
+  padding: 12px 0;
+  font-size: 23px;
   line-height: 1.5;
   color: var(--text-secondary);
   text-align: left;
-  opacity: 0.5;
-  transition: 
-    opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1),
-    transform 0.6s cubic-bezier(0.23, 1, 0.32, 1),
-    filter 0.6s cubic-bezier(0.23, 1, 0.32, 1),
-    font-size 0.4s cubic-bezier(0.23, 1, 0.32, 1),
-    color 0.3s ease;
+  opacity: 0.6;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
-  transform: scale(0.88) translateX(0);
+  transform: scale(0.92);
   transform-origin: left;
   word-wrap: break-word;
   white-space: pre-wrap;
@@ -336,68 +332,74 @@ html, body {
 }
 
 .lyric-line:hover {
-  opacity: 0.7;
+  opacity: 0.8;
   filter: blur(3px);
-  transform: scale(0.92) translateX(4px);
 }
 
 .lyric-line.passed {
-  opacity: 0.3;
-  transform: scale(0.85) translateX(-8px);
+  opacity: 0.4;
+  transform: scale(0.88);
   filter: blur(8px);
 }
 
-/* 进入动画 - 从下方滑入 */
-.lyric-line.entering {
-  animation: lyricEnter 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+.lyric-line.active {
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--accent-color);
+  opacity: 1;
+  transform: scale(1.05);
+  filter: blur(0.5px);
+  text-shadow: 0 0 40px var(--accent-glow);
 }
 
-/* 离开动画 - 滑出 */
+/* 当前歌词前后的过渡效果 - 距离渐变 */
+.lyric-line.near-1 {
+  opacity: 0.75;
+  transform: scale(0.97);
+  filter: blur(2px);
+}
+
+.lyric-line.near-2 {
+  opacity: 0.55;
+  transform: scale(0.94);
+  filter: blur(4px);
+}
+
+.lyric-line.near-3 {
+  opacity: 0.45;
+  transform: scale(0.91);
+  filter: blur(5px);
+}
+
+/* 歌词切换动画 */
+.lyric-line.entering {
+  animation: lyricEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
 .lyric-line.leaving {
-  animation: lyricLeave 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  animation: lyricLeave 0.4s ease-out forwards;
 }
 
 @keyframes lyricEnter {
   0% {
-    opacity: 0.5;
-    transform: scale(0.92) translateX(20px);
+    transform: scale(0.9) translateY(10px);
     filter: blur(4px);
   }
   100% {
-    opacity: 1;
-    transform: scale(1) translateX(0);
-    filter: blur(1px);
+    transform: scale(1.05);
+    filter: blur(0.5px);
   }
 }
 
 @keyframes lyricLeave {
   0% {
-    opacity: 1;
-    transform: scale(1) translateX(0);
-    filter: blur(1px);
+    transform: scale(1.05);
+    filter: blur(0.5px);
   }
   100% {
-    opacity: 0.3;
-    transform: scale(0.85) translateX(-15px);
+    transform: scale(0.88);
     filter: blur(8px);
   }
-}
-
-.lyric-line.active {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--accent-color);
-  opacity: 1;
-  transform: scale(1) translateX(0);
-  filter: blur(1px);
-  text-shadow: 0 0 40px var(--accent-glow);
-}
-
-/* 当前歌词前后的过渡效果 */
-.lyric-line.near-active {
-  opacity: 0.6;
-  transform: scale(0.94) translateX(0);
-  filter: blur(4px);
 }
 
 /* 播放列表面板 */
@@ -603,9 +605,9 @@ html, body {
 .controls-bar {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 16px;
-  padding: 12px 32px;
+  padding: 12px 24px;
 }
 
 /* Tab 导航栏 - 在控制区 */
@@ -919,8 +921,8 @@ html, body {
 @media (max-width: 768px) {
   #tapp-content {
     grid-template-rows: 5fr 2fr;
-    padding: 0;
-    gap: 0;
+    padding: 12px;
+    gap: 12px;
   }
   
   .content-area {
