@@ -26,7 +26,7 @@
       "repository": "https://github.com/Myriad-You/tapp-store",
       "category": "productivity",
       "tags": ["笔记", "便签", "效率", "widget", "搜索", "多语言"],
-      "permissions": ["storage", "ui:notification", "ui:theme"],
+      "permissions": ["storage", "ui:notification", "ui:theme", "ui:confirm"],
       "min_myriad_version": "0.1.0",
       "icon": "📝",
       "screenshots": [],

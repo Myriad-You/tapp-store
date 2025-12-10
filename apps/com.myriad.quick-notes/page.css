@@ -522,7 +522,6 @@
   padding: 16px 20px;
   padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   z-index: 100;
-  background: linear-gradient(to top, var(--notes-bg-solid) 60%, transparent);
 }
 
 .input-card {
