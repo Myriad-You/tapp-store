@@ -7,11 +7,26 @@
   /* 动态音乐颜色 - 由 JS 从播放器的封面颜色同步 */
   --music-primary: #fc3c44;
   --music-secondary: #ff6b6b;
+  --music-accent: #ff8a8a;
+  --music-light: #ffb3b3;
+  --music-dark: #cc2e34;
   
   /* 派生色 - 基于音乐封面颜色 */
   --accent-color: var(--music-primary);
   --accent-light: color-mix(in srgb, var(--music-primary) 15%, transparent);
   --accent-glow: color-mix(in srgb, var(--music-primary) 40%, transparent);
+  
+  /* 按钮渐变色 */
+  --btn-gradient: linear-gradient(135deg,
+    color-mix(in srgb, var(--music-primary) 15%, transparent),
+    color-mix(in srgb, var(--music-secondary) 10%, transparent)
+  );
+  --btn-gradient-hover: linear-gradient(135deg,
+    color-mix(in srgb, var(--music-primary) 25%, transparent),
+    color-mix(in srgb, var(--music-secondary) 20%, transparent)
+  );
+  --btn-border: color-mix(in srgb, var(--music-primary) 20%, transparent);
+  --btn-border-hover: color-mix(in srgb, var(--music-primary) 35%, transparent);
   
   /* 玻璃效果 */
   --glass-bg: rgba(255, 255, 255, 0.72);
@@ -600,7 +615,7 @@ html, body {
   padding: 12px 24px;
 }
 
-/* Tab 按钮 - 在右侧控制组 */
+/* Tab 按钮 - 在右侧控制组，渐变背景 */
 .tab-btn {
   display: flex;
   align-items: center;
@@ -612,8 +627,8 @@ html, body {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
-  background: transparent;
-  border: none;
+  background: var(--btn-gradient);
+  border: 1px solid var(--btn-border);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -626,10 +641,14 @@ html, body {
 
 .tab-btn:hover {
   color: var(--text-primary);
+  background: var(--btn-gradient-hover);
+  border-color: var(--btn-border-hover);
 }
 
 .tab-btn.active {
   color: var(--accent-color);
+  background: var(--btn-gradient-hover);
+  border-color: var(--btn-border-hover);
 }
 
 .tab-badge {
@@ -766,11 +785,18 @@ html, body {
   transition: inherit;
 }
 
-/* 次要按钮 - 模式/音量 */
+/* 次要按钮 - 模式/音量，渐变背景 */
 .control-secondary {
   width: 32px;
   height: 32px;
   border-radius: 50%;
+  background: var(--btn-gradient);
+  border: 1px solid var(--btn-border);
+}
+
+.control-secondary:hover {
+  background: var(--btn-gradient-hover);
+  border-color: var(--btn-border-hover);
 }
 
 .control-secondary svg {
@@ -780,6 +806,7 @@ html, body {
 
 .control-secondary.active {
   color: var(--accent-color);
+  background: var(--btn-gradient-hover);
 }
 
 /* 播放模式按钮 - 默认白色 */
@@ -800,10 +827,18 @@ html, body {
   flex-shrink: 0;
 }
 
-/* 主按钮 - 上一首/下一首 */
+/* 主按钮 - 上一首/下一首，渐变背景 */
 .control-main {
   width: 36px;
   height: 36px;
+  border-radius: 50%;
+  background: var(--btn-gradient);
+  border: 1px solid var(--btn-border);
+}
+
+.control-main:hover {
+  background: var(--btn-gradient-hover);
+  border-color: var(--btn-border-hover);
 }
 
 .control-main svg {
@@ -811,11 +846,14 @@ html, body {
   height: 24px;
 }
 
-/* 播放按钮 */
+/* 播放按钮 - 渐变效果 */
 .control-play {
   width: 52px;
   height: 52px;
-  background: var(--accent-color);
+  background: linear-gradient(135deg,
+    var(--music-primary),
+    var(--music-secondary)
+  );
   border-radius: 50%;
   color: #fff;
   box-shadow: 0 4px 16px var(--accent-glow);
@@ -824,7 +862,7 @@ html, body {
 .control-play:hover {
   color: #fff;
   transform: scale(1.08);
-  box-shadow: 0 6px 20px var(--accent-glow);
+  box-shadow: 0 6px 24px var(--accent-glow), 0 0 40px color-mix(in srgb, var(--music-primary) 30%, transparent);
 }
 
 .control-play svg {

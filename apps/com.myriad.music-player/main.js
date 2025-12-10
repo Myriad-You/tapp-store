@@ -329,7 +329,116 @@ function handleLyricClick(e) {
   }
 }
 
-// 渲染播放列表
+// ========================================
+// 虚拟滚动播放列表
+// ========================================
+
+var virtualList = {
+  container: null,
+  scrollContainer: null,
+  itemHeight: 56, // 每项高度
+  bufferSize: 5,  // 上下缓冲区大小
+  visibleStart: 0,
+  visibleEnd: 0,
+  data: [],
+  currentTrackId: null,
+  searchQuery: '',
+  scrollHandler: null
+};
+
+// 初始化虚拟列表
+function initVirtualList() {
+  virtualList.scrollContainer = document.querySelector('.playlist-scroll');
+  virtualList.container = $('playlist-container');
+  
+  if (!virtualList.scrollContainer || !virtualList.container) return;
+  
+  // 移除旧的滚动监听
+  if (virtualList.scrollHandler) {
+    virtualList.scrollContainer.removeEventListener('scroll', virtualList.scrollHandler);
+  }
+  
+  // 添加滚动监听（使用节流）
+  var scrollTimeout = null;
+  virtualList.scrollHandler = function() {
+    if (scrollTimeout) return;
+    scrollTimeout = setTimeout(function() {
+      scrollTimeout = null;
+      renderVisibleItems();
+    }, 16); // ~60fps
+  };
+  
+  virtualList.scrollContainer.addEventListener('scroll', virtualList.scrollHandler, { passive: true });
+}
+
+// 渲染可见项
+function renderVisibleItems() {
+  if (!virtualList.container || !virtualList.scrollContainer) return;
+  if (virtualList.data.length === 0) return;
+  
+  var scrollTop = virtualList.scrollContainer.scrollTop;
+  var containerHeight = virtualList.scrollContainer.clientHeight;
+  
+  var startIndex = Math.max(0, Math.floor(scrollTop / virtualList.itemHeight) - virtualList.bufferSize);
+  var endIndex = Math.min(
+    virtualList.data.length,
+    Math.ceil((scrollTop + containerHeight) / virtualList.itemHeight) + virtualList.bufferSize
+  );
+  
+  // 如果范围没变，不重新渲染
+  if (startIndex === virtualList.visibleStart && endIndex === virtualList.visibleEnd) {
+    return;
+  }
+  
+  virtualList.visibleStart = startIndex;
+  virtualList.visibleEnd = endIndex;
+  
+  // 创建容器内容
+  var totalHeight = virtualList.data.length * virtualList.itemHeight;
+  var offsetTop = startIndex * virtualList.itemHeight;
+  
+  var html = '<div style="height:' + totalHeight + 'px;position:relative;">';
+  html += '<div style="position:absolute;top:' + offsetTop + 'px;left:0;right:0;">';
+  
+  for (var i = startIndex; i < endIndex; i++) {
+    var song = virtualList.data[i];
+    var isActive = virtualList.currentTrackId && song.id === virtualList.currentTrackId;
+    
+    var coverHtml = song.cover 
+      ? '<img class="playlist-item-cover" src="' + escapeHtml(song.cover) + '" alt="" loading="lazy" />'
+      : '<div class="playlist-item-cover"></div>';
+    
+    html += '<div class="playlist-item ' + (isActive ? 'active' : '') + '" data-id="' + song.id + '" data-index="' + song.originalIndex + '">' +
+            coverHtml +
+            '<div class="playlist-item-info">' +
+              '<div class="playlist-item-name">' + escapeHtml(song.name) + '</div>' +
+              '<div class="playlist-item-artist">' + escapeHtml(song.artist) + '</div>' +
+            '</div>' +
+            '</div>';
+  }
+  
+  html += '</div></div>';
+  virtualList.container.innerHTML = html;
+  
+  // 绑定点击事件（使用事件委托）
+  bindPlaylistClickEvents();
+}
+
+// 绑定播放列表点击事件
+function bindPlaylistClickEvents() {
+  if (!virtualList.container) return;
+  
+  // 使用事件委托，只在容器上绑定一次
+  virtualList.container.onclick = function(e) {
+    var item = e.target.closest('.playlist-item');
+    if (item) {
+      var index = parseInt(item.getAttribute('data-index'), 10);
+      Tapp.media.jumpToIndex(index);
+    }
+  };
+}
+
+// 渲染播放列表（使用虚拟滚动）
 function renderPlaylist(playlist, currentTrack, searchQuery) {
   var container = $('playlist-container');
   if (!container) return;
@@ -346,15 +455,50 @@ function renderPlaylist(playlist, currentTrack, searchQuery) {
   if (filteredList.length === 0) {
     container.innerHTML = '<div class="playlist-empty">' + 
       (searchQuery ? '未找到匹配歌曲' : t('noPlaylist')) + '</div>';
+    virtualList.data = [];
     return;
   }
+  
+  // 更新 Tab badge
+  var badge = $('playlist-badge');
+  if (badge) badge.textContent = playlist.length;
 
+  // 小列表直接渲染，大列表使用虚拟滚动
+  if (filteredList.length <= 50) {
+    renderPlaylistSimple(filteredList, currentTrack);
+  } else {
+    // 初始化虚拟列表
+    initVirtualList();
+    virtualList.data = filteredList;
+    virtualList.currentTrackId = currentTrack ? currentTrack.id : null;
+    virtualList.searchQuery = searchQuery;
+    virtualList.visibleStart = -1; // 强制重新渲染
+    virtualList.visibleEnd = -1;
+    renderVisibleItems();
+    
+    // 滚动到当前播放
+    if (!searchQuery && currentTrack) {
+      var activeIndex = filteredList.findIndex(function(s) { return s.id === currentTrack.id; });
+      if (activeIndex >= 0) {
+        setTimeout(function() {
+          var scrollTop = activeIndex * virtualList.itemHeight - virtualList.scrollContainer.clientHeight / 2 + virtualList.itemHeight / 2;
+          virtualList.scrollContainer.scrollTo({ top: Math.max(0, scrollTop), behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }
+}
+
+// 简单渲染（小列表）
+function renderPlaylistSimple(filteredList, currentTrack) {
+  var container = $('playlist-container');
+  if (!container) return;
+  
   var html = '';
   for (var i = 0; i < filteredList.length; i++) {
     var song = filteredList[i];
     var isActive = currentTrack && song.id === currentTrack.id;
     
-    // 封面图片或占位
     var coverHtml = song.cover 
       ? '<img class="playlist-item-cover" src="' + escapeHtml(song.cover) + '" alt="" loading="lazy" />'
       : '<div class="playlist-item-cover"></div>';
@@ -368,23 +512,18 @@ function renderPlaylist(playlist, currentTrack, searchQuery) {
             '</div>';
   }
   container.innerHTML = html;
-  
-  // 更新 Tab badge
-  var badge = $('playlist-badge');
-  if (badge) badge.textContent = playlist.length;
 
-  // 绑定点击事件 - 跳转到指定歌曲
+  // 绑定点击事件
   var items = container.querySelectorAll('.playlist-item');
   items.forEach(function(item) {
     item.addEventListener('click', function() {
       var index = parseInt(item.getAttribute('data-index'), 10);
-      // jumpToIndex 在当前播放列表中跳转，不触发临时播放
       Tapp.media.jumpToIndex(index);
     });
   });
 
   // 滚动到当前播放
-  if (!searchQuery && currentTrack) {
+  if (currentTrack) {
     var activeItem = container.querySelector('.playlist-item.active');
     if (activeItem) {
       setTimeout(function() {
@@ -406,17 +545,26 @@ function updatePlayerUI(status) {
     bgArtwork.style.backgroundImage = 'url(' + track.cover + ')';
   }
   
-  // 同步音乐播放器的动态封面颜色
+  // 同步音乐播放器的完整动态颜色
+  var root = document.documentElement;
   if (status.primaryColor) {
-    var color = status.primaryColor;
-    var root = document.documentElement;
-    root.style.setProperty('--music-primary', color);
-    root.style.setProperty('--accent-color', color);
-    root.style.setProperty('--accent-light', color + '26');
-    root.style.setProperty('--accent-glow', color + '66');
+    var primary = status.primaryColor;
+    root.style.setProperty('--music-primary', primary);
+    root.style.setProperty('--accent-color', primary);
+    root.style.setProperty('--accent-light', primary + '26');
+    root.style.setProperty('--accent-glow', primary + '66');
   }
   if (status.secondaryColor) {
-    document.documentElement.style.setProperty('--music-secondary', status.secondaryColor);
+    root.style.setProperty('--music-secondary', status.secondaryColor);
+  }
+  if (status.accentColor) {
+    root.style.setProperty('--music-accent', status.accentColor);
+  }
+  if (status.lightColor) {
+    root.style.setProperty('--music-light', status.lightColor);
+  }
+  if (status.darkColor) {
+    root.style.setProperty('--music-dark', status.darkColor);
   }
   
   // 封面
