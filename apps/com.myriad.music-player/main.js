@@ -397,11 +397,27 @@ async function initPage() {
 
   // 获取初始状态
   try {
-    var status = await Tapp.media.getStatus();
+    var statusResult = await Tapp.media.getStatus();
+    // API 返回 { isPlaying, currentTrack: { id, title, artist, cover, duration }, progress, volume, muted, mode }
+    var status = statusResult || {};
+    
+    // 规范化字段名: API 返回 title，我们需要 name
+    if (status.currentTrack) {
+      status.currentTrack.name = status.currentTrack.title || status.currentTrack.name;
+    }
+    // 规范化进度: API 返回 progress.current，我们需要 position
+    if (status.progress) {
+      status.position = status.progress.current || 0;
+    }
+    // 规范化音量: API 返回 0-100，我们需要 0-1
+    if (typeof status.volume === 'number' && status.volume > 1) {
+      status.volume = status.volume / 100;
+    }
+    
     pageState.status = status;
     updatePlayerUI(status);
 
-    // 获取歌词
+    // 获取歌词（如果有）
     if (status.currentTrack && status.currentTrack.lyrics) {
       renderLyrics(status.currentTrack.lyrics, -1);
     }
@@ -411,22 +427,52 @@ async function initPage() {
 
   // 获取播放列表
   try {
-    var playlist = await Tapp.media.getPlaylist();
-    pageState.playlist = playlist.map(function(song, idx) {
-      song.originalIndex = idx;
-      return song;
+    var playlistResult = await Tapp.media.getPlaylist();
+    // API 返回 { tracks: [...], currentIndex, total }
+    var tracks = [];
+    if (playlistResult && Array.isArray(playlistResult.tracks)) {
+      tracks = playlistResult.tracks;
+    } else if (Array.isArray(playlistResult)) {
+      tracks = playlistResult;
+    }
+    
+    pageState.playlist = tracks.map(function(song, idx) {
+      // 规范化字段名
+      return {
+        id: song.id || String(idx),
+        name: song.title || song.name || 'Unknown',
+        artist: song.artist || 'Unknown',
+        cover: song.cover || '',
+        duration: song.duration || 0,
+        isVip: song.isVip || false,
+        vipType: song.vipType || null,
+        originalIndex: song.index !== undefined ? song.index : idx,
+        isCurrent: song.isCurrent || false
+      };
     });
+    
     renderPlaylist(pageState.playlist, pageState.status?.currentTrack, '');
     
     // 更新歌曲数量
     var countEl = document.getElementById('playlist-count');
-    if (countEl) countEl.textContent = playlist.length + ' ' + t('songs');
+    if (countEl) countEl.textContent = pageState.playlist.length + ' ' + t('songs');
   } catch (e) {
     console.error('Failed to get playlist:', e);
   }
 
   // 监听状态变化
   pageState.unsubscribe = Tapp.media.onStateChange(function(state) {
+    // 规范化状态
+    if (state.currentTrack) {
+      state.currentTrack.name = state.currentTrack.title || state.currentTrack.name;
+    }
+    if (state.progress) {
+      state.position = state.progress.current || 0;
+    }
+    if (typeof state.volume === 'number' && state.volume > 1) {
+      state.volume = state.volume / 100;
+    }
+    
     pageState.status = state;
     updatePlayerUI(state);
 
