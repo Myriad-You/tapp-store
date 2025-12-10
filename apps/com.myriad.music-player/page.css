@@ -1011,26 +1011,27 @@ html, body {
     flex-direction: column;
   }
   
-  /* 左侧区域全屏显示 */
+  /* 左侧区域 - 居左布局 */
   .player-left {
     flex: 1;
     padding: 20px;
     gap: 20px;
-    justify-content: center;
+    justify-content: flex-start;
+    align-items: flex-start;
   }
   
   .artwork-wrapper {
-    max-width: 280px;
-    width: 70%;
+    max-width: 200px;
+    width: 50%;
   }
   
   .track-info {
-    text-align: center;
-    align-items: center;
+    text-align: left;
+    align-items: flex-start;
   }
   
   .track-title-row {
-    justify-content: center;
+    justify-content: flex-start;
   }
   
   .track-title {
@@ -1112,30 +1113,34 @@ html, body {
     color: var(--text-primary);
   }
   
-  /* 控制栏适配 */
+  /* 控制栏适配 - 居左多行布局 */
   .controls-bar {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: flex-start;
     padding: 12px 16px;
     gap: 12px;
     border-radius: var(--radius-lg);
   }
   
-  .controls-group {
-    order: 1;
-  }
-  
+  /* 第一行：进度条 */
   .progress-section {
-    order: 3;
+    order: 1;
     width: 100%;
     max-width: none;
   }
   
-  .volume-section {
-    display: none; /* 移动端隐藏音量控制 */
+  /* 第二行：上一首 播放 下一首 */
+  .controls-group {
+    order: 2;
   }
   
+  /* 第三行：其他功能 */
   .right-controls {
-    order: 2;
+    order: 3;
+  }
+  
+  .volume-section {
+    display: none; /* 移动端隐藏音量控制 */
   }
   
   .control-play {
@@ -1185,8 +1190,8 @@ html, body {
   }
   
   .artwork-wrapper {
-    max-width: 200px;
-    width: 60%;
+    max-width: 160px;
+    width: 45%;
   }
   
   .track-title {
