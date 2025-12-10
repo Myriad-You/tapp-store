@@ -479,7 +479,6 @@
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  background: linear-gradient(135deg, var(--w-primary), var(--w-secondary));
   border-radius: 50%;
   animation: avatar-float 3s ease-in-out infinite;
 }

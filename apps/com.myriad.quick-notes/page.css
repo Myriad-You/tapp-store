@@ -1,6 +1,6 @@
 /**
  * Quick Notes Page v1.0.0
- * 便携便签 - 页面样式
+ * 便携便签 - 页面样式（便利贴风格）
  */
 
 /* ========================================
@@ -19,6 +19,14 @@
   /* 功能色 */
   --notes-error: #ef4444;
   --notes-success: #10b981;
+  
+  /* 便利贴颜色 */
+  --sticky-yellow: #fef3c7;
+  --sticky-pink: #fce7f3;
+  --sticky-blue: #dbeafe;
+  --sticky-green: #dcfce7;
+  --sticky-purple: #f3e8ff;
+  --sticky-orange: #ffedd5;
   
   /* 背景色 */
   --notes-bg-solid: #f8f9fa;
@@ -49,6 +57,7 @@
   --notes-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   --notes-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.15);
   --notes-shadow-glow: 0 0 20px rgba(var(--notes-primary-rgb), 0.2);
+  --sticky-shadow: 2px 4px 12px rgba(0, 0, 0, 0.1);
   
   /* 过渡 */
   --notes-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -67,6 +76,14 @@
   --notes-glow-strong: rgba(var(--notes-primary-rgb), 0.35);
   --notes-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   --notes-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+  
+  /* 深色便利贴颜色（降低亮度） */
+  --sticky-yellow: #44403c;
+  --sticky-pink: #4a3f4a;
+  --sticky-blue: #3b4a5a;
+  --sticky-green: #3b4a3f;
+  --sticky-purple: #4a3f5a;
+  --sticky-orange: #4a433b;
 }
 
 /* ========================================
@@ -143,13 +160,13 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px 20px 20px;
 }
 
 /* ========================================
-   状态头部
+   状态头部（含搜索）
    ======================================== */
 
 .status-header {
@@ -177,6 +194,10 @@
   transition: var(--notes-transition);
 }
 
+.status-pill.searching {
+  gap: 8px;
+}
+
 .status-avatar {
   width: 32px;
   height: 32px;
@@ -196,6 +217,13 @@
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  transition: var(--notes-transition);
+}
+
+.status-pill.searching .status-info {
+  width: 0;
+  overflow: hidden;
+  opacity: 0;
 }
 
 .status-title {
@@ -216,10 +244,47 @@
   transition: var(--notes-transition);
 }
 
+/* ========================================
+   胶囊内搜索
+   ======================================== */
+
+.search-wrapper {
+  width: 0;
+  overflow: hidden;
+  transition: width 0.3s ease, opacity 0.2s ease;
+  opacity: 0;
+}
+
+.status-pill.searching .search-wrapper {
+  width: 200px;
+  opacity: 1;
+}
+
+.search-input {
+  width: 100%;
+  padding: 6px 12px;
+  border: 1px solid var(--notes-border);
+  border-radius: 20px;
+  background: var(--notes-surface);
+  font-size: 13px;
+  color: var(--notes-text);
+  outline: none;
+  transition: var(--notes-transition);
+}
+
+.search-input::placeholder {
+  color: var(--notes-text-secondary);
+}
+
+.search-input:focus {
+  border-color: var(--notes-primary);
+  box-shadow: 0 0 0 2px rgba(var(--notes-primary-rgb), 0.15);
+}
+
 .status-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin-left: 4px;
 }
 
@@ -242,6 +307,11 @@
   color: var(--notes-primary);
 }
 
+.status-action-btn.active {
+  background: var(--notes-primary);
+  color: white;
+}
+
 .dark .status-action-btn {
   background: rgba(255, 255, 255, 0.08);
 }
@@ -251,17 +321,19 @@
   color: var(--notes-primary);
 }
 
+.dark .status-action-btn.active {
+  background: var(--notes-primary);
+  color: white;
+}
+
 /* ========================================
-   笔记列表区域
+   笔记区域（便利贴网格）
    ======================================== */
 
 .notes-area {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
   padding: 8px 0;
   scroll-behavior: smooth;
   min-height: 0;
@@ -284,121 +356,154 @@
   background: rgba(var(--notes-primary-rgb), 0.4);
 }
 
+/* 便利贴网格布局 */
+.notes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  padding: 8px 4px;
+}
+
 /* ========================================
-   笔记卡片
+   便利贴卡片
    ======================================== */
 
-.note-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 16px 20px;
-  background: var(--notes-surface);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--notes-border);
-  border-radius: var(--notes-radius-sm);
-  box-shadow: var(--notes-shadow);
+.sticky-note {
+  position: relative;
+  min-height: 140px;
+  max-height: 220px;
+  padding: 16px;
+  border-radius: 4px;
+  box-shadow: var(--sticky-shadow);
   transition: var(--notes-transition);
-  animation: note-fade-in 0.4s ease-out;
+  animation: sticky-pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.note-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--notes-shadow-lg);
-  border-color: rgba(var(--notes-primary-rgb), 0.2);
+/* 便利贴颜色变体 */
+.sticky-note.color-0 { background: var(--sticky-yellow); }
+.sticky-note.color-1 { background: var(--sticky-pink); }
+.sticky-note.color-2 { background: var(--sticky-blue); }
+.sticky-note.color-3 { background: var(--sticky-green); }
+.sticky-note.color-4 { background: var(--sticky-purple); }
+.sticky-note.color-5 { background: var(--sticky-orange); }
+
+/* 便利贴折角效果 */
+.sticky-note::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 24px 24px 0;
+  border-color: transparent rgba(0,0,0,0.08) transparent transparent;
+  transition: var(--notes-transition);
 }
 
-@keyframes note-fade-in {
+.sticky-note::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, transparent 50%, rgba(255,255,255,0.4) 50%);
+}
+
+.sticky-note:hover {
+  transform: translateY(-4px) rotate(-1deg);
+  box-shadow: 4px 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes sticky-pop-in {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: scale(0.8) rotate(-5deg);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1) rotate(0deg);
   }
 }
 
-.note-card-content {
+.sticky-content {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  overflow: hidden;
 }
 
-.note-card-text {
-  font-size: 15px;
-  line-height: 1.6;
-  color: var(--notes-text);
-  word-break: break-word;
-  white-space: pre-wrap;
-}
-
-.note-card-time {
-  font-size: 13px;
-  color: var(--notes-text-secondary);
-}
-
-.note-card-delete {
-  padding: 8px 16px;
-  border: none;
-  border-radius: var(--notes-radius-xs);
-  background: transparent;
-  color: var(--notes-text-secondary);
+.sticky-text {
   font-size: 14px;
-  cursor: pointer;
-  transition: var(--notes-transition);
-  flex-shrink: 0;
+  line-height: 1.5;
+  color: #1f2937;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-family: 'Comic Sans MS', 'Segoe Print', cursive, sans-serif;
 }
 
-.note-card-delete:hover {
-  background: rgba(239, 68, 68, 0.15);
-  color: var(--notes-error);
+.dark .sticky-text {
+  color: #e5e7eb;
+}
+
+.sticky-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.sticky-time {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.4);
+  font-family: sans-serif;
+}
+
+.dark .sticky-time {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.sticky-delete {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.08);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.4);
+  font-size: 14px;
+  opacity: 0;
+  transition: var(--notes-transition);
+}
+
+.sticky-note:hover .sticky-delete {
+  opacity: 1;
+}
+
+.sticky-delete:hover {
+  background: var(--notes-error);
+  color: white;
 }
 
 /* ========================================
-   空状态
+   空状态（不再占位，隐藏）
    ======================================== */
 
-.notes-empty {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 60px 20px;
-  background: var(--notes-surface);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--notes-border);
-  border-radius: var(--notes-radius);
-  text-align: center;
-  color: var(--notes-text-secondary);
-  animation: empty-fade 0.5s ease-out;
-}
-
-@keyframes empty-fade {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.empty-icon {
-  font-size: 48px;
-  opacity: 0.6;
-}
-
-.empty-text {
-  font-size: 16px;
-  color: var(--notes-text-secondary);
+.notes-area.empty {
+  display: none;
 }
 
 /* ========================================
@@ -408,6 +513,8 @@
 .float-input-wrap {
   position: relative;
   width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
   padding: 16px 0;
   z-index: 10;
   flex-shrink: 0;
@@ -517,47 +624,6 @@
 }
 
 /* ========================================
-   搜索栏
-   ======================================== */
-
-.search-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  background: var(--notes-surface);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--notes-border);
-  border-radius: 28px;
-  margin-bottom: 16px;
-  transition: var(--notes-transition);
-}
-
-.search-bar:focus-within {
-  border-color: rgba(var(--notes-primary-rgb), 0.4);
-  box-shadow: 0 0 0 3px rgba(var(--notes-primary-rgb), 0.1);
-}
-
-.search-icon {
-  color: var(--notes-text-secondary);
-  font-size: 16px;
-}
-
-.search-input {
-  flex: 1;
-  border: none;
-  background: transparent;
-  font-size: 14px;
-  color: var(--notes-text);
-  outline: none;
-}
-
-.search-input::placeholder {
-  color: var(--notes-text-secondary);
-}
-
-/* ========================================
    响应式
    ======================================== */
 
@@ -570,13 +636,23 @@
     padding: 8px 12px;
   }
   
-  .note-card {
-    padding: 12px 16px;
+  .status-pill.searching .search-wrapper {
+    width: 140px;
+  }
+  
+  .notes-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 12px;
   }
   
-  .note-card-text {
-    font-size: 14px;
+  .sticky-note {
+    min-height: 120px;
+    padding: 12px;
+  }
+  
+  .sticky-text {
+    font-size: 13px;
+    -webkit-line-clamp: 5;
   }
   
   .input-card {
@@ -586,5 +662,11 @@
   .page-send-btn {
     width: 40px;
     height: 40px;
+  }
+}
+
+@media (min-width: 900px) {
+  .notes-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   }
 }

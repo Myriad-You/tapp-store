@@ -1,5 +1,5 @@
 // Quick Notes Tapp v1.0.0
-// 便携便签 - 完全重构版
+// 便携便签 - 完全重构版（便利贴风格）
 
 // ========================================
 // 国际化
@@ -322,7 +322,9 @@ function updateStatusPill() {
   titleEl.textContent = t('title');
   
   var count = pageState.notes.length;
-  if (pageState.searchQuery) {
+  if (count === 0) {
+    subtitleEl.textContent = t('emptyTitle');
+  } else if (pageState.searchQuery) {
     subtitleEl.textContent = pageState.filteredNotes.length + ' / ' + count + ' ' + t('notesCount');
   } else {
     subtitleEl.textContent = count + ' ' + t('notesCount');
@@ -338,45 +340,62 @@ function renderPageNotes() {
   
   var notesToRender = pageState.searchQuery ? pageState.filteredNotes : pageState.notes;
   
+  // 空状态：不渲染占位元素，仅在胶囊显示提示
   if (notesToRender.length === 0) {
-    var empty = document.createElement('div');
-    empty.className = 'notes-empty';
-    empty.innerHTML = '<span class="empty-icon">📝</span><span class="empty-text">' + 
-      escapeHtml(pageState.searchQuery ? t('emptyTitle') : t('emptySubtitle')) + '</span>';
-    area.appendChild(empty);
+    area.classList.add('empty');
     return;
   }
   
-  notesToRender.forEach(function(note) {
-    var card = document.createElement('div');
-    card.className = 'note-card';
+  area.classList.remove('empty');
+  
+  // 创建便利贴网格容器
+  var grid = document.createElement('div');
+  grid.className = 'notes-grid';
+  
+  notesToRender.forEach(function(note, index) {
+    var sticky = document.createElement('div');
+    // 分配颜色：基于note.id循环6种颜色
+    var colorIndex = note.id % 6;
+    sticky.className = 'sticky-note color-' + colorIndex;
     
     var content = document.createElement('div');
-    content.className = 'note-card-content';
+    content.className = 'sticky-content';
     
     var text = document.createElement('div');
-    text.className = 'note-card-text';
+    text.className = 'sticky-text';
     text.textContent = note.text;
     content.appendChild(text);
     
+    var footer = document.createElement('div');
+    footer.className = 'sticky-footer';
+    
     if (pageState.settings.showTimestamp) {
-      var time = document.createElement('div');
-      time.className = 'note-card-time';
+      var time = document.createElement('span');
+      time.className = 'sticky-time';
       time.textContent = formatTime(note.createdAt);
-      content.appendChild(time);
+      footer.appendChild(time);
     }
     
     var deleteBtn = document.createElement('button');
-    deleteBtn.className = 'note-card-delete';
-    deleteBtn.textContent = t('delete');
-    deleteBtn.addEventListener('click', function() {
+    deleteBtn.className = 'sticky-delete';
+    deleteBtn.textContent = '×';
+    deleteBtn.title = t('delete');
+    deleteBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
       deletePageNote(note.id);
     });
+    footer.appendChild(deleteBtn);
     
-    card.appendChild(content);
-    card.appendChild(deleteBtn);
-    area.appendChild(card);
+    content.appendChild(footer);
+    sticky.appendChild(content);
+    
+    // 添加动画延迟
+    sticky.style.animationDelay = (index * 0.05) + 's';
+    
+    grid.appendChild(sticky);
   });
+  
+  area.appendChild(grid);
 }
 
 async function addPageNote() {
@@ -486,12 +505,44 @@ function initPage() {
   var clearBtn = document.getElementById('page-clear');
   var charCount = document.getElementById('char-count');
   var searchInput = document.getElementById('search-input');
+  var searchToggle = document.getElementById('search-toggle');
+  var statusPill = document.getElementById('status-pill');
   
   // 设置多语言文本
   if (input) input.placeholder = t('placeholder');
   if (sendBtn) sendBtn.title = t('add');
   if (clearBtn) clearBtn.title = t('clearAll');
   if (searchInput) searchInput.placeholder = t('searchPlaceholder');
+  
+  // 搜索切换按钮
+  if (searchToggle && statusPill && searchInput) {
+    searchToggle.onclick = function() {
+      var isSearching = statusPill.classList.toggle('searching');
+      searchToggle.classList.toggle('active', isSearching);
+      
+      if (isSearching) {
+        setTimeout(function() {
+          searchInput.focus();
+        }, 150);
+      } else {
+        // 关闭搜索时清空并重新渲染
+        searchInput.value = '';
+        filterNotes('');
+        renderPageNotes();
+      }
+    };
+    
+    // ESC键关闭搜索
+    searchInput.onkeydown = function(e) {
+      if (e.key === 'Escape') {
+        statusPill.classList.remove('searching');
+        searchToggle.classList.remove('active');
+        searchInput.value = '';
+        filterNotes('');
+        renderPageNotes();
+      }
+    };
+  }
   
   // 输入框事件
   if (input) {
@@ -519,7 +570,7 @@ function initPage() {
     clearBtn.onclick = clearAllNotes;
   }
   
-  // 搜索
+  // 搜索输入
   if (searchInput) {
     var searchTimeout;
     searchInput.oninput = function() {
