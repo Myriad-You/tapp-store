@@ -1,118 +1,153 @@
-<!-- Music Player Page v1.0.0 -->
+<!-- Music Player Tapp v2.0 - Apple Music Style -->
 
-<!-- 背景层 -->
+<!-- 动态背景 -->
 <div id="tapp-background">
-  <div class="page-bg-base"></div>
-  <div class="page-bg-glow page-bg-glow-1"></div>
-  <div class="page-bg-glow page-bg-glow-2"></div>
+  <div class="bg-artwork" id="bg-artwork"></div>
+  <div class="bg-overlay"></div>
 </div>
 
-<!-- 内容层 -->
+<!-- 主内容 -->
 <div id="tapp-content">
-  <div class="player-layout">
+  <div class="player-container">
     
-    <!-- 左侧：歌曲信息 -->
-    <div class="player-left">
-      <!-- 封面区域 -->
-      <div class="album-cover-wrapper">
-        <img id="album-cover" class="album-cover" src="" alt="Album Cover" />
-        <div id="cover-placeholder" class="cover-placeholder">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-          </svg>
+    <!-- 顶部：Now Playing -->
+    <header class="now-playing-header">
+      <span class="now-playing-label" id="now-playing-label">正在播放</span>
+    </header>
+    
+    <!-- 中间：封面 + 信息 + 控制 -->
+    <main class="player-main">
+      
+      <!-- 封面 -->
+      <div class="artwork-container">
+        <div class="artwork-wrapper" id="artwork-wrapper">
+          <img id="album-cover" class="artwork-image" src="" alt="" />
+          <div id="cover-placeholder" class="artwork-placeholder">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+            </svg>
+          </div>
         </div>
-        <!-- 频谱动画 -->
-        <div id="spectrum-bars" class="spectrum-bars">
-          <span></span><span></span><span></span><span></span>
+        <!-- 播放状态指示器 -->
+        <div id="playing-indicator" class="playing-indicator">
+          <span></span><span></span><span></span>
         </div>
       </div>
       
       <!-- 歌曲信息 -->
-      <div class="song-info">
-        <div class="song-name-row">
-          <h2 id="song-name" class="song-name">暂无播放</h2>
-          <span id="vip-badge" class="vip-badge" style="display:none;">VIP</span>
+      <div class="track-info">
+        <div class="track-title-row">
+          <h1 id="song-name" class="track-title">未在播放</h1>
+          <span id="vip-badge" class="badge-vip" style="display:none;">VIP</span>
         </div>
-        <p id="song-artist" class="song-artist"></p>
+        <p id="song-artist" class="track-artist">-</p>
       </div>
       
       <!-- 进度条 -->
-      <div class="progress-section">
-        <span id="current-time" class="time-label">0:00</span>
-        <input type="range" id="progress-bar" class="progress-bar" min="0" max="100" value="0" aria-label="播放进度" title="播放进度" />
-        <span id="total-time" class="time-label">0:00</span>
+      <div class="progress-container">
+        <div class="progress-track">
+          <input type="range" id="progress-bar" class="progress-slider" min="0" max="100" value="0" aria-label="播放进度" />
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="progress-times">
+          <span id="current-time" class="time-current">0:00</span>
+          <span id="total-time" class="time-total">0:00</span>
+        </div>
       </div>
       
-      <!-- 控制按钮 -->
-      <div class="controls-section">
-        <button id="mode-btn" class="control-btn mode-btn" title="播放模式">
+      <!-- 播放控制 -->
+      <div class="controls-container">
+        <button id="mode-btn" class="control-btn control-secondary" aria-label="播放模式">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
           </svg>
         </button>
         
-        <button id="prev-btn" class="control-btn" title="上一首">
+        <button id="prev-btn" class="control-btn control-main" aria-label="上一首">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
           </svg>
         </button>
         
-        <button id="play-btn" class="control-btn play-btn" title="播放">
-          <svg viewBox="0 0 24 24" fill="currentColor">
+        <button id="play-btn" class="control-btn control-play" aria-label="播放">
+          <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor">
             <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
           </svg>
         </button>
         
-        <button id="next-btn" class="control-btn" title="下一首">
+        <button id="next-btn" class="control-btn control-main" aria-label="下一首">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
           </svg>
         </button>
         
-        <div class="volume-control">
-          <button id="volume-icon" class="control-btn volume-btn" title="音量">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-            </svg>
-          </button>
-          <input type="range" id="volume-bar" class="volume-bar" min="0" max="1" step="0.01" value="0.7" aria-label="音量" title="音量" />
-        </div>
-      </div>
-    </div>
-    
-    <!-- 右侧：歌词 -->
-    <div class="player-right">
-      <div class="lyrics-header">
-        <h3 class="lyrics-title">歌词</h3>
-      </div>
-      <div id="lyrics-container" class="lyrics-container">
-        <div class="lyrics-empty">暂无歌词</div>
-      </div>
-    </div>
-    
-    <!-- 底部：播放列表 -->
-    <div class="player-bottom">
-      <div class="playlist-header">
-        <div class="playlist-title-row">
-          <h3 class="playlist-title">播放列表</h3>
-          <span id="playlist-count" class="playlist-count">0 首歌曲</span>
-        </div>
-        <div class="playlist-search-wrapper">
-          <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+        <button id="volume-btn" class="control-btn control-secondary" aria-label="音量">
+          <svg class="icon-volume" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
           </svg>
-          <input type="text" id="playlist-search" class="playlist-search" placeholder="搜索歌曲..." />
-          <button id="clear-search" class="clear-search-btn" aria-label="清除搜索" title="清除搜索">
+          <svg class="icon-muted" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- 音量滑块（点击音量按钮展开） -->
+      <div class="volume-slider-container" id="volume-container">
+        <div class="volume-track">
+          <input type="range" id="volume-bar" class="volume-slider" min="0" max="1" step="0.01" value="0.7" aria-label="音量" />
+          <div class="volume-fill" id="volume-fill"></div>
+        </div>
+      </div>
+      
+    </main>
+    
+    <!-- 底部：Tab 切换 -->
+    <nav class="tab-bar">
+      <button class="tab-btn active" data-tab="lyrics" id="tab-lyrics">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/>
+          <path d="M8 12h8v2H8zm0 4h5v2H8z"/>
+        </svg>
+        <span>歌词</span>
+      </button>
+      <button class="tab-btn" data-tab="playlist" id="tab-playlist">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M4 10h12v2H4zm0-4h12v2H4zm0 8h8v2H4zm10 0v6l5-3z"/>
+        </svg>
+        <span>列表</span>
+        <span class="tab-badge" id="playlist-badge">0</span>
+      </button>
+    </nav>
+    
+    <!-- 歌词面板 -->
+    <section class="panel panel-lyrics active" id="panel-lyrics">
+      <div class="lyrics-scroll" id="lyrics-container">
+        <div class="lyrics-empty" id="lyrics-empty">暂无歌词</div>
+      </div>
+    </section>
+    
+    <!-- 播放列表面板 -->
+    <section class="panel panel-playlist" id="panel-playlist">
+      <div class="playlist-header">
+        <div class="search-box">
+          <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"/>
+          </svg>
+          <input type="text" id="playlist-search" class="search-input" placeholder="搜索" />
+          <button id="clear-search" class="search-clear" aria-label="清除">
             <svg viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/>
             </svg>
           </button>
         </div>
       </div>
-      <div id="playlist-container" class="playlist-container">
-        <div class="playlist-empty">播放列表为空</div>
+      <div class="playlist-scroll" id="playlist-container">
+        <div class="playlist-empty" id="playlist-empty">播放列表为空</div>
       </div>
-    </div>
+    </section>
     
   </div>
 </div>

@@ -182,6 +182,7 @@ function getModeTooltip(mode) {
 // 渲染歌词
 function renderLyrics(lyrics, currentIndex) {
   var container = document.getElementById('lyrics-container');
+  var emptyEl = document.getElementById('lyrics-empty');
   if (!container) return;
 
   if (!lyrics || lyrics.length === 0) {
@@ -239,23 +240,26 @@ function renderPlaylist(playlist, currentTrack, searchQuery) {
   for (var i = 0; i < filteredList.length; i++) {
     var song = filteredList[i];
     var isActive = currentTrack && song.id === currentTrack.id;
-    var vipBadge = '';
-    if (song.isVip) {
-      vipBadge = '<span class="vip-badge">' + t('vip') + '</span>';
-    } else if (song.vipType === 'trial') {
-      vipBadge = '<span class="vip-badge trial">' + t('trial') + '</span>';
-    }
+    
+    // 封面图片或占位
+    var coverHtml = song.cover 
+      ? '<img class="playlist-item-cover" src="' + escapeHtml(song.cover) + '" alt="" loading="lazy" />'
+      : '<div class="playlist-item-cover"></div>';
     
     html += '<div class="playlist-item ' + (isActive ? 'active' : '') + '" data-id="' + song.id + '" data-index="' + song.originalIndex + '">' +
-            '<div class="playlist-item-index">' + (song.originalIndex + 1) + '</div>' +
+            coverHtml +
             '<div class="playlist-item-info">' +
-              '<div class="playlist-item-name">' + escapeHtml(song.name) + vipBadge + '</div>' +
+              '<div class="playlist-item-name">' + escapeHtml(song.name) + '</div>' +
               '<div class="playlist-item-artist">' + escapeHtml(song.artist) + '</div>' +
             '</div>' +
-            (isActive ? '<div class="playlist-item-playing">♪</div>' : '') +
+            (isActive ? '<div class="playlist-item-playing"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>' : '') +
             '</div>';
   }
   container.innerHTML = html;
+  
+  // 更新 Tab badge
+  var badge = document.getElementById('playlist-badge');
+  if (badge) badge.textContent = playlist.length;
 
   // 绑定点击事件
   var items = container.querySelectorAll('.playlist-item');
@@ -284,6 +288,12 @@ function updatePlayerUI(status) {
 
   var track = status.currentTrack;
   
+  // 动态背景 - 使用封面作为模糊背景
+  var bgArtwork = document.getElementById('bg-artwork');
+  if (bgArtwork && track && track.cover) {
+    bgArtwork.style.backgroundImage = 'url(' + track.cover + ')';
+  }
+  
   // 封面
   var coverEl = document.getElementById('album-cover');
   var coverPlaceholder = document.getElementById('cover-placeholder');
@@ -306,74 +316,96 @@ function updatePlayerUI(status) {
   var nameEl = document.getElementById('song-name');
   var artistEl = document.getElementById('song-artist');
   if (nameEl) nameEl.textContent = track ? track.name : t('noPlaying');
-  if (artistEl) artistEl.textContent = track ? track.artist : '';
+  if (artistEl) artistEl.textContent = track ? track.artist : '-';
 
   // VIP 标签
   var vipEl = document.getElementById('vip-badge');
   if (vipEl) {
     if (track && track.isVip) {
       vipEl.textContent = t('vip');
-      vipEl.className = 'vip-badge';
+      vipEl.className = 'badge-vip';
       vipEl.style.display = 'inline-block';
     } else if (track && track.vipType === 'trial') {
       vipEl.textContent = t('trial');
-      vipEl.className = 'vip-badge trial';
+      vipEl.className = 'badge-vip trial';
       vipEl.style.display = 'inline-block';
     } else {
       vipEl.style.display = 'none';
     }
   }
 
-  // 播放/暂停按钮
+  // 播放/暂停按钮 - 使用 icon-play 和 icon-pause
   var playBtn = document.getElementById('play-btn');
   if (playBtn) {
-    playBtn.innerHTML = status.isPlaying
-      ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>'
-      : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
-    playBtn.title = status.isPlaying ? t('pause') : t('play');
+    var iconPlay = playBtn.querySelector('.icon-play');
+    var iconPause = playBtn.querySelector('.icon-pause');
+    if (iconPlay && iconPause) {
+      iconPlay.style.display = status.isPlaying ? 'none' : 'block';
+      iconPause.style.display = status.isPlaying ? 'block' : 'none';
+    }
+    playBtn.setAttribute('aria-label', status.isPlaying ? t('pause') : t('play'));
   }
 
   // 进度条
   var progressBar = document.getElementById('progress-bar');
+  var progressFill = document.getElementById('progress-fill');
   var currentTimeEl = document.getElementById('current-time');
   var totalTimeEl = document.getElementById('total-time');
   var duration = track ? (track.duration || 0) : 0;
   var position = status.position || (status.progress ? status.progress.current : 0) || 0;
   
   if (progressBar) {
-    progressBar.max = duration;
+    progressBar.max = duration || 100;
     progressBar.value = position;
+  }
+  if (progressFill) {
+    var percent = duration > 0 ? (position / duration) * 100 : 0;
+    progressFill.style.width = percent + '%';
   }
   if (currentTimeEl) currentTimeEl.textContent = formatTime(position);
   if (totalTimeEl) totalTimeEl.textContent = formatTime(duration);
 
   // 音量 - API 返回 0-100，HTML slider 是 0-1
   var volumeBar = document.getElementById('volume-bar');
-  var volumeIcon = document.getElementById('volume-icon');
+  var volumeFill = document.getElementById('volume-fill');
+  var volumeBtn = document.getElementById('volume-btn');
   var volumeValue = status.volume || 0;
   // 规范化音量为 0-1
   var normalizedVolume = volumeValue > 1 ? volumeValue / 100 : volumeValue;
   if (volumeBar) volumeBar.value = normalizedVolume;
-  if (volumeIcon) {
-    volumeIcon.innerHTML = status.muted || volumeValue === 0
-      ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>'
-      : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
+  if (volumeFill) volumeFill.style.width = (normalizedVolume * 100) + '%';
+  
+  // 音量图标切换
+  if (volumeBtn) {
+    var iconVolume = volumeBtn.querySelector('.icon-volume');
+    var iconMuted = volumeBtn.querySelector('.icon-muted');
+    if (iconVolume && iconMuted) {
+      var isMuted = status.muted || volumeValue === 0;
+      iconVolume.style.display = isMuted ? 'none' : 'block';
+      iconMuted.style.display = isMuted ? 'block' : 'none';
+    }
   }
 
   // 播放模式
   var modeBtn = document.getElementById('mode-btn');
   if (modeBtn) {
     modeBtn.innerHTML = getModeIcon(status.mode);
-    modeBtn.title = getModeTooltip(status.mode);
+    modeBtn.setAttribute('aria-label', getModeTooltip(status.mode));
+    // 高亮非顺序模式
+    if (status.mode && status.mode !== 'sequence') {
+      modeBtn.classList.add('active');
+    } else {
+      modeBtn.classList.remove('active');
+    }
   }
 
-  // 频谱动画 - 播放状态指示
-  var spectrumEl = document.getElementById('spectrum-bars');
-  if (spectrumEl) {
-    if (status.isPlaying && pageState.settings.showSpectrum) {
-      spectrumEl.classList.add('playing');
+  // 播放状态指示器
+  var playingIndicator = document.getElementById('playing-indicator');
+  if (playingIndicator) {
+    if (status.isPlaying) {
+      playingIndicator.classList.add('active');
     } else {
-      spectrumEl.classList.remove('playing');
+      playingIndicator.classList.remove('active');
     }
   }
 }
@@ -462,9 +494,9 @@ async function initPage() {
     
     renderPlaylist(pageState.playlist, pageState.status?.currentTrack, '');
     
-    // 更新歌曲数量
-    var countEl = document.getElementById('playlist-count');
-    if (countEl) countEl.textContent = pageState.playlist.length + ' ' + t('songs');
+    // 更新 Tab badge 数量
+    var badge = document.getElementById('playlist-badge');
+    if (badge) badge.textContent = pageState.playlist.length;
   } catch (e) {
     console.error('Failed to get playlist:', e);
   }
@@ -534,6 +566,24 @@ async function initPage() {
 
 // 绑定控制按钮事件
 function bindControls() {
+  // Tab 切换
+  var tabBtns = document.querySelectorAll('.tab-btn');
+  tabBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var tab = btn.getAttribute('data-tab');
+      
+      // 更新 tab 按钮状态
+      tabBtns.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      
+      // 切换面板
+      var panels = document.querySelectorAll('.panel');
+      panels.forEach(function(p) { p.classList.remove('active'); });
+      var targetPanel = document.getElementById('panel-' + tab);
+      if (targetPanel) targetPanel.classList.add('active');
+    });
+  });
+  
   // 播放/暂停
   var playBtn = document.getElementById('play-btn');
   if (playBtn) {
@@ -562,33 +612,50 @@ function bindControls() {
     });
   }
 
-  // 进度条
+  // 进度条 - 同步 fill
   var progressBar = document.getElementById('progress-bar');
+  var progressFill = document.getElementById('progress-fill');
   if (progressBar) {
     progressBar.addEventListener('input', function(e) {
-      Tapp.media.seek(parseFloat(e.target.value));
+      var value = parseFloat(e.target.value);
+      var max = parseFloat(e.target.max) || 100;
+      if (progressFill) {
+        progressFill.style.width = (value / max * 100) + '%';
+      }
+      Tapp.media.seek(value);
     });
   }
 
-  // 音量
+  // 音量按钮 - 展开/收起滑块 + 静音切换
+  var volumeBtn = document.getElementById('volume-btn');
+  var volumeContainer = document.getElementById('volume-container');
+  if (volumeBtn && volumeContainer) {
+    volumeBtn.addEventListener('click', function(e) {
+      // 如果按住 shift 或双击，切换静音
+      if (e.shiftKey) {
+        if (pageState.status && pageState.status.muted) {
+          Tapp.media.unmute();
+        } else {
+          Tapp.media.mute();
+        }
+      } else {
+        // 切换音量滑块显示
+        volumeContainer.classList.toggle('active');
+      }
+    });
+  }
+
+  // 音量滑块 - 同步 fill
   var volumeBar = document.getElementById('volume-bar');
+  var volumeFill = document.getElementById('volume-fill');
   if (volumeBar) {
     volumeBar.addEventListener('input', function(e) {
-      // 后端期望 0-100，HTML slider 是 0-1，需要转换
-      var volumeValue = parseFloat(e.target.value) * 100;
-      Tapp.media.setVolume(volumeValue);
-    });
-  }
-
-  // 静音切换
-  var volumeIcon = document.getElementById('volume-icon');
-  if (volumeIcon) {
-    volumeIcon.addEventListener('click', function() {
-      if (pageState.status && pageState.status.muted) {
-        Tapp.media.unmute();
-      } else {
-        Tapp.media.mute();
+      var value = parseFloat(e.target.value);
+      if (volumeFill) {
+        volumeFill.style.width = (value * 100) + '%';
       }
+      // 后端期望 0-100，HTML slider 是 0-1，需要转换
+      Tapp.media.setVolume(value * 100);
     });
   }
 
@@ -665,7 +732,10 @@ function cleanup() {
         // 应用主题色
         var primaryColor = results[2];
         if (primaryColor) {
-          document.documentElement.style.setProperty('--primary-color', primaryColor);
+          document.documentElement.style.setProperty('--accent-color', primaryColor);
+          // 计算浅色版本
+          document.documentElement.style.setProperty('--accent-light', primaryColor + '26');
+          document.documentElement.style.setProperty('--accent-glow', primaryColor + '66');
         }
 
         await initPage();
@@ -678,7 +748,9 @@ function cleanup() {
 
         // 监听主题色变化
         Tapp.ui.onPrimaryColorChange(function(color) {
-          document.documentElement.style.setProperty('--primary-color', color);
+          document.documentElement.style.setProperty('--accent-color', color);
+          document.documentElement.style.setProperty('--accent-light', color + '26');
+          document.documentElement.style.setProperty('--accent-glow', color + '66');
         });
       } catch (err) {
         console.error('Init error:', err);
