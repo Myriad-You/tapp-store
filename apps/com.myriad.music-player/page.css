@@ -425,7 +425,7 @@ html, body {
 }
 
 .playlist-header {
-  padding: 10px 16px;
+  padding: 20px 16px 10px;
   flex-shrink: 0;
 }
 

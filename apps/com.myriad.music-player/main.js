@@ -377,9 +377,10 @@ function renderPlaylist(playlist, currentTrack, searchQuery) {
   var items = container.querySelectorAll('.playlist-item');
   items.forEach(function(item) {
     item.addEventListener('click', function() {
+      var id = item.getAttribute('data-id');
       var index = parseInt(item.getAttribute('data-index'), 10);
-      // 使用 skipTo 在当前播放列表中跳转，而非 playTrack 临时播放
-      Tapp.media.skipTo(index);
+      // playTrack 在当前播放列表中跳转到指定索引
+      Tapp.media.playTrack(id, index);
     });
   });
 
