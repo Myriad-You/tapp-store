@@ -15,11 +15,6 @@
     <!-- 左侧：封面 + 歌曲信息 -->
     <div class="player-left">
       
-      <!-- 顶部：Now Playing -->
-      <header class="now-playing-header">
-        <span class="now-playing-label" id="now-playing-label">正在播放</span>
-      </header>
-      
       <!-- 封面 -->
       <div class="artwork-container">
         <div class="artwork-wrapper" id="artwork-wrapper">
@@ -29,10 +24,6 @@
               <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
             </svg>
           </div>
-        </div>
-        <!-- 播放状态指示器 -->
-        <div id="playing-indicator" class="playing-indicator">
-          <span></span><span></span><span></span>
         </div>
       </div>
       
@@ -49,24 +40,6 @@
     
     <!-- 右侧：歌词和列表 -->
     <div class="player-right">
-      <!-- Tab 切换 -->
-      <nav class="tab-bar">
-        <button class="tab-btn active" data-tab="lyrics" id="tab-lyrics">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/>
-            <path d="M8 12h8v2H8zm0 4h5v2H8z"/>
-          </svg>
-          <span>歌词</span>
-        </button>
-        <button class="tab-btn" data-tab="playlist" id="tab-playlist">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M4 10h12v2H4zm0-4h12v2H4zm0 8h8v2H4zm10 0v6l5-3z"/>
-          </svg>
-          <span>列表</span>
-          <span class="tab-badge" id="playlist-badge">0</span>
-        </button>
-      </nav>
-      
       <!-- 歌词面板 -->
       <section class="panel panel-lyrics active" id="panel-lyrics">
         <div class="lyrics-scroll" id="lyrics-container">
@@ -99,6 +72,22 @@
   
   <!-- 底部控制区 - 1/7高度 -->
   <div class="controls-bar">
+    
+    <!-- Tab 切换 -->
+    <nav class="tab-bar">
+      <button class="tab-btn active" data-tab="lyrics" id="tab-lyrics">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/>
+          <path d="M8 12h8v2H8zm0 4h5v2H8z"/>
+        </svg>
+      </button>
+      <button class="tab-btn" data-tab="playlist" id="tab-playlist">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M4 10h12v2H4zm0-4h12v2H4zm0 8h8v2H4zm10 0v6l5-3z"/>
+        </svg>
+        <span class="tab-badge" id="playlist-badge">0</span>
+      </button>
+    </nav>
     
     <!-- 播放模式按钮 -->
     <button id="mode-btn" class="control-btn control-secondary" aria-label="播放模式">
