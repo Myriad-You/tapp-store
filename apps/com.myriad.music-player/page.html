@@ -10,13 +10,13 @@
 <div id="tapp-content">
   <div class="player-container">
     
-    <!-- 顶部：Now Playing -->
-    <header class="now-playing-header">
-      <span class="now-playing-label" id="now-playing-label">正在播放</span>
-    </header>
-    
-    <!-- 中间：封面 + 信息 + 控制 -->
+    <!-- 左侧：封面 + 信息 + 控制 -->
     <main class="player-main">
+      
+      <!-- 顶部：Now Playing -->
+      <header class="now-playing-header">
+        <span class="now-playing-label" id="now-playing-label">正在播放</span>
+      </header>
       
       <!-- 封面 -->
       <div class="artwork-container">
@@ -104,50 +104,53 @@
       
     </main>
     
-    <!-- 底部：Tab 切换 -->
-    <nav class="tab-bar">
-      <button class="tab-btn active" data-tab="lyrics" id="tab-lyrics">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/>
-          <path d="M8 12h8v2H8zm0 4h5v2H8z"/>
-        </svg>
-        <span>歌词</span>
-      </button>
-      <button class="tab-btn" data-tab="playlist" id="tab-playlist">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M4 10h12v2H4zm0-4h12v2H4zm0 8h8v2H4zm10 0v6l5-3z"/>
-        </svg>
-        <span>列表</span>
-        <span class="tab-badge" id="playlist-badge">0</span>
-      </button>
-    </nav>
-    
-    <!-- 歌词面板 -->
-    <section class="panel panel-lyrics active" id="panel-lyrics">
-      <div class="lyrics-scroll" id="lyrics-container">
-        <div class="lyrics-empty" id="lyrics-empty">暂无歌词</div>
-      </div>
-    </section>
-    
-    <!-- 播放列表面板 -->
-    <section class="panel panel-playlist" id="panel-playlist">
-      <div class="playlist-header">
-        <div class="search-box">
-          <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"/>
+    <!-- 右侧：歌词和列表 -->
+    <div class="player-right">
+      <!-- Tab 切换 -->
+      <nav class="tab-bar">
+        <button class="tab-btn active" data-tab="lyrics" id="tab-lyrics">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/>
+            <path d="M8 12h8v2H8zm0 4h5v2H8z"/>
           </svg>
-          <input type="text" id="playlist-search" class="search-input" placeholder="搜索" />
-          <button id="clear-search" class="search-clear" aria-label="清除">
-            <svg viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/>
-            </svg>
-          </button>
+          <span>歌词</span>
+        </button>
+        <button class="tab-btn" data-tab="playlist" id="tab-playlist">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M4 10h12v2H4zm0-4h12v2H4zm0 8h8v2H4zm10 0v6l5-3z"/>
+          </svg>
+          <span>列表</span>
+          <span class="tab-badge" id="playlist-badge">0</span>
+        </button>
+      </nav>
+      
+      <!-- 歌词面板 -->
+      <section class="panel panel-lyrics active" id="panel-lyrics">
+        <div class="lyrics-scroll" id="lyrics-container">
+          <div class="lyrics-empty" id="lyrics-empty">暂无歌词</div>
         </div>
-      </div>
-      <div class="playlist-scroll" id="playlist-container">
-        <div class="playlist-empty" id="playlist-empty">播放列表为空</div>
-      </div>
-    </section>
+      </section>
+      
+      <!-- 播放列表面板 -->
+      <section class="panel panel-playlist" id="panel-playlist">
+        <div class="playlist-header">
+          <div class="search-box">
+            <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"/>
+            </svg>
+            <input type="text" id="playlist-search" class="search-input" placeholder="搜索" />
+            <button id="clear-search" class="search-clear" aria-label="清除">
+              <svg viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="playlist-scroll" id="playlist-container">
+          <div class="playlist-empty" id="playlist-empty">播放列表为空</div>
+        </div>
+      </section>
+    </div>
     
   </div>
 </div>

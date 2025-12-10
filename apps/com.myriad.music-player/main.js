@@ -294,6 +294,14 @@ function updatePlayerUI(status) {
     bgArtwork.style.backgroundImage = 'url(' + track.cover + ')';
   }
   
+  // 同步音乐播放器的动态颜色
+  if (status.primaryColor) {
+    document.documentElement.style.setProperty('--music-primary', status.primaryColor);
+  }
+  if (status.secondaryColor) {
+    document.documentElement.style.setProperty('--music-secondary', status.secondaryColor);
+  }
+  
   // 封面
   var coverEl = document.getElementById('album-cover');
   var coverPlaceholder = document.getElementById('cover-placeholder');
