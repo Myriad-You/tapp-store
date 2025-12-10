@@ -339,7 +339,7 @@ html, body {
 
 .lyric-line:hover {
   opacity: 0.7;
-  filter: blur(3px);
+  filter: blur(1px);
   transform: scale(0.94) translateZ(0);
 }
 
@@ -350,7 +350,7 @@ html, body {
 }
 
 .lyric-line.active {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 600;
   color: var(--accent-color);
   opacity: 1;

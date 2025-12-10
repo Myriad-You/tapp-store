@@ -219,12 +219,16 @@ function renderLyrics(lyrics, currentIndex) {
       var el = document.createElement('div');
       el.className = getLyricLineClasses(i, currentIndex);
       el.setAttribute('data-index', i);
+      el.setAttribute('data-time', line.time || 0);
       el.textContent = line.text || '';
       fragment.appendChild(el);
     }
     
     container.innerHTML = '';
     container.appendChild(fragment);
+    
+    // 绑定点击事件 - 使用事件委托
+    bindLyricClickEvents(container);
   } else {
     // 增量更新 - 使用 requestAnimationFrame 批量更新
     requestAnimationFrame(function() {
@@ -288,6 +292,37 @@ function getLyricLineClasses(index, currentIndex) {
   else if (distance === 3) classes.push('near-3');
   
   return classes.join(' ');
+}
+
+// 绑定歌词点击事件 - 事件委托
+function bindLyricClickEvents(container) {
+  // 移除旧的监听器（如果有）
+  container.removeEventListener('click', handleLyricClick);
+  // 添加新的监听器
+  container.addEventListener('click', handleLyricClick);
+}
+
+// 处理歌词点击
+function handleLyricClick(e) {
+  var target = e.target;
+  // 找到最近的 .lyric-line 元素
+  while (target && !target.classList.contains('lyric-line')) {
+    if (target === e.currentTarget) return;
+    target = target.parentElement;
+  }
+  
+  if (target && target.classList.contains('lyric-line')) {
+    var time = parseFloat(target.getAttribute('data-time'));
+    if (!isNaN(time) && time >= 0) {
+      // 跳转到对应时间
+      Tapp.media.seek(time);
+      // 临时禁用自动滚动，避免跳转后立即被滚动覆盖
+      pageState.settings.autoScroll = false;
+      setTimeout(function() {
+        pageState.settings.autoScroll = true;
+      }, 1000);
+    }
+  }
 }
 
 // 渲染播放列表
