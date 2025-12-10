@@ -335,6 +335,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: 8px 0;
+  padding-bottom: 100px; /* 为固定底部输入框留出空间 */
   scroll-behavior: smooth;
   min-height: 0;
 }
@@ -549,17 +550,21 @@
 }
 
 /* ========================================
-   浮动输入区域
+   浮动输入区域（固定底部）
    ======================================== */
 
 .float-input-wrap {
-  position: relative;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   width: 100%;
   max-width: 600px;
   margin: 0 auto;
-  padding: 16px 0;
-  z-index: 10;
-  flex-shrink: 0;
+  padding: 16px 20px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 100;
+  background: linear-gradient(to top, var(--notes-bg-solid) 60%, transparent);
 }
 
 .input-card {
