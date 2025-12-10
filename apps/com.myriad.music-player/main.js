@@ -294,9 +294,15 @@ function updatePlayerUI(status) {
     bgArtwork.style.backgroundImage = 'url(' + track.cover + ')';
   }
   
-  // 同步音乐播放器的动态颜色
+  // 同步音乐播放器的动态封面颜色
   if (status.primaryColor) {
-    document.documentElement.style.setProperty('--music-primary', status.primaryColor);
+    var color = status.primaryColor;
+    document.documentElement.style.setProperty('--music-primary', color);
+    // 同步更新派生色（因为CSS变量引用在计算时确定）
+    document.documentElement.style.setProperty('--accent-color', color);
+    // 使用 hex 颜色添加透明度
+    document.documentElement.style.setProperty('--accent-light', color + '26'); // 15% opacity
+    document.documentElement.style.setProperty('--accent-glow', color + '66'); // 40% opacity
   }
   if (status.secondaryColor) {
     document.documentElement.style.setProperty('--music-secondary', status.secondaryColor);
@@ -634,21 +640,14 @@ function bindControls() {
     });
   }
 
-  // 音量按钮 - 展开/收起滑块 + 静音切换
+  // 音量按钮 - 切换静音
   var volumeBtn = document.getElementById('volume-btn');
-  var volumeContainer = document.getElementById('volume-container');
-  if (volumeBtn && volumeContainer) {
-    volumeBtn.addEventListener('click', function(e) {
-      // 如果按住 shift 或双击，切换静音
-      if (e.shiftKey) {
-        if (pageState.status && pageState.status.muted) {
-          Tapp.media.unmute();
-        } else {
-          Tapp.media.mute();
-        }
+  if (volumeBtn) {
+    volumeBtn.addEventListener('click', function() {
+      if (pageState.status && pageState.status.muted) {
+        Tapp.media.unmute();
       } else {
-        // 切换音量滑块显示
-        volumeContainer.classList.toggle('active');
+        Tapp.media.mute();
       }
     });
   }
@@ -731,21 +730,14 @@ function cleanup() {
       try {
         var results = await Promise.all([
           Tapp.ui.getLocale(),
-          Tapp.ui.getTheme(),
-          Tapp.ui.getPrimaryColor()
+          Tapp.ui.getTheme()
         ]);
 
         currentLocale = normalizeLocale(results[0]);
         
-        // 应用主题色
-        var primaryColor = results[2];
-        if (primaryColor) {
-          document.documentElement.style.setProperty('--accent-color', primaryColor);
-          // 计算浅色版本
-          document.documentElement.style.setProperty('--accent-light', primaryColor + '26');
-          document.documentElement.style.setProperty('--accent-glow', primaryColor + '66');
-        }
-
+        // 注意：音乐播放器 Tapp 使用封面颜色，不使用系统主题色
+        // 封面颜色会在 initPage() 中从音乐状态同步
+        
         await initPage();
 
         // 监听语言变化
@@ -754,12 +746,7 @@ function cleanup() {
           initPage();
         });
 
-        // 监听主题色变化
-        Tapp.ui.onPrimaryColorChange(function(color) {
-          document.documentElement.style.setProperty('--accent-color', color);
-          document.documentElement.style.setProperty('--accent-light', color + '26');
-          document.documentElement.style.setProperty('--accent-glow', color + '66');
-        });
+        // 不监听系统主题色变化，音乐播放器使用封面颜色
       } catch (err) {
         console.error('Init error:', err);
         initPage();
