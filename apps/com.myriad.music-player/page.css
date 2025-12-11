@@ -209,8 +209,7 @@ html, body {
     0 8px 20px rgba(0, 0, 0, 0.2);
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
               box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  /* 限制重绘范围 */
-  contain: layout style;
+  /* 🎯 WebKit 兼容性：移除 contain，确保触摸事件可以正常工作 */
 }
 
 /* 暂停状态 - 封面缩小 */
@@ -398,8 +397,9 @@ html, body {
     font-size 0.5s cubic-bezier(0.22, 1, 0.36, 1),
     background 0.3s ease;
   box-sizing: border-box;
-  /* 限制重绘 */
-  contain: layout style;
+  /* 🎯 WebKit 兼容性：移除 contain，确保触摸事件可以正常工作 */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .lyric-line:hover {
@@ -583,9 +583,10 @@ html, body {
   transition: background 0.15s ease;
   position: relative;
   /* 性能优化 - 限制重绘范围 */
-  contain: layout style paint;
-  content-visibility: auto;
-  contain-intrinsic-size: 0 60px;
+  /* 🎯 WebKit 兼容性：移除 contain 和 content-visibility，它们在 Safari/iOS 上可能阻止触摸事件 */
+  /* 对于交互元素，性能优化让位于兼容性 */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .playlist-item:hover {
@@ -743,6 +744,8 @@ html, body {
   background: transparent;
   cursor: pointer;
   z-index: 2;
+  /* 🎯 WebKit 兼容性：确保触摸滑动正常工作 */
+  touch-action: none;
 }
 
 .progress-slider::-webkit-slider-thumb {
@@ -820,6 +823,8 @@ html, body {
   /* 只过渡必要的属性 */
   transition: color var(--transition-fast), transform var(--transition-fast);
   -webkit-tap-highlight-color: transparent;
+  /* 🎯 WebKit 兼容性：确保触摸事件正常工作 */
+  touch-action: manipulation;
 }
 
 .control-btn:hover {
@@ -966,6 +971,8 @@ html, body {
   background: transparent;
   cursor: pointer;
   z-index: 2;
+  /* 🎯 WebKit 兼容性：确保触摸滑动正常工作 */
+  touch-action: none;
 }
 
 .volume-slider::-webkit-slider-thumb {
