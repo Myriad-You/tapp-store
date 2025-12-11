@@ -712,6 +712,12 @@ function renderPlaylist(playlist, currentTrack, searchQuery) {
       virtualList.itemPool.push(el);
     });
     virtualList.activeItems.clear();
+    // 重置容器引用，下次渲染时会重新创建
+    virtualList.innerWrapper = null;
+    virtualList.contentWrapper = null;
+    virtualList.visibleStart = -1;
+    virtualList.visibleEnd = -1;
+    virtualList.lastTotalHeight = 0;
     
     container.innerHTML = '<div class="playlist-empty">' + 
       (searchQuery ? '未找到匹配歌曲' : t('noPlaylist')) + '</div>';
@@ -776,6 +782,13 @@ function renderPlaylist(playlist, currentTrack, searchQuery) {
 function renderPlaylistSimple(filteredList, currentTrack) {
   var container = $('playlist-container');
   if (!container) return;
+  
+  // 重置虚拟列表容器引用（因为下面会用 innerHTML 清空）
+  virtualList.innerWrapper = null;
+  virtualList.contentWrapper = null;
+  virtualList.activeItems.clear();
+  virtualList.visibleStart = -1;
+  virtualList.visibleEnd = -1;
   
   var currentTrackId = currentTrack ? currentTrack.id : null;
   var fragment = document.createDocumentFragment();
