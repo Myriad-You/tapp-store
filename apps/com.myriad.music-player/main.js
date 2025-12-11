@@ -29,6 +29,12 @@ var i18n = {
     currentlyPlaying: '正在播放',
     vip: 'VIP',
     trial: '试听',
+    playlistIdPlaceholder: '网易云歌单ID',
+    loadPlaylist: '加载歌单',
+    loadingPlaylist: '正在加载...',
+    playlistLoaded: '歌单加载成功',
+    playlistLoadFailed: '加载失败，请检查ID',
+    playlistIdRequired: '请输入歌单ID',
   },
   'en-US': {
     title: 'Music Player',
@@ -54,6 +60,12 @@ var i18n = {
     currentlyPlaying: 'Now Playing',
     vip: 'VIP',
     trial: 'Trial',
+    playlistIdPlaceholder: 'Netease Playlist ID',
+    loadPlaylist: 'Load Playlist',
+    loadingPlaylist: 'Loading...',
+    playlistLoaded: 'Playlist loaded',
+    playlistLoadFailed: 'Failed, check ID',
+    playlistIdRequired: 'Enter playlist ID',
   },
   'ja-JP': {
     title: '音楽プレーヤー',
@@ -79,6 +91,12 @@ var i18n = {
     currentlyPlaying: '再生中',
     vip: 'VIP',
     trial: '試聴',
+    playlistIdPlaceholder: 'Netease歌単ID',
+    loadPlaylist: '歌単を読込',
+    loadingPlaylist: '読み込み中...',
+    playlistLoaded: '歌単読み込み完了',
+    playlistLoadFailed: '失敗、IDを確認',
+    playlistIdRequired: '歌単IDを入力',
   },
 };
 
@@ -1602,6 +1620,109 @@ function bindControls() {
         searchInput.value = '';
         pageState.searchQuery = '';
         renderPlaylist(pageState.playlist, pageState.status?.currentTrack, '');
+      }
+    });
+  }
+
+  // 加载网易云歌单
+  var playlistIdInput = document.getElementById('playlist-id-input');
+  var loadPlaylistBtn = document.getElementById('load-playlist-btn');
+  var playlistIdHint = document.getElementById('playlist-id-hint');
+  
+  if (playlistIdInput) {
+    playlistIdInput.placeholder = t('playlistIdPlaceholder');
+  }
+  
+  if (loadPlaylistBtn && playlistIdInput) {
+    var isLoadingPlaylist = false;
+    
+    // 显示提示信息
+    function showHint(text, type) {
+      if (playlistIdHint) {
+        playlistIdHint.textContent = text;
+        playlistIdHint.className = 'playlist-id-hint' + (type ? ' ' + type : '');
+      }
+    }
+    
+    // 设置加载状态
+    function setLoadingState(loading) {
+      isLoadingPlaylist = loading;
+      var loadIcon = loadPlaylistBtn.querySelector('.load-icon');
+      var loadingIcon = loadPlaylistBtn.querySelector('.loading-icon');
+      if (loadIcon) loadIcon.style.display = loading ? 'none' : 'block';
+      if (loadingIcon) loadingIcon.style.display = loading ? 'block' : 'none';
+      loadPlaylistBtn.disabled = loading;
+      playlistIdInput.disabled = loading;
+    }
+    
+    // 提取歌单ID（支持完整URL或纯ID）
+    function extractPlaylistId(input) {
+      if (!input) return '';
+      input = input.trim();
+      
+      // 如果是纯数字，直接返回
+      if (/^\d+$/.test(input)) {
+        return input;
+      }
+      
+      // 尝试从URL中提取ID
+      // 支持格式：
+      // https://music.163.com/#/playlist?id=123456
+      // https://music.163.com/playlist?id=123456
+      // music.163.com/playlist/123456
+      var match = input.match(/(?:playlist[?/](?:id=)?|id=)(\d+)/i);
+      if (match) {
+        return match[1];
+      }
+      
+      return input;
+    }
+    
+    // 加载歌单
+    async function loadPlaylist() {
+      var rawInput = playlistIdInput.value;
+      var playlistId = extractPlaylistId(rawInput);
+      
+      if (!playlistId) {
+        showHint(t('playlistIdRequired'), 'error');
+        return;
+      }
+      
+      if (isLoadingPlaylist) return;
+      
+      setLoadingState(true);
+      showHint(t('loadingPlaylist'), '');
+      
+      try {
+        var result = await Tapp.media.loadNeteasePlaylist(playlistId);
+        
+        if (result && result.success) {
+          showHint(t('playlistLoaded'), 'success');
+          // 清空输入框
+          playlistIdInput.value = '';
+          // 3秒后清除提示
+          setTimeout(function() {
+            showHint('', '');
+          }, 3000);
+        } else {
+          showHint(t('playlistLoadFailed'), 'error');
+        }
+      } catch (err) {
+        console.error('Failed to load playlist:', err);
+        showHint(t('playlistLoadFailed'), 'error');
+      } finally {
+        setLoadingState(false);
+      }
+    }
+    
+    // 点击按钮加载
+    loadPlaylistBtn.addEventListener('click', loadPlaylist);
+    
+    // 回车键加载
+    playlistIdInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        loadPlaylist();
       }
     });
   }

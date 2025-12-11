@@ -64,6 +64,22 @@
       <!-- 播放列表面板 -->
       <section class="panel panel-playlist" id="panel-playlist">
         <div class="playlist-header">
+          <!-- 歌单ID输入 -->
+          <div class="playlist-id-input" id="playlist-id-section">
+            <div class="playlist-id-row">
+              <input type="text" id="playlist-id-input" class="playlist-id-field" placeholder="网易云歌单ID" />
+              <button id="load-playlist-btn" class="load-playlist-btn" aria-label="加载歌单">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="load-icon">
+                  <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                </svg>
+                <svg viewBox="0 0 24 24" fill="currentColor" class="loading-icon" style="display:none;">
+                  <path d="M12 4V2A10 10 0 0 0 2 12h2a8 8 0 0 1 8-8z"/>
+                </svg>
+              </button>
+            </div>
+            <p class="playlist-id-hint" id="playlist-id-hint"></p>
+          </div>
+          <!-- 搜索框 -->
           <div class="search-box">
             <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"/>
