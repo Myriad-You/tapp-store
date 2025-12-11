@@ -129,6 +129,84 @@ function debounce(fn, delay) {
   };
 }
 
+function throttle(fn, limit) {
+  var lastCall = 0;
+  return function() {
+    var now = Date.now();
+    if (now - lastCall >= limit) {
+      lastCall = now;
+      fn.apply(this, arguments);
+    }
+  };
+}
+
+// ========================================
+// 统一动画调度器
+// ========================================
+
+// 初始化动画配置
+async function initAnimationConfig() {
+  try {
+    var results = await Promise.all([
+      Tapp.animation.shouldAnimate(),
+      Tapp.animation.getConfig()
+    ]);
+    
+    pageState.animConfig.shouldAnimate = results[0];
+    
+    var config = results[1];
+    if (config) {
+      pageState.animConfig.level = config.level || 'standard';
+      pageState.animConfig.loop = config.loop !== false;
+      pageState.animConfig.durationScale = config.durationScale || 1;
+    }
+    
+    // 监听动画级别变化
+    Tapp.animation.onLevelChange(function(level) {
+      pageState.animConfig.level = level;
+      pageState.animConfig.shouldAnimate = level !== 'none';
+      
+      // 根据新级别调整动画
+      if (level === 'none') {
+        stopBackgroundAnimation();
+      } else if (pageState.status && pageState.status.isPlaying) {
+        startBackgroundAnimation();
+      }
+    });
+  } catch (e) {
+    // 使用默认配置
+    console.warn('Failed to load animation config:', e);
+  }
+}
+
+// 获取调度延迟
+async function getScheduledDelay(index, baseDelay) {
+  if (!pageState.animConfig.shouldAnimate) {
+    return 0;
+  }
+  try {
+    return await Tapp.animation.getStaggerDelay(index, baseDelay || 50);
+  } catch (e) {
+    // 回退到本地计算
+    var delay = baseDelay || 50;
+    if (pageState.animConfig.level === 'light') delay *= 0.5;
+    return index * delay * pageState.animConfig.durationScale;
+  }
+}
+
+// 获取缩放后的动画时长
+function getScaledDuration(baseDuration) {
+  if (!pageState.animConfig.shouldAnimate) {
+    return 0;
+  }
+  return baseDuration * pageState.animConfig.durationScale;
+}
+
+// 检查是否应该执行动画
+function shouldAnimate() {
+  return pageState.animConfig.shouldAnimate && pageState.animConfig.level !== 'none';
+}
+
 // ========================================
 // 页面状态
 // ========================================
@@ -153,6 +231,13 @@ var pageState = {
   lastBeatTime: 0,
   beatIntensity: 0,
   bgPhase: 0,
+  // 统一动画调度器配置
+  animConfig: {
+    level: 'standard',        // 'none' | 'light' | 'standard'
+    loop: true,
+    durationScale: 1,
+    shouldAnimate: true,
+  },
 };
 
 // DOM 元素缓存
@@ -236,28 +321,53 @@ function renderLyrics(lyrics, currentIndex) {
     // 绑定点击事件 - 使用事件委托
     bindLyricClickEvents(container);
   } else {
-    // 增量更新 - 直接更新，不使用 requestAnimationFrame 以减少延迟
-    existingLines.forEach(function(el, i) {
+    // 增量更新 - 只更新变化的元素
+    var updateRange = Math.min(5, lyrics.length); // 只更新当前索引附近的元素
+    var startIdx = Math.max(0, currentIndex - updateRange);
+    var endIdx = Math.min(lyrics.length, currentIndex + updateRange + 1);
+    
+    // 如果之前的索引不在范围内，也需要更新
+    if (prevIndex >= 0 && (prevIndex < startIdx || prevIndex >= endIdx)) {
+      var prevEl = existingLines[prevIndex];
+      if (prevEl) {
+        prevEl.className = getLyricLineClasses(prevIndex, currentIndex);
+      }
+    }
+    
+    for (var i = startIdx; i < endIdx; i++) {
+      var el = existingLines[i];
+      if (!el) continue;
+      
       var newClassName = getLyricLineClasses(i, currentIndex);
       
       // 只在类名实际变化时更新
       if (el.className !== newClassName) {
-        // 处理进入/离开动画
-        if (isIndexChange) {
+        // 处理进入/离开动画（根据调度器配置）
+        if (isIndexChange && shouldAnimate()) {
+          // 使用缩放后的动画时长
+          var enterDuration = getScaledDuration(600);
+          var leaveDuration = getScaledDuration(500);
+          
           if (i === currentIndex && i !== prevIndex) {
-            // 新的当前行 - 添加进入动画
             el.classList.add('entering');
-            setTimeout(function() { el.classList.remove('entering'); }, 600);
+            if (enterDuration > 0) {
+              setTimeout(function() { el.classList.remove('entering'); }, enterDuration);
+            } else {
+              el.classList.remove('entering');
+            }
           } else if (i === prevIndex) {
-            // 离开的行 - 添加离开动画
             el.classList.add('leaving');
-            setTimeout(function() { el.classList.remove('leaving'); }, 500);
+            if (leaveDuration > 0) {
+              setTimeout(function() { el.classList.remove('leaving'); }, leaveDuration);
+            } else {
+              el.classList.remove('leaving');
+            }
           }
         }
         
         el.className = newClassName;
       }
-    });
+    }
   }
 
   // 使用 requestAnimationFrame 优化滚动
@@ -270,10 +380,16 @@ function renderLyrics(lyrics, currentIndex) {
         var lineHeight = activeLine.clientHeight;
         var scrollTop = lineTop - (containerHeight / 2) + (lineHeight / 2);
         
-        container.scrollTo({
-          top: Math.max(0, scrollTop),
-          behavior: 'smooth'
-        });
+        // 根据动画配置决定滚动行为
+        if (shouldAnimate()) {
+          container.scrollTo({
+            top: Math.max(0, scrollTop),
+            behavior: 'smooth'
+          });
+        } else {
+          // 无动画模式：直接跳转
+          container.scrollTop = Math.max(0, scrollTop);
+        }
       }
     });
   }
@@ -336,6 +452,8 @@ function handleLyricClick(e) {
 var virtualList = {
   container: null,
   scrollContainer: null,
+  innerWrapper: null,
+  contentWrapper: null,
   itemHeight: 56, // 每项高度
   bufferSize: 5,  // 上下缓冲区大小
   visibleStart: 0,
@@ -343,7 +461,12 @@ var virtualList = {
   data: [],
   currentTrackId: null,
   searchQuery: '',
-  scrollHandler: null
+  scrollHandler: null,
+  // DOM缓存池
+  itemPool: [],
+  activeItems: new Map(), // index -> DOM element
+  lastTotalHeight: 0,
+  isRendering: false
 };
 
 // 初始化虚拟列表
@@ -353,137 +476,297 @@ function initVirtualList() {
   
   if (!virtualList.scrollContainer || !virtualList.container) return;
   
+  // 创建固定的容器结构（只创建一次）
+  if (!virtualList.innerWrapper) {
+    virtualList.innerWrapper = document.createElement('div');
+    virtualList.innerWrapper.style.cssText = 'position:relative;width:100%;';
+    
+    virtualList.contentWrapper = document.createElement('div');
+    virtualList.contentWrapper.style.cssText = 'position:absolute;left:0;right:0;';
+    
+    virtualList.innerWrapper.appendChild(virtualList.contentWrapper);
+    virtualList.container.appendChild(virtualList.innerWrapper);
+    
+    // 绑定点击事件（事件委托，只绑定一次）
+    virtualList.container.onclick = function(e) {
+      var item = e.target.closest('.playlist-item');
+      if (item) {
+        var index = parseInt(item.getAttribute('data-index'), 10);
+        Tapp.media.jumpToIndex(index);
+      }
+    };
+  }
+  
   // 移除旧的滚动监听
   if (virtualList.scrollHandler) {
     virtualList.scrollContainer.removeEventListener('scroll', virtualList.scrollHandler);
   }
   
   // 添加滚动监听（使用节流）
-  var scrollTimeout = null;
+  var lastScrollTime = 0;
   virtualList.scrollHandler = function() {
-    if (scrollTimeout) return;
-    scrollTimeout = setTimeout(function() {
-      scrollTimeout = null;
-      renderVisibleItems();
-    }, 16); // ~60fps
+    var now = Date.now();
+    if (now - lastScrollTime < 16) return; // ~60fps
+    lastScrollTime = now;
+    
+    if (!virtualList.isRendering) {
+      requestAnimationFrame(renderVisibleItems);
+    }
   };
   
   virtualList.scrollContainer.addEventListener('scroll', virtualList.scrollHandler, { passive: true });
 }
 
+// 从对象池获取或创建DOM元素
+function getPooledItem() {
+  if (virtualList.itemPool.length > 0) {
+    return virtualList.itemPool.pop();
+  }
+  
+  var el = document.createElement('div');
+  el.className = 'playlist-item';
+  el.innerHTML = '<div class="playlist-item-cover"></div>' +
+                 '<div class="playlist-item-info">' +
+                   '<div class="playlist-item-name"></div>' +
+                   '<div class="playlist-item-artist"></div>' +
+                 '</div>';
+  return el;
+}
+
+// 更新DOM元素内容
+function updateItemContent(el, song, isActive) {
+  var cover = el.firstChild;
+  var info = el.lastChild;
+  var nameEl = info.firstChild;
+  var artistEl = info.lastChild;
+  
+  // 只在内容变化时更新
+  if (el.getAttribute('data-id') !== song.id) {
+    el.setAttribute('data-id', song.id);
+    el.setAttribute('data-index', song.originalIndex);
+    
+    // 更新封面
+    if (song.cover) {
+      if (cover.tagName !== 'IMG') {
+        var img = document.createElement('img');
+        img.className = 'playlist-item-cover';
+        img.loading = 'lazy';
+        img.alt = '';
+        el.replaceChild(img, cover);
+        cover = img;
+      }
+      if (cover.src !== song.cover) {
+        cover.src = song.cover;
+      }
+    } else {
+      if (cover.tagName === 'IMG') {
+        var div = document.createElement('div');
+        div.className = 'playlist-item-cover';
+        el.replaceChild(div, cover);
+      }
+    }
+    
+    nameEl.textContent = song.name || '';
+    artistEl.textContent = song.artist || '';
+  }
+  
+  // 更新激活状态
+  if (isActive && !el.classList.contains('active')) {
+    el.classList.add('active');
+  } else if (!isActive && el.classList.contains('active')) {
+    el.classList.remove('active');
+  }
+}
+
 // 渲染可见项
 function renderVisibleItems() {
-  if (!virtualList.container || !virtualList.scrollContainer) return;
-  if (virtualList.data.length === 0) return;
+  virtualList.isRendering = true;
   
-  var scrollTop = virtualList.scrollContainer.scrollTop;
-  var containerHeight = virtualList.scrollContainer.clientHeight;
-  
-  var startIndex = Math.max(0, Math.floor(scrollTop / virtualList.itemHeight) - virtualList.bufferSize);
-  var endIndex = Math.min(
-    virtualList.data.length,
-    Math.ceil((scrollTop + containerHeight) / virtualList.itemHeight) + virtualList.bufferSize
-  );
-  
-  // 如果范围没变，不重新渲染
-  if (startIndex === virtualList.visibleStart && endIndex === virtualList.visibleEnd) {
+  if (!virtualList.contentWrapper || !virtualList.scrollContainer) {
+    virtualList.isRendering = false;
+    return;
+  }
+  if (virtualList.data.length === 0) {
+    virtualList.isRendering = false;
     return;
   }
   
+  var scrollTop = virtualList.scrollContainer.scrollTop;
+  var containerHeight = virtualList.scrollContainer.clientHeight;
+  var itemHeight = virtualList.itemHeight;
+  var bufferSize = virtualList.bufferSize;
+  var dataLen = virtualList.data.length;
+  
+  var startIndex = Math.max(0, (scrollTop / itemHeight | 0) - bufferSize);
+  var endIndex = Math.min(dataLen, ((scrollTop + containerHeight) / itemHeight | 0) + bufferSize + 1);
+  
+  // 如果范围没变，只检查激活状态
+  if (startIndex === virtualList.visibleStart && endIndex === virtualList.visibleEnd) {
+    // 快速更新激活状态
+    virtualList.activeItems.forEach(function(el, idx) {
+      var song = virtualList.data[idx];
+      if (song) {
+        var isActive = virtualList.currentTrackId && song.id === virtualList.currentTrackId;
+        if (isActive !== el.classList.contains('active')) {
+          el.classList.toggle('active', isActive);
+        }
+      }
+    });
+    virtualList.isRendering = false;
+    return;
+  }
+  
+  var prevStart = virtualList.visibleStart;
+  var prevEnd = virtualList.visibleEnd;
   virtualList.visibleStart = startIndex;
   virtualList.visibleEnd = endIndex;
   
-  // 创建容器内容
-  var totalHeight = virtualList.data.length * virtualList.itemHeight;
-  var offsetTop = startIndex * virtualList.itemHeight;
+  // 更新容器高度
+  var totalHeight = dataLen * itemHeight;
+  if (totalHeight !== virtualList.lastTotalHeight) {
+    virtualList.innerWrapper.style.height = totalHeight + 'px';
+    virtualList.lastTotalHeight = totalHeight;
+  }
   
-  var html = '<div style="height:' + totalHeight + 'px;position:relative;">';
-  html += '<div style="position:absolute;top:' + offsetTop + 'px;left:0;right:0;">';
+  // 更新内容偏移
+  virtualList.contentWrapper.style.top = (startIndex * itemHeight) + 'px';
+  
+  // 回收不再可见的元素
+  virtualList.activeItems.forEach(function(el, idx) {
+    if (idx < startIndex || idx >= endIndex) {
+      virtualList.itemPool.push(el);
+      virtualList.activeItems.delete(idx);
+      if (el.parentNode) el.parentNode.removeChild(el);
+    }
+  });
+  
+  // 渲染可见元素
+  var fragment = null;
+  var needsAppend = false;
   
   for (var i = startIndex; i < endIndex; i++) {
     var song = virtualList.data[i];
     var isActive = virtualList.currentTrackId && song.id === virtualList.currentTrackId;
     
-    var coverHtml = song.cover 
-      ? '<img class="playlist-item-cover" src="' + escapeHtml(song.cover) + '" alt="" loading="lazy" />'
-      : '<div class="playlist-item-cover"></div>';
+    var el = virtualList.activeItems.get(i);
+    if (!el) {
+      el = getPooledItem();
+      virtualList.activeItems.set(i, el);
+      
+      if (!fragment) fragment = document.createDocumentFragment();
+      fragment.appendChild(el);
+      needsAppend = true;
+    }
     
-    html += '<div class="playlist-item ' + (isActive ? 'active' : '') + '" data-id="' + song.id + '" data-index="' + song.originalIndex + '">' +
-            coverHtml +
-            '<div class="playlist-item-info">' +
-              '<div class="playlist-item-name">' + escapeHtml(song.name) + '</div>' +
-              '<div class="playlist-item-artist">' + escapeHtml(song.artist) + '</div>' +
-            '</div>' +
-            '</div>';
+    updateItemContent(el, song, isActive);
   }
   
-  html += '</div></div>';
-  virtualList.container.innerHTML = html;
+  if (needsAppend && fragment) {
+    virtualList.contentWrapper.appendChild(fragment);
+  }
   
-  // 绑定点击事件（使用事件委托）
-  bindPlaylistClickEvents();
+  virtualList.isRendering = false;
 }
 
-// 绑定播放列表点击事件
-function bindPlaylistClickEvents() {
-  if (!virtualList.container) return;
-  
-  // 使用事件委托，只在容器上绑定一次
-  virtualList.container.onclick = function(e) {
-    var item = e.target.closest('.playlist-item');
-    if (item) {
-      var index = parseInt(item.getAttribute('data-index'), 10);
-      Tapp.media.jumpToIndex(index);
-    }
-  };
-}
+// 缓存的搜索结果
+var playlistCache = {
+  lastQuery: null,
+  lastResult: null,
+  lastPlaylistLen: 0
+};
 
 // 渲染播放列表（使用虚拟滚动）
 function renderPlaylist(playlist, currentTrack, searchQuery) {
   var container = $('playlist-container');
   if (!container) return;
 
-  var filteredList = playlist;
-  if (searchQuery) {
-    var query = searchQuery.toLowerCase();
-    filteredList = playlist.filter(function(song) {
-      return (song.name && song.name.toLowerCase().includes(query)) ||
-             (song.artist && song.artist.toLowerCase().includes(query));
-    });
+  var filteredList;
+  var query = searchQuery ? searchQuery.toLowerCase() : '';
+  
+  // 使用缓存避免重复过滤
+  if (query === playlistCache.lastQuery && playlist.length === playlistCache.lastPlaylistLen) {
+    filteredList = playlistCache.lastResult;
+  } else {
+    if (query) {
+      filteredList = [];
+      for (var i = 0; i < playlist.length; i++) {
+        var song = playlist[i];
+        var name = song.name ? song.name.toLowerCase() : '';
+        var artist = song.artist ? song.artist.toLowerCase() : '';
+        if (name.indexOf(query) !== -1 || artist.indexOf(query) !== -1) {
+          filteredList.push(song);
+        }
+      }
+    } else {
+      filteredList = playlist;
+    }
+    playlistCache.lastQuery = query;
+    playlistCache.lastResult = filteredList;
+    playlistCache.lastPlaylistLen = playlist.length;
   }
 
   if (filteredList.length === 0) {
+    // 清理虚拟列表状态
+    virtualList.data = [];
+    virtualList.activeItems.forEach(function(el) {
+      virtualList.itemPool.push(el);
+    });
+    virtualList.activeItems.clear();
+    
     container.innerHTML = '<div class="playlist-empty">' + 
       (searchQuery ? '未找到匹配歌曲' : t('noPlaylist')) + '</div>';
-    virtualList.data = [];
     return;
   }
   
   // 更新 Tab badge
   var badge = $('playlist-badge');
-  if (badge) badge.textContent = playlist.length;
+  if (badge) {
+    var newLen = String(playlist.length);
+    if (badge.textContent !== newLen) badge.textContent = newLen;
+  }
+  
+  var newTrackId = currentTrack ? currentTrack.id : null;
 
   // 小列表直接渲染，大列表使用虚拟滚动
   if (filteredList.length <= 50) {
     renderPlaylistSimple(filteredList, currentTrack);
   } else {
+    // 检查是否只是currentTrack变化
+    var onlyTrackChanged = virtualList.data === filteredList && 
+                           virtualList.currentTrackId !== newTrackId;
+    
     // 初始化虚拟列表
     initVirtualList();
-    virtualList.data = filteredList;
-    virtualList.currentTrackId = currentTrack ? currentTrack.id : null;
-    virtualList.searchQuery = searchQuery;
-    virtualList.visibleStart = -1; // 强制重新渲染
-    virtualList.visibleEnd = -1;
+    virtualList.currentTrackId = newTrackId;
+    
+    if (!onlyTrackChanged || virtualList.data !== filteredList) {
+      virtualList.data = filteredList;
+      virtualList.searchQuery = searchQuery;
+      virtualList.visibleStart = -1; // 强制重新渲染
+      virtualList.visibleEnd = -1;
+    }
+    
     renderVisibleItems();
     
     // 滚动到当前播放
-    if (!searchQuery && currentTrack) {
-      var activeIndex = filteredList.findIndex(function(s) { return s.id === currentTrack.id; });
+    if (!searchQuery && currentTrack && !onlyTrackChanged) {
+      var activeIndex = -1;
+      for (var j = 0; j < filteredList.length; j++) {
+        if (filteredList[j].id === currentTrack.id) {
+          activeIndex = j;
+          break;
+        }
+      }
       if (activeIndex >= 0) {
         setTimeout(function() {
           var scrollTop = activeIndex * virtualList.itemHeight - virtualList.scrollContainer.clientHeight / 2 + virtualList.itemHeight / 2;
-          virtualList.scrollContainer.scrollTo({ top: Math.max(0, scrollTop), behavior: 'smooth' });
-        }, 100);
+          // 根据动画配置决定滚动行为
+          if (shouldAnimate()) {
+            virtualList.scrollContainer.scrollTo({ top: Math.max(0, scrollTop), behavior: 'smooth' });
+          } else {
+            virtualList.scrollContainer.scrollTop = Math.max(0, scrollTop);
+          }
+        }, shouldAnimate() ? 100 : 0);
       }
     }
   }
@@ -494,41 +777,71 @@ function renderPlaylistSimple(filteredList, currentTrack) {
   var container = $('playlist-container');
   if (!container) return;
   
-  var html = '';
+  var currentTrackId = currentTrack ? currentTrack.id : null;
+  var fragment = document.createDocumentFragment();
+  
   for (var i = 0; i < filteredList.length; i++) {
     var song = filteredList[i];
-    var isActive = currentTrack && song.id === currentTrack.id;
+    var isActive = currentTrackId && song.id === currentTrackId;
     
-    var coverHtml = song.cover 
-      ? '<img class="playlist-item-cover" src="' + escapeHtml(song.cover) + '" alt="" loading="lazy" />'
-      : '<div class="playlist-item-cover"></div>';
+    var el = document.createElement('div');
+    el.className = isActive ? 'playlist-item active' : 'playlist-item';
+    el.setAttribute('data-id', song.id);
+    el.setAttribute('data-index', song.originalIndex);
     
-    html += '<div class="playlist-item ' + (isActive ? 'active' : '') + '" data-id="' + song.id + '" data-index="' + song.originalIndex + '">' +
-            coverHtml +
-            '<div class="playlist-item-info">' +
-              '<div class="playlist-item-name">' + escapeHtml(song.name) + '</div>' +
-              '<div class="playlist-item-artist">' + escapeHtml(song.artist) + '</div>' +
-            '</div>' +
-            '</div>';
+    if (song.cover) {
+      var img = document.createElement('img');
+      img.className = 'playlist-item-cover';
+      img.src = song.cover;
+      img.loading = 'lazy';
+      img.alt = '';
+      el.appendChild(img);
+    } else {
+      var coverDiv = document.createElement('div');
+      coverDiv.className = 'playlist-item-cover';
+      el.appendChild(coverDiv);
+    }
+    
+    var info = document.createElement('div');
+    info.className = 'playlist-item-info';
+    
+    var nameEl = document.createElement('div');
+    nameEl.className = 'playlist-item-name';
+    nameEl.textContent = song.name || '';
+    info.appendChild(nameEl);
+    
+    var artistEl = document.createElement('div');
+    artistEl.className = 'playlist-item-artist';
+    artistEl.textContent = song.artist || '';
+    info.appendChild(artistEl);
+    
+    el.appendChild(info);
+    fragment.appendChild(el);
   }
-  container.innerHTML = html;
+  
+  container.innerHTML = '';
+  container.appendChild(fragment);
 
-  // 绑定点击事件
-  var items = container.querySelectorAll('.playlist-item');
-  items.forEach(function(item) {
-    item.addEventListener('click', function() {
+  // 使用事件委托（只绑定一次）
+  container.onclick = function(e) {
+    var item = e.target.closest('.playlist-item');
+    if (item) {
       var index = parseInt(item.getAttribute('data-index'), 10);
       Tapp.media.jumpToIndex(index);
-    });
-  });
+    }
+  };
 
   // 滚动到当前播放
   if (currentTrack) {
     var activeItem = container.querySelector('.playlist-item.active');
     if (activeItem) {
-      setTimeout(function() {
-        activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 100);
+      requestAnimationFrame(function() {
+        if (shouldAnimate()) {
+          activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          activeItem.scrollIntoView({ behavior: 'auto', block: 'center' });
+        }
+      });
     }
   }
 }
@@ -817,20 +1130,38 @@ async function initPage() {
       renderLyrics([], -1);
     }
 
-    // 更新播放列表高亮
-    var items = document.querySelectorAll('.playlist-item');
-    items.forEach(function(item) {
-      var id = item.getAttribute('data-id');
-      if (state.currentTrack && id === state.currentTrack.id) {
-        item.classList.add('active');
-      } else {
-        item.classList.remove('active');
+    // 更新播放列表高亮 - 使用缓存的元素引用
+    if (state.currentTrack) {
+      var currentId = state.currentTrack.id;
+      var container = $('playlist-container');
+      if (container) {
+        var prevActive = container.querySelector('.playlist-item.active');
+        if (prevActive && prevActive.getAttribute('data-id') !== currentId) {
+          prevActive.classList.remove('active');
+        }
+        var newActive = container.querySelector('.playlist-item[data-id="' + currentId + '"]');
+        if (newActive && !newActive.classList.contains('active')) {
+          newActive.classList.add('active');
+        }
       }
-    });
+    }
   });
 
   // 绑定控制按钮
   bindControls();
+  
+  // 页面可见性优化 - 不可见时暂停非关键动画
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+      // 页面不可见，暂停背景动画
+      stopBackgroundAnimation();
+    } else {
+      // 页面恢复可见
+      if (pageState.status && pageState.status.isPlaying && shouldAnimate()) {
+        startBackgroundAnimation();
+      }
+    }
+  }, { passive: true });
 }
 
 // 绑定控制按钮事件
@@ -1013,10 +1344,16 @@ var BG_BEAT_COOLDOWN = 150;
 
 // 启动背景动画
 function startBackgroundAnimation() {
+  // 检查动画级别
+  if (!shouldAnimate()) {
+    return;
+  }
+  
   if (pageState.bgAnimationFrame) return;
   
   var lastUpdateTime = 0;
-  var UPDATE_INTERVAL = 33; // ~30fps
+  // 根据动画级别调整帧率
+  var UPDATE_INTERVAL = pageState.animConfig.level === 'light' ? 100 : 50; // light模式~10fps，standard~20fps
   
   function updateBackground(timestamp) {
     // 检查是否正在播放
@@ -1047,7 +1384,7 @@ function startBackgroundAnimation() {
         }
         
         // 计算当前能量
-        var currentEnergy = (spectrum[0] + spectrum[1] + spectrum[2] + spectrum[3]) / 4;
+        var currentEnergy = (spectrum[0] + spectrum[1] + spectrum[2] + spectrum[3]) * 0.25;
         
         // 维护能量历史
         pageState.energyHistory.push(currentEnergy);
@@ -1056,8 +1393,11 @@ function startBackgroundAnimation() {
         }
         
         // 计算平均能量
-        var avgEnergy = pageState.energyHistory.reduce(function(a, b) { return a + b; }, 0) / 
-                        pageState.energyHistory.length;
+        var sum = 0;
+        for (var i = 0; i < pageState.energyHistory.length; i++) {
+          sum += pageState.energyHistory[i];
+        }
+        var avgEnergy = sum / pageState.energyHistory.length;
         
         // 节拍检测
         var isBeat = currentEnergy > avgEnergy * BG_BEAT_THRESHOLD && 
@@ -1148,9 +1488,11 @@ function cleanup() {
   if (mode === 'page') {
     Tapp.lifecycle.onReady(async function() {
       try {
+        // 并行初始化所有配置
         var results = await Promise.all([
           Tapp.ui.getLocale(),
-          Tapp.ui.getTheme()
+          Tapp.ui.getTheme(),
+          initAnimationConfig() // 初始化动画调度器配置
         ]);
 
         currentLocale = normalizeLocale(results[0]);

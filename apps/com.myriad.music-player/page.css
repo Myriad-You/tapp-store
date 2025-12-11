@@ -91,12 +91,11 @@ html, body {
   background-size: cover;
   background-position: center;
   filter: blur(60px) saturate(1.8) brightness(0.9);
-  transform: scale(1.1);
+  transform: scale(1.1) translateZ(0);
   transition: background-image 0.8s ease;
-  /* GPU 加速和平滑动画 */
-  will-change: transform;
   transform-origin: center center;
-  backface-visibility: hidden;
+  /* 使用 contain 限制重绘范围 */
+  contain: strict;
 }
 
 .bg-overlay {
@@ -179,11 +178,14 @@ html, body {
   max-width: 280px;
   aspect-ratio: 1;
   border-radius: var(--radius-lg);
+  overflow: hidden;
   box-shadow: 
     0 20px 60px color-mix(in srgb, var(--music-primary) 30%, transparent),
     0 8px 20px rgba(0, 0, 0, 0.2);
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
               box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* 限制重绘范围 */
+  contain: layout style;
 }
 
 /* 暂停状态 - 封面缩小 */
@@ -362,15 +364,17 @@ html, body {
   word-wrap: break-word;
   white-space: pre-wrap;
   filter: blur(5px);
-  will-change: opacity, filter;
+  /* GPU加速 */
+  transform: translateZ(0);
   transition: 
     opacity 0.5s ease-out,
     filter 0.5s ease-out,
     color 0.4s ease-out,
     font-size 0.5s cubic-bezier(0.22, 1, 0.36, 1),
     background 0.3s ease;
-  /* 确保点击区域完整覆盖 */
   box-sizing: border-box;
+  /* 限制重绘 */
+  contain: layout style;
 }
 
 .lyric-line:hover {
@@ -546,8 +550,10 @@ html, body {
   padding: 8px 10px;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease;
   position: relative;
+  /* 性能优化 */
+  contain: layout style;
 }
 
 .playlist-item:hover {
@@ -779,7 +785,8 @@ html, body {
   border: none;
   color: var(--text-primary);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  /* 只过渡必要的属性 */
+  transition: color var(--transition-fast), transform var(--transition-fast);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -1209,5 +1216,47 @@ html, body {
   .mobile-close-btn,
   .mobile-panel-title {
     display: none !important;
+  }
+}
+
+/* ========================================
+   减少动画模式 - 系统级无障碍支持
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  /* 禁用所有过渡和动画 */
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  /* 禁用背景动画 */
+  .bg-artwork {
+    transition: none !important;
+    transform: scale(1.1) !important;
+  }
+  
+  /* 禁用歌词滚动动画 */
+  .lyrics-container {
+    scroll-behavior: auto !important;
+  }
+  
+  .lyric-line {
+    transition: none !important;
+  }
+  
+  /* 禁用滑入动画 */
+  @keyframes slideUp {
+    from, to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* 简化控件交互 */
+  .control-btn,
+  .playlist-item,
+  .tab-btn {
+    transition: none !important;
   }
 }
