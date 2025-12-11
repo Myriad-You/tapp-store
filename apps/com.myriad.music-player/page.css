@@ -1046,7 +1046,7 @@ html, body {
   .player-right {
     display: none;
     position: fixed;
-    top: 60px;
+    top: 70px;
     left: 0;
     right: 0;
     bottom: 0;
@@ -1132,16 +1132,19 @@ html, body {
     order: 1;
     width: 100%;
     max-width: none;
+    justify-content: flex-start;
   }
   
   /* 第二行：上一首 播放 下一首 */
   .controls-group {
     order: 2;
+    justify-content: flex-start;
   }
   
   /* 第三行：其他功能 */
   .right-controls {
     order: 3;
+    justify-content: flex-start;
   }
   
   .volume-section {
@@ -1160,6 +1163,11 @@ html, body {
   }
   
   /* 上一首/下一首 - 次要 */
+  .control-main {
+    width: 52px;
+    height: 52px;
+  }
+  
   .control-main svg {
     width: 28px;
     height: 28px;
@@ -1167,24 +1175,24 @@ html, body {
   
   /* Tab按钮 - 较小 */
   .tab-btn {
-    width: 46px;
-    height: 46px;
+    width: 44px;
+    height: 44px;
   }
   
   .tab-btn svg {
-    width: 23px;
-    height: 23px;
+    width: 22px;
+    height: 22px;
   }
   
   /* 模式按钮等次要控件 - 最小 */
   .control-secondary {
-    width: 41px;
-    height: 41px;
+    width: 44px;
+    height: 44px;
   }
   
   .control-secondary svg {
-    width: 21px;
-    height: 21px;
+    width: 22px;
+    height: 22px;
   }
 }
 
