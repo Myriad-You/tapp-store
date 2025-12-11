@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.app/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2025-12-10T00:00:00Z",
+  "updated_at": "2025-12-11T00:00:00Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.app",
@@ -28,7 +28,8 @@
       "tags": ["音乐", "播放器", "歌词", "media", "多语言"],
       "permissions": ["storage", "ui:notification", "ui:theme", "media:control", "media:read"],
       "min_myriad_version": "0.1.0",
-      "icon": "🎵",
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='12' cy='12' r='10' stroke='currentColor' stroke-width='1.5'/><path d='M9 17V8.5C9 7.67 9.67 7 10.5 7H15V11H11V15.5C11 16.33 10.33 17 9.5 17C8.67 17 8 16.33 8 15.5C8 14.67 8.67 14 9.5 14' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>",
+      "theme_color": "#E91E63",
       "screenshots": [],
       "download": {
         "manifest": "apps/com.myriad.music-player/manifest.json",
@@ -62,7 +63,8 @@
       "tags": ["笔记", "便签", "效率", "widget", "搜索", "多语言"],
       "permissions": ["storage", "ui:notification", "ui:theme", "ui:confirm"],
       "min_myriad_version": "0.1.0",
-      "icon": "📝",
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M8 2V5M16 2V5M3.5 9.09H20.5M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 5.5 21 8.5Z' stroke='currentColor' stroke-width='1.5' stroke-miterlimit='10' stroke-linecap='round' stroke-linejoin='round'/><path d='M8 14H12M8 18H16' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'/></svg>",
+      "theme_color": "#FFA726",
       "screenshots": [],
       "download": {
         "manifest": "apps/com.myriad.quick-notes/manifest.json",
@@ -102,7 +104,8 @@
       "tags": ["AI", "聊天", "助手", "widget", "GPT", "动效"],
       "permissions": ["storage", "ui:notification", "ui:theme", "ai:chat"],
       "min_myriad_version": "0.1.0",
-      "icon": "🤖",
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M12 3C7.03 3 3 6.58 3 11C3 13.39 4.32 15.5 6.5 16.87V21L10.52 18.65C11 18.72 11.5 18.75 12 18.75C16.97 18.75 21 15.17 21 10.75C21 6.33 16.97 3 12 3Z' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/><circle cx='8.5' cy='11' r='1' fill='currentColor'/><circle cx='12' cy='11' r='1' fill='currentColor'/><circle cx='15.5' cy='11' r='1' fill='currentColor'/></svg>",
+      "theme_color": "#00ACC1",
       "screenshots": [],
       "download": {
         "manifest": "apps/com.myriad.ai-chat/manifest.json",
@@ -140,7 +143,8 @@
       "tags": ["天气", "weather", "widget", "位置", "utility"],
       "permissions": ["storage", "widget:register"],
       "min_myriad_version": "0.3.0",
-      "icon": "🌤️",
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M12 3V4M12 20V21M4 12H3M6.31 6.31L5.6 5.6M17.69 6.31L18.4 5.6M6.31 17.69L5.6 18.4M17.69 17.69L18.4 18.4M21 12H20' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'/><circle cx='12' cy='12' r='4' stroke='currentColor' stroke-width='1.5'/><path d='M14.5 16.5C13.8 18 12 19.5 9 19.5C5.69 19.5 3 17.31 3 14.5C3 12.19 4.81 10.28 7.29 9.67' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'/></svg>",
+      "theme_color": "#42A5F5",
       "screenshots": [],
       "download": {
         "manifest": "apps/com.myriad.weather/manifest.json",
