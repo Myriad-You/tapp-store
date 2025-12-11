@@ -930,30 +930,50 @@ var lastColors = {
   dark: null
 };
 
-// 轻量级进度更新 - 只更新进度条和时间显示
+// 播放模式缓存 - 避免重复设置 innerHTML
+var lastMode = null;
+
+// 高频 DOM 元素缓存 - 进度相关（每秒更新60次）
+var progressElements = {
+  bar: null,
+  fill: null,
+  current: null,
+  remaining: null,
+  initialized: false
+};
+
+// 初始化进度元素缓存
+function initProgressElements() {
+  if (progressElements.initialized) return;
+  progressElements.bar = $('progress-bar');
+  progressElements.fill = $('progress-fill');
+  progressElements.current = $('current-time');
+  progressElements.remaining = $('remaining-time');
+  progressElements.initialized = true;
+}
+
+// 轻量级进度更新 - 只更新进度条和时间显示（使用缓存的 DOM 引用）
 function updateProgressOnly(status) {
   if (!status) return;
+  
+  // 确保 DOM 引用已缓存
+  initProgressElements();
   
   var track = status.currentTrack;
   var duration = track ? (track.duration || 0) : 0;
   var position = status.position || (status.progress ? status.progress.current : 0) || 0;
   
-  var progressBar = $('progress-bar');
-  var progressFill = $('progress-fill');
-  var currentTimeEl = $('current-time');
-  var remainingTimeEl = $('remaining-time');
-  
-  if (progressBar) {
-    progressBar.value = position;
+  if (progressElements.bar) {
+    progressElements.bar.value = position;
   }
-  if (progressFill) {
+  if (progressElements.fill) {
     var percent = duration > 0 ? (position / duration) * 100 : 0;
-    progressFill.style.width = percent + '%';
+    progressElements.fill.style.width = percent + '%';
   }
-  if (currentTimeEl) currentTimeEl.textContent = formatTime(position);
-  if (remainingTimeEl) {
+  if (progressElements.current) progressElements.current.textContent = formatTime(position);
+  if (progressElements.remaining) {
     var remaining = Math.max(0, duration - position);
-    remainingTimeEl.textContent = '-' + formatTime(remaining);
+    progressElements.remaining.textContent = '-' + formatTime(remaining);
   }
 }
 
@@ -1061,27 +1081,24 @@ function updatePlayerUI(status) {
     }
   }
 
-  // 进度条
-  var progressBar = $('progress-bar');
-  var progressFill = $('progress-fill');
-  var currentTimeEl = $('current-time');
-  var remainingTimeEl = $('remaining-time');
+  // 进度条 - 使用缓存的 DOM 引用
+  initProgressElements();
   var duration = track ? (track.duration || 0) : 0;
   var position = status.position || (status.progress ? status.progress.current : 0) || 0;
   
-  if (progressBar) {
-    progressBar.max = duration || 100;
-    progressBar.value = position;
+  if (progressElements.bar) {
+    progressElements.bar.max = duration || 100;
+    progressElements.bar.value = position;
   }
-  if (progressFill) {
+  if (progressElements.fill) {
     var percent = duration > 0 ? (position / duration) * 100 : 0;
-    progressFill.style.width = percent + '%';
+    progressElements.fill.style.width = percent + '%';
   }
-  if (currentTimeEl) currentTimeEl.textContent = formatTime(position);
+  if (progressElements.current) progressElements.current.textContent = formatTime(position);
   // 显示剩余时长（负数形式）
-  if (remainingTimeEl) {
+  if (progressElements.remaining) {
     var remaining = Math.max(0, duration - position);
-    remainingTimeEl.textContent = '-' + formatTime(remaining);
+    progressElements.remaining.textContent = '-' + formatTime(remaining);
   }
 
   // 音量
@@ -1092,9 +1109,10 @@ function updatePlayerUI(status) {
   if (volumeBar) volumeBar.value = normalizedVolume;
   if (volumeFill) volumeFill.style.width = (normalizedVolume * 100) + '%';
 
-  // 播放模式
+  // 播放模式 - 只在模式变化时更新
   var modeBtn = $('mode-btn');
-  if (modeBtn) {
+  if (modeBtn && status.mode !== lastMode) {
+    lastMode = status.mode;
     modeBtn.innerHTML = getModeIcon(status.mode);
     modeBtn.setAttribute('aria-label', getModeTooltip(status.mode));
     if (status.mode && status.mode !== 'sequence') {
@@ -1181,21 +1199,25 @@ function updateStateSnapshot(state) {
 
 // 初始化页面
 async function initPage() {
-  // 获取设置
-  try {
-    var saved = await Tapp.settings.getAll();
-    if (saved) Object.assign(pageState.settings, saved);
-  } catch (e) {}
-
   // 设置标题
   var titleEl = document.getElementById('page-title');
   if (titleEl) titleEl.textContent = t('title');
 
-  // 获取初始状态
-  try {
-    var statusResult = await Tapp.media.getStatus();
-    // API 返回 { isPlaying, currentTrack: { id, title, artist, cover, duration }, progress, volume, muted, mode }
-    var status = statusResult || {};
+  // 并行获取所有初始数据（减少初始化时间）
+  var results = await Promise.allSettled([
+    Tapp.settings.getAll(),
+    Tapp.media.getStatus(),
+    Tapp.media.getPlaylist()
+  ]);
+  
+  // 处理设置
+  if (results[0].status === 'fulfilled' && results[0].value) {
+    Object.assign(pageState.settings, results[0].value);
+  }
+  
+  // 处理媒体状态
+  if (results[1].status === 'fulfilled') {
+    var status = results[1].value || {};
     
     // 规范化字段名: API 返回 title，我们需要 name
     if (status.currentTrack) {
@@ -1205,7 +1227,6 @@ async function initPage() {
     if (status.progress) {
       status.position = status.progress.current || 0;
     }
-    // 注意：不在这里规范化 volume，让 updatePlayerUI 统一处理
     
     pageState.status = status;
     updatePlayerUI(status);
@@ -1216,14 +1237,11 @@ async function initPage() {
       pageState.currentLyricIndex = status.currentLyricIndex || -1;
       renderLyrics(status.lyrics, status.currentLyricIndex || -1);
     }
-  } catch (e) {
-    console.error('Failed to get media status:', e);
   }
-
-  // 获取播放列表
-  try {
-    var playlistResult = await Tapp.media.getPlaylist();
-    // API 返回 { tracks: [...], currentIndex, total }
+  
+  // 处理播放列表
+  if (results[2].status === 'fulfilled') {
+    var playlistResult = results[2].value;
     var tracks = [];
     if (playlistResult && Array.isArray(playlistResult.tracks)) {
       tracks = playlistResult.tracks;
@@ -1254,8 +1272,6 @@ async function initPage() {
     // 更新 Tab badge 数量
     var badge = document.getElementById('playlist-badge');
     if (badge) badge.textContent = pageState.playlist.length;
-  } catch (e) {
-    console.error('Failed to get playlist:', e);
   }
 
   // 监听状态变化
@@ -1358,17 +1374,8 @@ async function initPage() {
 
 // 绑定控制按钮事件
 function bindControls() {
-  // 检测是否移动端 - 缓存结果
-  var cachedIsMobile = null;
-  var lastWidth = 0;
-  var isMobile = function() {
-    var w = window.innerWidth;
-    if (w !== lastWidth) {
-      lastWidth = w;
-      cachedIsMobile = w <= 768;
-    }
-    return cachedIsMobile;
-  };
+  // 使用全局统一的移动端检测函数
+  var isMobile = checkIsMobile;
   
   // 缓存所有需要的DOM元素
   var tabBtns = document.querySelectorAll('.tab-btn');
@@ -1424,13 +1431,13 @@ function bindControls() {
     });
   }
   
-  // 窗口大小变化时重置状态 - 使用节流
+  // 窗口大小变化时重置状态 - 使用节流（统一处理所有 resize 逻辑）
   var resizeTimeout = null;
   window.addEventListener('resize', function() {
     if (resizeTimeout) return;
     resizeTimeout = setTimeout(function() {
       resizeTimeout = null;
-      cachedIsMobile = null; // 清除缓存
+      // 全局移动端缓存会在 checkIsMobile 调用时自动更新
       if (!isMobile() && playerRight) {
         playerRight.classList.remove('mobile-visible');
         // 桌面端恢复默认active状态
@@ -1470,31 +1477,103 @@ function bindControls() {
     });
   }
 
-  // 进度条 - 同步 fill
+  // 进度条 - 同步 fill，使用节流减少API调用
   var progressBar = document.getElementById('progress-bar');
   var progressFill = document.getElementById('progress-fill');
   if (progressBar) {
+    // 节流seek调用 - 每100ms最多调用一次
+    var lastSeekTime = 0;
+    var pendingSeekValue = null;
+    var seekTimeout = null;
+    
+    var flushSeek = function() {
+      if (pendingSeekValue !== null) {
+        Tapp.media.seek(pendingSeekValue);
+        pendingSeekValue = null;
+      }
+      seekTimeout = null;
+    };
+    
     progressBar.addEventListener('input', function(e) {
       var value = parseFloat(e.target.value);
       var max = parseFloat(e.target.max) || 100;
       if (progressFill) {
         progressFill.style.width = (value / max * 100) + '%';
       }
+      
+      // 节流seek调用
+      var now = Date.now();
+      if (now - lastSeekTime >= 100) {
+        lastSeekTime = now;
+        Tapp.media.seek(value);
+        pendingSeekValue = null;
+      } else {
+        // 延迟执行，确保最终值被发送
+        pendingSeekValue = value;
+        if (!seekTimeout) {
+          seekTimeout = setTimeout(flushSeek, 100);
+        }
+      }
+    });
+    
+    // 拖动结束时确保发送最终值
+    progressBar.addEventListener('change', function(e) {
+      var value = parseFloat(e.target.value);
+      if (seekTimeout) {
+        clearTimeout(seekTimeout);
+        seekTimeout = null;
+      }
       Tapp.media.seek(value);
+      pendingSeekValue = null;
     });
   }
 
-  // 音量滑块 - 同步 fill
+  // 音量滑块 - 同步 fill，使用节流减少API调用
   var volumeBar = document.getElementById('volume-bar');
   var volumeFill = document.getElementById('volume-fill');
   if (volumeBar) {
+    // 节流volume调用 - 每50ms最多调用一次
+    var lastVolumeTime = 0;
+    var pendingVolume = null;
+    var volumeTimeout = null;
+    
+    var flushVolume = function() {
+      if (pendingVolume !== null) {
+        Tapp.media.setVolume(pendingVolume * 100);
+        pendingVolume = null;
+      }
+      volumeTimeout = null;
+    };
+    
     volumeBar.addEventListener('input', function(e) {
       var value = parseFloat(e.target.value);
       if (volumeFill) {
         volumeFill.style.width = (value * 100) + '%';
       }
-      // 后端期望 0-100，HTML slider 是 0-1，需要转换
+      
+      // 节流volume调用
+      var now = Date.now();
+      if (now - lastVolumeTime >= 50) {
+        lastVolumeTime = now;
+        Tapp.media.setVolume(value * 100);
+        pendingVolume = null;
+      } else {
+        pendingVolume = value;
+        if (!volumeTimeout) {
+          volumeTimeout = setTimeout(flushVolume, 50);
+        }
+      }
+    });
+    
+    // 拖动结束时确保发送最终值
+    volumeBar.addEventListener('change', function(e) {
+      var value = parseFloat(e.target.value);
+      if (volumeTimeout) {
+        clearTimeout(volumeTimeout);
+        volumeTimeout = null;
+      }
       Tapp.media.setVolume(value * 100);
+      pendingVolume = null;
     });
   }
 
@@ -1572,18 +1651,18 @@ function getAverageEnergy() {
   return energyBuffer.count > 0 ? energyBuffer.sum / energyBuffer.count : 0;
 }
 
-// 检测是否为移动端（缓存结果）
+// 检测是否为移动端（全局统一缓存）
 var isMobileDevice = null;
+var lastWindowWidth = 0;
 function checkIsMobile() {
-  if (isMobileDevice === null) {
-    isMobileDevice = window.innerWidth <= 768;
+  var w = window.innerWidth;
+  if (w !== lastWindowWidth) {
+    lastWindowWidth = w;
+    isMobileDevice = w <= 768;
   }
   return isMobileDevice;
 }
-// 窗口大小变化时重置检测缓存
-window.addEventListener('resize', function() {
-  isMobileDevice = null;
-}, { passive: true });
+// 注意: resize 事件在 bindControls 中统一处理
 
 // 启动背景动画
 function startBackgroundAnimation() {
