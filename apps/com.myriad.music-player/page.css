@@ -1263,7 +1263,7 @@ html, body {
     align-items: flex-start;
     gap: 12px;
     border-radius: var(--radius-lg);
-    margin-bottom: 45px;
+    margin-bottom: 48px;
   }
   
   /* 第一行：进度条 */
