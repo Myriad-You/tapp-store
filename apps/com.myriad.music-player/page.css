@@ -1264,7 +1264,7 @@ html, body {
     padding: 12px 6px;
     gap: 12px;
     border-radius: var(--radius-lg);
-    margin-bottom: 35px;
+    margin-bottom: 20px;
   }
   
   /* 第一行：进度条 */
