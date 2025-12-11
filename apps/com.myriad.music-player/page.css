@@ -162,7 +162,6 @@ html, body {
   display: grid;
   grid-template-rows: 6fr 1fr;
   gap: 16px;
-  padding: 0 !important;
 }
 
 /* ========================================
@@ -1265,7 +1264,7 @@ html, body {
     padding: 12px 6px;
     gap: 12px;
     border-radius: var(--radius-lg);
-    margin-bottom: 50px;
+    margin-bottom: 35px;
   }
   
   /* 第一行：进度条 */
