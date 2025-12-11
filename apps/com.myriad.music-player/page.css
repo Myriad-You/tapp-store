@@ -139,7 +139,6 @@ html, body {
   grid-template-rows: 6fr 1fr;
   gap: 16px;
   padding: 0 !important;
-  overflow: hidden;
 }
 
 /* ========================================
@@ -1001,7 +1000,7 @@ html, body {
 @media (max-width: 768px) {
   #tapp-content {
     grid-template-rows: 1fr auto;
-    padding: 30px 6px 30px 6px !important;
+    padding: 28px 10px !important;
     gap: 6px;
   }
   
