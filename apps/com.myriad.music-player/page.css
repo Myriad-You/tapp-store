@@ -1067,6 +1067,7 @@ html, body {
     flex: 1;
     display: none;
     border-radius: 0;
+    padding-top: 20px;
   }
   
   .player-right.mobile-visible .panel.active {
