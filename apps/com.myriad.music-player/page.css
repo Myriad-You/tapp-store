@@ -1021,8 +1021,8 @@ html, body {
   }
   
   .artwork-wrapper {
-    max-width: 230px;
-    width: 58%;
+    max-width: 265px;
+    width: 67%;
   }
   
   .track-info {
@@ -1035,11 +1035,11 @@ html, body {
   }
   
   .track-title {
-    font-size: 23px;
+    font-size: 26px;
   }
   
   .track-artist {
-    font-size: 18px;
+    font-size: 21px;
   }
   
   /* 右侧面板默认隐藏 */
@@ -1149,41 +1149,41 @@ html, body {
   
   /* 播放按钮 - 最大最突出 */
   .control-play {
-    width: 60px;
-    height: 60px;
+    width: 69px;
+    height: 69px;
   }
   
   .control-play svg {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
   }
   
   /* 上一首/下一首 - 次要 */
   .control-main svg {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
   }
   
   /* Tab按钮 - 较小 */
   .tab-btn {
-    width: 40px;
-    height: 40px;
+    width: 46px;
+    height: 46px;
   }
   
   .tab-btn svg {
-    width: 20px;
-    height: 20px;
+    width: 23px;
+    height: 23px;
   }
   
   /* 模式按钮等次要控件 - 最小 */
   .control-secondary {
-    width: 36px;
-    height: 36px;
+    width: 41px;
+    height: 41px;
   }
   
   .control-secondary svg {
-    width: 18px;
-    height: 18px;
+    width: 21px;
+    height: 21px;
   }
 }
 
