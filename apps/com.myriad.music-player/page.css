@@ -1021,8 +1021,8 @@ html, body {
   }
   
   .artwork-wrapper {
-    max-width: 265px;
-    width: 67%;
+    max-width: 186px;
+    width: 47%;
   }
   
   .track-info {
@@ -1035,11 +1035,11 @@ html, body {
   }
   
   .track-title {
-    font-size: 26px;
+    font-size: 18px;
   }
   
   .track-artist {
-    font-size: 21px;
+    font-size: 15px;
   }
   
   /* 右侧面板默认隐藏 */
