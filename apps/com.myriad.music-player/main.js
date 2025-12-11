@@ -83,6 +83,7 @@ var i18n = {
 };
 
 var currentLocale = 'zh-CN';
+var currentTheme = 'light'; // 当前主题
 
 function normalizeLocale(locale) {
   if (!locale) return 'zh-CN';
@@ -94,6 +95,60 @@ function normalizeLocale(locale) {
 
 function t(key) {
   return (i18n[currentLocale] || i18n['zh-CN'])[key] || key;
+}
+
+// ========================================
+// 主题适配
+// ========================================
+
+function applyTheme(theme) {
+  currentTheme = theme || 'light';
+  var isDark = currentTheme === 'dark';
+  var root = document.documentElement;
+  
+  // 切换 dark 类
+  if (isDark) {
+    root.classList.add('dark');
+  } else {
+    root.classList.remove('dark');
+  }
+  
+  // 批量更新 CSS 变量
+  var updates = isDark ? [
+    ['--glass-bg', 'rgba(28, 28, 30, 0.85)'],
+    ['--glass-border', 'rgba(255, 255, 255, 0.08)'],
+    ['--glass-shadow', '0 8px 32px rgba(0, 0, 0, 0.4)'],
+    ['--text-primary', '#f5f5f7'],
+    ['--text-secondary', 'rgba(235, 235, 245, 0.6)'],
+    ['--text-tertiary', 'rgba(235, 235, 245, 0.3)']
+  ] : [
+    ['--glass-bg', 'rgba(255, 255, 255, 0.72)'],
+    ['--glass-border', 'rgba(255, 255, 255, 0.18)'],
+    ['--glass-shadow', '0 8px 32px rgba(0, 0, 0, 0.12)'],
+    ['--text-primary', '#1d1d1f'],
+    ['--text-secondary', 'rgba(60, 60, 67, 0.6)'],
+    ['--text-tertiary', 'rgba(60, 60, 67, 0.3)']
+  ];
+  
+  for (var i = 0; i < updates.length; i++) {
+    root.style.setProperty(updates[i][0], updates[i][1]);
+  }
+  
+  // 更新背景遮罩（如果存在）
+  var bgOverlay = document.querySelector('.bg-overlay');
+  if (bgOverlay) {
+    bgOverlay.style.background = isDark
+      ? 'linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 40%, rgba(0, 0, 0, 0.7) 100%)'
+      : 'linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.6) 40%, rgba(255, 255, 255, 0.8) 100%)';
+  }
+  
+  // 更新背景模糊效果
+  var bgArtwork = document.querySelector('.bg-artwork');
+  if (bgArtwork) {
+    bgArtwork.style.filter = isDark
+      ? 'blur(60px) saturate(1.2) brightness(0.4)'
+      : 'blur(60px) saturate(1.8) brightness(0.9)';
+  }
 }
 
 // ========================================
@@ -1531,8 +1586,8 @@ function cleanup() {
 
         currentLocale = normalizeLocale(results[0]);
         
-        // 注意：音乐播放器 Tapp 使用封面颜色，不使用系统主题色
-        // 封面颜色会在 initPage() 中从音乐状态同步
+        // 应用初始主题（深色/浅色模式）
+        applyTheme(results[1]);
         
         await initPage();
 
@@ -1542,7 +1597,10 @@ function cleanup() {
           initPage();
         });
 
-        // 不监听系统主题色变化，音乐播放器使用封面颜色
+        // 监听主题变化（深色/浅色模式切换）
+        Tapp.ui.onThemeChange(function(theme) {
+          applyTheme(theme);
+        });
       } catch (err) {
         console.error('Init error:', err);
         initPage();

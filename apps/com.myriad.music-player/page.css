@@ -50,8 +50,9 @@
   --transition-spring: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+/* 深色模式 - 通过系统偏好或 .dark 类控制 */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
     --glass-bg: rgba(28, 28, 30, 0.85);
     --glass-border: rgba(255, 255, 255, 0.08);
     --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
@@ -59,6 +60,16 @@
     --text-secondary: rgba(235, 235, 245, 0.6);
     --text-tertiary: rgba(235, 235, 245, 0.3);
   }
+}
+
+/* 通过 .dark 类强制深色模式（优先级高于系统偏好） */
+:root.dark {
+  --glass-bg: rgba(28, 28, 30, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --text-primary: #f5f5f7;
+  --text-secondary: rgba(235, 235, 245, 0.6);
+  --text-tertiary: rgba(235, 235, 245, 0.3);
 }
 
 /* ========================================
@@ -110,11 +121,11 @@ html, body {
 }
 
 @media (prefers-color-scheme: dark) {
-  .bg-artwork {
+  :root:not(.light) .bg-artwork {
     filter: blur(60px) saturate(1.2) brightness(0.4);
   }
   
-  .bg-overlay {
+  :root:not(.light) .bg-overlay {
     background: linear-gradient(
       180deg,
       rgba(0, 0, 0, 0.3) 0%,
@@ -122,6 +133,20 @@ html, body {
       rgba(0, 0, 0, 0.7) 100%
     );
   }
+}
+
+/* 通过 .dark 类控制深色背景 */
+:root.dark .bg-artwork {
+  filter: blur(60px) saturate(1.2) brightness(0.4);
+}
+
+:root.dark .bg-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.3) 0%,
+    rgba(0, 0, 0, 0.5) 40%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
 }
 
 /* ========================================
@@ -1104,9 +1129,13 @@ html, body {
   }
   
   @media (prefers-color-scheme: dark) {
-    .mobile-close-btn {
+    :root:not(.light) .mobile-close-btn {
       background: rgba(255, 255, 255, 0.1);
     }
+  }
+  
+  :root.dark .mobile-close-btn {
+    background: rgba(255, 255, 255, 0.1);
   }
   
   /* 面板标题 */
