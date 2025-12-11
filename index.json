@@ -104,7 +104,7 @@
       "tags": ["AI", "聊天", "助手", "widget", "GPT", "动效"],
       "permissions": ["storage", "ui:notification", "ui:theme", "ai:chat"],
       "min_myriad_version": "0.1.0",
-      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M12 2C12 2 14 8 14 10C14 8 16 2 16 2C16 2 14 8 12 10C14 10 22 12 22 12C22 12 14 14 12 14C14 14 16 22 16 22C16 22 14 16 12 14C12 16 12 22 12 22C12 22 10 16 10 14C10 16 8 22 8 22C8 22 10 16 12 14C10 14 2 12 2 12C2 12 10 10 12 10C10 10 8 2 8 2C8 2 10 8 12 10C12 8 12 2 12 2Z' fill='currentColor'/></svg>",
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M12 2c0 5.5-1.5 8.5-4.5 10 3 1.5 4.5 4.5 4.5 10 0-5.5 1.5-8.5 4.5-10-3-1.5-4.5-4.5-4.5-10z' fill='currentColor'/></svg>",
       "theme_color": "#00ACC1",
       "screenshots": [],
       "download": {
