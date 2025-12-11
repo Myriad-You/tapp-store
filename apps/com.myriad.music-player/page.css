@@ -1002,8 +1002,8 @@ html, body {
 @media (max-width: 768px) {
   #tapp-content {
     grid-template-rows: 1fr auto;
-    padding: 60px 6px 40px 6px !important;
-    gap: 12px;
+    padding: 30px 6px 30px 6px !important;
+    gap: 6px;
   }
   
   /* 内容区只显示左侧（封面信息） */
@@ -1047,7 +1047,7 @@ html, body {
   .player-right {
     display: none;
     position: fixed;
-    top: 50px;
+    top: 20px;
     left: 0;
     right: 0;
     bottom: 0;
@@ -1112,7 +1112,7 @@ html, body {
     display: block;
     position: absolute;
     top: 16px;
-    left: 8px;
+    left: 12px;
     font-size: 18px;
     font-weight: 600;
     color: var(--text-primary);
@@ -1148,45 +1148,43 @@ html, body {
     display: none; /* 移动端隐藏音量控制 */
   }
   
+  /* 播放按钮 - 最大最突出 */
   .control-play {
-    width: 55px;
-    height: 55px;
+    width: 60px;
+    height: 60px;
   }
   
   .control-play svg {
-    width: 25px;
-    height: 25px;
+    width: 28px;
+    height: 28px;
   }
   
-  .control-main {
-    width: 44px;
-    height: 44px;
-  }
-  
+  /* 上一首/下一首 - 次要 */
   .control-main svg {
-    width: 23px;
-    height: 23px;
+    width: 24px;
+    height: 24px;
   }
   
-  /* Tab按钮在移动端更明显 */
+  /* Tab按钮 - 较小 */
   .tab-btn {
-    width: 46px;
-    height: 46px;
+    width: 40px;
+    height: 40px;
   }
   
   .tab-btn svg {
-    width: 23px;
-    height: 23px;
+    width: 20px;
+    height: 20px;
   }
   
+  /* 模式按钮等次要控件 - 最小 */
   .control-secondary {
-    width: 44px;
-    height: 44px;
+    width: 36px;
+    height: 36px;
   }
   
   .control-secondary svg {
-    width: 21px;
-    height: 21px;
+    width: 18px;
+    height: 18px;
   }
 }
 
