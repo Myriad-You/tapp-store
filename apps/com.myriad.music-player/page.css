@@ -1002,7 +1002,7 @@ html, body {
 @media (max-width: 768px) {
   #tapp-content {
     grid-template-rows: 1fr auto;
-    padding: 40px 20px !important;
+    padding: 12px 6px !important;
     gap: 12px;
   }
   
@@ -1015,7 +1015,7 @@ html, body {
   /* 左侧区域 - 居左布局 */
   .player-left {
     flex: 1;
-    padding: 40px 20px;
+    padding: 12px 6px;
     gap: 20px;
     justify-content: flex-start;
     align-items: flex-start;
@@ -1047,13 +1047,17 @@ html, body {
   .player-right {
     display: none;
     position: fixed;
-    inset: 0;
+    top: 50px;
+    left: 0;
+    right: 0;
+    bottom: 0;
     z-index: 100;
     background: var(--glass-bg);
     -webkit-backdrop-filter: blur(40px) saturate(1.8);
     backdrop-filter: blur(40px) saturate(1.8);
-    padding: 40px 20px;
-    padding-top: 80px;
+    padding: 12px 6px;
+    padding-top: 56px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     animation: slideUp 0.3s ease;
   }
   
@@ -1067,7 +1071,6 @@ html, body {
     flex: 1;
     display: none;
     border-radius: 0;
-    padding-top: 20px;
   }
   
   .player-right.mobile-visible .panel.active {
@@ -1079,8 +1082,8 @@ html, body {
   .mobile-close-btn {
     display: flex;
     position: absolute;
-    top: 16px;
-    right: 16px;
+    top: 12px;
+    right: 8px;
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -1108,8 +1111,8 @@ html, body {
   .mobile-panel-title {
     display: block;
     position: absolute;
-    top: 20px;
-    left: 20px;
+    top: 16px;
+    left: 8px;
     font-size: 18px;
     font-weight: 600;
     color: var(--text-primary);
@@ -1119,7 +1122,8 @@ html, body {
   .controls-bar {
     flex-direction: column;
     align-items: flex-start;
-    padding: 24px 16px;
+    padding: 12px 6px;
+    padding-bottom: 40px;
     gap: 12px;
     border-radius: var(--radius-lg);
   }
@@ -1182,12 +1186,12 @@ html, body {
 /* 超小屏幕 */
 @media (max-width: 480px) {
   #tapp-content {
-    padding: 24px 12px;
+    padding: 12px;
     gap: 10px;
   }
   
   .player-left {
-    padding: 32px 16px;
+    padding: 16px;
     gap: 16px;
   }
   
