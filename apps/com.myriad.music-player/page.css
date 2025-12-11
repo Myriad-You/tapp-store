@@ -1002,7 +1002,7 @@ html, body {
 @media (max-width: 768px) {
   #tapp-content {
     grid-template-rows: 1fr auto;
-    padding: 16px;
+    padding: 20px !important;
     gap: 12px;
   }
   
@@ -1225,7 +1225,9 @@ html, body {
 }
 
 /* 桌面端隐藏移动端专用元素 */
-.mobile-close-btn,
-.mobile-panel-title {
-  display: none;
+@media (min-width: 769px) {
+  .mobile-close-btn,
+  .mobile-panel-title {
+    display: none !important;
+  }
 }
