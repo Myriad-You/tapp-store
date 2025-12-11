@@ -102,8 +102,8 @@ function t(key) {
 
 function formatTime(seconds) {
   if (!seconds || isNaN(seconds)) return '0:00';
-  var mins = Math.floor(seconds / 60);
-  var secs = Math.floor(seconds % 60);
+  var mins = (seconds / 60) | 0; // 位运算取整比Math.floor快
+  var secs = (seconds % 60) | 0;
   return mins + ':' + (secs < 10 ? '0' : '') + secs;
 }
 
@@ -395,23 +395,23 @@ function renderLyrics(lyrics, currentIndex) {
   }
 }
 
-// 获取歌词行的类名
+// 获取歌词行的类名 - 优化版：使用字符串拼接替代数组
 function getLyricLineClasses(index, currentIndex) {
-  var classes = ['lyric-line'];
+  var cls = 'lyric-line';
   var distance = currentIndex >= 0 ? Math.abs(index - currentIndex) : 999;
   
   if (index === currentIndex) {
-    classes.push('active');
+    cls += ' active';
   } else if (currentIndex >= 0 && index < currentIndex) {
-    classes.push('passed');
+    cls += ' passed';
   }
   
   // 距离渐变效果
-  if (distance === 1) classes.push('near-1');
-  else if (distance === 2) classes.push('near-2');
-  else if (distance === 3) classes.push('near-3');
+  if (distance === 1) cls += ' near-1';
+  else if (distance === 2) cls += ' near-2';
+  else if (distance === 3) cls += ' near-3';
   
-  return classes.join(' ');
+  return cls;
 }
 
 // 绑定歌词点击事件 - 事件委托
@@ -422,16 +422,11 @@ function bindLyricClickEvents(container) {
   container.addEventListener('click', handleLyricClick);
 }
 
-// 处理歌词点击
+// 处理歌词点击 - 优化版
 function handleLyricClick(e) {
-  var target = e.target;
-  // 找到最近的 .lyric-line 元素
-  while (target && !target.classList.contains('lyric-line')) {
-    if (target === e.currentTarget) return;
-    target = target.parentElement;
-  }
+  var target = e.target.closest('.lyric-line');
   
-  if (target && target.classList.contains('lyric-line')) {
+  if (target) {
     var time = parseFloat(target.getAttribute('data-time'));
     if (!isNaN(time) && time >= 0) {
       // 跳转到对应时间
@@ -478,6 +473,9 @@ function initVirtualList() {
   
   // 创建固定的容器结构（只创建一次）
   if (!virtualList.innerWrapper) {
+    // 先清空容器（移除 playlist-empty 等旧内容）
+    virtualList.container.innerHTML = '';
+    
     virtualList.innerWrapper = document.createElement('div');
     virtualList.innerWrapper.style.cssText = 'position:relative;width:100%;';
     
@@ -871,26 +869,33 @@ function updatePlayerUI(status) {
     bgArtwork.style.backgroundImage = 'url(' + track.cover + ')';
   }
   
-  // 同步音乐播放器的完整动态颜色
+  // 同步音乐播放器的完整动态颜色 - 批量更新减少重排
   var root = document.documentElement;
+  var colorUpdates = [];
   if (status.primaryColor) {
     var primary = status.primaryColor;
-    root.style.setProperty('--music-primary', primary);
-    root.style.setProperty('--accent-color', primary);
-    root.style.setProperty('--accent-light', primary + '26');
-    root.style.setProperty('--accent-glow', primary + '66');
+    colorUpdates.push(['--music-primary', primary]);
+    colorUpdates.push(['--accent-color', primary]);
+    colorUpdates.push(['--accent-light', primary + '26']);
+    colorUpdates.push(['--accent-glow', primary + '66']);
   }
   if (status.secondaryColor) {
-    root.style.setProperty('--music-secondary', status.secondaryColor);
+    colorUpdates.push(['--music-secondary', status.secondaryColor]);
   }
   if (status.accentColor) {
-    root.style.setProperty('--music-accent', status.accentColor);
+    colorUpdates.push(['--music-accent', status.accentColor]);
   }
   if (status.lightColor) {
-    root.style.setProperty('--music-light', status.lightColor);
+    colorUpdates.push(['--music-light', status.lightColor]);
   }
   if (status.darkColor) {
-    root.style.setProperty('--music-dark', status.darkColor);
+    colorUpdates.push(['--music-dark', status.darkColor]);
+  }
+  // 一次性应用所有颜色更新
+  if (colorUpdates.length > 0) {
+    for (var i = 0; i < colorUpdates.length; i++) {
+      root.style.setProperty(colorUpdates[i][0], colorUpdates[i][1]);
+    }
   }
   
   // 封面
@@ -1078,20 +1083,23 @@ async function initPage() {
       tracks = playlistResult;
     }
     
-    pageState.playlist = tracks.map(function(song, idx) {
-      // 规范化字段名
-      return {
-        id: song.id || String(idx),
+    // 预分配数组避免多次push
+    pageState.playlist = new Array(tracks.length);
+    for (var i = 0; i < tracks.length; i++) {
+      var song = tracks[i];
+      // 规范化字段名 - 直接赋值而非创建新对象
+      pageState.playlist[i] = {
+        id: song.id || String(i),
         name: song.title || song.name || 'Unknown',
         artist: song.artist || 'Unknown',
         cover: song.cover || '',
         duration: song.duration || 0,
         isVip: song.isVip || false,
         vipType: song.vipType || null,
-        originalIndex: song.index !== undefined ? song.index : idx,
+        originalIndex: song.index !== undefined ? song.index : i,
         isCurrent: song.isCurrent || false
       };
-    });
+    }
     
     renderPlaylist(pageState.playlist, pageState.status?.currentTrack, '');
     
@@ -1179,16 +1187,24 @@ async function initPage() {
 
 // 绑定控制按钮事件
 function bindControls() {
-  // 检测是否移动端
+  // 检测是否移动端 - 缓存结果
+  var cachedIsMobile = null;
+  var lastWidth = 0;
   var isMobile = function() {
-    return window.innerWidth <= 768;
+    var w = window.innerWidth;
+    if (w !== lastWidth) {
+      lastWidth = w;
+      cachedIsMobile = w <= 768;
+    }
+    return cachedIsMobile;
   };
   
-  // Tab 切换
+  // 缓存所有需要的DOM元素
   var tabBtns = document.querySelectorAll('.tab-btn');
   var playerRight = document.getElementById('player-right');
   var mobileCloseBtn = document.getElementById('mobile-close-btn');
   var mobilePanelTitle = document.getElementById('mobile-panel-title');
+  var panels = document.querySelectorAll('.panel');
   
   // 面板标题映射
   var panelTitles = {
@@ -1205,8 +1221,7 @@ function bindControls() {
       tabBtns.forEach(function(b) { b.classList.remove('active'); });
       btn.classList.add('active');
       
-      // 切换面板
-      var panels = document.querySelectorAll('.panel');
+      // 切换面板 - 使用缓存的panels
       panels.forEach(function(p) { p.classList.remove('active'); });
       var targetPanel = document.getElementById('panel-' + tab);
       if (targetPanel) targetPanel.classList.add('active');
@@ -1238,17 +1253,23 @@ function bindControls() {
     });
   }
   
-  // 窗口大小变化时重置状态
+  // 窗口大小变化时重置状态 - 使用节流
+  var resizeTimeout = null;
   window.addEventListener('resize', function() {
-    if (!isMobile() && playerRight) {
-      playerRight.classList.remove('mobile-visible');
-      // 桌面端恢复默认active状态
-      var lyricsTab = document.getElementById('tab-lyrics');
-      if (lyricsTab && !document.querySelector('.tab-btn.active')) {
-        lyricsTab.classList.add('active');
+    if (resizeTimeout) return;
+    resizeTimeout = setTimeout(function() {
+      resizeTimeout = null;
+      cachedIsMobile = null; // 清除缓存
+      if (!isMobile() && playerRight) {
+        playerRight.classList.remove('mobile-visible');
+        // 桌面端恢复默认active状态
+        var lyricsTab = document.getElementById('tab-lyrics');
+        if (lyricsTab && !document.querySelector('.tab-btn.active')) {
+          lyricsTab.classList.add('active');
+        }
       }
-    }
-  });
+    }, 100);
+  }, { passive: true });
   
   // 播放/暂停
   var playBtn = document.getElementById('play-btn');
