@@ -1398,44 +1398,92 @@ function bindControls() {
     'playlist': '播放列表'
   };
   
-  tabBtns.forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var tab = btn.getAttribute('data-tab');
-      var wasActive = btn.classList.contains('active');
-      
-      // 更新 tab 按钮状态
-      tabBtns.forEach(function(b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-      
-      // 切换面板 - 使用缓存的panels
-      panels.forEach(function(p) { p.classList.remove('active'); });
-      var targetPanel = document.getElementById('panel-' + tab);
-      if (targetPanel) targetPanel.classList.add('active');
-      
-      // 移动端：显示面板或切换
-      if (isMobile() && playerRight) {
-        if (wasActive && playerRight.classList.contains('mobile-visible')) {
-          // 再次点击同一个按钮，关闭面板
-          playerRight.classList.remove('mobile-visible');
-          btn.classList.remove('active');
-        } else {
-          // 显示面板
-          playerRight.classList.add('mobile-visible');
-          // 更新面板标题
-          if (mobilePanelTitle) {
-            mobilePanelTitle.textContent = panelTitles[tab] || tab;
-          }
+  // 🎯 WebKit 兼容性：统一的 Tab 按钮点击处理函数
+  function handleTabClick(btn, e) {
+    // 阻止事件冒泡和默认行为
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    var tab = btn.getAttribute('data-tab');
+    var wasActive = btn.classList.contains('active');
+    
+    // 更新 tab 按钮状态
+    tabBtns.forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    
+    // 切换面板 - 使用缓存的panels
+    panels.forEach(function(p) { p.classList.remove('active'); });
+    var targetPanel = document.getElementById('panel-' + tab);
+    if (targetPanel) targetPanel.classList.add('active');
+    
+    // 移动端：显示面板或切换
+    if (isMobile() && playerRight) {
+      if (wasActive && playerRight.classList.contains('mobile-visible')) {
+        // 再次点击同一个按钮，关闭面板
+        playerRight.classList.remove('mobile-visible');
+        btn.classList.remove('active');
+      } else {
+        // 显示面板
+        playerRight.classList.add('mobile-visible');
+        // 更新面板标题
+        if (mobilePanelTitle) {
+          mobilePanelTitle.textContent = panelTitles[tab] || tab;
         }
       }
+    }
+  }
+  
+  tabBtns.forEach(function(btn) {
+    // 🎯 WebKit 兼容性：同时绑定 click 和 touchend 事件
+    // 使用标志位防止重复触发
+    var touchHandled = false;
+    
+    btn.addEventListener('touchend', function(e) {
+      touchHandled = true;
+      handleTabClick(btn, e);
+      // 重置标志位
+      setTimeout(function() { touchHandled = false; }, 300);
+    }, { passive: false });
+    
+    btn.addEventListener('click', function(e) {
+      // 如果已经由 touchend 处理，跳过
+      if (touchHandled) {
+        touchHandled = false;
+        return;
+      }
+      handleTabClick(btn, e);
     });
   });
   
   // 移动端关闭按钮
   if (mobileCloseBtn && playerRight) {
-    mobileCloseBtn.addEventListener('click', function() {
+    // 🎯 WebKit 兼容性：关闭按钮点击处理
+    function handleCloseClick(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       playerRight.classList.remove('mobile-visible');
       // 取消所有tab按钮的active状态
       tabBtns.forEach(function(b) { b.classList.remove('active'); });
+    }
+    
+    var closeTouchHandled = false;
+    
+    mobileCloseBtn.addEventListener('touchend', function(e) {
+      closeTouchHandled = true;
+      handleCloseClick(e);
+      setTimeout(function() { closeTouchHandled = false; }, 300);
+    }, { passive: false });
+    
+    mobileCloseBtn.addEventListener('click', function(e) {
+      if (closeTouchHandled) {
+        closeTouchHandled = false;
+        return;
+      }
+      handleCloseClick(e);
     });
   }
   

@@ -778,11 +778,20 @@ html, body {
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition-fast);
+  /* 🎯 WebKit 兼容性：确保触摸事件正常工作 */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  /* 确保按钮在最上层可点击 */
+  z-index: 1;
 }
 
 .tab-btn svg {
   width: 20px;
   height: 20px;
+  /* 🎯 WebKit 兼容性：确保 SVG 不阻止触摸事件穿透到按钮 */
+  pointer-events: none;
 }
 
 .tab-btn:hover {
@@ -973,6 +982,9 @@ html, body {
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
+  /* 🎯 WebKit 兼容性：确保控制按钮可点击 */
+  position: relative;
+  z-index: 10;
 }
 
 /* 主按钮 - 上一首/下一首，渐变背景 */
@@ -1228,12 +1240,19 @@ html, body {
     justify-content: center;
     cursor: pointer;
     z-index: 10;
+    /* 🎯 WebKit 兼容性：确保触摸事件正常工作 */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
   }
   
   .mobile-close-btn svg {
     width: 20px;
     height: 20px;
     fill: var(--text-secondary);
+    /* 🎯 WebKit 兼容性：确保 SVG 不阻止触摸事件 */
+    pointer-events: none;
   }
   
   @media (prefers-color-scheme: dark) {
@@ -1312,15 +1331,20 @@ html, body {
     height: 26px;
   }
   
-  /* Tab按钮 - 较小 */
+  /* Tab按钮 - 移动端增大点击区域 */
   .tab-btn {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
+    /* 🎯 WebKit 兼容性：增大触摸目标 */
+    min-width: 44px;
+    min-height: 44px;
   }
   
   .tab-btn svg {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
+    /* 确保 SVG 不阻止触摸事件 */
+    pointer-events: none;
   }
   
   /* 模式按钮等次要控件 - 最小 */
