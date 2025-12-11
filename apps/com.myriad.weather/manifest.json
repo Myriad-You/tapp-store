@@ -12,7 +12,8 @@
     "storage",
     "widget:register"
   ],
-  "icon": "🌤️",
+  "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M12 3V4M12 20V21M4 12H3M6.31 6.31L5.6 5.6M17.69 6.31L18.4 5.6M6.31 17.69L5.6 18.4M17.69 17.69L18.4 18.4M21 12H20' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'/><circle cx='12' cy='12' r='4' stroke='currentColor' stroke-width='1.5'/><path d='M14.5 16.5C13.8 18 12 19.5 9 19.5C5.69 19.5 3 17.31 3 14.5C3 12.19 4.81 10.28 7.29 9.67' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'/></svg>",
+  "themeColor": "#42A5F5",
   "hasPage": true,
   "widgets": [
     {
