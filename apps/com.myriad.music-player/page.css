@@ -1022,8 +1022,8 @@ html, body {
   }
   
   .artwork-wrapper {
-    max-width: 200px;
-    width: 50%;
+    max-width: 230px;
+    width: 58%;
   }
   
   .track-info {
@@ -1036,11 +1036,11 @@ html, body {
   }
   
   .track-title {
-    font-size: 20px;
+    font-size: 23px;
   }
   
   .track-artist {
-    font-size: 16px;
+    font-size: 18px;
   }
   
   /* 右侧面板默认隐藏 */
@@ -1149,24 +1149,44 @@ html, body {
   }
   
   .control-play {
-    width: 48px;
-    height: 48px;
+    width: 55px;
+    height: 55px;
   }
   
   .control-play svg {
-    width: 22px;
-    height: 22px;
+    width: 25px;
+    height: 25px;
+  }
+  
+  .control-main {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .control-main svg {
+    width: 23px;
+    height: 23px;
   }
   
   /* Tab按钮在移动端更明显 */
   .tab-btn {
-    width: 40px;
-    height: 40px;
+    width: 46px;
+    height: 46px;
   }
   
   .tab-btn svg {
-    width: 20px;
-    height: 20px;
+    width: 23px;
+    height: 23px;
+  }
+  
+  .control-secondary {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .control-secondary svg {
+    width: 21px;
+    height: 21px;
   }
 }
 
