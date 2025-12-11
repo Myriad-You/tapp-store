@@ -149,7 +149,6 @@ html, body {
   grid-template-columns: 2fr 3fr;
   gap: 16px;
   min-height: 0;
-  overflow: hidden;
 }
 
 /* ========================================
@@ -162,7 +161,6 @@ html, body {
   justify-content: center;
   padding: 24px;
   padding-left: 15%;
-  overflow: hidden;
   gap: 12px;
 }
 
@@ -181,7 +179,6 @@ html, body {
   max-width: 280px;
   aspect-ratio: 1;
   border-radius: var(--radius-lg);
-  overflow: hidden;
   box-shadow: 
     0 20px 60px color-mix(in srgb, var(--music-primary) 30%, transparent),
     0 8px 20px rgba(0, 0, 0, 0.2);
