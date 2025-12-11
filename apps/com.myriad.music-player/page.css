@@ -1046,7 +1046,7 @@ html, body {
   .player-right {
     display: none;
     position: fixed;
-    top: 20px;
+    top: 60px;
     left: 0;
     right: 0;
     bottom: 0;
@@ -1054,8 +1054,8 @@ html, body {
     background: var(--glass-bg);
     -webkit-backdrop-filter: blur(40px) saturate(1.8);
     backdrop-filter: blur(40px) saturate(1.8);
-    padding: 12px 6px;
-    padding-top: 56px;
+    padding: 6px;
+    padding-top: 50px;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     animation: slideUp 0.3s ease;
   }
@@ -1110,8 +1110,8 @@ html, body {
   .mobile-panel-title {
     display: block;
     position: absolute;
-    top: 16px;
-    left: 12px;
+    top: 18px;
+    left: 24px;
     font-size: 18px;
     font-weight: 600;
     color: var(--text-primary);
@@ -1124,6 +1124,7 @@ html, body {
     padding: 12px 6px;
     gap: 12px;
     border-radius: var(--radius-lg);
+    margin-bottom: 50px;
   }
   
   /* 第一行：进度条 */
