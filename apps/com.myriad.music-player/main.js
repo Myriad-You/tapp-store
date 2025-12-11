@@ -1694,19 +1694,57 @@ function bindControls() {
       showHint(t('loadingPlaylist'), '');
       
       try {
+        // SDK 成功时返回 data 对象 { playlistId, source, loading }
+        // 如果失败会抛出异常
         var result = await Tapp.media.loadNeteasePlaylist(playlistId);
         
-        if (result && result.success) {
-          showHint(t('playlistLoaded'), 'success');
-          // 清空输入框
-          playlistIdInput.value = '';
-          // 3秒后清除提示
-          setTimeout(function() {
-            showHint('', '');
-          }, 3000);
-        } else {
-          showHint(t('playlistLoadFailed'), 'error');
-        }
+        // 只要没抛异常就是成功了
+        showHint(t('playlistLoaded'), 'success');
+        // 清空输入框
+        playlistIdInput.value = '';
+        
+        // 等待一段时间让后端加载完成，然后刷新播放列表
+        setTimeout(async function() {
+          try {
+            var playlistResult = await Tapp.media.getPlaylist();
+            var tracks = [];
+            if (playlistResult && Array.isArray(playlistResult.tracks)) {
+              tracks = playlistResult.tracks;
+            } else if (Array.isArray(playlistResult)) {
+              tracks = playlistResult;
+            }
+            
+            // 更新播放列表
+            pageState.playlist = new Array(tracks.length);
+            for (var i = 0; i < tracks.length; i++) {
+              var song = tracks[i];
+              pageState.playlist[i] = {
+                id: song.id || String(i),
+                name: song.title || song.name || 'Unknown',
+                artist: song.artist || 'Unknown',
+                cover: song.cover || '',
+                duration: song.duration || 0,
+                isVip: song.isVip || false,
+                vipType: song.vipType || null,
+                originalIndex: song.index !== undefined ? song.index : i,
+                isCurrent: song.isCurrent || false
+              };
+            }
+            
+            renderPlaylist(pageState.playlist, pageState.status?.currentTrack, '');
+            
+            // 更新 Tab badge 数量
+            var badge = document.getElementById('playlist-badge');
+            if (badge) badge.textContent = pageState.playlist.length;
+          } catch (e) {
+            console.error('Failed to refresh playlist:', e);
+          }
+        }, 500);
+        
+        // 3秒后清除提示
+        setTimeout(function() {
+          showHint('', '');
+        }, 3000);
       } catch (err) {
         console.error('Failed to load playlist:', err);
         showHint(t('playlistLoadFailed'), 'error');
