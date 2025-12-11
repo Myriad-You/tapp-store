@@ -1153,46 +1153,46 @@ html, body {
   
   /* 播放按钮 - 最大最突出 */
   .control-play {
-    width: 69px;
-    height: 69px;
+    width: 56px;
+    height: 56px;
   }
   
   .control-play svg {
-    width: 32px;
-    height: 32px;
-  }
-  
-  /* 上一首/下一首 - 次要 */
-  .control-main {
-    width: 52px;
-    height: 52px;
-  }
-  
-  .control-main svg {
     width: 28px;
     height: 28px;
   }
   
+  /* 上一首/下一首 - 次要 */
+  .control-main {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .control-main svg {
+    width: 26px;
+    height: 26px;
+  }
+  
   /* Tab按钮 - 较小 */
   .tab-btn {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
   }
   
   .tab-btn svg {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
   }
   
   /* 模式按钮等次要控件 - 最小 */
   .control-secondary {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
   }
   
   .control-secondary svg {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
   }
 }
 
@@ -1205,52 +1205,6 @@ html, body {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-/* 超小屏幕 */
-@media (max-width: 480px) {
-  #tapp-content {
-    padding: 12px;
-    gap: 10px;
-  }
-  
-  .player-left {
-    padding: 16px;
-    gap: 16px;
-  }
-  
-  .artwork-wrapper {
-    max-width: 160px;
-    width: 45%;
-  }
-  
-  .track-title {
-    font-size: 18px;
-  }
-  
-  .track-artist {
-    font-size: 14px;
-  }
-  
-  .controls-bar {
-    padding: 10px 12px;
-    gap: 10px;
-  }
-  
-  .control-main svg {
-    width: 20px;
-    height: 20px;
-  }
-  
-  .control-play {
-    width: 44px;
-    height: 44px;
-  }
-  
-  .control-play svg {
-    width: 20px;
-    height: 20px;
   }
 }
 
