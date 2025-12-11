@@ -13,7 +13,7 @@
     "ui:theme",
     "ai:chat"
   ],
-  "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M12 3C7.03 3 3 6.58 3 11C3 13.39 4.32 15.5 6.5 16.87V21L10.52 18.65C11 18.72 11.5 18.75 12 18.75C16.97 18.75 21 15.17 21 10.75C21 6.33 16.97 3 12 3Z' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/><circle cx='8.5' cy='11' r='1' fill='currentColor'/><circle cx='12' cy='11' r='1' fill='currentColor'/><circle cx='15.5' cy='11' r='1' fill='currentColor'/></svg>",
+  "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><path d='M8 12h.01M12 12h.01M16 12h.01' stroke='currentColor' stroke-width='2.5' stroke-linecap='round'/></svg>",
   "themeColor": "#00ACC1",
   "hasPage": true,
   "cssMode": "separated",
