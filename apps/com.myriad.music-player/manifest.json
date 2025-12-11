@@ -19,28 +19,5 @@
   "hasPage": true,
   "cssMode": "separated",
   "pageStyles": "page.css",
-  "pageTemplate": "page.html",
-  "settings": [
-    {
-      "key": "showLyrics",
-      "label": "显示歌词",
-      "type": "toggle",
-      "description": "在页面模式中显示歌词面板",
-      "defaultValue": true
-    },
-    {
-      "key": "autoScroll",
-      "label": "歌词自动滚动",
-      "type": "toggle",
-      "description": "歌词自动跟随播放进度滚动",
-      "defaultValue": true
-    },
-    {
-      "key": "showSpectrum",
-      "label": "显示频谱动画",
-      "type": "toggle",
-      "description": "在播放时显示音频频谱动画效果",
-      "defaultValue": true
-    }
-  ]
+  "pageTemplate": "page.html"
 }

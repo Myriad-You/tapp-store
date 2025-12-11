@@ -282,11 +282,7 @@ var pageState = {
   currentLyricIndex: -1,
   searchQuery: '',
   isSearching: false,
-  settings: {
-    showLyrics: true,
-    autoScroll: true,
-    showSpectrum: true,
-  },
+  autoScrollEnabled: true, // 自动滚动开关（点击歌词跳转时临时禁用）
   unsubscribe: null,
   animationFrame: null,
   // 背景动画状态
@@ -435,7 +431,7 @@ function renderLyrics(lyrics, currentIndex) {
   }
 
   // 使用 requestAnimationFrame 优化滚动
-  if (pageState.settings.autoScroll && currentIndex >= 0) {
+  if (pageState.autoScrollEnabled && currentIndex >= 0) {
     requestAnimationFrame(function() {
       var activeLine = container.querySelector('.lyric-line.active');
       if (activeLine) {
@@ -496,9 +492,9 @@ function handleLyricClick(e) {
       // 跳转到对应时间
       Tapp.media.seek(time);
       // 临时禁用自动滚动，避免跳转后立即被滚动覆盖
-      pageState.settings.autoScroll = false;
+      pageState.autoScrollEnabled = false;
       setTimeout(function() {
-        pageState.settings.autoScroll = true;
+        pageState.autoScrollEnabled = true;
       }, 1000);
     }
   }
@@ -1205,19 +1201,13 @@ async function initPage() {
 
   // 并行获取所有初始数据（减少初始化时间）
   var results = await Promise.allSettled([
-    Tapp.settings.getAll(),
     Tapp.media.getStatus(),
     Tapp.media.getPlaylist()
   ]);
   
-  // 处理设置
-  if (results[0].status === 'fulfilled' && results[0].value) {
-    Object.assign(pageState.settings, results[0].value);
-  }
-  
   // 处理媒体状态
-  if (results[1].status === 'fulfilled') {
-    var status = results[1].value || {};
+  if (results[0].status === 'fulfilled') {
+    var status = results[0].value || {};
     
     // 规范化字段名: API 返回 title，我们需要 name
     if (status.currentTrack) {
@@ -1240,8 +1230,8 @@ async function initPage() {
   }
   
   // 处理播放列表
-  if (results[2].status === 'fulfilled') {
-    var playlistResult = results[2].value;
+  if (results[1].status === 'fulfilled') {
+    var playlistResult = results[1].value;
     var tracks = [];
     if (playlistResult && Array.isArray(playlistResult.tracks)) {
       tracks = playlistResult.tracks;
