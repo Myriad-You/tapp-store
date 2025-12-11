@@ -423,6 +423,11 @@ html, body {
   background-clip: text;
   opacity: 1;
   filter: blur(0) drop-shadow(0 0 20px var(--accent-glow));
+  /* active状态的完整过渡 */
+  transition: 
+    opacity 0.35s ease-out,
+    filter 0.35s ease-out,
+    font-size 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* 当前歌词前后的过渡效果 - 距离渐变 */
@@ -575,10 +580,12 @@ html, body {
   padding: 8px 10px;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background 0.15s ease;
   position: relative;
-  /* 性能优化 */
-  contain: layout style;
+  /* 性能优化 - 限制重绘范围 */
+  contain: layout style paint;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 60px;
 }
 
 .playlist-item:hover {

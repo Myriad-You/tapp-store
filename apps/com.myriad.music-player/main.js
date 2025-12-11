@@ -84,6 +84,7 @@ var i18n = {
 
 var currentLocale = 'zh-CN';
 var currentTheme = 'light'; // 当前主题
+var currentDict = i18n['zh-CN']; // 缓存当前语言字典
 
 function normalizeLocale(locale) {
   if (!locale) return 'zh-CN';
@@ -93,13 +94,44 @@ function normalizeLocale(locale) {
   return 'en-US';
 }
 
+function setLocale(locale) {
+  currentLocale = locale;
+  currentDict = i18n[locale] || i18n['zh-CN'];
+}
+
 function t(key) {
-  return (i18n[currentLocale] || i18n['zh-CN'])[key] || key;
+  return currentDict[key] || key;
 }
 
 // ========================================
 // 主题适配
 // ========================================
+
+// 预定义主题配置，避免重复创建数组
+var THEME_DARK = [
+  ['--glass-bg', 'rgba(28, 28, 30, 0.85)'],
+  ['--glass-border', 'rgba(255, 255, 255, 0.08)'],
+  ['--glass-shadow', '0 8px 32px rgba(0, 0, 0, 0.4)'],
+  ['--text-primary', '#f5f5f7'],
+  ['--text-secondary', 'rgba(235, 235, 245, 0.6)'],
+  ['--text-tertiary', 'rgba(235, 235, 245, 0.3)']
+];
+var THEME_LIGHT = [
+  ['--glass-bg', 'rgba(255, 255, 255, 0.72)'],
+  ['--glass-border', 'rgba(255, 255, 255, 0.18)'],
+  ['--glass-shadow', '0 8px 32px rgba(0, 0, 0, 0.12)'],
+  ['--text-primary', '#1d1d1f'],
+  ['--text-secondary', 'rgba(60, 60, 67, 0.6)'],
+  ['--text-tertiary', 'rgba(60, 60, 67, 0.3)']
+];
+var BG_DARK_GRADIENT = 'linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 40%, rgba(0, 0, 0, 0.7) 100%)';
+var BG_LIGHT_GRADIENT = 'linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.6) 40%, rgba(255, 255, 255, 0.8) 100%)';
+var BG_DARK_FILTER = 'blur(60px) saturate(1.2) brightness(0.4)';
+var BG_LIGHT_FILTER = 'blur(60px) saturate(1.8) brightness(0.9)';
+
+// 缓存背景元素引用
+var cachedBgOverlay = null;
+var cachedBgArtwork = null;
 
 function applyTheme(theme) {
   currentTheme = theme || 'light';
@@ -107,47 +139,24 @@ function applyTheme(theme) {
   var root = document.documentElement;
   
   // 切换 dark 类
-  if (isDark) {
-    root.classList.add('dark');
-  } else {
-    root.classList.remove('dark');
-  }
+  root.classList.toggle('dark', isDark);
   
   // 批量更新 CSS 变量
-  var updates = isDark ? [
-    ['--glass-bg', 'rgba(28, 28, 30, 0.85)'],
-    ['--glass-border', 'rgba(255, 255, 255, 0.08)'],
-    ['--glass-shadow', '0 8px 32px rgba(0, 0, 0, 0.4)'],
-    ['--text-primary', '#f5f5f7'],
-    ['--text-secondary', 'rgba(235, 235, 245, 0.6)'],
-    ['--text-tertiary', 'rgba(235, 235, 245, 0.3)']
-  ] : [
-    ['--glass-bg', 'rgba(255, 255, 255, 0.72)'],
-    ['--glass-border', 'rgba(255, 255, 255, 0.18)'],
-    ['--glass-shadow', '0 8px 32px rgba(0, 0, 0, 0.12)'],
-    ['--text-primary', '#1d1d1f'],
-    ['--text-secondary', 'rgba(60, 60, 67, 0.6)'],
-    ['--text-tertiary', 'rgba(60, 60, 67, 0.3)']
-  ];
-  
+  var updates = isDark ? THEME_DARK : THEME_LIGHT;
   for (var i = 0; i < updates.length; i++) {
     root.style.setProperty(updates[i][0], updates[i][1]);
   }
   
-  // 更新背景遮罩（如果存在）
-  var bgOverlay = document.querySelector('.bg-overlay');
-  if (bgOverlay) {
-    bgOverlay.style.background = isDark
-      ? 'linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 40%, rgba(0, 0, 0, 0.7) 100%)'
-      : 'linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.6) 40%, rgba(255, 255, 255, 0.8) 100%)';
+  // 更新背景遮罩（使用缓存引用）
+  if (!cachedBgOverlay) cachedBgOverlay = document.querySelector('.bg-overlay');
+  if (cachedBgOverlay) {
+    cachedBgOverlay.style.background = isDark ? BG_DARK_GRADIENT : BG_LIGHT_GRADIENT;
   }
   
-  // 更新背景模糊效果
-  var bgArtwork = document.querySelector('.bg-artwork');
-  if (bgArtwork) {
-    bgArtwork.style.filter = isDark
-      ? 'blur(60px) saturate(1.2) brightness(0.4)'
-      : 'blur(60px) saturate(1.8) brightness(0.9)';
+  // 更新背景模糊效果（使用缓存引用）
+  if (!cachedBgArtwork) cachedBgArtwork = document.querySelector('.bg-artwork');
+  if (cachedBgArtwork) {
+    cachedBgArtwork.style.filter = isDark ? BG_DARK_FILTER : BG_LIGHT_FILTER;
   }
 }
 
@@ -912,6 +921,42 @@ function renderPlaylistSimple(filteredList, currentTrack) {
   }
 }
 
+// 颜色更新缓存 - 避免重复设置相同颜色
+var lastColors = {
+  primary: null,
+  secondary: null,
+  accent: null,
+  light: null,
+  dark: null
+};
+
+// 轻量级进度更新 - 只更新进度条和时间显示
+function updateProgressOnly(status) {
+  if (!status) return;
+  
+  var track = status.currentTrack;
+  var duration = track ? (track.duration || 0) : 0;
+  var position = status.position || (status.progress ? status.progress.current : 0) || 0;
+  
+  var progressBar = $('progress-bar');
+  var progressFill = $('progress-fill');
+  var currentTimeEl = $('current-time');
+  var remainingTimeEl = $('remaining-time');
+  
+  if (progressBar) {
+    progressBar.value = position;
+  }
+  if (progressFill) {
+    var percent = duration > 0 ? (position / duration) * 100 : 0;
+    progressFill.style.width = percent + '%';
+  }
+  if (currentTimeEl) currentTimeEl.textContent = formatTime(position);
+  if (remainingTimeEl) {
+    var remaining = Math.max(0, duration - position);
+    remainingTimeEl.textContent = '-' + formatTime(remaining);
+  }
+}
+
 // 更新播放器UI
 function updatePlayerUI(status) {
   if (!status) return;
@@ -924,33 +969,31 @@ function updatePlayerUI(status) {
     bgArtwork.style.backgroundImage = 'url(' + track.cover + ')';
   }
   
-  // 同步音乐播放器的完整动态颜色 - 批量更新减少重排
+  // 同步音乐播放器的完整动态颜色 - 只在颜色变化时更新
   var root = document.documentElement;
-  var colorUpdates = [];
-  if (status.primaryColor) {
+  if (status.primaryColor && status.primaryColor !== lastColors.primary) {
     var primary = status.primaryColor;
-    colorUpdates.push(['--music-primary', primary]);
-    colorUpdates.push(['--accent-color', primary]);
-    colorUpdates.push(['--accent-light', primary + '26']);
-    colorUpdates.push(['--accent-glow', primary + '66']);
+    lastColors.primary = primary;
+    root.style.setProperty('--music-primary', primary);
+    root.style.setProperty('--accent-color', primary);
+    root.style.setProperty('--accent-light', primary + '26');
+    root.style.setProperty('--accent-glow', primary + '66');
   }
-  if (status.secondaryColor) {
-    colorUpdates.push(['--music-secondary', status.secondaryColor]);
+  if (status.secondaryColor && status.secondaryColor !== lastColors.secondary) {
+    lastColors.secondary = status.secondaryColor;
+    root.style.setProperty('--music-secondary', status.secondaryColor);
   }
-  if (status.accentColor) {
-    colorUpdates.push(['--music-accent', status.accentColor]);
+  if (status.accentColor && status.accentColor !== lastColors.accent) {
+    lastColors.accent = status.accentColor;
+    root.style.setProperty('--music-accent', status.accentColor);
   }
-  if (status.lightColor) {
-    colorUpdates.push(['--music-light', status.lightColor]);
+  if (status.lightColor && status.lightColor !== lastColors.light) {
+    lastColors.light = status.lightColor;
+    root.style.setProperty('--music-light', status.lightColor);
   }
-  if (status.darkColor) {
-    colorUpdates.push(['--music-dark', status.darkColor]);
-  }
-  // 一次性应用所有颜色更新
-  if (colorUpdates.length > 0) {
-    for (var i = 0; i < colorUpdates.length; i++) {
-      root.style.setProperty(colorUpdates[i][0], colorUpdates[i][1]);
-    }
+  if (status.darkColor && status.darkColor !== lastColors.dark) {
+    lastColors.dark = status.darkColor;
+    root.style.setProperty('--music-dark', status.darkColor);
   }
   
   // 封面
@@ -993,14 +1036,17 @@ function updatePlayerUI(status) {
     }
   }
 
-  // 播放/暂停按钮
+  // 播放/暂停按钮 - 使用缓存的图标元素
   var playBtn = $('play-btn');
   if (playBtn) {
-    var iconPlay = playBtn.querySelector('.icon-play');
-    var iconPause = playBtn.querySelector('.icon-pause');
-    if (iconPlay && iconPause) {
-      iconPlay.style.display = status.isPlaying ? 'none' : 'block';
-      iconPause.style.display = status.isPlaying ? 'block' : 'none';
+    if (!playBtnIcons.cached) {
+      playBtnIcons.play = playBtn.querySelector('.icon-play');
+      playBtnIcons.pause = playBtn.querySelector('.icon-pause');
+      playBtnIcons.cached = true;
+    }
+    if (playBtnIcons.play && playBtnIcons.pause) {
+      playBtnIcons.play.style.display = status.isPlaying ? 'none' : 'block';
+      playBtnIcons.pause.style.display = status.isPlaying ? 'block' : 'none';
     }
     playBtn.setAttribute('aria-label', status.isPlaying ? t('pause') : t('play'));
   }
@@ -1086,6 +1132,53 @@ function updateLyricIndex(position, lyrics) {
   return index;
 }
 
+// 播放按钮图标缓存
+var playBtnIcons = { play: null, pause: null, cached: false };
+
+// 上次状态快照 - 用于检测变化
+var lastStateSnapshot = {
+  trackId: null,
+  isPlaying: null,
+  position: -1,
+  volume: -1,
+  mode: null
+};
+
+// 检查状态是否有关键变化
+function hasSignificantChange(state) {
+  var trackId = state.currentTrack ? state.currentTrack.id : null;
+  var position = state.position || (state.progress ? state.progress.current : 0) || 0;
+  
+  // 歌曲切换、播放状态变化、模式变化是关键变化
+  if (trackId !== lastStateSnapshot.trackId ||
+      state.isPlaying !== lastStateSnapshot.isPlaying ||
+      state.mode !== lastStateSnapshot.mode) {
+    return true;
+  }
+  
+  // 进度变化超过0.5秒才算关键变化（避免高频更新）
+  if (Math.abs(position - lastStateSnapshot.position) > 0.5) {
+    return true;
+  }
+  
+  // 音量变化
+  var volume = state.volume || 0;
+  if (Math.abs(volume - lastStateSnapshot.volume) > 1) {
+    return true;
+  }
+  
+  return false;
+}
+
+// 更新状态快照
+function updateStateSnapshot(state) {
+  lastStateSnapshot.trackId = state.currentTrack ? state.currentTrack.id : null;
+  lastStateSnapshot.isPlaying = state.isPlaying;
+  lastStateSnapshot.position = state.position || (state.progress ? state.progress.current : 0) || 0;
+  lastStateSnapshot.volume = state.volume || 0;
+  lastStateSnapshot.mode = state.mode;
+}
+
 // 初始化页面
 async function initPage() {
   // 获取设置
@@ -1167,6 +1260,9 @@ async function initPage() {
 
   // 监听状态变化
   pageState.unsubscribe = Tapp.media.onStateChange(function(state) {
+    // 检查是否有关键变化
+    var significantChange = hasSignificantChange(state);
+    
     // 规范化状态
     if (state.currentTrack) {
       state.currentTrack.name = state.currentTrack.title || state.currentTrack.name;
@@ -1174,13 +1270,18 @@ async function initPage() {
     // 处理进度信息
     if (state.progress) {
       state.position = state.progress.current || 0;
-    } else if (typeof state.position === 'number') {
-      // 已经有 position 字段
     }
-    // 注意：不在这里规范化 volume，让 updatePlayerUI 统一处理
     
     pageState.status = state;
-    updatePlayerUI(state);
+    
+    // 只在关键变化时更新完整UI
+    if (significantChange) {
+      updateStateSnapshot(state);
+      updatePlayerUI(state);
+    } else {
+      // 非关键变化只更新进度相关
+      updateProgressOnly(state);
+    }
 
     // 更新歌词 - 歌词数据在 state.lyrics 中
     var lyrics = state.lyrics || [];
@@ -1206,18 +1307,33 @@ async function initPage() {
       renderLyrics([], -1);
     }
 
-    // 更新播放列表高亮 - 使用缓存的元素引用
+    // 更新播放列表高亮 - 使用虚拟列表的索引
     if (state.currentTrack) {
       var currentId = state.currentTrack.id;
-      var container = $('playlist-container');
-      if (container) {
-        var prevActive = container.querySelector('.playlist-item.active');
-        if (prevActive && prevActive.getAttribute('data-id') !== currentId) {
-          prevActive.classList.remove('active');
+      // 如果使用虚拟列表，直接更新其跟踪的ID
+      if (virtualList.data.length > 50 && virtualList.contentWrapper) {
+        if (virtualList.currentTrackId !== currentId) {
+          virtualList.currentTrackId = currentId;
+          // 只更新可见项的active状态
+          virtualList.activeItems.forEach(function(el, idx) {
+            var song = virtualList.data[idx];
+            if (song) {
+              el.classList.toggle('active', song.id === currentId);
+            }
+          });
         }
-        var newActive = container.querySelector('.playlist-item[data-id="' + currentId + '"]');
-        if (newActive && !newActive.classList.contains('active')) {
-          newActive.classList.add('active');
+      } else {
+        // 小列表使用DOM查询
+        var container = $('playlist-container');
+        if (container) {
+          var prevActive = container.querySelector('.playlist-item.active');
+          if (prevActive && prevActive.getAttribute('data-id') !== currentId) {
+            prevActive.classList.remove('active');
+          }
+          var newActive = container.querySelector('.playlist-item[data-id="' + currentId + '"]');
+          if (newActive && !newActive.classList.contains('active')) {
+            newActive.classList.add('active');
+          }
         }
       }
     }
@@ -1431,10 +1547,53 @@ var BG_ENERGY_HISTORY_SIZE = 8;
 var BG_BEAT_THRESHOLD = 1.3;
 var BG_BEAT_COOLDOWN = 150;
 
+// 能量历史环形缓冲区 - 避免数组shift操作
+var energyBuffer = {
+  data: new Array(BG_ENERGY_HISTORY_SIZE).fill(0),
+  index: 0,
+  sum: 0,
+  count: 0
+};
+
+function addEnergyValue(value) {
+  // 从总和中减去旧值
+  energyBuffer.sum -= energyBuffer.data[energyBuffer.index];
+  // 添加新值
+  energyBuffer.data[energyBuffer.index] = value;
+  energyBuffer.sum += value;
+  // 移动索引
+  energyBuffer.index = (energyBuffer.index + 1) % BG_ENERGY_HISTORY_SIZE;
+  if (energyBuffer.count < BG_ENERGY_HISTORY_SIZE) {
+    energyBuffer.count++;
+  }
+}
+
+function getAverageEnergy() {
+  return energyBuffer.count > 0 ? energyBuffer.sum / energyBuffer.count : 0;
+}
+
+// 检测是否为移动端（缓存结果）
+var isMobileDevice = null;
+function checkIsMobile() {
+  if (isMobileDevice === null) {
+    isMobileDevice = window.innerWidth <= 768;
+  }
+  return isMobileDevice;
+}
+// 窗口大小变化时重置检测缓存
+window.addEventListener('resize', function() {
+  isMobileDevice = null;
+}, { passive: true });
+
 // 启动背景动画
 function startBackgroundAnimation() {
   // 检查动画级别
   if (!shouldAnimate()) {
+    return;
+  }
+  
+  // 移动端禁用背景旋律动画（节省性能）
+  if (checkIsMobile()) {
     return;
   }
   
@@ -1475,18 +1634,9 @@ function startBackgroundAnimation() {
         // 计算当前能量
         var currentEnergy = (spectrum[0] + spectrum[1] + spectrum[2] + spectrum[3]) * 0.25;
         
-        // 维护能量历史
-        pageState.energyHistory.push(currentEnergy);
-        if (pageState.energyHistory.length > BG_ENERGY_HISTORY_SIZE) {
-          pageState.energyHistory.shift();
-        }
-        
-        // 计算平均能量
-        var sum = 0;
-        for (var i = 0; i < pageState.energyHistory.length; i++) {
-          sum += pageState.energyHistory[i];
-        }
-        var avgEnergy = sum / pageState.energyHistory.length;
+        // 使用环形缓冲区维护能量历史
+        addEnergyValue(currentEnergy);
+        var avgEnergy = getAverageEnergy();
         
         // 节拍检测
         var isBeat = currentEnergy > avgEnergy * BG_BEAT_THRESHOLD && 
@@ -1515,29 +1665,31 @@ function startBackgroundAnimation() {
   pageState.bgAnimationFrame = requestAnimationFrame(updateBackground);
 }
 
-// 应用背景变换
+// 应用背景变换 - 使用缓存的元素引用
+var cachedBgArtworkRef = null;
+
 function applyBackgroundTransform(beatIntensity, energy, phase) {
-  var bgArtwork = $('bg-artwork');
-  if (!bgArtwork) return;
-  
-  // 基础参数
-  var baseScale = 1.1;
-  var baseRotate = 0;
+  if (!cachedBgArtworkRef) cachedBgArtworkRef = $('bg-artwork');
+  if (!cachedBgArtworkRef) return;
   
   // 根据节拍强度计算缩放 (1.1 ~ 1.25)
-  var scale = baseScale + beatIntensity * 0.15;
+  var scale = 1.1 + beatIntensity * 0.15;
   
   // 根据相位计算缓慢位移 (柔和的漂浮效果)
-  var translateX = Math.sin(phase) * 15 + beatIntensity * Math.sin(phase * 3) * 10;
-  var translateY = Math.cos(phase * 0.7) * 15 + beatIntensity * Math.cos(phase * 2.5) * 10;
+  // 预计算sin/cos值减少重复调用
+  var sinPhase = Math.sin(phase);
+  var cosPhase = Math.cos(phase * 0.7);
+  var translateX = sinPhase * 15 + beatIntensity * Math.sin(phase * 3) * 10;
+  var translateY = cosPhase * 15 + beatIntensity * Math.cos(phase * 2.5) * 10;
   
   // 根据能量和相位计算微小旋转 (-3deg ~ 3deg)
-  var rotate = Math.sin(phase * 0.5) * 2 + beatIntensity * Math.sin(phase * 2) * 1;
+  var rotate = Math.sin(phase * 0.5) * 2 + beatIntensity * Math.sin(phase * 2);
   
-  // 应用变换
-  bgArtwork.style.transform = 'scale(' + scale.toFixed(3) + ') ' +
-                              'translate(' + translateX.toFixed(1) + 'px, ' + translateY.toFixed(1) + 'px) ' +
-                              'rotate(' + rotate.toFixed(2) + 'deg)';
+  // 应用变换 - 使用位运算快速取整避免toFixed开销
+  cachedBgArtworkRef.style.transform = 
+    'scale(' + ((scale * 1000 | 0) / 1000) + ') ' +
+    'translate(' + (translateX | 0) + 'px,' + (translateY | 0) + 'px) ' +
+    'rotate(' + ((rotate * 100 | 0) / 100) + 'deg)';
 }
 
 // 停止背景动画
@@ -1584,7 +1736,7 @@ function cleanup() {
           initAnimationConfig() // 初始化动画调度器配置
         ]);
 
-        currentLocale = normalizeLocale(results[0]);
+        setLocale(normalizeLocale(results[0]));
         
         // 应用初始主题（深色/浅色模式）
         applyTheme(results[1]);
@@ -1593,7 +1745,7 @@ function cleanup() {
 
         // 监听语言变化
         Tapp.ui.onLocaleChange(function(locale) {
-          currentLocale = normalizeLocale(locale);
+          setLocale(normalizeLocale(locale));
           initPage();
         });
 
