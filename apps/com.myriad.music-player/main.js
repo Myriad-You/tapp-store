@@ -1436,31 +1436,15 @@ function bindControls() {
   }
   
   tabBtns.forEach(function(btn) {
-    // 🎯 WebKit 兼容性：同时绑定 click 和 touchend 事件
-    // 使用标志位防止重复触发
-    var touchHandled = false;
-    
-    btn.addEventListener('touchend', function(e) {
-      touchHandled = true;
-      handleTabClick(btn, e);
-      // 重置标志位
-      setTimeout(function() { touchHandled = false; }, 300);
-    }, { passive: false });
-    
+    // 使用最兼容的 click 事件，移除复杂的 touch 处理
     btn.addEventListener('click', function(e) {
-      // 如果已经由 touchend 处理，跳过
-      if (touchHandled) {
-        touchHandled = false;
-        return;
-      }
       handleTabClick(btn, e);
     });
   });
   
   // 移动端关闭按钮
   if (mobileCloseBtn && playerRight) {
-    // 🎯 WebKit 兼容性：关闭按钮点击处理
-    function handleCloseClick(e) {
+    mobileCloseBtn.addEventListener('click', function(e) {
       if (e) {
         e.preventDefault();
         e.stopPropagation();
@@ -1468,22 +1452,6 @@ function bindControls() {
       playerRight.classList.remove('mobile-visible');
       // 取消所有tab按钮的active状态
       tabBtns.forEach(function(b) { b.classList.remove('active'); });
-    }
-    
-    var closeTouchHandled = false;
-    
-    mobileCloseBtn.addEventListener('touchend', function(e) {
-      closeTouchHandled = true;
-      handleCloseClick(e);
-      setTimeout(function() { closeTouchHandled = false; }, 300);
-    }, { passive: false });
-    
-    mobileCloseBtn.addEventListener('click', function(e) {
-      if (closeTouchHandled) {
-        closeTouchHandled = false;
-        return;
-      }
-      handleCloseClick(e);
     });
   }
   
