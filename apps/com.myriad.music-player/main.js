@@ -1400,39 +1400,47 @@ function bindControls() {
   
   // 🎯 WebKit 兼容性：统一的 Tab 按钮点击处理函数
   function handleTabClick(btn, e) {
-    // 阻止事件冒泡和默认行为
+    // 仅阻止默认行为，允许冒泡（除非有特殊原因）
     if (e) {
       e.preventDefault();
-      e.stopPropagation();
     }
     
     var tab = btn.getAttribute('data-tab');
+    // 检查当前按钮是否已经是激活状态
     var wasActive = btn.classList.contains('active');
     
+    // 移动端特殊逻辑：处理面板的显示/隐藏
+    if (isMobile() && playerRight) {
+      // 如果面板当前是可见的
+      if (playerRight.classList.contains('mobile-visible')) {
+        // 如果点击的是当前已激活的按钮 -> 关闭面板
+        if (wasActive) {
+          playerRight.classList.remove('mobile-visible');
+          // 移除所有激活状态
+          tabBtns.forEach(function(b) { b.classList.remove('active'); });
+          return; // 结束处理
+        }
+        // 如果点击的是其他按钮 -> 切换内容，保持面板打开
+      } else {
+        // 面板不可见 -> 打开面板
+        playerRight.classList.add('mobile-visible');
+      }
+      
+      // 更新面板标题
+      if (mobilePanelTitle) {
+        mobilePanelTitle.textContent = panelTitles[tab] || tab;
+      }
+    }
+    
+    // 通用逻辑：切换激活状态和面板内容
     // 更新 tab 按钮状态
     tabBtns.forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
     
-    // 切换面板 - 使用缓存的panels
+    // 切换面板内容
     panels.forEach(function(p) { p.classList.remove('active'); });
     var targetPanel = document.getElementById('panel-' + tab);
     if (targetPanel) targetPanel.classList.add('active');
-    
-    // 移动端：显示面板或切换
-    if (isMobile() && playerRight) {
-      if (wasActive && playerRight.classList.contains('mobile-visible')) {
-        // 再次点击同一个按钮，关闭面板
-        playerRight.classList.remove('mobile-visible');
-        btn.classList.remove('active');
-      } else {
-        // 显示面板
-        playerRight.classList.add('mobile-visible');
-        // 更新面板标题
-        if (mobilePanelTitle) {
-          mobilePanelTitle.textContent = panelTitles[tab] || tab;
-        }
-      }
-    }
   }
   
   tabBtns.forEach(function(btn) {
