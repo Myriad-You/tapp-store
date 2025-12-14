@@ -1,179 +1,69 @@
 /**
- * Weather Plus Tapp - 天气动态应用
- * 
- * 完整独立实现，使用 Tapp SDK API
- * 支持：地理定位、天气获取、空气质量、多日预报
+ * 天气小组件 - 复刻 Myriad WeatherWidget
+ * 支持 2x2, 4x1, 4x2 三种尺寸
  */
 
-// ==================== 常量定义 ====================
+// ==================== 常量 ====================
 
-// 缓存键
 const CACHE_KEYS = {
   LOCATION: 'weather_location',
-  WEATHER: 'weather_data',
-  SETTINGS: '_settings'
+  WEATHER: 'weather_data'
 };
 
-// 缓存时长（毫秒）
 const CACHE_TTL = {
-  LOCATION: 24 * 60 * 60 * 1000,  // 位置缓存24小时
-  WEATHER: 30 * 60 * 1000         // 天气缓存30分钟
+  LOCATION: 24 * 60 * 60 * 1000,  // 24小时
+  WEATHER: 30 * 60 * 1000         // 30分钟
 };
 
-// WMO 天气代码映射 - 图标
-const WEATHER_ICONS = {
-  0: '☀️',   // 晴朗
-  1: '🌤️',  // 大部晴朗
-  2: '⛅',   // 部分多云
-  3: '☁️',   // 阴天
-  45: '🌫️', // 雾
-  48: '🌫️', // 雾凇
-  51: '🌦️', // 小毛毛雨
-  53: '🌦️', // 中毛毛雨
-  55: '🌦️', // 大毛毛雨
-  56: '🌧️', // 冻毛毛雨（小）
-  57: '🌧️', // 冻毛毛雨（大）
-  61: '🌧️', // 小雨
-  63: '🌧️', // 中雨
-  65: '🌧️', // 大雨
-  66: '🌧️', // 冻雨（小）
-  67: '🌧️', // 冻雨（大）
-  71: '🌨️', // 小雪
-  73: '🌨️', // 中雪
-  75: '❄️',  // 大雪
-  77: '🌨️', // 雪粒
-  80: '🌦️', // 小阵雨
-  81: '🌧️', // 中阵雨
-  82: '⛈️',  // 大阵雨
-  85: '🌨️', // 小阵雪
-  86: '❄️',  // 大阵雪
-  95: '⛈️',  // 雷暴
-  96: '⛈️',  // 雷暴+小冰雹
-  99: '⛈️'   // 雷暴+大冰雹
+// WMO 天气代码映射
+const WEATHER_CODES = {
+  0: { text: '晴', icon: '☀️', color: '#f59e0b' },
+  1: { text: '晴', icon: '🌤️', color: '#f59e0b' },
+  2: { text: '多云', icon: '⛅', color: '#6b7280' },
+  3: { text: '阴', icon: '☁️', color: '#6b7280' },
+  45: { text: '雾', icon: '🌫️', color: '#9ca3af' },
+  48: { text: '雾', icon: '🌫️', color: '#9ca3af' },
+  51: { text: '小雨', icon: '🌧️', color: '#3b82f6' },
+  53: { text: '小雨', icon: '🌧️', color: '#3b82f6' },
+  55: { text: '小雨', icon: '🌧️', color: '#3b82f6' },
+  56: { text: '冻雨', icon: '🌨️', color: '#3b82f6' },
+  57: { text: '冻雨', icon: '🌨️', color: '#3b82f6' },
+  61: { text: '小雨', icon: '🌧️', color: '#3b82f6' },
+  63: { text: '中雨', icon: '🌧️', color: '#3b82f6' },
+  65: { text: '大雨', icon: '🌧️', color: '#3b82f6' },
+  66: { text: '冻雨', icon: '🌨️', color: '#3b82f6' },
+  67: { text: '冻雨', icon: '🌨️', color: '#3b82f6' },
+  71: { text: '小雪', icon: '🌨️', color: '#6366f1' },
+  73: { text: '中雪', icon: '🌨️', color: '#6366f1' },
+  75: { text: '大雪', icon: '❄️', color: '#6366f1' },
+  77: { text: '雨夹雪', icon: '🌨️', color: '#6366f1' },
+  80: { text: '阵雨', icon: '🌦️', color: '#3b82f6' },
+  81: { text: '阵雨', icon: '🌦️', color: '#3b82f6' },
+  82: { text: '暴雨', icon: '⛈️', color: '#3b82f6' },
+  85: { text: '阵雪', icon: '🌨️', color: '#6366f1' },
+  86: { text: '暴雪', icon: '❄️', color: '#6366f1' },
+  95: { text: '雷暴', icon: '⛈️', color: '#8b5cf6' },
+  96: { text: '雷暴', icon: '⛈️', color: '#8b5cf6' },
+  99: { text: '雷暴', icon: '⛈️', color: '#8b5cf6' }
 };
-
-// WMO 天气代码映射 - 文字描述
-const WEATHER_TEXT = {
-  0: '晴',
-  1: '晴',
-  2: '多云',
-  3: '阴',
-  45: '雾',
-  48: '雾',
-  51: '小雨',
-  53: '小雨',
-  55: '小雨',
-  56: '冻雨',
-  57: '冻雨',
-  61: '小雨',
-  63: '中雨',
-  65: '大雨',
-  66: '冻雨',
-  67: '冻雨',
-  71: '小雪',
-  73: '中雪',
-  75: '大雪',
-  77: '雪粒',
-  80: '阵雨',
-  81: '阵雨',
-  82: '暴雨',
-  85: '阵雪',
-  86: '大雪',
-  95: '雷暴',
-  96: '雷暴',
-  99: '雷暴'
-};
-
-// 天气代码对应的主题色
-const WEATHER_COLORS = {
-  sunny: '#f59e0b',      // 晴天 - 橙黄
-  cloudy: '#6b7280',     // 多云 - 灰色
-  foggy: '#9ca3af',      // 雾 - 浅灰
-  rainy: '#3b82f6',      // 雨 - 蓝色
-  snowy: '#6366f1',      // 雪 - 靛蓝
-  stormy: '#8b5cf6'      // 雷暴 - 紫色
-};
-
-// 当前语言
-let currentLocale = 'zh-CN';
 
 // ==================== 工具函数 ====================
 
-/**
- * 根据天气代码获取图标
- */
-function getWeatherIcon(code) {
-  return WEATHER_ICONS[code] || '🌤️';
+function getWeatherInfo(code) {
+  return WEATHER_CODES[code] || { text: '未知', icon: '❓', color: '#10b981' };
 }
 
-/**
- * 根据天气代码获取文字描述
- */
-function getWeatherText(code) {
-  return WEATHER_TEXT[code] || '未知';
+function formatTemp(temp) {
+  return Math.round(temp) + '°';
 }
 
-/**
- * 根据天气代码获取主题色
- */
-function getWeatherColor(code) {
-  if (code === 0 || code === 1) return WEATHER_COLORS.sunny;
-  if (code === 2 || code === 3) return WEATHER_COLORS.cloudy;
-  if (code === 45 || code === 48) return WEATHER_COLORS.foggy;
-  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return WEATHER_COLORS.rainy;
-  if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return WEATHER_COLORS.snowy;
-  if (code >= 95 && code <= 99) return WEATHER_COLORS.stormy;
-  return WEATHER_COLORS.sunny;
+function formatWeekday(dateStr) {
+  const days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  return days[new Date(dateStr).getDay()];
 }
 
-/**
- * 格式化温度
- */
-function formatTemp(temp, units = 'celsius') {
-  const rounded = Math.round(temp);
-  if (units === 'fahrenheit') {
-    const fahrenheit = Math.round(temp * 9 / 5 + 32);
-    return `${fahrenheit}°F`;
-  }
-  return `${rounded}°C`;
-}
+// ==================== 数据获取 ====================
 
-/**
- * 格式化温度（仅数字）
- */
-function formatTempValue(temp, units = 'celsius') {
-  if (units === 'fahrenheit') {
-    return Math.round(temp * 9 / 5 + 32);
-  }
-  return Math.round(temp);
-}
-
-/**
- * 获取 AQI 等级信息
- */
-function getAqiInfo(aqi) {
-  if (aqi <= 50) return { level: 'good', text: '优', color: '#22c55e', icon: '🌿' };
-  if (aqi <= 100) return { level: 'moderate', text: '良', color: '#eab308', icon: '🌫️' };
-  if (aqi <= 150) return { level: 'unhealthy-sensitive', text: '轻度污染', color: '#f97316', icon: '😷' };
-  if (aqi <= 200) return { level: 'unhealthy', text: '中度污染', color: '#ef4444', icon: '😷' };
-  if (aqi <= 300) return { level: 'very-unhealthy', text: '重度污染', color: '#7c3aed', icon: '⚠️' };
-  return { level: 'hazardous', text: '严重污染', color: '#991b1b', icon: '☠️' };
-}
-
-/**
- * 格式化星期几
- */
-function formatWeekday(dateStr, locale = 'zh-CN') {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString(locale, { weekday: 'short' });
-}
-
-// ==================== 核心 API 函数 ====================
-
-/**
- * 获取地理位置
- * 优先使用后端代理，失败后使用备用方案
- */
 async function getLocation() {
   // 检查缓存
   const cached = await Tapp.storage.get(CACHE_KEYS.LOCATION);
@@ -184,10 +74,9 @@ async function getLocation() {
 
   console.log('[Weather] Fetching new location...');
 
-  // 方案1: 使用内置 geo API 获取地理位置
+  // 方案1: 使用内置 geo API
   try {
     const data = await Tapp.api('getClientGeo');
-    // builtin:geo 直接返回 { lat, lon, city, region, country }
     if (data && data.lat && data.lon) {
       const location = {
         lat: data.lat,
@@ -203,10 +92,9 @@ async function getLocation() {
     console.warn('[Weather] Builtin geo failed:', error);
   }
 
-  // 方案2: 使用 ipapi.co 备用（HTTP API）
+  // 方案2: 使用 ipapi.co 备用
   try {
     const data = await Tapp.api('getGeoByIP');
-    // ipapi.co 返回 { latitude, longitude, city, region, country_name }
     if (data && data.latitude && data.longitude) {
       const location = {
         lat: data.latitude,
@@ -222,50 +110,11 @@ async function getLocation() {
     console.warn('[Weather] ipapi.co fallback failed:', error);
   }
 
-  // 方案3: 浏览器地理位置 API（在沙箱中通常被禁用）
-  if ('geolocation' in navigator) {
-    try {
-      const position = await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          timeout: 10000,
-          maximumAge: 600000
-        });
-      });
-
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-
-      // 反向地理编码获取城市名
-      let city = '当前位置';
-      try {
-        const geoData = await Tapp.api('reverseGeocode', { lat, lon });
-        if (geoData && geoData.address) {
-          const addr = geoData.address;
-          city = addr.city || addr.town || addr.village || 
-                 addr.county || addr.state || '当前位置';
-        }
-      } catch (e) {
-        console.warn('[Weather] Reverse geocoding failed:', e);
-      }
-
-      const location = { lat, lon, city, timestamp: Date.now() };
-      await Tapp.storage.set(CACHE_KEYS.LOCATION, location);
-      console.log('[Weather] Location from browser:', location.city);
-      return location;
-    } catch (error) {
-      console.warn('[Weather] Browser geolocation failed:', error);
-    }
-  }
-
-  // 所有方案都失败，返回 null
   console.error('[Weather] All location methods failed');
   return null;
 }
 
-/**
- * 获取天气数据
- */
-async function getWeatherData(location, settings = {}) {
+async function getWeatherData(location, showAqi = true) {
   if (!location || !location.lat || !location.lon) {
     throw new Error('Invalid location');
   }
@@ -284,384 +133,204 @@ async function getWeatherData(location, settings = {}) {
   // 并行获取天气和空气质量
   const [weatherData, aqiData] = await Promise.all([
     Tapp.api('getWeather', { lat: location.lat, lon: location.lon }),
-    settings.showAqi !== false 
+    showAqi 
       ? Tapp.api('getAirQuality', { lat: location.lat, lon: location.lon }).catch(() => null)
       : Promise.resolve(null)
   ]);
 
-  // Tapp.api 成功时直接返回数据，失败时抛异常
-  if (!weatherData) {
-    throw new Error('Failed to fetch weather data');
+  if (!weatherData || !weatherData.current) {
+    throw new Error('Invalid weather data');
   }
 
   const current = weatherData.current;
   const daily = weatherData.daily;
-
-  if (!current) {
-    throw new Error('No current weather data');
-  }
-
-  // 处理预报数据
-  const forecast = [];
-  if (daily && daily.time && daily.time.length > 0) {
-    for (let i = 1; i < Math.min(daily.time.length, 5); i++) {
-      forecast.push({
-        date: daily.time[i],
-        maxTemp: daily.temperature_2m_max[i],
-        minTemp: daily.temperature_2m_min[i],
-        weatherCode: daily.weather_code[i],
-        icon: getWeatherIcon(daily.weather_code[i]),
-        text: getWeatherText(daily.weather_code[i])
-      });
-    }
-  }
-
-  // 处理空气质量 - aqiData 直接是 API 响应
-  let aqi = null;
-  if (aqiData && aqiData.current && aqiData.current.us_aqi) {
-    aqi = aqiData.current.us_aqi;
-  }
+  const weatherInfo = getWeatherInfo(current.weather_code);
 
   const result = {
-    city: location.city,
-    temperature: current.temperature_2m,
+    temperature: formatTemp(current.temperature_2m),
     weatherCode: current.weather_code,
-    icon: getWeatherIcon(current.weather_code),
-    text: getWeatherText(current.weather_code),
-    color: getWeatherColor(current.weather_code),
+    weather: weatherInfo.text,
+    icon: weatherInfo.icon,
+    color: weatherInfo.color,
     humidity: current.relative_humidity_2m,
-    windSpeed: current.wind_speed_10m,
-    feelsLike: current.apparent_temperature,
-    aqi: aqi,
-    aqiInfo: aqi ? getAqiInfo(aqi) : null,
-    forecast: forecast,
+    windSpeed: Math.round(current.wind_speed_10m),
+    feelsLike: current.apparent_temperature ? Math.round(current.apparent_temperature) : null,
+    aqi: aqiData?.current?.us_aqi || null,
+    forecast: [],
+    city: location.city,
     timestamp: Date.now()
   };
 
-  // 缓存结果
-  await Tapp.storage.set(cacheKey, result);
-  console.log('[Weather] Weather data cached:', result.city, result.text);
+  // 解析预报数据
+  if (daily && daily.time && daily.weather_code) {
+    result.forecast = daily.time.slice(0, 4).map((date, i) => {
+      const info = getWeatherInfo(daily.weather_code[i]);
+      return {
+        date,
+        icon: info.icon,
+        maxTemp: Math.round(daily.temperature_2m_max[i]),
+        minTemp: Math.round(daily.temperature_2m_min[i])
+      };
+    });
+  }
 
+  // 保存缓存
+  await Tapp.storage.set(cacheKey, result);
   return result;
 }
 
-/**
- * 获取完整天气信息（位置 + 天气）
- */
-async function getFullWeatherInfo() {
-  const settings = await Tapp.settings.getAll() || {};
-  
-  const location = await getLocation();
-  if (!location) {
-    return { error: 'location_failed', message: '无法获取位置信息' };
-  }
+// ==================== UI 更新 ====================
 
-  try {
-    const weather = await getWeatherData(location, settings);
-    return {
-      success: true,
-      data: weather,
-      settings: settings
-    };
-  } catch (error) {
-    console.error('[Weather] Failed to get weather:', error);
-    return { error: 'weather_failed', message: error.message || '获取天气失败' };
+function showLoading() {
+  const loading = document.getElementById('loading');
+  const content = document.getElementById('content');
+  const error = document.getElementById('error');
+  
+  if (loading) loading.classList.remove('hidden');
+  if (content) content.classList.add('hidden');
+  if (error) error.classList.add('hidden');
+}
+
+function showError() {
+  const loading = document.getElementById('loading');
+  const content = document.getElementById('content');
+  const error = document.getElementById('error');
+  
+  if (loading) loading.classList.add('hidden');
+  if (content) content.classList.add('hidden');
+  if (error) error.classList.remove('hidden');
+}
+
+function showContent() {
+  const loading = document.getElementById('loading');
+  const content = document.getElementById('content');
+  const error = document.getElementById('error');
+  
+  if (loading) loading.classList.add('hidden');
+  if (content) content.classList.remove('hidden');
+  if (error) error.classList.add('hidden');
+}
+
+function updateGlow(color) {
+  const glow = document.getElementById('glow');
+  if (glow) {
+    glow.style.setProperty('--theme-color', color);
+    glow.style.background = color;
   }
 }
 
-// ==================== Widget 渲染函数 ====================
-
-/**
- * 设置背景效果
- */
-function setWeatherBackground(color) {
-  const glow = document.getElementById('weather-glow');
-  const orb1 = document.getElementById('weather-orb-1');
-  const orb2 = document.getElementById('weather-orb-2');
-  
-  if (glow) glow.style.background = `linear-gradient(135deg, ${color}, transparent 60%)`;
-  if (orb1) orb1.style.background = `linear-gradient(180deg, ${color}, transparent)`;
-  if (orb2) orb2.style.background = color;
+function updateWidget2x2(data) {
+  document.getElementById('icon').textContent = data.icon;
+  document.getElementById('temp').textContent = data.temperature;
+  document.getElementById('weather').textContent = data.weather;
+  document.getElementById('city').textContent = data.city;
+  document.getElementById('humidity').textContent = data.humidity + '%';
+  document.getElementById('wind').textContent = data.windSpeed + 'km/h';
+  updateGlow(data.color);
 }
 
-/**
- * 渲染错误状态
- */
-function renderError(message) {
-  const content = document.getElementById('weather-content');
-  if (!content) return;
+function updateWidget4x1(data) {
+  document.getElementById('icon').textContent = data.icon;
+  document.getElementById('temp').textContent = data.temperature;
+  document.getElementById('weather').textContent = data.weather;
+  document.getElementById('city').textContent = data.city;
+  document.getElementById('humidity').textContent = data.humidity + '%';
+  document.getElementById('wind').textContent = data.windSpeed;
   
-  content.innerHTML = `
-    <div class="weather-error weather-fade-in">
-      <div class="weather-error-icon">⚠️</div>
-      <div class="weather-error-text">${message || '获取天气失败'}</div>
-    </div>
-  `;
+  // 明天预报
+  if (data.forecast && data.forecast.length > 1) {
+    const tomorrow = data.forecast[1];
+    document.getElementById('tomorrow-icon').textContent = tomorrow.icon;
+    document.getElementById('tomorrow-max').textContent = tomorrow.maxTemp + '°';
+    document.getElementById('tomorrow-min').textContent = tomorrow.minTemp + '°';
+  }
+  
+  updateGlow(data.color);
 }
 
-/**
- * 渲染 2x2 小组件
- */
-function renderWidget2x2(data, settings) {
-  const content = document.getElementById('weather-content');
-  if (!content) return;
+function updateWidget4x2(data) {
+  document.getElementById('icon').textContent = data.icon;
+  document.getElementById('temp').textContent = data.temperature;
+  document.getElementById('weather').textContent = data.weather;
+  document.getElementById('city').textContent = data.city;
+  document.getElementById('humidity').textContent = data.humidity + '%';
+  document.getElementById('wind').textContent = data.windSpeed + 'km/h';
   
-  const units = settings?.units || 'celsius';
-  const showAqi = settings?.showAqi !== false;
-  const animEnabled = settings?.animationEnabled !== false;
-  
-  setWeatherBackground(data.color || '#3b82f6');
-  
-  // 构建详情信息
-  let detailsHtml = '';
-  if (data.humidity !== undefined || data.windSpeed !== undefined) {
-    detailsHtml = '<div class="weather-details">';
-    if (data.humidity !== undefined) {
-      detailsHtml += `<div class="weather-detail-item"><span>💧</span><span>${data.humidity}%</span></div>`;
-    }
-    if (data.windSpeed !== undefined) {
-      detailsHtml += `<div class="weather-detail-item"><span>🍃</span><span>${Math.round(data.windSpeed)}km/h</span></div>`;
-    }
-    if (showAqi && data.aqi !== undefined && data.aqiInfo) {
-      detailsHtml += `<div class="weather-detail-item"><span>${data.aqiInfo.icon}</span><span style="color:${data.aqiInfo.color}">${data.aqi}</span></div>`;
-    }
-    detailsHtml += '</div>';
+  // 体感温度
+  const feelsLike = document.getElementById('feels-like');
+  if (feelsLike && data.feelsLike !== null) {
+    feelsLike.textContent = '体感 ' + data.feelsLike + '°';
   }
   
-  content.innerHTML = `
-    <div class="weather-fade-in">
-      <div class="weather-icon" style="${animEnabled ? '' : 'animation:none'}">${data.icon}</div>
-      <div class="weather-temp">${formatTemp(data.temperature, units)}</div>
-      <div class="weather-text">${data.text}</div>
-    </div>
-    <div class="weather-fade-in" style="animation-delay: 0.1s">
-      ${detailsHtml}
-      <div class="weather-city">
-        <span>📍</span>
-        <span>${data.city}</span>
-      </div>
-    </div>
-  `;
-}
-
-/**
- * 渲染 4x2 小组件
- */
-function renderWidget4x2(data, settings) {
-  const content = document.getElementById('weather-content');
-  if (!content) return;
-  
-  const units = settings?.units || 'celsius';
-  const showAqi = settings?.showAqi !== false;
-  const animEnabled = settings?.animationEnabled !== false;
-  
-  setWeatherBackground(data.color || '#3b82f6');
-  
-  // 构建元信息
-  let metaHtml = '<div class="weather-meta">';
-  if (data.humidity !== undefined) {
-    metaHtml += `<div class="weather-meta-item"><span>💧</span><span>${data.humidity}%</span></div>`;
-  }
-  if (data.windSpeed !== undefined) {
-    metaHtml += `<div class="weather-meta-item"><span>🍃</span><span>${Math.round(data.windSpeed)}km/h</span></div>`;
-  }
-  if (showAqi && data.aqi !== undefined && data.aqiInfo) {
-    metaHtml += `<div class="weather-meta-item"><span>${data.aqiInfo.icon}</span><span style="color:${data.aqiInfo.color}">AQI ${data.aqi}</span></div>`;
-  }
-  metaHtml += '</div>';
-  
-  // 构建预报列表
-  let forecastHtml = '<div class="weather-forecast">';
-  if (data.forecast && data.forecast.length > 0) {
-    data.forecast.slice(0, 3).forEach((day, i) => {
-      forecastHtml += `
-        <div class="forecast-item weather-fade-in" style="animation-delay: ${0.1 * (i + 1)}s">
-          <div class="forecast-day">${formatWeekday(day.date, currentLocale)}</div>
-          <div class="forecast-icon">${day.icon}</div>
-          <div class="forecast-temps">
-            <span class="forecast-temp-high">${formatTempValue(day.maxTemp, units)}°</span>
-            <span class="forecast-temp-low">${formatTempValue(day.minTemp, units)}°</span>
-          </div>
-        </div>
-      `;
-    });
-  } else {
-    forecastHtml += '<div class="weather-loading-text" style="text-align:center;padding:12px">暂无预报</div>';
-  }
-  forecastHtml += '</div>';
-  
-  content.innerHTML = `
-    <div class="weather-main weather-fade-in">
-      <div class="weather-city">${data.city}</div>
-      <div class="weather-header">
-        <div class="weather-icon" style="${animEnabled ? '' : 'animation:none'}">${data.icon}</div>
-        <div class="weather-info">
-          <div class="weather-temp">${formatTemp(data.temperature, units)}</div>
-          <div class="weather-text">${data.text}${data.feelsLike !== undefined ? ` · 体感 ${formatTempValue(data.feelsLike, units)}°` : ''}</div>
-        </div>
-      </div>
-      ${metaHtml}
-    </div>
-    ${forecastHtml}
-  `;
-}
-
-/**
- * 渲染 4x4 小组件
- */
-function renderWidget4x4(data, settings) {
-  const content = document.getElementById('weather-content');
-  if (!content) return;
-  
-  const units = settings?.units || 'celsius';
-  const showAqi = settings?.showAqi !== false;
-  const animEnabled = settings?.animationEnabled !== false;
-  
-  setWeatherBackground(data.color || '#3b82f6');
-  
-  // 构建详情卡片
-  let detailsHtml = '<div class="weather-details-grid">';
-  
-  if (data.humidity !== undefined) {
-    detailsHtml += `
-      <div class="detail-card weather-fade-in" style="animation-delay: 0.15s">
-        <div class="detail-label">湿度</div>
-        <div class="detail-value">
-          <span class="detail-icon">💧</span>
-          <span>${data.humidity}%</span>
-        </div>
-      </div>
-    `;
-  }
-  
-  if (data.windSpeed !== undefined) {
-    detailsHtml += `
-      <div class="detail-card weather-fade-in" style="animation-delay: 0.2s">
-        <div class="detail-label">风速</div>
-        <div class="detail-value">
-          <span class="detail-icon">🍃</span>
-          <span>${Math.round(data.windSpeed)} km/h</span>
-        </div>
-      </div>
-    `;
-  }
-  
-  if (data.feelsLike !== undefined) {
-    detailsHtml += `
-      <div class="detail-card weather-fade-in" style="animation-delay: 0.25s">
-        <div class="detail-label">体感温度</div>
-        <div class="detail-value">
-          <span class="detail-icon">🌡️</span>
-          <span>${formatTemp(data.feelsLike, units)}</span>
-        </div>
-      </div>
-    `;
-  }
-  
-  if (showAqi && data.aqi !== undefined && data.aqiInfo) {
-    detailsHtml += `
-      <div class="detail-card weather-fade-in" style="animation-delay: 0.3s">
-        <div class="detail-label">空气质量</div>
-        <div class="detail-value">
-          <span class="aqi-badge" style="background: ${data.aqiInfo.color}20; color: ${data.aqiInfo.color}">
-            ${data.aqiInfo.icon} ${data.aqiInfo.text}
-          </span>
-        </div>
-      </div>
-    `;
-  }
-  
-  detailsHtml += '</div>';
-  
-  // 构建预报列表
-  let forecastHtml = `
-    <div class="weather-forecast">
-      <div class="forecast-title">未来天气</div>
-      <div class="forecast-list">
-  `;
-  
-  if (data.forecast && data.forecast.length > 0) {
-    data.forecast.forEach((day, i) => {
-      forecastHtml += `
-        <div class="forecast-item weather-fade-in" style="animation-delay: ${0.35 + 0.05 * i}s">
-          <div class="forecast-day">${formatWeekday(day.date, currentLocale)}</div>
-          <div class="forecast-icon">${day.icon}</div>
-          <div class="forecast-text">${day.text}</div>
-          <div class="forecast-temps">
-            <span class="forecast-temp-high">${formatTempValue(day.maxTemp, units)}°</span>
-            <span class="forecast-temp-low">${formatTempValue(day.minTemp, units)}°</span>
-          </div>
-        </div>
-      `;
-    });
-  } else {
-    forecastHtml += '<div class="weather-loading-text" style="text-align:center;padding:24px">暂无预报数据</div>';
-  }
-  
-  forecastHtml += '</div></div>';
-  
-  content.innerHTML = `
-    <div class="weather-top weather-fade-in">
-      <div class="weather-current">
-        <div class="weather-city">📍 ${data.city}</div>
-        <div class="weather-main-row">
-          <div class="weather-icon" style="${animEnabled ? '' : 'animation:none'}">${data.icon}</div>
-          <div>
-            <div class="weather-temp">${formatTemp(data.temperature, units)}</div>
-            <div class="weather-text">${data.text}</div>
-            ${data.feelsLike !== undefined ? `<div class="weather-feels">体感 ${formatTemp(data.feelsLike, units)}</div>` : ''}
-          </div>
-        </div>
-        ${detailsHtml}
-      </div>
-    </div>
-    ${forecastHtml}
-  `;
-}
-
-// ==================== Widget 初始化 ====================
-
-async function initWidget() {
-  const props = window._TAPP_WIDGET_PROPS || {};
-  const size = props.size || '2x2';
-  currentLocale = props.locale || 'zh-CN';
-  
-  console.log('[Weather Plus] Widget init, size:', size);
-  
-  try {
-    const result = await getFullWeatherInfo();
+  // AQI
+  const aqiItem = document.getElementById('aqi-item');
+  if (aqiItem && data.aqi !== null) {
+    aqiItem.classList.remove('hidden');
+    const aqiIcon = document.getElementById('aqi-icon');
+    const aqiText = document.getElementById('aqi');
     
-    if (result.error) {
-      renderError(result.message);
+    aqiIcon.textContent = data.aqi <= 50 ? '🌿' : data.aqi <= 100 ? '🌫️' : '😷';
+    aqiText.textContent = 'AQI ' + data.aqi;
+    aqiText.className = data.aqi <= 50 ? 'aqi-good' : 
+                        data.aqi <= 100 ? 'aqi-moderate' : 
+                        data.aqi <= 150 ? 'aqi-unhealthy' : 'aqi-very-unhealthy';
+  }
+  
+  // 预报列表
+  const forecastList = document.getElementById('forecast');
+  if (forecastList && data.forecast && data.forecast.length > 0) {
+    forecastList.innerHTML = data.forecast.slice(0, 3).map(day => `
+      <div class="forecast-item">
+        <div class="forecast-day">${formatWeekday(day.date)}</div>
+        <div class="forecast-icon">${day.icon}</div>
+        <div class="forecast-temps">
+          <span class="forecast-max">${day.maxTemp}°</span>
+          <span class="forecast-min">${day.minTemp}°</span>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  updateGlow(data.color);
+}
+
+// ==================== 初始化 ====================
+
+async function initWidget(size) {
+  console.log('[Weather] Widget init, size:', size);
+  showLoading();
+  
+  try {
+    const location = await getLocation();
+    if (!location) {
+      showError();
       return;
     }
     
-    // 根据尺寸选择渲染函数
-    if (size === '4x4') {
-      renderWidget4x4(result.data, result.settings);
+    const showAqi = size === '4x2';
+    const data = await getWeatherData(location, showAqi);
+    
+    if (size === '2x2') {
+      updateWidget2x2(data);
+    } else if (size === '4x1') {
+      updateWidget4x1(data);
     } else if (size === '4x2') {
-      renderWidget4x2(result.data, result.settings);
-    } else {
-      renderWidget2x2(result.data, result.settings);
+      updateWidget4x2(data);
     }
+    
+    showContent();
   } catch (error) {
-    console.error('[Weather Plus] Widget error:', error);
-    renderError('获取失败');
+    console.error('[Weather] Init failed:', error);
+    showError();
   }
 }
 
-// ==================== 生命周期入口 ====================
+// ==================== Tapp 入口 ====================
 
-(function() {
-  const mode = window._TAPP_MODE;
-  
-  if (mode === 'widget') {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initWidget);
-    } else {
-      setTimeout(initWidget, 0);
-    }
+Tapp.widgets.weather = {
+  mount(container, props) {
+    const size = props.size || '2x2';
+    console.log('[Weather] Tapp initialized, mode: widget, size:', size);
+    initWidget(size);
   }
-  
-  console.log('[Weather Plus] Tapp initialized, mode:', mode);
-})();
+};

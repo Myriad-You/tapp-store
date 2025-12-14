@@ -1,20 +1,52 @@
-<!-- Weather Plus Widget 2x2 - 紧凑天气 -->
-<div class="weather-widget weather-2x2" id="weather-widget" data-widget-root="true">
-  <!-- 动态背景 -->
-  <div class="weather-glow" id="weather-glow"></div>
-  <div class="weather-orb weather-orb-1" id="weather-orb-1"></div>
-  <div class="weather-orb weather-orb-2" id="weather-orb-2"></div>
-  <div class="weather-glass-bg"></div>
-  
-  <!-- 内容 -->
-  <div class="weather-content" id="weather-content">
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <div id="widget" class="widget-2x2">
+    <!-- 动态背景光效 -->
+    <div id="glow" class="glow"></div>
+    
     <!-- 加载状态 -->
-    <div class="weather-loading">
-      <div class="weather-spinner"></div>
-      <div class="weather-loading-text">获取天气...</div>
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+    </div>
+    
+    <!-- 错误状态 -->
+    <div id="error" class="error hidden">
+      <span class="error-text">无法获取天气</span>
+    </div>
+    
+    <!-- 主内容 -->
+    <div id="content" class="content hidden">
+      <!-- 顶部：图标 -->
+      <div class="icon-row">
+        <span id="icon" class="weather-icon">☀️</span>
+      </div>
+      
+      <!-- 主要信息：温度和天气状态 -->
+      <div class="main-info">
+        <div class="temp-row">
+          <span id="temp" class="temperature">24°</span>
+          <span id="weather" class="weather-text">晴</span>
+        </div>
+        <div id="city" class="city">北京</div>
+      </div>
+      
+      <!-- 次要信息：湿度/风速 -->
+      <div class="detail-row">
+        <div class="detail-item" title="湿度">
+          <span>💧</span>
+          <span id="humidity">45%</span>
+        </div>
+        <div class="detail-item" title="风速">
+          <span>🍃</span>
+          <span id="wind">12km/h</span>
+        </div>
+      </div>
     </div>
   </div>
-  
-  <!-- 边框效果 -->
-  <div class="weather-border-effect"></div>
-</div>
+</body>
+</html>

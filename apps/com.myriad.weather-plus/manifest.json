@@ -1,16 +1,14 @@
 {
   "id": "com.myriad.weather-plus",
-  "name": "天气动态",
+  "name": "天气",
   "version": "1.0.0",
-  "description": "实时天气信息与动态内容展示，支持多种尺寸小组件，自动获取位置并显示天气、空气质量和未来预报",
+  "description": "实时天气信息小组件，自动获取位置并显示天气、空气质量和未来预报",
   "main": "main.js",
   "author": {
     "name": "Myriad Team"
   },
   "permissions": [
     "storage",
-    "widget:register",
-    "ui:notification",
     "ui:theme"
   ],
   "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M12 3v2M12 19v2M3 12h2M19 12h2M5.64 5.64l1.41 1.41M16.95 16.95l1.41 1.41M5.64 18.36l1.41-1.41M16.95 7.05l1.41-1.41' stroke='currentColor' stroke-width='2' stroke-linecap='round'/><circle cx='12' cy='12' r='4' fill='currentColor'/></svg>",
@@ -20,42 +18,18 @@
   "widgetStyles": "widget.css",
   "widgets": [
     {
-      "id": "weather-compact",
-      "name": "紧凑天气",
-      "description": "显示当前温度和天气状态",
+      "id": "weather",
+      "name": "天气",
+      "description": "显示当前天气和预报",
       "icon": "🌤️",
       "defaultSize": "2x2",
-      "sizes": ["2x2"],
+      "sizes": ["2x2", "4x1", "4x2"],
       "minRefreshInterval": 300000,
       "category": "utility",
       "templates": {
-        "2x2": "widget-2x2.html"
-      }
-    },
-    {
-      "id": "weather-detailed",
-      "name": "详细天气",
-      "description": "显示天气详情和未来预报",
-      "icon": "🌦️",
-      "defaultSize": "4x2",
-      "sizes": ["4x2"],
-      "minRefreshInterval": 300000,
-      "category": "utility",
-      "templates": {
+        "2x2": "widget-2x2.html",
+        "4x1": "widget-4x1.html",
         "4x2": "widget-4x2.html"
-      }
-    },
-    {
-      "id": "weather-forecast",
-      "name": "天气预报",
-      "description": "完整天气预报面板",
-      "icon": "📊",
-      "defaultSize": "4x4",
-      "sizes": ["4x4"],
-      "minRefreshInterval": 300000,
-      "category": "utility",
-      "templates": {
-        "4x4": "widget-4x4.html"
       }
     }
   ],
@@ -76,22 +50,6 @@
       "label": "显示空气质量",
       "type": "toggle",
       "description": "在小组件中显示空气质量指数",
-      "defaultValue": true
-    },
-    {
-      "key": "refreshInterval",
-      "label": "刷新间隔（分钟）",
-      "type": "number",
-      "description": "自动刷新天气数据的间隔",
-      "defaultValue": 30,
-      "min": 5,
-      "max": 120
-    },
-    {
-      "key": "animationEnabled",
-      "label": "启用动画效果",
-      "type": "toggle",
-      "description": "在小组件中启用天气动画",
       "defaultValue": true
     }
   ],
@@ -121,18 +79,6 @@
       "endpoint": "https://air-quality-api.open-meteo.com/v1/air-quality?latitude={{params.lat}}&longitude={{params.lon}}&current=us_aqi",
       "method": "GET",
       "cacheTtl": 1800
-    },
-    "reverseGeocode": {
-      "name": "反向地理编码",
-      "description": "将经纬度转换为城市名称",
-      "access": "public",
-      "type": "http",
-      "endpoint": "https://nominatim.openstreetmap.org/reverse?format=json&lat={{params.lat}}&lon={{params.lon}}&zoom=10&addressdetails=1",
-      "method": "GET",
-      "headers": {
-        "User-Agent": "Myriad Weather Tapp/1.0"
-      },
-      "cacheTtl": 86400
     },
     "getGeoByIP": {
       "name": "IP地理定位(备用)",
