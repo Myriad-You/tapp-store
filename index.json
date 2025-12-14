@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.app/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2025-12-11T00:00:00Z",
+  "updated_at": "2025-12-14T00:00:00Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.app",
@@ -164,6 +164,45 @@
       "verified": true,
       "created_at": "2025-12-08T00:00:00Z",
       "updated_at": "2025-12-08T00:00:00Z"
+    },
+    {
+      "id": "com.myriad.weather-plus",
+      "name": "天气动态",
+      "version": "1.0.0",
+      "description": "实时天气信息与动态内容展示，支持多种尺寸小组件，自动获取位置并显示天气、空气质量和未来预报",
+      "long_description": "天气动态 Tapp 提供完整的天气信息展示。支持智能定位（多方案自动选择）、实时天气、空气质量 AQI 指数、未来 4 天预报。采用 Glass Morphism 设计风格，根据天气自动调整主题色彩，完美适配深色模式。提供 2x2、4x2、4x4 三种小组件尺寸。",
+      "author": {
+        "name": "Myriad Team",
+        "url": "https://github.com/Myriad-You"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/com.myriad.weather-plus",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "utility",
+      "tags": ["天气", "weather", "widget", "AQI", "空气质量", "预报", "定位"],
+      "permissions": ["storage", "widget:register", "ui:notification", "ui:theme"],
+      "min_myriad_version": "0.3.0",
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M12 3v2M12 19v2M3 12h2M19 12h2M5.64 5.64l1.41 1.41M16.95 16.95l1.41 1.41M5.64 18.36l1.41-1.41M16.95 7.05l1.41-1.41' stroke='currentColor' stroke-width='2' stroke-linecap='round'/><circle cx='12' cy='12' r='4' fill='currentColor'/></svg>",
+      "theme_color": "#3B82F6",
+      "screenshots": [],
+      "download": {
+        "manifest": "apps/com.myriad.weather-plus/manifest.json",
+        "code": "apps/com.myriad.weather-plus/main.js",
+        "readme": "apps/com.myriad.weather-plus/README.md",
+        "widget_styles": "apps/com.myriad.weather-plus/widget.css",
+        "widget_templates": {
+          "2x2": "apps/com.myriad.weather-plus/widget-2x2.html",
+          "4x2": "apps/com.myriad.weather-plus/widget-4x2.html",
+          "4x4": "apps/com.myriad.weather-plus/widget-4x4.html"
+        }
+      },
+      "size": 24576,
+      "downloads": 0,
+      "rating": 0,
+      "featured": true,
+      "verified": true,
+      "created_at": "2025-12-14T00:00:00Z",
+      "updated_at": "2025-12-14T00:00:00Z"
     }
   ]
 }

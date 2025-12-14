@@ -1,0 +1,145 @@
+<!-- Weather Plus Widget 4x2 - 详细天气 -->
+<div class="weather-widget weather-4x2" id="weather-widget">
+  <!-- 动态背景 -->
+  <div class="weather-glow" id="weather-glow"></div>
+  <div class="weather-orb weather-orb-1" id="weather-orb-1"></div>
+  <div class="weather-orb weather-orb-2" id="weather-orb-2"></div>
+  <div class="weather-glass-bg"></div>
+  
+  <!-- 内容 -->
+  <div class="weather-content" id="weather-content">
+    <!-- 加载状态 -->
+    <div class="weather-loading" id="loading-state">
+      <div class="weather-spinner"></div>
+      <div class="weather-loading-text">获取天气...</div>
+    </div>
+  </div>
+  
+  <!-- 边框效果 -->
+  <div class="weather-border-effect"></div>
+</div>
+
+<script>
+(async function() {
+  const widget = document.getElementById('weather-widget');
+  const content = document.getElementById('weather-content');
+  const glow = document.getElementById('weather-glow');
+  const orb1 = document.getElementById('weather-orb-1');
+  const orb2 = document.getElementById('weather-orb-2');
+  
+  // 等待主脚本加载
+  await new Promise(resolve => {
+    if (window.WeatherPlus) return resolve();
+    const check = setInterval(() => {
+      if (window.WeatherPlus) {
+        clearInterval(check);
+        resolve();
+      }
+    }, 100);
+    setTimeout(() => {
+      clearInterval(check);
+      resolve();
+    }, 5000);
+  });
+  
+  const WP = window.WeatherPlus;
+  
+  // 获取语言
+  let locale = 'zh-CN';
+  try {
+    locale = await Tapp.ui.getLocale() || 'zh-CN';
+  } catch (e) {}
+  
+  // 渲染错误状态
+  function renderError(message) {
+    content.innerHTML = `
+      <div class="weather-error weather-fade-in">
+        <div class="weather-error-icon">⚠️</div>
+        <div class="weather-error-text">${message || '获取天气失败'}</div>
+        <button class="weather-retry-btn" onclick="location.reload()">重试</button>
+      </div>
+    `;
+  }
+  
+  // 渲染天气数据
+  function renderWeather(data, settings) {
+    const units = settings?.units || 'celsius';
+    const showAqi = settings?.showAqi !== false;
+    const animEnabled = settings?.animationEnabled !== false;
+    
+    // 设置背景色
+    const color = data.color || '#3b82f6';
+    glow.style.background = `linear-gradient(135deg, ${color}, transparent 60%)`;
+    orb1.style.background = `linear-gradient(180deg, ${color}, transparent)`;
+    orb2.style.background = color;
+    
+    // 构建元信息
+    let metaHtml = '<div class="weather-meta">';
+    if (data.humidity !== undefined) {
+      metaHtml += `<div class="weather-meta-item"><span>💧</span><span>${data.humidity}%</span></div>`;
+    }
+    if (data.windSpeed !== undefined) {
+      metaHtml += `<div class="weather-meta-item"><span>🍃</span><span>${Math.round(data.windSpeed)}km/h</span></div>`;
+    }
+    if (showAqi && data.aqi !== undefined && data.aqiInfo) {
+      metaHtml += `<div class="weather-meta-item"><span>${data.aqiInfo.icon}</span><span style="color:${data.aqiInfo.color}">AQI ${data.aqi}</span></div>`;
+    }
+    metaHtml += '</div>';
+    
+    // 构建预报列表
+    let forecastHtml = '<div class="weather-forecast">';
+    if (data.forecast && data.forecast.length > 0) {
+      data.forecast.slice(0, 3).forEach((day, i) => {
+        forecastHtml += `
+          <div class="forecast-item weather-fade-in" style="animation-delay: ${0.1 * (i + 1)}s">
+            <div class="forecast-day">${WP.formatWeekday(day.date, locale)}</div>
+            <div class="forecast-icon">${day.icon}</div>
+            <div class="forecast-temps">
+              <span class="forecast-temp-high">${WP.formatTempValue(day.maxTemp, units)}°</span>
+              <span class="forecast-temp-low">${WP.formatTempValue(day.minTemp, units)}°</span>
+            </div>
+          </div>
+        `;
+      });
+    } else {
+      forecastHtml += '<div class="weather-loading-text" style="text-align:center;padding:12px">暂无预报</div>';
+    }
+    forecastHtml += '</div>';
+    
+    content.innerHTML = `
+      <div class="weather-main weather-fade-in">
+        <div class="weather-city">${data.city}</div>
+        <div class="weather-header">
+          <div class="weather-icon" style="${animEnabled ? '' : 'animation:none'}">${data.icon}</div>
+          <div class="weather-info">
+            <div class="weather-temp">${WP.formatTemp(data.temperature, units)}</div>
+            <div class="weather-text">${data.text}${data.feelsLike !== undefined ? ` · 体感 ${WP.formatTempValue(data.feelsLike, units)}°` : ''}</div>
+          </div>
+        </div>
+        ${metaHtml}
+      </div>
+      ${forecastHtml}
+    `;
+  }
+  
+  // 加载天气
+  try {
+    if (!WP) {
+      renderError('加载失败');
+      return;
+    }
+    
+    const result = await WP.getFullWeatherInfo();
+    
+    if (result.error) {
+      renderError(result.message);
+      return;
+    }
+    
+    renderWeather(result.data, result.settings);
+  } catch (error) {
+    console.error('[Weather 4x2] Error:', error);
+    renderError('获取失败');
+  }
+})();
+</script>
