@@ -325,12 +325,23 @@ async function initWidget(size) {
   }
 }
 
-// ==================== Tapp 入口 ====================
+// ==================== 生命周期入口 ====================
 
-Tapp.widgets.weather = {
-  mount(container, props) {
-    const size = props.size || '2x2';
-    console.log('[Weather] Tapp initialized, mode: widget, size:', size);
-    initWidget(size);
+(function() {
+  var mode = window._TAPP_MODE;
+  var size = window._TAPP_WIDGET_SIZE || '2x2';
+  
+  console.log('[Weather] Tapp initialized, mode:', mode, 'size:', size);
+  
+  if (mode === 'widget') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function() {
+        initWidget(size);
+      });
+    } else {
+      setTimeout(function() {
+        initWidget(size);
+      }, 0);
+    }
   }
-};
+})();
