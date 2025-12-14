@@ -1283,9 +1283,6 @@ html, body {
     gap: 12px;
     border-radius: var(--radius-lg);
     margin-bottom: 48px;
-    /* 确保控制栏在面板之上，防止被遮挡 */
-    position: relative;
-    z-index: 101;
   }
   
   /* 第一行：进度条 */
