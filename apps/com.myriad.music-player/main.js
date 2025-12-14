@@ -1398,69 +1398,99 @@ function bindControls() {
     'playlist': '播放列表'
   };
   
-  // 🎯 WebKit 兼容性：统一的 Tab 按钮点击处理函数
-  function handleTabClick(btn, e) {
-    // 仅阻止默认行为，允许冒泡（除非有特殊原因）
-    if (e) {
-      e.preventDefault();
-    }
-    
+  // 统一的 Tab 按钮点击处理函数
+  function handleTabClick(btn) {
     var tab = btn.getAttribute('data-tab');
-    // 检查当前按钮是否已经是激活状态
     var wasActive = btn.classList.contains('active');
+    var panelWasVisible = playerRight && playerRight.classList.contains('mobile-visible');
     
-    // 移动端特殊逻辑：处理面板的显示/隐藏
-    if (isMobile() && playerRight) {
-      // 如果面板当前是可见的
-      if (playerRight.classList.contains('mobile-visible')) {
-        // 如果点击的是当前已激活的按钮 -> 关闭面板
-        if (wasActive) {
-          playerRight.classList.remove('mobile-visible');
-          // 移除所有激活状态
-          tabBtns.forEach(function(b) { b.classList.remove('active'); });
-          return; // 结束处理
-        }
-        // 如果点击的是其他按钮 -> 切换内容，保持面板打开
-      } else {
-        // 面板不可见 -> 打开面板
-        playerRight.classList.add('mobile-visible');
-      }
-      
-      // 更新面板标题
-      if (mobilePanelTitle) {
-        mobilePanelTitle.textContent = panelTitles[tab] || tab;
-      }
-    }
-    
-    // 通用逻辑：切换激活状态和面板内容
     // 更新 tab 按钮状态
     tabBtns.forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
     
-    // 切换面板内容
+    // 切换面板 - 使用缓存的panels
     panels.forEach(function(p) { p.classList.remove('active'); });
     var targetPanel = document.getElementById('panel-' + tab);
     if (targetPanel) targetPanel.classList.add('active');
+    
+    // 移动端：显示面板或切换
+    if (isMobile() && playerRight) {
+      if (wasActive && panelWasVisible) {
+        // 再次点击同一个按钮，关闭面板
+        playerRight.classList.remove('mobile-visible');
+        btn.classList.remove('active');
+      } else {
+        // 显示面板
+        playerRight.classList.add('mobile-visible');
+        // 更新面板标题
+        if (mobilePanelTitle) {
+          mobilePanelTitle.textContent = panelTitles[tab] || tab;
+        }
+      }
+    }
   }
   
+  // 关闭面板处理函数
+  function handleClosePanel() {
+    if (playerRight) {
+      playerRight.classList.remove('mobile-visible');
+    }
+    // 取消所有tab按钮的active状态
+    tabBtns.forEach(function(b) { b.classList.remove('active'); });
+  }
+  
+  // 为按钮添加通用的点击绑定（兼容移动端和桌面端）
+  function addClickHandler(element, handler) {
+    if (!element) return;
+    
+    var startX = 0;
+    var startY = 0;
+    var moved = false;
+    
+    // touchstart 记录起始位置
+    element.addEventListener('touchstart', function(e) {
+      var touch = e.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+      moved = false;
+    }, { passive: true });
+    
+    // touchmove 检测是否移动（防止滑动时误触发）
+    element.addEventListener('touchmove', function(e) {
+      var touch = e.touches[0];
+      var dx = Math.abs(touch.clientX - startX);
+      var dy = Math.abs(touch.clientY - startY);
+      if (dx > 10 || dy > 10) {
+        moved = true;
+      }
+    }, { passive: true });
+    
+    // touchend 触发点击（移动端主要事件）
+    element.addEventListener('touchend', function(e) {
+      if (!moved) {
+        e.preventDefault();
+        handler();
+      }
+    }, { passive: false });
+    
+    // click 事件作为桌面端和备用
+    element.addEventListener('click', function(e) {
+      // 移动端已由 touchend 处理，这里主要是桌面端
+      e.preventDefault();
+      handler();
+    });
+  }
+  
+  // 绑定 Tab 按钮
   tabBtns.forEach(function(btn) {
-    // 使用最兼容的 click 事件，移除复杂的 touch 处理
-    btn.addEventListener('click', function(e) {
-      handleTabClick(btn, e);
+    addClickHandler(btn, function() {
+      handleTabClick(btn);
     });
   });
   
   // 移动端关闭按钮
-  if (mobileCloseBtn && playerRight) {
-    mobileCloseBtn.addEventListener('click', function(e) {
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      playerRight.classList.remove('mobile-visible');
-      // 取消所有tab按钮的active状态
-      tabBtns.forEach(function(b) { b.classList.remove('active'); });
-    });
+  if (mobileCloseBtn) {
+    addClickHandler(mobileCloseBtn, handleClosePanel);
   }
   
   // 窗口大小变化时重置状态 - 使用节流（统一处理所有 resize 逻辑）

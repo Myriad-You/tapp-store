@@ -778,13 +778,13 @@ html, body {
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition-fast);
-  /* 🎯 WebKit 兼容性：确保触摸事件正常工作 */
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
+  /* 移动端点击优化 */
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
   /* 确保按钮在最上层可点击 */
-  z-index: 1;
+  z-index: 10;
 }
 
 .tab-btn svg {
@@ -1231,18 +1231,18 @@ html, body {
     position: absolute;
     top: 12px;
     right: 8px;
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.1);
     border: none;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    z-index: 10;
-    /* 🎯 WebKit 兼容性：确保触摸事件正常工作 */
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
+    z-index: 110;
+    /* 移动端点击优化 */
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
   }
@@ -1333,17 +1333,16 @@ html, body {
   
   /* Tab按钮 - 移动端增大点击区域 */
   .tab-btn {
-    width: 44px;
-    height: 44px;
-    /* 🎯 WebKit 兼容性：增大触摸目标 */
-    min-width: 44px;
-    min-height: 44px;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    z-index: 20;
   }
   
   .tab-btn svg {
-    width: 22px;
-    height: 22px;
-    /* 确保 SVG 不阻止触摸事件 */
+    width: 24px;
+    height: 24px;
     pointer-events: none;
   }
   
