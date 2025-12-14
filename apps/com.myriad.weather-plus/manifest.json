@@ -98,11 +98,10 @@
   "apis": {
     "getClientGeo": {
       "name": "获取客户端地理位置",
-      "description": "通过后端代理获取客户端IP的地理位置信息",
+      "description": "通过内置 API 获取客户端IP的地理位置信息",
       "access": "public",
-      "type": "internal",
-      "endpoint": "/api/proxy/client-geo",
-      "method": "GET",
+      "type": "builtin",
+      "builtin": "geo",
       "cache_ttl": 86400000,
       "rate_limit": {
         "calls": 10,

@@ -184,49 +184,45 @@ async function getLocation() {
 
   console.log('[Weather] Fetching new location...');
 
-  // 方案1: 使用后端代理获取客户端地理位置
+  // 方案1: 使用内置 geo API 获取地理位置
   try {
-    const response = await Tapp.api('getClientGeo');
-    if (response.success && response.data) {
-      const data = response.data;
-      if (data.lat && data.lon) {
-        const location = {
-          lat: data.lat,
-          lon: data.lon,
-          city: data.city || data.regionName || data.country || '未知位置',
-          timestamp: Date.now()
-        };
-        await Tapp.storage.set(CACHE_KEYS.LOCATION, location);
-        console.log('[Weather] Location from backend proxy:', location.city);
-        return location;
-      }
+    const data = await Tapp.api('getClientGeo');
+    // builtin:geo 直接返回 { lat, lon, city, region, country }
+    if (data && data.lat && data.lon) {
+      const location = {
+        lat: data.lat,
+        lon: data.lon,
+        city: data.city || data.region || data.country || '未知位置',
+        timestamp: Date.now()
+      };
+      await Tapp.storage.set(CACHE_KEYS.LOCATION, location);
+      console.log('[Weather] Location from builtin geo:', location.city);
+      return location;
     }
   } catch (error) {
-    console.warn('[Weather] Backend proxy failed:', error);
+    console.warn('[Weather] Builtin geo failed:', error);
   }
 
-  // 方案2: 使用 ipapi.co 备用
+  // 方案2: 使用 ipapi.co 备用（HTTP API）
   try {
-    const response = await Tapp.api('getGeoByIP');
-    if (response.success && response.data) {
-      const data = response.data;
-      if (data.latitude && data.longitude) {
-        const location = {
-          lat: data.latitude,
-          lon: data.longitude,
-          city: data.city || data.region || data.country_name || '未知位置',
-          timestamp: Date.now()
-        };
-        await Tapp.storage.set(CACHE_KEYS.LOCATION, location);
-        console.log('[Weather] Location from ipapi.co:', location.city);
-        return location;
-      }
+    const data = await Tapp.api('getGeoByIP');
+    // ipapi.co 返回 { latitude, longitude, city, region, country_name }
+    if (data && data.latitude && data.longitude) {
+      const location = {
+        lat: data.latitude,
+        lon: data.longitude,
+        city: data.city || data.region || data.country_name || '未知位置',
+        timestamp: Date.now()
+      };
+      await Tapp.storage.set(CACHE_KEYS.LOCATION, location);
+      console.log('[Weather] Location from ipapi.co:', location.city);
+      return location;
     }
   } catch (error) {
     console.warn('[Weather] ipapi.co fallback failed:', error);
   }
 
-  // 方案3: 浏览器地理位置 API（需要用户授权）
+  // 方案3: 浏览器地理位置 API（在沙箱中通常被禁用）
   if ('geolocation' in navigator) {
     try {
       const position = await new Promise((resolve, reject) => {
@@ -242,11 +238,11 @@ async function getLocation() {
       // 反向地理编码获取城市名
       let city = '当前位置';
       try {
-        const reverseResponse = await Tapp.api('reverseGeocode', { lat, lon });
-        if (reverseResponse.success && reverseResponse.data) {
-          const addr = reverseResponse.data.address;
-          city = addr?.city || addr?.town || addr?.village || 
-                 addr?.county || addr?.state || '当前位置';
+        const geoData = await Tapp.api('reverseGeocode', { lat, lon });
+        if (geoData && geoData.address) {
+          const addr = geoData.address;
+          city = addr.city || addr.town || addr.village || 
+                 addr.county || addr.state || '当前位置';
         }
       } catch (e) {
         console.warn('[Weather] Reverse geocoding failed:', e);
@@ -286,18 +282,18 @@ async function getWeatherData(location, settings = {}) {
   console.log('[Weather] Fetching new weather data...');
 
   // 并行获取天气和空气质量
-  const [weatherResponse, aqiResponse] = await Promise.all([
+  const [weatherData, aqiData] = await Promise.all([
     Tapp.api('getWeather', { lat: location.lat, lon: location.lon }),
     settings.showAqi !== false 
       ? Tapp.api('getAirQuality', { lat: location.lat, lon: location.lon }).catch(() => null)
       : Promise.resolve(null)
   ]);
 
-  if (!weatherResponse.success || !weatherResponse.data) {
+  // Tapp.api 成功时直接返回数据，失败时抛异常
+  if (!weatherData) {
     throw new Error('Failed to fetch weather data');
   }
 
-  const weatherData = weatherResponse.data;
   const current = weatherData.current;
   const daily = weatherData.daily;
 
@@ -320,10 +316,10 @@ async function getWeatherData(location, settings = {}) {
     }
   }
 
-  // 处理空气质量
+  // 处理空气质量 - aqiData 直接是 API 响应
   let aqi = null;
-  if (aqiResponse && aqiResponse.success && aqiResponse.data?.current?.us_aqi) {
-    aqi = aqiResponse.data.current.us_aqi;
+  if (aqiData && aqiData.current && aqiData.current.us_aqi) {
+    aqi = aqiData.current.us_aqi;
   }
 
   const result = {
