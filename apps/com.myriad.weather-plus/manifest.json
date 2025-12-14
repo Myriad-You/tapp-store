@@ -102,85 +102,46 @@
       "access": "public",
       "type": "builtin",
       "builtin": "geo",
-      "cache_ttl": 86400000,
-      "rate_limit": {
-        "calls": 10,
-        "period": 3600
-      }
+      "cacheTtl": 86400
     },
     "getWeather": {
       "name": "获取天气数据",
       "description": "从 Open-Meteo 获取当前天气和预报",
       "access": "public",
       "type": "http",
-      "url": "https://api.open-meteo.com/v1/forecast",
+      "endpoint": "https://api.open-meteo.com/v1/forecast?latitude={{params.lat}}&longitude={{params.lon}}&current=temperature_2m,weather_code,relative_humidity_2m,apparent_temperature,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto",
       "method": "GET",
-      "params": {
-        "latitude": "{{params.lat}}",
-        "longitude": "{{params.lon}}",
-        "current": "temperature_2m,weather_code,relative_humidity_2m,apparent_temperature,wind_speed_10m",
-        "daily": "weather_code,temperature_2m_max,temperature_2m_min",
-        "timezone": "auto"
-      },
-      "cache_ttl": 1800000,
-      "rate_limit": {
-        "calls": 60,
-        "period": 3600
-      }
+      "cacheTtl": 1800
     },
     "getAirQuality": {
       "name": "获取空气质量",
       "description": "从 Open-Meteo 获取空气质量指数",
       "access": "public",
       "type": "http",
-      "url": "https://air-quality-api.open-meteo.com/v1/air-quality",
+      "endpoint": "https://air-quality-api.open-meteo.com/v1/air-quality?latitude={{params.lat}}&longitude={{params.lon}}&current=us_aqi",
       "method": "GET",
-      "params": {
-        "latitude": "{{params.lat}}",
-        "longitude": "{{params.lon}}",
-        "current": "us_aqi"
-      },
-      "cache_ttl": 1800000,
-      "rate_limit": {
-        "calls": 60,
-        "period": 3600
-      }
+      "cacheTtl": 1800
     },
     "reverseGeocode": {
       "name": "反向地理编码",
       "description": "将经纬度转换为城市名称",
       "access": "public",
       "type": "http",
-      "url": "https://nominatim.openstreetmap.org/reverse",
+      "endpoint": "https://nominatim.openstreetmap.org/reverse?format=json&lat={{params.lat}}&lon={{params.lon}}&zoom=10&addressdetails=1",
       "method": "GET",
-      "params": {
-        "format": "json",
-        "lat": "{{params.lat}}",
-        "lon": "{{params.lon}}",
-        "zoom": "10",
-        "addressdetails": "1"
-      },
       "headers": {
         "User-Agent": "Myriad Weather Tapp/1.0"
       },
-      "cache_ttl": 86400000,
-      "rate_limit": {
-        "calls": 10,
-        "period": 60
-      }
+      "cacheTtl": 86400
     },
     "getGeoByIP": {
       "name": "IP地理定位(备用)",
       "description": "通过 ipapi.co 获取IP地理位置",
       "access": "public",
       "type": "http",
-      "url": "https://ipapi.co/json/",
+      "endpoint": "https://ipapi.co/json/",
       "method": "GET",
-      "cache_ttl": 86400000,
-      "rate_limit": {
-        "calls": 30,
-        "period": 3600
-      }
+      "cacheTtl": 86400
     }
   }
 }
