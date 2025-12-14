@@ -1,5 +1,5 @@
 <!-- Weather Plus Widget 2x2 - 紧凑天气 -->
-<div class="weather-widget weather-2x2" id="weather-widget">
+<div class="weather-widget weather-2x2" id="weather-widget" data-widget-root="true">
   <!-- 动态背景 -->
   <div class="weather-glow" id="weather-glow"></div>
   <div class="weather-orb weather-orb-1" id="weather-orb-1"></div>
@@ -9,7 +9,7 @@
   <!-- 内容 -->
   <div class="weather-content" id="weather-content">
     <!-- 加载状态 -->
-    <div class="weather-loading" id="loading-state">
+    <div class="weather-loading">
       <div class="weather-spinner"></div>
       <div class="weather-loading-text">获取天气...</div>
     </div>
@@ -18,106 +18,3 @@
   <!-- 边框效果 -->
   <div class="weather-border-effect"></div>
 </div>
-
-<script>
-(async function() {
-  const widget = document.getElementById('weather-widget');
-  const content = document.getElementById('weather-content');
-  const glow = document.getElementById('weather-glow');
-  const orb1 = document.getElementById('weather-orb-1');
-  const orb2 = document.getElementById('weather-orb-2');
-  
-  // 等待主脚本加载
-  await new Promise(resolve => {
-    if (window.WeatherPlus) return resolve();
-    const check = setInterval(() => {
-      if (window.WeatherPlus) {
-        clearInterval(check);
-        resolve();
-      }
-    }, 100);
-    // 超时处理
-    setTimeout(() => {
-      clearInterval(check);
-      resolve();
-    }, 5000);
-  });
-  
-  const WP = window.WeatherPlus;
-  
-  // 渲染错误状态
-  function renderError(message) {
-    content.innerHTML = `
-      <div class="weather-error weather-fade-in">
-        <div class="weather-error-icon">⚠️</div>
-        <div class="weather-error-text">${message || '获取天气失败'}</div>
-        <button class="weather-retry-btn" onclick="location.reload()">重试</button>
-      </div>
-    `;
-  }
-  
-  // 渲染天气数据
-  function renderWeather(data, settings) {
-    const units = settings?.units || 'celsius';
-    const showAqi = settings?.showAqi !== false;
-    const animEnabled = settings?.animationEnabled !== false;
-    
-    // 设置背景色
-    const color = data.color || '#3b82f6';
-    glow.style.background = `linear-gradient(135deg, ${color}, transparent 60%)`;
-    orb1.style.background = `linear-gradient(180deg, ${color}, transparent)`;
-    orb2.style.background = color;
-    
-    // 构建详情信息
-    let detailsHtml = '';
-    if (data.humidity !== undefined || data.windSpeed !== undefined) {
-      detailsHtml = '<div class="weather-details">';
-      if (data.humidity !== undefined) {
-        detailsHtml += `<div class="weather-detail-item"><span>💧</span><span>${data.humidity}%</span></div>`;
-      }
-      if (data.windSpeed !== undefined) {
-        detailsHtml += `<div class="weather-detail-item"><span>🍃</span><span>${Math.round(data.windSpeed)}km/h</span></div>`;
-      }
-      if (showAqi && data.aqi !== undefined && data.aqiInfo) {
-        detailsHtml += `<div class="weather-detail-item"><span>${data.aqiInfo.icon}</span><span style="color:${data.aqiInfo.color}">${data.aqi}</span></div>`;
-      }
-      detailsHtml += '</div>';
-    }
-    
-    content.innerHTML = `
-      <div class="weather-fade-in">
-        <div class="weather-icon" style="${animEnabled ? '' : 'animation:none'}">${data.icon}</div>
-        <div class="weather-temp">${WP.formatTemp(data.temperature, units)}</div>
-        <div class="weather-text">${data.text}</div>
-      </div>
-      <div class="weather-fade-in" style="animation-delay: 0.1s">
-        ${detailsHtml}
-        <div class="weather-city">
-          <span>📍</span>
-          <span>${data.city}</span>
-        </div>
-      </div>
-    `;
-  }
-  
-  // 加载天气
-  try {
-    if (!WP) {
-      renderError('加载失败');
-      return;
-    }
-    
-    const result = await WP.getFullWeatherInfo();
-    
-    if (result.error) {
-      renderError(result.message);
-      return;
-    }
-    
-    renderWeather(result.data, result.settings);
-  } catch (error) {
-    console.error('[Weather 2x2] Error:', error);
-    renderError('获取失败');
-  }
-})();
-</script>

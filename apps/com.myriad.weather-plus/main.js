@@ -94,6 +94,9 @@ const WEATHER_COLORS = {
   stormy: '#8b5cf6'      // 雷暴 - 紫色
 };
 
+// 当前语言
+let currentLocale = 'zh-CN';
+
 // ==================== 工具函数 ====================
 
 /**
@@ -370,22 +373,299 @@ async function getFullWeatherInfo() {
   }
 }
 
-// ==================== 全局导出 ====================
+// ==================== Widget 渲染函数 ====================
 
-// 导出给小组件使用
-window.WeatherPlus = {
-  getFullWeatherInfo,
-  getLocation,
-  getWeatherData,
-  formatTemp,
-  formatTempValue,
-  formatWeekday,
-  getWeatherIcon,
-  getWeatherText,
-  getWeatherColor,
-  getAqiInfo,
-  CACHE_TTL
-};
+/**
+ * 设置背景效果
+ */
+function setWeatherBackground(color) {
+  const glow = document.getElementById('weather-glow');
+  const orb1 = document.getElementById('weather-orb-1');
+  const orb2 = document.getElementById('weather-orb-2');
+  
+  if (glow) glow.style.background = `linear-gradient(135deg, ${color}, transparent 60%)`;
+  if (orb1) orb1.style.background = `linear-gradient(180deg, ${color}, transparent)`;
+  if (orb2) orb2.style.background = color;
+}
 
-// 初始化
-console.log('[Weather Plus] Tapp initialized');
+/**
+ * 渲染错误状态
+ */
+function renderError(message) {
+  const content = document.getElementById('weather-content');
+  if (!content) return;
+  
+  content.innerHTML = `
+    <div class="weather-error weather-fade-in">
+      <div class="weather-error-icon">⚠️</div>
+      <div class="weather-error-text">${message || '获取天气失败'}</div>
+    </div>
+  `;
+}
+
+/**
+ * 渲染 2x2 小组件
+ */
+function renderWidget2x2(data, settings) {
+  const content = document.getElementById('weather-content');
+  if (!content) return;
+  
+  const units = settings?.units || 'celsius';
+  const showAqi = settings?.showAqi !== false;
+  const animEnabled = settings?.animationEnabled !== false;
+  
+  setWeatherBackground(data.color || '#3b82f6');
+  
+  // 构建详情信息
+  let detailsHtml = '';
+  if (data.humidity !== undefined || data.windSpeed !== undefined) {
+    detailsHtml = '<div class="weather-details">';
+    if (data.humidity !== undefined) {
+      detailsHtml += `<div class="weather-detail-item"><span>💧</span><span>${data.humidity}%</span></div>`;
+    }
+    if (data.windSpeed !== undefined) {
+      detailsHtml += `<div class="weather-detail-item"><span>🍃</span><span>${Math.round(data.windSpeed)}km/h</span></div>`;
+    }
+    if (showAqi && data.aqi !== undefined && data.aqiInfo) {
+      detailsHtml += `<div class="weather-detail-item"><span>${data.aqiInfo.icon}</span><span style="color:${data.aqiInfo.color}">${data.aqi}</span></div>`;
+    }
+    detailsHtml += '</div>';
+  }
+  
+  content.innerHTML = `
+    <div class="weather-fade-in">
+      <div class="weather-icon" style="${animEnabled ? '' : 'animation:none'}">${data.icon}</div>
+      <div class="weather-temp">${formatTemp(data.temperature, units)}</div>
+      <div class="weather-text">${data.text}</div>
+    </div>
+    <div class="weather-fade-in" style="animation-delay: 0.1s">
+      ${detailsHtml}
+      <div class="weather-city">
+        <span>📍</span>
+        <span>${data.city}</span>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * 渲染 4x2 小组件
+ */
+function renderWidget4x2(data, settings) {
+  const content = document.getElementById('weather-content');
+  if (!content) return;
+  
+  const units = settings?.units || 'celsius';
+  const showAqi = settings?.showAqi !== false;
+  const animEnabled = settings?.animationEnabled !== false;
+  
+  setWeatherBackground(data.color || '#3b82f6');
+  
+  // 构建元信息
+  let metaHtml = '<div class="weather-meta">';
+  if (data.humidity !== undefined) {
+    metaHtml += `<div class="weather-meta-item"><span>💧</span><span>${data.humidity}%</span></div>`;
+  }
+  if (data.windSpeed !== undefined) {
+    metaHtml += `<div class="weather-meta-item"><span>🍃</span><span>${Math.round(data.windSpeed)}km/h</span></div>`;
+  }
+  if (showAqi && data.aqi !== undefined && data.aqiInfo) {
+    metaHtml += `<div class="weather-meta-item"><span>${data.aqiInfo.icon}</span><span style="color:${data.aqiInfo.color}">AQI ${data.aqi}</span></div>`;
+  }
+  metaHtml += '</div>';
+  
+  // 构建预报列表
+  let forecastHtml = '<div class="weather-forecast">';
+  if (data.forecast && data.forecast.length > 0) {
+    data.forecast.slice(0, 3).forEach((day, i) => {
+      forecastHtml += `
+        <div class="forecast-item weather-fade-in" style="animation-delay: ${0.1 * (i + 1)}s">
+          <div class="forecast-day">${formatWeekday(day.date, currentLocale)}</div>
+          <div class="forecast-icon">${day.icon}</div>
+          <div class="forecast-temps">
+            <span class="forecast-temp-high">${formatTempValue(day.maxTemp, units)}°</span>
+            <span class="forecast-temp-low">${formatTempValue(day.minTemp, units)}°</span>
+          </div>
+        </div>
+      `;
+    });
+  } else {
+    forecastHtml += '<div class="weather-loading-text" style="text-align:center;padding:12px">暂无预报</div>';
+  }
+  forecastHtml += '</div>';
+  
+  content.innerHTML = `
+    <div class="weather-main weather-fade-in">
+      <div class="weather-city">${data.city}</div>
+      <div class="weather-header">
+        <div class="weather-icon" style="${animEnabled ? '' : 'animation:none'}">${data.icon}</div>
+        <div class="weather-info">
+          <div class="weather-temp">${formatTemp(data.temperature, units)}</div>
+          <div class="weather-text">${data.text}${data.feelsLike !== undefined ? ` · 体感 ${formatTempValue(data.feelsLike, units)}°` : ''}</div>
+        </div>
+      </div>
+      ${metaHtml}
+    </div>
+    ${forecastHtml}
+  `;
+}
+
+/**
+ * 渲染 4x4 小组件
+ */
+function renderWidget4x4(data, settings) {
+  const content = document.getElementById('weather-content');
+  if (!content) return;
+  
+  const units = settings?.units || 'celsius';
+  const showAqi = settings?.showAqi !== false;
+  const animEnabled = settings?.animationEnabled !== false;
+  
+  setWeatherBackground(data.color || '#3b82f6');
+  
+  // 构建详情卡片
+  let detailsHtml = '<div class="weather-details-grid">';
+  
+  if (data.humidity !== undefined) {
+    detailsHtml += `
+      <div class="detail-card weather-fade-in" style="animation-delay: 0.15s">
+        <div class="detail-label">湿度</div>
+        <div class="detail-value">
+          <span class="detail-icon">💧</span>
+          <span>${data.humidity}%</span>
+        </div>
+      </div>
+    `;
+  }
+  
+  if (data.windSpeed !== undefined) {
+    detailsHtml += `
+      <div class="detail-card weather-fade-in" style="animation-delay: 0.2s">
+        <div class="detail-label">风速</div>
+        <div class="detail-value">
+          <span class="detail-icon">🍃</span>
+          <span>${Math.round(data.windSpeed)} km/h</span>
+        </div>
+      </div>
+    `;
+  }
+  
+  if (data.feelsLike !== undefined) {
+    detailsHtml += `
+      <div class="detail-card weather-fade-in" style="animation-delay: 0.25s">
+        <div class="detail-label">体感温度</div>
+        <div class="detail-value">
+          <span class="detail-icon">🌡️</span>
+          <span>${formatTemp(data.feelsLike, units)}</span>
+        </div>
+      </div>
+    `;
+  }
+  
+  if (showAqi && data.aqi !== undefined && data.aqiInfo) {
+    detailsHtml += `
+      <div class="detail-card weather-fade-in" style="animation-delay: 0.3s">
+        <div class="detail-label">空气质量</div>
+        <div class="detail-value">
+          <span class="aqi-badge" style="background: ${data.aqiInfo.color}20; color: ${data.aqiInfo.color}">
+            ${data.aqiInfo.icon} ${data.aqiInfo.text}
+          </span>
+        </div>
+      </div>
+    `;
+  }
+  
+  detailsHtml += '</div>';
+  
+  // 构建预报列表
+  let forecastHtml = `
+    <div class="weather-forecast">
+      <div class="forecast-title">未来天气</div>
+      <div class="forecast-list">
+  `;
+  
+  if (data.forecast && data.forecast.length > 0) {
+    data.forecast.forEach((day, i) => {
+      forecastHtml += `
+        <div class="forecast-item weather-fade-in" style="animation-delay: ${0.35 + 0.05 * i}s">
+          <div class="forecast-day">${formatWeekday(day.date, currentLocale)}</div>
+          <div class="forecast-icon">${day.icon}</div>
+          <div class="forecast-text">${day.text}</div>
+          <div class="forecast-temps">
+            <span class="forecast-temp-high">${formatTempValue(day.maxTemp, units)}°</span>
+            <span class="forecast-temp-low">${formatTempValue(day.minTemp, units)}°</span>
+          </div>
+        </div>
+      `;
+    });
+  } else {
+    forecastHtml += '<div class="weather-loading-text" style="text-align:center;padding:24px">暂无预报数据</div>';
+  }
+  
+  forecastHtml += '</div></div>';
+  
+  content.innerHTML = `
+    <div class="weather-top weather-fade-in">
+      <div class="weather-current">
+        <div class="weather-city">📍 ${data.city}</div>
+        <div class="weather-main-row">
+          <div class="weather-icon" style="${animEnabled ? '' : 'animation:none'}">${data.icon}</div>
+          <div>
+            <div class="weather-temp">${formatTemp(data.temperature, units)}</div>
+            <div class="weather-text">${data.text}</div>
+            ${data.feelsLike !== undefined ? `<div class="weather-feels">体感 ${formatTemp(data.feelsLike, units)}</div>` : ''}
+          </div>
+        </div>
+        ${detailsHtml}
+      </div>
+    </div>
+    ${forecastHtml}
+  `;
+}
+
+// ==================== Widget 初始化 ====================
+
+async function initWidget() {
+  const props = window._TAPP_WIDGET_PROPS || {};
+  const size = props.size || '2x2';
+  currentLocale = props.locale || 'zh-CN';
+  
+  console.log('[Weather Plus] Widget init, size:', size);
+  
+  try {
+    const result = await getFullWeatherInfo();
+    
+    if (result.error) {
+      renderError(result.message);
+      return;
+    }
+    
+    // 根据尺寸选择渲染函数
+    if (size === '4x4') {
+      renderWidget4x4(result.data, result.settings);
+    } else if (size === '4x2') {
+      renderWidget4x2(result.data, result.settings);
+    } else {
+      renderWidget2x2(result.data, result.settings);
+    }
+  } catch (error) {
+    console.error('[Weather Plus] Widget error:', error);
+    renderError('获取失败');
+  }
+}
+
+// ==================== 生命周期入口 ====================
+
+(function() {
+  const mode = window._TAPP_MODE;
+  
+  if (mode === 'widget') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initWidget);
+    } else {
+      setTimeout(initWidget, 0);
+    }
+  }
+  
+  console.log('[Weather Plus] Tapp initialized, mode:', mode);
+})();
