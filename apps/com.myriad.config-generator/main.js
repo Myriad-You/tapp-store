@@ -648,31 +648,112 @@ function generateConfigs() {
 // ========================================
 
 function copyToClipboard(text, btn) {
-  navigator.clipboard.writeText(text).then(function() {
-    var originalText = btn.innerHTML;
+  var originalHTML = btn.innerHTML;
+  
+  // 尝试使用现代 Clipboard API
+  function onSuccess() {
     btn.classList.add('copied');
     btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> 已复制';
     
     setTimeout(function() {
       btn.classList.remove('copied');
-      btn.innerHTML = originalText;
+      btn.innerHTML = originalHTML;
     }, 2000);
-  }).catch(function(err) {
+    
+    showNotification('已复制到剪贴板', 'success');
+  }
+  
+  function onError(err) {
     console.error('复制失败:', err);
-    showNotification('复制失败', 'error');
-  });
+    showNotification('复制失败，请手动选择复制', 'error');
+  }
+  
+  // 方法1: 尝试使用 Clipboard API
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(onSuccess).catch(function(err) {
+      // 方法2: 降级使用 execCommand
+      fallbackCopy(text, onSuccess, onError);
+    });
+  } else {
+    // 方法2: 降级使用 execCommand
+    fallbackCopy(text, onSuccess, onError);
+  }
+}
+
+function fallbackCopy(text, onSuccess, onError) {
+  var textArea = document.createElement('textarea');
+  textArea.value = text;
+  
+  // 确保不影响页面布局
+  textArea.style.position = 'fixed';
+  textArea.style.top = '0';
+  textArea.style.left = '0';
+  textArea.style.width = '2em';
+  textArea.style.height = '2em';
+  textArea.style.padding = '0';
+  textArea.style.border = 'none';
+  textArea.style.outline = 'none';
+  textArea.style.boxShadow = 'none';
+  textArea.style.background = 'transparent';
+  textArea.style.opacity = '0';
+  
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  
+  try {
+    var successful = document.execCommand('copy');
+    if (successful) {
+      onSuccess();
+    } else {
+      onError(new Error('execCommand 返回 false'));
+    }
+  } catch (err) {
+    onError(err);
+  }
+  
+  document.body.removeChild(textArea);
 }
 
 function downloadFile(content, filename) {
   var blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
   var url = URL.createObjectURL(blob);
+  
+  // 创建下载链接
   var a = document.createElement('a');
   a.href = url;
   a.download = filename;
+  a.style.display = 'none';
+  
+  // 添加到 body
   document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  
+  // 尝试触发下载
+  try {
+    // 方法1: 直接点击
+    a.click();
+  } catch (e) {
+    // 方法2: 使用 MouseEvent
+    try {
+      var event = new MouseEvent('click', {
+        view: window,
+        bubbles: true,
+        cancelable: true
+      });
+      a.dispatchEvent(event);
+    } catch (e2) {
+      // 方法3: 打开新窗口（最后手段）
+      window.open(url, '_blank');
+    }
+  }
+  
+  // 清理
+  setTimeout(function() {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 100);
+  
+  showNotification('文件下载已开始: ' + filename, 'success');
 }
 
 async function showNotification(message, type) {
