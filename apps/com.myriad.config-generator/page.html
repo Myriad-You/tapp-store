@@ -10,7 +10,7 @@
 <!-- 内容层 -->
 <div id="tapp-content">
   <div class="page-content">
-    <!-- 标题区域 -->
+    <!-- 标题区域 - 胶囊样式 -->
     <header class="page-header">
       <div class="header-icon">⚙️</div>
       <div class="header-info">
@@ -79,6 +79,17 @@
         </h2>
         <p class="section-desc">上传您现有的 Nginx 配置文件，保留 SSL 设置并替换域名</p>
         
+        <!-- 警告提示框 -->
+        <div class="section-warning">
+          <span class="section-warning-icon">⚠️</span>
+          <div class="section-warning-content">
+            <span class="section-warning-title">上传要求</span>
+            请上传<strong>纯净的、仅配置好 SSL 证书</strong>的 Nginx 配置文件。<br>
+            复杂的配置文件（包含多个 server 块、复杂的 location 规则等）可能无法正确处理。<br>
+            如不上传，将使用默认模板生成（无 SSL，需要手动配置）。
+          </div>
+        </div>
+        
         <div class="upload-group">
           <div class="upload-item">
             <label>主域名 Nginx 配置</label>
@@ -137,7 +148,7 @@
 
     <!-- 生成结果 -->
     <div id="results-section" class="results-section" hidden>
-      <h2 class="results-title">生成结果</h2>
+      <h2 class="results-title">📦 生成结果</h2>
       
       <!-- Docker Compose -->
       <div class="result-card">
