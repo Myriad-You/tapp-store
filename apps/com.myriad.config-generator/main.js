@@ -2,7 +2,7 @@
 // 一键生成 Myriad 部署配置文件
 
 // ========================================
-// 配置模板
+// 配置模板（带占位符）
 // ========================================
 
 var DOCKER_COMPOSE_TEMPLATE = `version: "3.8"
@@ -10,13 +10,13 @@ var DOCKER_COMPOSE_TEMPLATE = `version: "3.8"
 services:
   # ==================== PostgreSQL Database ====================
   postgres:
-    image: postgres:16-alpine
+    image: postgres:{{DB_VERSION}}-alpine
     container_name: myriad-postgres
     deploy:
       resources:
         limits:
-          cpus: '1.0'
-          memory: 1G
+          cpus: '{{DB_CPU_LIMIT}}'
+          memory: {{DB_MEM_LIMIT}}
         reservations:
           cpus: '0.5'
           memory: 512M
@@ -74,8 +74,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.0'
-          memory: 1G
+          cpus: '{{BACKEND_CPU_LIMIT}}'
+          memory: {{BACKEND_MEM_LIMIT}}
         reservations:
           cpus: '0.5'
           memory: 512M
@@ -85,7 +85,7 @@ services:
 
       # 服务器配置
       SERVER_HOST: 0.0.0.0
-      SERVER_PORT: 3000
+      SERVER_PORT: {{BACKEND_PORT}}
 
       # 安全配置
       JWT_SECRET: {{JWT_SECRET}}
@@ -101,12 +101,12 @@ services:
       RUST_LOG: info
       TZ: Asia/Shanghai
     ports:
-      - "3000:3000"
+      - "{{BACKEND_PORT}}:{{BACKEND_PORT}}"
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:3000/health" ]
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:{{BACKEND_PORT}}/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -137,8 +137,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.0'
-          memory: 1G
+          cpus: '{{FRONTEND_CPU_LIMIT}}'
+          memory: {{FRONTEND_MEM_LIMIT}}
         reservations:
           cpus: '0.25'
           memory: 256M
@@ -147,12 +147,12 @@ services:
       NODE_ENV: production
       TZ: Asia/Shanghai
     ports:
-      - "4321:4321"
+      - "{{FRONTEND_PORT}}:{{FRONTEND_PORT}}"
     depends_on:
       backend:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:4321" ]
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:{{FRONTEND_PORT}}" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -203,7 +203,7 @@ var DEFAULT_MAIN_NGINX_TEMPLATE = `server {
     # ----------------------------------------------------------------------
     location ^~ /api/ {
         # ⚠️ 关键点 2：显式指定后端地址和路径
-        proxy_pass http://127.0.0.1:3000/api/;
+        proxy_pass http://127.0.0.1:{{BACKEND_PORT}}/api/;
         
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -221,7 +221,7 @@ var DEFAULT_MAIN_NGINX_TEMPLATE = `server {
 
     # 健康检查
     location ^~ /health {
-        proxy_pass http://127.0.0.1:3000/health;
+        proxy_pass http://127.0.0.1:{{BACKEND_PORT}}/health;
         access_log off;
     }
 
@@ -229,7 +229,7 @@ var DEFAULT_MAIN_NGINX_TEMPLATE = `server {
     # 前端转发 (兜底规则)
     # ----------------------------------------------------------------------
     location / {
-        proxy_pass http://127.0.0.1:4321;
+        proxy_pass http://127.0.0.1:{{FRONTEND_PORT}};
 
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -259,7 +259,7 @@ var DEFAULT_API_NGINX_TEMPLATE = `server {
     error_log /www/sites/{{API_DOMAIN}}/log/error.log; 
     
     location / {
-        proxy_pass http://127.0.0.1:3000;
+        proxy_pass http://127.0.0.1:{{BACKEND_PORT}};
 
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -282,7 +282,7 @@ var DEFAULT_API_NGINX_TEMPLATE = `server {
 
     # 健康检查端点
     location /health {
-        proxy_pass http://127.0.0.1:3000/health;
+        proxy_pass http://127.0.0.1:{{BACKEND_PORT}}/health;
         access_log off;
     }
 
@@ -345,6 +345,19 @@ function replaceNginxDomain(config, oldDomain, newDomain) {
   return config;
 }
 
+// 替换 Nginx 配置中的端口
+function replaceNginxPorts(config, backendPort, frontendPort) {
+  // 替换后端端口 (默认 3000)
+  config = config.replace(/127\.0\.0\.1:3000/g, '127.0.0.1:' + backendPort);
+  config = config.replace(/localhost:3000/g, 'localhost:' + backendPort);
+  
+  // 替换前端端口 (默认 4321)
+  config = config.replace(/127\.0\.0\.1:4321/g, '127.0.0.1:' + frontendPort);
+  config = config.replace(/localhost:4321/g, 'localhost:' + frontendPort);
+  
+  return config;
+}
+
 // 提取原始域名
 function extractDomain(config) {
   var match = config.match(/server_name\s+([^;]+);/);
@@ -366,8 +379,21 @@ var state = {
   mainNginxConfig: null,
   apiNginxConfig: null,
   mainNginxFileName: '',
-  apiNginxFileName: ''
+  apiNginxFileName: '',
+  // 新增配置
+  backendPort: 3000,
+  frontendPort: 4321,
+  dbVersion: '16',
+  dbCpuLimit: '1.0',
+  dbMemLimit: '1G',
+  backendCpuLimit: '1.0',
+  backendMemLimit: '1G',
+  frontendCpuLimit: '1.0',
+  frontendMemLimit: '1G'
 };
+
+// 防抖定时器
+var apiDomainDebounceTimer = null;
 
 // ========================================
 // UI 交互
@@ -393,11 +419,52 @@ function initPage() {
   var fileMainConf = document.getElementById('file-main-conf');
   var fileApiConf = document.getElementById('file-api-conf');
   
-  // 自动填充 API 域名
+  // 服务配置输入
+  var backendPortInput = document.getElementById('backend-port');
+  var frontendPortInput = document.getElementById('frontend-port');
+  var dbVersionSelect = document.getElementById('db-version');
+  
+  // 资源限制输入
+  var dbCpuLimitInput = document.getElementById('db-cpu-limit');
+  var dbMemLimitInput = document.getElementById('db-mem-limit');
+  var backendCpuLimitInput = document.getElementById('backend-cpu-limit');
+  var backendMemLimitInput = document.getElementById('backend-mem-limit');
+  var frontendCpuLimitInput = document.getElementById('frontend-cpu-limit');
+  var frontendMemLimitInput = document.getElementById('frontend-mem-limit');
+  
+  // 自动填充 API 域名 - 使用防抖，等用户输入完成后再生成
   mainDomainInput.addEventListener('input', function() {
+    // 清除之前的定时器
+    if (apiDomainDebounceTimer) {
+      clearTimeout(apiDomainDebounceTimer);
+    }
+    
+    // 设置新的定时器，500ms 后执行
+    apiDomainDebounceTimer = setTimeout(function() {
+      var val = mainDomainInput.value.trim();
+      // 只有当用户没有手动修改过 API 域名时才自动填充
+      if (val && (!apiDomainInput.value || apiDomainInput.dataset.autoFilled === 'true')) {
+        apiDomainInput.value = 'api.' + val;
+        apiDomainInput.dataset.autoFilled = 'true';
+      }
+    }, 500);
+  });
+  
+  // 当用户手动修改 API 域名时，标记为非自动填充
+  apiDomainInput.addEventListener('input', function() {
+    apiDomainInput.dataset.autoFilled = 'false';
+  });
+  
+  // 主域名失去焦点时立即填充（如果还没填充的话）
+  mainDomainInput.addEventListener('blur', function() {
+    if (apiDomainDebounceTimer) {
+      clearTimeout(apiDomainDebounceTimer);
+      apiDomainDebounceTimer = null;
+    }
     var val = mainDomainInput.value.trim();
-    if (val && !apiDomainInput.value) {
+    if (val && (!apiDomainInput.value || apiDomainInput.dataset.autoFilled === 'true')) {
       apiDomainInput.value = 'api.' + val;
+      apiDomainInput.dataset.autoFilled = 'true';
     }
   });
   
@@ -464,6 +531,19 @@ function initPage() {
     state.apiDomain = apiDomain;
     state.dbPassword = dbPassword;
     state.jwtSecret = jwtSecret;
+    
+    // 保存服务配置
+    state.backendPort = parseInt(backendPortInput.value) || 3000;
+    state.frontendPort = parseInt(frontendPortInput.value) || 4321;
+    state.dbVersion = dbVersionSelect.value || '16';
+    
+    // 保存资源限制
+    state.dbCpuLimit = dbCpuLimitInput.value.trim() || '1.0';
+    state.dbMemLimit = dbMemLimitInput.value.trim() || '1G';
+    state.backendCpuLimit = backendCpuLimitInput.value.trim() || '1.0';
+    state.backendMemLimit = backendMemLimitInput.value.trim() || '1G';
+    state.frontendCpuLimit = frontendCpuLimitInput.value.trim() || '1.0';
+    state.frontendMemLimit = frontendMemLimitInput.value.trim() || '1G';
     
     // 生成配置
     generateConfigs();
@@ -600,28 +680,45 @@ function generateConfigs() {
     .replace(/\{\{DB_PASSWORD_URL_ENCODED\}\}/g, dbPasswordUrlEncoded)
     .replace(/\{\{JWT_SECRET\}\}/g, state.jwtSecret)
     .replace(/\{\{MAIN_DOMAIN\}\}/g, state.mainDomain)
-    .replace(/\{\{API_DOMAIN\}\}/g, state.apiDomain);
+    .replace(/\{\{API_DOMAIN\}\}/g, state.apiDomain)
+    // 端口配置
+    .replace(/\{\{BACKEND_PORT\}\}/g, state.backendPort)
+    .replace(/\{\{FRONTEND_PORT\}\}/g, state.frontendPort)
+    // 数据库版本
+    .replace(/\{\{DB_VERSION\}\}/g, state.dbVersion)
+    // 资源限制
+    .replace(/\{\{DB_CPU_LIMIT\}\}/g, state.dbCpuLimit)
+    .replace(/\{\{DB_MEM_LIMIT\}\}/g, state.dbMemLimit)
+    .replace(/\{\{BACKEND_CPU_LIMIT\}\}/g, state.backendCpuLimit)
+    .replace(/\{\{BACKEND_MEM_LIMIT\}\}/g, state.backendMemLimit)
+    .replace(/\{\{FRONTEND_CPU_LIMIT\}\}/g, state.frontendCpuLimit)
+    .replace(/\{\{FRONTEND_MEM_LIMIT\}\}/g, state.frontendMemLimit);
   
   // 生成主域名 Nginx 配置
   var mainNginx;
   if (state.mainNginxConfig) {
-    // 使用上传的配置，替换域名
+    // 使用上传的配置，替换域名和端口
     mainNginx = replaceNginxDomain(state.mainNginxConfig, extractDomain(state.mainNginxConfig), state.mainDomain);
+    mainNginx = replaceNginxPorts(mainNginx, state.backendPort, state.frontendPort);
   } else {
     // 使用默认模板
     mainNginx = DEFAULT_MAIN_NGINX_TEMPLATE
-      .replace(/\{\{MAIN_DOMAIN\}\}/g, state.mainDomain);
+      .replace(/\{\{MAIN_DOMAIN\}\}/g, state.mainDomain)
+      .replace(/\{\{BACKEND_PORT\}\}/g, state.backendPort)
+      .replace(/\{\{FRONTEND_PORT\}\}/g, state.frontendPort);
   }
   
   // 生成 API 域名 Nginx 配置
   var apiNginx;
   if (state.apiNginxConfig) {
-    // 使用上传的配置，替换域名
+    // 使用上传的配置，替换域名和端口
     apiNginx = replaceNginxDomain(state.apiNginxConfig, extractDomain(state.apiNginxConfig), state.apiDomain);
+    apiNginx = replaceNginxPorts(apiNginx, state.backendPort, state.frontendPort);
   } else {
     // 使用默认模板
     apiNginx = DEFAULT_API_NGINX_TEMPLATE
-      .replace(/\{\{API_DOMAIN\}\}/g, state.apiDomain);
+      .replace(/\{\{API_DOMAIN\}\}/g, state.apiDomain)
+      .replace(/\{\{BACKEND_PORT\}\}/g, state.backendPort);
   }
   
   // 显示结果

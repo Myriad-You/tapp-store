@@ -360,6 +360,77 @@
   color: var(--config-text-muted);
 }
 
+/* Form Row - 两列布局 */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-group-half {
+  margin-bottom: 0;
+}
+
+@media (max-width: 500px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-group-half {
+    margin-bottom: 16px;
+  }
+  
+  .form-group-half:last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* Select 下拉框 */
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+.dark .form-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* 资源配置分组 */
+.resource-group {
+  padding: 14px;
+  margin-bottom: 16px;
+  background: var(--config-input-bg);
+  border-radius: var(--config-radius-sm);
+  border: 1px solid var(--config-border);
+}
+
+.resource-group:last-child {
+  margin-bottom: 0;
+}
+
+.resource-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--config-text);
+  margin-bottom: 12px;
+}
+
+.resource-group .form-row {
+  margin-bottom: 0;
+}
+
+.resource-group .form-group {
+  margin-bottom: 0;
+}
+
+.resource-group .form-hint {
+  display: none;
+}
+
 /* Input with action button */
 .input-with-action {
   display: flex;

@@ -71,6 +71,90 @@
         </div>
       </section>
 
+      <!-- 服务配置 -->
+      <section class="form-section">
+        <h2 class="section-title">
+          <span class="section-icon">🔧</span>
+          服务配置
+        </h2>
+        <div class="form-row">
+          <div class="form-group form-group-half">
+            <label for="backend-port">后端端口</label>
+            <input type="number" id="backend-port" class="form-input" value="3000" min="1" max="65535">
+            <span class="form-hint">Backend API 服务端口</span>
+          </div>
+          <div class="form-group form-group-half">
+            <label for="frontend-port">前端端口</label>
+            <input type="number" id="frontend-port" class="form-input" value="4321" min="1" max="65535">
+            <span class="form-hint">Frontend 服务端口</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="db-version">PostgreSQL 版本</label>
+          <select id="db-version" class="form-input form-select">
+            <option value="16">PostgreSQL 16 (推荐)</option>
+            <option value="17">PostgreSQL 17 (最新)</option>
+          </select>
+          <span class="form-hint">选择数据库版本，16 更稳定，17 有新特性</span>
+        </div>
+      </section>
+
+      <!-- 资源限制 -->
+      <section class="form-section">
+        <h2 class="section-title">
+          <span class="section-icon">📊</span>
+          资源限制
+        </h2>
+        <p class="section-desc">配置各服务的 CPU 和内存限制（Docker Compose deploy 配置）</p>
+        
+        <!-- 数据库资源 -->
+        <div class="resource-group">
+          <div class="resource-label">🗄️ PostgreSQL</div>
+          <div class="form-row">
+            <div class="form-group form-group-half">
+              <label for="db-cpu-limit">CPU 限制</label>
+              <input type="text" id="db-cpu-limit" class="form-input" value="1.0" placeholder="1.0">
+              <span class="form-hint">CPU 核心数，如 0.5, 1.0, 2.0</span>
+            </div>
+            <div class="form-group form-group-half">
+              <label for="db-mem-limit">内存限制</label>
+              <input type="text" id="db-mem-limit" class="form-input" value="1G" placeholder="1G">
+              <span class="form-hint">如 512M, 1G, 2G</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 后端资源 -->
+        <div class="resource-group">
+          <div class="resource-label">⚙️ Backend</div>
+          <div class="form-row">
+            <div class="form-group form-group-half">
+              <label for="backend-cpu-limit">CPU 限制</label>
+              <input type="text" id="backend-cpu-limit" class="form-input" value="1.0" placeholder="1.0">
+            </div>
+            <div class="form-group form-group-half">
+              <label for="backend-mem-limit">内存限制</label>
+              <input type="text" id="backend-mem-limit" class="form-input" value="1G" placeholder="1G">
+            </div>
+          </div>
+        </div>
+
+        <!-- 前端资源 -->
+        <div class="resource-group">
+          <div class="resource-label">🎨 Frontend</div>
+          <div class="form-row">
+            <div class="form-group form-group-half">
+              <label for="frontend-cpu-limit">CPU 限制</label>
+              <input type="text" id="frontend-cpu-limit" class="form-input" value="1.0" placeholder="1.0">
+            </div>
+            <div class="form-group form-group-half">
+              <label for="frontend-mem-limit">内存限制</label>
+              <input type="text" id="frontend-mem-limit" class="form-input" value="1G" placeholder="1G">
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Nginx 配置上传 -->
       <section class="form-section">
         <h2 class="section-title">
