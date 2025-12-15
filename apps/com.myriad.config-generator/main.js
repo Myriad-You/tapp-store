@@ -716,41 +716,39 @@ function fallbackCopy(text, onSuccess, onError) {
 }
 
 function downloadFile(content, filename) {
-  var blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  var url = URL.createObjectURL(blob);
+  // 使用 Tapp SDK 的文件下载 API（绕过 iframe 沙盒限制）
+  if (typeof Tapp !== 'undefined' && Tapp.file && Tapp.file.download) {
+    Tapp.file.download(content, filename, 'text/plain;charset=utf-8')
+      .then(function() {
+        showNotification('文件下载成功: ' + filename, 'success');
+      })
+      .catch(function(err) {
+        console.error('Tapp.file.download 失败:', err);
+        // 降级到备用方案
+        fallbackDownload(content, filename);
+      });
+  } else {
+    // 降级到传统方案
+    fallbackDownload(content, filename);
+  }
+}
+
+function fallbackDownload(content, filename) {
+  // 使用 Data URL 方式
+  var dataUrl = 'data:text/plain;charset=utf-8,' + encodeURIComponent(content);
   
-  // 创建下载链接
   var a = document.createElement('a');
-  a.href = url;
+  a.href = dataUrl;
   a.download = filename;
   a.style.display = 'none';
   
-  // 添加到 body
   document.body.appendChild(a);
+  a.click();
   
-  // 尝试触发下载
-  try {
-    // 方法1: 直接点击
-    a.click();
-  } catch (e) {
-    // 方法2: 使用 MouseEvent
-    try {
-      var event = new MouseEvent('click', {
-        view: window,
-        bubbles: true,
-        cancelable: true
-      });
-      a.dispatchEvent(event);
-    } catch (e2) {
-      // 方法3: 打开新窗口（最后手段）
-      window.open(url, '_blank');
-    }
-  }
-  
-  // 清理
   setTimeout(function() {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    if (a.parentNode) {
+      a.parentNode.removeChild(a);
+    }
   }, 100);
   
   showNotification('文件下载已开始: ' + filename, 'success');

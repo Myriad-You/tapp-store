@@ -14,6 +14,7 @@
 - [报告 API](#报告-api)
 - [DOM 安全 API](#dom-安全-api)
 - [数据处理 API](#数据处理-api)
+- [文件 API](#文件-api)
 - [媒体控制 API](#媒体控制-api)
 - [上下文 API](#上下文-api)
 - [用户角色 API](#用户角色-api)
@@ -442,6 +443,47 @@ const result = await Tapp.data.transform({
 | `aggregate` | `operation`, `field`         | 聚合统计 |
 | `dedupe`    | `key`                        | 去重     |
 | `map`       | `expression`                 | 映射转换 |
+
+---
+
+## 文件 API
+
+**权限**: `storage`
+
+在主应用上下文中执行文件下载，绕过 iframe 沙盒限制。
+
+```javascript
+// 下载文件
+await Tapp.file.download(content, filename, mimeType);
+
+// 示例：下载配置文件
+await Tapp.file.download(
+  "version: 3.8\nservices:\n  ...",
+  "docker-compose.yml",
+  "text/yaml"
+);
+
+// 示例：下载 JSON 数据
+const data = { name: "test", value: 123 };
+await Tapp.file.download(
+  JSON.stringify(data, null, 2),
+  "data.json",
+  "application/json"
+);
+```
+
+### 参数说明
+
+| 参数       | 类型     | 必填 | 说明                                    |
+| ---------- | -------- | ---- | --------------------------------------- |
+| `content`  | `string` | 是   | 文件内容                                |
+| `filename` | `string` | 是   | 文件名（禁止包含路径字符）              |
+| `mimeType` | `string` | 否   | MIME 类型，默认 `text/plain;charset=utf-8` |
+
+### 限制
+
+- 文件大小最大 10MB
+- 文件名不能包含 `..`、`/`、`\` 等路径字符
 
 ---
 
