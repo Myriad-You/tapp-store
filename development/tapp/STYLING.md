@@ -8,7 +8,7 @@
 > - 更容易实现复杂的 hover/动画效果
 > - 支持 CSS 架构分离模式（`cssMode: separated`）
 >
-> 参考实现：查看 `com.myriad.hello-world` 和 `com.myriad.ai-chat` 示例。
+> 参考实现：查看 `com.myriad.hello-world` 和 `com.myriad.quick-notes` 示例。
 
 ## CSS 变量系统
 

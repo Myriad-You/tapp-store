@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.app/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.8.2",
+  "version": "1.8.3",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-07-15T00:00:00Z",
+  "updated_at": "2026-07-17T00:00:00Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.app",
@@ -92,52 +92,6 @@
         }
       },
       "size": 28672,
-      "downloads": 0,
-      "rating": 0,
-      "featured": true,
-      "verified": true,
-      "created_at": "2025-12-04T00:00:00Z",
-      "updated_at": "2026-07-15T00:00:00Z"
-    },
-    {
-      "id": "com.myriad.ai-chat",
-      "name": "AI 聊天助手",
-      "version": "1.0.0",
-      "description": "AI 驱动的智能对话助手",
-      "long_description": "AI 聊天助手。支持多轮对话和历史记录。",
-      "author": {
-        "name": "Myriad Team",
-        "url": "https://github.com/Myriad-You"
-      },
-      "license": "MIT",
-      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/com.myriad.ai-chat",
-      "repository": "https://github.com/Myriad-You/tapp-store",
-      "category": "ai",
-      "tags": ["AI", "聊天", "助手", "widget", "GPT", "动效"],
-      "permissions": [
-        "storage",
-        "widget:register",
-        "ui:notification",
-        "ui:theme",
-        "ai:chat"
-      ],
-      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M12 2C12 7 9 10 4 12c5 2 8 5 8 10 0-5 3-8 8-10-5-2-8-5-8-10z' fill='currentColor'/></svg>",
-      "theme_color": "#00ACC1",
-      "screenshots": [],
-      "download": {
-        "manifest": "apps/com.myriad.ai-chat/manifest.json",
-        "code": "apps/com.myriad.ai-chat/main.js",
-        "widget_styles": "apps/com.myriad.ai-chat/widget.css",
-        "page_styles": "apps/com.myriad.ai-chat/page.css",
-        "page_template": "apps/com.myriad.ai-chat/page.html",
-        "widget_templates": {
-          "ai-chat": {
-            "4x2": "apps/com.myriad.ai-chat/widget-4x2.html",
-            "4x4": "apps/com.myriad.ai-chat/widget-4x4.html"
-          }
-        }
-      },
-      "size": 25840,
       "downloads": 0,
       "rating": 0,
       "featured": true,
