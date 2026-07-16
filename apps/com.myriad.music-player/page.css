@@ -284,22 +284,6 @@ html, body {
   pointer-events: none;
 }
 
-/* 光呼吸：铺满背景的柔光，透明度随节奏 groove 起伏（替代背景震动的节奏表达）。
-   opacity 由 JS 每帧驱动 + 短过渡平滑，合成器友好 */
-.rhythm-glow {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    ellipse at 50% 78%,
-    color-mix(in srgb, var(--music-primary) 40%, transparent),
-    transparent 65%
-  );
-  opacity: 0;
-  transition: opacity 0.12s linear;
-  will-change: opacity;
-  pointer-events: none;
-}
-
 /* 节奏涟漪：柔化的环形波带（radial-gradient 圆环），从封面中心荡开扫过背景。
    尺寸/圆心由 JS 在触发时按封面几何设置；扩散动画走合成器（scale+opacity） */
 .rhythm-ripple {

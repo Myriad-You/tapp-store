@@ -270,9 +270,8 @@ var pageState = {
   autoScrollEnabled: true, // 自动滚动开关（点击歌词跳转时临时禁用）
   unsubscribe: null,
   unsubscribeProgress: null,
-  // 背景动画状态
+  // 背景动画状态（纯环境漂移，与节拍无关）
   bgAnimationFrame: null,
-  beatIntensity: 0,
   bgPhase: 0,
   // 统一动画调度器配置
   animConfig: {
@@ -3434,8 +3433,6 @@ function bindControls() {
 // 动态背景动画
 // ========================================
 
-// （原本地节拍检测已由节奏引擎 rhythm.groove/density 取代）
-
 // 检测是否为移动端（全局统一缓存）
 var isMobileDevice = null;
 var lastWindowWidth = 0;
@@ -3580,9 +3577,8 @@ var rhythm = {
   lastBeatT: 0,      // 常规节拍冷却
   beats: [],         // 4s 窗口内的节拍时间戳（估算节奏密度）
   density: 0,        // 节奏密度 0~1（≈2.5 拍/秒 → 1）
-  groove: 0,         // 节奏包络：每拍冲击、按密度决定衰减快慢 → 驱动背景震动
   mood: 0,           // 情绪值 0(缓和)~1(激烈)：绝对 MIR 特征回归的 arousal（唤醒度），
-                     // 决定视觉的「性格」——涟漪快慢、Aurora 节奏、光呼吸深浅
+                     // 决定视觉的「性格」——涟漪快慢、Aurora 节奏
   lowRate: 0,        // 低能量率（安静帧占比 EMA）：抒情歌动态呼吸大 → 高
   warm: 0,           // 预热计数：慢均线未稳定前不做转折判定（防开场误触发）
   dropAng: 0,        // 雨滴落点相位（黄金角步进，按拍序绕屏规律行进）
@@ -3680,26 +3676,22 @@ function rhythmTick(bands, ts) {
   var sigma = Math.sqrt(rhythm.fluxVar) || 0.001;
 
   // 三层节奏响应：
-  //  常规节拍（低门槛）：groove 冲击 + 小雨滴 —— 逐拍贴合，规律感的来源
+  //  常规节拍（低门槛）：密度采样 + 小雨滴 —— 逐拍贴合，规律感的来源
   //  重音（高门槛）：更大更亮的雨滴
   //  转折（下方）：中心大波
   var isBeat = flux > rhythm.fluxAvg + 1.1 * sigma && flux > 0.1;
   // live 重音门槛提高（2.8σ + 绝对下限 0.3）：明确的强调才算，
   // 稍微重一点的字不触发；有网格时重音完全交给离线标注
   var isAccent = flux > rhythm.fluxAvg + 2.8 * sigma && flux > 0.3;
-  // 节拍网格存在时，常规拍的 groove/雨滴由 gridTick 精确踩拍接管
+  // 节拍网格存在时，常规拍的密度/雨滴由 gridTick 精确踩拍接管
   var gridActive = beatGrid.beats !== null;
 
   if (isBeat && !gridActive) {
-    // groove 冲击（背景震动的能量源）
-    rhythm.groove = Math.min(1, rhythm.groove + 0.4 + Math.min(0.5, flux));
     rhythm.beats.push(ts);
   }
   // 节奏密度：4s 窗口内的拍数（≈2.5 拍/秒 → 1）
   while (rhythm.beats.length > 0 && ts - rhythm.beats[0] > 4000) rhythm.beats.shift();
   rhythm.density += (Math.min(1, rhythm.beats.length / 10) - rhythm.density) * 0.1;
-  // groove 衰减：节奏紧凑 → 快衰减（弹得脆）；缓和 → 慢衰减（绵软地涌）
-  rhythm.groove *= Math.exp(-(1.8 + rhythm.density * 4.2) * 0.066);
 
   // ---- 情绪值（arousal 回归，Tzanetakis & Cook 2002 / Yang et al. 2008）----
   // 关键：全部用绝对特征。自适应阈值派生的量（如 density）会把不同歌自动拉平，
@@ -3818,10 +3810,9 @@ function gridTick() {
   if (i >= b.length || (i > 0 && pos < b[i - 1] - 1)) i = 0;
   // 前进跳过已错过的拍（>80ms 视为错过，不补发）
   while (i < b.length && b[i] < pos - 0.08) i++;
-  // 到拍：groove 冲击 + 雨滴（离线标注的重音拍 → 重音波）
+  // 到拍：密度采样 + 雨滴（离线标注的重音拍 → 重音波）
   if (i < b.length && b[i] <= pos + 0.017) {
     var isAcc = !!(beatGrid.accents && beatGrid.accents[i]);
-    rhythm.groove = Math.min(1, rhythm.groove + (isAcc ? 0.7 : 0.45) + rhythm.mood * 0.2);
     rhythm.beats.push(nowMs());
     if (shouldAnimate()) {
       if (isAcc) {
@@ -3841,7 +3832,7 @@ function gridTick() {
 
 var eqLastUpdate = 0;
 var EQ_INTERVAL = 66; // ~15fps 数据轮询
-// 防崩溃壳：eqTick 驱动全部视觉效果（aurora/涟漪/光呼吸/网格踩拍/间奏点/自愈），
+// 防崩溃壳：eqTick 驱动全部视觉效果（aurora/涟漪/网格踩拍/间奏点/自愈），
 // 任何一帧异常若不捕获，循环静默死亡且句柄残留 → ensureEqLoop 永远无法重启 →
 // 所有效果永久失效。异常只丢当帧并记录，循环必须活着。
 function eqTick(ts) {
@@ -3926,37 +3917,22 @@ function eqTickBody(ts) {
   gridTick();
   // Aurora 渲染每帧运行（60fps 包络 + 公转），数据按 15fps 更新
   renderAurora(ts);
-  renderRhythmGlow();
 }
 
-// 光呼吸：透明度 = groove × 密度增益（量化去重，只在变化时写）
-var glowState = { el: null, last: -1 };
-function renderRhythmGlow() {
-  if (!shouldAnimate()) return;
-  if (!glowState.el) {
-    glowState.el = $('rhythm-glow');
-    if (!glowState.el) return;
-  }
-  var o = Math.round(rhythm.groove * (0.04 + rhythm.density * 0.06 + rhythm.mood * 0.07) * 1000);
-  if (o !== glowState.last) {
-    glowState.last = o;
-    glowState.el.style.opacity = (o / 1000).toFixed(3);
-  }
-}
 function ensureEqLoop() {
   if (pageState.status && pageState.status.isPlaying && !pageState.eqFrame) {
     pageState.eqFrame = requestAnimationFrame(eqTick);
   }
 }
 
-// 启动背景动画
+// 启动背景动画（纯环境漂移：慢速 translate/rotate，不跟随节拍）
 function startBackgroundAnimation() {
   // 检查动画级别
   if (!shouldAnimate()) {
     return;
   }
   
-  // 移动端禁用背景旋律动画（节省性能）
+  // 移动端禁用背景漂移（节省性能）
   if (checkIsMobile()) {
     return;
   }
@@ -3972,30 +3948,16 @@ function startBackgroundAnimation() {
     var isPlaying = pageState.status && pageState.status.isPlaying;
     
     if (!isPlaying) {
-      // 暂停时缓慢重置动画
-      pageState.beatIntensity *= 0.95;
-      if (pageState.beatIntensity < 0.01) {
-        pageState.beatIntensity = 0;
-        applyBackgroundTransform(0, pageState.bgPhase);
-        pageState.bgAnimationFrame = null;
-        return;
-      }
-      applyBackgroundTransform(pageState.beatIntensity, pageState.bgPhase);
-      pageState.bgAnimationFrame = requestAnimationFrame(updateBackground);
+      // 暂停时定格在当前环境相位
+      applyBackgroundTransform(pageState.bgPhase);
+      pageState.bgAnimationFrame = null;
       return;
     }
     
     if (timestamp - lastUpdateTime >= UPDATE_INTERVAL) {
       lastUpdateTime = timestamp;
       pageState.bgPhase += 0.008; // 缓慢相位变化
-
-      // 背景震动强度 = 节奏引擎的 groove 包络 × 密度增益：
-      // 缓和的歌 → 密度低 → 幅度小、衰减慢（轻轻地涌）；
-      // 紧凑的歌 → 密度高 → 幅度大、衰减快（跟着拍点弹）
-      // （groove/density 由 eq 循环的 15fps 频谱轮询驱动，这里不再重复
-      //  调 getSpectrum——此前每秒 ~20 次桥接往返取回的 energy 从未被使用）
-      pageState.beatIntensity = rhythm.groove * (0.45 + rhythm.density * 0.75);
-      applyBackgroundTransform(pageState.beatIntensity, pageState.bgPhase);
+      applyBackgroundTransform(pageState.bgPhase);
     }
     
     pageState.bgAnimationFrame = requestAnimationFrame(updateBackground);
@@ -4007,15 +3969,12 @@ function startBackgroundAnimation() {
 // 应用背景变换 - 使用缓存的元素引用
 var cachedBgArtworkRef = null;
 
-function applyBackgroundTransform(beatIntensity, phase) {
+function applyBackgroundTransform(phase) {
   if (!cachedBgArtworkRef) cachedBgArtworkRef = $('bg-artwork');
   if (!cachedBgArtworkRef) return;
   
-  // 节拍只做极轻的缩放呼吸（1.1 ~ 1.14），不注入位移/旋转抖动——
-  // 晃动读作故障，呼吸才读作音乐；节奏的主表达交给 rhythm-glow 光层
-  var scale = 1.1 + beatIntensity * 0.04;
-
-  // 缓慢位移与旋转（纯环境漂移，与节拍无关）
+  // 固定轻微放大 + 缓慢位移/旋转（纯环境漂移，与节拍无关）
+  var scale = 1.1;
   var sinPhase = Math.sin(phase);
   var cosPhase = Math.cos(phase * 0.7);
   var translateX = sinPhase * 15;
@@ -4024,7 +3983,7 @@ function applyBackgroundTransform(beatIntensity, phase) {
   
   // 应用变换 - 使用位运算快速取整避免toFixed开销
   cachedBgArtworkRef.style.transform = 
-    'scale(' + ((scale * 1000 | 0) / 1000) + ') ' +
+    'scale(' + scale + ') ' +
     'translate(' + (translateX | 0) + 'px,' + (translateY | 0) + 'px) ' +
     'rotate(' + ((rotate * 100 | 0) / 100) + 'deg)';
 }
