@@ -21,6 +21,7 @@ var i18n = {
     lyrics: '歌词',
     noLyrics: '暂无歌词',
     translate: '翻译',
+    visualFx: '动效',
     searchPlaceholder: '搜索歌曲...',
     vip: 'VIP',
     trial: '试听',
@@ -51,6 +52,7 @@ var i18n = {
     lyrics: 'Lyrics',
     noLyrics: 'No Lyrics',
     translate: 'Translate',
+    visualFx: 'Effects',
     searchPlaceholder: 'Search songs...',
     vip: 'VIP',
     trial: 'Trial',
@@ -81,6 +83,7 @@ var i18n = {
     lyrics: '歌詞',
     noLyrics: '歌詞なし',
     translate: '翻訳',
+    visualFx: '演出',
     searchPlaceholder: '曲を検索...',
     vip: 'VIP',
     trial: '試聴',
@@ -243,9 +246,15 @@ async function initAnimationConfig() {
   }
 }
 
-// 检查是否应该执行动画
+// 检查是否应该执行动画（系统级外层门控）
 function shouldAnimate() {
   return pageState.animConfig.shouldAnimate && pageState.animConfig.level !== 'none';
+}
+
+// 动态视觉效果是否启用：用户开关 ∧ 系统 shouldAnimate
+// 列表 EQ（updateListEq）不经此门控；歌词/UI 微动画亦不受影响
+function visualFxEnabled() {
+  return pageState.visualFxOn && shouldAnimate();
 }
 
 // ========================================
@@ -264,6 +273,7 @@ var pageState = {
   hasTranslation: false,   // 当前歌曲是否有翻译数据
   transLang: '',           // 翻译语言（'zh' | ''）
   transOn: false,          // 翻译显示开关（持久化于 Tapp.storage）
+  visualFxOn: true,        // 动态视觉效果开关（持久化于 Tapp.storage，默认开）
   lyricWordFrame: null,    // 逐字高亮 rAF 句柄
   lastKaraokeLine: -1,     // 上一次做逐字填充的行索引
   eqFrame: null,           // 列表均衡器频谱 rAF 句柄
@@ -518,6 +528,62 @@ function setLyricTransOn(on) {
   // 焦点目标可能未变但其他行的 y 全变了：无条件启动波浪把行送到新位
   if (shouldAnimate()) startLyricWave();
   else snapLyricItems();
+}
+
+// ========================================
+// 动态视觉效果开关（Aurora / 涟漪 / 背景漂移）
+// 列表 EQ 与歌词/UI 微动画不经此开关
+// ========================================
+
+function syncVisualFxUI() {
+  var btn = $('visual-fx-btn');
+  if (btn) {
+    btn.classList.toggle('active', pageState.visualFxOn);
+    btn.title = t('visualFx');
+    btn.setAttribute('aria-label', t('visualFx'));
+    btn.setAttribute('aria-pressed', pageState.visualFxOn ? 'true' : 'false');
+  }
+  document.documentElement.classList.toggle('visual-fx-off', !pageState.visualFxOn);
+}
+
+// 清除进行中的节奏涟漪动画
+function clearRhythmRipples() {
+  var els = document.getElementsByClassName('rhythm-ripple');
+  for (var i = 0; i < els.length; i++) {
+    els[i].classList.remove('run', 'big', 'accent', 'soft');
+  }
+}
+
+// 收敛 Aurora 包络与内联样式（关闭时冻结/熄灭）
+function dimAurora() {
+  aurora.env = [0, 0, 0];
+  aurora.lastOp = [NaN, NaN, NaN];
+  if (!aurora.el) {
+    aurora.el = $('artwork-aurora');
+    if (aurora.el) aurora.blobs = aurora.el.getElementsByClassName('aurora-blob');
+  }
+  if (aurora.blobs) {
+    for (var i = 0; i < aurora.blobs.length; i++) {
+      aurora.blobs[i].style.opacity = '0';
+    }
+  }
+}
+
+function setVisualFxOn(on) {
+  var next = !!on;
+  var prev = pageState.visualFxOn;
+  pageState.visualFxOn = next;
+  syncVisualFxUI();
+  if (prev === next) return;
+  if (!next) {
+    // 播放中途关闭：停背景漂移、清涟漪、熄 Aurora
+    stopBackgroundAnimation();
+    clearRhythmRipples();
+    dimAurora();
+  } else if (pageState.status && pageState.status.isPlaying && shouldAnimate()) {
+    // 播放中途打开：重启背景漂移（若系统允许动画）
+    startBackgroundAnimation();
+  }
 }
 
 function startLyricWave() {
@@ -3024,6 +3090,17 @@ function bindControls() {
       }
     });
   }
+
+  // 动态视觉效果开关（常显，与翻译按钮同组）
+  var visualFxBtn = document.getElementById('visual-fx-btn');
+  if (visualFxBtn) {
+    addClickHandler(visualFxBtn, function() {
+      setVisualFxOn(!pageState.visualFxOn);
+      if (Tapp.storage && Tapp.storage.set) {
+        Tapp.storage.set('visualFxOn', pageState.visualFxOn).catch(function() {});
+      }
+    });
+  }
   
   // 窗口大小变化时重置状态 - 使用节流（统一处理所有 resize 逻辑）
   var resizeTimeout = null;
@@ -3506,7 +3583,7 @@ var aurora = {
 };
 
 function renderAurora(ts) {
-  if (!shouldAnimate()) return;
+  if (!visualFxEnabled()) return;
   if (!aurora.el) {
     aurora.el = $('artwork-aurora');
     if (!aurora.el) return;
@@ -3591,6 +3668,7 @@ var rhythm = {
 //  'accent' 重音：大而亮的双波前（一眼区别于常规拍）
 //  'shift'  转折：中心全屏大波 + 内部微光（稀有仪式感）
 function fireRipple(strength, tier) {
+  if (!visualFxEnabled()) return;
   if (!rhythm.pool) {
     var els = document.getElementsByClassName('rhythm-ripple');
     if (!els || els.length === 0) return;
@@ -3651,7 +3729,7 @@ function fireRipple(strength, tier) {
 
 // 节奏检测（15fps 数据块调用）
 function rhythmTick(bands, ts) {
-  if (!bands || bands.length < 8 || !shouldAnimate()) return;
+  if (!bands || bands.length < 8 || !visualFxEnabled()) return;
   var i;
   var energy = 0;
   for (i = 0; i < 8; i++) energy += bands[i];
@@ -3814,7 +3892,7 @@ function gridTick() {
   if (i < b.length && b[i] <= pos + 0.017) {
     var isAcc = !!(beatGrid.accents && beatGrid.accents[i]);
     rhythm.beats.push(nowMs());
-    if (shouldAnimate()) {
+    if (visualFxEnabled()) {
       if (isAcc) {
         fireRipple(0.55 + rhythm.mood * 0.3 + Math.random() * 0.15, 'accent');
       } else {
@@ -3890,24 +3968,25 @@ function eqTickBody(ts) {
       }
     }
     // offsetParent 为 null 说明被 display:none 祖先隐藏，跳过对应消费方
+    // needEq 与动效开关无关（列表 EQ 始终可驱动）；Aurora/节奏频谱仅在 FX 开时需要
     var eq = getActiveEqEl();
     var needEq = !!(eq && eq.offsetParent !== null);
-    var needAurora = !!(aurora.el
-      ? aurora.el.offsetParent !== null
-      : $('artwork-aurora')) && shouldAnimate();
-    if (needEq || needAurora) {
+    var needFx = visualFxEnabled();
+    if (needEq || needFx) {
       Tapp.media.getSpectrum().then(function(r) {
         var s = (r && r.spectrum && r.spectrum.length >= 4) ? r.spectrum : [0, 0, 0, 0];
         if (needEq) updateListEq(s, eq);
-        // Aurora 数据样本：优先原始 8 频段；旧前端无 bands 时由 4 柱数据降级映射
-        if (r && r.bands && r.bands.length >= 8) {
-          aurora.bands = r.bands;
-        } else {
-          // 降级：s 为重排 4 柱（低-高-高-低），粗略映射三段
-          aurora.bands = [s[0], s[0], 0, s[2], s[2], s[1], s[3], 0];
+        if (needFx) {
+          // Aurora 数据样本：优先原始 8 频段；旧前端无 bands 时由 4 柱数据降级映射
+          if (r && r.bands && r.bands.length >= 8) {
+            aurora.bands = r.bands;
+          } else {
+            // 降级：s 为重排 4 柱（低-高-高-低），粗略映射三段
+            aurora.bands = [s[0], s[0], 0, s[2], s[2], s[1], s[3], 0];
+          }
+          // 节奏事件：重音/转折检测（触发即交给 CSS 合成器动画，无每帧渲染）
+          rhythmTick(aurora.bands, ts);
         }
-        // 节奏事件：重音/转折检测（触发即交给 CSS 合成器动画，无每帧渲染）
-        rhythmTick(aurora.bands, ts);
       }).catch(function(e) {
         logTickError('spectrumPoll', e);
       });
@@ -3915,7 +3994,7 @@ function eqTickBody(ts) {
   }
   // 网格跟拍逐帧比对（60fps 精度踩拍）
   gridTick();
-  // Aurora 渲染每帧运行（60fps 包络 + 公转），数据按 15fps 更新
+  // Aurora 渲染每帧运行（60fps 包络 + 公转），数据按 15fps 更新；内部再经 visualFxEnabled 门控
   renderAurora(ts);
 }
 
@@ -3927,8 +4006,8 @@ function ensureEqLoop() {
 
 // 启动背景动画（纯环境漂移：慢速 translate/rotate，不跟随节拍）
 function startBackgroundAnimation() {
-  // 检查动画级别
-  if (!shouldAnimate()) {
+  // 用户动效开关 ∧ 系统动画级别
+  if (!visualFxEnabled()) {
     return;
   }
   
@@ -4055,10 +4134,17 @@ function cleanup() {
         
         await initPage();
 
-        // 恢复翻译开关偏好（持久化；storage 权限已在 manifest 声明）
+        // 同步动效按钮文案/高亮（默认开；storage 再覆盖）
+        syncVisualFxUI();
+
+        // 恢复翻译 / 动效开关偏好（持久化；storage 权限已在 manifest 声明）
         if (Tapp.storage && Tapp.storage.get) {
           Tapp.storage.get('lyricTransOn').then(function(v) {
             if (v === true || v === 'true') setLyricTransOn(true);
+          }).catch(function() {});
+          Tapp.storage.get('visualFxOn').then(function(v) {
+            // 默认 true；仅显式 false 时关闭
+            if (v === false || v === 'false') setVisualFxOn(false);
           }).catch(function() {});
         }
 
@@ -4066,6 +4152,8 @@ function cleanup() {
         Tapp.ui.onLocaleChange(function(locale) {
           setLocale(normalizeLocale(locale));
           initPage();
+          syncVisualFxUI();
+          syncLyricTransUI();
         });
 
         // 监听主题变化（深色/浅色模式切换）

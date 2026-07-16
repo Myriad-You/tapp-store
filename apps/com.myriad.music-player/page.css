@@ -758,16 +758,25 @@ html, body {
   opacity: 1;
 }
 
-/* 翻译开关：歌词面板右下角浮钮（放在渐隐遮罩外层，不被 mask 吃掉） */
+/* 歌词面板右下角浮钮组：动效 + 翻译（放在渐隐遮罩外层，不被 mask 吃掉） */
 .panel-lyrics {
   position: relative;
 }
 
-.lyric-trans-btn {
+.lyrics-corner-btns {
   position: absolute;
   right: 28px;
   bottom: 24px;
   z-index: 5;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.lyric-corner-btn {
+  pointer-events: auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -788,28 +797,40 @@ html, body {
   touch-action: manipulation;
 }
 
-.lyric-trans-btn svg {
+.lyric-corner-btn svg {
   width: 18px;
   height: 18px;
   pointer-events: none;
 }
 
-.lyric-trans-btn:hover {
+.lyric-corner-btn:hover {
   background: color-mix(in srgb, var(--text-primary) 14%, transparent);
   color: var(--text-primary);
 }
 
-.lyric-trans-btn:active {
+.lyric-corner-btn:active {
   transform: scale(0.92);
 }
 
-.lyric-trans-btn.active {
+.lyric-corner-btn.active {
   background: linear-gradient(135deg, var(--music-primary), var(--music-secondary));
   color: #fff;
 }
 
-.lyric-trans-btn[hidden] {
+.lyric-corner-btn[hidden] {
   display: none;
+}
+
+/* 动效关闭：冻结/隐藏 Aurora 与涟漪；列表 EQ 与静态封面模糊不受影响 */
+:root.visual-fx-off .artwork-aurora {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.35s ease, visibility 0s linear 0.35s;
+}
+
+:root.visual-fx-off .rhythm-ripple {
+  opacity: 0 !important;
+  animation: none !important;
 }
 
 /* 多字符 token 的字母容器：作为整体参与换行，字母不被从中间拆断。
@@ -1962,12 +1983,16 @@ html, body {
     font-weight: 600;
   }
 
-  /* 移动端翻译开关：44px 触控热区 + 避开底部安全区 */
-  .lyric-trans-btn {
-    width: 44px;
-    height: 44px;
+  /* 移动端右下角浮钮组：44px 触控热区 + 避开底部安全区 */
+  .lyrics-corner-btns {
     right: 20px;
     bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    gap: 12px;
+  }
+
+  .lyric-corner-btn {
+    width: 44px;
+    height: 44px;
   }
 
   .lyric-interlude {

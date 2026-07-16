@@ -74,10 +74,20 @@
         <div class="lyrics-scroll" id="lyrics-container">
           <div class="lyrics-empty" id="lyrics-empty">暂无歌词</div>
         </div>
-        <!-- 翻译开关（仅当前歌曲有用户语言的翻译时显示） -->
-        <button class="lyric-trans-btn" id="lyric-trans-btn" hidden aria-label="翻译" aria-pressed="false" title="翻译">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>
-        </button>
+        <!-- 右下角浮钮组：动效开关（常显）+ 翻译开关（有翻译时显示） -->
+        <div class="lyrics-corner-btns" id="lyrics-corner-btns">
+          <button class="lyric-corner-btn active" id="visual-fx-btn" aria-label="动效" aria-pressed="true" title="动效">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2.2l1.05 3.15L16.2 6.4l-3.15 1.05L12 10.6l-1.05-3.15L7.8 6.4l3.15-1.05L12 2.2z"/>
+              <path d="M18.2 11.2l.72 2.16 2.16.72-2.16.72-.72 2.16-.72-2.16-2.16-.72 2.16-.72.72-2.16z"/>
+              <path d="M6.3 13.4l.62 1.86 1.86.62-1.86.62-.62 1.86-.62-1.86-1.86-.62 1.86-.62.62-1.86z"/>
+              <path d="M5 5.5l.45 1.35L6.8 7.3l-1.35.45L5 9.1l-.45-1.35L3.2 7.3l1.35-.45L5 5.5z" opacity="0.7"/>
+            </svg>
+          </button>
+          <button class="lyric-corner-btn lyric-trans-btn" id="lyric-trans-btn" hidden aria-label="翻译" aria-pressed="false" title="翻译">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>
+          </button>
+        </div>
       </section>
       
       <!-- 播放列表面板 -->
