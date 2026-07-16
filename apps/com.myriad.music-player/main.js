@@ -767,6 +767,77 @@ function bindLyricManualScroll(container) {
   });
 }
 
+// 间奏空窗判定：歌词至少保持 MIN_LINE_HOLD 秒可见，避免脏 yrc 的过短
+// duration 把本句提前踢入「停顿点」；空窗仍须 > INTERLUDE_MIN_GAP 才插呼吸点
+var MIN_LINE_HOLD = 2.2;
+var INTERLUDE_MIN_GAP = 6;
+
+// 仅用于间奏 gap 插入：估算本句「唱完」时刻。不改卡拉 OK 填色时间轴。
+// 优先字级 end → 行级 duration → 相对 nextStart 的兜底；再套 min-hold / 钳位。
+function computeLineEnd(i, lyrics, verbatim) {
+  var line = lyrics[i];
+  var next = lyrics[i + 1];
+  if (!line || !next) return null;
+
+  var lineStart = (typeof line.time === 'number' && isFinite(line.time))
+    ? line.time
+    : 0;
+  var nextStart = (typeof next.time === 'number' && isFinite(next.time))
+    ? next.time
+    : NaN;
+  if (!isFinite(nextStart)) return null;
+
+  // 两句间隔本身短于 min-hold：永不插入间奏
+  if (nextStart - lineStart < MIN_LINE_HOLD) return null;
+
+  var rawEnd = NaN;
+  var v = verbatim && verbatim[i];
+
+  // 1) 字级 end：max(word.start|time + duration)
+  if (v && v.words && v.words.length > 0) {
+    var maxEnd = -Infinity;
+    for (var w = 0; w < v.words.length; w++) {
+      var word = v.words[w];
+      if (!word) continue;
+      var ws = (typeof word.start === 'number' && isFinite(word.start))
+        ? word.start
+        : (typeof word.time === 'number' && isFinite(word.time) ? word.time : NaN);
+      if (!isFinite(ws)) continue;
+      var wd = (typeof word.duration === 'number' && isFinite(word.duration) && word.duration > 0)
+        ? word.duration
+        : 0;
+      var we = ws + wd;
+      if (we > maxEnd) maxEnd = we;
+    }
+    if (isFinite(maxEnd) && maxEnd > -Infinity) rawEnd = maxEnd;
+  }
+
+  // 2) 行级 duration（存在且正）
+  if (!isFinite(rawEnd) && v && typeof v.duration === 'number' && isFinite(v.duration) && v.duration > 0) {
+    var vTime = (typeof v.time === 'number' && isFinite(v.time)) ? v.time : lineStart;
+    rawEnd = vTime + v.duration;
+  }
+
+  // 3) 无逐字 / 无 duration：相对 nextStart 估算（旧 time+3 会无视 next 与 min-hold）
+  if (!isFinite(rawEnd)) {
+    rawEnd = lineStart + Math.min(3, Math.max(MIN_LINE_HOLD, (nextStart - lineStart) * 0.5));
+  }
+
+  // 脏数据：end 离谱（含 ms 误当 s、越过 next 过多）→ 改用保守估算
+  if (!isFinite(rawEnd) || rawEnd <= 0 ||
+      rawEnd > nextStart + 1 || rawEnd < lineStart - 0.5) {
+    rawEnd = lineStart + Math.min(3, Math.max(MIN_LINE_HOLD, (nextStart - lineStart) * 0.5));
+    if (!isFinite(rawEnd) || rawEnd >= nextStart) return null;
+  }
+
+  // 强制至少 hold 满 MIN_LINE_HOLD（next 允许时），再钳到 nextStart
+  var effectiveEnd = Math.max(rawEnd, lineStart + MIN_LINE_HOLD);
+  effectiveEnd = Math.min(effectiveEnd, nextStart);
+
+  if (nextStart - effectiveEnd > INTERLUDE_MIN_GAP) return effectiveEnd;
+  return null;
+}
+
 // 间奏开始：取消上一句的聚焦（Apple 行为——间奏期间没有「当前句」，
 // 上一句降级为已唱过的暗态，高亮与放大都撤掉）
 function demoteActiveLyricLineForInterlude() {
@@ -775,6 +846,11 @@ function demoteActiveLyricLineForInterlude() {
   var activeLine = container.querySelector('.lyric-line.active');
   if (!activeLine) return;
   var idx = parseInt(activeLine.getAttribute('data-index'), 10);
+  // 兜底：本句显示未满 MIN_LINE_HOLD 时不降级（防脏 timeline 过早进间奏）
+  if (idx >= 0 && pageState.lyrics[idx] &&
+      typeof pageState.lyrics[idx].time === 'number') {
+    if (getLyricPosition() - pageState.lyrics[idx].time < MIN_LINE_HOLD) return;
+  }
   activeLine.className = 'lyric-line passed near-1';
   var k = findLyricItemK(idx);
   if (k >= 0) {
@@ -959,13 +1035,12 @@ function buildLyricDom(container, lyrics, currentIndex, isKaraoke) {
       targetScale: i === currentIndex ? 1 : LYRIC_SCALE_INACTIVE, delayUntil: 0,
     });
 
-    // 间奏：本行唱完到下一行开始空窗 > 6s → 呼吸点（有逐字时长则精确）
+    // 间奏：本行有效唱完到下一行开始空窗足够大 → 呼吸点
+    // computeLineEnd 处理脏 yrc（过短 duration / 字级 end）与 min-hold
     var next = lyrics[i + 1];
     if (next) {
-      var lineEnd = (verbatim[i] && verbatim[i].duration)
-        ? verbatim[i].time + verbatim[i].duration
-        : lyrics[i].time + 3;
-      if (next.time - lineEnd > 6) pushDots(lineEnd, next.time);
+      var lineEnd = computeLineEnd(i, lyrics, verbatim);
+      if (lineEnd != null) pushDots(lineEnd, next.time);
     }
   }
 

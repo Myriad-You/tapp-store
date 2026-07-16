@@ -782,9 +782,9 @@ html, body {
   bottom: 24px;
   z-index: 5;
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
   pointer-events: none;
 }
 
@@ -1996,11 +1996,13 @@ html, body {
     font-weight: 600;
   }
 
-  /* 移动端右下角浮钮组：44px 触控热区 + 避开底部安全区 */
+  /* 移动端右下角浮钮组：44px 触控热区 + 避开底部安全区（竖排与桌面一致） */
   .lyrics-corner-btns {
     right: 20px;
     bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-    gap: 12px;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
   }
 
   .lyric-corner-btn {
