@@ -233,12 +233,18 @@ async function initAnimationConfig() {
       pageState.animConfig.level = level;
       pageState.animConfig.shouldAnimate = level !== 'none';
       
-      // 根据新级别调整动画
-      if (level === 'none') {
+      // 根据新级别调整动画（light：无背景漂移；none：全停）
+      if (level === 'none' || level === 'light') {
         stopBackgroundAnimation();
       } else if (pageState.status && pageState.status.isPlaying) {
         startBackgroundAnimation();
       }
+      if (level === 'none' || level === 'light') {
+        clearRhythmRipples();
+      }
+      syncFxCompositing();
+      // 帧率策略随 level 变化，立即重调度
+      if (pageState.status && pageState.status.isPlaying) restartEqLoop();
     });
   } catch (e) {
     // 使用默认配置
@@ -255,6 +261,19 @@ function shouldAnimate() {
 // 列表 EQ（updateListEq）不经此门控；歌词/UI 微动画亦不受影响
 function visualFxEnabled() {
   return pageState.visualFxOn && shouldAnimate();
+}
+
+// 系统动画级别为 light：降级重视觉（涟漪/背景漂移关闭，Aurora 简化）
+// 列表 EQ 与 visualFx 开关语义不变
+function isAnimLight() {
+  return pageState.animConfig.level === 'light';
+}
+
+// 播放中 + FX 开时挂 will-change 合成层；暂停/关 FX 时卸下以释放层
+function syncFxCompositing() {
+  var on = !!(pageState.visualFxOn && shouldAnimate() &&
+    pageState.status && pageState.status.isPlaying);
+  document.documentElement.classList.toggle('fx-compositing', on);
 }
 
 // ========================================
@@ -276,12 +295,13 @@ var pageState = {
   visualFxOn: true,        // 动态视觉效果开关（持久化于 Tapp.storage，默认开）
   lyricWordFrame: null,    // 逐字高亮 rAF 句柄
   lastKaraokeLine: -1,     // 上一次做逐字填充的行索引
-  eqFrame: null,           // 列表均衡器频谱 rAF 句柄
+  eqFrame: null,           // 视觉/EQ 循环 rAF 句柄
+  eqTimer: null,           // 低帧率维护/轮询 setTimeout 句柄（与 eqFrame 互斥）
   autoScrollEnabled: true, // 自动滚动开关（点击歌词跳转时临时禁用）
   unsubscribe: null,
   unsubscribeProgress: null,
-  // 背景动画状态（纯环境漂移，与节拍无关）
-  bgAnimationFrame: null,
+  // 背景漂移状态（由 eqTick 低帧率驱动，无独立 rAF）
+  bgDriftOn: false,        // 是否应在 eqTick 中推进背景相位
   bgPhase: 0,
   // 统一动画调度器配置
   animConfig: {
@@ -581,9 +601,13 @@ function setVisualFxOn(on) {
     clearRhythmRipples();
     dimAurora();
   } else if (pageState.status && pageState.status.isPlaying && shouldAnimate()) {
-    // 播放中途打开：重启背景漂移（若系统允许动画）
+    // 播放中途打开：重同步拍点索引（关 FX 时未逐帧 gridTick）+ 重启背景漂移
+    resyncBeatGridIdx();
     startBackgroundAnimation();
   }
+  syncFxCompositing();
+  // 调度模式随 FX 切换（60fps ↔ 低帧率维护），立即取消旧句柄并重入
+  if (pageState.status && pageState.status.isPlaying) restartEqLoop();
 }
 
 function startLyricWave() {
@@ -2610,11 +2634,14 @@ function updatePlayerUI(status) {
     }
   }
   
-  // 根据播放状态控制背景动画
+  // 根据播放状态控制背景漂移意图（实际推进在 eqTick）
   if (status.isPlaying) {
     startBackgroundAnimation();
+  } else {
+    // 暂停：冻结当前相位（不复位 transform）；卸 will-change
+    pageState.bgDriftOn = false;
   }
-  // 注意：暂停时动画会自动缓慢停止，不需要立即停止
+  syncFxCompositing();
 }
 
 // 歌词提前量（秒）- 补偿各种延迟
@@ -2913,13 +2940,16 @@ async function initPage() {
   // 页面可见性优化 - 不可见时暂停非关键动画（只绑一次）
   if (firstBind) document.addEventListener('visibilitychange', function() {
     if (document.hidden) {
-      // 页面不可见，暂停背景动画
+      // 页面不可见：停背景漂移意图 + 卸合成层提示
       stopBackgroundAnimation();
+      document.documentElement.classList.remove('fx-compositing');
     } else {
       // 页面恢复可见
       if (pageState.status && pageState.status.isPlaying && shouldAnimate()) {
         startBackgroundAnimation();
+        ensureEqLoop();
       }
+      syncFxCompositing();
     }
   }, { passive: true });
 }
@@ -3547,6 +3577,10 @@ function getActiveEqEl() {
   return c.eq;
 }
 
+// 列表 EQ 高度写回去重：量化到整数 % 后仅在变化时写 style
+var listEqLastEl = null;
+var listEqLastQ = [-1, -1, -1];
+
 // 用真实频谱驱动「列表当前播放项」的均衡器（3 根柱：低/中高/高，居中强调）
 // 加 .live 类禁用 CSS keyframe，改由 JS 设高度
 function updateListEq(spectrum, eq) {
@@ -3554,13 +3588,20 @@ function updateListEq(spectrum, eq) {
   var bars = eq.getElementsByTagName('span');
   if (bars.length < 3) return false;
   if (!eq.classList.contains('live')) eq.classList.add('live');
+  if (eq !== listEqLastEl) {
+    listEqLastEl = eq;
+    listEqLastQ[0] = listEqLastQ[1] = listEqLastQ[2] = -1;
+  }
   var v0 = spectrum[0] || 0;
   var v1 = Math.max(spectrum[1] || 0, spectrum[2] || 0);
   var v2 = spectrum[3] || 0;
-  // 平方增强对比 + 25%~100% 区间
-  bars[0].style.height = (25 + v0 * v0 * 75) + '%';
-  bars[1].style.height = (25 + v1 * v1 * 75) + '%';
-  bars[2].style.height = (25 + v2 * v2 * 75) + '%';
+  // 平方增强对比 + 25%~100% 区间，量化到整数 % 去重
+  var h0 = (25 + v0 * v0 * 75 + 0.5) | 0;
+  var h1 = (25 + v1 * v1 * 75 + 0.5) | 0;
+  var h2 = (25 + v2 * v2 * 75 + 0.5) | 0;
+  if (h0 !== listEqLastQ[0]) { listEqLastQ[0] = h0; bars[0].style.height = h0 + '%'; }
+  if (h1 !== listEqLastQ[1]) { listEqLastQ[1] = h1; bars[1].style.height = h1 + '%'; }
+  if (h2 !== listEqLastQ[2]) { listEqLastQ[2] = h2; bars[2].style.height = h2 + '%'; }
   return true;
 }
 
@@ -3583,18 +3624,23 @@ var aurora = {
 };
 
 function renderAurora(ts) {
+  // 调用方应已在 eqTickBody 用 visualFxEnabled 门控；此处双保险 + 隐藏检测
   if (!visualFxEnabled()) return;
   if (!aurora.el) {
     aurora.el = $('artwork-aurora');
     if (!aurora.el) return;
     aurora.blobs = aurora.el.getElementsByClassName('aurora-blob');
   }
+  // display:none / 无布局 → offsetParent null；visibility:hidden（visual-fx-off）也跳过
   if (aurora.el.offsetParent === null || !aurora.blobs || aurora.blobs.length < 3) return;
+  if (document.documentElement.classList.contains('visual-fx-off')) return;
 
   var dt = Math.min(0.1, (ts - (aurora.lastT || ts)) / 1000);
   aurora.lastT = ts;
-  // 公转速度随情绪：缓和 → 悠悠地转；激烈 → 明显加快
-  aurora.phase += dt * (0.16 + rhythm.mood * 0.5);
+  var light = isAnimLight();
+  // light：更慢公转，降低每帧感知成本
+  var orbit = light ? 0.08 : (0.16 + rhythm.mood * 0.5);
+  aurora.phase += dt * orbit;
 
   // 频段目标：低(0-1) / 中(3-4) / 高(5-7)
   var b = aurora.bands;
@@ -3608,25 +3654,35 @@ function renderAurora(ts) {
 
   // 攻击/释放包络（经典 VU 手感：起得快、落得慢）
   // 释放随情绪：缓和 → 长余韵（光慢慢消散）；激烈 → 收得利落
-  var aAtk = 1 - Math.exp(-dt / 0.055);
-  var aRel = 1 - Math.exp(-dt / (0.5 - rhythm.mood * 0.28));
+  var aAtk = 1 - Math.exp(-dt / (light ? 0.09 : 0.055));
+  var aRel = 1 - Math.exp(-dt / (light ? 0.55 : (0.5 - rhythm.mood * 0.28)));
   for (var i = 0; i < 3; i++) {
     var e = aurora.env[i];
     var tgt = targets[i];
     aurora.env[i] = e + (tgt - e) * (tgt > e ? aAtk : aRel);
   }
 
+  // light：振幅缩小，写 transform 时量化更粗以减少合成层更新
+  var amp = light ? 0.55 : 1;
+  var scBase = light ? 0.95 : 0.9;
+  var scGain = light ? 0.18 : 0.35;
   for (i = 0; i < 3; i++) {
     var el = aurora.blobs[i];
     var e2 = aurora.env[i];
     // 各光斑不同角速度/相位，避免同步感
     var ph = aurora.phase * (1 + i * 0.37) + i * 2.1;
-    var ox = Math.cos(ph) * (4 + i * 2);
-    var oy = Math.sin(ph * 0.8) * (3 + i * 2);
-    var sc = 0.9 + e2 * 0.35;
-    el.style.transform = 'translate(' + ox.toFixed(1) + '%,' + oy.toFixed(1) + '%) scale(' + sc.toFixed(3) + ')';
+    var ox = Math.cos(ph) * (4 + i * 2) * amp;
+    var oy = Math.sin(ph * 0.8) * (3 + i * 2) * amp;
+    var sc = scBase + e2 * scGain;
+    if (light) {
+      // 粗量化 transform 字符串，减少无感变化时的 style 写入
+      el.style.transform = 'translate(' + (ox | 0) + '%,' + (oy | 0) + '%) scale(' +
+        ((sc * 100 + 0.5) | 0) / 100 + ')';
+    } else {
+      el.style.transform = 'translate(' + ox.toFixed(1) + '%,' + oy.toFixed(1) + '%) scale(' + sc.toFixed(3) + ')';
+    }
     // opacity 量化去重（公转 transform 每帧必写，opacity 只在包络变化时写）
-    var op = Math.round((0.1 + e2 * 0.5) * 1000);
+    var op = Math.round((0.1 + e2 * (light ? 0.35 : 0.5)) * 1000);
     if (op !== aurora.lastOp[i]) {
       aurora.lastOp[i] = op;
       el.style.opacity = (op / 1000).toFixed(3);
@@ -3669,6 +3725,8 @@ var rhythm = {
 //  'shift'  转折：中心全屏大波 + 内部微光（稀有仪式感）
 function fireRipple(strength, tier) {
   if (!visualFxEnabled()) return;
+  // light 级别：跳过涟漪（高成本 class/回流），保留列表 EQ 与轻量 Aurora
+  if (isAnimLight()) return;
   if (!rhythm.pool) {
     var els = document.getElementsByClassName('rhythm-ripple');
     if (!els || els.length === 0) return;
@@ -3878,7 +3936,7 @@ function loadBeatGridForTrack(track) {
   });
 }
 
-// 每帧网格跟拍（由 eqTick 驱动）
+// 每帧网格跟拍（仅 FX 开时由 eqTick 调用；关 FX 时用 resyncBeatGridIdx 在重开时对齐）
 function gridTick() {
   var b = beatGrid.beats;
   if (!b) return;
@@ -3892,39 +3950,118 @@ function gridTick() {
   if (i < b.length && b[i] <= pos + 0.017) {
     var isAcc = !!(beatGrid.accents && beatGrid.accents[i]);
     rhythm.beats.push(nowMs());
-    if (visualFxEnabled()) {
-      if (isAcc) {
-        fireRipple(0.55 + rhythm.mood * 0.3 + Math.random() * 0.15, 'accent');
-      } else {
-        // 强度取当拍的真实低频能量：鼓点有轻有重，雨滴自然有大有小
-        var hit = aurora.bands
-          ? Math.min(1, (aurora.bands[0] + aurora.bands[1]) * 0.7)
-          : 0.4;
-        fireRipple(0.1 + hit * 0.6 + Math.random() * 0.12, 'beat');
-      }
+    // 调用方已保证 visualFxEnabled；light 时 fireRipple 内部短路
+    if (isAcc) {
+      fireRipple(0.55 + rhythm.mood * 0.3 + Math.random() * 0.15, 'accent');
+    } else {
+      // 强度取当拍的真实低频能量：鼓点有轻有重，雨滴自然有大有小
+      var hit = aurora.bands
+        ? Math.min(1, (aurora.bands[0] + aurora.bands[1]) * 0.7)
+        : 0.4;
+      fireRipple(0.1 + hit * 0.6 + Math.random() * 0.12, 'beat');
     }
     i++;
   }
   beatGrid.idx = i;
 }
 
+// FX 重开 / seek 后对齐拍点索引，避免关 FX 期间未扫描导致连发补拍
+function resyncBeatGridIdx() {
+  var b = beatGrid.beats;
+  if (!b || b.length === 0) return;
+  var pos = getLyricPosition();
+  var i = 0;
+  while (i < b.length && b[i] < pos - 0.08) i++;
+  beatGrid.idx = i;
+}
+
+// ---- eqTick 调度与频谱轮询 ----
+// 帧率策略（播放中）：
+//  - FX standard：rAF ~60fps（Aurora 包络 + grid 踩拍 + 背景漂移低频分支）
+//  - FX light：~20fps（轻量 Aurora，无涟漪/无 bg drift）
+//  - 仅列表 EQ：~15fps（频谱 + 间奏/自愈）
+//  - 零消费方：~8fps 维护（间奏点 + lyric heal），绝不空转 60fps
 var eqLastUpdate = 0;
-var EQ_INTERVAL = 66; // ~15fps 数据轮询
+var eqBgLastUpdate = 0;
+var EQ_INTERVAL = 66;       // ~15fps 频谱/间奏数据块
+var EQ_MAINT_MS = 125;      // ~8fps 零消费方维护
+var EQ_LIGHT_MS = 50;       // ~20fps light 级 Aurora
+var EQ_BG_MS = 50;          // 背景漂移 ~20fps（仅 standard + 非移动端）
+// getSpectrum 单飞：上一次 bridge Promise 未 settle 时跳过本拍，不排队
+var spectrumInFlight = false;
+// 循环在飞（含 body 执行中 / timer 等待），防止 progress 回调 ensureEqLoop 双开
+var eqLoopActive = false;
+
 // 防崩溃壳：eqTick 驱动全部视觉效果（aurora/涟漪/网格踩拍/间奏点/自愈），
 // 任何一帧异常若不捕获，循环静默死亡且句柄残留 → ensureEqLoop 永远无法重启 →
 // 所有效果永久失效。异常只丢当帧并记录，循环必须活着。
 function eqTick(ts) {
+  // 本帧 rAF 已消费；eqLoopActive 保持 true 直至停播或 cancel，挡住 ensureEqLoop 竞态
+  pageState.eqFrame = null;
   var isPlaying = pageState.status && pageState.status.isPlaying;
-  if (!isPlaying) { pageState.eqFrame = null; return; }
+  if (!isPlaying) {
+    cancelEqSchedule();
+    syncFxCompositing();
+    return;
+  }
   try {
     eqTickBody(ts);
   } catch (e) {
     logTickError('eqTick', e);
   }
-  pageState.eqFrame = requestAnimationFrame(eqTick);
+  scheduleEqNext();
+}
+
+// 取消 rAF / setTimeout 双通道调度
+function cancelEqSchedule() {
+  if (pageState.eqFrame != null) {
+    cancelAnimationFrame(pageState.eqFrame);
+    pageState.eqFrame = null;
+  }
+  if (pageState.eqTimer != null) {
+    clearTimeout(pageState.eqTimer);
+    pageState.eqTimer = null;
+  }
+  eqLoopActive = false;
+}
+
+// 按当前消费方选择下一帧调度方式
+function scheduleEqNext() {
+  if (!(pageState.status && pageState.status.isPlaying)) {
+    eqLoopActive = false;
+    return;
+  }
+  // 已有挂起的帧/定时器则不重复排（restartEqLoop 会先 cancel）
+  if (pageState.eqFrame != null || pageState.eqTimer != null) return;
+
+  eqLoopActive = true;
+  var needFx = visualFxEnabled();
+  if (needFx && !isAnimLight()) {
+    // standard FX：真 60fps rAF
+    pageState.eqFrame = requestAnimationFrame(eqTick);
+    return;
+  }
+  // light FX / 仅 EQ / 零消费：timer 节流，避免空 60fps
+  var delay;
+  if (needFx && isAnimLight()) {
+    delay = EQ_LIGHT_MS;
+  } else {
+    var eq = getActiveEqEl();
+    var needEq = !!(eq && eq.offsetParent !== null);
+    delay = needEq ? EQ_INTERVAL : EQ_MAINT_MS;
+  }
+  pageState.eqTimer = setTimeout(function() {
+    pageState.eqTimer = null;
+    pageState.eqFrame = requestAnimationFrame(eqTick);
+  }, delay);
 }
 
 function eqTickBody(ts) {
+  // 尽早解析 FX 门控，避免关 FX 时仍跑 grid/aurora/涟漪路径
+  var needFx = visualFxEnabled();
+  var light = needFx && isAnimLight();
+
+  // 数据块：频谱 / 间奏 / 自愈（~15fps；维护模式由外层 timer 控制调用频率）
   if (ts - eqLastUpdate >= EQ_INTERVAL) {
     eqLastUpdate = ts;
     // 间奏呼吸点：进度点亮 + 焦点跟随（15fps 足够）
@@ -3971,12 +4108,19 @@ function eqTickBody(ts) {
     // needEq 与动效开关无关（列表 EQ 始终可驱动）；Aurora/节奏频谱仅在 FX 开时需要
     var eq = getActiveEqEl();
     var needEq = !!(eq && eq.offsetParent !== null);
-    var needFx = visualFxEnabled();
-    if (needEq || needFx) {
+    // 单飞：上一次 getSpectrum 未 settle 则跳过本拍（不排队堆积）
+    if ((needEq || needFx) && !spectrumInFlight) {
+      spectrumInFlight = true;
+      var pollNeedEq = needEq;
+      var pollNeedFx = needFx;
+      var pollEq = eq;
+      var pollTs = ts;
       Tapp.media.getSpectrum().then(function(r) {
+        spectrumInFlight = false;
         var s = (r && r.spectrum && r.spectrum.length >= 4) ? r.spectrum : [0, 0, 0, 0];
-        if (needEq) updateListEq(s, eq);
-        if (needFx) {
+        if (pollNeedEq) updateListEq(s, pollEq);
+        // FX 可能在 Promise 飞行期间被关掉
+        if (pollNeedFx && visualFxEnabled()) {
           // Aurora 数据样本：优先原始 8 频段；旧前端无 bands 时由 4 柱数据降级映射
           if (r && r.bands && r.bands.length >= 8) {
             aurora.bands = r.bands;
@@ -3984,65 +4128,60 @@ function eqTickBody(ts) {
             // 降级：s 为重排 4 柱（低-高-高-低），粗略映射三段
             aurora.bands = [s[0], s[0], 0, s[2], s[2], s[1], s[3], 0];
           }
-          // 节奏事件：重音/转折检测（触发即交给 CSS 合成器动画，无每帧渲染）
-          rhythmTick(aurora.bands, ts);
+          // light：无涟漪/grid，mood 不驱动 Aurora → 跳过节奏引擎
+          if (!isAnimLight()) {
+            rhythmTick(aurora.bands, pollTs);
+          }
         }
       }).catch(function(e) {
+        spectrumInFlight = false;
         logTickError('spectrumPoll', e);
       });
     }
   }
-  // 网格跟拍逐帧比对（60fps 精度踩拍）
-  gridTick();
-  // Aurora 渲染每帧运行（60fps 包络 + 公转），数据按 15fps 更新；内部再经 visualFxEnabled 门控
+
+  // ---- 仅 FX 开：网格踩拍 / Aurora / 背景漂移 ----
+  if (!needFx) return;
+
+  // light：无涟漪网格触发（fireRipple 也会短路）；跳过 grid 扫描以省 pos 计算
+  if (!light) {
+    gridTick();
+  }
+
+  // Aurora：standard 每帧；light 随 ~20fps 调度
   renderAurora(ts);
+
+  // 背景漂移：并入 eqTick 低频分支（无独立 rAF）；mobile / light / 开关关闭时不跑
+  if (pageState.bgDriftOn && !light && !checkIsMobile()) {
+    if (ts - eqBgLastUpdate >= EQ_BG_MS) {
+      eqBgLastUpdate = ts;
+      pageState.bgPhase += 0.008;
+      applyBackgroundTransform(pageState.bgPhase);
+    }
+  }
 }
 
 function ensureEqLoop() {
-  if (pageState.status && pageState.status.isPlaying && !pageState.eqFrame) {
-    pageState.eqFrame = requestAnimationFrame(eqTick);
-  }
+  if (!(pageState.status && pageState.status.isPlaying)) return;
+  if (eqLoopActive || pageState.eqFrame != null || pageState.eqTimer != null) return;
+  eqLoopActive = true;
+  pageState.eqFrame = requestAnimationFrame(eqTick);
 }
 
-// 启动背景动画（纯环境漂移：慢速 translate/rotate，不跟随节拍）
+// 强制取消并重入（FX 开关 / anim level 变化时切换帧率策略）
+function restartEqLoop() {
+  cancelEqSchedule();
+  ensureEqLoop();
+}
+
+// 启动背景漂移意图（实际相位推进在 eqTick 低频分支）
 function startBackgroundAnimation() {
-  // 用户动效开关 ∧ 系统动画级别
-  if (!visualFxEnabled()) {
+  // 用户动效开关 ∧ 系统动画 ∧ 非 light ∧ 非移动端
+  if (!visualFxEnabled() || isAnimLight() || checkIsMobile()) {
+    pageState.bgDriftOn = false;
     return;
   }
-  
-  // 移动端禁用背景漂移（节省性能）
-  if (checkIsMobile()) {
-    return;
-  }
-  
-  if (pageState.bgAnimationFrame) return;
-  
-  var lastUpdateTime = 0;
-  // 根据动画级别调整帧率
-  var UPDATE_INTERVAL = pageState.animConfig.level === 'light' ? 100 : 50; // light模式~10fps，standard~20fps
-  
-  function updateBackground(timestamp) {
-    // 检查是否正在播放
-    var isPlaying = pageState.status && pageState.status.isPlaying;
-    
-    if (!isPlaying) {
-      // 暂停时定格在当前环境相位
-      applyBackgroundTransform(pageState.bgPhase);
-      pageState.bgAnimationFrame = null;
-      return;
-    }
-    
-    if (timestamp - lastUpdateTime >= UPDATE_INTERVAL) {
-      lastUpdateTime = timestamp;
-      pageState.bgPhase += 0.008; // 缓慢相位变化
-      applyBackgroundTransform(pageState.bgPhase);
-    }
-    
-    pageState.bgAnimationFrame = requestAnimationFrame(updateBackground);
-  }
-  
-  pageState.bgAnimationFrame = requestAnimationFrame(updateBackground);
+  pageState.bgDriftOn = true;
 }
 
 // 应用背景变换 - 使用缓存的元素引用
@@ -4067,12 +4206,9 @@ function applyBackgroundTransform(phase) {
     'rotate(' + ((rotate * 100 | 0) / 100) + 'deg)';
 }
 
-// 停止背景动画
+// 停止背景漂移意图并复位变换
 function stopBackgroundAnimation() {
-  if (pageState.bgAnimationFrame) {
-    cancelAnimationFrame(pageState.bgAnimationFrame);
-    pageState.bgAnimationFrame = null;
-  }
+  pageState.bgDriftOn = false;
   // 重置背景变换
   var bgArtwork = $('bg-artwork');
   if (bgArtwork) {
@@ -4095,19 +4231,18 @@ function cleanup() {
     cancelAnimationFrame(pageState.lyricWordFrame);
     pageState.lyricWordFrame = null;
   }
-  // 清理列表均衡器 rAF
-  if (pageState.eqFrame) {
-    cancelAnimationFrame(pageState.eqFrame);
-    pageState.eqFrame = null;
-  }
+  // 清理视觉/EQ 循环（rAF + 低帧率 timer）
+  cancelEqSchedule();
+  spectrumInFlight = false;
   // 清理歌词波浪引擎
   stopLyricWave();
   if (lyricResumeTimer) {
     clearTimeout(lyricResumeTimer);
     lyricResumeTimer = null;
   }
-  // 清理背景动画
+  // 清理背景漂移意图
   stopBackgroundAnimation();
+  document.documentElement.classList.remove('fx-compositing');
 }
 
 // ========================================

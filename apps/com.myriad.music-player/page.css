@@ -125,6 +125,11 @@ html, body {
   contain: strict;
 }
 
+/* 播放中 + FX 开时才挂 will-change，暂停/关 FX 卸下以释放合成层 */
+:root.fx-compositing .bg-artwork {
+  will-change: transform;
+}
+
 .bg-overlay {
   position: absolute;
   inset: 0;
@@ -239,6 +244,10 @@ html, body {
   border-radius: 50%;
   filter: blur(48px);
   opacity: 0.1;
+  /* will-change 仅在 :root.fx-compositing 下挂载（见下） */
+}
+
+:root.fx-compositing .aurora-blob {
   will-change: transform, opacity;
 }
 
@@ -298,8 +307,12 @@ html, body {
     transparent 80%
   );
   opacity: 0;
-  will-change: transform, opacity;
+  /* will-change 仅在 :root.fx-compositing 下挂载 */
   pointer-events: none;
+}
+
+:root.fx-compositing .rhythm-ripple {
+  will-change: transform, opacity;
 }
 
 /* 波的时长由 JS 按情绪值设置：缓和 → 慢荡（~2.3s），激烈 → 快脆（~1.0s） */
