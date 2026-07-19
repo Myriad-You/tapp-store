@@ -48,7 +48,7 @@
         <div class="form-group">
           <label for="main-domain">主域名</label>
           <input type="text" id="main-domain" class="form-input" placeholder="myriad.example.com" autocomplete="off">
-          <span class="form-hint">不要带 <code>https://</code></span>
+          <span class="form-hint">不要带 <code>https://</code>。会写入 <code>BASE_URL</code>/<code>FRONTEND_URL</code>（联邦 Actor URL）；外层 Nginx 须<strong>整站</strong>反代到 proxy，勿只反代 <code>/api</code>。</span>
         </div>
         <div class="form-group">
           <label for="extra-domain">额外域名（可选）</label>
@@ -175,6 +175,7 @@
           <div class="form-group form-group-third">
             <label for="proxy-tag">PROXY_TAG</label>
             <input type="text" id="proxy-tag" class="form-input" value="" placeholder="自动获取…" autocomplete="off">
+            <span class="form-hint">与 MYRIAD_TAG 独立；proxy 有 AP 路由/联邦变更时单独 bump</span>
           </div>
           <div class="form-group form-group-third">
             <label for="updater-tag">UPDATER_TAG</label>

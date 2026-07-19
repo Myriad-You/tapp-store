@@ -154,6 +154,10 @@ services:
       driver: "json-file"
       options: { max-size: "10m", max-file: "3" }
 
+  # proxy: only public host port. Routes SPA, /api, health, and federation public paths
+  # (/.well-known/webfinger|nodeinfo, /nodeinfo/2.1, /inbox, /users/*). Outer TLS
+  # must whole-site reverse-proxy here — not /api-only. Preserve public Host for
+  # ActivityPub HTTP Signatures. Bind stays HTTP_BIND_ADDRESS:HTTP_PORT (1Panel-friendly).
   proxy:
     image: \${PROXY_IMAGE:-docker.io/somekawahitomi/myriad-proxy}:\${PROXY_TAG}
     container_name: myriad-proxy
@@ -291,6 +295,7 @@ var ENV_TEMPLATE = `# Myriad .env — chmod 600，勿提交 Git
 # 禁止 :latest
 
 MYRIAD_TAG={{MYRIAD_TAG}}
+# PROXY_TAG is separate from MYRIAD_TAG — bump when proxy gains AP routing / federation fixes
 PROXY_TAG={{PROXY_TAG}}
 UPDATER_TAG={{UPDATER_TAG}}
 BACKEND_IMAGE=docker.io/somekawahitomi/myriad-backend
@@ -312,6 +317,8 @@ CHECK_INTERVAL_SECS=3600
 
 HTTP_BIND_ADDRESS={{HTTP_BIND_ADDRESS}}
 HTTP_PORT={{HTTP_PORT}}
+# PROXY_TRUSTED_UPSTREAMS: empty trusts private/loopback peers only (outer 1Panel/Nginx).
+# Never set 0.0.0.0/0 (would trust forged X-Forwarded-* from anyone).
 # PROXY_TRUSTED_UPSTREAMS=
 PROXY_ALLOW_DIRECT_UPDATER=false
 
@@ -325,12 +332,16 @@ DATABASE_URL={{DATABASE_URL}}
 JWT_SECRET={{JWT_SECRET}}
 
 CORS_ORIGINS={{CORS_ORIGINS}}
+# BASE_URL / FRONTEND_URL = public HTTPS origin (required for federation Actor URLs)
 BASE_URL=https://{{MAIN_DOMAIN}}
 FRONTEND_URL=https://{{MAIN_DOMAIN}}
 PUBLIC_API_URL=
 # RUST_LOG=info
 `;
 
+// Whole-site reverse proxy to Myriad proxy (NOT /api-only). Federation paths that
+// MUST reach proxy: /.well-known/webfinger, /.well-known/nodeinfo, /nodeinfo/2.1,
+// /inbox, /users/, plus /api/* (federation WS under /api/federation/*/ws).
 var DEFAULT_NGINX_TEMPLATE = `server {
     listen 80;
     server_name {{MAIN_DOMAIN}};
@@ -339,6 +350,15 @@ var DEFAULT_NGINX_TEMPLATE = `server {
     access_log /www/sites/{{MAIN_DOMAIN}}/log/access.log main;
     error_log /www/sites/{{MAIN_DOMAIN}}/log/error.log;
 
+    # ACME (1Panel/certbot): local root BEFORE catch-all. Other /.well-known/* via proxy.
+    location ^~ /.well-known/acme-challenge/ {
+        root /www/sites/{{MAIN_DOMAIN}}/index;
+        allow all;
+    }
+
+    # Whole-site → Myriad proxy (SPA + /api + federation). Do NOT proxy only /api.
+    # Must reach proxy: /.well-known/webfinger, /.well-known/nodeinfo, /nodeinfo/2.1,
+    # /inbox, /users/, /api/* (incl. WS /api/federation/*/ws). Preserve Host for HTTP Signatures.
     location / {
         proxy_pass http://127.0.0.1:{{HTTP_PORT}};
 
@@ -364,6 +384,7 @@ var DEFAULT_NGINX_TEMPLATE = `server {
         access_log off;
     }
 
+    # Block dangerous extensions under .well-known; do NOT block webfinger/nodeinfo.
     if ( $uri ~ "^/\\.well-known/.*\\.(php|jsp|py|js|css|lua|ts|go|zip|tar\\.gz|rar|7z|sql|bak)$" ) {
         return 403;
     }
@@ -380,6 +401,15 @@ var DEFAULT_EXTRA_NGINX_TEMPLATE = `server {
     access_log /www/sites/{{EXTRA_DOMAIN}}/log/access.log main;
     error_log /www/sites/{{EXTRA_DOMAIN}}/log/error.log;
 
+    # ACME (1Panel/certbot): local root BEFORE catch-all. Other /.well-known/* via proxy.
+    location ^~ /.well-known/acme-challenge/ {
+        root /www/sites/{{EXTRA_DOMAIN}}/index;
+        allow all;
+    }
+
+    # Whole-site → Myriad proxy (SPA + /api + federation). Do NOT proxy only /api.
+    # Must reach proxy: /.well-known/webfinger, /.well-known/nodeinfo, /nodeinfo/2.1,
+    # /inbox, /users/, /api/* (incl. WS /api/federation/*/ws). Preserve Host for HTTP Signatures.
     location / {
         proxy_pass http://127.0.0.1:{{HTTP_PORT}};
 
@@ -400,6 +430,7 @@ var DEFAULT_EXTRA_NGINX_TEMPLATE = `server {
         client_max_body_size 50M;
     }
 
+    # Block dangerous extensions under .well-known; do NOT block webfinger/nodeinfo.
     if ( $uri ~ "^/\\.well-known/.*\\.(php|jsp|py|js|css|lua|ts|go|zip|tar\\.gz|rar|7z|sql|bak)$" ) {
         return 403;
     }
@@ -423,9 +454,28 @@ var DEPLOY_NOTES_TEMPLATE = `# Myriad 部署
 
 \`backend-volume-init\` 使用 \`network_mode: none\`；仅 proxy 开宿主端口。
 
+## 联邦 / Federation
+
+- \`BASE_URL\` / \`FRONTEND_URL\` = 公网 HTTPS 源站（如 \`https://{{MAIN_DOMAIN}}\`），用于 Actor URL；联邦必填。
+- 外层 Nginx/Caddy 必须 **整站** 反代到 Myriad proxy（\`HTTP_BIND_ADDRESS:HTTP_PORT\`），**不要只反代 /api**。
+- 以下路径必须到达 proxy（再由 proxy 转 backend）：
+  - \`/.well-known/webfinger\`
+  - \`/.well-known/nodeinfo\`
+  - \`/nodeinfo/2.1\`
+  - \`/inbox\`
+  - \`/users/\`
+  - \`/api/*\`（含联邦 WebSocket \`/api/federation/*/ws\`）
+- ACME：\`/.well-known/acme-challenge/\` 由外层 Nginx 本地提供；其余 \`.well-known\` 仍走 proxy。
+- 冒烟（期望 JSON，不是 HTML）：
+
+\`\`\`bash
+curl -sS "https://{{MAIN_DOMAIN}}/.well-known/webfinger?resource=acct:USER@{{MAIN_DOMAIN}}" | head -c 200
+curl -sS "https://{{MAIN_DOMAIN}}/.well-known/nodeinfo" | head -c 200
+\`\`\`
+
 ## 1Panel
 
-编排贴 YAML；环境变量贴 \`.env\`；启动。
+编排贴 YAML；环境变量贴 \`.env\`；启动。站点反代到 proxy 端口，勿改成仅 /api。
 
 ## 启动
 
@@ -441,11 +491,13 @@ docker compose pull && docker compose up -d
 
 ## HTTPS
 
-https://{{MAIN_DOMAIN}} → \`{{HTTP_BIND_ADDRESS}}:{{HTTP_PORT}}\`
+https://{{MAIN_DOMAIN}} → \`{{HTTP_BIND_ADDRESS}}:{{HTTP_PORT}}\`（整站反代）
 
 ## 更新
 
 设置 → 关于 → 更新管理 · \`{{CHANNEL}}\` · cosign \`{{COSIGN_VERIFY}}\`
+
+proxy 有 AP 路由变更时需单独 bump \`PROXY_TAG\`（与 \`MYRIAD_TAG\` 独立）。
 
 ## 数据
 
@@ -809,9 +861,15 @@ async function refreshLatestTags(inputs, channelSelect, opts) {
   return tagFetchState.inflight;
 }
 
+// Whole-site reverse proxy to Myriad proxy — never rewrite to /api-only.
+// Federation paths that MUST reach proxy: /.well-known/webfinger, /.well-known/nodeinfo,
+// /nodeinfo/2.1, /inbox, /users/, /api/* (WS under /api/federation/*/ws).
 function buildNginxProxyLocation(httpPort, indent) {
   var childIndent = indent + '    ';
   return [
+    indent + '# Whole-site → Myriad proxy (SPA + /api + federation). Do NOT proxy only /api.',
+    indent + '# Must reach proxy: /.well-known/webfinger, /.well-known/nodeinfo, /nodeinfo/2.1,',
+    indent + '# /inbox, /users/, /api/* (incl. WS /api/federation/*/ws). Preserve Host for HTTP Signatures.',
     indent + 'location / {',
     childIndent + 'proxy_pass http://127.0.0.1:' + httpPort + ';',
     '',
@@ -831,6 +889,47 @@ function buildNginxProxyLocation(httpPort, indent) {
     childIndent + 'client_max_body_size 50M;',
     indent + '}'
   ].join('\n');
+}
+
+function extractNginxRoot(serverConfig, domain) {
+  var match = serverConfig.match(/(?:^|\n)[ \t]*root\s+([^;]+);/);
+  if (match) return match[1].trim();
+  if (domain) return '/www/sites/' + domain + '/index';
+  return '/www/sites/default/index';
+}
+
+function hasAcmeChallengeLocation(serverConfig) {
+  return /location\s+\^~\s+\/\.well-known\/acme-challenge\//.test(serverConfig);
+}
+
+function buildAcmeChallengeLocation(siteRoot, indent) {
+  var childIndent = indent + '    ';
+  return [
+    indent + '# ACME (1Panel/certbot): local root BEFORE catch-all. Other /.well-known/* via proxy.',
+    indent + 'location ^~ /.well-known/acme-challenge/ {',
+    childIndent + 'root ' + siteRoot + ';',
+    childIndent + 'allow all;',
+    indent + '}'
+  ].join('\n');
+}
+
+// Ensure ACME challenge is local; keep other /.well-known/* on the whole-site proxy.
+function ensureAcmeChallengeLocation(serverConfig, domain, serverIndent) {
+  if (hasAcmeChallengeLocation(serverConfig)) return serverConfig;
+
+  var childIndent = serverIndent + '    ';
+  var acmeBlock = buildAcmeChallengeLocation(extractNginxRoot(serverConfig, domain), childIndent);
+  var rootLocation = /(^|\n)([ \t]*)location\s+(?:(?:=|\^~)\s+)?\/\s*\{/;
+  var match = rootLocation.exec(serverConfig);
+  if (match) {
+    var insertAt = match.index + match[1].length;
+    return serverConfig.slice(0, insertAt) + acmeBlock + '\n\n' + serverConfig.slice(insertAt);
+  }
+
+  var closeBrace = serverConfig.lastIndexOf('}');
+  if (closeBrace === -1) return serverConfig;
+  return serverConfig.slice(0, closeBrace).replace(/[ \t]*$/, '') +
+    '\n\n' + acmeBlock + '\n' + serverConfig.slice(closeBrace);
 }
 
 function findClosingBrace(config, openBraceIndex) {
@@ -926,27 +1025,30 @@ function isRedirectOnlyServer(serverConfig) {
   return !servesTls && redirectsWholeServer && !hasUpstreamHandler;
 }
 
-function transformServerBlock(serverConfig, httpPort, serverIndent) {
+function transformServerBlock(serverConfig, httpPort, serverIndent, domain) {
   var childIndent = serverIndent + '    ';
   var proxyLocation = buildNginxProxyLocation(httpPort, childIndent);
   var proxyInclude = /^[ \t]*include\s+[^;\n]*\/proxy\/\*\.conf\s*;[ \t]*$/gm;
   var replacedRoot = replaceRootLocation(serverConfig, httpPort);
+  var next = serverConfig;
 
   if (replacedRoot !== null) {
-    // Myriad 独占根路径；移除 1Panel 外置代理入口，避免重复 location /。
-    return replacedRoot.replace(proxyInclude, '');
-  }
-  if (proxyInclude.test(serverConfig)) {
+    // Myriad 独占根路径（整站反代，非 /api-only）；移除 1Panel 外置代理入口，避免重复 location /。
+    next = replacedRoot.replace(proxyInclude, '');
+  } else if (proxyInclude.test(serverConfig)) {
     proxyInclude.lastIndex = 0;
-    return serverConfig.replace(proxyInclude, proxyLocation);
+    // Replace 1Panel proxy include with whole-site location / (keeps federation paths).
+    next = serverConfig.replace(proxyInclude, proxyLocation);
+  } else {
+    var closeBrace = serverConfig.lastIndexOf('}');
+    next = serverConfig.slice(0, closeBrace).replace(/[ \t]*$/, '') +
+      '\n\n' + proxyLocation + '\n' + serverConfig.slice(closeBrace);
   }
 
-  var closeBrace = serverConfig.lastIndexOf('}');
-  return serverConfig.slice(0, closeBrace).replace(/[ \t]*$/, '') +
-    '\n\n' + proxyLocation + '\n' + serverConfig.slice(closeBrace);
+  return ensureAcmeChallengeLocation(next, domain, serverIndent);
 }
 
-// 将上传的站点配置规范化为 Myriad proxy 单入口。
+// 将上传的站点配置规范化为 Myriad proxy 整站入口（非 /api-only）。
 // 支持同一站点常见的 HTTP 跳转块 + HTTPS 服务块，不修改其他域名。
 function replaceNginxUpstreamToProxy(config, httpPort, domain) {
   var blocks = findServerBlocks(config);
@@ -956,7 +1058,7 @@ function replaceNginxUpstreamToProxy(config, httpPort, domain) {
     return {
       start: block.start,
       end: block.end,
-      text: transformServerBlock(block.text, httpPort, block.indent)
+      text: transformServerBlock(block.text, httpPort, block.indent, domain)
     };
   });
 
