@@ -1960,7 +1960,14 @@ function renderPublishedItem(item) {
   var typeIcons = { 'report': SVG_ICONS.report, 'brew-article': SVG_ICONS.memo, 'tapp': SVG_ICONS.tapp, 'library': SVG_ICONS.library, 'note': SVG_ICONS.page, 'repost': SVG_ICONS.page };
   var icon = typeIcons[item.content_type] || SVG_ICONS.page;
   var dateStr = '';
+  var dateTitle = '';
   try { dateStr = timeAgo(item.published_at); } catch (e) {}
+  try {
+    if (item.published_at) {
+      var dPub = new Date(item.published_at);
+      if (!isNaN(dPub.getTime())) dateTitle = dPub.toLocaleString();
+    }
+  } catch (eTs) {}
   // Prefer title as header line when useful; body uses summary/content_preview.
   // attachments come from list_published (joined Create object) — same shape as Note AP.
   var attachments = extractNoteAttachments(item);
@@ -1997,7 +2004,10 @@ function renderPublishedItem(item) {
   }
   h += '<div class="feed-item-header">';
   h += '<span class="feed-item-name">' + esc(titleLine || publishedTypeLabel(item.content_type)) + '</span>';
-  if (dateStr) h += '<span class="feed-item-sep">&middot;</span><span class="feed-item-time">' + esc(dateStr) + '</span>';
+  if (dateStr) {
+    h += '<span class="feed-item-sep">&middot;</span><span class="feed-item-time"'
+      + (dateTitle ? ' title="' + esc(dateTitle) + '"' : '') + '>' + esc(dateStr) + '</span>';
+  }
   h += '</div>';
   if (preview && (!titleLine || preview !== titleLine || isRepost)) {
     h += '<div class="feed-item-text">' + esc(preview) + '</div>';
