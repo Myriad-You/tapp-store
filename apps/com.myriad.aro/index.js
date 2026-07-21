@@ -432,6 +432,16 @@
       "settingsDeliveryCancelFail": "Couldn't cancel delivery",
       "settingsDeliveryRetryFail": "Couldn't retry delivery",
       "settingsDeliveryLoadFail": "Couldn't load delivery status",
+      "settingsDeliveryRetryAllConfirm": "Retry all failed federation deliveries?",
+      "settingsKeys": "Federation signing keys",
+      "settingsKeysHint": "ActivityPub HTTP signatures use an RSA keypair on this server. Rotation replaces the live key and fans out Update(Person) to followers.",
+      "settingsKeysStatusIdle": "Keys are created automatically. Rotate only if a private key may be compromised.",
+      "settingsKeysRotate": "Rotate keys…",
+      "settingsKeysRotateConfirm": "Rotate your federation signing key? Peers must re-fetch your actor document. Past posts keep old signatures; new outbound activity uses the new key.",
+      "settingsKeysRotating": "Rotating keys…",
+      "settingsKeysRotateOk": "Keys rotated. Update fan-out queued: {n}",
+      "settingsKeysRotateOkTitle": "Keys rotated",
+      "settingsKeysRotateFail": "Couldn't rotate keys",
       "deleteChannel": "Delete chat",
       "deleteChannelConfirm": "Delete this closed chat permanently? Message history on this device will be removed.",
       "deleteChannelFail": "Couldn't delete chat",
@@ -920,6 +930,16 @@
       "settingsDeliveryCancelFail": "キャンセルに失敗しました",
       "settingsDeliveryRetryFail": "再試行に失敗しました",
       "settingsDeliveryLoadFail": "配信状況を読み込めませんでした",
+      "settingsDeliveryRetryAllConfirm": "失敗した連合配信をすべて再試行しますか？",
+      "settingsKeys": "連合署名鍵",
+      "settingsKeysHint": "ActivityPub の HTTP 署名はこのサーバー上の RSA 鍵を使います。ローテーションは現行鍵を置き換え、フォロワーへ Update(Person) を配信します。",
+      "settingsKeysStatusIdle": "鍵は自動作成されます。秘密鍵の漏洩が疑われる場合のみローテーションしてください。",
+      "settingsKeysRotate": "鍵をローテート…",
+      "settingsKeysRotateConfirm": "連合署名鍵をローテートしますか？リモートは Actor を再取得する必要があります。過去の投稿は旧署名のまま、新しい送信は新鍵を使います。",
+      "settingsKeysRotating": "鍵をローテートしています…",
+      "settingsKeysRotateOk": "鍵をローテートしました。Update 配信キュー: {n}",
+      "settingsKeysRotateOkTitle": "鍵をローテートしました",
+      "settingsKeysRotateFail": "鍵のローテートに失敗しました",
       "deleteChannel": "チャットを削除",
       "deleteChannelConfirm": "終了したチャットを完全に削除しますか？この端末の履歴も消えます。",
       "deleteChannelFail": "削除に失敗しました",
@@ -1408,6 +1428,16 @@
       "settingsDeliveryCancelFail": "取消失败",
       "settingsDeliveryRetryFail": "重试失败",
       "settingsDeliveryLoadFail": "无法加载投递状态",
+      "settingsDeliveryRetryAllConfirm": "重试全部失败的联邦投递？",
+      "settingsKeys": "联邦签名密钥",
+      "settingsKeysHint": "ActivityPub HTTP 签名使用本站 RSA 密钥对。轮换会替换当前密钥，并向关注者广播 Update(Person)。",
+      "settingsKeysStatusIdle": "密钥会自动创建。仅在私钥可能泄露时再轮换。",
+      "settingsKeysRotate": "轮换密钥…",
+      "settingsKeysRotateConfirm": "确认轮换联邦签名密钥？远端需重新拉取你的 Actor。历史帖文仍用旧签名；新出站活动使用新密钥。",
+      "settingsKeysRotating": "正在轮换密钥…",
+      "settingsKeysRotateOk": "密钥已轮换。Update 广播排队：{n}",
+      "settingsKeysRotateOkTitle": "密钥已轮换",
+      "settingsKeysRotateFail": "密钥轮换失败",
       "deleteChannel": "删除会话",
       "deleteChannelConfirm": "永久删除此已关闭会话？本机消息记录将一并移除。",
       "deleteChannelFail": "删除失败",
@@ -7953,6 +7983,19 @@
     });
     html += '</div></div>';
 
+    // Federation signing keys (explicit rotate via host bridge)
+    html += '<div class="backup-card" id="settings-keys-card">';
+    html += '<div class="backup-card-head"><div><div class="backup-card-title">'
+      + esc(lang.settingsKeys || 'Federation signing keys') + '</div>'
+      + '<p class="backup-card-desc">' + esc(lang.settingsKeysHint || '') + '</p></div></div>';
+    html += '<p class="settings-note" id="settings-keys-status">'
+      + esc(lang.settingsKeysStatusIdle || 'Keys are created automatically. Rotate only if a private key may be compromised.')
+      + '</p>';
+    html += '<div class="backup-actions" style="margin-top:10px">';
+    html += '<button type="button" class="backup-btn backup-btn-danger" id="settings-keys-rotate">'
+      + esc(lang.settingsKeysRotate || 'Rotate keys…') + '</button>';
+    html += '</div></div>';
+
     // Outbound delivery status
     html += '<div class="backup-card" id="settings-delivery-card">';
     html += '<div class="backup-card-head"><div><div class="backup-card-title">'
@@ -8131,6 +8174,67 @@
         saveAroSettings({ autoE2eOnOpen: next });
       });
     }
+    var rotateKeysBtn = root.querySelector('#settings-keys-rotate');
+    if (rotateKeysBtn) {
+      rotateKeysBtn.addEventListener('click', async function () {
+        if (!Tapp.federation || typeof Tapp.federation.rotateKeys !== 'function') {
+          notifyError(
+            lang.settingsKeysRotateFail || "Couldn't rotate keys",
+            new Error('API unavailable — host needs federation.rotateKeys')
+          );
+          return;
+        }
+        try {
+          if (typeof aroConfirm === 'function') {
+            var okRotate = await aroConfirm(
+              lang.settingsKeysRotateConfirm
+                || 'Rotate your federation signing key? Peers must re-fetch your actor. Old signatures stay valid for past posts; new outbound mail uses the new key.',
+              true
+            );
+            if (!okRotate) return;
+          }
+          rotateKeysBtn.disabled = true;
+          var statusEl = root.querySelector('#settings-keys-status');
+          if (statusEl) {
+            statusEl.textContent = lang.settingsKeysRotating || 'Rotating keys…';
+            statusEl.classList.remove('settings-status-error');
+          }
+          var rotRes = await Tapp.federation.rotateKeys(true);
+          var rotData = (rotRes && rotRes.data) || rotRes || {};
+          var kid = rotData.key_id || rotData.keyId || '';
+          var queued = rotData.update_queued != null
+            ? rotData.update_queued
+            : (rotData.updateQueued != null ? rotData.updateQueued : 0);
+          var okMsg = (lang.settingsKeysRotateOk || 'Keys rotated. Update fan-out queued: {n}')
+            .replace('{n}', String(queued));
+          if (kid) okMsg += ' · keyId ' + String(kid).slice(0, 64);
+          if (statusEl) {
+            statusEl.textContent = okMsg;
+            statusEl.classList.remove('settings-status-error');
+          }
+          try {
+            Tapp.ui.showNotification({
+              title: lang.settingsKeysRotateOkTitle || 'Keys rotated',
+              message: okMsg,
+              type: 'success'
+            });
+          } catch (e0) {}
+          if (typeof loadFederationIdentity === 'function') {
+            try { await loadFederationIdentity(); } catch (e1) {}
+          }
+        } catch (e) {
+          console.error('[Aro] rotateKeys', e);
+          var statusErr = root.querySelector('#settings-keys-status');
+          if (statusErr) {
+            statusErr.textContent = lang.settingsKeysRotateFail || "Couldn't rotate keys";
+            statusErr.classList.add('settings-status-error');
+          }
+          notifyError(lang.settingsKeysRotateFail || "Couldn't rotate keys", e);
+        } finally {
+          rotateKeysBtn.disabled = false;
+        }
+      });
+    }
     var refreshDel = root.querySelector('#settings-delivery-refresh');
     if (refreshDel) {
       refreshDel.addEventListener('click', function () { loadSettingsDeliveryPanel(); });
@@ -8173,11 +8277,31 @@
     var retryAll = root.querySelector('#settings-delivery-retry-all');
     if (retryAll) {
       retryAll.addEventListener('click', async function () {
-        if (typeof Tapp.federation.retryAllDeadDelivery !== 'function') return;
+        if (!Tapp.federation || typeof Tapp.federation.retryAllDeadDelivery !== 'function') {
+          notifyError(lang.settingsDeliveryRetryFail || 'Retry failed', new Error('API unavailable'));
+          return;
+        }
         try {
-          await Tapp.federation.retryAllDeadDelivery(50);
+          if (typeof aroConfirm === 'function') {
+            var okRetry = await aroConfirm(
+              lang.settingsDeliveryRetryAllConfirm || lang.deliveryRetryConfirm || 'Retry all failed federation deliveries?',
+              false
+            );
+            if (!okRetry) return;
+          }
+          var retryRes = await Tapp.federation.retryAllDeadDelivery(50);
+          var retried = 0;
+          if (retryRes) {
+            retried = retryRes.retried != null
+              ? retryRes.retried
+              : (retryRes.data && retryRes.data.retried != null ? retryRes.data.retried : 0);
+          }
           try {
-            Tapp.ui.showNotification({ title: lang.deliveryRetryOk || 'Retry queued', type: 'success' });
+            Tapp.ui.showNotification({
+              title: lang.deliveryRetryOk || 'Retry queued',
+              message: (lang.deliveryRetryBody || '{n} messages re-queued').replace('{n}', String(retried)),
+              type: 'success'
+            });
           } catch (e0) {}
           loadSettingsDeliveryPanel();
         } catch (e) {

@@ -1287,6 +1287,19 @@ async function renderSettingsPage() {
   });
   html += '</div></div>';
 
+  // Federation signing keys (explicit rotate via host bridge)
+  html += '<div class="backup-card" id="settings-keys-card">';
+  html += '<div class="backup-card-head"><div><div class="backup-card-title">'
+    + esc(lang.settingsKeys || 'Federation signing keys') + '</div>'
+    + '<p class="backup-card-desc">' + esc(lang.settingsKeysHint || '') + '</p></div></div>';
+  html += '<p class="settings-note" id="settings-keys-status">'
+    + esc(lang.settingsKeysStatusIdle || 'Keys are created automatically. Rotate only if a private key may be compromised.')
+    + '</p>';
+  html += '<div class="backup-actions" style="margin-top:10px">';
+  html += '<button type="button" class="backup-btn backup-btn-danger" id="settings-keys-rotate">'
+    + esc(lang.settingsKeysRotate || 'Rotate keys…') + '</button>';
+  html += '</div></div>';
+
   // Outbound delivery status
   html += '<div class="backup-card" id="settings-delivery-card">';
   html += '<div class="backup-card-head"><div><div class="backup-card-title">'
@@ -1465,6 +1478,68 @@ function bindSettingsPageEvents(root) {
       saveAroSettings({ autoE2eOnOpen: next });
     });
   }
+  var rotateKeysBtn = root.querySelector('#settings-keys-rotate');
+  if (rotateKeysBtn) {
+    rotateKeysBtn.addEventListener('click', async function () {
+      if (!Tapp.federation || typeof Tapp.federation.rotateKeys !== 'function') {
+        notifyError(
+          lang.settingsKeysRotateFail || "Couldn't rotate keys",
+          new Error('API unavailable — host needs federation.rotateKeys')
+        );
+        return;
+      }
+      try {
+        if (typeof aroConfirm === 'function') {
+          var okRotate = await aroConfirm(
+            lang.settingsKeysRotateConfirm
+              || 'Rotate your federation signing key? Peers must re-fetch your actor. Old signatures stay valid for past posts; new outbound mail uses the new key.',
+            true
+          );
+          if (!okRotate) return;
+        }
+        rotateKeysBtn.disabled = true;
+        var statusEl = root.querySelector('#settings-keys-status');
+        if (statusEl) {
+          statusEl.textContent = lang.settingsKeysRotating || 'Rotating keys…';
+          statusEl.classList.remove('settings-status-error');
+        }
+        var rotRes = await Tapp.federation.rotateKeys(true);
+        var rotData = (rotRes && rotRes.data) || rotRes || {};
+        var kid = rotData.key_id || rotData.keyId || '';
+        var queued = rotData.update_queued != null
+          ? rotData.update_queued
+          : (rotData.updateQueued != null ? rotData.updateQueued : 0);
+        var okMsg = (lang.settingsKeysRotateOk || 'Keys rotated. Update fan-out queued: {n}')
+          .replace('{n}', String(queued));
+        if (kid) okMsg += ' · keyId ' + String(kid).slice(0, 64);
+        if (statusEl) {
+          statusEl.textContent = okMsg;
+          statusEl.classList.remove('settings-status-error');
+        }
+        try {
+          Tapp.ui.showNotification({
+            title: lang.settingsKeysRotateOkTitle || 'Keys rotated',
+            message: okMsg,
+            type: 'success'
+          });
+        } catch (e0) {}
+        // Refresh identity surface so handle/actor stay in sync after Update(Person).
+        if (typeof loadFederationIdentity === 'function') {
+          try { await loadFederationIdentity(); } catch (e1) {}
+        }
+      } catch (e) {
+        console.error('[Aro] rotateKeys', e);
+        var statusErr = root.querySelector('#settings-keys-status');
+        if (statusErr) {
+          statusErr.textContent = lang.settingsKeysRotateFail || "Couldn't rotate keys";
+          statusErr.classList.add('settings-status-error');
+        }
+        notifyError(lang.settingsKeysRotateFail || "Couldn't rotate keys", e);
+      } finally {
+        rotateKeysBtn.disabled = false;
+      }
+    });
+  }
   var refreshDel = root.querySelector('#settings-delivery-refresh');
   if (refreshDel) {
     refreshDel.addEventListener('click', function () { loadSettingsDeliveryPanel(); });
@@ -1508,11 +1583,31 @@ function bindSettingsPageEvents(root) {
   var retryAll = root.querySelector('#settings-delivery-retry-all');
   if (retryAll) {
     retryAll.addEventListener('click', async function () {
-      if (typeof Tapp.federation.retryAllDeadDelivery !== 'function') return;
+      if (!Tapp.federation || typeof Tapp.federation.retryAllDeadDelivery !== 'function') {
+        notifyError(lang.settingsDeliveryRetryFail || 'Retry failed', new Error('API unavailable'));
+        return;
+      }
       try {
-        await Tapp.federation.retryAllDeadDelivery(50);
+        if (typeof aroConfirm === 'function') {
+          var okRetry = await aroConfirm(
+            lang.settingsDeliveryRetryAllConfirm || lang.deliveryRetryConfirm || 'Retry all failed federation deliveries?',
+            false
+          );
+          if (!okRetry) return;
+        }
+        var retryRes = await Tapp.federation.retryAllDeadDelivery(50);
+        var retried = 0;
+        if (retryRes) {
+          retried = retryRes.retried != null
+            ? retryRes.retried
+            : (retryRes.data && retryRes.data.retried != null ? retryRes.data.retried : 0);
+        }
         try {
-          Tapp.ui.showNotification({ title: lang.deliveryRetryOk || 'Retry queued', type: 'success' });
+          Tapp.ui.showNotification({
+            title: lang.deliveryRetryOk || 'Retry queued',
+            message: (lang.deliveryRetryBody || '{n} messages re-queued').replace('{n}', String(retried)),
+            type: 'success'
+          });
         } catch (e0) {}
         loadSettingsDeliveryPanel();
       } catch (e) {
