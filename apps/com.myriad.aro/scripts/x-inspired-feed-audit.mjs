@@ -46,6 +46,12 @@ must('share-fn-local-intent', views.includes('function buildLocalXIntentUrl'))
 must('share-host-compose', views.includes('composeExternalShare'))
 must('share-host-status', views.includes('getExternalShareStatus'))
 must('share-refuse-can-post', views.includes('can_post') && views.includes('refusing') || views.includes("can_post === true"))
+must('published-share', views.includes('renderPublishedItem') && views.includes('feed-item-action-share'))
+must('find-published', views.includes('state.published') && views.includes('function findFeedItem'))
+must('follow-back-busy', views.includes('followBackBusy'))
+must('copy-actor', views.includes('data-action-copy-actor'))
+must('share-copy-toast', views.includes('shareCopiedText') || views.includes('shareCopiedIntent'))
+
 
 must('share-local-fallback', views.includes('buildLocalXIntentUrl') && views.includes('x.com/intent/tweet'))
 must('share-btn-render', views.includes('data-action-share'))
