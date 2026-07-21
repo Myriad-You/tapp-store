@@ -35,6 +35,16 @@
 
 - Messenger / overlay / interaction polish
 
+## Host bridge dependencies
+
+| Aro feature | Host method | Permission | Notes |
+|-------------|-------------|------------|-------|
+| Key rotate (1.0.7) | `federation.rotateKeys(confirm)` | `federation:write` | Myriad PR #224 |
+| External share (1.0.8) | `federation.composeExternalShare(req)` | `federation:read` | Myriad PR #225 — X Web Intent only |
+| Share status (optional) | `federation.getExternalShareStatus()` | `federation:read` | Same PR; mode=`intent`, `can_post=false` |
+
+If `composeExternalShare` is missing, Aro falls back to a local `https://x.com/intent/tweet` URL. **Myriad never posts to X server-side.**
+
 ## 包结构
 
 ```
