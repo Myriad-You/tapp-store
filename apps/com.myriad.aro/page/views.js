@@ -1976,8 +1976,39 @@ function renderPublishedItem(item) {
   if (titleLine && item.content_type && item.content_type !== 'note' && !isRepost) {
     h += '<div class="feed-item-meta" style="font-size:11px;color:var(--text-secondary,#888)">' + esc(publishedTypeLabel(item.content_type)) + '</div>';
   }
+  // Federation object / activity id for external share (intent only).
+  var shareObjectId = '';
+  if (item.object_id) shareObjectId = String(item.object_id);
+  else if (item.activity_id) shareObjectId = String(item.activity_id);
+  else if (item.note_id) shareObjectId = String(item.note_id);
+  else if (item.url && /^https?:\/\//i.test(String(item.url))) shareObjectId = String(item.url);
+  var shareUrl = '';
+  if (item.url && /^https?:\/\//i.test(String(item.url))) shareUrl = String(item.url);
+  else if (shareObjectId && /^https?:\/\//i.test(shareObjectId)) shareUrl = shareObjectId;
+  var shareAuthor = '';
+  try {
+    if (state.identity) {
+      shareAuthor = state.identity.display_name || '';
+      if (!shareAuthor && state.identity.username) {
+        shareAuthor = '@' + state.identity.username
+          + (state.identity.domain ? '@' + state.identity.domain : '');
+      }
+    }
+  } catch (eId) {}
   h += '<div class="feed-item-actions">';
-  h += '<button class="feed-item-action feed-item-action-danger" data-action-unpublish data-content-type="' + esc(item.content_type) + '" data-content-id="' + esc(item.content_id) + '">'
+  if (shareObjectId || shareUrl || preview) {
+    h += '<button type="button" class="feed-item-action feed-item-action-share" data-action-share="' + esc(shareObjectId || shareUrl || '') + '"'
+      + ' data-object-id="' + esc(shareObjectId || '') + '"'
+      + ' data-share-url="' + esc(shareUrl || shareObjectId || '') + '"'
+      + ' data-share-author="' + esc(shareAuthor || '') + '"'
+      + ' title="' + esc(lang.shareBtn || 'Share') + '"'
+      + ' aria-label="' + esc(lang.shareBtn || 'Share') + '">'
+      + '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>'
+      + '</button>';
+  }
+  h += '<button type="button" class="feed-item-action feed-item-action-danger" data-action-unpublish data-content-type="' + esc(item.content_type) + '" data-content-id="' + esc(item.content_id) + '"'
+    + ' title="' + esc(lang.removeBtn || 'Remove') + '"'
+    + ' aria-label="' + esc(lang.removeBtn || 'Remove') + '">'
     + '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>'
     + esc(lang.removeBtn) + '</button>';
   h += '</div></div></div>';
