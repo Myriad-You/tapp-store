@@ -523,6 +523,16 @@ function bindFeedContentActions(content) {
       doFollowBack(btn.dataset.actionFollowBack);
     });
   });
+  content.querySelectorAll('[data-action-copy-actor]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var text = btn.dataset.actionCopyActor || '';
+      if (!text) return;
+      if (typeof copyTextToClipboard === 'function') {
+        copyTextToClipboard(text, { showMessage: false });
+      }
+    });
+  });
 }
 
 /** True when timeline item was authored by the local identity. */
@@ -639,19 +649,25 @@ function setFeedInteractionBusy(kind, objectId, busy) {
   var k = feedInteractionKey(kind, objectId);
   if (busy) feedInteractionBusy[k] = true;
   else delete feedInteractionBusy[k];
-  // Light DOM feedback without full re-render
+  // Light DOM feedback without full re-render (dataset compare — no CSS.escape needed)
   try {
-    var sel = '';
-    if (kind === 'like') sel = '[data-action-like="' + CSS.escape(String(objectId)) + '"]';
-    else if (kind === 'bookmark') sel = '[data-action-bookmark="' + CSS.escape(String(objectId)) + '"]';
-    else if (kind === 'announce') sel = '[data-action-announce="' + CSS.escape(String(objectId)) + '"]';
-    if (!sel) return;
+    var attr = kind === 'like' ? 'actionLike'
+      : kind === 'bookmark' ? 'actionBookmark'
+      : kind === 'announce' ? 'actionAnnounce'
+      : '';
+    var sel = kind === 'like' ? '[data-action-like]'
+      : kind === 'bookmark' ? '[data-action-bookmark]'
+      : kind === 'announce' ? '[data-action-announce]'
+      : '';
+    if (!sel || !attr) return;
+    var target = String(objectId);
     document.querySelectorAll(sel).forEach(function (btn) {
+      if (String(btn.dataset[attr] || '') !== target) return;
       btn.classList.toggle('is-busy', !!busy);
       btn.disabled = !!busy;
       btn.setAttribute('aria-busy', busy ? 'true' : 'false');
     });
-  } catch (eBusy) { /* CSS.escape may be missing — ignore */ }
+  } catch (eBusy) { /* ignore */ }
 }
 
 /** Patch like/bookmark button DOM in place (avoids full list re-render flicker). */
@@ -1351,27 +1367,34 @@ async function doSubmitQuoteRepost() {
 async function doUnannounce(objectId) {
   if (!objectId || state.isGuest) return;
   if (!Tapp.federation || typeof Tapp.federation.unannounce !== 'function') return;
+  if (isFeedInteractionBusy('announce', objectId)) return;
+  setFeedInteractionBusy('announce', objectId, true);
+  var prevCount = ((findFeedItem(objectId) || {}).announce_count || 0);
+  var nextCount = Math.max(0, prevCount - 1);
   applyInteractionToLists(objectId, {
     announced_by_me: false,
-    announce_count: Math.max(0, ((findFeedItem(objectId) || {}).announce_count || 0) - 1)
+    announce_count: nextCount
   });
-  renderFeedContent();
+  patchInteractionButtons(objectId, { announced_by_me: false, announce_count: nextCount });
   try {
     var res = await Tapp.federation.unannounce(objectId);
     var data = (res && res.data) || res || {};
-    applyInteractionToLists(objectId, {
+    var finalPatch = {
       announced_by_me: data.announced_by_me != null ? data.announced_by_me : false,
-      announce_count: data.announce_count != null ? data.announce_count : undefined
-    });
+      announce_count: data.announce_count != null ? data.announce_count : nextCount
+    };
+    applyInteractionToLists(objectId, finalPatch);
+    patchInteractionButtons(objectId, finalPatch);
     state.feedLoaded.timeline = false;
-    renderFeedContent();
   } catch (e) {
     applyInteractionToLists(objectId, {
       announced_by_me: true,
-      announce_count: Math.max(0, ((findFeedItem(objectId) || {}).announce_count || 0) + 1)
+      announce_count: prevCount
     });
-    renderFeedContent();
-    notifyError(lang.repostFail || 'Repost failed', e);
+    patchInteractionButtons(objectId, { announced_by_me: true, announce_count: prevCount });
+    notifyError(lang.unrepostFail || lang.repostFail || 'Undo repost failed', e);
+  } finally {
+    setFeedInteractionBusy('announce', objectId, false);
   }
 }
 
@@ -1721,19 +1744,19 @@ function renderTimelineItem(item) {
       + (replyCount ? '<span class="feed-item-action-count">' + esc(String(replyCount)) + '</span>' : '')
       + '</button>';
     // Repost
-    h += '<button type="button" class="feed-item-action' + (announced ? ' is-active is-announced' : '') + '" data-action-announce="' + esc(objectId) + '" data-announced="' + (announced ? '1' : '0') + '" title="' + esc(announced ? (lang.unrepostBtn || 'Undo repost') : (lang.repostBtn || 'Repost')) + '" aria-label="' + esc(announced ? (lang.unrepostBtn || 'Undo repost') : (lang.repostBtn || 'Repost')) + '">'
+    h += '<button type="button" class="feed-item-action' + (announced ? ' is-active is-announced' : '') + '" data-action-announce="' + esc(objectId) + '" data-announced="' + (announced ? '1' : '0') + '" aria-pressed="' + (announced ? 'true' : 'false') + '" title="' + esc(announced ? (lang.unrepostBtn || 'Undo repost') : (lang.repostBtn || 'Repost')) + '" aria-label="' + esc(announced ? (lang.unrepostBtn || 'Undo repost') : (lang.repostBtn || 'Repost')) + '">'
       + '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>'
       + (announceCount ? '<span class="feed-item-action-count">' + esc(String(announceCount)) + '</span>' : '')
       + '</button>';
     // Like
-    h += '<button type="button" class="feed-item-action' + (liked ? ' is-active is-liked' : '') + '" data-action-like="' + esc(objectId) + '" data-liked="' + (liked ? '1' : '0') + '" title="' + esc(liked ? (lang.unlikeBtn || 'Unlike') : (lang.likeBtn || 'Like')) + '" aria-label="' + esc(liked ? (lang.unlikeBtn || 'Unlike') : (lang.likeBtn || 'Like')) + '">'
+    h += '<button type="button" class="feed-item-action' + (liked ? ' is-active is-liked' : '') + '" data-action-like="' + esc(objectId) + '" data-liked="' + (liked ? '1' : '0') + '" aria-pressed="' + (liked ? 'true' : 'false') + '" title="' + esc(liked ? (lang.unlikeBtn || 'Unlike') : (lang.likeBtn || 'Like')) + '" aria-label="' + esc(liked ? (lang.unlikeBtn || 'Unlike') : (lang.likeBtn || 'Like')) + '">'
       + (liked
         ? '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 000-7.8z"/></svg>'
         : '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 000-7.8z"/></svg>')
       + (likeCount ? '<span class="feed-item-action-count">' + esc(String(likeCount)) + '</span>' : '')
       + '</button>';
     // Bookmark
-    h += '<button type="button" class="feed-item-action' + (bookmarked ? ' is-active is-bookmarked' : '') + '" data-action-bookmark="' + esc(objectId) + '" data-bookmarked="' + (bookmarked ? '1' : '0') + '" title="' + esc(bookmarked ? (lang.unbookmarkBtn || 'Remove bookmark') : (lang.bookmarkBtn || 'Bookmark')) + '" aria-label="' + esc(bookmarked ? (lang.unbookmarkBtn || 'Remove bookmark') : (lang.bookmarkBtn || 'Bookmark')) + '">'
+    h += '<button type="button" class="feed-item-action' + (bookmarked ? ' is-active is-bookmarked' : '') + '" data-action-bookmark="' + esc(objectId) + '" data-bookmarked="' + (bookmarked ? '1' : '0') + '" aria-pressed="' + (bookmarked ? 'true' : 'false') + '" title="' + esc(bookmarked ? (lang.unbookmarkBtn || 'Remove bookmark') : (lang.bookmarkBtn || 'Bookmark')) + '" aria-label="' + esc(bookmarked ? (lang.unbookmarkBtn || 'Remove bookmark') : (lang.bookmarkBtn || 'Bookmark')) + '">'
       + (bookmarked
         ? '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>'
         : '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>')
@@ -1843,8 +1866,16 @@ function renderActorItem(actor, context) {
   }
   h += '</div>';
   if (actor.bio) h += '<div class="feed-item-text feed-actor-bio">' + esc(actor.bio) + '</div>';
-  // Actions
+  // Actions — copy handle/url for graph clarity + follow/unfollow
   h += '<div class="feed-item-actions">';
+  var copyTarget = handle || actor.actor_url || '';
+  if (copyTarget) {
+    h += '<button type="button" class="feed-item-action" data-action-copy-actor="' + esc(copyTarget) + '"'
+      + ' title="' + esc(lang.copyHandle || lang.copied || 'Copy handle') + '"'
+      + ' aria-label="' + esc(lang.copyHandle || 'Copy handle') + '">'
+      + '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>'
+      + '<span>' + esc(lang.copyHandle || 'Copy') + '</span></button>';
+  }
   if (context === 'following') {
     h += '<button type="button" class="feed-item-action feed-item-action-danger" data-action-unfollow="' + esc(actor.actor_url || '') + '"'
       + ' title="' + esc(lang.unfollowBtn || 'Unfollow') + '"'
