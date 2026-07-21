@@ -1290,9 +1290,23 @@ function isActorInFollowing(actorUrl) {
   return !!(set[u] || set[String(actorUrl)]);
 }
 
+var followBackBusy = {};
+
 async function doFollowBack(actorUrl) {
   if (!actorUrl || state.isGuest) return;
   if (!Tapp.federation || typeof Tapp.federation.follow !== 'function') return;
+  var busyKey = String(actorUrl);
+  if (followBackBusy[busyKey]) return;
+  followBackBusy[busyKey] = true;
+  // Mark matching buttons busy (dataset match — no CSS.escape)
+  try {
+    document.querySelectorAll('[data-action-follow-back]').forEach(function (btn) {
+      if (String(btn.dataset.actionFollowBack || '') !== busyKey) return;
+      btn.classList.add('is-busy');
+      btn.disabled = true;
+      btn.setAttribute('aria-busy', 'true');
+    });
+  } catch (eB) {}
   try {
     await Tapp.federation.follow(actorUrl);
     try {
@@ -1314,6 +1328,16 @@ async function doFollowBack(actorUrl) {
     }
   } catch (e) {
     notifyError(lang.followFail || "Couldn't follow", e);
+  } finally {
+    delete followBackBusy[busyKey];
+    try {
+      document.querySelectorAll('[data-action-follow-back]').forEach(function (btn) {
+        if (String(btn.dataset.actionFollowBack || '') !== busyKey) return;
+        btn.classList.remove('is-busy');
+        btn.disabled = false;
+        btn.setAttribute('aria-busy', 'false');
+      });
+    } catch (eF) {}
   }
 }
 
