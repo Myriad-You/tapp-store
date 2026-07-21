@@ -73,12 +73,18 @@
   document.querySelectorAll('.feed-mobile-tab').forEach(function (btn) {
     btn.addEventListener('click', function () { switchFeedSubTab(btn.dataset.sub); });
   });
-  // Messenger sidebar: 私信 / 群组 / 已关闭
+  // Messenger sidebar: 最近 / 私信 / 群聊 + 已关闭 chip
   document.querySelectorAll('.conv-tab').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      if (typeof setConvTab === 'function') setConvTab(btn.getAttribute('data-conv-tab') || 'dm');
+      if (typeof setConvTab === 'function') setConvTab(btn.getAttribute('data-conv-tab') || 'recent');
     });
   });
+  var closedToggle = $('conv-closed-toggle');
+  if (closedToggle) {
+    closedToggle.addEventListener('click', function () {
+      if (typeof toggleShowClosed === 'function') toggleShowClosed();
+    });
+  }
   var feedFollowBtn = $('feed-follow-btn');
   if (feedFollowBtn) feedFollowBtn.addEventListener('click', doFollow);
   var feedFollowInput = $('feed-follow-input');

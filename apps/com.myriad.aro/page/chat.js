@@ -42,37 +42,71 @@ function filterConversationItems(items, query) {
   });
 }
 
-/** Apply sidebar tab: 私信 / 群组 / 已关闭 (closed after dm+room). */
+/**
+ * Apply messenger list filter.
+ * - showClosed on: only closed conversations (covers type tab; type selection kept).
+ * - showClosed off: recent | dm | room type tabs (non-closed only).
+ * recent = open DMs + rooms, sorted by existing last-activity order.
+ */
 function filterConversationByTab(items) {
-  var tab = state.convTab || 'dm';
+  if (state.showClosed) {
+    return items.filter(function (item) {
+      // Closed channels; rooms with closed membership if that ever appears
+      if (item.kind === 'channel') return item.status === 'closed';
+      if (item.kind === 'room') return item.status === 'closed';
+      return false;
+    });
+  }
+  var tab = state.convTab || 'recent';
   return items.filter(function (item) {
     if (tab === 'dm') {
       return item.kind === 'channel' && item.status !== 'closed';
     }
     if (tab === 'room') {
-      return item.kind === 'room';
+      return item.kind === 'room' && item.status !== 'closed';
     }
-    if (tab === 'closed') {
-      return item.kind === 'channel' && item.status === 'closed';
-    }
-    return true;
+    // recent (default): non-closed DMs + rooms
+    if (item.kind === 'channel') return item.status !== 'closed';
+    if (item.kind === 'room') return item.status !== 'closed';
+    return false;
   });
 }
 
 function syncConvTabsUi() {
-  var tab = state.convTab || 'dm';
+  var tab = state.convTab || 'recent';
+  var closedOn = !!state.showClosed;
   document.querySelectorAll('.conv-tab').forEach(function (btn) {
     var on = btn.getAttribute('data-conv-tab') === tab;
     btn.classList.toggle('conv-tab-active', on);
     if (btn.setAttribute) btn.setAttribute('aria-selected', on ? 'true' : 'false');
   });
+  var bar = $('conv-tabs-bar') || document.querySelector('.conv-tabs-bar');
+  if (bar) bar.classList.toggle('conv-tabs-closed-mode', closedOn);
+  var tabs = $('conv-tabs');
+  if (tabs) tabs.classList.toggle('conv-tabs-dimmed', closedOn);
+  var chip = $('conv-closed-toggle');
+  if (chip) {
+    chip.classList.toggle('conv-closed-chip-active', closedOn);
+    chip.setAttribute('aria-pressed', closedOn ? 'true' : 'false');
+  }
 }
 
 function setConvTab(tab) {
-  if (tab !== 'dm' && tab !== 'room' && tab !== 'closed') tab = 'dm';
+  if (tab !== 'recent' && tab !== 'dm' && tab !== 'room') tab = 'recent';
   state.convTab = tab;
+  // Switching type tab keeps showClosed as-is (list still closed-only while toggle on)
   syncConvTabsUi();
   renderConvList();
+}
+
+function setShowClosed(on) {
+  state.showClosed = !!on;
+  syncConvTabsUi();
+  renderConvList();
+}
+
+function toggleShowClosed() {
+  setShowClosed(!state.showClosed);
 }
 
 function renderConvList() {
@@ -89,15 +123,18 @@ function renderConvList() {
   if (tabItems.length === 0 && !q) {
     var emptyTitle = lang.noConv || lang.title || 'Messenger';
     var emptyHint = lang.noConvHint || lang.selectHint || 'Start a chat with +';
-    if ((state.convTab || 'dm') === 'closed') {
+    if (state.showClosed) {
       emptyTitle = lang.convTabClosedEmpty || lang.closed || 'Closed';
       emptyHint = lang.convTabClosedEmptyHint || 'No closed chats';
-    } else if ((state.convTab || 'dm') === 'room') {
-      emptyTitle = lang.rooms || lang.convTabRoom || 'Groups';
-      emptyHint = lang.noRoomsHint || lang.noConvHint || emptyHint;
+    } else if ((state.convTab || 'recent') === 'room') {
+      emptyTitle = lang.convTabRoomEmpty || lang.rooms || lang.convTabRoom || 'Groups';
+      emptyHint = lang.convTabRoomEmptyHint || lang.noRoomsHint || lang.noConvHint || emptyHint;
+    } else if ((state.convTab || 'recent') === 'dm') {
+      emptyTitle = lang.convTabDmEmpty || lang.dm || lang.convTabDm || 'DMs';
+      emptyHint = lang.convTabDmEmptyHint || lang.noConvHint || emptyHint;
     } else {
-      emptyTitle = lang.dm || lang.convTabDm || 'DMs';
-      emptyHint = lang.noConvHint || emptyHint;
+      emptyTitle = lang.convTabRecentEmpty || lang.noConv || emptyTitle;
+      emptyHint = lang.convTabRecentEmptyHint || lang.noConvHint || emptyHint;
     }
     list.innerHTML = '<div class="conv-empty conv-empty-fill"><span style="display:flex;flex-direction:column;gap:6px;align-items:center;max-width:200px">'
       + '<span style="font-weight:600;font-size:13px;color:var(--text-primary,#333)">' + esc(emptyTitle) + '</span>'

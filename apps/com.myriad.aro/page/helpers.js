@@ -1515,9 +1515,16 @@ function applyLabels() {
   el = document.querySelector('#view-messages .sidebar-title'); if (el) el.textContent = lang.title || 'Messenger';
   el = document.querySelector('#view-messages .empty-text'); if (el) el.textContent = lang.selectHint || 'Pick a conversation to start messaging';
   el = $('create-btn'); if (el) { el.setAttribute('title', lang.create); el.setAttribute('aria-label', lang.create); }
+  el = $('conv-tab-recent'); if (el) el.textContent = lang.convTabRecent || 'Recent';
   el = $('conv-tab-dm'); if (el) el.textContent = lang.convTabDm || lang.dm || 'DMs';
   el = $('conv-tab-room'); if (el) el.textContent = lang.convTabRoom || lang.rooms || 'Groups';
-  el = $('conv-tab-closed'); if (el) el.textContent = lang.convTabClosed || lang.closed || 'Closed';
+  el = $('conv-closed-toggle');
+  if (el) {
+    var closedLabel = lang.convTabClosed || lang.closed || 'Closed';
+    el.textContent = closedLabel;
+    el.setAttribute('title', closedLabel);
+    el.setAttribute('aria-label', closedLabel);
+  }
   el = $('feed-empty-title');
   if (el && typeof getFeedEmptyTitle === 'function') {
     el.style.display = 'block';

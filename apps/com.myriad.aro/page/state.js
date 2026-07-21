@@ -29,8 +29,10 @@ var state = {
   isAdmin: false,
   // Attachment
   pendingAttach: null, // { type, file?, data?, name, size, mime, ... }
-  /** Messenger sidebar filter: dm | room | closed */
-  convTab: 'dm',
+  /** Messenger sidebar type tab: recent | dm | room */
+  convTab: 'recent',
+  /** When true, list shows only closed conversations (overrides type tab filter). */
+  showClosed: false,
   // Aro views
   currentView: 'feed',
   // Feed (merged timeline + profile)

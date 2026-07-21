@@ -485,9 +485,16 @@
   "quoteRepostQuoted": "引用元の投稿",
   "quoteRepostNested": "引用されたリポスト",
   "quoteRepostTruncated": "これより前の引用は省略",
+  "convTabRecent": "最近",
   "convTabDm": "DM",
   "convTabRoom": "グループ",
   "convTabClosed": "終了済み",
+  "convTabRecentEmpty": "最近の会話はありません",
+  "convTabRecentEmptyHint": "+ から DM やグループを開始",
+  "convTabDmEmpty": "DM はありません",
+  "convTabDmEmptyHint": "+ から DM を開始",
+  "convTabRoomEmpty": "グループはありません",
+  "convTabRoomEmptyHint": "+ からグループを作成または参加",
   "convTabClosedEmpty": "終了したチャットはありません",
   "convTabClosedEmptyHint": "閉じたダイレクトメッセージがここに表示されます"
 }

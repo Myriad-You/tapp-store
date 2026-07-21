@@ -361,20 +361,27 @@ body.dark{background:#0a0a0a;color:rgba(255,255,255,.92)}
 .sidebar{display:flex;flex-direction:column;width:280px;border-right:1px solid rgba(128,128,128,.08);flex-shrink:0;overflow:hidden}
 .sidebar-header{padding:14px 14px 12px;border-bottom:1px solid rgba(128,128,128,.06);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:52px}
 .sidebar-title{margin:0;font-size:16px;font-weight:700;color:var(--text-primary,#1a1a1a);letter-spacing:-.02em}
-/* Messenger list tabs: 私信 → 群组 → 已关闭 */
-.conv-tabs{
-  display:flex;align-items:stretch;gap:2px;flex-shrink:0;
-  padding:6px 10px 0;border-bottom:1px solid rgba(128,128,128,.06);
+/* Messenger list: type tabs (最近|私信|群聊) + closed chip after */
+.conv-tabs-bar{
+  display:flex;align-items:stretch;gap:6px;flex-shrink:0;
+  padding:6px 8px 0 6px;border-bottom:1px solid rgba(128,128,128,.06);
   background:rgba(255,255,255,.4);
+  min-width:0;
 }
+.conv-tabs{
+  display:flex;align-items:stretch;gap:1px;flex:1 1 auto;min-width:0;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.conv-tabs::-webkit-scrollbar{display:none}
 .conv-tab{
   flex:1 1 0;min-width:0;
   display:inline-flex;align-items:center;justify-content:center;
-  padding:10px 8px;border:none;background:none;cursor:pointer;
+  padding:10px 6px;border:none;background:none;cursor:pointer;
   font-size:13px;font-weight:600;font-family:inherit;
   color:var(--text-secondary,#8b98a5);
   border-bottom:2.5px solid transparent;
-  white-space:nowrap;transition:color .12s,border-color .12s,background .12s;
+  white-space:nowrap;transition:color .12s,border-color .12s,background .12s,opacity .12s;
   -webkit-tap-highlight-color:transparent;
 }
 .conv-tab:hover{color:var(--text-primary,#1a1a1a);background:rgba(128,128,128,.04)}
@@ -383,10 +390,49 @@ body.dark{background:#0a0a0a;color:rgba(255,255,255,.92)}
   font-weight:750;
   border-bottom-color:var(--tapp-primary,#6366f1)!important;
 }
-.dark .conv-tabs{background:rgba(0,0,0,.18);border-color:rgba(255,255,255,.06)}
+/* Type tabs stay selected under closed mode but are dimmed (list is closed-only) */
+.conv-tabs-dimmed .conv-tab{opacity:.45}
+.conv-tabs-dimmed .conv-tab-active{opacity:.7}
+.conv-closed-chip{
+  flex:0 0 auto;align-self:center;
+  margin:0 0 6px 0;padding:5px 10px;
+  border:1px solid rgba(128,128,128,.18);
+  border-radius:999px;background:transparent;cursor:pointer;
+  font-size:11px;font-weight:600;font-family:inherit;
+  color:var(--text-secondary,#8b98a5);
+  white-space:nowrap;line-height:1.2;
+  transition:color .12s,background .12s,border-color .12s,box-shadow .12s;
+  -webkit-tap-highlight-color:transparent;
+}
+.conv-closed-chip:hover{
+  color:var(--text-primary,#1a1a1a);
+  background:rgba(128,128,128,.06);
+  border-color:rgba(128,128,128,.28);
+}
+.conv-closed-chip-active{
+  color:var(--tapp-primary,#6366f1)!important;
+  border-color:rgba(var(--tapp-primary-rgb,99,102,241),.45)!important;
+  background:rgba(var(--tapp-primary-rgb,99,102,241),.1)!important;
+  box-shadow:0 0 0 1px rgba(var(--tapp-primary-rgb,99,102,241),.12);
+}
+.dark .conv-tabs-bar{background:rgba(0,0,0,.18);border-color:rgba(255,255,255,.06)}
 .dark .conv-tab{color:rgba(255,255,255,.5)}
 .dark .conv-tab:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.04)}
 .dark .conv-tab-active{color:rgba(255,255,255,.95)!important}
+.dark .conv-closed-chip{
+  color:rgba(255,255,255,.5);
+  border-color:rgba(255,255,255,.14);
+}
+.dark .conv-closed-chip:hover{
+  color:rgba(255,255,255,.9);
+  background:rgba(255,255,255,.06);
+  border-color:rgba(255,255,255,.22);
+}
+.dark .conv-closed-chip-active{
+  color:rgba(165,180,252)!important;
+  border-color:rgba(var(--tapp-primary-rgb,99,102,241),.5)!important;
+  background:rgba(var(--tapp-primary-rgb,99,102,241),.16)!important;
+}
 .create-btn{width:36px;height:36px;min-width:36px;min-height:36px;border-radius:10px;border:none;background:var(--tapp-primary,#6366f1);color:#fff;font-size:22px;font-weight:400;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .15s,transform .12s;flex-shrink:0;line-height:1}
 .create-btn:hover{opacity:.9}
 .create-btn:active{transform:scale(.96)}

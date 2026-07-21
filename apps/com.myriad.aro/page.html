@@ -32,10 +32,13 @@
           <h2 class="sidebar-title">信使</h2>
           <button id="create-btn" class="create-btn" title="新建">+</button>
         </div>
-        <div class="conv-tabs" id="conv-tabs" role="tablist" aria-label="Conversations">
-          <button type="button" class="conv-tab conv-tab-active" data-conv-tab="dm" role="tab" aria-selected="true" id="conv-tab-dm">私信</button>
-          <button type="button" class="conv-tab" data-conv-tab="room" role="tab" aria-selected="false" id="conv-tab-room">群组</button>
-          <button type="button" class="conv-tab" data-conv-tab="closed" role="tab" aria-selected="false" id="conv-tab-closed">已关闭</button>
+        <div class="conv-tabs-bar" id="conv-tabs-bar">
+          <div class="conv-tabs" id="conv-tabs" role="tablist" aria-label="Conversations">
+            <button type="button" class="conv-tab conv-tab-active" data-conv-tab="recent" role="tab" aria-selected="true" id="conv-tab-recent">最近</button>
+            <button type="button" class="conv-tab" data-conv-tab="dm" role="tab" aria-selected="false" id="conv-tab-dm">私信</button>
+            <button type="button" class="conv-tab" data-conv-tab="room" role="tab" aria-selected="false" id="conv-tab-room">群聊</button>
+          </div>
+          <button type="button" class="conv-closed-chip" id="conv-closed-toggle" aria-pressed="false" title="已关闭">已关闭</button>
         </div>
         <div class="aro-search-bar">
           <span class="aro-search-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span>
