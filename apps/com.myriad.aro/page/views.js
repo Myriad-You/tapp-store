@@ -1185,7 +1185,15 @@ async function doShareCopyText() {
   var ta = $('feed-share-text');
   var text = ta ? String(ta.value || '') : '';
   if (!text) return;
-  await copyTextToClipboard(text, { showMessage: false });
+  var ok = await copyTextToClipboard(text, { showMessage: false, silent: true });
+  if (ok !== false) {
+    try {
+      Tapp.ui.showNotification({
+        title: lang.shareCopiedText || lang.copied || 'Copied',
+        type: 'success',
+      });
+    } catch (e0) {}
+  }
 }
 
 async function doShareCopyLink() {
@@ -1199,7 +1207,15 @@ async function doShareCopyLink() {
     } catch (e0) {}
     return;
   }
-  await copyTextToClipboard(link, { showMessage: false });
+  var ok = await copyTextToClipboard(link, { showMessage: false, silent: true });
+  if (ok !== false) {
+    try {
+      Tapp.ui.showNotification({
+        title: lang.shareCopiedIntent || lang.copied || 'Copied',
+        type: 'success',
+      });
+    } catch (e1) {}
+  }
 }
 
 function doShareOpenX() {
