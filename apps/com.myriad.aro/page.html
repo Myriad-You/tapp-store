@@ -528,6 +528,34 @@
     </div>
   </div>
 
+  <!-- Share external (compose text + optional X intent — never server-side post) -->
+  <div id="feed-share-dialog" class="create-overlay feed-compose-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="feed-share-title" hidden>
+    <div class="create-dialog feed-compose-dialog feed-share-dialog">
+      <div class="create-dialog-header">
+        <h3 id="feed-share-title" class="create-dialog-title">Share</h3>
+        <button id="feed-share-close" class="create-dialog-close" type="button" aria-label="Close">✕</button>
+      </div>
+      <div class="feed-compose-body">
+        <p id="feed-share-hint" class="feed-share-hint">Copy text or open an external share link. Myriad never posts for you.</p>
+        <textarea id="feed-share-text" class="feed-compose-text" rows="4" placeholder="Share text…"></textarea>
+        <div class="feed-share-meta">
+          <span id="feed-share-chars" class="feed-share-chars">0</span>
+          <span id="feed-share-mode" class="feed-share-mode" hidden></span>
+        </div>
+        <div class="feed-share-actions">
+          <button type="button" id="feed-share-copy" class="feed-share-btn feed-share-btn-secondary">Copy text</button>
+          <button type="button" id="feed-share-copy-link" class="feed-share-btn feed-share-btn-secondary">Copy link</button>
+          <button type="button" id="feed-share-x" class="feed-share-btn feed-share-btn-primary">Open X</button>
+        </div>
+        <div class="feed-compose-actions">
+          <div class="feed-compose-submit">
+            <button type="button" id="feed-share-cancel" class="feed-compose-cancel">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 创建对话框 -->
   <div id="create-dialog" class="create-overlay" style="display:none">
     <div class="create-dialog">
