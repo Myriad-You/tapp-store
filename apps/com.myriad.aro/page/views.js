@@ -1449,7 +1449,8 @@ async function doSubmitReply(objectId, text) {
 }
 
 function findFeedItem(objectId) {
-  var lists = [state.timeline, state.bookmarks];
+  // Include published so share compose from 已发布 can resolve preview text.
+  var lists = [state.timeline, state.bookmarks, state.published];
   for (var i = 0; i < lists.length; i++) {
     var list = lists[i] || [];
     for (var j = 0; j < list.length; j++) {
