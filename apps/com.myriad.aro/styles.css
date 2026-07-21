@@ -290,6 +290,7 @@ body.dark{background:#0a0a0a;color:rgba(255,255,255,.92)}
 .feed-item-action.is-liked:hover{color:#e11d48;background:rgba(244,63,94,.08)}
 .feed-item-action.is-bookmarked{color:#eab308}
 .feed-item-action.is-announced{color:#22c55e}
+.feed-item-action.is-busy{opacity:.55;pointer-events:none;cursor:wait}
 .feed-item-action-count{font-variant-numeric:tabular-nums;min-width:1ch;font-size:12px;opacity:.92}
 /* Hide zero counts for density (structure still present for layout stability when non-zero) */
 .feed-item-action-count:empty,
