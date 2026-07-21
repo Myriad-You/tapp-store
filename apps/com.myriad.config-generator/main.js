@@ -1,11 +1,7 @@
 // Myriad Config Generator — 生产 compose / .env / Nginx
 
-var DOCKER_COMPOSE_TEMPLATE = `# Myriad
-# nets: myriad-net | myriad-admin-net | myriad-docker-guard-net(internal)
-# mkdir -p pgdata state backups && docker compose up -d
-
-services:
-  postgres:
+// Bundled Postgres service (MYRIAD_DB_MODE=bundled). Omitted entirely for external mode.
+var POSTGRES_SERVICE_TEMPLATE = `  postgres:
     image: postgres:{{DB_VERSION}}-alpine
     container_name: myriad-postgres
     deploy:
@@ -55,7 +51,15 @@ services:
       driver: "json-file"
       options: { max-size: "10m", max-file: "3" }
 
-  backend-volume-init:
+`;
+
+var DOCKER_COMPOSE_TEMPLATE = `# Myriad
+# nets: myriad-net | myriad-admin-net | myriad-docker-guard-net(internal)
+# MYRIAD_DB_MODE={{MYRIAD_DB_MODE}}
+# {{COMPOSE_START_HINT}}
+
+services:
+{{POSTGRES_SERVICE}}  backend-volume-init:
     image: \${BACKEND_IMAGE:-docker.io/somekawahitomi/myriad-backend}:\${MYRIAD_TAG}
     container_name: myriad-backend-volume-init
     user: "0:0"
@@ -100,8 +104,7 @@ services:
       MYRIAD_UPDATER_URL: http://updater-gateway:1104
       UPDATER_GATEWAY_SECRET: \${UPDATER_GATEWAY_SECRET}
     depends_on:
-      postgres: { condition: service_healthy }
-      backend-volume-init: { condition: service_completed_successfully }
+{{BACKEND_DEPENDS_ON}}
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:1103/health"]
       interval: 30s
@@ -196,7 +199,7 @@ services:
       MYRIAD_DOCKER_GUARD_NETWORK: \${MYRIAD_DOCKER_GUARD_NETWORK:-myriad-docker-guard-net}
       DOCKER_GUARD_COMPOSE_DIR: /host/compose
       DOCKER_GUARD_ENV_FILE: /host/compose/.env
-      DOCKER_GUARD_ALLOWED_IMAGES: \${BACKEND_IMAGE:-docker.io/somekawahitomi/myriad-backend},\${FRONTEND_IMAGE:-docker.io/somekawahitomi/myriad-frontend},\${PROXY_IMAGE:-docker.io/somekawahitomi/myriad-proxy},\${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater},postgres
+      DOCKER_GUARD_ALLOWED_IMAGES: \${BACKEND_IMAGE:-docker.io/somekawahitomi/myriad-backend},\${FRONTEND_IMAGE:-docker.io/somekawahitomi/myriad-frontend},\${PROXY_IMAGE:-docker.io/somekawahitomi/myriad-proxy},\${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}{{DOCKER_GUARD_EXTRA_IMAGES}}
       RUST_LOG: \${DOCKER_GUARD_LOG:-info}
       TZ: Asia/Shanghai
     volumes:
@@ -228,8 +231,7 @@ services:
       CHECK_INTERVAL_SECS: \${CHECK_INTERVAL_SECS:-3600}
       UPDATER_STATE_DIR: /host/compose/state
       UPDATER_ENV_FILE: /host/compose/.env
-      UPDATER_PGDATA: /host/compose/pgdata
-      UPDATER_COMPOSE_DIR: /host/compose
+{{UPDATER_PGDATA_LINE}}      UPDATER_COMPOSE_DIR: /host/compose
       DOCKER_HOST: tcp://docker-guard:2375
       DOCKER_GUARD_SELF_UPDATE_URL: http://docker-guard:2375/_myriad/self-update
       COSIGN_VERIFY: \${COSIGN_VERIFY:-strict}
@@ -327,10 +329,9 @@ PROXY_ALLOW_DIRECT_UPDATER=false
 COSIGN_VERIFY={{COSIGN_VERIFY}}
 {{COSIGN_INSECURE_HINT}}
 
-POSTGRES_DB={{POSTGRES_DB}}
-POSTGRES_USER={{POSTGRES_USER}}
-POSTGRES_PASSWORD={{POSTGRES_PASSWORD}}
-DATABASE_URL={{DATABASE_URL}}
+# MYRIAD_DB_MODE=bundled|external — external: no compose postgres; updater skips pgdata snapshots
+MYRIAD_DB_MODE={{MYRIAD_DB_MODE}}
+{{POSTGRES_ENV_BLOCK}}DATABASE_URL={{DATABASE_URL}}
 JWT_SECRET={{JWT_SECRET}}
 
 CORS_ORIGINS={{CORS_ORIGINS}}
@@ -446,11 +447,13 @@ var DEPLOY_NOTES_TEMPLATE = `# Myriad 部署
 
 同目录：\`docker-compose.yml\` + \`.env\`（\`chmod 600\`，勿提交）。
 
+数据库模式：\`MYRIAD_DB_MODE={{MYRIAD_DB_MODE}}\`（bundled=内置 Postgres；external=外置，不启动 compose 内 postgres）。
+
 ## 网络
 
 | 网络 | 成员 |
 |------|------|
-| myriad-net | proxy, frontend, backend, postgres |
+| myriad-net | {{DEPLOY_NET_MEMBERS}} |
 | myriad-admin-net | backend, updater, updater-gateway, proxy |
 | myriad-docker-guard-net (internal) | updater, docker-guard |
 
@@ -482,7 +485,7 @@ curl -sS "https://{{MAIN_DOMAIN}}/.well-known/nodeinfo" | head -c 200
 ## 启动
 
 \`\`\`bash
-mkdir -p pgdata state backups
+{{DEPLOY_MKDIR}}
 chmod 600 .env
 docker compose pull && docker compose up -d
 \`\`\`
@@ -503,9 +506,7 @@ proxy 有 AP 路由变更时需单独 bump \`PROXY_TAG\`（与 \`MYRIAD_TAG\` �
 
 \`DOCKER_GUARD_ALLOWED_IMAGES\` 必须包含 proxy（默认 \`myriad-proxy\`）；否则 product/proxy 更新会 403。已部署栈若曾漏掉 proxy：编辑 compose 补上后执行 \`docker compose up -d --force-recreate docker-guard\`，再重试更新。
 
-## 数据
-
-\`./pgdata\` bind mount。换 PG 大版本前先 dump/restore。
+{{DEPLOY_DATA_SECTION}}
 
 ## 救援
 
@@ -1111,6 +1112,54 @@ function buildCorsOrigins(mainDomain, extraDomain) {
   return origins.join(',');
 }
 
+// Host reachable from backend container (IP / hostname / host.docker.internal)
+function isValidDbHost(host) {
+  if (!host || typeof host !== 'string') return false;
+  var h = host.trim();
+  if (!h || h.length > 253) return false;
+  if (h === 'localhost' || h === 'host.docker.internal') return true;
+  // IPv4
+  if (/^(\d{1,3}\.){3}\d{1,3}$/.test(h)) {
+    var parts = h.split('.');
+    for (var i = 0; i < parts.length; i++) {
+      var n = Number(parts[i]);
+      if (n < 0 || n > 255) return false;
+    }
+    return true;
+  }
+  // hostname (incl. docker DNS names)
+  return /^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/i.test(h);
+}
+
+var SSLMODE_ALLOWED = {
+  '': true,
+  disable: true,
+  allow: true,
+  prefer: true,
+  require: true,
+  'verify-ca': true,
+  'verify-full': true
+};
+
+// Build postgres:// URL with encoded user/password; optional sslmode query.
+function buildDatabaseUrl(opts) {
+  var user = opts.user;
+  var password = opts.password;
+  var host = opts.host;
+  var port = opts.port;
+  var database = opts.database;
+  var sslmode = (opts.sslmode || '').trim();
+  var url = 'postgres://' +
+    encodeURIComponent(user) + ':' +
+    encodeURIComponent(password) +
+    '@' + host + ':' + port + '/' +
+    encodeURIComponent(database);
+  if (sslmode) {
+    url += '?sslmode=' + encodeURIComponent(sslmode);
+  }
+  return url;
+}
+
 // ========================================
 // 状态
 // ========================================
@@ -1128,9 +1177,14 @@ var state = {
   extraNginxFileName: '',
   httpBindAddress: '127.0.0.1',
   httpPort: 8080,
+  // bundled = compose postgres; external = user-managed PG (1Panel / managed)
+  dbMode: 'bundled',
   dbVersion: '18',
   dbName: 'myriad',
   dbUser: 'myriad',
+  dbHost: '',
+  dbPort: 5432,
+  dbSslmode: '',
   dbCpuLimit: '2.0',
   dbMemLimit: '2G',
   // 运行时由 Docker Hub 解析填充，不在源码中写死版本
@@ -1159,6 +1213,13 @@ function initPage() {
   var gatewaySecretInput = document.getElementById('updater-gateway-secret');
   var dbNameInput = document.getElementById('db-name');
   var dbUserInput = document.getElementById('db-user');
+  var dbHostInput = document.getElementById('db-host');
+  var dbPortInput = document.getElementById('db-port');
+  var dbSslmodeSelect = document.getElementById('db-sslmode');
+  var dbModeBundledFields = document.getElementById('db-mode-bundled-fields');
+  var dbModeExternalFields = document.getElementById('db-mode-external-fields');
+  var dbResourceGroup = document.getElementById('db-resource-group');
+  var dbModeRadios = document.querySelectorAll('input[name="db-mode"]');
 
   var genDbPasswordBtn = document.getElementById('gen-db-password');
   var genJwtSecretBtn = document.getElementById('gen-jwt-secret');
@@ -1193,6 +1254,33 @@ function initPage() {
     proxy: proxyTagInput,
     updater: updaterTagInput
   };
+
+  function getSelectedDbMode() {
+    var selected = document.querySelector('input[name="db-mode"]:checked');
+    return (selected && selected.value === 'external') ? 'external' : 'bundled';
+  }
+
+  function syncDbModeUi() {
+    var mode = getSelectedDbMode();
+    state.dbMode = mode;
+    var isExternal = mode === 'external';
+    if (dbModeBundledFields) dbModeBundledFields.hidden = isExternal;
+    if (dbModeExternalFields) dbModeExternalFields.hidden = !isExternal;
+    if (dbResourceGroup) dbResourceGroup.hidden = isExternal;
+    // Segmented control active styles
+    document.querySelectorAll('.db-mode-option').forEach(function(label) {
+      var input = label.querySelector('input[name="db-mode"]');
+      if (!input) return;
+      label.classList.toggle('is-active', input.checked);
+    });
+  }
+
+  if (dbModeRadios && dbModeRadios.length) {
+    dbModeRadios.forEach(function(radio) {
+      radio.addEventListener('change', syncDbModeUi);
+    });
+    syncDbModeUi();
+  }
 
   function markTagManual(input) {
     if (!input) return;
@@ -1274,6 +1362,8 @@ function initPage() {
       var gatewaySecret = gatewaySecretInput ? gatewaySecretInput.value.trim() : '';
       var dbName = dbNameInput.value.trim();
       var dbUser = dbUserInput.value.trim();
+      var dbMode = getSelectedDbMode();
+      var isExternal = dbMode === 'external';
 
       if (!mainDomain) {
         showNotification('请输入主域名', 'error');
@@ -1305,16 +1395,47 @@ function initPage() {
         return;
       }
 
-      // 密钥不足时当场补齐并继续，避免「生成后还要再点一次」
-      if (!dbPassword || dbPassword.length < 32) {
-        dbPassword = generatePassword();
-        dbPasswordInput.value = dbPassword;
+      var dbHost = '';
+      var dbPort = 5432;
+      var dbSslmode = '';
+      if (isExternal) {
+        dbHost = dbHostInput ? dbHostInput.value.trim() : '';
+        if (!isValidDbHost(dbHost)) {
+          showNotification('请填写有效的数据库主机（IP / 主机名 / host.docker.internal）', 'error');
+          if (dbHostInput) dbHostInput.focus();
+          return;
+        }
+        dbPort = parseInt(dbPortInput && dbPortInput.value, 10);
+        if (!dbPort || dbPort < 1 || dbPort > 65535) {
+          showNotification('数据库端口无效', 'error');
+          if (dbPortInput) dbPortInput.focus();
+          return;
+        }
+        dbSslmode = dbSslmodeSelect ? (dbSslmodeSelect.value || '').trim() : '';
+        if (!SSLMODE_ALLOWED[dbSslmode]) {
+          showNotification('sslmode 无效', 'error');
+          if (dbSslmodeSelect) dbSslmodeSelect.focus();
+          return;
+        }
+        // External: keep user password as-is (URL-encoded when building DATABASE_URL)
+        if (!dbPassword) {
+          showNotification('请填写外置数据库密码', 'error');
+          dbPasswordInput.focus();
+          return;
+        }
+      } else {
+        // Bundled: 密钥不足时当场补齐；限制 URL-safe 字符避免 compose 特殊字符问题
+        if (!dbPassword || dbPassword.length < 32) {
+          dbPassword = generatePassword();
+          dbPasswordInput.value = dbPassword;
+        }
+        if (!/^[A-Za-z0-9_-]{32,}$/.test(dbPassword)) {
+          showNotification('数据库密码至少 32 位，只能使用字母、数字、下划线和连字符', 'error');
+          dbPasswordInput.focus();
+          return;
+        }
       }
-      if (!/^[A-Za-z0-9_-]{32,}$/.test(dbPassword)) {
-        showNotification('数据库密码至少 32 位，只能使用字母、数字、下划线和连字符', 'error');
-        dbPasswordInput.focus();
-        return;
-      }
+
       if (!jwtSecret || jwtSecret.length < 32) {
         jwtSecret = generateJwtSecret();
         jwtSecretInput.value = jwtSecret;
@@ -1336,6 +1457,10 @@ function initPage() {
       state.updaterGatewaySecret = gatewaySecret;
       state.dbName = dbName;
       state.dbUser = dbUser;
+      state.dbMode = dbMode;
+      state.dbHost = dbHost;
+      state.dbPort = dbPort;
+      state.dbSslmode = dbSslmode;
 
       state.httpBindAddress = httpBindAddressSelect.value || '127.0.0.1';
       if (state.httpBindAddress !== '127.0.0.1' && state.httpBindAddress !== '0.0.0.0') {
@@ -1351,11 +1476,13 @@ function initPage() {
         return;
       }
 
-      state.dbVersion = (dbVersionSelect.value || '18').trim();
-      if (!/^\d+$/.test(state.dbVersion) || Number(state.dbVersion) < 18) {
-        showNotification('PostgreSQL 版本必须是 18 或更高的正式主版本', 'error');
-        dbVersionSelect.focus();
-        return;
+      state.dbVersion = (dbVersionSelect && dbVersionSelect.value) ? dbVersionSelect.value.trim() : '18';
+      if (!isExternal) {
+        if (!/^\d+$/.test(state.dbVersion) || Number(state.dbVersion) < 18) {
+          showNotification('PostgreSQL 版本必须是 18 或更高的正式主版本', 'error');
+          if (dbVersionSelect) dbVersionSelect.focus();
+          return;
+        }
       }
 
       // 若 tag 为空：等待进行中的拉取，或发起新拉取（不强制覆盖手改字段）
@@ -1380,19 +1507,23 @@ function initPage() {
       state.channel = channelSelect.value || 'stable';
       state.cosignVerify = cosignSelect.value || 'strict';
 
-      state.dbCpuLimit = dbCpuLimitInput.value.trim() || '2.0';
-      state.dbMemLimit = dbMemLimitInput.value.trim() || '2G';
+      state.dbCpuLimit = (dbCpuLimitInput && dbCpuLimitInput.value.trim()) || '2.0';
+      state.dbMemLimit = (dbMemLimitInput && dbMemLimitInput.value.trim()) || '2G';
       state.backendCpuLimit = backendCpuLimitInput.value.trim() || '2.0';
       state.backendMemLimit = backendMemLimitInput.value.trim() || '4G';
       state.frontendCpuLimit = frontendCpuLimitInput.value.trim() || '2.0';
       state.frontendMemLimit = frontendMemLimitInput.value.trim() || '2G';
 
-      var cpuValues = [state.dbCpuLimit, state.backendCpuLimit, state.frontendCpuLimit];
+      var cpuValues = isExternal
+        ? [state.backendCpuLimit, state.frontendCpuLimit]
+        : [state.dbCpuLimit, state.backendCpuLimit, state.frontendCpuLimit];
       if (cpuValues.some(function(value) { return !/^\d+(?:\.\d+)?$/.test(value) || Number(value) <= 0; })) {
         showNotification('CPU 数量必须是大于 0 的数字', 'error');
         return;
       }
-      var memoryValues = [state.dbMemLimit, state.backendMemLimit, state.frontendMemLimit];
+      var memoryValues = isExternal
+        ? [state.backendMemLimit, state.frontendMemLimit]
+        : [state.dbMemLimit, state.backendMemLimit, state.frontendMemLimit];
       if (memoryValues.some(function(value) { return !/^\d+(?:\.\d+)?[KMGTP]i?B?$/i.test(value); })) {
         showNotification('内存格式无效，请使用 512M、2G 等格式', 'error');
         return;
@@ -1542,23 +1673,96 @@ function applyPlaceholders(template, map) {
   var out = template;
   Object.keys(map).forEach(function(key) {
     var re = new RegExp('\\{\\{' + key + '\\}\\}', 'g');
-    out = out.replace(re, map[key]);
+    // Function replacer: avoid $ special sequences in passwords / URLs
+    var value = map[key] == null ? '' : String(map[key]);
+    out = out.replace(re, function() { return value; });
   });
   return out;
 }
 
 function generateConfigs() {
   var corsOrigins = buildCorsOrigins(state.mainDomain, state.extraDomain);
-  var databaseUrl = 'postgres://' +
-    encodeURIComponent(state.dbUser) + ':' +
-    encodeURIComponent(state.dbPassword) +
-    '@postgres:5432/' + encodeURIComponent(state.dbName);
+  var isExternal = state.dbMode === 'external';
+
+  var databaseUrl;
+  if (isExternal) {
+    databaseUrl = buildDatabaseUrl({
+      user: state.dbUser,
+      password: state.dbPassword,
+      host: state.dbHost,
+      port: state.dbPort,
+      database: state.dbName,
+      sslmode: state.dbSslmode
+    });
+  } else {
+    databaseUrl = buildDatabaseUrl({
+      user: state.dbUser,
+      password: state.dbPassword,
+      host: 'postgres',
+      port: 5432,
+      database: state.dbName,
+      sslmode: ''
+    });
+  }
 
   var cosignInsecureHint = state.cosignVerify === 'off'
     ? 'UPDATER_ALLOW_INSECURE_COSIGN=true'
     : '# UPDATER_ALLOW_INSECURE_COSIGN=true\n# COSIGN_INSECURE_OK=true';
 
+  var postgresService = '';
+  var backendDependsOn = '      backend-volume-init: { condition: service_completed_successfully }\n';
+  var dockerGuardExtra = '';
+  var updaterPgdataLine = '';
+  var composeStartHint = 'mkdir -p state backups && docker compose up -d';
+  var postgresEnvBlock = '';
+  var deployNetMembers = 'proxy, frontend, backend';
+  var deployMkdir = 'mkdir -p state backups';
+  var deployDataSection =
+    '## 数据\n\n' +
+    '`MYRIAD_DB_MODE=external`：不使用 `./pgdata`，Myriad updater **不会** 快照外置数据库。\n' +
+    '备份与恢复由你自行负责（1Panel 备份、托管 PG 快照、`pg_dump` 等）。\n' +
+    '容器访问宿主机/外置库时，主机可能需填 IP、`host.docker.internal` 或 docker bridge 网关。\n';
+
+  if (!isExternal) {
+    postgresService = applyPlaceholders(POSTGRES_SERVICE_TEMPLATE, {
+      DB_VERSION: state.dbVersion,
+      DB_CPU_LIMIT: state.dbCpuLimit,
+      DB_MEM_LIMIT: state.dbMemLimit
+    });
+    backendDependsOn =
+      '      postgres: { condition: service_healthy }\n' +
+      '      backend-volume-init: { condition: service_completed_successfully }\n';
+    dockerGuardExtra = ',postgres';
+    updaterPgdataLine = '      UPDATER_PGDATA: /host/compose/pgdata\n';
+    composeStartHint = 'mkdir -p pgdata state backups && docker compose up -d';
+    postgresEnvBlock =
+      'POSTGRES_DB=' + state.dbName + '\n' +
+      'POSTGRES_USER=' + state.dbUser + '\n' +
+      'POSTGRES_PASSWORD=' + state.dbPassword + '\n';
+    deployNetMembers = 'proxy, frontend, backend, postgres';
+    deployMkdir = 'mkdir -p pgdata state backups';
+    deployDataSection =
+      '## 数据\n\n' +
+      '`./pgdata` bind mount（`MYRIAD_DB_MODE=bundled`）。换 PG 大版本前先 dump/restore。\n';
+  } else {
+    // Still document credentials used to build DATABASE_URL (optional for operators)
+    postgresEnvBlock =
+      '# Credentials used to build DATABASE_URL (external DB; no compose postgres service)\n' +
+      '# POSTGRES_DB=' + state.dbName + '\n' +
+      '# POSTGRES_USER=' + state.dbUser + '\n';
+  }
+
   var map = {
+    MYRIAD_DB_MODE: isExternal ? 'external' : 'bundled',
+    COMPOSE_START_HINT: composeStartHint,
+    POSTGRES_SERVICE: postgresService,
+    BACKEND_DEPENDS_ON: backendDependsOn,
+    DOCKER_GUARD_EXTRA_IMAGES: dockerGuardExtra,
+    UPDATER_PGDATA_LINE: updaterPgdataLine,
+    POSTGRES_ENV_BLOCK: postgresEnvBlock,
+    DEPLOY_NET_MEMBERS: deployNetMembers,
+    DEPLOY_MKDIR: deployMkdir,
+    DEPLOY_DATA_SECTION: deployDataSection,
     DB_VERSION: state.dbVersion,
     POSTGRES_DB: state.dbName,
     POSTGRES_USER: state.dbUser,

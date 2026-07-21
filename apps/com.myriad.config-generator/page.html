@@ -67,33 +67,80 @@
           </span>
           数据库
         </h2>
-        <div class="form-row">
-          <div class="form-group form-group-half">
+
+        <div class="form-group">
+          <span class="form-label-text" id="db-mode-label">部署方式</span>
+          <div class="db-mode-toggle" role="radiogroup" aria-labelledby="db-mode-label">
+            <label class="db-mode-option is-active">
+              <input type="radio" name="db-mode" value="bundled" checked>
+              <span class="db-mode-option-title">内置 Postgres</span>
+              <span class="db-mode-option-desc">compose 内 postgres · 默认</span>
+            </label>
+            <label class="db-mode-option">
+              <input type="radio" name="db-mode" value="external">
+              <span class="db-mode-option-title">外置 Postgres</span>
+              <span class="db-mode-option-desc">1Panel / 托管库 · 无 postgres 服务</span>
+            </label>
+          </div>
+          <span class="form-hint">写入 <code>MYRIAD_DB_MODE=bundled|external</code>。外置时 updater 不快照数据库，备份自负。</span>
+        </div>
+
+        <div id="db-mode-bundled-fields">
+          <div class="form-group">
             <label for="db-version">PostgreSQL 版本</label>
             <input type="number" id="db-version" class="form-input" value="18" min="18" step="1">
+            <span class="form-hint">内置镜像 <code>postgres:VERSION-alpine</code>，主版本 ≥18</span>
           </div>
+        </div>
+
+        <div id="db-mode-external-fields" hidden>
+          <div class="form-row">
+            <div class="form-group form-group-half">
+              <label for="db-host">主机</label>
+              <input type="text" id="db-host" class="form-input" placeholder="host.docker.internal 或 IP" autocomplete="off">
+            </div>
+            <div class="form-group form-group-half">
+              <label for="db-port">端口</label>
+              <input type="number" id="db-port" class="form-input" value="5432" min="1" max="65535">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="db-sslmode">sslmode（可选）</label>
+            <select id="db-sslmode" class="form-input form-select">
+              <option value="" selected>不设置</option>
+              <option value="disable">disable</option>
+              <option value="allow">allow</option>
+              <option value="prefer">prefer</option>
+              <option value="require">require</option>
+              <option value="verify-ca">verify-ca</option>
+              <option value="verify-full">verify-full</option>
+            </select>
+          </div>
+          <span class="form-hint form-hint-block">容器访问宿主机上的库：常用 <code>host.docker.internal</code>（Docker Desktop）、宿主 IP，或 docker bridge 网关（如 <code>172.17.0.1</code>）。托管库填公网/VPC 主机名即可。</span>
+        </div>
+
+        <div class="form-row">
           <div class="form-group form-group-half">
             <label for="db-name">数据库名</label>
             <input type="text" id="db-name" class="form-input" value="myriad" autocomplete="off">
             <span class="form-hint">小写字母/数字/_，字母开头</span>
           </div>
-        </div>
-        <div class="form-row">
           <div class="form-group form-group-half">
             <label for="db-user">用户名</label>
             <input type="text" id="db-user" class="form-input" value="myriad" autocomplete="off">
           </div>
-          <div class="form-group form-group-half">
-            <label for="db-password">密码</label>
-            <div class="input-with-action">
-              <input type="text" id="db-password" class="form-input" placeholder="≥32，可自动生成" autocomplete="off">
-              <button type="button" id="gen-db-password" class="btn-generate" title="生成随机密码">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/>
-                </svg>
-              </button>
-            </div>
+        </div>
+        <div class="form-group">
+          <label for="db-password">密码</label>
+          <div class="input-with-action">
+            <input type="text" id="db-password" class="form-input" placeholder="内置 ≥32 可生成；外置填真实密码" autocomplete="off">
+            <button type="button" id="gen-db-password" class="btn-generate" title="生成随机密码">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/>
+              </svg>
+            </button>
           </div>
+          <span class="form-hint">写入 <code>DATABASE_URL</code> 时会对密码做 URL 编码</span>
         </div>
       </section>
 
@@ -253,8 +300,8 @@
           </div>
 
           <h3 class="advanced-subtitle">资源上限</h3>
-          <div class="resource-group">
-            <div class="resource-label"><span>PostgreSQL</span></div>
+          <div class="resource-group" id="db-resource-group">
+            <div class="resource-label"><span>PostgreSQL（仅内置）</span></div>
             <div class="form-row">
               <div class="form-group form-group-half">
                 <label for="db-cpu-limit">CPU</label>

@@ -636,6 +636,79 @@
   color: var(--config-text);
 }
 
+/* 数据库模式切换：内置 / 外置 */
+.form-label-text {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--config-text);
+  margin-bottom: 8px;
+}
+
+.db-mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.db-mode-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: var(--config-radius-sm);
+  border: 1px solid var(--config-border);
+  background: var(--config-input-bg);
+  cursor: pointer;
+  transition: var(--config-transition);
+  user-select: none;
+}
+
+.db-mode-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.db-mode-option:hover {
+  border-color: rgba(var(--config-primary-rgb), 0.35);
+  background: rgba(var(--config-primary-rgb), 0.06);
+}
+
+.db-mode-option.is-active {
+  border-color: rgba(var(--config-primary-rgb), 0.55);
+  background: rgba(var(--config-primary-rgb), 0.12);
+  box-shadow: 0 0 0 1px rgba(var(--config-primary-rgb), 0.2);
+}
+
+.db-mode-option-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--config-text);
+}
+
+.db-mode-option.is-active .db-mode-option-title {
+  color: var(--config-primary);
+}
+
+.db-mode-option-desc {
+  font-size: 11px;
+  color: var(--config-text-muted);
+  line-height: 1.4;
+}
+
+.form-hint-block {
+  display: block;
+  margin: -4px 0 14px;
+}
+
+@media (max-width: 520px) {
+  .db-mode-toggle {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Select 下拉框 */
 .form-select {
   appearance: none;
