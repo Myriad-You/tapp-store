@@ -25,6 +25,8 @@
 - Timeline: share affordance (compose text + optional X Web Intent; never server-side post)
 - Following/followers: domain chip, mutual / follows-you badges, follow-back
 - Feed density: tighter action row, absolute time title, actor-list skeleton
+- Published tab: external share + absolute time title; follow-back in-flight guard
+- Share copy feedback toasts (shareCopiedText / shareCopiedIntent)
 
 ### 1.0.7
 
