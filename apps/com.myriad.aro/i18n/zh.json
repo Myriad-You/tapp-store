@@ -524,5 +524,6 @@
   "mutualFollow": "互关",
   "followingBadge": "已关注",
   "followsYouBadge": "关注了你",
-  "emptyTitleBookmarks": "还没有收藏"
+  "emptyTitleBookmarks": "还没有收藏",
+  "copyHandle": "复制标识"
 }

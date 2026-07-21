@@ -524,5 +524,6 @@
   "mutualFollow": "Mutual",
   "followingBadge": "Following",
   "followsYouBadge": "Follows you",
-  "emptyTitleBookmarks": "No bookmarks yet"
+  "emptyTitleBookmarks": "No bookmarks yet",
+  "copyHandle": "Copy handle"
 }

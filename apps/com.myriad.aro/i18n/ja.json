@@ -524,5 +524,6 @@
   "mutualFollow": "相互",
   "followingBadge": "フォロー中",
   "followsYouBadge": "フォローされています",
-  "emptyTitleBookmarks": "ブックマークはまだありません"
+  "emptyTitleBookmarks": "ブックマークはまだありません",
+  "copyHandle": "ハンドルをコピー"
 }
