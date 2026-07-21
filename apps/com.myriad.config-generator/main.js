@@ -196,7 +196,7 @@ services:
       MYRIAD_DOCKER_GUARD_NETWORK: \${MYRIAD_DOCKER_GUARD_NETWORK:-myriad-docker-guard-net}
       DOCKER_GUARD_COMPOSE_DIR: /host/compose
       DOCKER_GUARD_ENV_FILE: /host/compose/.env
-      DOCKER_GUARD_ALLOWED_IMAGES: \${BACKEND_IMAGE:-docker.io/somekawahitomi/myriad-backend},\${FRONTEND_IMAGE:-docker.io/somekawahitomi/myriad-frontend},\${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater},postgres
+      DOCKER_GUARD_ALLOWED_IMAGES: \${BACKEND_IMAGE:-docker.io/somekawahitomi/myriad-backend},\${FRONTEND_IMAGE:-docker.io/somekawahitomi/myriad-frontend},\${PROXY_IMAGE:-docker.io/somekawahitomi/myriad-proxy},\${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater},postgres
       RUST_LOG: \${DOCKER_GUARD_LOG:-info}
       TZ: Asia/Shanghai
     volumes:
@@ -300,6 +300,8 @@ PROXY_TAG={{PROXY_TAG}}
 UPDATER_TAG={{UPDATER_TAG}}
 BACKEND_IMAGE=docker.io/somekawahitomi/myriad-backend
 FRONTEND_IMAGE=docker.io/somekawahitomi/myriad-frontend
+# PROXY_IMAGE=docker.io/somekawahitomi/myriad-proxy
+# UPDATER_IMAGE=docker.io/somekawahitomi/myriad-updater
 COMPOSE_PROJECT_NAME=myriad
 # MYRIAD_DOCKER_NETWORK=myriad-net
 # MYRIAD_ADMIN_NETWORK=myriad-admin-net
@@ -498,6 +500,8 @@ https://{{MAIN_DOMAIN}} → \`{{HTTP_BIND_ADDRESS}}:{{HTTP_PORT}}\`（整站反�
 设置 → 关于 → 更新管理 · \`{{CHANNEL}}\` · cosign \`{{COSIGN_VERIFY}}\`
 
 proxy 有 AP 路由变更时需单独 bump \`PROXY_TAG\`（与 \`MYRIAD_TAG\` 独立）。
+
+\`DOCKER_GUARD_ALLOWED_IMAGES\` 必须包含 proxy（默认 \`myriad-proxy\`）；否则 product/proxy 更新会 403。已部署栈若曾漏掉 proxy：编辑 compose 补上后执行 \`docker compose up -d --force-recreate docker-guard\`，再重试更新。
 
 ## 数据
 

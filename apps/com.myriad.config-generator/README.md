@@ -21,6 +21,7 @@
 
 - backend-volume-init 使用 `network_mode: none`
 - 仅 docker-guard 挂 sock；仅 proxy 映射宿主端口
+- `DOCKER_GUARD_ALLOWED_IMAGES` 须含 backend / frontend / **proxy** / updater / postgres（漏 proxy 会导致 pull 403）
 - backend 只持 `UPDATER_GATEWAY_SECRET`，经 gateway 更新
 - backend-volume-init 会在 backend 启动前修复持久卷权限
 - 禁止 `:latest`

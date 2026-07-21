@@ -132,7 +132,7 @@
     {
       "id": "com.myriad.config-generator",
       "name": "Myriad 安装配置生成",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "生成 Compose、.env 与 Nginx 部署配置",
       "long_description": "填写域名与数据库参数，生成官方生产拓扑的 docker-compose、.env、Nginx 与部署说明（含 1Panel）。",
       "locales": {
@@ -185,7 +185,7 @@
       "featured": true,
       "verified": true,
       "created_at": "2025-12-14T00:00:00Z",
-      "updated_at": "2026-07-19T11:28:19Z"
+      "updated_at": "2026-07-21T00:00:00Z"
     },
     {
       "id": "com.myriad.doudizhu",
