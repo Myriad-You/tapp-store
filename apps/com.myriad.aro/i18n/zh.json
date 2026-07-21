@@ -525,5 +525,7 @@
   "followingBadge": "已关注",
   "followsYouBadge": "关注了你",
   "emptyTitleBookmarks": "还没有收藏",
-  "copyHandle": "复制标识"
+  "copyHandle": "复制标识",
+  "shareCopiedText": "分享文案已复制",
+  "unrepostFail": "取消转发失败"
 }
