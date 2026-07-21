@@ -141,6 +141,12 @@
       closeFeedPlusMenu();
       return;
     }
+    var shareDlg = $('feed-share-dialog');
+    if (shareDlg && shareDlg.style.display !== 'none') {
+      e.preventDefault();
+      if (typeof closeShareModal === 'function') closeShareModal();
+      return;
+    }
     var quoteDlg = $('quote-repost-dialog');
     if (quoteDlg && quoteDlg.style.display !== 'none') {
       e.preventDefault();
@@ -183,6 +189,36 @@
       e.preventDefault();
       if (typeof doSubmitQuoteRepost === 'function') doSubmitQuoteRepost();
     }
+  });
+
+  // External share modal (intent only — no server post)
+  var shareCancel = $('feed-share-cancel');
+  if (shareCancel) shareCancel.addEventListener('click', function () {
+    if (typeof closeShareModal === 'function') closeShareModal();
+  });
+  var shareClose = $('feed-share-close');
+  if (shareClose) shareClose.addEventListener('click', function () {
+    if (typeof closeShareModal === 'function') closeShareModal();
+  });
+  var shareOverlay = $('feed-share-dialog');
+  if (shareOverlay) shareOverlay.addEventListener('click', function (e) {
+    if (e.target === shareOverlay && typeof closeShareModal === 'function') closeShareModal();
+  });
+  var shareCopy = $('feed-share-copy');
+  if (shareCopy) shareCopy.addEventListener('click', function () {
+    if (typeof doShareCopyText === 'function') doShareCopyText();
+  });
+  var shareCopyLink = $('feed-share-copy-link');
+  if (shareCopyLink) shareCopyLink.addEventListener('click', function () {
+    if (typeof doShareCopyLink === 'function') doShareCopyLink();
+  });
+  var shareX = $('feed-share-x');
+  if (shareX) shareX.addEventListener('click', function () {
+    if (typeof doShareOpenX === 'function') doShareOpenX();
+  });
+  var shareTa = $('feed-share-text');
+  if (shareTa) shareTa.addEventListener('input', function () {
+    if (typeof updateShareCharCount === 'function') updateShareCharCount();
   });
 
   // Feed freeform note composer (modal)

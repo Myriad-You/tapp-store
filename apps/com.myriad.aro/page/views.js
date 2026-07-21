@@ -108,12 +108,28 @@ async function loadFeedSubTab() {
       if (!res && feedErr) throw feedErr;
       state.timeline = unwrapListResponse(res);
     } else if (sub === 'following') {
-      var res = await Tapp.federation.getFollowing();
-      state.following = unwrapListResponse(res);
+      // Parallel followers fetch so mutual / "follows you" badges resolve.
+      var resFollowPair = await Promise.all([
+        Tapp.federation.getFollowing(),
+        Tapp.federation.getFollowers().catch(function () { return { items: [] }; }),
+      ]);
+      state.following = unwrapListResponse(resFollowPair[0]);
+      var folSide = unwrapListResponse(resFollowPair[1]);
+      if (folSide.length || !(state.followers && state.followers.length)) {
+        state.followers = folSide;
+      }
       updateFeedCountBadges();
     } else if (sub === 'followers') {
-      var res = await Tapp.federation.getFollowers();
-      state.followers = unwrapListResponse(res);
+      // Parallel following fetch so follow-back / mutual badges resolve.
+      var resFollowerPair = await Promise.all([
+        Tapp.federation.getFollowers(),
+        Tapp.federation.getFollowing().catch(function () { return { items: [] }; }),
+      ]);
+      state.followers = unwrapListResponse(resFollowerPair[0]);
+      var folSide2 = unwrapListResponse(resFollowerPair[1]);
+      if (folSide2.length || !(state.following && state.following.length)) {
+        state.following = folSide2;
+      }
       updateFeedCountBadges();
     } else if (sub === 'published') {
       var res = await Tapp.federation.getPublished();
@@ -406,14 +422,17 @@ function showFeedEmpty(message, kind) {
 }
 
 function renderFeedSkeleton() {
+  var sub = state.feedSubTab;
+  var actorLike = sub === 'following' || sub === 'followers';
   var html = '';
-  for (var i = 0; i < 4; i++) {
-    html += '<div class="feed-skeleton-item">'
+  for (var i = 0; i < (actorLike ? 5 : 4); i++) {
+    html += '<div class="feed-skeleton-item' + (actorLike ? ' feed-skeleton-actor' : '') + '">'
       + '<div class="feed-skeleton-avatar"></div>'
       + '<div class="feed-skeleton-body">'
       + '<div class="feed-skeleton-line feed-skeleton-line-short"></div>'
-      + '<div class="feed-skeleton-line"></div>'
-      + '<div class="feed-skeleton-line feed-skeleton-line-mid"></div>'
+      + (actorLike
+        ? '<div class="feed-skeleton-line feed-skeleton-line-mid"></div>'
+        : '<div class="feed-skeleton-line"></div><div class="feed-skeleton-line feed-skeleton-line-mid"></div>')
       + '</div>'
       + '</div>';
   }
@@ -486,6 +505,22 @@ function bindFeedContentActions(content) {
       var box = card ? card.querySelector('.feed-reply-box textarea') : null;
       var text = box ? box.value : '';
       doSubmitReply(oid, text);
+    });
+  });
+  content.querySelectorAll('[data-action-share]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      openShareModal(btn.dataset.actionShare || '', {
+        objectId: btn.dataset.objectId || btn.dataset.actionShare || '',
+        linkUrl: btn.dataset.shareUrl || '',
+        author: btn.dataset.shareAuthor || '',
+      });
+    });
+  });
+  content.querySelectorAll('[data-action-follow-back]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      doFollowBack(btn.dataset.actionFollowBack);
     });
   });
 }
@@ -854,6 +889,258 @@ function applyQuoteRepostLabels() {
   el = $('quote-repost-submit'); if (el) el.textContent = lang.quoteRepostSubmit || lang.repostBtn || 'Repost';
 }
 
+// ---------------------------------------------------------------------------
+// External share intent (X-inspired; host compose if available, never server post)
+// ---------------------------------------------------------------------------
+var shareModalState = { objectId: '', linkUrl: '', author: '', intentUrl: '' };
+
+function buildLocalXIntentUrl(text, url) {
+  var params = [];
+  var t = String(text || '').trim();
+  if (t) params.push('text=' + encodeURIComponent(t));
+  if (url) params.push('url=' + encodeURIComponent(String(url)));
+  return 'https://x.com/intent/tweet' + (params.length ? '?' + params.join('&') : '');
+}
+
+function composeShareTextFromItem(objectId, opts) {
+  opts = opts || {};
+  var item = objectId ? findFeedItem(objectId) : null;
+  var preview = feedItemPreviewText(item) || '';
+  var author = opts.author || '';
+  if (!author && item && item.actor) {
+    author = item.actor.display_name || '';
+    if (!author && item.actor.username) {
+      author = '@' + item.actor.username + (item.actor.domain ? '@' + item.actor.domain : '');
+    }
+  }
+  var link = opts.linkUrl || '';
+  if (!link && item) {
+    var cj = timelineContentObject(item);
+    if (cj && typeof cj.url === 'string' && cj.url) link = cj.url;
+    else if (objectId && /^https?:\/\//i.test(objectId)) link = objectId;
+  }
+  var parts = [];
+  if (author) parts.push(author + ':');
+  if (preview) parts.push(preview);
+  var body = parts.join(' ').trim();
+  if (!body) body = lang.shareDefaultText || 'Shared from Myriad federation';
+  // Soft cap for local compose (host may recompose with exact max).
+  if (body.length > 240) body = body.slice(0, 237) + '…';
+  return { text: body, url: link || objectId || '', author: author };
+}
+
+function updateShareCharCount() {
+  var ta = $('feed-share-text');
+  var el = $('feed-share-chars');
+  if (!ta || !el) return;
+  var n = String(ta.value || '').length;
+  el.textContent = String(n);
+  el.classList.toggle('is-over', n > 280);
+}
+
+function applyShareModalLabels() {
+  var el;
+  el = $('feed-share-title'); if (el) el.textContent = lang.shareTitle || lang.shareBtn || 'Share';
+  el = $('feed-share-close'); if (el) el.setAttribute('aria-label', lang.composeCancel || lang.close || 'Close');
+  el = $('feed-share-hint'); if (el) el.textContent = lang.shareHint
+    || 'Copy text or open an external share link. Myriad never posts for you.';
+  el = $('feed-share-text'); if (el) el.placeholder = lang.sharePlaceholder || 'Share text…';
+  el = $('feed-share-copy'); if (el) el.textContent = lang.shareCopyText || 'Copy text';
+  el = $('feed-share-copy-link'); if (el) el.textContent = lang.shareCopyLink || 'Copy link';
+  el = $('feed-share-x'); if (el) el.textContent = lang.shareOpenX || 'Open X';
+  el = $('feed-share-cancel'); if (el) el.textContent = lang.close || lang.composeCancel || 'Close';
+  el = $('feed-share-mode'); if (el) {
+    el.hidden = false;
+    el.textContent = lang.shareModeIntent || 'Intent only';
+  }
+}
+
+async function openShareModal(objectId, opts) {
+  opts = opts || {};
+  var composed = composeShareTextFromItem(objectId, opts);
+  shareModalState = {
+    objectId: objectId || opts.objectId || '',
+    linkUrl: composed.url || opts.linkUrl || '',
+    author: composed.author || opts.author || '',
+    intentUrl: '',
+  };
+  applyShareModalLabels();
+  var ta = $('feed-share-text');
+  if (ta) ta.value = composed.text;
+  updateShareCharCount();
+
+  // Prefer host compose (same rules as /api/x/share) when bridge is present.
+  if (Tapp.federation && typeof Tapp.federation.composeExternalShare === 'function') {
+    try {
+      var res = await Tapp.federation.composeExternalShare({
+        text: composed.text,
+        url: shareModalState.linkUrl || undefined,
+        max_length: 280,
+      });
+      var data = (res && res.data) || res || {};
+      if (data && data.text) {
+        if (ta) ta.value = data.text;
+        updateShareCharCount();
+      }
+      if (data && data.intent_url) {
+        shareModalState.intentUrl = String(data.intent_url);
+      }
+      if (data && data.mode && data.mode !== 'intent') {
+        console.warn('[Aro] external share mode is not intent; ignoring post path');
+        shareModalState.intentUrl = '';
+      }
+    } catch (eCompose) {
+      console.warn('[Aro] composeExternalShare failed; using local intent', eCompose);
+    }
+  }
+  if (!shareModalState.intentUrl) {
+    shareModalState.intentUrl = buildLocalXIntentUrl(
+      ta ? ta.value : composed.text,
+      shareModalState.linkUrl,
+    );
+  }
+
+  var dlg = $('feed-share-dialog');
+  if (dlg) showAroOverlay(dlg);
+  if (ta) {
+    try { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); } catch (eF) {}
+  }
+}
+
+function closeShareModal() {
+  shareModalState = { objectId: '', linkUrl: '', author: '', intentUrl: '' };
+  var dlg = $('feed-share-dialog');
+  var ta = $('feed-share-text');
+  if (ta) ta.value = '';
+  if (!dlg) return;
+  if (typeof aroDismiss === 'function') {
+    aroDismiss(dlg, { ms: 160 });
+  } else {
+    dlg.style.display = 'none';
+    dlg.hidden = true;
+  }
+}
+
+async function doShareCopyText() {
+  var ta = $('feed-share-text');
+  var text = ta ? String(ta.value || '') : '';
+  if (!text) return;
+  await copyTextToClipboard(text, { showMessage: false });
+}
+
+async function doShareCopyLink() {
+  var link = shareModalState.linkUrl || shareModalState.objectId || '';
+  if (!link) {
+    try {
+      Tapp.ui.showNotification({
+        title: lang.shareNoLink || 'No link available',
+        type: 'warning',
+      });
+    } catch (e0) {}
+    return;
+  }
+  await copyTextToClipboard(link, { showMessage: false });
+}
+
+function doShareOpenX() {
+  var ta = $('feed-share-text');
+  var text = ta ? String(ta.value || '').trim() : '';
+  var url = shareModalState.intentUrl;
+  // Rebuild if user edited text after open
+  if (text) {
+    url = buildLocalXIntentUrl(text, shareModalState.linkUrl);
+    shareModalState.intentUrl = url;
+  }
+  if (!url) {
+    try {
+      Tapp.ui.showNotification({
+        title: lang.shareFail || "Couldn't open share link",
+        type: 'error',
+      });
+    } catch (e1) {}
+    return;
+  }
+  try {
+    var opened = window.open(url, '_blank', 'noopener,noreferrer');
+    if (!opened) {
+      // Sandbox may block window.open — fall back to copy intent URL
+      copyTextToClipboard(url, { showMessage: false });
+      try {
+        Tapp.ui.showNotification({
+          title: lang.shareCopiedIntent || 'Share link copied — paste in your browser',
+          type: 'info',
+        });
+      } catch (e2) {}
+      return;
+    }
+    try {
+      Tapp.ui.showNotification({
+        title: lang.shareOpenedX || 'Opened X share',
+        message: lang.shareModeIntent || 'Intent only — you complete the post',
+        type: 'success',
+      });
+    } catch (e3) {}
+  } catch (eOpen) {
+    copyTextToClipboard(url, { showMessage: false });
+    try {
+      Tapp.ui.showNotification({
+        title: lang.shareCopiedIntent || 'Share link copied — paste in your browser',
+        type: 'info',
+      });
+    } catch (e4) {}
+  }
+}
+
+/** Build a Set of actor URLs the local user is following (accepted). */
+function followingActorUrlSet() {
+  var set = {};
+  (state.following || []).forEach(function (a) {
+    if (!a) return;
+    var u = typeof normalizeFederationUrl === 'function'
+      ? normalizeFederationUrl(a.actor_url)
+      : String(a.actor_url || '').trim();
+    if (u) set[u] = a;
+    if (a.actor_url) set[String(a.actor_url)] = a;
+  });
+  return set;
+}
+
+function isActorInFollowing(actorUrl) {
+  if (!actorUrl) return false;
+  var set = followingActorUrlSet();
+  var u = typeof normalizeFederationUrl === 'function'
+    ? normalizeFederationUrl(actorUrl)
+    : String(actorUrl).trim();
+  return !!(set[u] || set[String(actorUrl)]);
+}
+
+async function doFollowBack(actorUrl) {
+  if (!actorUrl || state.isGuest) return;
+  if (!Tapp.federation || typeof Tapp.federation.follow !== 'function') return;
+  try {
+    await Tapp.federation.follow(actorUrl);
+    try {
+      Tapp.ui.showNotification({
+        title: lang.followBtn || 'Follow',
+        message: lang.followQueued || 'Follow request sent.',
+        type: 'success',
+      });
+    } catch (e0) {}
+    state.feedLoaded.following = false;
+    // Refresh following + current tab
+    try {
+      var res = await Tapp.federation.getFollowing();
+      state.following = unwrapListResponse(res);
+      updateFeedNavBadges();
+    } catch (e1) {}
+    if (state.feedSubTab === 'followers' || state.feedSubTab === 'following') {
+      renderFeedContent();
+    }
+  } catch (e) {
+    notifyError(lang.followFail || "Couldn't follow", e);
+  }
+}
+
 async function doSubmitQuoteRepost() {
   var objectId = quoteRepostObjectId;
   if (!objectId || state.isGuest || quoteRepostSubmitting) return;
@@ -1154,8 +1441,16 @@ function renderTimelineItem(item) {
   var handle = actor.username
     ? '@' + actor.username + (actor.domain ? '@' + actor.domain : '')
     : (actor.actor_url ? actor.actor_url : '');
+  var rawTs = item.created_at || item.received_at || item.timestamp || '';
   var ts = '';
-  try { ts = timeAgo(item.created_at || item.received_at || item.timestamp); } catch (e) {}
+  try { ts = timeAgo(rawTs); } catch (e) {}
+  var tsTitle = '';
+  try {
+    if (rawTs) {
+      var dTs = new Date(rawTs);
+      if (!isNaN(dTs.getTime())) tsTitle = dTs.toLocaleString();
+    }
+  } catch (eTs) {}
   // content_json is normally the AP object; tolerate full Create envelope or aliases.
   var contentJson = item.content_json || item.content || item.object || null;
   if (contentJson && contentJson.object && typeof contentJson.object === 'object'
@@ -1242,7 +1537,13 @@ function renderTimelineItem(item) {
   h += '<div class="feed-item-header">';
   h += '<span class="feed-item-name">' + esc(name) + '</span>';
   if (handle) h += '<span class="feed-item-handle">' + esc(handle) + '</span>';
-  if (ts) h += '<span class="feed-item-sep">&middot;</span><span class="feed-item-time">' + esc(ts) + '</span>';
+  if (actor.domain) {
+    h += '<span class="feed-item-domain" title="' + esc(actor.domain) + '">' + esc(actor.domain) + '</span>';
+  }
+  if (ts) {
+    h += '<span class="feed-item-sep">&middot;</span><span class="feed-item-time"'
+      + (tsTitle ? ' title="' + esc(tsTitle) + '"' : '') + '>' + esc(ts) + '</span>';
+  }
   h += '</div>';
   if (text) {
     if (linkUrl) {
@@ -1265,32 +1566,45 @@ function renderTimelineItem(item) {
     }
   }
   h += renderTimelineMedia(attachments);
-  if (canInteract || canDelete) {
+  // Action bar: interactions for signed-in users; share is always available (external intent).
+  var showShare = !!objectId || !!linkUrl || !!text;
+  if (canInteract || canDelete || showShare) {
     h += '<div class="feed-item-actions">';
     if (canInteract) {
     // Reply
-    h += '<button type="button" class="feed-item-action" data-action-reply="' + esc(objectId) + '" title="' + esc(lang.replyBtn || 'Reply') + '">'
+    h += '<button type="button" class="feed-item-action" data-action-reply="' + esc(objectId) + '" title="' + esc(lang.replyBtn || 'Reply') + '" aria-label="' + esc(lang.replyBtn || 'Reply') + '">'
       + '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 01-4 4H8l-5 3V7a4 4 0 014-4h10a4 4 0 014 4z"/></svg>'
       + (replyCount ? '<span class="feed-item-action-count">' + esc(String(replyCount)) + '</span>' : '')
       + '</button>';
     // Repost
-    h += '<button type="button" class="feed-item-action' + (announced ? ' is-active is-announced' : '') + '" data-action-announce="' + esc(objectId) + '" data-announced="' + (announced ? '1' : '0') + '" title="' + esc(announced ? (lang.unrepostBtn || 'Undo repost') : (lang.repostBtn || 'Repost')) + '">'
+    h += '<button type="button" class="feed-item-action' + (announced ? ' is-active is-announced' : '') + '" data-action-announce="' + esc(objectId) + '" data-announced="' + (announced ? '1' : '0') + '" title="' + esc(announced ? (lang.unrepostBtn || 'Undo repost') : (lang.repostBtn || 'Repost')) + '" aria-label="' + esc(announced ? (lang.unrepostBtn || 'Undo repost') : (lang.repostBtn || 'Repost')) + '">'
       + '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>'
       + (announceCount ? '<span class="feed-item-action-count">' + esc(String(announceCount)) + '</span>' : '')
       + '</button>';
     // Like
-    h += '<button type="button" class="feed-item-action' + (liked ? ' is-active is-liked' : '') + '" data-action-like="' + esc(objectId) + '" data-liked="' + (liked ? '1' : '0') + '" title="' + esc(liked ? (lang.unlikeBtn || 'Unlike') : (lang.likeBtn || 'Like')) + '">'
+    h += '<button type="button" class="feed-item-action' + (liked ? ' is-active is-liked' : '') + '" data-action-like="' + esc(objectId) + '" data-liked="' + (liked ? '1' : '0') + '" title="' + esc(liked ? (lang.unlikeBtn || 'Unlike') : (lang.likeBtn || 'Like')) + '" aria-label="' + esc(liked ? (lang.unlikeBtn || 'Unlike') : (lang.likeBtn || 'Like')) + '">'
       + (liked
         ? '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 000-7.8z"/></svg>'
         : '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 000-7.8z"/></svg>')
       + (likeCount ? '<span class="feed-item-action-count">' + esc(String(likeCount)) + '</span>' : '')
       + '</button>';
     // Bookmark
-    h += '<button type="button" class="feed-item-action' + (bookmarked ? ' is-active is-bookmarked' : '') + '" data-action-bookmark="' + esc(objectId) + '" data-bookmarked="' + (bookmarked ? '1' : '0') + '" title="' + esc(bookmarked ? (lang.unbookmarkBtn || 'Remove bookmark') : (lang.bookmarkBtn || 'Bookmark')) + '">'
+    h += '<button type="button" class="feed-item-action' + (bookmarked ? ' is-active is-bookmarked' : '') + '" data-action-bookmark="' + esc(objectId) + '" data-bookmarked="' + (bookmarked ? '1' : '0') + '" title="' + esc(bookmarked ? (lang.unbookmarkBtn || 'Remove bookmark') : (lang.bookmarkBtn || 'Bookmark')) + '" aria-label="' + esc(bookmarked ? (lang.unbookmarkBtn || 'Remove bookmark') : (lang.bookmarkBtn || 'Bookmark')) + '">'
       + (bookmarked
         ? '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>'
         : '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>')
       + '</button>';
+    }
+    // Share external (compose + optional X intent URL — never server post)
+    if (showShare) {
+      h += '<button type="button" class="feed-item-action feed-item-action-share" data-action-share="' + esc(objectId || '') + '"'
+        + ' data-object-id="' + esc(objectId || '') + '"'
+        + ' data-share-url="' + esc(linkUrl || objectId || '') + '"'
+        + ' data-share-author="' + esc(name || handle || '') + '"'
+        + ' title="' + esc(lang.shareBtn || 'Share') + '"'
+        + ' aria-label="' + esc(lang.shareBtn || 'Share') + '">'
+        + '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>'
+        + '</button>';
     }
     // Delete own post (timeline quick-delete)
     if (canDelete) {
@@ -1329,23 +1643,80 @@ function renderActorItem(actor, context) {
   var handle = actor.username
     ? '@' + actor.username + (actor.domain ? '@' + actor.domain : '')
     : (actor.actor_url || actor.domain || '');
-  var h = '<div class="feed-item">';
+  var domain = actor.domain || '';
+  if (!domain && actor.actor_url) {
+    try {
+      domain = new URL(actor.actor_url).hostname || '';
+    } catch (eDom) { domain = ''; }
+  }
+  var isFollowingThem = isActorInFollowing(actor.actor_url);
+  // Mutual: they follow you (followers list) and you follow them; or following list where they also follow back.
+  var followsYou = false;
+  if (context === 'followers') {
+    followsYou = true;
+  } else if (context === 'following') {
+    var followers = state.followers || [];
+    for (var fi = 0; fi < followers.length; fi++) {
+      var f = followers[fi];
+      if (!f) continue;
+      var fu = typeof normalizeFederationUrl === 'function'
+        ? normalizeFederationUrl(f.actor_url)
+        : String(f.actor_url || '').trim();
+      var au = typeof normalizeFederationUrl === 'function'
+        ? normalizeFederationUrl(actor.actor_url)
+        : String(actor.actor_url || '').trim();
+      if (fu && au && fu === au) { followsYou = true; break; }
+      if (f.actor_url && actor.actor_url && String(f.actor_url) === String(actor.actor_url)) {
+        followsYou = true; break;
+      }
+    }
+  }
+  var isMutual = isFollowingThem && followsYou;
+  var h = '<div class="feed-item feed-actor-item' + (isMutual ? ' is-mutual' : '') + '"'
+    + (actor.actor_url ? ' data-actor-url="' + esc(actor.actor_url) + '"' : '') + '>';
   h += '<div class="feed-item-avatar">' + avatarContentHtml(actor.avatar_url || '', name) + '</div>';
   h += '<div class="feed-item-body">';
   h += '<div class="feed-item-header">';
   h += '<span class="feed-item-name">' + esc(name) + '</span>';
   if (handle) h += '<span class="feed-item-handle">' + esc(handle) + '</span>';
   h += '</div>';
-  if (actor.bio) h += '<div class="feed-item-text">' + esc(actor.bio) + '</div>';
-  // Status + action — localize non-accepted (pending) badge
-  h += '<div class="feed-item-actions">';
+  // Secondary meta row: domain + relationship badges (X-style graph clarity)
+  h += '<div class="feed-actor-meta">';
+  if (domain) {
+    h += '<span class="feed-actor-domain" title="' + esc(domain) + '">' + esc(domain) + '</span>';
+  }
+  if (isMutual) {
+    h += '<span class="aro-badge aro-badge-mutual" title="' + esc(lang.mutualFollow || 'You follow each other') + '">'
+      + esc(lang.mutualFollow || 'Mutual') + '</span>';
+  } else if (context === 'followers' && isFollowingThem) {
+    h += '<span class="aro-badge aro-badge-following-them">' + esc(lang.followingBadge || 'Following') + '</span>';
+  } else if (context === 'following' && followsYou) {
+    h += '<span class="aro-badge aro-badge-follows-you">' + esc(lang.followsYouBadge || 'Follows you') + '</span>';
+  }
   if (actor.status && actor.status !== 'accepted') {
     h += '<span class="aro-badge aro-badge-pending">' + esc(pendingStatusLabel(actor.status)) + '</span>';
   }
+  h += '</div>';
+  if (actor.bio) h += '<div class="feed-item-text feed-actor-bio">' + esc(actor.bio) + '</div>';
+  // Actions
+  h += '<div class="feed-item-actions">';
   if (context === 'following') {
-    h += '<button class="feed-item-action feed-item-action-danger" data-action-unfollow="' + esc(actor.actor_url || '') + '">'
+    h += '<button type="button" class="feed-item-action feed-item-action-danger" data-action-unfollow="' + esc(actor.actor_url || '') + '"'
+      + ' title="' + esc(lang.unfollowBtn || 'Unfollow') + '">'
       + '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>'
-      + esc(lang.unfollowBtn) + '</button>';
+      + '<span>' + esc(lang.unfollowBtn || 'Unfollow') + '</span></button>';
+  } else if (context === 'followers' && !state.isGuest) {
+    if (isFollowingThem) {
+      h += '<button type="button" class="feed-item-action feed-item-action-danger" data-action-unfollow="' + esc(actor.actor_url || '') + '"'
+        + ' title="' + esc(lang.unfollowBtn || 'Unfollow') + '">'
+        + '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>'
+        + '<span>' + esc(lang.unfollowBtn || 'Unfollow') + '</span></button>';
+    } else if (actor.actor_url) {
+      h += '<button type="button" class="feed-item-action feed-item-action-primary" data-action-follow-back="' + esc(actor.actor_url || '') + '"'
+        + ' title="' + esc(lang.followBackBtn || lang.followBtn || 'Follow back') + '">'
+        + '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>'
+        + '<span>' + esc(lang.followBackBtn || lang.followBtn || 'Follow back') + '</span></button>';
+    }
   }
   h += '</div></div></div>';
   return h;
