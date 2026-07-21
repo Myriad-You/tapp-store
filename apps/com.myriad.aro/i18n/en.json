@@ -525,5 +525,7 @@
   "followingBadge": "Following",
   "followsYouBadge": "Follows you",
   "emptyTitleBookmarks": "No bookmarks yet",
-  "copyHandle": "Copy handle"
+  "copyHandle": "Copy handle",
+  "shareCopiedText": "Share text copied",
+  "unrepostFail": "Couldn't undo repost"
 }
