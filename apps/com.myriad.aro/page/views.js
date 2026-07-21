@@ -1039,7 +1039,11 @@ function buildLocalXIntentUrl(text, url) {
 function composeShareTextFromItem(objectId, opts) {
   opts = opts || {};
   var item = objectId ? findFeedItem(objectId) : null;
+  // Published rows use content_preview/title rather than timeline Note shape.
   var preview = feedItemPreviewText(item) || '';
+  if (!preview && item) {
+    preview = stripHtmlPreview(item.content_preview || item.summary || item.title || item.name || '') || '';
+  }
   var author = opts.author || '';
   if (!author && item && item.actor) {
     author = item.actor.display_name || '';
@@ -1049,8 +1053,9 @@ function composeShareTextFromItem(objectId, opts) {
   }
   var link = opts.linkUrl || '';
   if (!link && item) {
-    var cj = timelineContentObject(item);
+    var cj = typeof timelineContentObject === 'function' ? timelineContentObject(item) : null;
     if (cj && typeof cj.url === 'string' && cj.url) link = cj.url;
+    else if (item.url && /^https?:\/\//i.test(String(item.url))) link = String(item.url);
     else if (objectId && /^https?:\/\//i.test(objectId)) link = objectId;
   }
   var parts = [];
