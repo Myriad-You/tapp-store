@@ -5,6 +5,11 @@
     }
     if (typeof updateRingCreateCategoryVisibility === 'function') updateRingCreateCategoryVisibility();
   });
+  if (typeof initRingCreateSelects === 'function') initRingCreateSelects();
+  else if (typeof initAroSelect === 'function') {
+    initAroSelect('ring-type-select');
+    initAroSelect('ring-brew-category-select');
+  }
   var ringTypeSelect = $('ring-type-select');
   if (ringTypeSelect) ringTypeSelect.addEventListener('change', function () {
     if (typeof updateRingCreateCategoryVisibility === 'function') updateRingCreateCategoryVisibility();

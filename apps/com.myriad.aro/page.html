@@ -425,17 +425,29 @@
       </div>
       <div class="create-form">
         <input id="ring-name-input" class="create-input" type="text" placeholder="环网名称" />
-        <select id="ring-type-select" class="create-input" style="height:40px;cursor:pointer">
-          <option id="ring-type-opt-brew" value="brew-recommend">Brew 推荐</option>
-          <option id="ring-type-opt-tapp" value="tapp-store">Tapp 商店</option>
-          <option id="ring-type-opt-library" value="library-exchange">资料交换</option>
-          <option id="ring-type-opt-instance" value="instance-directory">实例目录</option>
-        </select>
+        <div id="ring-type-select" class="aro-select" data-value="brew-recommend" role="combobox" aria-haspopup="listbox" aria-expanded="false">
+          <button type="button" class="aro-select-trigger create-input" id="ring-type-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+            <span class="aro-select-value" data-aro-select-label>Brew 推荐</span>
+            <span class="aro-select-chevron" aria-hidden="true">▾</span>
+          </button>
+          <div class="aro-select-menu manage-dropdown" role="listbox" hidden>
+            <button type="button" class="aro-select-option manage-item" role="option" id="ring-type-opt-brew" data-value="brew-recommend" aria-selected="true">Brew 推荐</button>
+            <button type="button" class="aro-select-option manage-item" role="option" id="ring-type-opt-tapp" data-value="tapp-store" aria-selected="false">Tapp 商店</button>
+            <button type="button" class="aro-select-option manage-item" role="option" id="ring-type-opt-library" data-value="library-exchange" aria-selected="false">资料交换</button>
+            <button type="button" class="aro-select-option manage-item" role="option" id="ring-type-opt-instance" data-value="instance-directory" aria-selected="false">实例目录</button>
+          </div>
+        </div>
         <div id="ring-brew-category-wrap" style="display:none;flex-direction:column;gap:6px">
-          <label id="ring-brew-category-label" for="ring-brew-category-select" style="font-size:12px;opacity:.8">Brew category (optional)</label>
-          <select id="ring-brew-category-select" class="create-input" style="height:40px;cursor:pointer">
-            <option id="ring-brew-category-all" value="">All my categories</option>
-          </select>
+          <label id="ring-brew-category-label" for="ring-brew-category-select-trigger" style="font-size:12px;opacity:.8">Brew category (optional)</label>
+          <div id="ring-brew-category-select" class="aro-select" data-value="" role="combobox" aria-haspopup="listbox" aria-expanded="false">
+            <button type="button" class="aro-select-trigger create-input" id="ring-brew-category-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+              <span class="aro-select-value" data-aro-select-label>All my categories</span>
+              <span class="aro-select-chevron" aria-hidden="true">▾</span>
+            </button>
+            <div class="aro-select-menu manage-dropdown" role="listbox" hidden>
+              <button type="button" class="aro-select-option manage-item" role="option" id="ring-brew-category-all" data-value="" aria-selected="true">All my categories</button>
+            </div>
+          </div>
           <input id="ring-brew-category-input" class="create-input" type="text" placeholder="Or type a category name" style="display:none" />
         </div>
         <button id="create-ring-btn" class="create-submit">创建</button>

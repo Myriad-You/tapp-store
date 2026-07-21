@@ -2348,7 +2348,9 @@ function renderRingsSidebar() {
 }
 
 function updateRingCreateCategoryVisibility() {
-  var type = ($('ring-type-select') || {}).value || 'brew-recommend';
+  var type = (typeof getAroSelectValue === 'function'
+    ? getAroSelectValue('ring-type-select')
+    : (($('ring-type-select') || {}).value)) || 'brew-recommend';
   var wrap = $('ring-brew-category-wrap');
   if (!wrap) return;
   if (type === 'brew-recommend') {
@@ -2363,9 +2365,13 @@ function loadBrewCategoriesForRingCreate() {
   var select = $('ring-brew-category-select');
   var freeText = $('ring-brew-category-input');
   if (!select) return;
-  // Keep the "all" option; rebuild the rest
+  if (typeof initAroSelect === 'function') initAroSelect(select);
+  // Keep the "all" option; rebuild the rest via custom select API
   var allLabel = (lang.ringBrewCategoryAll || 'All my categories');
-  select.innerHTML = '<option id="ring-brew-category-all" value="">' + esc(allLabel) + '</option>';
+  var baseOpts = [{ value: '', label: allLabel, id: 'ring-brew-category-all' }];
+  if (typeof setAroSelectOptions === 'function') {
+    setAroSelectOptions(select, baseOpts, '');
+  }
   if (freeText) {
     freeText.value = '';
     freeText.style.display = 'none';
@@ -2379,14 +2385,15 @@ function loadBrewCategoriesForRingCreate() {
   select.style.display = '';
   Tapp.brewList.categories().then(function (cats) {
     var list = Array.isArray(cats) ? cats : (cats && cats.categories) || [];
+    var opts = [{ value: '', label: allLabel, id: 'ring-brew-category-all' }];
     list.forEach(function (c) {
       var name = (c && (c.name || c)) || '';
       if (!name) return;
-      var opt = document.createElement('option');
-      opt.value = name;
-      opt.textContent = name;
-      select.appendChild(opt);
+      opts.push({ value: name, label: name });
     });
+    if (typeof setAroSelectOptions === 'function') {
+      setAroSelectOptions(select, opts, '');
+    }
     // If no categories from API, allow free-text
     if (list.length === 0 && freeText) {
       freeText.style.display = '';
@@ -2404,14 +2411,18 @@ async function doCreateRing() {
   if (!input) return;
   var name = input.value.trim();
   if (!name) return;
-  var type = ($('ring-type-select') || {}).value || 'brew-recommend';
+  var type = (typeof getAroSelectValue === 'function'
+    ? getAroSelectValue('ring-type-select')
+    : (($('ring-type-select') || {}).value)) || 'brew-recommend';
   var req = { name: name, ring_type: type };
   if (type === 'brew-recommend') {
     var catSelect = $('ring-brew-category-select');
     var catInput = $('ring-brew-category-input');
     var cat = '';
     if (catSelect && catSelect.style.display !== 'none') {
-      cat = (catSelect.value || '').trim();
+      cat = ((typeof getAroSelectValue === 'function'
+        ? getAroSelectValue(catSelect)
+        : catSelect.value) || '').trim();
     }
     if (!cat && catInput && catInput.style.display !== 'none') {
       cat = (catInput.value || '').trim();
@@ -2423,7 +2434,8 @@ async function doCreateRing() {
     await Tapp.federation.createRing(req);
     input.value = '';
     var catSel = $('ring-brew-category-select');
-    if (catSel) catSel.value = '';
+    if (catSel && typeof setAroSelectValue === 'function') setAroSelectValue(catSel, '', true);
+    else if (catSel) catSel.value = '';
     var catIn = $('ring-brew-category-input');
     if (catIn) catIn.value = '';
     var d = $('ring-create-dialog');

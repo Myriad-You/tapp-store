@@ -666,6 +666,327 @@ function ringTypeLabel(type) {
   return map[type] || type || '';
 }
 
+// ==================== Custom select (aro-select) ====================
+// Lightweight listbox replacing native <select> for dark/iframe-friendly UI.
+// Reuses manage-dropdown / manage-item visual language.
+
+/**
+ * Resolve a root element for aro-select by id or node.
+ * @param {string|HTMLElement} rootOrId
+ * @returns {HTMLElement|null}
+ */
+function resolveAroSelectRoot(rootOrId) {
+  if (!rootOrId) return null;
+  if (typeof rootOrId === 'string') return $(rootOrId);
+  return rootOrId.nodeType ? rootOrId : null;
+}
+
+/**
+ * Read value from custom select or native control.
+ * @param {string|HTMLElement} rootOrId
+ * @returns {string}
+ */
+function getAroSelectValue(rootOrId) {
+  var root = resolveAroSelectRoot(rootOrId);
+  if (!root) return '';
+  if (root._aroSelect && typeof root._aroSelect.getValue === 'function') {
+    return root._aroSelect.getValue();
+  }
+  if (typeof root.value === 'string') return root.value;
+  return root.getAttribute('data-value') || '';
+}
+
+/**
+ * Set value on custom select (or native). silent skips change event.
+ * @param {string|HTMLElement} rootOrId
+ * @param {string} value
+ * @param {boolean} [silent]
+ */
+function setAroSelectValue(rootOrId, value, silent) {
+  var root = resolveAroSelectRoot(rootOrId);
+  if (!root) return;
+  if (root._aroSelect && typeof root._aroSelect.setValue === 'function') {
+    root._aroSelect.setValue(value, !!silent);
+    return;
+  }
+  root.value = value == null ? '' : String(value);
+}
+
+/**
+ * Replace options: [{ value, label, id? }]. Keeps selection when possible.
+ * @param {string|HTMLElement} rootOrId
+ * @param {Array<{value:string,label:string,id?:string}>} options
+ * @param {string} [selectedValue]
+ */
+function setAroSelectOptions(rootOrId, options, selectedValue) {
+  var root = resolveAroSelectRoot(rootOrId);
+  if (!root) return;
+  if (!root._aroSelect) initAroSelect(root);
+  if (root._aroSelect && typeof root._aroSelect.setOptions === 'function') {
+    root._aroSelect.setOptions(options || [], selectedValue);
+  }
+}
+
+/** Refresh trigger label after i18n updates option textContent. */
+function refreshAroSelectLabel(rootOrId) {
+  var root = resolveAroSelectRoot(rootOrId);
+  if (root && root._aroSelect && typeof root._aroSelect.refreshLabel === 'function') {
+    root._aroSelect.refreshLabel();
+  }
+}
+
+/**
+ * Initialize a custom select root. Safe to call multiple times.
+ * Defines root.value get/set and dispatches bubbling 'change' events.
+ * @param {string|HTMLElement} rootOrId
+ * @param {{ onChange?: function(string):void }} [opts]
+ * @returns {{ getValue:function, setValue:function, setOptions:function, open:function, close:function, refreshLabel:function }|null}
+ */
+function initAroSelect(rootOrId, opts) {
+  var root = resolveAroSelectRoot(rootOrId);
+  if (!root) return null;
+  if (root._aroSelect) {
+    if (opts && typeof opts.onChange === 'function') root._aroSelect._onChange = opts.onChange;
+    return root._aroSelect;
+  }
+
+  var trigger = root.querySelector('.aro-select-trigger');
+  var labelEl = root.querySelector('[data-aro-select-label]') || root.querySelector('.aro-select-value');
+  var menu = root.querySelector('.aro-select-menu');
+  if (!trigger || !menu) return null;
+
+  var open = false;
+  var onChangeCb = opts && typeof opts.onChange === 'function' ? opts.onChange : null;
+
+  function optionNodes() {
+    return Array.prototype.slice.call(menu.querySelectorAll('.aro-select-option[data-value], .aro-select-option[data-value=""]'));
+  }
+
+  function getValue() {
+    var v = root.getAttribute('data-value');
+    return v == null ? '' : v;
+  }
+
+  function findOption(value) {
+    var optsList = optionNodes();
+    var want = value == null ? '' : String(value);
+    for (var i = 0; i < optsList.length; i++) {
+      if ((optsList[i].getAttribute('data-value') || '') === want) return optsList[i];
+    }
+    return null;
+  }
+
+  function syncSelectedUi() {
+    var cur = getValue();
+    var optsList = optionNodes();
+    var matched = null;
+    for (var i = 0; i < optsList.length; i++) {
+      var ov = optsList[i].getAttribute('data-value') || '';
+      var sel = ov === cur;
+      optsList[i].classList.toggle('is-selected', sel);
+      optsList[i].setAttribute('aria-selected', sel ? 'true' : 'false');
+      if (sel) matched = optsList[i];
+    }
+    if (labelEl) {
+      labelEl.textContent = matched
+        ? (matched.textContent || '').trim()
+        : (optsList[0] ? (optsList[0].textContent || '').trim() : '');
+    }
+  }
+
+  function setValue(value, silent) {
+    var next = value == null ? '' : String(value);
+    var prev = getValue();
+    root.setAttribute('data-value', next);
+    syncSelectedUi();
+    if (!silent && next !== prev) {
+      try {
+        root.dispatchEvent(new Event('change', { bubbles: true }));
+      } catch (eEvt) {
+        var ev = document.createEvent('Event');
+        ev.initEvent('change', true, true);
+        root.dispatchEvent(ev);
+      }
+      if (onChangeCb) onChangeCb(next);
+    }
+  }
+
+  function setOptions(options, selectedValue) {
+    var keep = selectedValue != null ? String(selectedValue) : getValue();
+    menu.innerHTML = '';
+    (options || []).forEach(function (opt) {
+      if (!opt) return;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'aro-select-option manage-item';
+      btn.setAttribute('role', 'option');
+      btn.setAttribute('data-value', opt.value == null ? '' : String(opt.value));
+      if (opt.id) btn.id = opt.id;
+      btn.textContent = opt.label == null ? String(opt.value || '') : String(opt.label);
+      menu.appendChild(btn);
+    });
+    var has = findOption(keep);
+    if (!has) {
+      var first = optionNodes()[0];
+      keep = first ? (first.getAttribute('data-value') || '') : '';
+    }
+    root.setAttribute('data-value', keep);
+    syncSelectedUi();
+  }
+
+  function closeMenu() {
+    if (!open) return;
+    open = false;
+    root.classList.remove('is-open');
+    menu.classList.remove('open');
+    menu.hidden = true;
+    root.setAttribute('aria-expanded', 'false');
+    trigger.setAttribute('aria-expanded', 'false');
+  }
+
+  function openMenu() {
+    if (open || root.getAttribute('aria-disabled') === 'true') return;
+    // Close other aro-selects
+    document.querySelectorAll('.aro-select.is-open').forEach(function (el) {
+      if (el !== root && el._aroSelect) el._aroSelect.close();
+    });
+    open = true;
+    root.classList.add('is-open');
+    menu.hidden = false;
+    menu.classList.add('open');
+    root.setAttribute('aria-expanded', 'true');
+    trigger.setAttribute('aria-expanded', 'true');
+    var cur = findOption(getValue());
+    if (cur && typeof cur.focus === 'function') {
+      try { cur.focus(); } catch (eF) { /* ignore */ }
+    }
+  }
+
+  function toggleMenu() {
+    if (open) closeMenu();
+    else openMenu();
+  }
+
+  function onDocPointer(e) {
+    if (!open) return;
+    if (root.contains(e.target)) return;
+    closeMenu();
+  }
+
+  function onKeyDown(e) {
+    var key = e.key;
+    if (key === 'Escape') {
+      if (open) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeMenu();
+        trigger.focus();
+      }
+      return;
+    }
+    if (key === 'Enter' || key === ' ') {
+      if (e.target === trigger || e.target === root) {
+        e.preventDefault();
+        toggleMenu();
+      }
+      return;
+    }
+    if (key === 'ArrowDown' || key === 'ArrowUp') {
+      e.preventDefault();
+      var optsList = optionNodes();
+      if (!optsList.length) return;
+      if (!open) {
+        openMenu();
+        return;
+      }
+      var active = document.activeElement;
+      var idx = optsList.indexOf(active);
+      if (idx < 0) {
+        var sel = findOption(getValue());
+        idx = sel ? optsList.indexOf(sel) : 0;
+      }
+      var nextIdx = key === 'ArrowDown'
+        ? Math.min(optsList.length - 1, (idx < 0 ? 0 : idx + 1))
+        : Math.max(0, (idx < 0 ? 0 : idx - 1));
+      if (idx < 0) nextIdx = key === 'ArrowDown' ? 0 : optsList.length - 1;
+      else if (key === 'ArrowDown') nextIdx = (idx + 1) % optsList.length;
+      else nextIdx = (idx - 1 + optsList.length) % optsList.length;
+      optsList[nextIdx].focus();
+    }
+  }
+
+  trigger.setAttribute('aria-haspopup', 'listbox');
+  trigger.setAttribute('aria-expanded', 'false');
+  if (!trigger.getAttribute('type')) trigger.type = 'button';
+  root.setAttribute('aria-haspopup', 'listbox');
+  root.setAttribute('aria-expanded', 'false');
+  if (!root.getAttribute('role')) root.setAttribute('role', 'combobox');
+  menu.setAttribute('role', 'listbox');
+  menu.hidden = true;
+  menu.classList.remove('open');
+
+  // Seed data-value from attribute or first option
+  if (!root.hasAttribute('data-value')) {
+    var firstOpt = optionNodes()[0];
+    root.setAttribute('data-value', firstOpt ? (firstOpt.getAttribute('data-value') || '') : '');
+  }
+  syncSelectedUi();
+
+  trigger.addEventListener('click', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleMenu();
+  });
+  menu.addEventListener('click', function (e) {
+    var opt = e.target && e.target.closest ? e.target.closest('.aro-select-option') : null;
+    if (!opt || !menu.contains(opt)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setValue(opt.getAttribute('data-value') || '', false);
+    closeMenu();
+    trigger.focus();
+  });
+  root.addEventListener('keydown', onKeyDown);
+  document.addEventListener('click', onDocPointer, true);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && open) {
+      closeMenu();
+    }
+  });
+
+  var api = {
+    getValue: getValue,
+    setValue: setValue,
+    setOptions: setOptions,
+    open: openMenu,
+    close: closeMenu,
+    refreshLabel: syncSelectedUi,
+  };
+  Object.defineProperty(api, '_onChange', {
+    get: function () { return onChangeCb; },
+    set: function (fn) { onChangeCb = typeof fn === 'function' ? fn : null; },
+    configurable: true,
+  });
+
+  try {
+    Object.defineProperty(root, 'value', {
+      get: function () { return getValue(); },
+      set: function (v) { setValue(v, true); },
+      configurable: true,
+    });
+  } catch (eProp) { /* ignore */ }
+
+  root._aroSelect = api;
+  root.classList.add('aro-select-ready');
+  return api;
+}
+
+/** Init ring-create selects if present in DOM. */
+function initRingCreateSelects() {
+  initAroSelect('ring-type-select');
+  initAroSelect('ring-brew-category-select');
+}
+
 /** 本地化成员角色标签 */
 function roleLabel(role) {
   var map = { owner: lang.roleOwner, admin: lang.roleAdmin, member: lang.roleMember };
@@ -1624,8 +1945,10 @@ function applyLabels() {
   el = $('ring-type-opt-tapp'); if (el) el.textContent = lang.ringTypeTappStore;
   el = $('ring-type-opt-library'); if (el) el.textContent = lang.ringTypeLibraryExchange;
   el = $('ring-type-opt-instance'); if (el) el.textContent = lang.ringTypeInstanceDirectory;
+  if (typeof refreshAroSelectLabel === 'function') refreshAroSelectLabel('ring-type-select');
   el = $('ring-brew-category-label'); if (el) el.textContent = lang.ringBrewCategoryLabel || 'Brew category (optional)';
   el = $('ring-brew-category-all'); if (el) el.textContent = lang.ringBrewCategoryAll || 'All my categories';
+  if (typeof refreshAroSelectLabel === 'function') refreshAroSelectLabel('ring-brew-category-select');
   el = $('ring-brew-category-input'); if (el) el.placeholder = lang.ringBrewCategoryPlaceholder || 'Or type a category name';
   document.querySelectorAll('[data-i18n-empty-peers]').forEach(function (node) {
     node.textContent = lang.emptyPeers;
