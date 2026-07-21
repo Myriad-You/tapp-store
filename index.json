@@ -245,7 +245,7 @@
     {
       "id": "com.myriad.aro",
       "name": "Aro",
-      "version": "1.0.7",
+      "version": "1.0.8",
       "description": "社交中心，统一管理消息、时间线、环网与个人资料",
       "long_description": "社交中心：统一管理联邦消息（Channel/Room）、时间线、环网与个人资料。支持后台新消息通知、附件与多语言（中/英/日）。",
       "locales": {
