@@ -525,5 +525,7 @@
   "followingBadge": "フォロー中",
   "followsYouBadge": "フォローされています",
   "emptyTitleBookmarks": "ブックマークはまだありません",
-  "copyHandle": "ハンドルをコピー"
+  "copyHandle": "ハンドルをコピー",
+  "shareCopiedText": "共有テキストをコピーしました",
+  "unrepostFail": "リポスト解除に失敗しました"
 }
