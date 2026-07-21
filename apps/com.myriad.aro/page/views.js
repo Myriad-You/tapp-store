@@ -1820,18 +1820,21 @@ function renderActorItem(actor, context) {
   h += '<div class="feed-item-actions">';
   if (context === 'following') {
     h += '<button type="button" class="feed-item-action feed-item-action-danger" data-action-unfollow="' + esc(actor.actor_url || '') + '"'
-      + ' title="' + esc(lang.unfollowBtn || 'Unfollow') + '">'
+      + ' title="' + esc(lang.unfollowBtn || 'Unfollow') + '"'
+      + ' aria-label="' + esc(lang.unfollowBtn || 'Unfollow') + '">'
       + '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>'
       + '<span>' + esc(lang.unfollowBtn || 'Unfollow') + '</span></button>';
   } else if (context === 'followers' && !state.isGuest) {
     if (isFollowingThem) {
       h += '<button type="button" class="feed-item-action feed-item-action-danger" data-action-unfollow="' + esc(actor.actor_url || '') + '"'
-        + ' title="' + esc(lang.unfollowBtn || 'Unfollow') + '">'
+        + ' title="' + esc(lang.unfollowBtn || 'Unfollow') + '"'
+        + ' aria-label="' + esc(lang.unfollowBtn || 'Unfollow') + '">'
         + '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>'
         + '<span>' + esc(lang.unfollowBtn || 'Unfollow') + '</span></button>';
     } else if (actor.actor_url) {
       h += '<button type="button" class="feed-item-action feed-item-action-primary" data-action-follow-back="' + esc(actor.actor_url || '') + '"'
-        + ' title="' + esc(lang.followBackBtn || lang.followBtn || 'Follow back') + '">'
+        + ' title="' + esc(lang.followBackBtn || lang.followBtn || 'Follow back') + '"'
+        + ' aria-label="' + esc(lang.followBackBtn || lang.followBtn || 'Follow back') + '">'
         + '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>'
         + '<span>' + esc(lang.followBackBtn || lang.followBtn || 'Follow back') + '</span></button>';
     }
