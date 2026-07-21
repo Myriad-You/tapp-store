@@ -7,8 +7,8 @@ body.dark{background:#0a0a0a;color:rgba(255,255,255,.92)}
 #tapp-content{display:flex!important;flex-direction:column!important;overflow:hidden!important}
 
 /* ===== Aro Nav ===== */
-.aro-nav{display:flex;align-items:center;gap:4px;padding:8px 12px;border-bottom:1px solid rgba(128,128,128,.08);flex-shrink:0;background:rgba(255,255,255,.78);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
-.aro-nav-item{min-height:36px;display:flex;align-items:center;gap:8px;padding:0 14px;border:none;background:none;border-radius:11px;font-size:13px;font-weight:600;color:var(--text-secondary,#888);cursor:pointer;transition:background .14s,color .14s;white-space:nowrap}
+.aro-nav{display:flex;align-items:center;gap:4px;padding:8px 12px;border-bottom:1px solid rgba(128,128,128,.08);flex-shrink:0;background:rgba(255,255,255,.78);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);position:relative;z-index:30;pointer-events:auto}
+.aro-nav-item{min-height:36px;display:flex;align-items:center;gap:8px;padding:0 14px;border:none;background:none;border-radius:11px;font-size:13px;font-weight:600;color:var(--text-secondary,#888);cursor:pointer;transition:background .14s,color .14s;white-space:nowrap;touch-action:manipulation;pointer-events:auto;-webkit-tap-highlight-color:transparent}
 .aro-nav-item:hover{background:rgba(128,128,128,.07);color:var(--text-primary,#222)}
 .aro-nav-item:focus-visible{outline:2px solid rgba(var(--tapp-primary-rgb,99,102,241),.45);outline-offset:1px}
 .aro-nav-active{background:rgba(var(--tapp-primary-rgb,100,100,255),.12)!important;color:var(--tapp-primary,#6366f1)!important}
@@ -358,8 +358,9 @@ body.dark{background:#0a0a0a;color:rgba(255,255,255,.92)}
 
 /* ===== Layout ===== */
 .messenger-app{display:flex;flex:1;min-height:0;overflow:hidden;position:relative}
-.sidebar{display:flex;flex-direction:column;width:280px;border-right:1px solid rgba(128,128,128,.08);flex-shrink:0;overflow:hidden}
-.sidebar-header{padding:14px 14px 12px;border-bottom:1px solid rgba(128,128,128,.06);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:52px}
+.sidebar{display:flex;flex-direction:column;width:280px;border-right:1px solid rgba(128,128,128,.08);flex-shrink:0;overflow:hidden;position:relative;z-index:2;pointer-events:auto}
+.sidebar-header{padding:14px 14px 12px;border-bottom:1px solid rgba(128,128,128,.06);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:52px;position:relative;z-index:3;pointer-events:auto}
+.sidebar-header .create-btn{position:relative;z-index:4;pointer-events:auto;touch-action:manipulation}
 .sidebar-title{margin:0;font-size:16px;font-weight:700;color:var(--text-primary,#1a1a1a);letter-spacing:-.02em}
 /* Messenger list: type tabs (最近|私信|群聊) + closed chip same row */
 .conv-tabs-bar{
@@ -463,9 +464,13 @@ body.dark{background:#0a0a0a;color:rgba(255,255,255,.92)}
 .history-overlay{
   position:absolute;inset:0;z-index:40;display:none;align-items:stretch;justify-content:flex-end;
   background:rgba(15,23,42,.22);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  pointer-events:none; /* never intercept while closed / display:none race */
 }
+.history-overlay[style*="display: flex"],
+.history-overlay[style*="display:flex"]{pointer-events:auto}
 .history-overlay.aro-history-enter{animation:aroFadeIn var(--aro-dur) ease both}
-.history-overlay.aro-leaving{animation:aroFadeOut 150ms ease both;pointer-events:none}
+.history-overlay.aro-leaving{animation:aroFadeOut 150ms ease both;pointer-events:none!important}
+.history-overlay[hidden]{display:none!important;pointer-events:none!important}
 /* history open uses class on overlay (not aroPlayEnter generic) */
 .history-sheet{
   width:min(400px,100%);max-width:100%;height:100%;
@@ -1252,8 +1257,11 @@ body.dark{background:#0a0a0a;color:rgba(255,255,255,.92)}
 .dark .msg-more-btn:hover,.dark .msg-more-btn:focus-visible{background:rgba(255,255,255,.1)}
 
 /* ===== Input ===== */
+/* pointer-events:none on the wrap so the gradient does not steal message-area
+   scrolls/clicks; only children (composer) are interactive. Never stretch over sidebar. */
 .input-float-wrap{position:absolute;bottom:0;left:0;right:0;z-index:20;padding:8px 12px;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));background:linear-gradient(to top,var(--bg-primary,#fff) 70%,transparent);pointer-events:none}
 .input-float-wrap>*{pointer-events:auto}
+.chat-main{isolation:isolate}
 .input-bar{display:flex;align-items:flex-end;gap:8px;padding:8px 10px;background:var(--bg-primary,#fff);border:1px solid rgba(128,128,128,.12);border-radius:18px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
 .attach-btn{width:36px;height:36px;border-radius:50%;border:none;background:transparent;color:var(--text-secondary,#999);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,color .15s;margin-bottom:1px}
 .attach-btn:hover{background:rgba(128,128,128,.08);color:var(--text-primary,#555)}
@@ -1879,12 +1887,12 @@ button.msg-file-card:hover .msg-file-action{color:rgb(var(--acc));background:rgb
   .aro-nav-item{flex-direction:column;gap:3px;padding:8px 12px;font-size:11px}
   .aro-nav-item svg{width:22px;height:22px}
   .nav-feed-avatar{width:24px;height:24px;font-size:11px}
-  .sidebar{width:100%}
-  .sidebar-hidden-mobile{display:none!important}
+  .sidebar{width:100%;z-index:2;pointer-events:auto}
+  .sidebar-hidden-mobile{display:none!important;pointer-events:none!important}
   .back-btn{display:block}
-  .member-panel{display:none;position:fixed;inset:0;width:100%!important;z-index:80;background:var(--bg-primary,#fff);border-left:none}
+  .member-panel{display:none!important;position:fixed;inset:0;width:100%!important;z-index:80;background:var(--bg-primary,#fff);border-left:none;pointer-events:none}
   .dark .member-panel{background:var(--bg-primary,#1a1a1a)}
-  .member-panel.member-open-mobile{display:flex!important}
+  .member-panel.member-open-mobile{display:flex!important;pointer-events:auto}
   .member-back-btn{display:flex}
   .aro-panel-layout .sidebar{width:100%}
   .aro-panel-layout .sidebar-hidden-mobile{display:none!important}
@@ -1912,7 +1920,12 @@ button.msg-file-card:hover .msg-file-action{color:rgb(var(--acc));background:rgb
 }
 
 /* ===== Create Dialog ===== */
-.create-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:100}
+/* Default display:none — previous display:flex default left a full-screen click shield
+   whenever inline style was cleared or dismiss raced. */
+.create-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:100;pointer-events:none}
+.create-overlay[style*="display: flex"],
+.create-overlay[style*="display:flex"]{pointer-events:auto}
+.create-overlay[hidden]{display:none!important;pointer-events:none!important}
 .create-dialog{background:var(--bg-primary,#fff);border-radius:16px;width:min(360px,90vw);padding:20px;box-shadow:0 16px 48px rgba(0,0,0,.15)}
 .create-dialog-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .create-dialog-title{margin:0;font-size:16px;font-weight:600;color:var(--text-primary,#1a1a1a)}
@@ -2026,7 +2039,8 @@ button.aro-select-trigger.create-input{
 
 
 /* ===== In-app Confirm Dialog (native confirm() is blocked in the sandboxed iframe) ===== */
-.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:300;animation:ctxFadeIn .12s ease}
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:300;animation:ctxFadeIn .12s ease;pointer-events:auto}
+.confirm-overlay.aro-leaving,.confirm-overlay[hidden]{pointer-events:none!important}
 .confirm-dialog{background:var(--bg-primary,#fff);border-radius:16px;width:min(320px,88vw);padding:20px;box-shadow:0 16px 48px rgba(0,0,0,.18)}
 .confirm-message{font-size:14px;line-height:1.6;color:var(--text-primary,#1a1a1a);margin-bottom:18px;overflow-wrap:break-word}
 .confirm-actions{display:flex;gap:8px;justify-content:flex-end}

@@ -228,6 +228,7 @@ function openChatHistory() {
   var overlay = $('chat-history-overlay');
   if (!overlay) return;
   overlay.hidden = false;
+  overlay.style.pointerEvents = 'auto';
   overlay.style.display = 'flex';
   overlay.classList.remove('aro-leaving', 'aro-history-enter');
   // Restart enter animation

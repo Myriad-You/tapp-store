@@ -38,6 +38,8 @@ var state = {
    * Bumped on every open or leave so stale awaits cannot flashback UI.
    */
   openGen: 0,
+  /** Monotonic generation for loadConversations (stale list writes discarded). */
+  convLoadGen: 0,
   // Aro views
   currentView: 'feed',
   // Feed (merged timeline + profile)

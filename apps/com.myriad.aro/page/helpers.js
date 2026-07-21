@@ -85,7 +85,24 @@ function aroPlayEnter(el, className) {
 }
 
 /**
+ * Immediately stop an overlay/menu from receiving clicks (safe even mid-animation).
+ * Use when a stuck layer would dead-lock the messenger UI.
+ */
+function forceHideInteractive(el) {
+  if (!el) return;
+  try {
+    el.classList.remove('aro-leaving', 'aro-history-enter', 'aro-view-enter', 'aro-panel-enter', 'aro-menu-enter', 'open', 'is-open');
+    el.style.pointerEvents = 'none';
+    el.style.display = 'none';
+    if (el.hasAttribute && (el.hasAttribute('hidden') || el.getAttribute('aria-modal') === 'true' || el.classList.contains('history-overlay') || el.classList.contains('create-overlay') || el.classList.contains('confirm-overlay') || el.classList.contains('picker-overlay') || el.classList.contains('forward-overlay'))) {
+      el.hidden = true;
+    }
+  } catch (eForce) { /* ignore */ }
+}
+
+/**
  * Hide or remove an element after a short exit animation (class `aro-leaving`).
+ * Always disables pointer-events immediately so dismiss never leaves a click shield.
  * @param {HTMLElement} el
  * @param {{ remove?: boolean, ms?: number, onDone?: function }} opts
  */
@@ -93,6 +110,8 @@ function aroDismiss(el, opts) {
   opts = opts || {};
   if (!el) { if (opts.onDone) opts.onDone(); return; }
   var finished = false;
+  // Critical: block hits the moment dismiss starts (aro-leaving CSS may lag / fail).
+  try { el.style.pointerEvents = 'none'; } catch (ePe) { /* ignore */ }
   var finish = function () {
     if (finished) return;
     finished = true;
@@ -102,6 +121,10 @@ function aroDismiss(el, opts) {
       try { el.remove(); } catch (e) { /* ignore */ }
     } else {
       el.style.display = 'none';
+      el.style.pointerEvents = '';
+      try {
+        if (el.hasAttribute && el.hasAttribute('hidden')) el.hidden = true;
+      } catch (eH) { /* ignore */ }
     }
     if (opts.onDone) opts.onDone();
   };
@@ -110,13 +133,76 @@ function aroDismiss(el, opts) {
     if (e && e.target && e.target !== el) return;
     finish();
   };
-  if (prefersReducedMotion() || el.style.display === 'none') {
+  if (prefersReducedMotion() || el.style.display === 'none' || el.hidden) {
     finish();
     return;
   }
   el.classList.add('aro-leaving');
   el.addEventListener('animationend', onAnimEnd);
   setTimeout(finish, opts.ms || 180);
+}
+
+/**
+ * Close menus/overlays that commonly leave a full-screen click shield after #24/#25.
+ * Safe to call from openConversation / switchView / back.
+ * @param {{ keepChat?: boolean }} [opts]
+ */
+function dismissTransientUi(opts) {
+  opts = opts || {};
+  try { if (typeof closeMsgMenu === 'function') closeMsgMenu(); } catch (e0) { /* ignore */ }
+  try { if (typeof closeAttachMenu === 'function') closeAttachMenu(); } catch (e1) { /* ignore */ }
+  try { if (typeof closeInvitePopover === 'function') closeInvitePopover(); } catch (e2) { /* ignore */ }
+  try { if (typeof closeManageDropdown === 'function') closeManageDropdown(); } catch (e3) { /* ignore */ }
+  try {
+    document.querySelectorAll('.aro-select.is-open').forEach(function (root) {
+      if (root._aroSelect && typeof root._aroSelect.close === 'function') root._aroSelect.close();
+    });
+  } catch (e4) { /* ignore */ }
+  // Force-hide fixed/absolute overlays that may still paint over the app
+  try {
+    ['create-dialog', 'edit-room-dialog', 'ring-create-dialog', 'feed-follow-dialog',
+      'feed-compose-dialog', 'quote-repost-dialog', 'chat-history-overlay', 'room-files-overlay'
+    ].forEach(function (id) {
+      var el = $(id);
+      if (!el) return;
+      if (el.style.display === 'none' || el.hidden) return;
+      // History/files: prefer their close helpers so state stays consistent
+      if (id === 'chat-history-overlay' && typeof closeChatHistory === 'function') {
+        closeChatHistory();
+        return;
+      }
+      if (id === 'room-files-overlay' && typeof closeRoomFiles === 'function') {
+        closeRoomFiles();
+        return;
+      }
+      if (id === 'create-dialog' && typeof hideCreateDialog === 'function') {
+        hideCreateDialog();
+        return;
+      }
+      if (id === 'edit-room-dialog' && typeof hideEditRoomDialog === 'function') {
+        hideEditRoomDialog();
+        return;
+      }
+      forceHideInteractive(el);
+    });
+  } catch (e5) { /* ignore */ }
+  // Dynamically created portals (do NOT kill .confirm-overlay — mid-confirm would hang).
+  try {
+    document.querySelectorAll('.forward-overlay, .picker-overlay, .img-viewer').forEach(function (el) {
+      forceHideInteractive(el);
+      try { el.remove(); } catch (eR) { /* ignore */ }
+    });
+  } catch (e6) { /* ignore */ }
+  // Mobile member sheet must not stick over the conv list after switch
+  try {
+    var panel = $('member-panel');
+    if (panel) {
+      panel.classList.remove('member-open-mobile');
+      if (!opts.keepChat) {
+        panel.classList.remove('member-expanded-tablet');
+      }
+    }
+  } catch (e7) { /* ignore */ }
 }
 
 function timeStr(iso) { try { return new Date(iso).toLocaleTimeString(currentLocale, { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } }
@@ -868,6 +954,7 @@ function initAroSelect(rootOrId, opts) {
   }
 
   function onDocPointer(e) {
+    // Never capture/swallow when closed — leftover open=true must not block messenger.
     if (!open) return;
     if (root.contains(e.target)) return;
     closeMenu();
@@ -947,7 +1034,8 @@ function initAroSelect(rootOrId, opts) {
     trigger.focus();
   });
   root.addEventListener('keydown', onKeyDown);
-  document.addEventListener('click', onDocPointer, true);
+  // Bubble phase only — capture:true previously risked ordering races with list/tab clicks.
+  document.addEventListener('click', onDocPointer, false);
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && open) {
       closeMenu();

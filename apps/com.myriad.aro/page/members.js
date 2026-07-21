@@ -5,10 +5,24 @@ function renderMembers() {
   if (!panel) return;
 
   if (state.activeKind !== 'room' || !state.roomDetail) {
+    // Always clear mobile full-screen sheet — stuck member-open-mobile blocks the list.
+    panel.classList.remove('member-open-mobile', 'member-expanded-tablet');
     panel.style.display = 'none';
+    panel.style.pointerEvents = '';
     return;
   }
-  panel.style.display = '';
+  // Desktop: show side panel. Mobile: keep hidden until user opens (member-open-mobile).
+  var isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+  if (isMobile) {
+    // Do not force-show; only ensure pointer-events when intentionally open.
+    if (!panel.classList.contains('member-open-mobile')) {
+      panel.style.display = '';
+      // media query keeps it display:none until .member-open-mobile
+    }
+  } else {
+    panel.style.display = '';
+    panel.style.pointerEvents = '';
+  }
   $('member-title').textContent = lang.members + ' (' + state.members.length + ')';
 
   var myRole = state.roomDetail.my_role || '';
@@ -292,6 +306,10 @@ function closeMemberPanel() {
   panel.classList.remove('member-expanded-tablet');
   if (window.innerWidth > 768 && !isTablet()) {
     panel.classList.add('member-collapsed');
+  }
+  // Mobile full-screen sheet: force hide so it cannot block sidebar/list
+  if (window.innerWidth <= 768) {
+    panel.style.display = '';
   }
   state.memberPanelOpen = false;
 }

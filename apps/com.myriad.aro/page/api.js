@@ -1,10 +1,13 @@
 // ==================== API ====================
 async function loadConversations() {
+  var gen = (state.convLoadGen = (state.convLoadGen || 0) + 1);
   try {
     var results = await Promise.allSettled([
       Tapp.federation.getChannels(),
       Tapp.federation.getRooms(),
     ]);
+    // Stale reload finished after a newer one — do not flash older list data.
+    if (gen !== state.convLoadGen) return;
     var errors = [];
     if (results[0].status === 'fulfilled' && results[0].value) {
       state.channels = results[0].value.channels || [];
@@ -32,6 +35,7 @@ async function loadConversations() {
       refreshDeliveryHealth().catch(function () {});
     }
   } catch (e) {
+    if (gen !== state.convLoadGen) return;
     console.error('[Aro] loadConversations error:', e);
   }
 }
@@ -57,6 +61,11 @@ async function openConversation(kind, id) {
 
   // Stop poll immediately so a prior interval cannot write into the new shell.
   stopPolling();
+
+  // Drop click-shields / sheets that would sit above the list or chat after #24/#25.
+  if (typeof dismissTransientUi === 'function') {
+    dismissTransientUi({ keepChat: true });
+  }
 
   // Drop previous realtime subscription before switching
   await unsubscribeRealtime();
@@ -1233,7 +1242,8 @@ function toggleInvitePopover(e) {
     pop.style.top = (rect.bottom + 6) + 'px';
     pop.style.left = Math.max(4, rect.right - 240) + 'px';
     pop.classList.remove('aro-leaving');
-    pop.style.display = '';
+    pop.style.pointerEvents = '';
+    pop.style.display = 'block';
     aroPlayEnter(pop, 'aro-menu-enter');
     renderInvitePopoverContacts();
     var invInput = pop.querySelector('#invite-input');
@@ -1363,13 +1373,20 @@ function showEditRoomDialog() {
     }
   }
   overlay.classList.remove('aro-leaving');
+  overlay.hidden = false;
+  overlay.style.pointerEvents = '';
   overlay.style.display = 'flex';
 }
 
 function hideEditRoomDialog() {
   var overlay = $('edit-room-dialog');
   if (!overlay || overlay.style.display === 'none') return;
-  aroDismiss(overlay, { ms: 170 });
+  aroDismiss(overlay, {
+    ms: 170,
+    onDone: function () {
+      try { overlay.hidden = true; } catch (e) { /* ignore */ }
+    },
+  });
 }
 
 async function doSaveRoom() {
@@ -1652,6 +1669,8 @@ function showCreateDialog() {
   var overlay = $('create-dialog');
   if (overlay) {
     overlay.classList.remove('aro-leaving');
+    overlay.hidden = false;
+    overlay.style.pointerEvents = '';
     overlay.style.display = 'flex';
   }
   switchCreateTab('channel');
@@ -1813,6 +1832,10 @@ function switchView(view) {
   var prev = state.currentView;
   if (prev === view) return;
   state.currentView = view;
+  // Leaving a view: clear overlays that can pin over the whole #tapp-content (create/compose).
+  if (typeof dismissTransientUi === 'function') {
+    dismissTransientUi({ keepChat: view === 'messages' });
+  }
   var views = ['messages', 'feed', 'rings'];
   views.forEach(function (v) {
     var el = $('view-' + v);
@@ -1821,8 +1844,11 @@ function switchView(view) {
       if (v !== view) {
         el.style.display = 'none';
         el.classList.remove('aro-view-enter');
+        // Ensure inactive views never intercept pointer hits
+        el.style.pointerEvents = 'none';
       } else {
         el.style.display = '';
+        el.style.pointerEvents = '';
         el.classList.add('aro-view-active');
         if (prev && prev !== view) aroPlayEnter(el, 'aro-view-enter');
       }

@@ -394,6 +394,7 @@ async function openRoomFiles() {
   var overlay = $('room-files-overlay');
   if (!overlay) return;
   overlay.hidden = false;
+  overlay.style.pointerEvents = 'auto';
   overlay.style.display = 'flex';
   overlay.classList.remove('aro-leaving', 'aro-history-enter');
   try { void overlay.offsetWidth; } catch (eAnim) { /* ignore */ }

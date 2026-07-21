@@ -298,12 +298,14 @@
     backBtn.addEventListener('click', function () {
       // Invalidate in-flight open/poll so leaving chat cannot flash stale messages.
       state.openGen = (state.openGen || 0) + 1;
+      if (typeof dismissTransientUi === 'function') dismissTransientUi({});
       var sidebar = $('sidebar');
       var chat = $('chat-container');
       var members = $('member-panel');
       var empty = $('empty-state');
       if (sidebar) {
         sidebar.classList.remove('sidebar-hidden-mobile');
+        sidebar.style.pointerEvents = '';
         aroPlayEnter(sidebar, 'aro-panel-enter');
       }
       if (chat) {
@@ -314,6 +316,7 @@
         members.style.display = 'none';
         members.classList.remove('member-open-mobile');
         members.classList.remove('member-expanded-tablet');
+        members.style.pointerEvents = '';
       }
       if (empty) {
         empty.style.display = '';

@@ -2,7 +2,7 @@
 
 社交中心：消息（Channel/Room）、时间线、环网与个人资料。
 
-> 本包由 Myriad `frontend/src/tapp/examples/tapps/aro.ts` **逐字导出**（version 1.0.2）。
+> 本包由 Myriad `frontend/src/tapp/examples/tapps/aro.ts` **逐字导出**（version 1.0.3）。
 
 ## 功能
 
@@ -23,5 +23,5 @@ index.js          # core（与 aro.ts buildCoreCode() 一致）
 page.html / page.css / styles.css
 page/*.js         # pageModules 与 aro.ts PAGE_MODULES 一致
 i18n/{zh,en,ja}.json
-manifest.json     # version 1.0.2
+manifest.json     # version 1.0.3
 ```
