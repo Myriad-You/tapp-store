@@ -1087,6 +1087,28 @@ async function openShareModal(objectId, opts) {
   if (ta) ta.value = composed.text;
   updateShareCharCount();
 
+  // Optional status probe (host PR #225) — show intent-only mode; refuse can_post.
+  var modeEl = $('feed-share-mode');
+  if (Tapp.federation && typeof Tapp.federation.getExternalShareStatus === 'function') {
+    try {
+      var stRes = await Tapp.federation.getExternalShareStatus();
+      var st = (stRes && stRes.data) || stRes || {};
+      if (st && st.can_post === true) {
+        console.warn('[Aro] host reported can_post; refusing server-side post path');
+      }
+      if (modeEl) {
+        modeEl.hidden = false;
+        if (st && st.mode === 'intent') {
+          modeEl.textContent = lang.shareModeIntent || 'Intent only';
+        } else if (st && st.mode) {
+          modeEl.textContent = String(st.mode);
+        }
+      }
+    } catch (eSt) {
+      /* local fallback still fine */
+    }
+  }
+
   // Prefer host compose (same rules as /api/x/share) when bridge is present.
   if (Tapp.federation && typeof Tapp.federation.composeExternalShare === 'function') {
     try {
@@ -1105,6 +1127,10 @@ async function openShareModal(objectId, opts) {
       }
       if (data && data.mode && data.mode !== 'intent') {
         console.warn('[Aro] external share mode is not intent; ignoring post path');
+        shareModalState.intentUrl = '';
+      }
+      if (data && data.can_post === true) {
+        console.warn('[Aro] compose returned can_post; clearing intent to force local');
         shareModalState.intentUrl = '';
       }
     } catch (eCompose) {
