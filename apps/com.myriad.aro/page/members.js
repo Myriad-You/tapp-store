@@ -107,6 +107,148 @@ document.addEventListener('click', function (e) {
   if (wrap && !wrap.contains(e.target)) closeManageDropdown();
 });
 
+// ==================== Pending invite / open-join CTAs (mid-pane) ====================
+/** Remote-initiated DM that still needs Accept/Reject. */
+function isRemoteChannelInvitePending() {
+  return state.activeKind === 'channel'
+    && !!state.channelDetail
+    && state.channelDetail.status === 'pending'
+    && state.channelDetail.initiated_by === 'remote';
+}
+
+/** Public/open room the user can join without an invite. */
+function canSelfJoinActiveRoom() {
+  if (state.activeKind !== 'room' || !state.roomDetail) return false;
+  if (typeof isRoomInvitePending === 'function' ? isRoomInvitePending() : false) return false;
+  var rm = state.roomDetail;
+  return !rm.my_role
+    && (rm.is_public || rm.invite_policy === 'open')
+    && typeof Tapp !== 'undefined'
+    && Tapp.federation
+    && typeof Tapp.federation.joinRoom === 'function';
+}
+
+/**
+ * Describe mid-pane invite/join UI, or null when the conversation is open.
+ * @returns {{kind:string,title:string,reason:string,avatarUrl:string,primaryId:string,primaryLabel:string,secondaryId:?string,secondaryLabel:?string}|null}
+ */
+function getPendingInviteUi() {
+  if (isRemoteChannelInvitePending()) {
+    var ch = state.channelDetail;
+    var chName = ch.remote_actor_name || (ch.remote_actor_url || '').split('/').pop() || '?';
+    return {
+      kind: 'channel-invite',
+      title: chName,
+      reason: lang.inviteAcceptHint || lang.channelNotAccepted || lang.pending || 'Accept to start messaging',
+      avatarUrl: ch.remote_actor_avatar || '',
+      primaryId: 'pending-accept-channel',
+      primaryLabel: lang.accept || 'Accept',
+      secondaryId: 'pending-reject-channel',
+      secondaryLabel: lang.reject || 'Decline',
+    };
+  }
+  if (typeof isRoomInvitePending === 'function' && isRoomInvitePending()) {
+    var rm = state.roomDetail;
+    return {
+      kind: 'room-invite',
+      title: (rm && rm.name) || '?',
+      reason: lang.roomInvitePending || lang.pending || 'Accept the invite to chat in this group',
+      avatarUrl: (rm && rm.avatar_url) || '',
+      primaryId: 'pending-accept-room',
+      primaryLabel: lang.accept || 'Accept',
+      secondaryId: 'pending-reject-room',
+      secondaryLabel: lang.reject || lang.leave || 'Decline',
+    };
+  }
+  if (canSelfJoinActiveRoom()) {
+    var rmJoin = state.roomDetail;
+    return {
+      kind: 'room-join',
+      title: (rmJoin && rmJoin.name) || '?',
+      reason: lang.roomJoinHint || lang.joinRoom || 'Join this group to chat',
+      avatarUrl: (rmJoin && rmJoin.avatar_url) || '',
+      primaryId: 'pending-join-room',
+      primaryLabel: lang.joinRoom || lang.accept || 'Join',
+      secondaryId: null,
+      secondaryLabel: null,
+    };
+  }
+  return null;
+}
+
+var PENDING_INVITE_ICON_CHECK = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';
+var PENDING_INVITE_ICON_X = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+
+/** HTML for the centered invite/join card inside #messages. */
+function pendingInviteBannerHtml(ui) {
+  if (!ui) return '';
+  var regionLabel = ui.kind === 'room-join'
+    ? (lang.joinRoom || 'Join')
+    : (lang.pending || 'Pending');
+  var html = '<div class="messages-empty pending-invite-pane" role="region" aria-label="'
+    + esc(regionLabel) + '">'
+    + '<div class="pending-invite-card">'
+    + '<div class="pending-invite-avatar" aria-hidden="true">'
+    + avatarContentHtml(ui.avatarUrl || '', ui.title || '?')
+    + '</div>'
+    + '<div class="pending-invite-title">' + esc(ui.title || '') + '</div>'
+    + '<p class="pending-invite-reason">' + esc(ui.reason || '') + '</p>'
+    + '<div class="pending-invite-actions">';
+  html += '<button type="button" class="pending-invite-btn pending-invite-btn-primary" id="'
+    + esc(ui.primaryId) + '">'
+    + PENDING_INVITE_ICON_CHECK
+    + '<span>' + esc(ui.primaryLabel || lang.accept || 'Accept') + '</span></button>';
+  if (ui.secondaryId) {
+    html += '<button type="button" class="pending-invite-btn pending-invite-btn-secondary" id="'
+      + esc(ui.secondaryId) + '">'
+      + PENDING_INVITE_ICON_X
+      + '<span>' + esc(ui.secondaryLabel || lang.reject || 'Decline') + '</span></button>';
+  }
+  html += '</div></div></div>';
+  return html;
+}
+
+/** Bind Accept / Reject / Join on the mid-pane card (re-bound after each render). */
+function wirePendingInviteBanner() {
+  var acceptCh = $('pending-accept-channel');
+  if (acceptCh) acceptCh.addEventListener('click', function () {
+    if (typeof doAcceptChannel === 'function') doAcceptChannel();
+  });
+  var rejectCh = $('pending-reject-channel');
+  if (rejectCh) rejectCh.addEventListener('click', function () {
+    if (typeof doRejectChannel === 'function') doRejectChannel();
+  });
+  var acceptRoom = $('pending-accept-room');
+  if (acceptRoom) acceptRoom.addEventListener('click', function () {
+    if (typeof doAcceptRoomInvite === 'function') doAcceptRoomInvite();
+  });
+  var rejectRoom = $('pending-reject-room');
+  if (rejectRoom) rejectRoom.addEventListener('click', function () {
+    if (typeof doRejectRoomInvite === 'function') doRejectRoomInvite();
+  });
+  var joinRoom = $('pending-join-room');
+  if (joinRoom) joinRoom.addEventListener('click', function () {
+    if (typeof doJoinOpenRoom === 'function') doJoinOpenRoom();
+  });
+}
+
+/**
+ * When the open conversation needs accept/reject/join, fill #messages with the
+ * centered card. Returns true if the banner was shown (caller should skip normal messages).
+ */
+function renderPendingInviteBanner() {
+  var ui = getPendingInviteUi();
+  if (!ui) return false;
+  var container = $('messages');
+  if (!container) return false;
+  container.innerHTML = pendingInviteBannerHtml(ui);
+  wirePendingInviteBanner();
+  var pb = $('pinned-bar');
+  if (pb) pb.style.display = 'none';
+  state.skipMsgAppear = false;
+  return true;
+}
+
 // ==================== Render: Chat Header ====================
 function renderChatHeader() {
   var nameEl = $('chat-name');
@@ -125,14 +267,10 @@ function renderChatHeader() {
     metaEl.innerHTML = '<span class="meta-badge badge-channel">' + esc(lang.dm) + '</span>'
       + (ch.status === 'pending' ? '<span class="meta-badge badge-pending">' + esc(lang.pending) + '</span>' : '')
       + e2eStatusBadgeHtml();
-    // Always show history (chat.js defines the helper — never nest it inside another fn).
+    // History + manage stay in header; Accept/Reject live mid-pane (see renderPendingInviteBanner).
     var actionsHtml = (typeof historyHeaderButtonHtml === 'function')
       ? historyHeaderButtonHtml()
       : '';
-    if (ch.status === 'pending' && ch.initiated_by === 'remote') {
-      actionsHtml += '<button class="action-btn action-accept" id="action-accept">' + esc(lang.accept) + '</button>';
-      actionsHtml += '<button class="action-btn action-reject" id="action-reject-channel">' + esc(lang.reject || 'Decline') + '</button>';
-    }
     if (ch.status !== 'closed') {
       actionsHtml += '<div class="manage-wrap"><button type="button" class="aro-icon-btn manage-btn" id="manage-toggle" title="' + esc(lang.manage) + '" aria-label="' + esc(lang.manage) + '">⋯</button>'
         + '<div class="manage-dropdown" id="manage-dropdown" role="menu">'
@@ -154,13 +292,7 @@ function renderChatHeader() {
   } else if (state.activeKind === 'room' && state.roomDetail) {
     var rm = state.roomDetail;
     var roomPending = (rm.my_membership_status || rm.membership_status || 'active') === 'pending';
-    // Public rooms or open invite_policy can be joined without a prior invite.
-    var canSelfJoin = !roomPending
-      && !rm.my_role
-      && (rm.is_public || rm.invite_policy === 'open')
-      && typeof Tapp !== 'undefined'
-      && Tapp.federation
-      && typeof Tapp.federation.joinRoom === 'function';
+    var canSelfJoin = canSelfJoinActiveRoom();
     nameEl.textContent = rm.name || '?';
     if (avatarEl) {
       avatarEl.innerHTML = avatarContentHtml(rm.avatar_url || '', rm.name || '?');
@@ -206,18 +338,16 @@ function renderChatHeader() {
         + '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>'
         + esc(e2eMenuLabel) + '</button>';
     }
-    // History + group files always when room is open (not invite/join-only chrome).
+    // History + group files when room is open; invite/join CTAs are mid-pane only.
     var historyBtn = typeof historyHeaderButtonHtml === 'function' ? historyHeaderButtonHtml() : '';
     var filesBtn = typeof roomFilesHeaderButtonHtml === 'function' ? roomFilesHeaderButtonHtml() : '';
     var memberToggleHtml = '<button type="button" class="aro-icon-btn member-toggle-btn" id="member-toggle-btn" title="' + esc(lang.members) + '" aria-label="' + esc(lang.members) + '">'
       + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>'
       + '</button>';
     var roomChrome = historyBtn + filesBtn + memberToggleHtml;
-    if (roomPending) {
-      actionsEl.innerHTML = '<button class="action-btn action-accept" id="action-accept-room">' + esc(lang.accept) + '</button>'
-        + '<button class="action-btn action-reject" id="action-reject-room">' + esc(lang.reject || lang.leave || 'Reject') + '</button>';
-    } else if (canSelfJoin) {
-      actionsEl.innerHTML = '<button class="action-btn action-accept" id="action-join-room">' + esc(lang.joinRoom || lang.accept || 'Join') + '</button>';
+    if (roomPending || canSelfJoin) {
+      // Header stays free of accept/reject/join; mid-pane card owns those CTAs.
+      actionsEl.innerHTML = '';
     } else if (menuItems) {
       actionsEl.innerHTML = roomChrome + '<div class="manage-wrap"><button type="button" class="aro-icon-btn manage-btn" id="manage-toggle" title="' + esc(lang.manage) + '" aria-label="' + esc(lang.manage) + '">⋯</button>'
         + '<div class="manage-dropdown" id="manage-dropdown" role="menu">' + menuItems + '</div></div>';
@@ -226,24 +356,6 @@ function renderChatHeader() {
     }
   }
 
-  var acceptBtn = $('action-accept');
-  if (acceptBtn) acceptBtn.addEventListener('click', doAcceptChannel);
-  var rejectChBtn = $('action-reject-channel');
-  if (rejectChBtn) rejectChBtn.addEventListener('click', function () {
-    if (typeof doRejectChannel === 'function') doRejectChannel();
-  });
-  var acceptRoomBtn = $('action-accept-room');
-  if (acceptRoomBtn) acceptRoomBtn.addEventListener('click', function () {
-    if (typeof doAcceptRoomInvite === 'function') doAcceptRoomInvite();
-  });
-  var rejectRoomBtn = $('action-reject-room');
-  if (rejectRoomBtn) rejectRoomBtn.addEventListener('click', function () {
-    if (typeof doRejectRoomInvite === 'function') doRejectRoomInvite();
-  });
-  var joinRoomBtn = $('action-join-room');
-  if (joinRoomBtn) joinRoomBtn.addEventListener('click', function () {
-    if (typeof doJoinOpenRoom === 'function') doJoinOpenRoom();
-  });
   var closeBtn = $('action-close');
   if (closeBtn) closeBtn.addEventListener('click', function () { closeManageDropdown(); doCloseChannel(); });
   var delChBtn = $('action-delete-channel');

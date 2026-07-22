@@ -610,6 +610,11 @@ function renderMessages(opts) {
   if (!container) return;
   state.pinnedBarDismissed = false;
 
+  // Pending channel/room invite or open-join: centered CTA card instead of transcript/header buttons.
+  if (typeof renderPendingInviteBanner === 'function' && renderPendingInviteBanner()) {
+    return;
+  }
+
   if (state.messages.length === 0) {
     if (state.chatLoadError) {
       container.innerHTML = '<div class="messages-empty messages-empty-error">'

@@ -2,7 +2,7 @@
 
 社交中心：消息（Channel/Room）、时间线、环网与个人资料。
 
-> 官方社交 Tapp（version 1.0.8）。设置页含出站投递队列与联邦签名密钥轮换（需宿主 `federation.rotateKeys`）。
+> 官方社交 Tapp（version 1.0.9）。设置页含出站投递队列与联邦签名密钥轮换（需宿主 `federation.rotateKeys`）。
 
 ## 功能
 
@@ -19,6 +19,11 @@
 `platform:read`, `report:read`, `tappList:read|manage`, `brew:read`
 
 ## Changelog
+
+### 1.0.9
+
+- Messenger: move Accept / Reject / Join CTAs from chat header into a centered invite card in the conversation pane
+- Soft primary Accept + outline Decline; open-join rooms use the same treatment
 
 ### 1.0.8
 
@@ -54,5 +59,5 @@ index.js          # core（background + 内嵌 i18n 回退）
 page.html / page.css / styles.css
 page/*.js         # pageModules（UI 真源）
 i18n/{zh,en,ja}.json
-manifest.json     # version 1.0.8
+manifest.json     # version 1.0.9
 ```

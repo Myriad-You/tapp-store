@@ -65,7 +65,7 @@ must('domain-chip', views.includes('feed-actor-domain') || views.includes('feed-
 must('css-share', css.includes('feed-share-actions') && css.includes('feed-actor-meta'))
 
 // Version + host dependency docs
-must('version', man.version === '1.0.8', man.version)
+must('version', man.version === '1.0.9', man.version)
 must('host-dep-docs', readme.includes('composeExternalShare') && readme.includes('PR #225'))
 
 // No server-side X post language

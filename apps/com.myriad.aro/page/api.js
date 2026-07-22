@@ -1552,6 +1552,7 @@ async function doAcceptChannel() {
       }
     }
     renderChatHeader();
+    if (typeof renderMessages === 'function') renderMessages();
     renderConvList();
     // Unlock attach/send after accept (pending was composer-locked).
     updateSendState();
@@ -1596,6 +1597,7 @@ async function doJoinOpenRoom() {
       state.members = unwrapRoomMembers(membersRes);
     } catch (e2) { /* ignore */ }
     renderChatHeader();
+    if (typeof renderMessages === 'function') renderMessages();
     renderMembers();
     renderConvList();
     updateSendState();
@@ -1635,6 +1637,7 @@ async function doAcceptRoomInvite() {
       state.members = unwrapRoomMembers(membersRes);
     } catch (e2) { /* ignore refresh errors */ }
     renderChatHeader();
+    if (typeof renderMessages === 'function') renderMessages();
     renderMembers();
     renderConvList();
     updateSendState();
