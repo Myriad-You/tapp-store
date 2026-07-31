@@ -1,0 +1,55 @@
+<main class="shell public-shell" id="public-ui" hidden>
+  <section class="public-card" aria-labelledby="public-title">
+    <div class="public-icon" aria-hidden="true">✓</div>
+    <p class="eyebrow">SITE CACHE</p>
+    <h1 id="public-title">站点缓存由管理员维护</h1>
+    <p class="public-lead">CDN 配置和缓存刷新属于站点运维操作，仅管理员可以访问。</p>
+    <div class="public-status"><span></span>CDN 管理已受保护</div>
+    <div class="public-providers" aria-label="支持的 CDN 服务商"><span>Cloudflare</span><span>EdgeOne</span><span>阿里云 CDN</span><span>AWS CloudFront</span></div>
+    <p class="public-note">你无需进行任何设置。如遇到页面内容未及时更新，请联系站点管理员。</p>
+  </section>
+</main>
+
+<main class="shell" id="admin-ui" hidden>
+  <header class="hero">
+    <div>
+      <p class="eyebrow">CACHE CONTROL</p>
+      <h1>CDN 缓存刷新</h1>
+      <p class="subtitle">支持 Cloudflare、腾讯云 EdgeOne、阿里云 CDN 与 AWS CloudFront。优先精确刷新 URL，谨慎清理全站。</p>
+    </div>
+    <div class="provider-badge" id="provider-badge">未配置</div>
+  </header>
+
+  <section class="grid">
+    <article class="panel">
+      <div class="panel-head"><div><span class="step">01</span><h2>服务商配置</h2></div><span id="save-status" class="muted">仅当前用户可用</span></div>
+      <div class="fields">
+        <label><span>CDN 服务商</span><select id="provider"><option value="cloudflare">Cloudflare</option><option value="edgeone">腾讯云 EdgeOne</option><option value="aliyun">阿里云 CDN</option><option value="aws">AWS CloudFront</option></select></label>
+        <label id="resource-id-field"><span id="resource-id-label">Zone ID</span><input id="zone-id" autocomplete="off" placeholder="Zone ID"></label>
+        <div id="cloudflare-fields">
+          <label><span>Cloudflare API Token</span><input id="cf-token" type="password" autocomplete="new-password" placeholder="仅授予 Zone.Cache Purge"></label>
+        </div>
+        <div id="edgeone-fields" hidden>
+          <label><span>腾讯云 SecretId</span><input id="secret-id" autocomplete="off" placeholder="AKID..."></label>
+          <label><span>腾讯云 SecretKey</span><input id="secret-key" type="password" autocomplete="new-password"></label>
+          <label><span>清除方式</span><select id="edge-method"><option value="invalidate">标记过期（推荐）</option><option value="delete">直接删除</option></select></label>
+        </div>
+        <div id="aliyun-fields" hidden><label><span>阿里云 AccessKey ID</span><input id="ali-access-key-id" autocomplete="off" placeholder="LTAI..."></label><label><span>阿里云 AccessKey Secret</span><input id="ali-access-key-secret" type="password" autocomplete="new-password"></label></div><div id="aws-fields" hidden><label><span>AWS Access Key ID</span><input id="aws-access-key-id" autocomplete="off" placeholder="AKIA..."></label><label><span>AWS Secret Access Key</span><input id="aws-secret-access-key" type="password" autocomplete="new-password"></label><label><span>AWS Session Token（临时凭证时填写）</span><input id="aws-session-token" type="password" autocomplete="new-password"></label></div><label><span>站点地址</span><input id="site-url" type="url" placeholder="https://example.com"></label>
+      </div>
+      <div class="actions"><button id="save-btn" class="button primary" type="button">保存配置</button><button id="clear-config-btn" class="button ghost danger" type="button">清除密钥</button></div>
+      <p class="security-note">密钥保存在当前登录用户的 Tapp 私有存储中，不写入安装包、商店索引或刷新日志。</p>
+    </article>
+
+    <article class="panel">
+      <div class="panel-head"><div><span class="step">02</span><h2>刷新缓存</h2></div><span id="last-result" class="muted">等待操作</span></div>
+      <label><span>需要刷新的完整 URL（每行一个）</span><textarea id="urls" rows="10" placeholder="https://example.com/&#10;https://example.com/assets/app.css"></textarea></label>
+      <div class="quick-row"><button class="chip" id="add-home-btn" type="button">添加首页</button><button class="chip" id="dedupe-btn" type="button">去重</button><button class="chip" id="clear-urls-btn" type="button">清空输入</button></div>
+      <div class="actions purge-actions"><button id="purge-urls-btn" class="button primary" type="button">刷新这些 URL</button><button id="purge-all-btn" class="button danger-solid" type="button">清理全站缓存</button></div>
+    </article>
+  </section>
+
+  <section class="panel logs-panel">
+    <div class="panel-head"><div><span class="step">03</span><h2>刷新日志</h2></div><button id="clear-logs-btn" class="button ghost" type="button">清空日志</button></div>
+    <div id="logs" class="logs" aria-live="polite"></div>
+  </section>
+</main>
