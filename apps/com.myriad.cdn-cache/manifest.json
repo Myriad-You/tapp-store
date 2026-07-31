@@ -1,7 +1,7 @@
 {
     "id":  "com.myriad.cdn-cache",
     "name":  "CDN 缓存刷新",
-    "version":  "1.0.0",
+    "version":  "1.0.1",
     "minSystemVersion":  "0.3.18",
     "description":  "仅管理员可操作的 Cloudflare、EdgeOne、阿里云 CDN 与 AWS CloudFront 缓存刷新工具",
     "locales":  {
