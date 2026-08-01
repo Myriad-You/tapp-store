@@ -5,7 +5,7 @@
     <h1 id="public-title">站点缓存由管理员维护</h1>
     <p class="public-lead">CDN 配置和缓存刷新属于站点运维操作，仅管理员可以访问。</p>
     <div class="public-status"><span></span>CDN 管理已受保护</div>
-    <div class="public-providers" aria-label="支持的 CDN 服务商"><span>Cloudflare</span><span>EdgeOne</span><span>阿里云 CDN</span><span>AWS CloudFront</span></div>
+    <div class="public-providers" aria-label="支持的 CDN 服务商"><span>Cloudflare</span><span>EdgeOne</span><span>阿里云 CDN</span></div>
     <p class="public-note">你无需进行任何设置。如遇到页面内容未及时更新，请联系站点管理员。</p>
   </section>
 </main>
@@ -15,7 +15,7 @@
     <div>
       <p class="eyebrow">CACHE CONTROL</p>
       <h1>CDN 缓存刷新</h1>
-      <p class="subtitle">支持 Cloudflare、腾讯云 EdgeOne、阿里云 CDN 与 AWS CloudFront。优先精确刷新 URL，谨慎清理全站。</p>
+      <p class="subtitle">支持 Cloudflare、腾讯云 EdgeOne 与阿里云 CDN。优先精确刷新 URL，谨慎清理全站。</p>
     </div>
     <div class="provider-badge" id="provider-badge">未配置</div>
   </header>
@@ -24,17 +24,13 @@
     <article class="panel">
       <div class="panel-head"><div><span class="step">01</span><h2>服务商配置</h2></div><span id="save-status" class="muted">仅当前用户可用</span></div>
       <div class="fields">
-        <label><span>CDN 服务商</span><select id="provider"><option value="cloudflare">Cloudflare</option><option value="edgeone">腾讯云 EdgeOne</option><option value="aliyun">阿里云 CDN</option><option value="aws">AWS CloudFront</option></select></label>
+        <label><span>CDN 服务商</span><select id="provider"><option value="cloudflare">Cloudflare</option><option value="edgeone">腾讯云 EdgeOne</option><option value="aliyun">阿里云 CDN</option></select></label>
         <label id="resource-id-field"><span id="resource-id-label">Zone ID</span><input id="zone-id" autocomplete="off" placeholder="Zone ID"></label>
         <div id="cloudflare-fields">
           <label><span>Cloudflare API Token</span><input id="cf-token" type="password" autocomplete="new-password" placeholder="仅授予 Zone.Cache Purge"></label>
         </div>
-        <div id="edgeone-fields" hidden>
-          <label><span>腾讯云 SecretId</span><input id="secret-id" autocomplete="off" placeholder="AKID..."></label>
-          <label><span>腾讯云 SecretKey</span><input id="secret-key" type="password" autocomplete="new-password"></label>
-          <label><span>清除方式</span><select id="edge-method"><option value="invalidate">标记过期（推荐）</option><option value="delete">直接删除</option></select></label>
-        </div>
-        <div id="aliyun-fields" hidden><label><span>阿里云 AccessKey ID</span><input id="ali-access-key-id" autocomplete="off" placeholder="LTAI..."></label><label><span>阿里云 AccessKey Secret</span><input id="ali-access-key-secret" type="password" autocomplete="new-password"></label></div><div id="aws-fields" hidden><label><span>AWS Access Key ID</span><input id="aws-access-key-id" autocomplete="off" placeholder="AKIA..."></label><label><span>AWS Secret Access Key</span><input id="aws-secret-access-key" type="password" autocomplete="new-password"></label><label><span>AWS Session Token（临时凭证时填写）</span><input id="aws-session-token" type="password" autocomplete="new-password"></label></div><label><span>站点地址</span><input id="site-url" type="url" placeholder="https://example.com"></label>
+        <div id="edgeone-fields" hidden><label><span>腾讯云 SecretId</span><input id="secret-id" autocomplete="off" placeholder="AKID..."></label><label><span>腾讯云 SecretKey</span><input id="secret-key" type="password" autocomplete="new-password"></label><label><span>清除方式</span><select id="edge-method"><option value="invalidate">标记过期（推荐）</option><option value="delete">直接删除</option></select></label></div>
+        <div id="aliyun-fields" hidden><label><span>阿里云 AccessKey ID</span><input id="ali-access-key-id" autocomplete="off" placeholder="LTAI..."></label><label><span>阿里云 AccessKey Secret</span><input id="ali-access-key-secret" type="password" autocomplete="new-password"></label></div><label><span>站点地址</span><input id="site-url" type="url" placeholder="https://example.com"></label>
       </div>
       <div class="actions"><button id="save-btn" class="button primary" type="button">保存配置</button><button id="clear-config-btn" class="button ghost danger" type="button">清除密钥</button></div>
       <p class="security-note">密钥保存在当前登录用户的 Tapp 私有存储中，不写入安装包、商店索引或刷新日志。</p>
