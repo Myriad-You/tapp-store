@@ -1023,7 +1023,9 @@ function anniversaryRender(container, props) {
   shell.setAttribute("data-style", config.style);
   shell.setAttribute("data-align", config.alignment);
   shell.setAttribute("data-direction", state.direction);
-  shell.setAttribute("data-digits", String(String(state.days).length));
+  shell.setAttribute("data-digits", String(Math.min(String(state.days).length, 6)));
+  var titleLength = Array.from(config.title.trim()).length;
+  shell.setAttribute("data-title-length", titleLength > 14 ? "very-long" : titleLength > 8 ? "long" : "normal");
   shell.setAttribute("data-state", "ready");
   shell.setAttribute("data-show-icon", String(config.showIcon));
   shell.setAttribute("data-show-date", String(config.showDate));

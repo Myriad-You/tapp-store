@@ -1,7 +1,7 @@
 {
   "id": "cn.xciy.xingchen.widgets",
   "name": "星辰小组件",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "minSystemVersion": "0.3.23",
   "description": "GitHub 数据卡片、照片墙、纪念日、系统访客统计与个人信息小组件合集。",
   "locales": {

@@ -881,6 +881,18 @@ body.dark,
   display: none;
 }
 
+.anniversary-widget[data-show-date="false"][data-show-progress="false"] .anniversary-footer {
+  display: none;
+}
+
+.anniversary-widget[data-show-date="false"][data-show-progress="true"] .anniversary-progress-label {
+  grid-column: 1 / -1;
+}
+
+.anniversary-widget[data-show-date="true"][data-show-progress="false"] .anniversary-footer {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .anniversary-widget[data-align="center"] {
   text-align: center;
 }
@@ -1006,30 +1018,37 @@ body.dark,
   border-color: transparent;
 }
 
-.anniversary-widget[data-size="2x1"],
-.anniversary-widget[data-size="4x1"] {
-  --anniversary-base-number: 56px;
+.anniversary-widget[data-size="2x1"] {
+  --anniversary-base-number: 50px;
   grid-template-areas:
     "header time"
     "copy time"
     "footer footer";
   grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  column-gap: clamp(12px, 4vw, 28px);
-  padding: clamp(11px, 4%, 18px);
-}
-
-.anniversary-widget[data-size="2x1"] {
-  --anniversary-base-number: 48px;
-  gap: 4px 10px;
-  padding: 10px 12px;
+  grid-template-rows: 26px minmax(0, 1fr) 14px;
+  gap: 2px 10px;
+  padding: 10px 12px 9px;
   border-radius: min(var(--anniversary-radius), 18px);
 }
 
 .anniversary-widget[data-size="2x1"] .anniversary-icon {
-  width: 26px;
-  height: 26px;
-  font-size: 15px;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+}
+
+.anniversary-widget[data-size="2x1"] .anniversary-label {
+  font-size: clamp(9px, 2.9cqh, 11px);
+  letter-spacing: 0.045em;
+}
+
+.anniversary-widget[data-size="2x1"] .anniversary-time {
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.anniversary-widget[data-size="2x1"] .anniversary-time span {
+  font-size: clamp(11px, 4.2cqh, 15px);
 }
 
 .anniversary-widget[data-size="2x1"] .anniversary-copy p,
@@ -1038,20 +1057,52 @@ body.dark,
 }
 
 .anniversary-widget[data-size="2x1"] .anniversary-copy h2 {
-  font-size: clamp(13px, 5cqh, 17px);
+  display: -webkit-box;
+  font-size: clamp(13px, 4.8cqh, 16px);
+  line-height: 1.08;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .anniversary-widget[data-size="2x1"] .anniversary-footer {
-  gap: 4px;
+  grid-template-columns: auto minmax(18px, 1fr);
+  gap: 7px;
 }
 
 .anniversary-widget[data-size="2x1"] .anniversary-progress {
-  grid-column: 2 / -1;
+  grid-column: 2;
+  height: 2px;
+}
+
+.anniversary-widget[data-size="2x1"][data-show-date="false"] .anniversary-progress {
+  grid-column: 1 / -1;
+}
+
+.anniversary-widget[data-size="2x1"] .anniversary-progress b {
+  width: 8px;
+  height: 8px;
+  left: clamp(0px, calc(var(--anniversary-progress-value) - 4px), calc(100% - 8px));
+}
+
+.anniversary-widget[data-size="2x1"][data-title-length="very-long"] .anniversary-copy h2 {
+  font-size: clamp(11px, 4cqh, 13px);
 }
 
 .anniversary-widget[data-size="2x2"] {
-  --anniversary-base-number: 70px;
-  padding: clamp(14px, 7%, 20px);
+  --anniversary-base-number: 82px;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: clamp(6px, 2.8%, 10px);
+  padding: clamp(15px, 6.5%, 21px);
+}
+
+.anniversary-widget[data-size="2x2"] .anniversary-time {
+  justify-content: center;
+  align-self: center;
+}
+
+.anniversary-widget[data-size="2x2"] .anniversary-time span {
+  font-size: clamp(14px, 4.8cqh, 19px);
 }
 
 .anniversary-widget[data-size="2x2"] .anniversary-copy p,
@@ -1059,29 +1110,156 @@ body.dark,
   display: none;
 }
 
+.anniversary-widget[data-size="2x2"] .anniversary-copy h2 {
+  display: -webkit-box;
+  line-height: 1.15;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-widget[data-size="2x2"] .anniversary-footer {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 7px;
+}
+
+.anniversary-widget[data-size="2x2"] .anniversary-progress {
+  grid-column: 1;
+}
+
+.anniversary-widget[data-size="2x2"][data-title-length="very-long"] .anniversary-copy h2 {
+  font-size: clamp(13px, 4.5cqh, 18px);
+}
+
+.anniversary-widget[data-size="4x1"] {
+  --anniversary-base-number: 62px;
+  grid-template-areas:
+    "header time copy"
+    "footer footer footer";
+  grid-template-columns: minmax(118px, 0.8fr) auto minmax(150px, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 8px clamp(18px, 4vw, 36px);
+  padding: 12px clamp(16px, 3.5%, 26px) 11px;
+}
+
+.anniversary-widget[data-size="4x1"] .anniversary-header {
+  align-self: center;
+}
+
+.anniversary-widget[data-size="4x1"] .anniversary-time {
+  justify-content: center;
+  align-self: center;
+}
+
+.anniversary-widget[data-size="4x1"] .anniversary-copy {
+  align-content: center;
+}
+
+.anniversary-widget[data-size="4x1"] .anniversary-copy h2 {
+  font-size: clamp(16px, 5.2cqh, 21px);
+}
+
+.anniversary-widget[data-size="4x1"] .anniversary-copy p {
+  font-size: clamp(9px, 3.1cqh, 12px);
+  white-space: nowrap;
+  -webkit-line-clamp: 1;
+}
+
+.anniversary-widget[data-size="4x1"] .anniversary-footer {
+  grid-template-columns: auto minmax(54px, 1fr) auto;
+  gap: 10px;
+}
+
+.anniversary-widget[data-size="4x1"][data-title-length="long"] .anniversary-copy h2 {
+  display: -webkit-box;
+  font-size: clamp(14px, 4.7cqh, 19px);
+  line-height: 1.08;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-widget[data-size="4x1"] .anniversary-progress {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.anniversary-widget[data-size="4x1"] .anniversary-progress-label {
+  grid-column: 3;
+}
+
+.anniversary-widget[data-size="4x1"][data-show-date="false"] .anniversary-progress {
+  grid-column: 1 / 3;
+}
+
+.anniversary-widget[data-size="4x1"][data-show-date="false"] .anniversary-progress-label {
+  grid-column: 3;
+}
+
+.anniversary-widget[data-size="4x1"][data-title-length="very-long"] .anniversary-copy h2 {
+  display: -webkit-box;
+  font-size: clamp(13px, 4.3cqh, 17px);
+  line-height: 1.08;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-widget[data-size="4x1"][data-title-length="very-long"] .anniversary-copy p {
+  display: none;
+}
+
 .anniversary-widget[data-size="4x2"] {
-  --anniversary-base-number: 92px;
+  --anniversary-base-number: 100px;
   grid-template-areas:
     "header header"
     "time copy"
     "footer footer";
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 0.95fr) minmax(180px, 1.05fr);
   grid-template-rows: auto minmax(0, 1fr) auto;
-  column-gap: clamp(20px, 5vw, 48px);
+  gap: clamp(8px, 3%, 14px) clamp(24px, 5vw, 52px);
+  padding: clamp(18px, 4.5%, 30px);
+}
+
+.anniversary-widget[data-size="4x2"] .anniversary-time {
+  align-self: center;
 }
 
 .anniversary-widget[data-size="4x2"] .anniversary-copy {
   align-content: center;
 }
 
+.anniversary-widget[data-size="4x2"] .anniversary-copy h2 {
+  display: -webkit-box;
+  font-size: clamp(20px, 6cqh, 28px);
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-widget[data-size="4x2"] .anniversary-copy p {
+  max-width: 32em;
+}
+
+.anniversary-widget[data-size="4x2"][data-title-length="very-long"] .anniversary-copy h2 {
+  font-size: clamp(16px, 4.8cqh, 22px);
+}
+
 .anniversary-widget[data-size="4x4"] {
-  --anniversary-base-number: 128px;
-  padding: clamp(22px, 7%, 38px);
-  gap: clamp(10px, 3%, 18px);
+  --anniversary-base-number: 142px;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  padding: clamp(24px, 7%, 40px);
+  gap: clamp(12px, 3.2%, 20px);
+}
+
+.anniversary-widget[data-size="4x4"] .anniversary-time {
+  align-self: center;
 }
 
 .anniversary-widget[data-size="4x4"] .anniversary-copy h2 {
   font-size: clamp(24px, 6cqh, 34px);
+  text-wrap: balance;
+  white-space: normal;
 }
 
 .anniversary-widget[data-size="4x4"] .anniversary-copy p {
@@ -1097,9 +1275,50 @@ body.dark,
   justify-self: end;
 }
 
-.anniversary-widget[data-digits="5"] .anniversary-time strong,
-.anniversary-widget[data-digits="6"] .anniversary-time strong {
-  font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.78);
+.anniversary-widget[data-size="4x4"][data-title-length="very-long"] .anniversary-copy h2 {
+  font-size: clamp(19px, 4.4cqh, 24px);
+  line-height: 1.12;
+}
+
+.anniversary-widget[data-size="2x1"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.92); }
+.anniversary-widget[data-size="2x1"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.8); }
+.anniversary-widget[data-size="2x1"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.66); }
+.anniversary-widget[data-size="2x1"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.56); }
+
+.anniversary-widget[data-size="4x1"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.95); }
+.anniversary-widget[data-size="4x1"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.85); }
+.anniversary-widget[data-size="4x1"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.72); }
+.anniversary-widget[data-size="4x1"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.62); }
+
+.anniversary-widget[data-size="2x2"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.9); }
+.anniversary-widget[data-size="2x2"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.76); }
+.anniversary-widget[data-size="2x2"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.64); }
+.anniversary-widget[data-size="2x2"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.55); }
+
+.anniversary-widget[data-size="4x2"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.92); }
+.anniversary-widget[data-size="4x2"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.78); }
+.anniversary-widget[data-size="4x2"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.67); }
+.anniversary-widget[data-size="4x2"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.58); }
+
+.anniversary-widget[data-size="4x4"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.95); }
+.anniversary-widget[data-size="4x4"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.84); }
+.anniversary-widget[data-size="4x4"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.74); }
+.anniversary-widget[data-size="4x4"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.66); }
+
+.anniversary-widget[data-style="letter"][data-size="2x1"],
+.anniversary-widget[data-style="letter"][data-size="4x1"] {
+  background-position: 0 -5px;
+}
+
+.anniversary-widget[data-style="glass"][data-size="2x1"] .anniversary-pattern,
+.anniversary-widget[data-style="glass"][data-size="4x1"] .anniversary-pattern {
+  inset: 6px;
+  border-radius: max(0px, calc(var(--anniversary-radius) - 6px));
+}
+
+.anniversary-widget[data-style="minimal"][data-size="2x1"] .anniversary-pattern,
+.anniversary-widget[data-style="minimal"][data-size="4x1"] .anniversary-pattern {
+  width: 7px;
 }
 
 .photo-wall-widget {
