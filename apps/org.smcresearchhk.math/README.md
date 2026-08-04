@@ -46,12 +46,6 @@ npx --yes --package=@myriad/tapp-cli@0.1.0 myriad-tapp pack ./com.example.functi
 
 产物：`dist/com.example.function-graph.tapp`，可在 Myriad 中通过「安装文件」导入。
 
-## 发布到 tapp-store
-
-1. 将本目录放入 `apps/com.example.function-graph/`
-2. 在根目录 `index.json` 的 `apps` 中增加条目（`id` / `version` / `category` 与 Manifest 一致，`download` 指向 `manifest` 与 `code` 等）
-3. 提交 PR 至 [Myriad-You/tapp-store](https://github.com/Myriad-You/tapp-store)
-
 ## 表达式说明
 
 支持：
@@ -71,4 +65,4 @@ npx --yes --package=@myriad/tapp-cli@0.1.0 myriad-tapp pack ./com.example.functi
 
 ## 许可证
 
-MIT（与官方商店示例一致，可按需修改）
+MIT
