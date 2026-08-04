@@ -4,7 +4,7 @@
   "version": "1.10.0",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-08-04T02:50:41Z",
+  "updated_at": "2026-08-04T06:05:00Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -713,7 +713,62 @@
       "verified": false,
       "created_at": "2026-08-04T02:07:42Z",
       "updated_at": "2026-08-04T02:50:41Z"
+    },
+    {
+      "id": "org.smcresearchhk.math",
+      "name": "函数图形计算器",
+      "version": "1.0.0",
+      "description": "类似 GeoGebra 的函数绘图与交互式计算器，支持多函数叠加、坐标系缩放平移、常用函数库与表达式求值",
+      "long_description": "交互式函数绘图计算器，风格接近 GeoGebra：多函数叠加、安全表达式解析（无 eval）、坐标系缩放/平移、网格与坐标轴、悬停轨迹、侧栏求值与常用函数预设。支持中英日界面与明暗主题，函数列表与视图范围持久化到本地 storage。",
+      "locales": {
+        "en-US": {
+          "name": "Function Graph Calculator",
+          "description": "GeoGebra-like function graphing and interactive calculator with multi-function overlay, zoom/pan, and expression evaluation"
+        },
+        "ja-JP": {
+          "name": "関数グラフ計算機",
+          "description": "GeoGebra風の関数グラフ描画と対話型計算機。複数関数の重ね描き、ズーム・パン、式評価に対応"
+        }
+      },
+      "author": {
+        "name": "sssr7844",
+        "url": "https://github.com/WKSYweb"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/org.smcresearchhk.math",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "utility",
+      "tags": [
+        "函数",
+        "图形",
+        "计算器",
+        "GeoGebra",
+        "数学",
+        "绘图"
+      ],
+      "permissions": [
+        "storage",
+        "ui:theme",
+        "ui:notification"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M3 12h18M12 3v18' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'/><path d='M4 16c2-4 4-6 6-6s4 4 6 6 4 2 6 0' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/><circle cx='12' cy='10' r='1.5' fill='currentColor'/></svg>",
+      "theme_color": "#0EA5E9",
+      "screenshots": [],
+      "download": {
+        "manifest": "apps/org.smcresearchhk.math/manifest.json",
+        "code": "apps/org.smcresearchhk.math/main.js",
+        "readme": "apps/org.smcresearchhk.math/README.md",
+        "page_styles": "apps/org.smcresearchhk.math/page.css",
+        "page_template": "apps/org.smcresearchhk.math/page.html"
+      },
+      "size": 57835,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-08-04T00:00:00Z",
+      "updated_at": "2026-08-04T06:05:00Z"
     }
   ],
-  "last_updated": "2026-08-04T02:50:41Z"
+  "last_updated": "2026-08-04T06:05:00Z"
 }
