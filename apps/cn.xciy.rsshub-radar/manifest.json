@@ -1,0 +1,88 @@
+{
+  "id": "cn.xciy.rsshub-radar",
+  "name": "RSSHub 雷达",
+  "version": "1.1.1",
+  "minSystemVersion": "0.2.1",
+  "description": "发现 RSSHub 路由，管理订阅并预览 Feed",
+  "locales": {
+    "en-US": {
+      "name": "RSSHub Radar",
+      "description": "Find RSSHub routes, manage subscriptions, and preview feeds"
+    },
+    "ja-JP": {
+      "name": "RSSHub レーダー",
+      "description": "RSSHub ルートの検索、購読管理、フィードのプレビュー"
+    }
+  },
+  "category": "productivity",
+  "main": "main.js",
+  "author": {
+    "name": "Myriad Team",
+    "url": "https://github.com/Myriad-You"
+  },
+  "permissions": [
+    "storage",
+    "network:fetch",
+    "ui:notification",
+    "ui:theme"
+  ],
+  "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='12' cy='12' r='8.5' stroke='currentColor' stroke-width='1.7'/><circle cx='12' cy='12' r='4.5' stroke='currentColor' stroke-width='1.4' stroke-dasharray='2 2'/><path d='M12 12L18.8 7.4' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/><circle cx='16.5' cy='9' r='1.4' fill='currentColor'/><path d='M12 2v2M22 12h-2M12 22v-2M2 12h2' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'/></svg>",
+  "themeColor": "#58F2D0",
+  "hasPage": true,
+  "cssMode": "separated",
+  "pageStyles": "page.css",
+  "pageTemplate": "page.html",
+  "assets": [
+    "assets/RSSHub-Radar-LICENSE.txt",
+    "assets/rules/index.json",
+    "assets/rules/0.json",
+    "assets/rules/1.json",
+    "assets/rules/2.json",
+    "assets/rules/3.json",
+    "assets/rules/4.json",
+    "assets/rules/5.json",
+    "assets/rules/6.json",
+    "assets/rules/7.json",
+    "assets/rules/8.json",
+    "assets/rules/9.json",
+    "assets/rules/a.json",
+    "assets/rules/b.json",
+    "assets/rules/c.json",
+    "assets/rules/d.json",
+    "assets/rules/e.json",
+    "assets/rules/f.json",
+    "assets/rules/g.json",
+    "assets/rules/h.json",
+    "assets/rules/i.json",
+    "assets/rules/j.json",
+    "assets/rules/k.json",
+    "assets/rules/l.json",
+    "assets/rules/m.json",
+    "assets/rules/n.json",
+    "assets/rules/o.json",
+    "assets/rules/p.json",
+    "assets/rules/q.json",
+    "assets/rules/r.json",
+    "assets/rules/s.json",
+    "assets/rules/t.json",
+    "assets/rules/u.json",
+    "assets/rules/v.json",
+    "assets/rules/w.json",
+    "assets/rules/x.json",
+    "assets/rules/y.json",
+    "assets/rules/z.json"
+  ],
+  "apis": {
+    "previewFeed": {
+      "type": "http",
+      "access": "protected",
+      "endpoint": "https://rsshub.app{{params.path}}",
+      "method": "GET",
+      "headers": {
+        "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.1"
+      },
+      "cacheTtl": 60,
+      "description": "通过固定声明的 rsshub.app 服务读取已匹配路由的 Feed 预览"
+    }
+  }
+}

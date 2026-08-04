@@ -1,0 +1,133 @@
+<main class="radar-shell" data-radar-app>
+  <header class="topbar">
+    <a class="brand" href="#radar-search" aria-label="返回搜索区">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span><strong>RSSHub</strong><em>RADAR</em></span>
+    </a>
+    <div class="catalog-status" aria-label="内置规则规模">
+      <span><b data-domain-count>—</b> 个站点</span>
+      <span><b data-rule-count>—</b> 条路线</span>
+    </div>
+  </header>
+
+  <section class="hero" id="radar-search">
+    <div class="scanner" data-scanner data-signal="idle" aria-hidden="true">
+      <div class="scanner-grid"></div>
+      <div class="scanner-sweep"></div>
+      <div class="scanner-ping ping-one"></div>
+      <div class="scanner-ping ping-two"></div>
+      <div class="scanner-center"></div>
+      <span class="scanner-label">ROUTE SIGNAL</span>
+    </div>
+
+    <div class="search-console">
+      <p class="kicker">URL → RSSHUB ROUTE</p>
+      <h1>把一个网页地址，<br>调成可订阅的信号。</h1>
+      <p class="hero-copy">粘贴公开网页地址，雷达会在内置规则中寻找对应的 RSSHub 路由。当前 TApp 不读取浏览器标签页，也不会扫描你的浏览记录。</p>
+
+      <form class="search-form" data-search-form>
+        <label for="radar-url">网页地址</label>
+        <div class="url-entry">
+          <input id="radar-url" data-url-input type="url" inputmode="url" autocomplete="url" spellcheck="false" value="https://github.com/DIYgod/RSSHub" placeholder="https://space.bilibili.com/2267573">
+          <button class="scan-button" type="button" data-scan-button>
+            <span>扫描路线</span><i aria-hidden="true"></i>
+          </button>
+        </div>
+      </form>
+
+      <div class="examples" aria-label="示例地址">
+        <span>试试看</span>
+        <button type="button" data-example-url="https://space.bilibili.com/2267573">哔哩哔哩</button>
+        <button type="button" data-example-url="https://github.com/DIYgod/RSSHub">GitHub</button>
+        <button type="button" data-example-url="https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw">YouTube</button>
+      </div>
+
+      <div class="instance-row">
+        <label for="radar-instance">生成链接使用的 RSSHub 实例</label>
+        <input id="radar-instance" data-instance-input type="url" inputmode="url" value="https://rsshub.app" spellcheck="false">
+        <div class="preview-service-status" data-preview-service-status data-state="idle">应用内预览 · rsshub.app 尚未检测</div>
+        <small>这个地址用于生成订阅链接。仅当填写 https://rsshub.app 时可在应用内预览；自定义实例不会静默回退到旧服务。</small>
+      </div>
+    </div>
+  </section>
+
+  <section class="workspace">
+    <section class="panel results-panel" aria-labelledby="results-title">
+      <div class="panel-heading">
+        <div>
+          <p class="panel-index">MATCHED SIGNALS</p>
+          <h2 id="results-title">路线结果</h2>
+        </div>
+        <span class="result-count" data-result-count>等待扫描</span>
+      </div>
+      <div class="result-list" data-result-list aria-live="polite">
+        <div class="empty-state" data-results-empty>
+          <span class="empty-line"></span>
+          <h3>还没有接收到路线</h3>
+          <p>输入一个支持 RSSHub 的网站地址。结果会区分“当前页面可直接生成”和“此网站可用的其他路线”。</p>
+        </div>
+      </div>
+    </section>
+
+    <aside class="side-stack">
+      <section class="panel selected-panel" aria-labelledby="selected-title">
+        <div class="panel-heading compact">
+          <div>
+            <p class="panel-index">TUNED ROUTE</p>
+            <h2 id="selected-title">当前路线</h2>
+          </div>
+        </div>
+        <div data-selected-route>
+          <div class="small-empty">从左侧选择一条路线，即可复制地址、预览 Feed 或生成阅读器订阅链接。</div>
+        </div>
+      </section>
+
+      <section class="panel saved-panel" aria-labelledby="saved-title">
+        <div class="panel-heading compact">
+          <div>
+            <p class="panel-index">PINNED</p>
+            <h2 id="saved-title">收藏路线</h2>
+          </div>
+          <div class="saved-tools">
+            <button class="export-button" type="button" data-export-opml disabled>导出 OPML</button>
+            <span class="mini-count" data-saved-count>0</span>
+          </div>
+        </div>
+        <div class="saved-list" data-saved-list>
+          <div class="small-empty">收藏会保存在当前用户的 TApp 私有空间。</div>
+        </div>
+      </section>
+
+      <section class="panel history-panel" aria-labelledby="history-title">
+        <div class="panel-heading compact">
+          <div>
+            <p class="panel-index">RECENT SWEEPS</p>
+            <h2 id="history-title">最近扫描</h2>
+          </div>
+        </div>
+        <div class="history-list" data-history-list>
+          <div class="small-empty">最近使用的网址会显示在这里。</div>
+        </div>
+      </section>
+    </aside>
+  </section>
+
+  <section class="feed-panel" data-feed-panel hidden aria-labelledby="feed-title">
+    <div class="feed-head">
+      <div>
+        <p class="panel-index">LIVE OR CACHED · RSSHUB.APP</p>
+        <h2 id="feed-title" data-feed-title>Feed 预览</h2>
+        <p data-feed-description></p>
+      </div>
+      <button class="close-preview" type="button" data-close-preview aria-label="关闭 Feed 预览">关闭</button>
+    </div>
+    <div class="feed-items" data-feed-items></div>
+  </section>
+
+  <footer class="radar-footer">
+    <span>规则数据来自 DIYgod/RSSHub-Radar，按 AGPL-3.0 使用。</span>
+    <span>这是 URL 驱动的 TApp 移植版，不读取当前浏览器页面。</span>
+  </footer>
+</main>
+
+<div class="radar-toast" data-toast role="status" aria-live="polite"></div>

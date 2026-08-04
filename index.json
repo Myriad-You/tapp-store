@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.13.0",
+  "version": "1.14.0",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-08-04T14:38:40Z",
+  "updated_at": "2026-08-04T15:39:27Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -724,7 +724,81 @@
       "verified": false,
       "created_at": "2026-08-04T02:07:42Z",
       "updated_at": "2026-08-04T14:38:40Z"
+    },
+    {
+      "id": "cn.xciy.rsshub-radar",
+      "name": "RSSHub 雷达",
+      "version": "1.1.1",
+      "description": "发现 RSSHub 路由，管理订阅并预览 Feed",
+      "long_description": "面向 Myriad TApp 沙箱的 RSSHub Radar 移植版。输入公开网页地址后，从内置规则中匹配 RSSHub 路由，生成官方或自建实例订阅地址，并支持 Feed 实时与缓存预览、收藏、OPML 导出、最近扫描记录和常用阅读器跳转。",
+      "locales": {
+        "en-US": {
+          "name": "RSSHub Radar",
+          "description": "Find RSSHub routes, manage subscriptions, and preview feeds"
+        },
+        "ja-JP": {
+          "name": "RSSHub レーダー",
+          "description": "RSSHub ルートの検索、購読管理、フィードのプレビュー"
+        }
+      },
+      "author": {
+        "name": "Myriad Team",
+        "url": "https://github.com/Myriad-You"
+      },
+      "license": "AGPL-3.0",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.xciy.rsshub-radar",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "productivity",
+      "tags": [
+        "RSSHub",
+        "RSS",
+        "订阅",
+        "Feed",
+        "阅读器"
+      ],
+      "permissions": [
+        "storage",
+        "network:fetch",
+        "ui:notification",
+        "ui:theme"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='12' cy='12' r='8.5' stroke='currentColor' stroke-width='1.7'/><circle cx='12' cy='12' r='4.5' stroke='currentColor' stroke-width='1.4' stroke-dasharray='2 2'/><path d='M12 12L18.8 7.4' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/><circle cx='16.5' cy='9' r='1.4' fill='currentColor'/><path d='M12 2v2M22 12h-2M12 22v-2M2 12h2' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'/></svg>",
+      "theme_color": "#58F2D0",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.xciy.rsshub-radar/preview.html",
+        "styles": [
+          "apps/cn.xciy.rsshub-radar/page.css",
+          "apps/cn.xciy.rsshub-radar/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.45
+        },
+        "theme": "dark"
+      },
+      "download": {
+        "manifest": "apps/cn.xciy.rsshub-radar/manifest.json",
+        "code": "apps/cn.xciy.rsshub-radar/main.js",
+        "readme": "apps/cn.xciy.rsshub-radar/README.md",
+        "page_styles": "apps/cn.xciy.rsshub-radar/page.css",
+        "page_template": "apps/cn.xciy.rsshub-radar/page.html"
+      },
+      "size": 960554,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-08-04T14:34:30Z",
+      "updated_at": "2026-08-04T16:09:30Z"
     }
   ],
-  "last_updated": "2026-08-04T14:38:40Z"
+  "last_updated": "2026-08-04T15:39:27Z"
 }
