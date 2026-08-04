@@ -1,0 +1,657 @@
+/* Function Graph Calculator — Page styles
+   Aligns with Myriad PAGE.md: neutral dark palette, glass, rounded-xl */
+
+.fg-app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  height: 100%;
+  background: #f8fafc;
+  color: #0f172a;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+html.dark .fg-app,
+.dark .fg-app {
+  background: #0a0a0a;
+  color: #e5e5e5;
+}
+
+.fg-app *,
+.fg-app *::before,
+.fg-app *::after {
+  box-sizing: border-box;
+}
+
+/* Header */
+.fg-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  flex-shrink: 0;
+}
+
+html.dark .fg-header,
+.dark .fg-header {
+  background: rgba(0, 0, 0, 0.85);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.fg-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fg-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  color: #fff;
+  font-weight: 700;
+  font-size: 18px;
+  font-style: italic;
+}
+
+.fg-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.fg-header-right {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Body layout */
+.fg-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.fg-sidebar {
+  width: 300px;
+  max-width: 40%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  overflow-y: auto;
+  border-right: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+html.dark .fg-sidebar,
+.dark .fg-sidebar {
+  background: rgba(0, 0, 0, 0.4);
+  border-right-color: rgba(255, 255, 255, 0.06);
+}
+
+.fg-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 12px;
+  gap: 8px;
+}
+
+/* Panels */
+.fg-panel {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+html.dark .fg-panel,
+.dark .fg-panel {
+  background: rgba(23, 23, 23, 0.95);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.fg-panel-compact {
+  padding: 10px 12px;
+}
+
+.fg-panel-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+html.dark .fg-panel-title,
+.dark .fg-panel-title {
+  color: #a3a3a3;
+}
+
+/* Function list */
+.fg-function-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fg-fn-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  border: 1px solid transparent;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+html.dark .fg-fn-item,
+.dark .fg-fn-item {
+  background: #171717;
+}
+
+.fg-fn-item:focus-within {
+  border-color: #0ea5e9;
+}
+
+.fg-fn-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fg-fn-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+}
+
+html.dark .fg-fn-color,
+.dark .fg-fn-color {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.fg-fn-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  min-width: 28px;
+}
+
+html.dark .fg-fn-label,
+.dark .fg-fn-label {
+  color: #a3a3a3;
+}
+
+.fg-fn-input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+html.dark .fg-fn-input,
+.dark .fg-fn-input {
+  background: #0a0a0a;
+  border-color: #404040;
+}
+
+.fg-fn-input:focus {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+}
+
+.fg-fn-input.fg-error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
+}
+
+.fg-fn-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.fg-fn-visible {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.7;
+  font-size: 14px;
+  line-height: 1;
+  color: inherit;
+}
+
+.fg-fn-visible:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+html.dark .fg-fn-visible:hover,
+.dark .fg-fn-visible:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.fg-fn-visible.off {
+  opacity: 0.35;
+}
+
+.fg-fn-remove {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  color: #ef4444;
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.fg-fn-remove:hover {
+  opacity: 1;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.fg-fn-error-msg {
+  font-size: 0.7rem;
+  color: #ef4444;
+  padding-left: 22px;
+}
+
+/* Presets */
+.fg-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.fg-preset {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font-size: 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  cursor: pointer;
+  color: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+html.dark .fg-preset,
+.dark .fg-preset {
+  background: #171717;
+  border-color: #404040;
+}
+
+.fg-preset:hover {
+  border-color: #0ea5e9;
+  background: rgba(14, 165, 233, 0.08);
+}
+
+/* Eval */
+.fg-eval-row {
+  display: flex;
+  gap: 6px;
+}
+
+.fg-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+html.dark .fg-input,
+.dark .fg-input {
+  background: #0a0a0a;
+  border-color: #404040;
+}
+
+.fg-input:focus {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+}
+
+.fg-eval-result {
+  margin-top: 8px;
+  min-height: 1.4em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9rem;
+  color: #0ea5e9;
+  word-break: break-all;
+}
+
+html.dark .fg-eval-result,
+.dark .fg-eval-result {
+  color: #38bdf8;
+}
+
+/* Buttons */
+.fg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  white-space: nowrap;
+}
+
+.fg-btn-sm {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+}
+
+.fg-btn-primary {
+  background: #0ea5e9;
+  color: #fff;
+}
+
+.fg-btn-primary:hover {
+  background: #0284c7;
+}
+
+.fg-btn-ghost {
+  background: transparent;
+  color: inherit;
+  border: 1px solid transparent;
+}
+
+.fg-btn-ghost:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+html.dark .fg-btn-ghost:hover,
+.dark .fg-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Canvas area */
+.fg-canvas-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 280px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  touch-action: none;
+}
+
+html.dark .fg-canvas-wrap,
+.dark .fg-canvas-wrap {
+  background: #111;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.fg-canvas-wrap canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+
+.fg-canvas-wrap.panning canvas {
+  cursor: grab;
+}
+
+.fg-canvas-wrap.panning.dragging canvas {
+  cursor: grabbing;
+}
+
+.fg-toolbar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  border-radius: 10px;
+  padding: 4px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+html.dark .fg-toolbar,
+.dark .fg-toolbar {
+  background: rgba(23, 23, 23, 0.92);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.fg-tool {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fg-tool:hover,
+.fg-tool.active {
+  background: rgba(14, 165, 233, 0.15);
+  color: #0ea5e9;
+}
+
+html.dark .fg-tool:hover,
+html.dark .fg-tool.active,
+.dark .fg-tool:hover,
+.dark .fg-tool.active {
+  background: rgba(14, 165, 233, 0.25);
+  color: #38bdf8;
+}
+
+.fg-trace {
+  position: absolute;
+  pointer-events: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.9);
+  color: #fff;
+  font-size: 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  white-space: nowrap;
+  z-index: 5;
+  transform: translate(12px, -50%);
+}
+
+html.dark .fg-trace,
+.dark .fg-trace {
+  background: rgba(255, 255, 255, 0.92);
+  color: #0a0a0a;
+}
+
+.fg-status {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  color: #64748b;
+  min-height: 1.5em;
+}
+
+html.dark .fg-status,
+.dark .fg-status {
+  color: #a3a3a3;
+}
+
+/* Modal */
+.fg-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.fg-modal[hidden] {
+  display: none !important;
+}
+
+.fg-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.fg-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  padding: 0;
+}
+
+html.dark .fg-modal-card,
+.dark .fg-modal-card {
+  background: #171717;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fg-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+html.dark .fg-modal-header,
+.dark .fg-modal-header {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.fg-modal-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 650;
+}
+
+.fg-modal-body {
+  padding: 16px 20px 24px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #334155;
+}
+
+html.dark .fg-modal-body,
+.dark .fg-modal-body {
+  color: #d4d4d4;
+}
+
+.fg-modal-body h3 {
+  margin: 16px 0 6px;
+  font-size: 0.95rem;
+  color: inherit;
+}
+
+.fg-modal-body h3:first-child {
+  margin-top: 0;
+}
+
+.fg-modal-body code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #f1f5f9;
+}
+
+html.dark .fg-modal-body code,
+.dark .fg-modal-body code {
+  background: #262626;
+}
+
+.fg-modal-body ul {
+  margin: 6px 0;
+  padding-left: 1.2em;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .fg-body {
+    flex-direction: column;
+  }
+
+  .fg-sidebar {
+    width: 100%;
+    max-width: none;
+    max-height: 42vh;
+    border-right: none;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  }
+
+  html.dark .fg-sidebar,
+  .dark .fg-sidebar {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .fg-canvas-wrap {
+    min-height: 240px;
+  }
+
+  .fg-title {
+    font-size: 1rem;
+  }
+}

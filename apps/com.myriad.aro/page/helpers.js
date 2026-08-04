@@ -949,6 +949,34 @@ function isE2eCiphertextEnvelope(payload) {
   return ct.length > 16 && !payload.text && !payload.title && !payload.data;
 }
 
+/**
+ * Grace period before a ciphertext bubble stops claiming it is still decrypting.
+ *
+ * Decryption happens on our own backend as it serves the message, so a payload
+ * that is still an envelope after the open + refresh burst is not slow — it is
+ * one we hold no usable key for (peer rotated, or the key-exchange write was
+ * lost). Saying "decrypting…" forever is a lie the reader cannot act on.
+ */
+var E2E_DECRYPT_GRACE_MS = 20000;
+
+/** Label for a ciphertext bubble we are never going to open, else '' . */
+function e2eUndecryptableLabel(msg, payload) {
+  if (!msg || typeof isE2eCiphertextEnvelope !== 'function') return '';
+  if (!isE2eCiphertextEnvelope(payload != null ? payload : msg.payload)) return '';
+  var age = 0;
+  try {
+    var t = new Date(msg.created_at).getTime();
+    if (isNaN(t)) return '';
+    age = Date.now() - t;
+  } catch (eAge) {
+    return '';
+  }
+  if (age < E2E_DECRYPT_GRACE_MS) return '';
+  return lang.e2eUndecryptable
+    || lang.e2eEncryptedMessage
+    || 'Encrypted message';
+}
+
 function e2eEncryptedPlaceholder(opts) {
   opts = opts || {};
   if (opts.pending) {

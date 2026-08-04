@@ -39,6 +39,10 @@
     "inlineSchemaDepth": 32,
     "localeTagLength": 35,
     "manifestBytes": 262144,
+    "openUrlIdLength": 64,
+    "openUrlQueryKeys": 16,
+    "openUrlQueryValueLength": 512,
+    "openUrls": 32,
     "pageModules": 64,
     "resourceBytes": 26214400,
     "resourcePathLength": 256,
@@ -220,6 +224,12 @@
       "styles": "styles",
       "widgetStyles": "widgetStyles"
     },
+    "openUrlMatchModes": [
+      "exact",
+      "prefix",
+      "origin"
+    ],
+    "openUrlPermission": "ui:openUrl",
     "packageJsonObjectDirectories": [
       "i18n"
     ],
@@ -782,6 +792,43 @@
         },
         "type": "object"
       },
+      "TappOpenUrlDef": {
+        "additionalProperties": false,
+        "description": "One install-time declared external navigation target.",
+        "properties": {
+          "id": {
+            "description": "Stable id used by `Tapp.ui.openUrl({ id })` (not a free-form URL).",
+            "type": "string"
+          },
+          "match": {
+            "$ref": "#/$defs/TappOpenUrlMatch",
+            "default": "exact",
+            "description": "How runtime path/query may extend `url`. Defaults to exact.",
+            "enum": [
+              "exact",
+              "prefix",
+              "origin"
+            ]
+          },
+          "url": {
+            "description": "Base HTTPS URL (http only for localhost / 127.0.0.1).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "url"
+        ],
+        "type": "object"
+      },
+      "TappOpenUrlMatch": {
+        "enum": [
+          "exact",
+          "prefix",
+          "origin"
+        ],
+        "type": "string"
+      },
       "TappSettingDef": {
         "additionalProperties": false,
         "properties": {
@@ -1143,6 +1190,16 @@
       "name": {
         "type": "string"
       },
+      "openUrls": {
+        "description": "Allowlisted external links for host-mediated `Tapp.ui.openUrl`.\nRuntime opens only by declared `id` (+ optional path/query under match rules).",
+        "items": {
+          "$ref": "#/$defs/TappOpenUrlDef"
+        },
+        "type": [
+          "array",
+          "null"
+        ]
+      },
       "pageModules": {
         "default": null,
         "items": {
@@ -1245,6 +1302,7 @@
       "ui:fullscreen": "basic",
       "ui:theme": "basic",
       "ui:confirm": "basic",
+      "ui:openUrl": "basic",
       "network:fetch": "elevated",
       "media:control": "basic",
       "media:read": "basic",
@@ -1380,6 +1438,8 @@
       "settings.getAll": "storage",
       "ui.showNotification": "ui:notification",
       "ui.confirm": "ui:confirm",
+      "ui.openUrl": "ui:openUrl",
+      "ui.listOpenUrls": "ui:openUrl",
       "ui.requestFullscreen": "ui:fullscreen",
       "ui.exitFullscreen": "ui:fullscreen",
       "ui.toggleFullscreen": "ui:fullscreen",
@@ -1524,6 +1584,8 @@
     "headlessDeniedActions": [
       "ui.setTitle",
       "ui.confirm",
+      "ui.openUrl",
+      "ui.listOpenUrls",
       "ui.requestFullscreen",
       "ui.exitFullscreen",
       "ui.toggleFullscreen",

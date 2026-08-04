@@ -777,6 +777,12 @@ function renderMessages(opts) {
   var wasNearBottom = !!opts.stickBottom || isMessagesNearBottom(container);
   var prevScrollTop = container.scrollTop;
   var prevScrollHeight = container.scrollHeight;
+  // Anchor on the topmost visible row. Restoring a raw scrollTop after a full
+  // innerHTML rebuild lands at the top: images/media have no intrinsic height
+  // until they decode, so scrollHeight momentarily collapses and the browser
+  // clamps scrollTop to that smaller box. The row anchor survives the collapse
+  // because it is re-measured after the media settles.
+  var anchor = captureScrollAnchor(container);
   state.skipMsgAppear = false;
 
   // Soft window: when on the live tail with a huge buffer, only paint the last N rows.
@@ -844,7 +850,9 @@ function renderMessages(opts) {
           card.dataset.orient = (img.naturalWidth / img.naturalHeight >= 1.15) ? 'landscape' : 'portrait';
         });
         if (wasNearBottom) {
-          try { container.scrollTop = container.scrollHeight; } catch (eScr) { /* ignore */ }
+          settleScrollPosition(container, function () {
+            container.scrollTop = container.scrollHeight;
+          });
         }
         renderPinnedBar();
         return;
@@ -886,7 +894,9 @@ function renderMessages(opts) {
       if (appendHtmlW) {
         container.insertAdjacentHTML('beforeend', appendHtmlW);
         if (wasNearBottom) {
-          try { container.scrollTop = container.scrollHeight; } catch (eScrW) { /* ignore */ }
+          settleScrollPosition(container, function () {
+            container.scrollTop = container.scrollHeight;
+          });
         }
         renderPinnedBar();
         return;
@@ -919,18 +929,110 @@ function renderMessages(opts) {
     card.dataset.orient = (img.naturalWidth / img.naturalHeight >= 1.15) ? 'landscape' : 'portrait';
   });
 
-  if (wasNearBottom) {
-    try { container.scrollTop = container.scrollHeight; } catch (eScr2) { /* ignore */ }
-  } else {
+  // Re-apply after media decodes: the first pass runs against a collapsed box.
+  settleScrollPosition(container, function () {
+    if (wasNearBottom) {
+      container.scrollTop = container.scrollHeight;
+      return;
+    }
+    if (restoreScrollAnchor(container, anchor)) return;
     // Preserve reading position when history above grew / pin refresh mid-scroll
-    try {
-      var delta = container.scrollHeight - prevScrollHeight;
-      if (delta) container.scrollTop = prevScrollTop + Math.max(0, delta);
-      else container.scrollTop = prevScrollTop;
-    } catch (eScr3) { /* ignore */ }
-  }
+    var delta = container.scrollHeight - prevScrollHeight;
+    if (delta > 0) container.scrollTop = prevScrollTop + delta;
+    else container.scrollTop = prevScrollTop;
+  });
 
   renderPinnedBar();
+}
+
+/**
+ * Remember which row is at the top of the viewport, and how far above it sits.
+ * Used to restore reading position across a full innerHTML rebuild.
+ */
+function captureScrollAnchor(container) {
+  try {
+    if (!container || container.scrollTop <= 0) return null;
+    var cTop = container.getBoundingClientRect().top;
+    var rows = container.querySelectorAll('.msg-row[data-msg-id]');
+    for (var i = 0; i < rows.length; i++) {
+      var top = rows[i].getBoundingClientRect().top - cTop;
+      // First row whose bottom edge is still on screen.
+      if (top + rows[i].offsetHeight > 0) {
+        var id = rows[i].getAttribute('data-msg-id');
+        if (!id) return null;
+        return { id: id, offset: top };
+      }
+    }
+  } catch (eAnc) { /* ignore */ }
+  return null;
+}
+
+/** Put `anchor`'s row back under the same viewport offset. True when applied. */
+function restoreScrollAnchor(container, anchor) {
+  if (!container || !anchor || !anchor.id) return false;
+  try {
+    var row = container.querySelector('.msg-row[data-msg-id="' + cssEscapeAttr(anchor.id) + '"]');
+    if (!row) return false;
+    var top = row.getBoundingClientRect().top - container.getBoundingClientRect().top;
+    container.scrollTop = container.scrollTop + (top - anchor.offset);
+    return true;
+  } catch (eRes) {
+    return false;
+  }
+}
+
+/** Escape a value for use inside a CSS attribute selector. */
+function cssEscapeAttr(value) {
+  return String(value).replace(/["\\]/g, '\\$&');
+}
+
+/**
+ * Run `apply` now, next frame, and again as transcript media finishes loading.
+ *
+ * A single post-render write is not enough: <img>/media inside the freshly
+ * written HTML report zero height until decode, so the container is short and
+ * any scrollTop we set gets clamped. Re-running as each image lands keeps the
+ * view where the reader left it instead of snapping to the top.
+ */
+var _scrollSettleToken = 0;
+function settleScrollPosition(container, apply) {
+  var token = ++_scrollSettleToken;
+  var lastWritten = null;
+  var run = function () {
+    if (token !== _scrollSettleToken || !container.isConnected) return false;
+    // The reader moved the viewport since our last write — stop correcting, or
+    // late-loading images would drag them back for the rest of the window.
+    if (lastWritten != null && Math.abs(container.scrollTop - lastWritten) > 2) {
+      _scrollSettleToken += 1;
+      return false;
+    }
+    try { apply(); } catch (eApply) { /* ignore */ }
+    lastWritten = container.scrollTop;
+    return true;
+  };
+  if (!run()) return;
+
+  var raf = typeof requestAnimationFrame === 'function'
+    ? requestAnimationFrame
+    : function (cb) { return setTimeout(cb, 16); };
+  raf(run);
+
+  var pending = container.querySelectorAll('img');
+  var deadline = Date.now() + 4000;
+  for (var i = 0; i < pending.length; i++) {
+    var img = pending[i];
+    if (img.complete) continue;
+    var onSettled = (function (target) {
+      return function handler() {
+        target.removeEventListener('load', handler);
+        target.removeEventListener('error', handler);
+        if (Date.now() > deadline) return;
+        run();
+      };
+    })(img);
+    img.addEventListener('load', onSettled);
+    img.addEventListener('error', onSettled);
+  }
 }
 
 

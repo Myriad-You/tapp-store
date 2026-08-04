@@ -161,6 +161,7 @@
   "e2ePublish": "开启端到端加密",
   "e2ePublishDesc": "向本群共享加密密钥，仅成员可阅读消息。密钥已就绪时不会重复生成。",
   "e2ePublished": "已向本会话共享加密密钥",
+  "e2eUndecryptable": "已加密 · 此设备无法解开",
   "e2eWaitingPeer": "等待对方加密密钥",
   "editRoom": "编辑群聊",
   "emoji": "表情",

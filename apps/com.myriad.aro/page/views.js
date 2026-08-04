@@ -2673,6 +2673,7 @@ function bindEvents() {
       state.activeId = null;
       state.messages = [];
       state.messagesFp = '';
+      state.messagesSrcFp = '';
       state.skipMsgAppear = false;
       state.channelDetail = null;
       state.roomDetail = null;

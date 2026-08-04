@@ -16,7 +16,6 @@ Manifest 是 Tapp 的核心配置文件，定义了应用的元数据、权限�
 | `permissions`            | string[] | ❌   | 所需权限列表                       |
 | `icon`                   | string   | ❌   | 图标（emoji 或 URL）               |
 | `iconSvg`                | string   | ❌   | 内联 SVG 图标代码（优先于 icon）   |
-| `iconShell`              | boolean  | ❌   | `true` 时全彩自定义图标仍套 material 色壳（默认 auto 铺满） |
 | `themeColor`             | string   | ❌   | 主题色（十六进制，如 #6366f1）     |
 | `widgets`                | object[] | ❌   | 小组件定义                         |
 | `hasPage`                | boolean  | ❌   | 是否有页面模块（可在页面模式运行） |
@@ -38,6 +37,7 @@ Manifest 是 Tapp 的核心配置文件，定义了应用的元数据、权限�
 | `pageModules`            | string[] | ❌   | `page/` 模块执行顺序               |
 | `category`               | string   | ✅   | 应用用途分类（稳定 ID）            |
 | `assets`                 | string[] | ❌   | 包内静态资源路径（须在 `assets/` 下） |
+| `openUrls`               | object[] | ❌   | 宿主代开的外链 allowlist（配合 `ui:openUrl`） |
 
 `author` 整体可选；**若提供**则 `author.name` 必填（1–255 字符），`email` / `url` 可选且须合法。
 作者名称会显示在商店卡片和 Tapp 详情页，详情页还会显示邮箱，并为通过 HTTP(S) 校验的作者主页生成外部链接。
@@ -51,6 +51,58 @@ Page/Widget 模板必须是 `.html`；代码与模板类声明资源必须是安
 下，且不得使用 `.js` / `.html` 扩展名；单文件 ≤ 5 MiB，合计 ≤ 20 MiB，最多 64 项。
 资源读取不会跟随安装后插入的符号链接。运行时通过 `Tapp.assets` 读取，详见
 [图形与轻量游戏](GRAPHICS.md)。
+
+### 外链 allowlist（openUrls）
+
+沙箱**不能**使用 `window.open` / `<a target=_blank>` 离开 Myriad。需要打开外部页面时：
+
+1. 在 Manifest 声明 `permissions: ["ui:openUrl"]` 与非空 `openUrls`；
+2. 运行时只调用 `Tapp.ui.openUrl({ id, path?, query? })`（或简写 `openUrl("id")`）；
+3. 宿主按声明重建 URL，未命中 allowlist **一律拒绝**。
+
+| 字段 | 类型 | 必填 | 说明 |
+| ---- | ---- | ---- | ---- |
+| `id` | string | ✅ | 稳定 id，供 SDK 引用（1–64，字母数字与 `._-`） |
+| `url` | string | ✅ | 基址：**HTTPS**；仅 `localhost` / `127.0.0.1` / `::1` 允许 `http`；禁止凭据与 `#fragment` |
+| `match` | string | ❌ | `exact`（默认）/ `prefix` / `origin` |
+
+匹配规则：
+
+- **`exact`**：只能打开声明的完整 URL；不允许 `path` / `query`
+- **`prefix`**：同 origin，路径须落在声明 path 前缀下（可带 `path` / `query`）
+- **`origin`**：同 origin 任意 path/query（自由度最高，商店审核应更严）
+
+```json
+{
+  "permissions": ["ui:openUrl"],
+  "openUrls": [
+    {
+      "id": "docs",
+      "url": "https://docs.example.com/guide/",
+      "match": "prefix"
+    },
+    {
+      "id": "status",
+      "url": "https://status.example.com/health"
+    }
+  ]
+}
+```
+
+```javascript
+// Widget / Page
+await Tapp.ui.openUrl({ id: "docs", path: "install" });
+// → https://docs.example.com/guide/install
+
+await Tapp.ui.openUrl({ id: "status" });
+// → https://status.example.com/health
+
+// 未声明 id 或逃出 prefix → 失败
+await Tapp.ui.openUrl({ id: "docs", path: "../evil" }); // reject
+```
+
+约束摘要：最多 32 条；`ui:openUrl` 与 `openUrls` 必须同时出现；headless core **无**此 API；
+宿主有打开速率限制；实现细节见 [API 参考 · openUrl](API_REFERENCE.md#打开声明链接-openurl)。
 
 Manifest 采用严格字段校验：未声明字段、拼写错误以及已经移除的字段都会让安装失败，
 不会再被静默忽略。所有运行能力都必须直接写入 `permissions`；宿主只会在真正调用时
@@ -144,8 +196,9 @@ Page、Widget 和 headless core 是运行形态，由 `hasPage`、`widgets` 和
   公开安装。不要写成“公共版本优先显示”。
 - **Storage 与 Settings 不同命名空间**：
   - `Tapp.storage` 的持久主体是 Runtime Grant **subject**（`user_id + tapp_id`）。打开
-    公开安装时，每个已登录用户仍读写自己的私有 storage，不会读取站点 owner 的数据。
-    游客 Grant 不含 `storage`，无持久 storage。
+    公开安装时，每个 subject（持久用户或**签名游客 session**）读写自己的私有 storage，
+    不会读取站点 owner 的数据。`storage` 为 guest-safe basic：签名游客可获 Grant 与负 id
+    命名空间下的持久 storage；无签名 session 则无 storage。
   - Manifest 声明的安装级设置（宿主 `Tapp.settings` / REST `GET|POST …/settings`）挂在
     **installation owner** 命名空间：owner 或管理员可**写**；凡能解析到该安装的运行者
     （含**游客打开公开安装**）可**读**已保存的声明键。未写入时回落 `defaultValue`。
@@ -768,9 +821,10 @@ Tapp 私有 storage、报告和内部状态不会因为知道另一个 `tappId` 
 | `ui:notification`    | 显示通知         |
 | `ui:theme`           | 读取主题信息     |
 | `ui:confirm`         | 显示确认对话框   |
+| `ui:openUrl`         | 打开 Manifest `openUrls` 声明的链接（宿主代开；未声明一律拒绝） |
 | `ui:fullscreen`      | 请求全屏显示     |
 | `platform:read`      | 读取平台数据     |
-| `analytics:read`     | 读取站点访问统计（聚合） |
+| `analytics:read`     | 读取站点访问统计（聚合；admin 完整 summary，非 admin 仅访客卡片） |
 | `tappList:read`      | 读取 Tapp 列表   |
 | `brew:read`          | 读取 Brew 内容   |
 | `brew:write`         | 修改 Brew 状态   |

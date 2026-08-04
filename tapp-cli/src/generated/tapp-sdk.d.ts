@@ -3,7 +3,7 @@
  * Generated from the runtime permission catalog. Call sites still need
  * matching Manifest permissions and a handler in the current sandbox profile.
  *
- * Headless-denied Bridge actions: component.list, component.registerAgent, component.registerTheme, component.unregister, dynamicContent.get, dynamicContent.remove, dynamicContent.set, dynamicContent.update, file.download, shortcut.list, shortcut.register, shortcut.unregister, tappList.export, tappList.get, tappList.getInstallPackage, tappList.getRecent, tappList.install, tappList.list, tappList.resolveStoreSource, tappList.start, tappList.stop, tappList.uninstall, ui.confirm, ui.exitFullscreen, ui.isFullscreen, ui.requestFullscreen, ui.setTitle, ui.toggleFullscreen, widget.listRegistered, widget.register, widget.unregister, widget.updateConfig
+ * Headless-denied Bridge actions: component.list, component.registerAgent, component.registerTheme, component.unregister, dynamicContent.get, dynamicContent.remove, dynamicContent.set, dynamicContent.update, file.download, shortcut.list, shortcut.register, shortcut.unregister, tappList.export, tappList.get, tappList.getInstallPackage, tappList.getRecent, tappList.install, tappList.list, tappList.resolveStoreSource, tappList.start, tappList.stop, tappList.uninstall, ui.confirm, ui.exitFullscreen, ui.isFullscreen, ui.listOpenUrls, ui.openUrl, ui.requestFullscreen, ui.setTitle, ui.toggleFullscreen, widget.listRegistered, widget.register, widget.unregister, widget.updateConfig
  *
  * Do not edit by hand — run: npm run sync-contract
  */
@@ -50,6 +50,20 @@ export interface TappSdk {
     onLocaleChange(callback: (locale: unknown) => void): () => void
     showNotification(options: unknown): Promise<unknown>
     confirm(message: string): Promise<boolean>
+    /**
+     * Open a host browser tab for a Manifest `openUrls` allowlisted id only.
+     * Pass `{ id, path?, query? }` — never a free-form absolute URL.
+     * Requires permission `ui:openUrl`.
+     */
+    openUrl(request: {
+      id: string
+      path?: string
+      query?: Record<string, string>
+    } | string): Promise<unknown>
+    /** List install-time openUrls declarations for this Tapp. */
+    listOpenUrls(): Promise<
+      Array<{ id: string; url: string; match: 'exact' | 'prefix' | 'origin' }>
+    >
     requestFullscreen(): Promise<unknown>
     exitFullscreen(): Promise<unknown>
     fullscreen: {

@@ -1,0 +1,88 @@
+<div id="tapp-root" class="fg-app" data-page-root="true">
+  <!-- Header -->
+  <header class="fg-header">
+    <div class="fg-header-left">
+      <span class="fg-logo" aria-hidden="true">ƒ</span>
+      <h1 class="fg-title" data-i18n="title">函数图形计算器</h1>
+    </div>
+    <div class="fg-header-right">
+      <button type="button" class="fg-btn fg-btn-ghost" data-action="toggle-help" title="帮助">
+        <span data-i18n="help">帮助</span>
+      </button>
+      <button type="button" class="fg-btn fg-btn-ghost" data-action="reset-view" title="重置视图">
+        <span data-i18n="resetView">重置视图</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="fg-body">
+    <!-- Left panel: function list & input -->
+    <aside class="fg-sidebar">
+      <div class="fg-panel">
+        <div class="fg-panel-title">
+          <span data-i18n="functions">函数</span>
+          <button type="button" class="fg-btn fg-btn-sm fg-btn-primary" data-action="add-function" title="添加函数">
+            + <span data-i18n="add">添加</span>
+          </button>
+        </div>
+        <div class="fg-function-list" data-content="function-list">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+      <div class="fg-panel fg-panel-compact">
+        <div class="fg-panel-title">
+          <span data-i18n="presets">常用函数</span>
+        </div>
+        <div class="fg-presets" data-content="presets">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+      <div class="fg-panel fg-panel-compact">
+        <div class="fg-panel-title">
+          <span data-i18n="evaluate">求值</span>
+        </div>
+        <div class="fg-eval-row">
+          <input type="text" class="fg-input" data-input="eval-expr" placeholder="例如: sin(pi/2) 或 2^10" spellcheck="false" autocomplete="off" />
+          <button type="button" class="fg-btn fg-btn-primary" data-action="evaluate">=</button>
+        </div>
+        <div class="fg-eval-result" data-content="eval-result"></div>
+      </div>
+    </aside>
+
+    <!-- Main graph area -->
+    <main class="fg-main">
+      <div class="fg-canvas-wrap" data-content="canvas-wrap">
+        <canvas data-canvas="graph" width="800" height="600"></canvas>
+        <div class="fg-trace" data-content="trace" hidden>
+          <span data-content="trace-text"></span>
+        </div>
+        <div class="fg-toolbar">
+          <button type="button" class="fg-tool" data-action="zoom-in" title="放大">+</button>
+          <button type="button" class="fg-tool" data-action="zoom-out" title="缩小">−</button>
+          <button type="button" class="fg-tool" data-action="pan-mode" title="平移" data-mode="pan">✋</button>
+          <button type="button" class="fg-tool" data-action="toggle-grid" title="网格">#</button>
+          <button type="button" class="fg-tool" data-action="toggle-axes" title="坐标轴">⊕</button>
+        </div>
+      </div>
+      <div class="fg-status" data-content="status">
+        <span data-i18n="hint">输入函数表达式，例如 sin(x)、x^2、exp(-x^2)</span>
+      </div>
+    </main>
+  </div>
+
+  <!-- Help modal -->
+  <div class="fg-modal" data-modal="help" hidden>
+    <div class="fg-modal-backdrop" data-action="close-help"></div>
+    <div class="fg-modal-card">
+      <div class="fg-modal-header">
+        <h2 data-i18n="helpTitle">使用说明</h2>
+        <button type="button" class="fg-btn fg-btn-ghost" data-action="close-help">×</button>
+      </div>
+      <div class="fg-modal-body" data-content="help-body">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </div>
+</div>

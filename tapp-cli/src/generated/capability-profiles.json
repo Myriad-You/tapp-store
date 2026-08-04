@@ -7,6 +7,8 @@
   "headlessDeniedActions": [
     "ui.setTitle",
     "ui.confirm",
+    "ui.openUrl",
+    "ui.listOpenUrls",
     "ui.requestFullscreen",
     "ui.exitFullscreen",
     "ui.toggleFullscreen",

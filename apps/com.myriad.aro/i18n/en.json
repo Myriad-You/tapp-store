@@ -161,6 +161,7 @@
   "e2ePublish": "Enable end-to-end encryption",
   "e2ePublishDesc": "Share your encryption key with this group so only members can read messages. Does nothing if keys are already set.",
   "e2ePublished": "Encryption key shared with this chat",
+  "e2eUndecryptable": "Encrypted · can’t be opened on this device",
   "e2eWaitingPeer": "Waiting for peer encryption key",
   "editRoom": "Edit group",
   "emoji": "Emoji",

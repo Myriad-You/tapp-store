@@ -64,7 +64,9 @@ const allTranslations = Tapp.i18n.getAll(); // 返回只读数据的深拷贝
 
 **权限**: `storage`
 
-该能力仅向已登录用户的 Runtime Grant 签发。访客运行公开 Tapp 时没有持久 storage。
+`storage` 为 **guest-safe basic**：真实用户与**签名游客 session** 均可进入 Runtime Grant。
+持久主体是 Grant subject（`user_id + tapp_id`）；游客落在负 id 命名空间，不与登录用户或
+站点 owner 共享。无签名 session 的纯匿名调用不会获得 Grant。
 
 ```javascript
 // 获取数据
@@ -98,7 +100,8 @@ const unsubscribe = Tapp.storage.onChanged(({ key, operation }) => {
 
 存储 key 和单值由后端校验，单值最大 1 MiB，总量最大 5 MiB。替换投影与写入位于同一数据库
 事务并使用 subject/Tapp advisory lock，因此并发写入也不能越过配额。公开 Tapp 仍按当前
-登录用户隔离存储；`_settings.`、`_component:`、`_shortcut:`、`_report:` 为宿主保留前缀。
+**subject**（持久用户或签名游客）隔离存储；`_settings.`、`_component:`、`_shortcut:`、
+`_report:` 为宿主保留前缀。
 
 ---
 
@@ -182,7 +185,7 @@ const allSettings = await Tapp.settings.getAll();
 
 ## UI API
 
-**权限**: `ui:notification`, `ui:theme`, `ui:confirm`, `ui:fullscreen`
+**权限**: `ui:notification`, `ui:theme`, `ui:confirm`, `ui:fullscreen`, `ui:openUrl`
 
 ### 基础 UI
 
@@ -202,6 +205,41 @@ await Tapp.ui.showNotification({
 const confirmed = await Tapp.ui.confirm("确定要执行吗？");
 // 返回: true（确定）或 false（取消）
 ```
+
+### 打开声明链接（openUrl）
+
+**权限**: `ui:openUrl`  
+**Manifest**: 非空 `openUrls`（见 [MANIFEST · openUrls](MANIFEST.md#外链-allowlistopenurls)）  
+**沙箱**: Page / Widget；**headless 不可用**
+
+沙箱禁止 `window.open` 与顶层导航。外链必须由宿主打开，且**只能**命中安装时声明的
+allowlist。调用方**不得**传入完整 URL。
+
+```javascript
+// 查看本 Tapp 已声明的目标
+const links = await Tapp.ui.listOpenUrls();
+// [{ id, url, match: 'exact'|'prefix'|'origin' }, ...]
+
+// 按 id 打开（exact：不可带 path/query）
+await Tapp.ui.openUrl({ id: "status" });
+// 简写
+await Tapp.ui.openUrl("status");
+
+// prefix / origin：可在声明范围内扩展 path 与 query
+await Tapp.ui.openUrl({
+  id: "docs",
+  path: "widget",
+  query: { from: "tapp" },
+});
+// → 例如 https://docs.example.com/guide/widget?from=tapp
+```
+
+安全行为：
+
+- 未声明的 `id`、逃出 `prefix`/`origin`、绝对 URL 形态的 `path`、危险协议 → **拒绝**
+- 声明 URL 仅 **HTTPS**（loopback 可 `http`）；禁止用户名密码与 `#fragment`
+- 宿主 `window.open(url, '_blank', 'noopener,noreferrer')`，带简单速率限制
+- 与 `network:fetch` 无关：openUrl **不会**代发 HTTP 请求，只打开浏览器标签
 
 ### 主题
 
@@ -319,7 +357,9 @@ async function animateListItems(items) {
 
 **权限**: `platform:read`, `platform:write`
 
-平台数据端点要求持久登录主体，匿名访客不会获得 `platform:read` Runtime Grant。
+- **`platform:read`**：guest-safe basic。真实用户与签名游客均可经 optional_auth + Grant
+  读取**站点公开缓存**（`listEnabled` / `getData` / `getStats` / `getDistribution`）。
+- **`platform:write`**：privileged / admin-gated（非仅「已登录」）；`addItem` / `addItems` 不会签入访客 Grant。
 
 ```javascript
 // 获取已启用平台列表
@@ -359,25 +399,52 @@ await Tapp.platform.addItems([
 
 ## 访问统计 API
 
-**权限**: `analytics:read`（basic，游客可用）
+**权限**: `analytics:read`（basic，guest-safe；游客可用）
 
-读取站点第一方访客统计的**聚合**结果，与管理端「访客统计」同源。  
-**不包含**访客哈希、序位等身份相关字段。
+读取站点第一方访客统计的**聚合**结果。**不包含**访客哈希、序位（`your_ordinal_today` /
+`counted`）等身份相关字段。后端实现：`backend/src/api/tapp_runtime/analytics.rs`。
 
-```javascript
-// 区间汇总 + 日趋势 + 页面 / 事件 / 来源 / 国家排行
-// days 默认 7，上限 365；也可用 from/to（YYYY-MM-DD）
-const summary = await Tapp.analytics.getSummary({ days: 7 });
-// summary.today / summary.range / summary.daily / summary.pages / summary.events …
+### 双 scope（角色门控）
 
-// 访客卡片精简数据（今日 / 累计 / 短趋势）
-const card = await Tapp.analytics.getVisitorCard();
-// card.today / card.all_time / card.daily
+| 主体 | `scope` | `getSummary` | `getVisitorCard` | `days` / `from` / `to` |
+| ---- | ------- | ------------ | ---------------- | ---------------------- |
+| **Admin**（`analytics:read`） | `"admin"` | 完整汇总：`today` / `range` / `daily` / `pages` / `events` / `referrers` / `countries`（等同管理端 `GET /api/analytics/summary` 形状，并带 `enabled`/`source`/`scope`） | 访客卡片精简 | **生效**（`days` 默认 7、上限 365；或 `from`/`to` `YYYY-MM-DD`） |
+| **非 Admin**（user / guest + `analytics:read`） | `"visitor"` | **仅**访客卡片聚合：`today` / `all_time` / 短 `daily` 趋势；**无** pages/events/referrers/countries | 同上精简形状 | **忽略**（窗口由服务端访客卡片固定，非 admin 传 range 不会扩大 payload） |
+
+对非 admin，`getSummary` 与 `getVisitorCard` 实质返回同一精简形状（`scope: "visitor"`）。
+`getVisitorCard` 仍是专用访客端点（`GET /api/tapp/analytics/visitor`，无 query 窗口）。
+Admin 应用完整 breakdown 应调用 `getSummary`；不要假设游客/普通用户能看到排行表。
+
+### `analytics_enabled` 短路
+
+站点关闭分析采集时（`DynamicConfig.analytics_enabled == false`），两个端点均直接返回：
+
+```json
+{ "success": true, "enabled": false, "source": "site_analytics" }
 ```
 
-REST（Runtime Grant 请求头）：
+不查询聚合表，也不附带 `scope` 或 breakdown 字段。开启时成功响应含
+`enabled: true`、`source: "site_analytics"` 与上表 `scope`。
 
-- `GET /api/tapp/analytics/summary?days=7`
+```javascript
+// Admin：完整区间汇总；非 admin：与 getVisitorCard 同形的 visitor 聚合（range 被忽略）
+const summary = await Tapp.analytics.getSummary({ days: 7 });
+// admin: summary.scope === "admin", summary.pages / summary.events / …
+// user/guest: summary.scope === "visitor", summary.today / summary.all_time / summary.daily
+
+// 专用访客卡片（任意有 analytics:read 的角色；始终 visitor 形状）
+const card = await Tapp.analytics.getVisitorCard();
+// card.scope === "visitor"；card.today / card.all_time / card.daily
+// card.enabled === false 时仅 success/enabled/source
+
+if (summary.enabled === false) {
+  // 站点关闭统计：不要渲染排行或趋势
+}
+```
+
+REST（Runtime Grant 请求头 + `analytics:read`）：
+
+- `GET /api/tapp/analytics/summary?days=7`（或 `from`/`to`；仅 admin 生效）
 - `GET /api/tapp/analytics/visitor`
 
 Manifest 示例：
@@ -1030,9 +1097,10 @@ Tapp.federation.onChannelUpdate((ev) => { /* accepted | closed | disconnected */
 Tapp.federation.onRoomUpdate((ev) => { /* governance_changed | member_* | disconnected */ });
 ```
 
-Channel/Room **JSON 消息**（含内联 base64 图）后端载荷上限 **32 MiB**
-（`MAX_MESSAGE_PAYLOAD` / `MAX_ROOM_MESSAGE_PAYLOAD`）；联邦 API 路由 DefaultBodyLimit
-约 **40 MiB**。更大附件请走分块传输（默认 chunk 约 **1 MiB** raw，base64 后约 1.37 MiB）。
+Channel/Room **JSON 消息**（含内联 base64 图）后端载荷上限 **36 MiB**
+（`MESSAGE_PAYLOAD_LIMIT` / `MAX_ROOM_MESSAGE_PAYLOAD`）；联邦 inbox DefaultBodyLimit
+为 **64 MiB**（见 `federation::limits`；已认证内容路由约 **80 MiB** = inbox + 16 MiB）。更大附件请走分块传输
+（默认 chunk **4 MiB** raw；base64 JSON 体上限 16 MiB，见 `TRANSFER_CHUNK_*`）。
 加密时 `sendMessage` / `sendRoomMessage` 可设 `encrypt: true`：库内与联邦 fan-out 仍为密文，
 本机 WebSocket 在密钥可用时推送明文以免 UI 先闪 ciphertext。
 
@@ -1485,10 +1553,11 @@ Tapp.assets.revokeAll(); // 也会在 onDestroy 时自动调用
 
 | 命名空间                                   | 主要能力                                            | 权限族                             |
 | ------------------------------------------ | --------------------------------------------------- | ---------------------------------- |
-| `storage`, `settings`                      | Tapp 私有键值存储与设置                             | `storage`                          |
+| `storage`, `settings`                      | Tapp 私有键值存储与设置（`storage` 含签名游客）     | `storage`                          |
 | `dataExchange`                             | 逐次授权的跨 Tapp 具名数据交换                      | Manifest + one-shot consent        |
 | `ui`, `animation`, `dynamicContent`, `dom` | 宿主 UI、主题、动画和安全 DOM helper                | `ui:*` 或 public                   |
 | `platform`, `data`                         | 平台数据读取、写入、转换和注册                      | `platform:*`                       |
+| `analytics`                                | 站点访问统计聚合（admin 完整 / 非 admin 访客卡片）  | `analytics:read`                   |
 | `ai`, `report`                             | 服务端治理的 AI Task 与报告读写                     | `ai:*`, `report:*`                 |
 | `widget`                                   | 管理员动态注册与配置 Widget                         | `widget:register`                  |
 | `media`                                    | 播放器读取和控制                                    | `media:*`                          |

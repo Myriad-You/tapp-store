@@ -1,0 +1,24 @@
+{
+  "id":"cn.wyyzxzyg.minecraft-hub",
+  "name":"Minecraft 服务器与 Wiki",
+  "version":"1.0.2",
+  "minSystemVersion":"0.3.23",
+  "description":"面向玩家的 Java/基岩版服务器查询、收藏与 Minecraft Wiki 搜索工具",
+  "category":"games",
+  "main":"main.js",
+  "author":{"name":"我願一直向著陽光.℡","url":"https://github.com/zgzyh"},
+  "permissions":["storage","ui:notification","ui:theme","network:fetch","widget:register"],
+  "iconSvg":"<svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path fill='currentColor' d='M3 5.5 12 2l9 3.5v13L12 22l-9-3.5v-13Zm9-1.35L6.1 6.45 12 8.8l5.9-2.35L12 4.15Zm-7 4v8.98l6 2.34v-8.98L5 8.15Zm8 11.32 6-2.34V8.15l-6 2.34v8.98Z'/></svg>",
+  "themeColor":"#57a64e",
+  "hasPage":true,
+  "cssMode":"separated",
+  "widgetStyles":"widget.css",
+  "pageStyles":"page.css",
+  "pageTemplate":"page.html",
+  "widgets":[{"id":"server-status","name":"Minecraft 服务器状态","description":"在首页循环展示多台服务器的在线状态、人数、版本与 MOTD","icon":"server","defaultSize":"4x2","sizes":["4x2"],"refreshPolicy":{"mode":"interval","intervalSeconds":300,"refreshOnVisible":true},"category":"utility","templates":{"4x2":"widget-4x2.html"}}],
+  "apis":{
+    "javaStatus":{"type":"http","access":"public","endpoint":"https://api.mcsrvstat.us/3/{{params.address}}","method":"GET","headers":{"User-Agent":"Myriad-Minecraft-Hub/1.0 (https://github.com/zgzyh/tapp-store)"},"cacheTtl":5,"description":"查询 Java 版服务器"},
+    "bedrockStatus":{"type":"http","access":"public","endpoint":"https://api.mcsrvstat.us/bedrock/3/{{params.address}}","method":"GET","headers":{"User-Agent":"Myriad-Minecraft-Hub/1.0 (https://github.com/zgzyh/tapp-store)"},"cacheTtl":5,"description":"查询基岩版服务器"},
+    "wikiSearch":{"type":"http","access":"public","endpoint":"https://zh.minecraft.wiki/api.php?action=query&generator=search&gsrsearch={{params.query}}&gsrlimit=10&prop=extracts&exintro=1&explaintext=1&exsentences=3&format=json&formatversion=2","method":"GET","headers":{"Accept":"application/json","User-Agent":"Myriad-Minecraft-Hub/1.0.2 (https://github.com/zgzyh/tapp-store)"},"cacheTtl":300,"description":"搜索中文 Minecraft Wiki"}
+  }
+}

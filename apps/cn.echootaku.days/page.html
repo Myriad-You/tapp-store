@@ -1,0 +1,114 @@
+<main class="days-page" data-days-page>
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">DAYS THAT MATTER</p>
+      <h1>朝夕</h1>
+      <p class="page-subtitle">把期待写进日历，也把走过的日子留在身边。</p>
+    </div>
+    <button class="primary-button" type="button" data-action="new-event" aria-label="新建日子">
+      <span aria-hidden="true">＋</span> 新建日子
+    </button>
+  </header>
+
+  <section class="hero-card" data-hero aria-live="polite">
+    <div class="hero-orbit" aria-hidden="true"></div>
+    <div class="hero-copy">
+      <span class="hero-category" data-hero-category>下一次相见</span>
+      <h2 data-hero-title>记录一个值得期待的日子</h2>
+      <p data-hero-date>从今天开始</p>
+    </div>
+    <div class="hero-count">
+      <strong data-hero-count>0</strong>
+      <span data-hero-unit>天</span>
+    </div>
+  </section>
+
+  <section class="toolbar" aria-label="筛选日子">
+    <label class="search-field">
+      <span aria-hidden="true">⌕</span>
+      <input type="search" data-search placeholder="搜索名称或备注" aria-label="搜索名称或备注" />
+    </label>
+    <div class="filter-group" role="group" aria-label="状态筛选">
+      <button type="button" class="filter-button is-active" data-filter="all">全部</button>
+      <button type="button" class="filter-button" data-filter="upcoming">即将到来</button>
+      <button type="button" class="filter-button" data-filter="past">已过单次</button>
+    </div>
+  </section>
+
+  <section class="event-section">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">YOUR MOMENTS</p>
+        <h2>我的日子</h2>
+      </div>
+      <span class="event-total" data-event-total>0 个日子</span>
+    </div>
+    <div class="event-grid" data-event-list></div>
+    <div class="empty-state" data-empty hidden>
+      <div class="empty-mark" aria-hidden="true">◌</div>
+      <h3>还没有符合条件的日子</h3>
+      <p>创建一个纪念日、生日、考试或任何值得期待的时刻。</p>
+      <button class="secondary-button" type="button" data-action="new-event">创建第一个日子</button>
+    </div>
+  </section>
+
+  <section class="editor-panel" data-editor hidden aria-labelledby="editor-title">
+    <div class="editor-backdrop" data-action="close-editor"></div>
+    <form class="editor-card" data-event-form>
+      <header>
+        <div>
+          <p class="eyebrow">A MOMENT IN TIME</p>
+          <h2 id="editor-title" data-editor-title>新建日子</h2>
+        </div>
+        <button class="icon-button" type="button" data-action="close-editor" aria-label="关闭编辑器">×</button>
+      </header>
+
+      <input type="hidden" name="id" />
+      <label class="field">
+        <span>名称</span>
+        <input name="title" maxlength="80" required placeholder="例如：去看海的日子" />
+      </label>
+      <div class="field-row">
+        <label class="field date-field">
+          <span>日期</span>
+          <input name="date" type="date" required />
+        </label>
+        <div class="field category-field" data-category-picker>
+          <span>分类</span>
+          <input name="category" type="hidden" value="life" />
+          <button class="category-trigger" type="button" data-action="toggle-category" aria-haspopup="listbox" aria-expanded="false">
+            <span data-category-value>生活</span>
+            <span class="category-chevron" aria-hidden="true">⌄</span>
+          </button>
+          <div class="category-popover" data-category-popover hidden>
+            <div class="category-options" data-category-options role="listbox" aria-label="选择分类"></div>
+            <div class="category-create">
+              <input type="text" data-category-input maxlength="12" placeholder="输入新分类" aria-label="新分类名称" />
+              <button type="button" data-action="add-category">添加</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <label class="field">
+        <span>备注</span>
+        <textarea name="note" maxlength="240" rows="3" placeholder="写下一点期待，或关于这一天的故事"></textarea>
+      </label>
+      <div class="field-row compact-row">
+        <label class="toggle-field">
+          <input name="annual" type="checkbox" />
+          <span><b>每年重复</b><small>适合生日与纪念日</small></span>
+        </label>
+        <label class="color-field">
+          <span>标记颜色</span>
+          <input name="color" type="color" value="#D97757" aria-label="标记颜色" />
+        </label>
+      </div>
+      <footer>
+        <button class="danger-button" type="button" data-action="delete-event" hidden>删除</button>
+        <span class="footer-spacer"></span>
+        <button class="secondary-button" type="button" data-action="close-editor">取消</button>
+        <button class="primary-button" type="button" data-action="save-event">保存日子</button>
+      </footer>
+    </form>
+  </section>
+</main>

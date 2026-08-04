@@ -128,6 +128,7 @@ async function openConversation(kind, id) {
   state.activeId = id;
   state.messages = [];
   state.messagesFp = '';
+  state.messagesSrcFp = '';
   state.skipMsgAppear = true;
   state.members = [];
   state.channelDetail = null;
@@ -278,6 +279,7 @@ async function openConversation(kind, id) {
         // pending membership: empty transcript is expected
         state.messages = [];
         state.messagesFp = '';
+        state.messagesSrcFp = '';
         if (typeof ensureHistoryState === 'function') ensureHistoryState().hasMoreMain = false;
       }
     }
@@ -1088,10 +1090,21 @@ async function pollMessages(force) {
     if (!isConversationCurrent(kind, id, gen)) return;
     if (res) {
       var msgs = res.messages || [];
-      var fp = messagesFingerprint(msgs);
+      // Compare like with like. `msgs` is the server tail window; state.messages is
+      // the merged list (older pages, optimistic rows, WS rows ahead of the poll,
+      // plaintext retained over a ciphertext re-fetch). Fingerprinting one and
+      // comparing it against the other never matches once those diverge, so every
+      // tick fell through to a full innerHTML rebuild — the flicker, and the scroll
+      // reset that rides along with it. Track the source window separately.
+      var srcFp = messagesFingerprint(msgs);
       var hadError = !!state.chatLoadError;
       state.chatLoadError = null;
-      if (force || fp !== state.messagesFp || hadError) {
+      if (force || srcFp !== state.messagesSrcFp || hadError) {
+        state.messagesSrcFp = srcFp;
+        // Snapshot before merge/prune: pruneOptimisticMessages rewrites
+        // state.messagesFp itself, so reading it afterwards would compare the
+        // new list against itself and skip the repaint that drops the bubble.
+        var prevFp = state.messagesFp;
         var prevLen = state.messages.length;
         var prevLast = prevLen ? (state.messages[prevLen - 1].message_id || '') : '';
         // Prefer known plaintext over a poll that still only has ciphertext
@@ -1120,6 +1133,9 @@ async function pollMessages(force) {
         }
         mergedMsgs = state.messages;
         state.messagesFp = messagesFingerprint(mergedMsgs);
+        // A changed server window that merges to the same visible list (the common
+        // case while a stuck ciphertext keeps re-arriving) must not repaint.
+        var listUnchanged = state.messagesFp === prevFp;
         // Track whether more history likely exists above the live window
         if (typeof ensureHistoryState === 'function') {
           var hs = ensureHistoryState();
@@ -1151,7 +1167,7 @@ async function pollMessages(force) {
             newCount: Math.min(mergedMsgs.length - prevLen, 3),
             stickBottom: stick,
           });
-        } else {
+        } else if (force || hadError || !listUnchanged) {
           paint({ forceFull: true, stickBottom: stick });
         }
       }
@@ -1710,6 +1726,7 @@ function exitActiveConversationUi(toastTitle, asError) {
   state.members = [];
   state.messages = [];
   state.messagesFp = '';
+  state.messagesSrcFp = '';
   state.chatOpening = false;
   state.chatLoadError = null;
   if (typeof stopPolling === 'function') stopPolling();

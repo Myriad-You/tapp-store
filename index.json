@@ -324,9 +324,9 @@
     {
       "id": "com.myriad.aro",
       "name": "Aro",
-      "version": "1.0.50",
+      "version": "1.0.54",
       "description": "社交中心，统一管理消息、时间线、环网与个人资料",
-      "long_description": "1.0.50: room chat header — default-collapse meta badges/room id; history & files move into ⋯ menu.\n\n1.0.49: fix feed page scroll/interaction — harden .feed-main scrollport (min-height, -webkit-overflow-scrolling, pan-y), seal fixed overlay click shields on boot/view switch, sticker-target-overlay PE defaults.\n\n1.0.48: mobile text overflow hardening — bubbles, headers, feed cards, share/file names, long URLs wrap on narrow screens.\n\n1.0.47: modular page split (msgUi/feedUi/mentionUi/roomUi/…), chat perf (windowing, optimistic send, scroll smart, feed load-more), room stickers/admin/@ mentions UI, setMemberRole.\n\n1.0.39: click post for detail modal; list cards truncate with show more.\n\n1.0.38: quote/repost full body + click to open original (no follow required).\n\n1.0.37: E2E decrypt race fix + soft delivery banners.\n\n1.0.36: inline composer icon styles for reinstall resilience.\n\n1.0.35: fix emoji button gray plate.\n\n1.0.34: full emoji picker + sticker packs complete.\n\n社交中心：统一管理联邦消息（Channel/Room）、时间线、环网与个人资料。支持后台新消息通知、附件与多语言（中/英/日）。\n\n1.0.33: room avatar + invite policy in edit/create.\n\n1.0.32: sticker button click + panel polish.\n\n1.0.31: fix store install missing page/stickers.js — stickers UI inlined into attachments.js (pageModules must stay in sync with index download.page_modules).\n\n1.0.30: sticker entry + add stickers from chat images (group/personal packs).\n\n1.0.29: composer sticker panel (group pack via host API; personal local).\n\n1.0.28: lock composer during optimistic room open (no false active membership).\n\n1.0.27: snappier view/chat/tab switching — no re-slide on A→B, same-chat no-op, shorter motion.\n\n1.0.26: polish messenger UX — open skeleton, empty CTAs, busy buttons, send spinner, join toast.\n\n1.0.25: debounce list refresh; remove unguarded member fallbacks.\n\n1.0.24: proactive roster confirm burst after join/leave (0–6s retries + 2.5s poll boost).\n\n1.0.23: room member roster refreshes on join/leave (WS + poll), live member_count, optimistic member_joined.\n\n1.0.22: fix large inline chat images falling back to filename only (safeMessageImageUrl).\n\n1.0.21: declare network:fetch so sandbox CSP allows remote https avatars/covers/federation media.\n\n1.0.11: thin main (background-only), close pageModules file boundaries.\n\n1.0.10: harden federation share rendering, safer store install and downloads.\n\n1.0.9: centered Accept/Reject invite CTAs in chat body.\n\n1.0.8: timeline share (X intent only), follow-graph mutual/domain badges.",
+      "long_description": "1.0.54: stop the chat repaint storm (poll now compares the server window against itself, not against the merged list), keep reading position across full re-renders via a row anchor that survives media layout, and stop labelling permanently sealed messages as \"decrypting…\".\n\n1.0.50: room chat header — default-collapse meta badges/room id; history & files move into ⋯ menu.\n\n1.0.49: fix feed page scroll/interaction — harden .feed-main scrollport (min-height, -webkit-overflow-scrolling, pan-y), seal fixed overlay click shields on boot/view switch, sticker-target-overlay PE defaults.\n\n1.0.48: mobile text overflow hardening — bubbles, headers, feed cards, share/file names, long URLs wrap on narrow screens.\n\n1.0.47: modular page split (msgUi/feedUi/mentionUi/roomUi/…), chat perf (windowing, optimistic send, scroll smart, feed load-more), room stickers/admin/@ mentions UI, setMemberRole.\n\n1.0.39: click post for detail modal; list cards truncate with show more.\n\n1.0.38: quote/repost full body + click to open original (no follow required).\n\n1.0.37: E2E decrypt race fix + soft delivery banners.\n\n1.0.36: inline composer icon styles for reinstall resilience.\n\n1.0.35: fix emoji button gray plate.\n\n1.0.34: full emoji picker + sticker packs complete.\n\n社交中心：统一管理联邦消息（Channel/Room）、时间线、环网与个人资料。支持后台新消息通知、附件与多语言（中/英/日）。\n\n1.0.33: room avatar + invite policy in edit/create.\n\n1.0.32: sticker button click + panel polish.\n\n1.0.31: fix store install missing page/stickers.js — stickers UI inlined into attachments.js (pageModules must stay in sync with index download.page_modules).\n\n1.0.30: sticker entry + add stickers from chat images (group/personal packs).\n\n1.0.29: composer sticker panel (group pack via host API; personal local).\n\n1.0.28: lock composer during optimistic room open (no false active membership).\n\n1.0.27: snappier view/chat/tab switching — no re-slide on A→B, same-chat no-op, shorter motion.\n\n1.0.26: polish messenger UX — open skeleton, empty CTAs, busy buttons, send spinner, join toast.\n\n1.0.25: debounce list refresh; remove unguarded member fallbacks.\n\n1.0.24: proactive roster confirm burst after join/leave (0–6s retries + 2.5s poll boost).\n\n1.0.23: room member roster refreshes on join/leave (WS + poll), live member_count, optimistic member_joined.\n\n1.0.22: fix large inline chat images falling back to filename only (safeMessageImageUrl).\n\n1.0.21: declare network:fetch so sandbox CSP allows remote https avatars/covers/federation media.\n\n1.0.11: thin main (background-only), close pageModules file boundaries.\n\n1.0.10: harden federation share rendering, safer store install and downloads.\n\n1.0.9: centered Accept/Reject invite CTAs in chat body.\n\n1.0.8: timeline share (X intent only), follow-graph mutual/domain badges.",
       "locales": {
         "en-US": {
           "description": "Social hub for messages, timeline, ring network and profile in one place"
@@ -427,16 +427,16 @@
           "index.js": "apps/com.myriad.aro/page/index.js"
         }
       },
-      "size": 1406939,
+      "size": 1443119,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-01T00:00:00Z",
-      "updated_at": "2026-07-29T00:23:31Z"
+      "updated_at": "2026-08-04T13:11:11Z"
     },
     {
-      "id": "com.myriad.cdn-cache",
+      "id": "cn.wyyzxzyg.cdn-cache",
       "name": "CDN 缓存刷新",
       "version": "1.1.0",
       "description": "仅管理员可操作的 Cloudflare、EdgeOne、阿里云 CDN 与 AWS CloudFront 缓存刷新工具",
@@ -456,7 +456,7 @@
         "url": "https://github.com/zgzyh"
       },
       "license": "MIT",
-      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/com.myriad.cdn-cache",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.wyyzxzyg.cdn-cache",
       "repository": "https://github.com/Myriad-You/tapp-store",
       "category": "developer",
       "tags": [
@@ -483,10 +483,10 @@
       "preview": {
         "version": 1,
         "type": "snapshot",
-        "html": "apps/com.myriad.cdn-cache/preview.html",
+        "html": "app/scn.wyyzxzyg.cdn-cache/preview.html",
         "styles": [
-          "apps/com.myriad.cdn-cache/page.css",
-          "apps/com.myriad.cdn-cache/preview.css"
+          "apps/cn.wyyzxzyg.cdn-cache/page.css",
+          "apps/cn.wyyzxzyg.cdn-cache/preview.css"
         ],
         "viewport": {
           "width": 1440,
@@ -500,11 +500,11 @@
         "theme": "dark"
       },
       "download": {
-        "manifest": "apps/com.myriad.cdn-cache/manifest.json",
-        "code": "apps/com.myriad.cdn-cache/main.js",
-        "readme": "apps/com.myriad.cdn-cache/README.md",
-        "page_styles": "apps/com.myriad.cdn-cache/page.css",
-        "page_template": "apps/com.myriad.cdn-cache/page.html"
+        "manifest": "apps/cn.wyyzxzyg.cdn-cache/manifest.json",
+        "code": "apps/cn.wyyzxzyg.cdn-cache/main.js",
+        "readme": "apps/cn.wyyzxzyg.cdn-cache/README.md",
+        "page_styles": "apps/cn.wyyzxzyg.cdn-cache/page.css",
+        "page_template": "apps/cn.wyyzxzyg.cdn-cache/page.html"
       },
       "size": 45737,
       "downloads": 0,
@@ -513,6 +513,78 @@
       "verified": true,
       "created_at": "2026-08-01T00:00:00Z",
       "updated_at": "2026-08-02T17:40:21Z"
+    },
+    {
+      "id": "cn.wyyzxzyg.minecraft-hub",
+      "name": "Minecraft 服务器与 Wiki",
+      "version": "1.0.2",
+      "description": "面向玩家的 Java/基岩版服务器查询、收藏与 Minecraft Wiki 搜索工具",
+      "long_description": "查询 Minecraft Java 与基岩版服务器的在线状态、版本、MOTD、人数、玩家和软件信息；收藏常用服务器、保存最近查询，并支持多服务器首页小组件轮播与自定义状态检测间隔。",
+      "author": {
+        "name": "我願一直向著陽光.℡",
+        "url": "https://github.com/zgzyh"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.wyyzxzyg.minecraft-hub",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "games",
+      "tags": [
+        "Minecraft",
+        "服务器",
+        "查服",
+        "Wiki",
+        "Java",
+        "基岩版"
+      ],
+      "permissions": [
+        "storage",
+        "ui:notification",
+        "ui:theme",
+        "network:fetch",
+        "widget:register"
+      ],
+      "icon_svg": "<svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"currentColor\" d=\"M3 5.5 12 2l9 3.5v13L12 22l-9-3.5v-13Zm9-1.35L6.1 6.45 12 8.8l5.9-2.35L12 4.15Zm-7 4v8.98l6 2.34v-8.98L5 8.15Zm8 11.32 6-2.34V8.15l-6 2.34v8.98Z\"/></svg>",
+      "theme_color": "#57a64e",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.wyyzxzyg.minecraft-hub/preview.html",
+        "styles": [
+          "apps/cn.wyyzxzyg.minecraft-hub/page.css",
+          "apps/cn.wyyzxzyg.minecraft-hub/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "theme": "light"
+      },
+      "download": {
+        "manifest": "apps/cn.wyyzxzyg.minecraft-hub/manifest.json",
+        "code": "apps/cn.wyyzxzyg.minecraft-hub/main.js",
+        "readme": "apps/cn.wyyzxzyg.minecraft-hub/README.md",
+        "page_styles": "apps/cn.wyyzxzyg.minecraft-hub/page.css",
+        "page_template": "apps/cn.wyyzxzyg.minecraft-hub/page.html",
+        "widget_styles": "apps/cn.wyyzxzyg.minecraft-hub/widget.css",
+        "widget_templates": {
+          "server-status": {
+            "4x2": "apps/cn.wyyzxzyg.minecraft-hub/widget-4x2.html"
+          }
+        }
+      },
+      "size": 30876,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": true,
+      "created_at": "2026-08-04T16:25:05Z",
+      "updated_at": "2026-08-04T16:26:57Z"
     },
     {
       "id": "site.abloom.meliora",
@@ -724,6 +796,142 @@
       "verified": false,
       "created_at": "2026-08-04T02:07:42Z",
       "updated_at": "2026-08-04T14:38:40Z"
+    },
+    {
+      "id": "cn.echootaku.days",
+      "name": "朝夕",
+      "version": "0.1.2",
+      "description": "记录值得期待与纪念的日子，在主页随时查看最近倒数。",
+      "long_description": "用朝夕记录生日、纪念日、旅行、考试和其他重要时刻。支持每年重复、自定义分类与颜色、搜索筛选，以及 2x2、4x2、4x4 三种主页小组件；所有数据仅保存在当前用户的私有存储中。",
+      "locales": {
+        "en-US": {
+          "name": "Days",
+          "description": "Keep meaningful dates close and see the next countdown at a glance."
+        },
+        "ja-JP": {
+          "name": "日々",
+          "description": "大切な日を記録し、次のカウントダウンをいつでも確認できます。"
+        }
+      },
+      "author": {
+        "name": "EchoOtaku",
+        "url": "https://echootaku.cn"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.echootaku.days",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "productivity",
+      "tags": [
+        "倒数日",
+        "纪念日",
+        "生日",
+        "日期",
+        "小组件"
+      ],
+      "permissions": [
+        "storage",
+        "ui:notification",
+        "ui:theme",
+        "ui:confirm",
+        "widget:register"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><rect x='3' y='4.5' width='18' height='16' rx='3' stroke='currentColor' stroke-width='1.8'/><path d='M7.5 2.5v4M16.5 2.5v4M3 9h18' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/><path d='M8 13h3v3H8zM14 13h2' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>",
+      "theme_color": "#D97757",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.echootaku.days/preview.html",
+        "styles": [
+          "apps/cn.echootaku.days/preview.css"
+        ],
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.48
+        },
+        "theme": "light"
+      },
+      "download": {
+        "manifest": "apps/cn.echootaku.days/manifest.json",
+        "code": "apps/cn.echootaku.days/main.js",
+        "readme": "apps/cn.echootaku.days/README.md",
+        "widget_styles": "apps/cn.echootaku.days/widget.css",
+        "page_styles": "apps/cn.echootaku.days/page.css",
+        "page_template": "apps/cn.echootaku.days/page.html",
+        "widget_templates": {
+          "days-countdown": {
+            "2x2": "apps/cn.echootaku.days/templates/widget-2x2.html",
+            "4x2": "apps/cn.echootaku.days/templates/widget-4x2.html",
+            "4x4": "apps/cn.echootaku.days/templates/widget-4x4.html"
+          }
+        }
+      },
+      "size": 57454,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-08-04T05:52:10Z",
+      "updated_at": "2026-08-04T09:47:35Z"
+    },
+    {
+      "id": "org.smcresearchhk.math",
+      "name": "函数图形计算器",
+      "version": "1.0.0",
+      "description": "类似 GeoGebra 的函数绘图与交互式计算器，支持多函数叠加、坐标系缩放平移、常用函数库与表达式求值",
+      "long_description": "交互式函数绘图计算器，风格接近 GeoGebra：多函数叠加、安全表达式解析（无 eval）、坐标系缩放/平移、网格与坐标轴、悬停轨迹、侧栏求值与常用函数预设。支持中英日界面与明暗主题，函数列表与视图范围持久化到本地 storage。",
+      "locales": {
+        "en-US": {
+          "name": "Function Graph Calculator",
+          "description": "GeoGebra-like function graphing and interactive calculator with multi-function overlay, zoom/pan, and expression evaluation"
+        },
+        "ja-JP": {
+          "name": "関数グラフ計算機",
+          "description": "GeoGebra風の関数グラフ描画と対話型計算機。複数関数の重ね描き、ズーム・パン、式評価に対応"
+        }
+      },
+      "author": {
+        "name": "WKSYweb",
+        "url": "https://github.com/WKSYweb"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/org.smcresearchhk.math",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "utility",
+      "tags": [
+        "函数",
+        "图形",
+        "计算器",
+        "GeoGebra",
+        "数学",
+        "绘图"
+      ],
+      "permissions": [
+        "storage",
+        "ui:theme"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M3 12h18M12 3v18' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'/><path d='M4 16c2-4 4-6 6-6s4 4 6 6 4 2 6 0' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/><circle cx='12' cy='10' r='1.5' fill='currentColor'/></svg>",
+      "theme_color": "#0EA5E9",
+      "screenshots": [],
+      "download": {
+        "manifest": "apps/org.smcresearchhk.math/manifest.json",
+        "code": "apps/org.smcresearchhk.math/main.js",
+        "readme": "apps/org.smcresearchhk.math/README.md",
+        "page_styles": "apps/org.smcresearchhk.math/page.css",
+        "page_template": "apps/org.smcresearchhk.math/page.html"
+      },
+      "size": 58058,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-08-04T00:00:00Z",
+      "updated_at": "2026-08-04T07:12:00Z"
     },
     {
       "id": "cn.xciy.rsshub-radar",

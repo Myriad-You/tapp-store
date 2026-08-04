@@ -6,6 +6,8 @@ var state = {
   activeId: null,
   messages: [],
   messagesFp: '',
+  /** Fingerprint of the last raw server window (compare polls like with like). */
+  messagesSrcFp: '',
   /** Skip bubble appear animation on next renderMessages (e.g. open chat). */
   skipMsgAppear: false,
   members: [],

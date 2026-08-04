@@ -88,6 +88,20 @@ function localMembers() {
     onLocaleChange(callback: (locale: unknown) => void): () => void
     showNotification(options: unknown): Promise<unknown>
     confirm(message: string): Promise<boolean>
+    /**
+     * Open a host browser tab for a Manifest \`openUrls\` allowlisted id only.
+     * Pass \`{ id, path?, query? }\` — never a free-form absolute URL.
+     * Requires permission \`ui:openUrl\`.
+     */
+    openUrl(request: {
+      id: string
+      path?: string
+      query?: Record<string, string>
+    } | string): Promise<unknown>
+    /** List install-time openUrls declarations for this Tapp. */
+    listOpenUrls(): Promise<
+      Array<{ id: string; url: string; match: 'exact' | 'prefix' | 'origin' }>
+    >
     requestFullscreen(): Promise<unknown>
     exitFullscreen(): Promise<unknown>
     fullscreen: {

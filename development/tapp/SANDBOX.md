@@ -96,7 +96,7 @@ manifest-src 'none'
 | `fetch`、`XMLHttpRequest`、`WebSocket`、`EventSource`    | 禁用                     | Manifest `apis` + `Tapp.api()`                |
 | `localStorage`、`sessionStorage`、`indexedDB`、Cache API | 禁用或替换为空实现       | `Tapp.storage`                                |
 | `eval`、带源码的 `Function`、字符串形式的 timer          | 禁用                     | 使用预打包代码和函数回调                      |
-| `window.open`、`alert`、`confirm`、`prompt`、`print`     | 禁用                     | `Tapp.ui.showNotification/confirm` 等受控 API |
+| `window.open`、`alert`、`confirm`、`prompt`、`print`     | 禁用                     | `Tapp.ui.showNotification/confirm`；外链用 `Tapp.ui.openUrl` + Manifest `openUrls` |
 | `window.parent/top/opener`                               | 限制                     | 只使用生成的 Tapp SDK                         |
 | 直接下载                                                 | sandbox 未开放 downloads | `Tapp.file.download()`                        |
 
@@ -212,10 +212,11 @@ container.textContent = userInput;
 写入后的总量；超过 5 MiB 会返回 413。数据库触发器执行相同的 5 MiB 硬限制，覆盖其他
 内部写入路径；`Tapp.storage.usage()` 返回的 quota 因而也是实际安全边界。
 
-持久 storage 命名空间跟随**当前登录用户**（Runtime Grant 的 subject），即使运行的是站点
-公开安装也不会读取安装 owner 的 storage。每个已登录用户都可以读写自己的 `user_id + tapp_id`
-空间；游客无 `storage` 权限、无持久 storage。`_settings.`、`_component:`、`_shortcut:`、
-`_report:` 是宿主保留前缀，不能通过 `Tapp.storage` 读取、写入、列举或清除。
+持久 storage 命名空间跟随 Runtime Grant **subject**（持久用户或**签名游客 session**），
+即使运行的是站点公开安装也不会读取安装 owner 的 storage。每个 subject 读写自己的
+`user_id + tapp_id` 空间（游客为负 id）；`storage` 为 guest-safe basic，签名游客可获
+Grant 与持久 storage。`_settings.`、`_component:`、`_shortcut:`、`_report:` 是宿主保留
+前缀，不能通过 `Tapp.storage` 读取、写入、列举或清除。
 
 Manifest **安装级 settings** 由 owner / 管理员写入 installation owner 命名空间；通过
 `Tapp.settings` 读取时，凡能打开该安装的 viewer（**含游客打开公开安装**）都能读到已保存

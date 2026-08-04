@@ -289,7 +289,7 @@ function buildMessageEntryHtml(msg, idx, opts) {
       + '<span class="msg-day-label">' + esc(kxLabel) + '</span></div>';
     return html;
   }
-  var text = getPayloadText(msg.payload);
+  var text = e2eUndecryptableLabel(msg, payload) || getPayloadText(msg.payload);
   var pinned = msg.is_pinned ? '<span class="msg-pin"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 11V4a1 1 0 011-1h4a1 1 0 011 1v7"/><path d="M5 17h14"/><path d="M7 11l-2 6h14l-2-6"/></svg></span>' : '';
 
   // Resolve avatar and display name for remote messages
