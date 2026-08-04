@@ -991,6 +991,14 @@ function anniversarySetCustomProperty(shell, property, value, enabled) {
 function anniversaryRender(container, props) {
   var shell = anniversaryEnsureMarkup(container);
   var config = anniversaryResolvedConfig(props || {});
+  var size = props && props.size ? props.size : "4x2";
+  shell.setAttribute("data-size", size);
+  shell.setAttribute("data-layout-version", "2");
+  shell.setAttribute("data-style", config.style);
+  shell.setAttribute("data-align", config.alignment);
+  shell.setAttribute("data-show-icon", String(config.showIcon));
+  shell.setAttribute("data-show-date", String(config.showDate));
+  shell.setAttribute("data-show-progress", String(config.showProgress));
   var state;
   try {
     state = anniversaryState(config);
@@ -1003,7 +1011,6 @@ function anniversaryRender(container, props) {
     return;
   }
 
-  var size = props && props.size ? props.size : "4x2";
   var backdrop = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-backdrop]"));
   var icon = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-icon]"));
   var label = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-label]"));
@@ -1019,17 +1026,11 @@ function anniversaryRender(container, props) {
   container.style.background = "transparent";
   container.ownerDocument.documentElement.style.background = "transparent";
   if (container.ownerDocument.body) container.ownerDocument.body.style.background = "transparent";
-  shell.setAttribute("data-size", size);
-  shell.setAttribute("data-style", config.style);
-  shell.setAttribute("data-align", config.alignment);
   shell.setAttribute("data-direction", state.direction);
   shell.setAttribute("data-digits", String(Math.min(String(state.days).length, 6)));
   var titleLength = Array.from(config.title.trim()).length;
   shell.setAttribute("data-title-length", titleLength > 14 ? "very-long" : titleLength > 8 ? "long" : "normal");
   shell.setAttribute("data-state", "ready");
-  shell.setAttribute("data-show-icon", String(config.showIcon));
-  shell.setAttribute("data-show-date", String(config.showDate));
-  shell.setAttribute("data-show-progress", String(config.showProgress));
   shell.setAttribute("data-has-image", String(Boolean(config.backgroundImage)));
   shell.style.setProperty("--anniversary-radius", config.cornerRadius + "px");
   shell.style.setProperty("--anniversary-number-scale", String(config.numberScale));

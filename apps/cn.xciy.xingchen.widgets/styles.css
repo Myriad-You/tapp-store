@@ -1321,6 +1321,517 @@ body.dark,
   width: 7px;
 }
 
+/* Anniversary layout v2: a date poster composed for each supported widget size. */
+.anniversary-widget[data-layout-version="2"] {
+  --anniversary-display: "Bahnschrift Condensed", "Aptos Narrow", "Arial Narrow", ui-sans-serif, system-ui, sans-serif;
+  grid-template-areas:
+    "header"
+    "copy"
+    "time"
+    "footer";
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 20px;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.18);
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-header,
+.anniversary-widget[data-layout-version="2"] .anniversary-copy,
+.anniversary-widget[data-layout-version="2"] .anniversary-time,
+.anniversary-widget[data-layout-version="2"] .anniversary-footer {
+  position: relative;
+  z-index: 1;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-header {
+  gap: 9px;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-label {
+  font-size: clamp(10px, 3.2cqh, 13px);
+  font-weight: 680;
+  letter-spacing: 0.045em;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-time {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+  align-self: stretch;
+  min-height: 0;
+  overflow: visible;
+  gap: 8px;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-time strong {
+  font-family: var(--anniversary-display);
+  font-weight: 760;
+  font-stretch: condensed;
+  letter-spacing: -0.055em;
+  line-height: 0.82;
+  text-shadow: none;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-time span {
+  flex: 0 0 auto;
+  font-size: clamp(13px, 4.4cqh, 20px);
+  font-weight: 780;
+  letter-spacing: 0.02em;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-copy {
+  gap: 7px;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-copy h2 {
+  font-size: clamp(18px, 5.8cqh, 30px);
+  font-weight: 760;
+  line-height: 1.06;
+  text-wrap: balance;
+  white-space: normal;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-copy p {
+  max-width: 36em;
+  line-height: 1.45;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-footer {
+  grid-template-columns: auto minmax(24px, 1fr) auto;
+  gap: 7px 10px;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-progress {
+  height: 2px;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-progress b {
+  width: 9px;
+  height: 9px;
+  left: clamp(0px, calc(var(--anniversary-progress-value) - 4.5px), calc(100% - 9px));
+  border-width: 2px;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] {
+  --anniversary-base-number: 54px;
+  grid-template-areas:
+    "header time"
+    "copy time"
+    "footer time";
+  grid-template-columns: minmax(0, 1fr) minmax(108px, 40%);
+  grid-template-rows: 24px minmax(0, 1fr) 25px;
+  gap: 3px 12px;
+  padding: 10px 12px;
+  border-radius: min(var(--anniversary-radius), 18px);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-icon {
+  width: 22px;
+  height: 22px;
+  font-size: 13px;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-label {
+  font-size: 10px;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-copy {
+  align-content: center;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-copy h2 {
+  display: -webkit-box;
+  font-size: clamp(14px, 4.8cqh, 17px);
+  line-height: 1.06;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-copy p,
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-progress-label {
+  display: none;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-time {
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  padding-left: 10px;
+  border-left: 1px solid color-mix(in srgb, var(--anniversary-muted) 22%, transparent);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-time span {
+  font-size: 13px;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-footer {
+  grid-template-columns: 1fr;
+  align-content: end;
+  gap: 5px;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-footer time,
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-progress {
+  grid-column: 1;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-progress {
+  grid-row: auto;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] {
+  --anniversary-base-number: 72px;
+  grid-template-areas:
+    "header time footer"
+    "copy time footer";
+  grid-template-columns: minmax(150px, 0.9fr) minmax(180px, 0.86fr) minmax(160px, 0.74fr);
+  grid-template-rows: 30px minmax(0, 1fr);
+  gap: 4px clamp(20px, 4vw, 38px);
+  padding: 12px clamp(18px, 3.5%, 28px);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] .anniversary-copy {
+  align-content: center;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] .anniversary-copy h2 {
+  display: -webkit-box;
+  font-size: clamp(17px, 5.1cqh, 21px);
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] .anniversary-copy p {
+  display: none;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] .anniversary-time {
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] .anniversary-footer {
+  grid-template-columns: 1fr;
+  align-content: center;
+  gap: 9px;
+  padding-left: clamp(16px, 3vw, 28px);
+  border-left: 1px solid color-mix(in srgb, var(--anniversary-muted) 22%, transparent);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] .anniversary-footer time,
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] .anniversary-progress-label,
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] .anniversary-progress {
+  grid-column: 1;
+  text-align: left;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] .anniversary-progress-label {
+  grid-row: auto;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] .anniversary-progress {
+  grid-row: auto;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x2"] {
+  --anniversary-base-number: 96px;
+  grid-template-areas:
+    "header"
+    "copy"
+    "time"
+    "footer";
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: clamp(17px, 6.5%, 22px);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x2"] .anniversary-copy h2 {
+  display: -webkit-box;
+  font-size: clamp(20px, 6.2cqh, 25px);
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x2"] .anniversary-copy p,
+.anniversary-widget[data-layout-version="2"][data-size="2x2"] .anniversary-progress-label {
+  display: none;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x2"] .anniversary-time {
+  align-items: center;
+  justify-content: center;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x2"] .anniversary-footer {
+  grid-template-columns: auto minmax(20px, 1fr);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x2"] .anniversary-progress {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x2"][data-show-date="false"] .anniversary-progress {
+  grid-column: 1 / -1;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x2"] {
+  --anniversary-base-number: 132px;
+  grid-template-areas:
+    "header time"
+    "copy time"
+    "footer time";
+  grid-template-columns: minmax(240px, 0.92fr) minmax(270px, 1.08fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 14px clamp(32px, 5vw, 58px);
+  padding: clamp(22px, 5%, 34px);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x2"] .anniversary-copy {
+  align-content: center;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x2"] .anniversary-copy h2 {
+  display: -webkit-box;
+  font-size: clamp(26px, 7cqh, 34px);
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x2"] .anniversary-copy p {
+  font-size: clamp(11px, 3.5cqh, 15px);
+  -webkit-line-clamp: 3;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x2"] .anniversary-time {
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x4"] {
+  --anniversary-base-number: 176px;
+  grid-template-areas:
+    "header"
+    "copy"
+    "time"
+    "footer";
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: clamp(15px, 3.8%, 22px);
+  padding: clamp(28px, 7%, 40px);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x4"] .anniversary-copy {
+  gap: 10px;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x4"] .anniversary-copy h2 {
+  display: -webkit-box;
+  max-width: 13em;
+  font-size: clamp(31px, 8cqh, 42px);
+  line-height: 1.04;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x4"] .anniversary-copy p {
+  max-width: 30em;
+  font-size: clamp(13px, 3.5cqh, 16px);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x4"] .anniversary-time {
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.anniversary-widget[data-layout-version="2"][data-align="center"][data-size="4x4"] .anniversary-copy h2,
+.anniversary-widget[data-layout-version="2"][data-align="center"][data-size="4x4"] .anniversary-copy p {
+  justify-self: center;
+}
+
+.anniversary-widget[data-layout-version="2"][data-align="right"][data-size="4x4"] .anniversary-copy h2,
+.anniversary-widget[data-layout-version="2"][data-align="right"][data-size="4x4"] .anniversary-copy p {
+  justify-self: end;
+}
+
+.anniversary-widget[data-layout-version="2"][data-align="center"] .anniversary-time {
+  justify-content: center;
+}
+
+.anniversary-widget[data-layout-version="2"][data-align="right"] .anniversary-time {
+  justify-content: flex-end;
+}
+
+.anniversary-widget[data-layout-version="2"][data-title-length="very-long"] .anniversary-copy h2 {
+  font-size: clamp(16px, 5.2cqh, 26px);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x4"][data-title-length="very-long"] .anniversary-copy h2 {
+  font-size: clamp(25px, 6.7cqh, 35px);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.9); }
+.anniversary-widget[data-layout-version="2"][data-size="2x1"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.76); }
+.anniversary-widget[data-layout-version="2"][data-size="2x1"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.62); }
+.anniversary-widget[data-layout-version="2"][data-size="2x1"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.52); }
+
+.anniversary-widget[data-layout-version="2"][data-size="4x1"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.94); }
+.anniversary-widget[data-layout-version="2"][data-size="4x1"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.82); }
+.anniversary-widget[data-layout-version="2"][data-size="4x1"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.68); }
+.anniversary-widget[data-layout-version="2"][data-size="4x1"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.58); }
+
+.anniversary-widget[data-layout-version="2"][data-size="2x2"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.9); }
+.anniversary-widget[data-layout-version="2"][data-size="2x2"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.76); }
+.anniversary-widget[data-layout-version="2"][data-size="2x2"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.63); }
+.anniversary-widget[data-layout-version="2"][data-size="2x2"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.54); }
+
+.anniversary-widget[data-layout-version="2"][data-size="4x2"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.92); }
+.anniversary-widget[data-layout-version="2"][data-size="4x2"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.8); }
+.anniversary-widget[data-layout-version="2"][data-size="4x2"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.68); }
+.anniversary-widget[data-layout-version="2"][data-size="4x2"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.58); }
+
+.anniversary-widget[data-layout-version="2"][data-size="4x4"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.94); }
+.anniversary-widget[data-layout-version="2"][data-size="4x4"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.82); }
+.anniversary-widget[data-layout-version="2"][data-size="4x4"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.7); }
+.anniversary-widget[data-layout-version="2"][data-size="4x4"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.6); }
+
+.anniversary-widget[data-layout-version="2"][data-style="starlight"] {
+  background:
+    radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--anniversary-accent) 30%, transparent), transparent 34%),
+    radial-gradient(circle at 88% 86%, rgba(14, 165, 233, 0.2), transparent 38%),
+    linear-gradient(145deg, color-mix(in srgb, var(--anniversary-background) 88%, #241b47), var(--anniversary-background));
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="starlight"] .anniversary-pattern {
+  opacity: 0.48;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.78) 0 1px, transparent 1.25px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.3) 0 0.8px, transparent 1.1px);
+  background-position: 13px 17px, 42px 31px;
+  background-size: 63px 63px, 79px 79px;
+  mask-image: linear-gradient(125deg, #000 0 50%, transparent 88%);
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="starlight"] .anniversary-time::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: min(88%, 230px);
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in srgb, var(--anniversary-accent) 42%, transparent);
+  border-radius: 50%;
+  box-shadow: inset 0 0 38px color-mix(in srgb, var(--anniversary-accent) 8%, transparent);
+  transform: rotate(-16deg) scaleY(0.54);
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="starlight"] .anniversary-time::after {
+  content: "";
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  top: 28%;
+  right: 15%;
+  background: var(--anniversary-accent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--anniversary-accent) 16%, transparent), 0 0 18px var(--anniversary-accent);
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="starlight"][data-size="2x1"] .anniversary-time::before,
+.anniversary-widget[data-layout-version="2"][data-style="starlight"][data-size="2x1"] .anniversary-time::after,
+.anniversary-widget[data-layout-version="2"][data-style="starlight"][data-size="4x1"] .anniversary-time::before,
+.anniversary-widget[data-layout-version="2"][data-style="starlight"][data-size="4x1"] .anniversary-time::after {
+  display: none;
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="letter"] {
+  background:
+    linear-gradient(90deg, transparent 0 10%, color-mix(in srgb, var(--anniversary-accent) 38%, transparent) 10% 10.35%, transparent 10.35%),
+    repeating-linear-gradient(180deg, transparent 0 27px, rgba(112, 85, 62, 0.085) 27px 28px),
+    var(--anniversary-background);
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="letter"] .anniversary-pattern {
+  display: none;
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="letter"] .anniversary-copy h2 {
+  font-family: "STKaiti", "KaiTi", "Songti SC", "STSong", serif;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="letter"] .anniversary-time strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="letter"] .anniversary-time::after {
+  content: "";
+  position: absolute;
+  left: 7%;
+  right: 5%;
+  bottom: 12%;
+  height: 2px;
+  background: color-mix(in srgb, var(--anniversary-accent) 64%, transparent);
+  border-radius: 999px;
+  transform: rotate(-2deg);
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="glass"] {
+  background:
+    radial-gradient(circle at 8% 12%, rgba(125, 211, 252, 0.34), transparent 34%),
+    radial-gradient(circle at 92% 86%, rgba(244, 114, 182, 0.18), transparent 38%),
+    linear-gradient(145deg, #334155, #172033);
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="glass"] .anniversary-pattern {
+  inset: 8px;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="glass"] .anniversary-time {
+  padding: clamp(10px, 3%, 20px);
+  background: rgba(255, 255, 255, 0.075);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: max(14px, calc(var(--anniversary-radius) - 7px));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="glass"][data-size="2x1"] .anniversary-time,
+.anniversary-widget[data-layout-version="2"][data-style="glass"][data-size="4x1"] .anniversary-time {
+  border-radius: 14px;
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="minimal"] {
+  background:
+    linear-gradient(90deg, transparent 0 calc(100% - 9px), var(--anniversary-accent) calc(100% - 9px)),
+    var(--anniversary-background);
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="minimal"] .anniversary-pattern {
+  display: none;
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="minimal"] .anniversary-time {
+  padding: clamp(10px, 3%, 20px);
+  background: color-mix(in srgb, var(--anniversary-accent) 9%, transparent);
+  border-left: 5px solid var(--anniversary-accent);
+  border-radius: 5px;
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="minimal"] .anniversary-time strong {
+  color: color-mix(in srgb, var(--anniversary-text) 92%, var(--anniversary-accent));
+}
+
 .photo-wall-widget {
   --photo-wall-gap: 4px;
   --photo-wall-radius: 18px;
