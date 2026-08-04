@@ -20,6 +20,8 @@ const files = page('files.js')
 const events = page('events.js')
 const index = page('index.js')
 const views = page('views.js')
+const msgUi = page('msgUi.js')
+const members = page('members.js')
 
 // Security (prior)
 assert.match(helpers, /function sanitizeRemoteSvg/)
@@ -29,8 +31,15 @@ assert.match(helpers, /function safeMessageImageUrl/)
 assert.match(helpers, /function createDisposableBag/)
 assert.match(helpers, /function pageListen/)
 assert.match(views, /pageListen\(document/)
-assert.match(chat, /sanitizeRemoteSvg\(payload\.tapp_icon\)/)
-assert.match(chat, /safeMessageImageUrl/)
+// ARO-01: a remote tapp icon must never reach innerHTML unsanitized.
+// Matched loosely on the argument: chat.js reads it via shareCardPayload(card),
+// msgUi.js via payload — an exact-expression assertion went stale on the first
+// rename and failed the whole suite while the property still held.
+assert.match(chat, /sanitizeRemoteSvg\(.{0,60}?tapp_icon/)
+assert.match(msgUi, /sanitizeRemoteSvg\(.{0,60}?tapp_icon/)
+// Image bubbles are rendered in msgUi.js (moved out of chat.js) — the src must
+// still go through the message-sized URL validator.
+assert.match(msgUi, /safeMessageImageUrl/)
 assert.doesNotMatch(api, /delete sendReq\.encrypt/)
 assert.match(api, /var ctx = \{/)
 assert.match(attachments, /file\.slice\(/)
@@ -45,6 +54,24 @@ assert.ok(safeMessageImageUrl(mid), 'mid-size chat image data URL must pass')
 assert.equal(safeMessageImageUrl('javascript:alert(1)'), '')
 assert.equal(safeMessageImageUrl('/media/federation/1/wallhaven-1p9529.jpg'), '/media/federation/1/wallhaven-1p9529.jpg')
 assert.equal(safeMessageImageUrl('/media/federation/1/../evil.jpg'), '')
+
+// esc() must be safe in *attribute* context, not just text context.
+//
+// It is interpolated into ~176 double-quoted attributes, several fed by
+// peer-controlled data (member actor_url, message payload.filename/quote_id).
+// The old textContent→innerHTML round-trip left `"` unescaped, so a remote
+// could close the attribute and inject markup into the Aro page.
+const esc = new Function(helpers + '; return esc;')()
+assert.equal(esc('<b>&'), '&lt;b&gt;&amp;', 'text context unchanged')
+assert.ok(!esc('x" onmouseover="alert(1)').includes('"'), 'double quotes must be encoded')
+assert.ok(!esc("y' onerror='alert(1)").includes("'"), 'single quotes must be encoded')
+assert.equal(esc(null), '')
+assert.equal(esc(undefined), '')
+// esc() must not need a DOM (it runs before the page sandbox is ready).
+assert.equal(typeof globalThis.document, 'undefined', 'esc must be DOM-free')
+// Attribute sinks that carry remote data stay wrapped.
+assert.match(members, /data-actor="'\s*\n?\s*\+ esc\(m\.actor_url/)
+assert.match(msgUi, /data-quote-id="'\s*\+ esc\(qId\)/)
 
 // ARO-13 thin main
 assert.ok(main.length < 12000, 'main index.js should stay thin, got ' + main.length)

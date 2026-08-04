@@ -1,5 +1,29 @@
 // ==================== Helpers ====================
-function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+
+/**
+ * Escape a value for interpolation into HTML — text **or** attribute context.
+ *
+ * The previous implementation round-tripped through `textContent`/`innerHTML`,
+ * which only escapes `&`, `<` and `>`: serializing a text node never escapes
+ * quotes. `esc()` is interpolated into ~176 double-quoted attributes across the
+ * page modules (`data-actor="…"`, `title="…"`, `alt="…"`, `aria-label="…"`),
+ * several of which carry peer-controlled data — a room member's `actor_url`, a
+ * message `payload.filename`/`quote_id`. A `"` in any of those closed the
+ * attribute early and let a remote inject arbitrary markup into the Aro page.
+ *
+ * Entity-encoding quotes fixes every call site at once and keeps text contexts
+ * identical (browsers render `&quot;`/`&#39;` as `"`/`'`). It also drops a DOM
+ * allocation from a hot render path.
+ */
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 /**
  * Shareable public room id: `rm_…@home[:port]` when home_server is known.

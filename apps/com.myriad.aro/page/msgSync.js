@@ -71,12 +71,16 @@ function mergeMessageLists(prev, next) {
   if (!next.length) return prev.slice(); // empty poll must not wipe history
   if (!prev.length) return next.slice();
 
-  var byId = {};
+  // Null-prototype maps: message_id comes off the wire (a peer sets
+  // `object.messageId` verbatim). With a plain object a message id of
+  // `constructor` / `toString` reads back a truthy inherited value, so the
+  // prior copy gets treated as "already in next" and silently dropped.
+  var byId = Object.create(null);
   for (var i = 0; i < prev.length; i++) {
     var p = prev[i];
     if (p && p.message_id) byId[p.message_id] = p;
   }
-  var nextIds = {};
+  var nextIds = Object.create(null);
   for (var j0 = 0; j0 < next.length; j0++) {
     if (next[j0] && next[j0].message_id) nextIds[next[j0].message_id] = true;
   }
@@ -139,7 +143,7 @@ function pruneOptimisticMessages(opts) {
     });
   } else {
     // Match optimistic text OR light media filename+size against confirmed local messages
-    var localKeys = {};
+    var localKeys = Object.create(null);
     state.messages.forEach(function (m) {
       if (!m || m._optimistic) return;
       if (typeof isLocalActor === 'function' && !isLocalActor(m.sender_actor)) return;
