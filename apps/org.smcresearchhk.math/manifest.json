@@ -1,0 +1,68 @@
+{
+  "id": "com.example.function-graph",
+  "name": "函数图形计算器",
+  "version": "1.0.0",
+  "minSystemVersion": "0.2.1",
+  "description": "类似 GeoGebra 的函数绘图与交互式计算器，支持多函数叠加、坐标系缩放平移、常用函数库与表达式求值",
+  "locales": {
+    "en-US": {
+      "name": "Function Graph Calculator",
+      "description": "GeoGebra-like function graphing and interactive calculator with multi-function overlay, zoom/pan, and expression evaluation"
+    },
+    "ja-JP": {
+      "name": "関数グラフ計算機",
+      "description": "GeoGebra風の関数グラフ描画と対話型計算機。複数関数の重ね描き、ズーム・パン、式評価に対応"
+    }
+  },
+  "category": "utility",
+  "main": "main.js",
+  "author": {
+    "name": "Community",
+    "url": "https://github.com/Myriad-You/tapp-store"
+  },
+  "permissions": [
+    "storage",
+    "ui:theme",
+    "ui:notification"
+  ],
+  "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M3 12h18M12 3v18' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'/><path d='M4 16c2-4 4-6 6-6s4 4 6 6 4 2 6 0' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/><circle cx='12' cy='10' r='1.5' fill='currentColor'/></svg>",
+  "themeColor": "#0EA5E9",
+  "hasPage": true,
+  "cssMode": "separated",
+  "pageStyles": "page.css",
+  "pageTemplate": "page.html",
+  "settings": [
+    {
+      "key": "defaultXMin",
+      "label": "默认 X 最小值",
+      "type": "number",
+      "description": "坐标系初始 X 轴左边界",
+      "defaultValue": -10,
+      "min": -100,
+      "max": 0
+    },
+    {
+      "key": "defaultXMax",
+      "label": "默认 X 最大值",
+      "type": "number",
+      "description": "坐标系初始 X 轴右边界",
+      "defaultValue": 10,
+      "min": 0,
+      "max": 100
+    },
+    {
+      "key": "gridEnabled",
+      "label": "显示网格",
+      "type": "toggle",
+      "description": "是否默认显示坐标系网格",
+      "defaultValue": true
+    },
+    {
+      "key": "showTrace",
+      "label": "显示轨迹点",
+      "type": "toggle",
+      "description": "鼠标悬停时显示坐标与函数值",
+      "defaultValue": true
+    }
+  ]
+}

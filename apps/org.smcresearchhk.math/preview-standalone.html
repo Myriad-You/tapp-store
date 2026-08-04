@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>函数图形计算器 — 本地预览</title>
+  <style>
+    html, body { margin: 0; height: 100%; }
+    body { font-family: system-ui, sans-serif; }
+    /* optional dark: add class "dark" on html */
+  </style>
+  <link rel="stylesheet" href="page.css" />
+</head>
+<body>
+  <!-- Mock minimal Tapp host for local preview -->
+  <script>
+    window.Tapp = {
+      storage: (function () {
+        var mem = {};
+        return {
+          get: function (k) {
+            return Promise.resolve(mem[k] != null ? mem[k] : (function () {
+              try {
+                var s = localStorage.getItem('tapp-fg-' + k);
+                return s ? JSON.parse(s) : null;
+              } catch (e) { return null; }
+            })());
+          },
+          set: function (k, v) {
+            mem[k] = v;
+            try { localStorage.setItem('tapp-fg-' + k, JSON.stringify(v)); } catch (e) {}
+            return Promise.resolve();
+          }
+        };
+      })(),
+      settings: {
+        get: function () { return Promise.resolve(undefined); }
+      },
+      platform: {
+        getLocale: function () { return Promise.resolve(navigator.language || 'zh-CN'); }
+      },
+      lifecycle: {
+        _ready: [],
+        _destroy: [],
+        onReady: function (fn) { this._ready.push(fn); },
+        onDestroy: function (fn) { this._destroy.push(fn); },
+        onPause: function () {},
+        onResume: function () {},
+        _fireReady: function () {
+          this._ready.forEach(function (f) { try { f(); } catch (e) { console.error(e); } });
+        }
+      }
+    };
+  </script>
+  <div id="mount" style="height:100vh;display:flex;flex-direction:column;">
+    <!-- page template injected -->
+  </div>
+  <script>
+    fetch('page.html').then(function (r) { return r.text(); }).then(function (html) {
+      document.getElementById('mount').innerHTML = html;
+      var s = document.createElement('script');
+      s.src = 'main.js';
+      s.onload = function () {
+        Tapp.lifecycle._fireReady();
+      };
+      document.body.appendChild(s);
+    }).catch(function (e) {
+      document.body.innerHTML = '<p>无法加载 page.html（请用本地静态服务器打开本目录，例如: npx serve .）</p><pre>' + e + '</pre>';
+    });
+  </script>
+</body>
+</html>
