@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-08-04T02:50:41Z",
+  "updated_at": "2026-08-04T06:07:26Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -645,13 +645,13 @@
     {
       "id": "cn.xciy.xingchen.widgets",
       "name": "星辰小组件",
-      "version": "0.6.0",
-      "description": "GitHub 数据卡片、照片墙、系统访客统计与个人信息小组件合集。",
-      "long_description": "提供 GitHub Stats Extended 卡片、全幅多尺寸照片墙、Myriad 内置站点分析累计访问量/独立访客，以及邮箱、QQ、微信、Telegram、GitHub、Gitee、哔哩哔哩和自定义个人信息展示。支持多种桌面尺寸与独立配色设置。",
+      "version": "0.7.0",
+      "description": "GitHub 数据卡片、照片墙、纪念日、系统访客统计与个人信息小组件合集。",
+      "long_description": "提供 GitHub Stats Extended 卡片、全幅多尺寸照片墙、高度自定义的纪念日倒数/累计模块、Myriad 内置站点分析累计访问量/独立访客，以及邮箱、QQ、微信、Telegram、GitHub、Gitee、哔哩哔哩和自定义个人信息展示。支持多种桌面尺寸与独立配色设置。",
       "locales": {
         "en-US": {
           "name": "Star Widgets",
-          "description": "GitHub cards, photo walls, built-in site analytics, and personal contact widgets"
+          "description": "GitHub cards, photo walls, anniversaries, built-in site analytics, and personal contact widgets"
         }
       },
       "author": {
@@ -699,6 +699,13 @@
             "4x2": "apps/cn.xciy.xingchen.widgets/templates/photo-wall-4x2.html",
             "4x4": "apps/cn.xciy.xingchen.widgets/templates/photo-wall-4x4.html"
           },
+          "anniversary": {
+            "2x1": "apps/cn.xciy.xingchen.widgets/templates/anniversary-2x1.html",
+            "2x2": "apps/cn.xciy.xingchen.widgets/templates/anniversary-2x2.html",
+            "4x1": "apps/cn.xciy.xingchen.widgets/templates/anniversary-4x1.html",
+            "4x2": "apps/cn.xciy.xingchen.widgets/templates/anniversary-4x2.html",
+            "4x4": "apps/cn.xciy.xingchen.widgets/templates/anniversary-4x4.html"
+          },
           "personal-info": {
             "2x1": "apps/cn.xciy.xingchen.widgets/templates/personal-2x1.html",
             "4x1": "apps/cn.xciy.xingchen.widgets/templates/personal-4x1.html",
@@ -706,14 +713,14 @@
           }
         }
       },
-      "size": 99542,
+      "size": 132903,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-04T02:07:42Z",
-      "updated_at": "2026-08-04T02:50:41Z"
+      "updated_at": "2026-08-04T06:07:26Z"
     }
   ],
-  "last_updated": "2026-08-04T02:50:41Z"
+  "last_updated": "2026-08-04T06:07:26Z"
 }

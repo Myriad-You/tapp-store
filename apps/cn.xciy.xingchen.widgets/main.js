@@ -771,6 +771,290 @@ Tapp.widgets["photo-wall"] = {
   render: photoWallRender
 };
 
+/** @typedef {"auto" | "countdown" | "countup"} AnniversaryMode */
+/** @typedef {"starlight" | "letter" | "glass" | "minimal"} AnniversaryStyle */
+/** @typedef {"left" | "center" | "right"} AnniversaryAlignment */
+/**
+ * @typedef {Object} AnniversaryResolvedConfig
+ * @property {string} title
+ * @property {string} date
+ * @property {AnniversaryMode} mode
+ * @property {boolean} repeatAnnual
+ * @property {AnniversaryStyle} style
+ * @property {AnniversaryAlignment} alignment
+ * @property {string} icon
+ * @property {string} subtitle
+ * @property {string} label
+ * @property {string} unit
+ * @property {boolean} showIcon
+ * @property {boolean} showDate
+ * @property {boolean} showProgress
+ * @property {boolean} useCustomColors
+ * @property {string} accentColor
+ * @property {string} backgroundColor
+ * @property {string} textColor
+ * @property {string} mutedColor
+ * @property {string} backgroundImage
+ * @property {number} overlayOpacity
+ * @property {number} cornerRadius
+ * @property {number} numberScale
+ * @property {"dot" | "cn" | "slash"} dateFormat
+ */
+
+/** @param {unknown} value @returns {AnniversaryMode} */
+function anniversaryMode(value) {
+  var mode = xingchenText(value).trim();
+  return mode === "countdown" || mode === "countup" ? mode : "auto";
+}
+
+/** @param {unknown} value @returns {AnniversaryStyle} */
+function anniversaryStyle(value) {
+  var style = xingchenText(value).trim();
+  return style === "letter" || style === "glass" || style === "minimal" ? style : "starlight";
+}
+
+/** @param {unknown} value @returns {AnniversaryAlignment} */
+function anniversaryAlignment(value) {
+  var alignment = xingchenText(value).trim();
+  return alignment === "center" || alignment === "right" ? alignment : "left";
+}
+
+/** @param {unknown} value @returns {string} */
+function anniversaryBackgroundImage(value) {
+  var raw = xingchenText(value).trim();
+  if (!raw) return "";
+  try {
+    var url = new URL(raw);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.href : "";
+  } catch (_error) {
+    return "";
+  }
+}
+
+/** @param {XingchenWidgetProps} props @returns {AnniversaryResolvedConfig} */
+function anniversaryResolvedConfig(props) {
+  var config = props && (props.config || props.settings) ? (props.config || props.settings || {}) : {};
+  var dateFormat = xingchenText(config.dateFormat).trim();
+  return {
+    title: (xingchenText(config.title).trim() || "我们的纪念日").slice(0, 64),
+    date: xingchenText(config.date).trim() || "2026-12-31",
+    mode: anniversaryMode(config.mode),
+    repeatAnnual: xingchenBoolean(config.repeatAnnual, true),
+    style: anniversaryStyle(config.style),
+    alignment: anniversaryAlignment(config.alignment),
+    icon: personalLimitCharacters(xingchenText(config.icon).trim() || "♡", 4),
+    subtitle: xingchenText(config.subtitle).trim().slice(0, 120),
+    label: xingchenText(config.label).trim().slice(0, 40),
+    unit: (xingchenText(config.unit).trim() || "天").slice(0, 8),
+    showIcon: xingchenBoolean(config.showIcon, true),
+    showDate: xingchenBoolean(config.showDate, true),
+    showProgress: xingchenBoolean(config.showProgress, true),
+    useCustomColors: xingchenBoolean(config.useCustomColors, false),
+    accentColor: xingchenColor(config.accentColor, "#A78BFA"),
+    backgroundColor: xingchenColor(config.backgroundColor, "#111827"),
+    textColor: xingchenColor(config.textColor, "#F8FAFC"),
+    mutedColor: xingchenColor(config.mutedColor, "#CBD5E1"),
+    backgroundImage: anniversaryBackgroundImage(config.backgroundImage),
+    overlayOpacity: xingchenNumber(config.overlayOpacity, 0.42, 0, 0.9),
+    cornerRadius: xingchenNumber(config.cornerRadius, 22, 0, 40),
+    numberScale: xingchenNumber(config.numberScale, 1, 0.7, 1.4),
+    dateFormat: dateFormat === "cn" || dateFormat === "slash" ? dateFormat : "dot"
+  };
+}
+
+/** @param {string} value @returns {Date | null} */
+function anniversaryParseDate(value) {
+  var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return null;
+  var year = Number(match[1]);
+  var month = Number(match[2]);
+  var day = Number(match[3]);
+  var date = new Date(year, month - 1, day, 12, 0, 0, 0);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+  return date;
+}
+
+/** @returns {Date} */
+function anniversaryToday() {
+  var now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0, 0);
+}
+
+/** @param {Date} date @param {number} year @returns {Date} */
+function anniversaryDateForYear(date, year) {
+  var lastDay = new Date(year, date.getMonth() + 1, 0, 12, 0, 0, 0).getDate();
+  return new Date(year, date.getMonth(), Math.min(date.getDate(), lastDay), 12, 0, 0, 0);
+}
+
+/** @param {Date} from @param {Date} to @returns {number} */
+function anniversaryDiffDays(from, to) {
+  return Math.round((to.getTime() - from.getTime()) / 86400000);
+}
+
+/** @param {Date} date @param {Date} today @returns {Date} */
+function anniversaryNextOccurrence(date, today) {
+  var occurrence = anniversaryDateForYear(date, today.getFullYear());
+  return anniversaryDiffDays(today, occurrence) >= 0
+    ? occurrence
+    : anniversaryDateForYear(date, today.getFullYear() + 1);
+}
+
+/** @param {Date} date @param {Date} today @returns {number} */
+function anniversaryCycleProgress(date, today) {
+  var next = anniversaryNextOccurrence(date, today);
+  var previous = anniversaryDateForYear(date, next.getFullYear() - 1);
+  if (anniversaryDiffDays(today, next) === 0) return 1;
+  var total = Math.max(1, anniversaryDiffDays(previous, next));
+  return Math.min(1, Math.max(0, anniversaryDiffDays(previous, today) / total));
+}
+
+/** @param {Date} date @param {AnniversaryResolvedConfig} config @returns {string} */
+function anniversaryFormatDate(date, config) {
+  var year = date.getFullYear();
+  var month = date.getMonth() + 1;
+  var day = date.getDate();
+  if (config.dateFormat === "cn") return year + "年" + month + "月" + day + "日";
+  var mm = String(month).padStart(2, "0");
+  var dd = String(day).padStart(2, "0");
+  return config.dateFormat === "slash" ? year + "/" + mm + "/" + dd : year + "." + mm + "." + dd;
+}
+
+/**
+ * @param {AnniversaryResolvedConfig} config
+ * @returns {{ days: number, direction: "future" | "past" | "today", label: string, date: Date, progress: number }}
+ */
+function anniversaryState(config) {
+  var originalDate = anniversaryParseDate(config.date);
+  if (!originalDate) throw new Error("日期格式应为 YYYY-MM-DD");
+  var today = anniversaryToday();
+  var displayDate = originalDate;
+  if (config.repeatAnnual && config.mode !== "countup") {
+    displayDate = anniversaryNextOccurrence(originalDate, today);
+  }
+  var diff = anniversaryDiffDays(today, displayDate);
+  var direction = diff === 0 ? "today" : (diff > 0 ? "future" : "past");
+  var days = Math.abs(diff);
+  if (config.mode === "countup") {
+    var countupDiff = anniversaryDiffDays(originalDate, today);
+    direction = countupDiff === 0 ? "today" : (countupDiff > 0 ? "past" : "future");
+    days = Math.abs(countupDiff);
+    displayDate = originalDate;
+  }
+  var automaticLabel = direction === "today"
+    ? "就是今天"
+    : (direction === "future" ? "距离这一天还有" : "已经一起走过");
+  return {
+    days: days,
+    direction: direction,
+    label: config.label || automaticLabel,
+    date: displayDate,
+    progress: anniversaryCycleProgress(originalDate, today)
+  };
+}
+
+/** @param {HTMLElement} container @returns {HTMLElement} */
+function anniversaryEnsureMarkup(container) {
+  var shell = /** @type {HTMLElement | null} */ (container.querySelector("[data-anniversary-shell]"));
+  if (shell && shell.querySelector("[data-anniversary-days]")) return shell;
+  container.innerHTML = [
+    '<section class="anniversary-widget" data-anniversary-shell data-size="4x2" data-style="starlight" role="timer">',
+    '  <div class="anniversary-backdrop" data-anniversary-backdrop aria-hidden="true"></div>',
+    '  <div class="anniversary-pattern" aria-hidden="true"></div>',
+    '  <header class="anniversary-header">',
+    '    <span class="anniversary-icon" data-anniversary-icon aria-hidden="true">♡</span>',
+    '    <span class="anniversary-label" data-anniversary-label>距离这一天还有</span>',
+    '  </header>',
+    '  <div class="anniversary-time">',
+    '    <strong data-anniversary-days>0</strong><span data-anniversary-unit>天</span>',
+    '  </div>',
+    '  <div class="anniversary-copy">',
+    '    <h2 data-anniversary-title>我们的纪念日</h2>',
+    '    <p data-anniversary-subtitle></p>',
+    '  </div>',
+    '  <footer class="anniversary-footer">',
+    '    <time data-anniversary-date>2026.12.31</time>',
+    '    <span class="anniversary-progress-label" data-anniversary-progress-label>年度轨迹 0%</span>',
+    '    <div class="anniversary-progress" data-anniversary-progress><i></i><b></b></div>',
+    '  </footer>',
+    '</section>'
+  ].join("");
+  return /** @type {HTMLElement} */ (container.querySelector("[data-anniversary-shell]"));
+}
+
+/** @param {HTMLElement} shell @param {string} property @param {string} value @param {boolean} enabled */
+function anniversarySetCustomProperty(shell, property, value, enabled) {
+  if (enabled) shell.style.setProperty(property, value);
+  else shell.style.removeProperty(property);
+}
+
+/** @param {HTMLElement} container @param {XingchenWidgetProps} props */
+function anniversaryRender(container, props) {
+  var shell = anniversaryEnsureMarkup(container);
+  var config = anniversaryResolvedConfig(props || {});
+  var state;
+  try {
+    state = anniversaryState(config);
+  } catch (error) {
+    shell.setAttribute("data-state", "error");
+    shell.setAttribute("aria-label", xingchenErrorMessage(error));
+    /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-label]")).textContent = "日期无法使用";
+    /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-title]")).textContent = xingchenErrorMessage(error);
+    /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-days]")).textContent = "—";
+    return;
+  }
+
+  var size = props && props.size ? props.size : "4x2";
+  var backdrop = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-backdrop]"));
+  var icon = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-icon]"));
+  var label = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-label]"));
+  var days = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-days]"));
+  var unit = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-unit]"));
+  var title = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-title]"));
+  var subtitle = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-subtitle]"));
+  var date = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-date]"));
+  var progress = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-progress]"));
+  var progressLabel = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-progress-label]"));
+  var progressPercent = Math.round(state.progress * 100);
+
+  container.style.background = "transparent";
+  container.ownerDocument.documentElement.style.background = "transparent";
+  if (container.ownerDocument.body) container.ownerDocument.body.style.background = "transparent";
+  shell.setAttribute("data-size", size);
+  shell.setAttribute("data-style", config.style);
+  shell.setAttribute("data-align", config.alignment);
+  shell.setAttribute("data-direction", state.direction);
+  shell.setAttribute("data-digits", String(String(state.days).length));
+  shell.setAttribute("data-state", "ready");
+  shell.setAttribute("data-show-icon", String(config.showIcon));
+  shell.setAttribute("data-show-date", String(config.showDate));
+  shell.setAttribute("data-show-progress", String(config.showProgress));
+  shell.setAttribute("data-has-image", String(Boolean(config.backgroundImage)));
+  shell.style.setProperty("--anniversary-radius", config.cornerRadius + "px");
+  shell.style.setProperty("--anniversary-number-scale", String(config.numberScale));
+  shell.style.setProperty("--anniversary-overlay-opacity", String(config.overlayOpacity));
+  shell.style.setProperty("--anniversary-progress-value", progressPercent + "%");
+  anniversarySetCustomProperty(shell, "--anniversary-accent", config.accentColor, config.useCustomColors);
+  anniversarySetCustomProperty(shell, "--anniversary-background", config.backgroundColor, config.useCustomColors);
+  anniversarySetCustomProperty(shell, "--anniversary-text", config.textColor, config.useCustomColors);
+  anniversarySetCustomProperty(shell, "--anniversary-muted", config.mutedColor, config.useCustomColors);
+  backdrop.style.backgroundImage = config.backgroundImage ? 'url("' + config.backgroundImage.replace(/"/g, "%22") + '")' : "none";
+  icon.textContent = config.icon;
+  label.textContent = state.label;
+  days.textContent = String(state.days);
+  unit.textContent = config.unit;
+  title.textContent = config.title;
+  subtitle.textContent = config.subtitle;
+  subtitle.hidden = !config.subtitle;
+  date.textContent = anniversaryFormatDate(state.date, config);
+  progressLabel.textContent = "年度轨迹 " + progressPercent + "%";
+  progress.setAttribute("aria-label", "年度轨迹 " + progressPercent + "%");
+  shell.setAttribute("aria-label", state.label + " " + state.days + " " + config.unit + "，" + config.title);
+}
+
+Tapp.widgets["anniversary"] = {
+  render: anniversaryRender
+};
+
 /** @typedef {"email" | "qq" | "wechat" | "telegram" | "github" | "gitee" | "bilibili" | "custom"} PersonalPlatform */
 /**
  * @typedef {Object} PersonalResolvedConfig

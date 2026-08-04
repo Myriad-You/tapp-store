@@ -1,13 +1,13 @@
 {
   "id": "cn.xciy.xingchen.widgets",
   "name": "星辰小组件",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "minSystemVersion": "0.3.23",
-  "description": "GitHub 数据卡片、照片墙、系统访客统计与个人信息小组件合集。",
+  "description": "GitHub 数据卡片、照片墙、纪念日、系统访客统计与个人信息小组件合集。",
   "locales": {
     "en-US": {
       "name": "Star Widgets",
-      "description": "GitHub cards, photo walls, built-in site analytics, and personal contact widgets"
+      "description": "GitHub cards, photo walls, anniversaries, built-in site analytics, and personal contact widgets"
     }
   },
   "category": "utility",
@@ -470,6 +470,215 @@
           "type": "color",
           "description": "照片间距和加载占位区域的底色。",
           "defaultValue": "#0F172A"
+        }
+      ]
+    },
+    {
+      "id": "anniversary",
+      "name": "纪念日",
+      "description": "展示重要日期的倒数或累计天数，支持年度重复、四种样式与高度自定义。",
+      "icon": "♡",
+      "category": "utility",
+      "defaultSize": "4x2",
+      "sizes": [
+        "2x1",
+        "2x2",
+        "4x1",
+        "4x2",
+        "4x4"
+      ],
+      "templates": {
+        "2x1": "templates/anniversary-2x1.html",
+        "2x2": "templates/anniversary-2x2.html",
+        "4x1": "templates/anniversary-4x1.html",
+        "4x2": "templates/anniversary-4x2.html",
+        "4x4": "templates/anniversary-4x4.html"
+      },
+      "refreshPolicy": {
+        "mode": "interval",
+        "intervalSeconds": 3600,
+        "refreshOnVisible": true
+      },
+      "settings": [
+        {
+          "key": "title",
+          "label": "纪念日名称",
+          "type": "input",
+          "defaultValue": "我们的纪念日",
+          "placeholder": "相识纪念日"
+        },
+        {
+          "key": "date",
+          "label": "日期",
+          "type": "input",
+          "description": "使用 YYYY-MM-DD 格式。",
+          "defaultValue": "2026-12-31",
+          "placeholder": "2026-12-31"
+        },
+        {
+          "key": "mode",
+          "label": "计时方式",
+          "type": "select",
+          "defaultValue": "auto",
+          "options": [
+            { "value": "auto", "label": "自动判断" },
+            { "value": "countdown", "label": "倒数目标日" },
+            { "value": "countup", "label": "累计经过天数" }
+          ]
+        },
+        {
+          "key": "repeatAnnual",
+          "label": "每年重复",
+          "type": "toggle",
+          "description": "开启后倒数每年的下一次纪念日；累计模式仍从原始日期计算。",
+          "defaultValue": true
+        },
+        {
+          "key": "style",
+          "label": "视觉样式",
+          "type": "select",
+          "defaultValue": "starlight",
+          "options": [
+            { "value": "starlight", "label": "星轨" },
+            { "value": "letter", "label": "信笺" },
+            { "value": "glass", "label": "玻璃相册" },
+            { "value": "minimal", "label": "极简色块" }
+          ]
+        },
+        {
+          "key": "alignment",
+          "label": "内容对齐",
+          "type": "select",
+          "defaultValue": "left",
+          "options": [
+            { "value": "left", "label": "左对齐" },
+            { "value": "center", "label": "居中" },
+            { "value": "right", "label": "右对齐" }
+          ]
+        },
+        {
+          "key": "icon",
+          "label": "纪念图标",
+          "type": "input",
+          "defaultValue": "♡",
+          "placeholder": "♡"
+        },
+        {
+          "key": "subtitle",
+          "label": "副标题",
+          "type": "input",
+          "defaultValue": "把重要的日子放在桌面上",
+          "placeholder": "Every day with you"
+        },
+        {
+          "key": "label",
+          "label": "计时提示文字",
+          "type": "input",
+          "description": "留空时根据日期自动显示“距离这一天还有”或“已经一起走过”。",
+          "defaultValue": "",
+          "placeholder": "距离我们相遇还有"
+        },
+        {
+          "key": "unit",
+          "label": "数字单位",
+          "type": "input",
+          "defaultValue": "天",
+          "placeholder": "天"
+        },
+        {
+          "key": "dateFormat",
+          "label": "日期格式",
+          "type": "select",
+          "defaultValue": "dot",
+          "options": [
+            { "value": "dot", "label": "2026.12.31" },
+            { "value": "cn", "label": "2026年12月31日" },
+            { "value": "slash", "label": "2026/12/31" }
+          ]
+        },
+        {
+          "key": "showIcon",
+          "label": "显示图标",
+          "type": "toggle",
+          "defaultValue": true
+        },
+        {
+          "key": "showDate",
+          "label": "显示日期",
+          "type": "toggle",
+          "defaultValue": true
+        },
+        {
+          "key": "showProgress",
+          "label": "显示年度轨迹",
+          "type": "toggle",
+          "defaultValue": true
+        },
+        {
+          "key": "backgroundImage",
+          "label": "背景图片",
+          "type": "input",
+          "description": "可填写 HTTP/HTTPS 图片地址，玻璃相册样式下效果最明显。",
+          "defaultValue": "",
+          "placeholder": "https://example.com/photo.jpg"
+        },
+        {
+          "key": "overlayOpacity",
+          "label": "背景遮罩",
+          "type": "number",
+          "defaultValue": 0.42,
+          "min": 0,
+          "max": 0.9,
+          "step": 0.05
+        },
+        {
+          "key": "useCustomColors",
+          "label": "使用自定义配色",
+          "type": "toggle",
+          "description": "关闭时使用所选样式的内置配色。",
+          "defaultValue": false
+        },
+        {
+          "key": "accentColor",
+          "label": "强调色",
+          "type": "color",
+          "defaultValue": "#A78BFA"
+        },
+        {
+          "key": "backgroundColor",
+          "label": "背景色",
+          "type": "color",
+          "defaultValue": "#111827"
+        },
+        {
+          "key": "textColor",
+          "label": "主要文字颜色",
+          "type": "color",
+          "defaultValue": "#F8FAFC"
+        },
+        {
+          "key": "mutedColor",
+          "label": "辅助文字颜色",
+          "type": "color",
+          "defaultValue": "#CBD5E1"
+        },
+        {
+          "key": "cornerRadius",
+          "label": "整体圆角",
+          "type": "number",
+          "defaultValue": 22,
+          "min": 0,
+          "max": 40,
+          "step": 1
+        },
+        {
+          "key": "numberScale",
+          "label": "数字比例",
+          "type": "number",
+          "defaultValue": 1,
+          "min": 0.7,
+          "max": 1.4,
+          "step": 0.05
         }
       ]
     },

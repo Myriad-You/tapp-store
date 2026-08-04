@@ -655,6 +655,453 @@ body.dark,
   grid-template-rows: minmax(0, 1fr);
 }
 
+.anniversary-widget {
+  --anniversary-accent: #a78bfa;
+  --anniversary-background: #111827;
+  --anniversary-text: #f8fafc;
+  --anniversary-muted: #cbd5e1;
+  --anniversary-radius: 22px;
+  --anniversary-number-scale: 1;
+  --anniversary-base-number: 92px;
+  --anniversary-overlay-opacity: 0.42;
+  --anniversary-progress-value: 0%;
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-areas:
+    "header"
+    "time"
+    "copy"
+    "footer";
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: clamp(5px, 2.5%, 12px);
+  padding: clamp(14px, 5%, 26px);
+  overflow: hidden;
+  color: var(--anniversary-text);
+  background: var(--anniversary-background);
+  border: 0;
+  border-radius: var(--anniversary-radius);
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.16);
+}
+
+.anniversary-widget::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: #080b16;
+  opacity: 0;
+}
+
+.anniversary-backdrop,
+.anniversary-pattern {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+}
+
+.anniversary-backdrop {
+  background-position: center;
+  background-size: cover;
+  opacity: 0;
+  transform: scale(1.025);
+}
+
+.anniversary-pattern {
+  z-index: -1;
+}
+
+.anniversary-widget[data-has-image="true"] .anniversary-backdrop {
+  opacity: 0.68;
+}
+
+.anniversary-widget[data-has-image="true"]::before {
+  opacity: var(--anniversary-overlay-opacity);
+}
+
+.anniversary-header {
+  grid-area: header;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.anniversary-icon {
+  flex: 0 0 auto;
+  width: clamp(28px, 8cqh, 38px);
+  height: clamp(28px, 8cqh, 38px);
+  display: grid;
+  place-items: center;
+  color: var(--anniversary-accent);
+  font-size: clamp(16px, 5cqh, 22px);
+  line-height: 1;
+  border: 1px solid color-mix(in srgb, var(--anniversary-accent) 46%, transparent);
+  border-radius: 999px;
+}
+
+.anniversary-label {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--anniversary-muted);
+  font-size: clamp(10px, 3cqh, 14px);
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.anniversary-time {
+  grid-area: time;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  align-self: center;
+  color: var(--anniversary-text);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.anniversary-time strong {
+  display: block;
+  min-width: 0;
+  font-family: "Arial Narrow", "Roboto Condensed", "DIN Alternate", ui-sans-serif, system-ui, sans-serif;
+  font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale));
+  font-weight: 760;
+  letter-spacing: -0.075em;
+  line-height: 0.78;
+  text-shadow: 0 9px 28px color-mix(in srgb, var(--anniversary-accent) 30%, transparent);
+}
+
+.anniversary-time span {
+  color: var(--anniversary-accent);
+  font-size: clamp(13px, 5cqh, 22px);
+  font-weight: 750;
+  letter-spacing: 0.05em;
+}
+
+.anniversary-copy {
+  grid-area: copy;
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+}
+
+.anniversary-copy h2,
+.anniversary-copy p {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.anniversary-copy h2 {
+  color: var(--anniversary-text);
+  font-size: clamp(15px, 5.8cqh, 25px);
+  font-weight: 720;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+  white-space: nowrap;
+}
+
+.anniversary-copy p {
+  display: -webkit-box;
+  color: var(--anniversary-muted);
+  font-size: clamp(10px, 3.5cqh, 14px);
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-footer {
+  grid-area: footer;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.anniversary-footer time,
+.anniversary-progress-label {
+  color: var(--anniversary-muted);
+  font-size: clamp(9px, 2.8cqh, 12px);
+  font-weight: 620;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.anniversary-progress-label {
+  grid-column: 3;
+  text-align: right;
+}
+
+.anniversary-progress {
+  position: relative;
+  grid-column: 1 / -1;
+  height: 3px;
+  overflow: visible;
+  background: color-mix(in srgb, var(--anniversary-muted) 25%, transparent);
+  border-radius: 999px;
+}
+
+.anniversary-progress i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--anniversary-progress-value);
+  background: var(--anniversary-accent);
+  border-radius: inherit;
+}
+
+.anniversary-progress b {
+  position: absolute;
+  top: 50%;
+  left: clamp(0px, calc(var(--anniversary-progress-value) - 5px), calc(100% - 10px));
+  width: 10px;
+  height: 10px;
+  background: var(--anniversary-accent);
+  border: 2px solid var(--anniversary-background);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--anniversary-accent) 20%, transparent);
+  transform: translateY(-50%);
+}
+
+.anniversary-widget[data-show-icon="false"] .anniversary-icon,
+.anniversary-widget[data-show-date="false"] time,
+.anniversary-widget[data-show-progress="false"] .anniversary-progress,
+.anniversary-widget[data-show-progress="false"] .anniversary-progress-label {
+  display: none;
+}
+
+.anniversary-widget[data-align="center"] {
+  text-align: center;
+}
+
+.anniversary-widget[data-align="center"] .anniversary-header,
+.anniversary-widget[data-align="center"] .anniversary-time {
+  justify-content: center;
+}
+
+.anniversary-widget[data-align="right"] {
+  text-align: right;
+}
+
+.anniversary-widget[data-align="right"] .anniversary-header,
+.anniversary-widget[data-align="right"] .anniversary-time {
+  justify-content: flex-end;
+}
+
+.anniversary-widget[data-direction="today"] .anniversary-icon {
+  animation: anniversary-heartbeat 1.8s ease-in-out infinite;
+}
+
+.anniversary-widget[data-state="error"] .anniversary-footer,
+.anniversary-widget[data-state="error"] .anniversary-icon {
+  display: none;
+}
+
+.anniversary-widget[data-style="starlight"] {
+  --anniversary-accent: #a78bfa;
+  --anniversary-background: #101225;
+  --anniversary-text: #f8fafc;
+  --anniversary-muted: #cbd5e1;
+  background:
+    radial-gradient(circle at 18% 14%, color-mix(in srgb, var(--anniversary-accent) 28%, transparent), transparent 38%),
+    radial-gradient(circle at 84% 82%, rgba(34, 211, 238, 0.18), transparent 42%),
+    var(--anniversary-background);
+}
+
+.anniversary-widget[data-style="starlight"] .anniversary-pattern {
+  opacity: 0.55;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.7) 0 1px, transparent 1.4px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.34) 0 1px, transparent 1.3px);
+  background-position: 14px 12px, 47px 38px;
+  background-size: 58px 58px, 74px 74px;
+  mask-image: linear-gradient(120deg, #000, transparent 70%);
+}
+
+.anniversary-widget[data-style="letter"] {
+  --anniversary-accent: #c96b5c;
+  --anniversary-background: #fbf3e4;
+  --anniversary-text: #3f3028;
+  --anniversary-muted: #8a7464;
+  box-shadow: 0 16px 38px rgba(96, 68, 45, 0.15), inset 0 0 0 1px rgba(109, 78, 53, 0.12);
+  background: var(--anniversary-background);
+}
+
+.anniversary-widget[data-style="letter"] .anniversary-pattern {
+  opacity: 0.72;
+  background:
+    linear-gradient(90deg, transparent 0 9%, color-mix(in srgb, var(--anniversary-accent) 36%, transparent) 9% 9.5%, transparent 9.5%),
+    repeating-linear-gradient(180deg, transparent 0 27px, rgba(112, 85, 62, 0.09) 27px 28px);
+}
+
+.anniversary-widget[data-style="letter"] .anniversary-copy h2 {
+  font-family: "Songti SC", "STSong", "Noto Serif CJK SC", serif;
+  font-weight: 700;
+}
+
+.anniversary-widget[data-style="letter"] .anniversary-time strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  text-shadow: none;
+}
+
+.anniversary-widget[data-style="glass"] {
+  --anniversary-accent: #f7d9aa;
+  --anniversary-background: #334155;
+  --anniversary-text: #ffffff;
+  --anniversary-muted: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(125, 211, 252, 0.34), transparent 38%),
+    linear-gradient(135deg, #334155, #1e293b);
+  box-shadow: 0 22px 52px rgba(15, 23, 42, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.34);
+}
+
+.anniversary-widget[data-style="glass"] .anniversary-backdrop {
+  opacity: 1;
+}
+
+.anniversary-widget[data-style="glass"]::before {
+  background: #0f172a;
+  opacity: var(--anniversary-overlay-opacity);
+}
+
+.anniversary-widget[data-style="glass"] .anniversary-pattern {
+  inset: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: max(0px, calc(var(--anniversary-radius) - 8px));
+}
+
+.anniversary-widget[data-style="minimal"] {
+  --anniversary-accent: #2563eb;
+  --anniversary-background: #e8f0ff;
+  --anniversary-text: #10213d;
+  --anniversary-muted: #5e7191;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--anniversary-accent) 14%, transparent);
+  background: var(--anniversary-background);
+}
+
+.anniversary-widget[data-style="minimal"] .anniversary-pattern {
+  left: auto;
+  width: 10px;
+  background: var(--anniversary-accent);
+}
+
+.anniversary-widget[data-style="minimal"] .anniversary-icon {
+  color: var(--anniversary-background);
+  background: var(--anniversary-accent);
+  border-color: transparent;
+}
+
+.anniversary-widget[data-size="2x1"],
+.anniversary-widget[data-size="4x1"] {
+  --anniversary-base-number: 56px;
+  grid-template-areas:
+    "header time"
+    "copy time"
+    "footer footer";
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  column-gap: clamp(12px, 4vw, 28px);
+  padding: clamp(11px, 4%, 18px);
+}
+
+.anniversary-widget[data-size="2x1"] {
+  --anniversary-base-number: 48px;
+  gap: 4px 10px;
+  padding: 10px 12px;
+  border-radius: min(var(--anniversary-radius), 18px);
+}
+
+.anniversary-widget[data-size="2x1"] .anniversary-icon {
+  width: 26px;
+  height: 26px;
+  font-size: 15px;
+}
+
+.anniversary-widget[data-size="2x1"] .anniversary-copy p,
+.anniversary-widget[data-size="2x1"] .anniversary-progress-label {
+  display: none;
+}
+
+.anniversary-widget[data-size="2x1"] .anniversary-copy h2 {
+  font-size: clamp(13px, 5cqh, 17px);
+}
+
+.anniversary-widget[data-size="2x1"] .anniversary-footer {
+  gap: 4px;
+}
+
+.anniversary-widget[data-size="2x1"] .anniversary-progress {
+  grid-column: 2 / -1;
+}
+
+.anniversary-widget[data-size="2x2"] {
+  --anniversary-base-number: 70px;
+  padding: clamp(14px, 7%, 20px);
+}
+
+.anniversary-widget[data-size="2x2"] .anniversary-copy p,
+.anniversary-widget[data-size="2x2"] .anniversary-progress-label {
+  display: none;
+}
+
+.anniversary-widget[data-size="4x2"] {
+  --anniversary-base-number: 92px;
+  grid-template-areas:
+    "header header"
+    "time copy"
+    "footer footer";
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  column-gap: clamp(20px, 5vw, 48px);
+}
+
+.anniversary-widget[data-size="4x2"] .anniversary-copy {
+  align-content: center;
+}
+
+.anniversary-widget[data-size="4x4"] {
+  --anniversary-base-number: 128px;
+  padding: clamp(22px, 7%, 38px);
+  gap: clamp(10px, 3%, 18px);
+}
+
+.anniversary-widget[data-size="4x4"] .anniversary-copy h2 {
+  font-size: clamp(24px, 6cqh, 34px);
+}
+
+.anniversary-widget[data-size="4x4"] .anniversary-copy p {
+  max-width: 34em;
+  font-size: clamp(13px, 3.2cqh, 17px);
+}
+
+.anniversary-widget[data-align="center"][data-size="4x4"] .anniversary-copy p {
+  justify-self: center;
+}
+
+.anniversary-widget[data-align="right"][data-size="4x4"] .anniversary-copy p {
+  justify-self: end;
+}
+
+.anniversary-widget[data-digits="5"] .anniversary-time strong,
+.anniversary-widget[data-digits="6"] .anniversary-time strong {
+  font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.78);
+}
+
 .photo-wall-widget {
   --photo-wall-gap: 4px;
   --photo-wall-radius: 18px;
@@ -909,6 +1356,13 @@ body.dark,
   to { background-position: -70% 0; }
 }
 
+@keyframes anniversary-heartbeat {
+  0%, 100% { transform: scale(1); }
+  14% { transform: scale(1.12); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.08); }
+}
+
 @keyframes visitor-pulse {
   from { opacity: 0.48; }
   to { opacity: 0.82; }
@@ -939,5 +1393,9 @@ body.dark,
 
   .photo-wall-item img {
     transition: none;
+  }
+
+  .anniversary-widget[data-direction="today"] .anniversary-icon {
+    animation: none;
   }
 }
