@@ -135,15 +135,33 @@
     pollTimer = setInterval(tick, pollIntervalMs);
   }
 
+  /**
+   * Background scanning only makes sense for a signed-in user: channels and
+   * rooms are per-user, so an anonymous visitor can only ever get 401s —
+   * once every pollInterval, on every page, forever.
+   *
+   * Unknown/unsupported SDK → keep polling (fail-open), so this can never
+   * silence notifications for a real user on an older host.
+   */
+  async function shouldPoll() {
+    if (!Tapp.user || typeof Tapp.user.isLoggedIn !== 'function') return true;
+    try {
+      return !!(await Tapp.user.isLoggedIn());
+    } catch (e) {
+      return true;
+    }
+  }
+
   // Page mode uses pageModules — do not boot UI from main.
   // Headless / background: poll only.
-  Tapp.lifecycle.onReady(function () {
+  Tapp.lifecycle.onReady(async function () {
     var mode = window._TAPP_MODE || '';
     var hasHtml = !!window._TAPP_HAS_HTML;
     if (mode === 'page' || hasHtml) {
       // Page sandbox loads pageModules; main stays idle for UI.
       return;
     }
+    if (!(await shouldPoll())) return;
     loadSettings().then(function () {
       startBackgroundPoll();
     });
