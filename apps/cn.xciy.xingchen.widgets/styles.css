@@ -807,7 +807,7 @@ body.dark,
   color: var(--anniversary-text);
   font-size: clamp(15px, 5.8cqh, 25px);
   font-weight: 720;
-  letter-spacing: -0.025em;
+  letter-spacing: 0;
   line-height: 1.08;
   white-space: nowrap;
 }
@@ -1367,7 +1367,7 @@ body.dark,
   font-family: var(--anniversary-display);
   font-weight: 760;
   font-stretch: condensed;
-  letter-spacing: -0.055em;
+  letter-spacing: 0;
   line-height: 0.82;
   text-shadow: none;
 }
@@ -2545,6 +2545,228 @@ body.dark,
 
 .photo-wall-widget[data-layout="mosaic"][data-size="4x4"] .photo-wall-item:first-child {
   grid-area: 1 / 1 / span 2 / span 2;
+}
+
+.world-clock-widget {
+  --clock-scale: 1;
+  --clock-font-scale: 1;
+  --clock-body: #d8e3f8;
+  --clock-text: #101827;
+  --clock-muted: #5f6b82;
+  --clock-dial: #a9c5fb;
+  --clock-hour: #366ab5;
+  --clock-minute: #5f6b82;
+  --clock-second: #101827;
+  --clock-radius: 28px;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.58fr);
+  align-items: center;
+  gap: calc(14px * var(--clock-scale));
+  padding: calc(18px * var(--clock-scale));
+  overflow: hidden;
+  color: var(--clock-text);
+  background: var(--clock-body);
+  border: 0;
+  border-radius: calc(var(--clock-radius) * var(--clock-scale));
+  box-shadow: 0 calc(10px * var(--clock-scale)) calc(28px * var(--clock-scale)) rgba(15, 23, 42, 0.12);
+  isolation: isolate;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.world-clock-dial {
+  position: relative;
+  justify-self: center;
+  width: min(100%, calc(146px * var(--clock-scale)));
+  aspect-ratio: 1;
+  color: var(--clock-dial);
+}
+
+.world-clock-seal {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: currentColor;
+  filter: drop-shadow(0 calc(5px * var(--clock-scale)) calc(10px * var(--clock-scale)) rgba(36, 68, 120, 0.08));
+}
+
+.world-clock-hand {
+  --clock-hand-angle: 0deg;
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 50%;
+  display: block;
+  border-radius: 999px;
+  transform: translateX(-50%) rotate(var(--clock-hand-angle));
+  transform-origin: 50% 100%;
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.world-clock-hand.is-hour {
+  width: calc(12px * var(--clock-scale));
+  height: 27%;
+  background: var(--clock-hour);
+}
+
+.world-clock-hand.is-minute {
+  width: calc(9px * var(--clock-scale));
+  height: 35%;
+  background: var(--clock-minute);
+}
+
+.world-clock-hand.is-second {
+  width: calc(3px * var(--clock-scale));
+  height: 37%;
+  background: var(--clock-second);
+  transition: none;
+}
+
+.world-clock-pin {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 50%;
+  width: calc(13px * var(--clock-scale));
+  height: calc(13px * var(--clock-scale));
+  border: calc(3px * var(--clock-scale)) solid var(--clock-dial);
+  border-radius: 50%;
+  background: var(--clock-text);
+  transform: translate(-50%, -50%);
+}
+
+.world-clock-mark {
+  position: absolute;
+  z-index: 3;
+  left: 80%;
+  top: 50%;
+  width: calc(14px * var(--clock-scale));
+  height: calc(14px * var(--clock-scale));
+  border-radius: 50%;
+  background: var(--clock-hour);
+  transform: translate(-50%, -50%);
+  opacity: 0.84;
+}
+
+.world-clock-readout {
+  min-width: 0;
+  align-self: stretch;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-items: center;
+  padding: calc(11px * var(--clock-scale)) calc(10px * var(--clock-scale)) calc(10px * var(--clock-scale)) 0;
+}
+
+.world-clock-meta,
+.world-clock-offset {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: calc(7px * var(--clock-scale));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.world-clock-meta {
+  color: var(--clock-text);
+  font-size: calc(20px * var(--clock-scale) * var(--clock-font-scale));
+  font-weight: 460;
+  letter-spacing: -0.025em;
+}
+
+.world-clock-meta time {
+  font-weight: 720;
+}
+
+.world-clock-meta span {
+  color: var(--clock-muted);
+}
+
+.world-clock-digital {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  white-space: nowrap;
+  color: var(--clock-text);
+  font-size: calc(44px * var(--clock-scale) * var(--clock-font-scale));
+  font-weight: 760;
+  line-height: 0.96;
+  letter-spacing: -0.055em;
+}
+
+.world-clock-digital i {
+  margin: 0 0.045em;
+  color: var(--clock-muted);
+  font-style: normal;
+  font-weight: 580;
+}
+
+.world-clock-second {
+  color: var(--clock-muted);
+  font-weight: 650;
+}
+
+.world-clock-offset {
+  color: var(--clock-muted);
+  font-size: calc(16px * var(--clock-scale) * var(--clock-font-scale));
+  font-weight: 440;
+  letter-spacing: 0;
+}
+
+.world-clock-offset i {
+  font-style: normal;
+  opacity: 0.66;
+}
+
+.world-clock-widget[data-show-seconds="false"] [data-clock-second-separator],
+.world-clock-widget[data-show-seconds="false"] [data-clock-second],
+.world-clock-widget[data-show-date="false"] [data-clock-date],
+.world-clock-widget[data-show-relative="false"] [data-clock-relative-row] {
+  display: none;
+}
+
+.world-clock-widget[data-show-seconds="false"] .world-clock-digital {
+  font-size: calc(50px * var(--clock-scale) * var(--clock-font-scale));
+}
+
+@media (max-width: 360px), (max-height: 170px) {
+  .world-clock-widget {
+    grid-template-columns: minmax(94px, 0.82fr) minmax(0, 1.6fr);
+    gap: calc(9px * var(--clock-scale));
+    padding: calc(12px * var(--clock-scale));
+  }
+
+  .world-clock-dial {
+    width: min(100%, calc(118px * var(--clock-scale)));
+  }
+
+  .world-clock-readout {
+    padding: calc(7px * var(--clock-scale)) calc(5px * var(--clock-scale)) calc(7px * var(--clock-scale)) 0;
+  }
+
+  .world-clock-meta {
+    font-size: calc(16px * var(--clock-scale) * var(--clock-font-scale));
+  }
+
+  .world-clock-digital {
+    font-size: calc(36px * var(--clock-scale) * var(--clock-font-scale));
+  }
+
+  .world-clock-widget[data-show-seconds="false"] .world-clock-digital {
+    font-size: calc(41px * var(--clock-scale) * var(--clock-font-scale));
+  }
+
+  .world-clock-offset {
+    font-size: calc(13px * var(--clock-scale) * var(--clock-font-scale));
+  }
 }
 
 @keyframes photo-wall-shimmer {

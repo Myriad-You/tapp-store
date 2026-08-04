@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.12.1",
+  "version": "1.13.0",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-08-04T07:23:03Z",
+  "updated_at": "2026-08-04T14:38:40Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -645,13 +645,13 @@
     {
       "id": "cn.xciy.xingchen.widgets",
       "name": "星辰小组件",
-      "version": "0.8.1",
-      "description": "GitHub 数据卡片、照片墙、纪念日、系统访客统计与个人信息小组件合集。",
-      "long_description": "提供 GitHub Stats Extended 卡片、全幅多尺寸照片墙、高度自定义的纪念日倒数/累计模块、Myriad 内置站点分析累计访问量/独立访客，以及邮箱、QQ、微信、Telegram、GitHub、Gitee、哔哩哔哩和自定义个人信息展示。支持多种桌面尺寸与独立配色设置。",
+      "version": "0.9.0",
+      "description": "GitHub 数据卡片、照片墙、纪念日、世界时钟、系统访客统计与个人信息小组件合集。",
+      "long_description": "提供 GitHub Stats Extended 卡片、全幅多尺寸照片墙、高度自定义的纪念日倒数/累计模块、4x2 实时世界时钟、Myriad 内置站点分析累计访问量/独立访客，以及邮箱、QQ、微信、Telegram、GitHub、Gitee、哔哩哔哩和自定义个人信息展示。世界时钟支持 IANA 时区、模拟指针、12/24 小时制、相对时差、UTC 偏移和主体颜色设置。",
       "locales": {
         "en-US": {
           "name": "Star Widgets",
-          "description": "GitHub cards, photo walls, anniversaries, built-in site analytics, and personal contact widgets"
+          "description": "GitHub cards, photo walls, anniversaries, world clocks, built-in site analytics, and personal contact widgets"
         }
       },
       "author": {
@@ -666,6 +666,7 @@
         "GitHub",
         "统计",
         "访客",
+        "时钟",
         "个人信息",
         "小组件"
       ],
@@ -706,6 +707,9 @@
             "4x2": "apps/cn.xciy.xingchen.widgets/templates/anniversary-4x2.html",
             "4x4": "apps/cn.xciy.xingchen.widgets/templates/anniversary-4x4.html"
           },
+          "world-clock": {
+            "4x2": "apps/cn.xciy.xingchen.widgets/templates/clock-4x2.html"
+          },
           "personal-info": {
             "2x1": "apps/cn.xciy.xingchen.widgets/templates/personal-2x1.html",
             "4x1": "apps/cn.xciy.xingchen.widgets/templates/personal-4x1.html",
@@ -713,14 +717,14 @@
           }
         }
       },
-      "size": 179616,
+      "size": 201157,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-04T02:07:42Z",
-      "updated_at": "2026-08-04T07:23:03Z"
+      "updated_at": "2026-08-04T14:38:40Z"
     }
   ],
-  "last_updated": "2026-08-04T07:23:03Z"
+  "last_updated": "2026-08-04T14:38:40Z"
 }

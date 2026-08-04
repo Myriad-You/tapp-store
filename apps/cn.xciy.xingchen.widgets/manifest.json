@@ -1,13 +1,13 @@
 {
   "id": "cn.xciy.xingchen.widgets",
   "name": "星辰小组件",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "minSystemVersion": "0.3.23",
-  "description": "GitHub 数据卡片、照片墙、纪念日、系统访客统计与个人信息小组件合集。",
+  "description": "GitHub 数据卡片、照片墙、纪念日、世界时钟、系统访客统计与个人信息小组件合集。",
   "locales": {
     "en-US": {
       "name": "Star Widgets",
-      "description": "GitHub cards, photo walls, anniversaries, built-in site analytics, and personal contact widgets"
+      "description": "GitHub cards, photo walls, anniversaries, world clocks, built-in site analytics, and personal contact widgets"
     }
   },
   "category": "utility",
@@ -679,6 +679,82 @@
           "min": 0.7,
           "max": 1.4,
           "step": 0.05
+        }
+      ]
+    },
+    {
+      "id": "world-clock",
+      "name": "世界时钟",
+      "description": "实时显示指定时区的日期、数字时间、模拟指针、相对本地时差与 UTC 偏移。",
+      "icon": "◷",
+      "category": "utility",
+      "defaultSize": "4x2",
+      "sizes": [
+        "4x2"
+      ],
+      "templates": {
+        "4x2": "templates/clock-4x2.html"
+      },
+      "settings": [
+        {
+          "key": "timeZone",
+          "label": "时区",
+          "type": "input",
+          "description": "填写 IANA 时区名称，例如 Asia/Shanghai、America/New_York。无效值会回退到 America/New_York。",
+          "defaultValue": "America/New_York",
+          "placeholder": "Asia/Shanghai"
+        },
+        {
+          "key": "zoneLabel",
+          "label": "时区简称",
+          "type": "input",
+          "description": "留空时自动显示 CST、EDT 或 UTC+8 等时区简称。",
+          "defaultValue": "",
+          "placeholder": "EDT"
+        },
+        {
+          "key": "hourCycle",
+          "label": "时间制式",
+          "type": "select",
+          "defaultValue": "24",
+          "options": [
+            { "value": "24", "label": "24 小时制" },
+            { "value": "12", "label": "12 小时制" }
+          ]
+        },
+        {
+          "key": "showSeconds",
+          "label": "显示秒钟",
+          "type": "toggle",
+          "defaultValue": true
+        },
+        {
+          "key": "showDate",
+          "label": "显示日期",
+          "type": "toggle",
+          "defaultValue": true
+        },
+        {
+          "key": "showRelative",
+          "label": "显示时差与 UTC 偏移",
+          "type": "toggle",
+          "defaultValue": true
+        },
+        {
+          "key": "bodyColor",
+          "label": "主体颜色",
+          "type": "color",
+          "description": "设置圆角卡片主体颜色；文字、表盘和指针颜色会自动适配。",
+          "defaultValue": "#D8E3F8"
+        },
+        {
+          "key": "cornerRadius",
+          "label": "主体圆角",
+          "type": "number",
+          "defaultValue": 28,
+          "min": 0,
+          "max": 50,
+          "step": 1
         }
       ]
     },
