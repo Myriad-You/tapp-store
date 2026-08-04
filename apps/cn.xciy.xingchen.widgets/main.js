@@ -19,6 +19,9 @@ var XINGCHEN_RENDER_SEQUENCE = 0;
  * @property {Record<string, unknown>=} settings
  * @property {string=} size
  * @property {string=} theme
+ * @property {string=} primaryColor
+ * @property {number=} scale
+ * @property {number=} fontScale
  */
 /**
  * @typedef {Object} XingchenResolvedConfig
@@ -992,13 +995,20 @@ function anniversaryRender(container, props) {
   var shell = anniversaryEnsureMarkup(container);
   var config = anniversaryResolvedConfig(props || {});
   var size = props && props.size ? props.size : "4x2";
+  var hostScale = xingchenNumber(props && props.scale, 1, 0.1, 2);
+  var hostFontScale = xingchenNumber(props && props.fontScale, 1, 0.6, 1.2);
+  var hostPrimary = xingchenColor(props && props.primaryColor, "#8B5CF6");
   shell.setAttribute("data-size", size);
-  shell.setAttribute("data-layout-version", "2");
+  shell.setAttribute("data-layout-version", "3");
   shell.setAttribute("data-style", config.style);
   shell.setAttribute("data-align", config.alignment);
+  shell.setAttribute("data-host-theme", xingchenHostTheme(props || {}));
   shell.setAttribute("data-show-icon", String(config.showIcon));
   shell.setAttribute("data-show-date", String(config.showDate));
   shell.setAttribute("data-show-progress", String(config.showProgress));
+  shell.style.setProperty("--anniversary-host-scale", String(hostScale));
+  shell.style.setProperty("--anniversary-host-font-scale", String(hostFontScale));
+  shell.style.setProperty("--anniversary-host-primary", hostPrimary);
   var state;
   try {
     state = anniversaryState(config);
