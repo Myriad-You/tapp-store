@@ -9,7 +9,7 @@
 .dark { --days-widget-bg: rgba(22, 21, 20, .94); --days-widget-text: #f5f1ec; --days-widget-muted: #aaa39b; --days-widget-line: rgba(255,255,255,.09); }
 * { box-sizing: border-box; }
 html, body { width: 100%; height: 100%; margin: 0; background: transparent; color: var(--days-widget-text); font-family: Inter, "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif; }
-.days-widget { position: relative; width: 100%; height: 100%; overflow: hidden; padding: calc(14px * var(--tapp-scale, 1)); border: 1px solid var(--days-widget-line); border-radius: calc(18px * var(--tapp-scale, 1)); background: var(--days-widget-bg); box-shadow: 0 12px 32px rgba(44, 31, 23, .09); }
+.days-widget { position: relative; width: 100%; height: 100%; overflow: hidden; padding: calc(14px * var(--tapp-scale, 1)); border-radius: calc(18px * var(--tapp-scale, 1)); }
 .widget-glow { position: absolute; right: -25%; bottom: -55%; width: 85%; aspect-ratio: 1; border-radius: 50%; background: color-mix(in srgb, var(--days-accent) 22%, transparent); filter: blur(12px); pointer-events: none; }
 .days-widget > *:not(.widget-glow) { position: relative; z-index: 1; }
 .days-widget header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }

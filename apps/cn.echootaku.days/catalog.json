@@ -1,0 +1,19 @@
+{
+  "long_description": "用朝夕记录生日、纪念日、旅行、考试和其他重要时刻。支持置顶、快捷日期、临近标识、每年重复、自定义分类与颜色、搜索筛选，以及 2x2、4x2、4x4 三种主页小组件；所有数据仅保存在当前用户的私有存储中。",
+  "tags": ["倒数日", "纪念日", "生日", "日期", "小组件", "效率"],
+  "featured": false,
+  "verified": false,
+  "license": "MIT",
+  "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.echootaku.days",
+  "repository": "https://github.com/Myriad-You/tapp-store",
+  "preview": {
+    "version": 1,
+    "type": "snapshot",
+    "html": "preview.html",
+    "styles": ["preview.css"],
+    "viewport": { "width": 1280, "height": 720 },
+    "fit": "cover",
+    "focus": { "x": 0.5, "y": 0.48 },
+    "theme": "light"
+  }
+}
