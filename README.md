@@ -40,8 +40,18 @@ tapp-store/
 │   ├── sync-index.mjs      # manifest + catalog.json → index
 │   ├── validate-app.mjs    # category / 敏感权限 / catalog
 │   └── validate-previews.mjs
+├── edge/                   # Cloudflare Workers：全网安装统计（可选部署）
 └── development/            # 贡献者文档镜像（见下）
 ```
+
+## 安装统计（边缘，可选）
+
+全网安装次数由 **Cloudflare Workers + KV** 服务维护，**不**写回本仓库 `index.json`（`downloads` 字段仅 schema 占位）。
+
+- 代码与部署说明：[`edge/README.md`](./edge/README.md)
+- API：`POST /v1/hit`（安装成功打点）、`GET /v1/stats?apps=…` / `?top=N`
+- 默认可部署到 `*.workers.dev`，**不强制自有域名**
+- 面向 ~1 万应用：禁止全量 dump、批量 ≤100、top 用维护索引
 
 ## `index.json` 协议（摘要）
 

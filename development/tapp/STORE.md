@@ -528,6 +528,25 @@ REST 商店安装仍是 body `source: "store"` + `storeSource: catalogRef`（源
 
 ---
 
+## 安装统计（边缘服务）
+
+官方全网安装次数由独立边缘服务维护（**Cloudflare Workers + KV**），与静态 Git 目录解耦：
+
+| 项 | 说明 |
+| -- | ---- |
+| 代码 | 商店仓库 [`edge/`](https://github.com/Myriad-You/tapp-store/tree/main/edge) |
+| 计什么 | **安装成功**（`event=install`）；`update` 单独计数；不计 preview / 浏览 |
+| 真值 | `GET /v1/stats`；**不**由 Catalog Sync 写回 `index.json` |
+| `index.json` `downloads` | 仅占位/降级；UI 优先 edge overlay |
+| 部署 | `wrangler deploy` → `*.workers.dev` 即可；自定义域名可选 |
+| 万级应用 | stats 必须 `apps=` / `app=` / `top=`；禁止无参全量 dump |
+
+Myriad 接入（后续）：后端/前端在安装成功路径 fire-and-forget `POST /v1/hit`；商店 UI 批量拉 stats 展示。失败不影响安装。
+
+详细部署与 API 见商店仓库 `edge/README.md`。
+
+---
+
 ## 变更时同步项
 
 修改商店协议或拉包逻辑时至少核对：
@@ -537,4 +556,5 @@ REST 商店安装仍是 body `source: "store"` + `storeSource: catalogRef`（源
 3. `store_package.rs` 与客户端 `downloadAppPackage` 对必填资源/assets 行为一致；
 4. `TappInstallationApi.installFromStore` 回退条件与大包阈值；
 5. 本文、[REST_API](REST_API.md)、[MANIFEST](MANIFEST.md) 分类与路径规则；
-6. 后端商店/安装定向测试与前端相关单测（`storePackagePaths`、`tappInstallProgress` 等）。
+6. 后端商店/安装定向测试与前端相关单测（`storePackagePaths`、`tappInstallProgress` 等）；
+7. 边缘统计 `edge/` 契约（若改 hit/stats 协议）。

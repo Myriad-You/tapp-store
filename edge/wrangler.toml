@@ -1,0 +1,44 @@
+# Cloudflare Workers — Tapp store install stats
+# Deploy: npm i && npx wrangler login && npm run deploy
+# Local:  npm run dev
+#
+# First-time KV:
+#   npx wrangler kv namespace create tapp-store-stats
+#   npx wrangler kv namespace create tapp-store-stats --preview
+# Then paste the ids below into [[kv_namespaces]].
+
+name = "tapp-store-stats"
+main = "src/index.ts"
+compatibility_date = "2025-08-01"
+workers_dev = true
+
+# Public preview URL: https://tapp-store-stats.<account>.workers.dev
+# Optional custom domain (after zone is on CF):
+# routes = [{ pattern = "store-stats.myriad.you/*", zone_name = "myriad.you" }]
+
+[vars]
+# Official catalog used to refresh the app_id allowlist.
+CATALOG_URL = "https://raw.githubusercontent.com/Myriad-You/tapp-store/main/index.json"
+# When false, unknown app_id hits are rejected (recommended in production).
+ALLOW_UNKNOWN_APPS = "false"
+# Soft rate limit: hits per IP per minute.
+HIT_RATE_LIMIT_PER_MIN = "60"
+# Max app ids accepted by GET /v1/stats?apps=
+STATS_MAX_BATCH = "100"
+# Max apps returned by GET /v1/stats?top=
+STATS_TOP_MAX = "100"
+# How long (seconds) to cache the catalog allowlist in KV.
+CATALOG_IDS_TTL_SEC = "600"
+
+# Bind after creating the namespace (replace ids):
+# [[kv_namespaces]]
+# binding = "STATS"
+# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+# preview_id = "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+
+# Local/dev without remote KV: wrangler creates a local sim when binding is present.
+# Uncomment and fill before production deploy:
+[[kv_namespaces]]
+binding = "STATS"
+id = "00000000000000000000000000000000"
+preview_id = "00000000000000000000000000000000"
