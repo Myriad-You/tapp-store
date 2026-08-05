@@ -1227,7 +1227,7 @@ function worldClockEnsureMarkup(container) {
     '  </div>',
     '  <div class="world-clock-readout">',
     '    <div class="world-clock-meta" data-clock-meta><time data-clock-date>2026/8/4</time><span data-clock-zone>EDT</span></div>',
-    '    <div class="world-clock-digital"><span data-clock-hour>03</span><i>:</i><span data-clock-minute>30</span><i data-clock-second-separator>:</i><span class="world-clock-second" data-clock-second>22</span></div>',
+    '    <div class="world-clock-digital"><span data-clock-hour>03</span><i>:</i><span data-clock-minute>30</span><i data-clock-second-separator>:</i><span class="world-clock-second" data-clock-second>22</span><span class="world-clock-period" data-clock-period hidden>AM</span></div>',
     '    <div class="world-clock-offset" data-clock-relative-row><span data-clock-relative>12h behind</span><i>/</i><span data-clock-offset>UTC -4:00</span></div>',
     '  </div>',
     '</section>'
@@ -1243,6 +1243,7 @@ function worldClockPaint(shell, config) {
   var localOffset = -now.getTimezoneOffset();
   var hour24 = Number(parts.hour);
   var hour = config.hourCycle === "12" ? (hour24 % 12 || 12) : hour24;
+  var periodLabel = hour24 < 12 ? "AM" : "PM";
   var minute = Number(parts.minute);
   var second = Number(parts.second);
   var zoneName = config.zoneLabel || worldClockZoneName(now, config.timeZone);
@@ -1252,12 +1253,15 @@ function worldClockPaint(shell, config) {
   /** @type {HTMLElement} */ (shell.querySelector("[data-clock-hour]")).textContent = String(hour).padStart(2, "0");
   /** @type {HTMLElement} */ (shell.querySelector("[data-clock-minute]")).textContent = String(minute).padStart(2, "0");
   /** @type {HTMLElement} */ (shell.querySelector("[data-clock-second]")).textContent = String(second).padStart(2, "0");
+  var period = /** @type {HTMLElement} */ (shell.querySelector("[data-clock-period]"));
+  period.textContent = periodLabel;
+  period.hidden = config.hourCycle !== "12";
   /** @type {HTMLElement} */ (shell.querySelector("[data-clock-relative]")).textContent = worldClockRelativeLabel(targetOffset - localOffset);
   /** @type {HTMLElement} */ (shell.querySelector("[data-clock-offset]")).textContent = worldClockOffsetLabel(targetOffset);
   /** @type {HTMLElement} */ (shell.querySelector("[data-clock-hour-hand]")).style.setProperty("--clock-hand-angle", ((hour24 % 12) * 30 + minute * 0.5 + second / 120) + "deg");
   /** @type {HTMLElement} */ (shell.querySelector("[data-clock-minute-hand]")).style.setProperty("--clock-hand-angle", (minute * 6 + second * 0.1) + "deg");
   /** @type {HTMLElement} */ (shell.querySelector("[data-clock-second-hand]")).style.setProperty("--clock-hand-angle", (second * 6) + "deg");
-  shell.setAttribute("aria-label", parts.year + "年" + Number(parts.month) + "月" + Number(parts.day) + "日 " + zoneName + " " + String(hour).padStart(2, "0") + ":" + String(minute).padStart(2, "0") + (config.showSeconds ? ":" + String(second).padStart(2, "0") : ""));
+  shell.setAttribute("aria-label", parts.year + "年" + Number(parts.month) + "月" + Number(parts.day) + "日 " + zoneName + " " + String(hour).padStart(2, "0") + ":" + String(minute).padStart(2, "0") + (config.showSeconds ? ":" + String(second).padStart(2, "0") : "") + (config.hourCycle === "12" ? " " + periodLabel : ""));
 }
 
 /** @param {HTMLElement} container @param {HTMLElement} shell @param {WorldClockResolvedConfig} config */

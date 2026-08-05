@@ -233,14 +233,14 @@
     if (!segments.length) expression += "/?";
     segments.forEach(function (segment) {
       if (segment.charAt(0) === "*") {
-        names.push(segment.slice(1) || "wildcard");
+        names.push({ name: segment.slice(1) || "wildcard", wildcard: true });
         expression += "/(.*)";
         return;
       }
       if (segment.charAt(0) === ":") {
         var optional = /\?$/.test(segment);
         var name = segment.slice(1).replace(/\?$/, "").replace(/\{[^}]*\}/g, "") || "param";
-        names.push(name);
+        names.push({ name: name, wildcard: false });
         expression += optional ? "(?:/([^/]+))?" : "/([^/]+)";
         return;
       }
@@ -259,10 +259,14 @@
     var matched = compiled.regex.exec(pathname || "/");
     if (!matched) return null;
     var params = {};
-    compiled.names.forEach(function (name, index) {
-      if (matched[index + 1] !== undefined) params[name] = safeDecode(matched[index + 1]);
+    var wildcardNames = {};
+    compiled.names.forEach(function (parameter, index) {
+      if (matched[index + 1] !== undefined) {
+        params[parameter.name] = safeDecode(matched[index + 1]);
+        if (parameter.wildcard) wildcardNames[parameter.name] = true;
+      }
     });
-    return params;
+    return { params: params, wildcardNames: wildcardNames };
   }
 
   function docsUrl(rule) {
@@ -274,13 +278,17 @@
     return rule && rule.docs ? rule.docs : "https://docs.rsshub.app/routes/";
   }
 
-  function buildRoutePath(target, params) {
+  function buildRoutePath(target, params, wildcardNames) {
     if (typeof target !== "string" || !target || target.indexOf("=>") >= 0 || /function\s*\(/.test(target)) {
       return null;
     }
     var missing = false;
     var result = target.replace(/\/:([A-Za-z0-9_]+)(?:\{[^}]*\})?(\?)?(?=\/|$)/g, function (_, name, optional) {
-      if (params[name] !== undefined && params[name] !== "") return "/" + encodeURIComponent(params[name]);
+      if (params[name] !== undefined && params[name] !== "") {
+        var encoded = encodeURIComponent(params[name]);
+        if (wildcardNames && wildcardNames[name]) encoded = encoded.replace(/%2F/gi, "/");
+        return "/" + encoded;
+      }
       if (optional) return "";
       missing = true;
       return "";
@@ -329,9 +337,9 @@
       rules.forEach(function (rule) {
         var sources = Array.isArray(rule.source) ? rule.source : [rule.source];
         for (var i = 0; i < sources.length; i += 1) {
-          var params = matchSource(sources[i], parsedUrl.pathname || "/");
-          if (!params) continue;
-          var path = buildRoutePath(rule.target, params);
+          var sourceMatch = matchSource(sources[i], parsedUrl.pathname || "/");
+          if (!sourceMatch) continue;
+          var path = buildRoutePath(rule.target, sourceMatch.params, sourceMatch.wildcardNames);
           addResult(results, seen, {
             kind: path ? "route" : "docs",
             title: rule.title || siteName,
@@ -745,7 +753,10 @@
   }
 
   function isCloudflareChallenge(value) {
-    return /(?:HTTP\s*403|cloudflare|just a moment|cf[-_ ]?chl)/i.test(String(value || ""));
+    var text = String(value || "").replace(/^\uFEFF/, "");
+    var isFeedXml = /^\s*(?:<\?xml[\s\S]*?\?>\s*)?(?:(?:<!--[\s\S]*?-->|<\?[^?]*\?>)\s*)*<(?:rss|feed|rdf:RDF)\b/i.test(text);
+    if (isFeedXml) return false;
+    return /(?:just a moment|cf[-_ ]?chl|challenge-platform|cloudflare ray id|HTTP\s*403[\s\S]{0,160}cloudflare|cloudflare[\s\S]{0,160}HTTP\s*403)/i.test(text);
   }
 
   function firstText(node, names) {

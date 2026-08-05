@@ -2714,6 +2714,18 @@ body.dark,
   font-weight: 650;
 }
 
+.world-clock-period {
+  margin-left: 0.42em;
+  color: var(--clock-muted);
+  font-size: 0.34em;
+  font-weight: 720;
+  letter-spacing: 0;
+}
+
+.world-clock-period[hidden] {
+  display: none;
+}
+
 .world-clock-offset {
   color: var(--clock-muted);
   font-size: calc(16px * var(--clock-scale) * var(--clock-font-scale));

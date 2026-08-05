@@ -57,6 +57,8 @@ vm.runInContext(source, sandbox, { filename: mainPath })
 const { buildOpml, canPreviewInstance, isCloudflareChallenge, matchUrl, normalizeInputUrl, previewFailureKind, previewFeed, setInstance } = sandbox.__radarMatcher
 assert.ok(isCloudflareChallenge("HTTP 403 Just a moment..."), 'Cloudflare challenge was not detected')
 assert.ok(!isCloudflareChallenge("<rss><channel><title>Feed</title></channel></rss>"), 'Valid RSS was misclassified as a challenge')
+assert.ok(!isCloudflareChallenge("<?xml version=\"1.0\"?><rss><channel><title>Cloudflare status</title></channel></rss>"), 'RSS mentioning Cloudflare was misclassified as a challenge')
+assert.ok(!isCloudflareChallenge("Cloudflare published a normal status update"), 'A lone Cloudflare mention was misclassified as a challenge')
 assert.equal(previewFailureKind('request timed out'), 'timeout')
 assert.equal(previewFailureKind('返回内容不是有效的 RSS 或 Atom'), 'invalid')
 assert.equal(canPreviewInstance('https://rsshub.app/'), true)
@@ -95,8 +97,8 @@ const cases = [
     expectedPath: '/youtube/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw',
   },
   {
-    url: 'https://github.com/DIYgod/RSSHub/blob/master/README.md',
-    expectedPath: '/github/file/DIYgod/RSSHub/master/README.md',
+    url: 'https://github.com/DIYgod/RSSHub/blob/master/docs/guide.md',
+    expectedPath: '/github/file/DIYgod/RSSHub/master/docs/guide.md',
   },
 ]
 
