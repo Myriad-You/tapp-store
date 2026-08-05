@@ -1,10 +1,53 @@
 var DAYS_STORAGE_KEY = 'days.events.v1';
 var DAYS_CATEGORIES_STORAGE_KEY = 'days.categories.v1';
 var DAYS_COLORS = ['#D97757', '#C6924B', '#66917A', '#6687A8', '#8D78A8', '#B56F83'];
-var DAYS_CATEGORY_LABELS = {
-  life: '生活', birthday: '生日', anniversary: '纪念', study: '学习', travel: '旅行', other: '其他'
+var DAYS_CATEGORY_IDS = { life: true, birthday: true, anniversary: true, study: true, travel: true, other: true };
+var DAYS_I18N = {
+  'zh-CN': {
+    appName: '朝夕', subtitle: '把期待写进日历，也把走过的日子留在身边。', newEvent: '新建日子',
+    nextMeeting: '下一次相见', emptyHero: '记录一个值得期待的日子', startToday: '从今天开始', dayUnit: '天',
+    filterAria: '筛选日子', search: '搜索名称或备注', statusFilter: '状态筛选', all: '全部', upcoming: '即将到来', pinnedFilter: '已置顶', past: '已过单次',
+    momentsTitle: '我的日子', dayCount: '{count} 个日子', emptyTitle: '还没有符合条件的日子', emptyBody: '创建一个纪念日、生日、考试或任何值得期待的时刻。', createFirst: '创建第一个日子',
+    editorNew: '新建日子', editorEdit: '编辑日子', closeEditor: '关闭编辑器', name: '名称', namePlaceholder: '例如：去看海的日子', date: '日期', quickDate: '快捷选择日期', today: '今天', in7Days: '7 天后', in30Days: '30 天后', inOneYear: '一年后',
+    category: '分类', chooseCategory: '选择分类', custom: '自定义', categoryPlaceholder: '输入新分类', newCategoryName: '新分类名称', add: '添加', note: '备注', notePlaceholder: '写下一点期待，或关于这一天的故事',
+    annual: '每年重复', annualHint: '适合生日与纪念日', pinEvent: '置顶日子', pinHint: '优先展示在首页与 Widget', color: '标记颜色', delete: '删除', cancel: '取消', save: '保存日子', saving: '保存中…',
+    pinned: '置顶', soon: '临近', yearly: '每年', once: '单次', remembered: '这一天值得被记住。', editAria: '编辑 {title}',
+    categoryAdded: '分类“{label}”已添加', saved: '日子已保存', updated: '日子已更新', deleted: '日子已删除', saveFailed: '保存失败，请稍后重试', categoryFailed: '分类添加失败，请稍后重试', editorFailed: '编辑器打开失败，请重新加载页面', deleteConfirm: '确定删除“{title}”吗？',
+    countToday: '今', isToday: '就是今天', remaining: '还有 {count} 天', elapsed: '已经 {count} 天', annualSuffix: ' · 每年', addImportant: '添加一个重要日子', anticipated: '值得期待的日子', widgetEmpty: '在朝夕中创建第一个重要日子', everyDayEchoes: '每一天都有回声',
+    categoryLife: '生活', categoryBirthday: '生日', categoryAnniversary: '纪念', categoryStudy: '学习', categoryTravel: '旅行', categoryOther: '其他'
+  },
+  'en-US': {
+    appName: 'Days', subtitle: 'Keep future moments close, and remember the days already lived.', newEvent: 'New day',
+    nextMeeting: 'NEXT MOMENT', emptyHero: 'Record a day worth looking forward to', startToday: 'Start today', dayUnit: 'days',
+    filterAria: 'Filter days', search: 'Search names or notes', statusFilter: 'Status filters', all: 'All', upcoming: 'Upcoming', pinnedFilter: 'Pinned', past: 'Past one-time',
+    momentsTitle: 'My days', dayCount: '{count} days', emptyTitle: 'No matching days yet', emptyBody: 'Create an anniversary, birthday, exam, or any moment worth anticipating.', createFirst: 'Create your first day',
+    editorNew: 'New day', editorEdit: 'Edit day', closeEditor: 'Close editor', name: 'Name', namePlaceholder: 'For example: A day by the sea', date: 'Date', quickDate: 'Quick date choices', today: 'Today', in7Days: 'In 7 days', in30Days: 'In 30 days', inOneYear: 'In one year',
+    category: 'Category', chooseCategory: 'Choose a category', custom: 'Custom', categoryPlaceholder: 'New category', newCategoryName: 'New category name', add: 'Add', note: 'Note', notePlaceholder: 'Write down what makes this day meaningful',
+    annual: 'Repeat yearly', annualHint: 'Great for birthdays and anniversaries', pinEvent: 'Pin day', pinHint: 'Show first on the page and Widget', color: 'Marker color', delete: 'Delete', cancel: 'Cancel', save: 'Save day', saving: 'Saving…',
+    pinned: 'Pinned', soon: 'Soon', yearly: 'Yearly', once: 'Once', remembered: 'A day worth remembering.', editAria: 'Edit {title}',
+    categoryAdded: 'Category “{label}” added', saved: 'Day saved', updated: 'Day updated', deleted: 'Day deleted', saveFailed: 'Could not save. Please try again.', categoryFailed: 'Could not add the category. Please try again.', editorFailed: 'Could not open the editor. Please reload.', deleteConfirm: 'Delete “{title}”?',
+    countToday: 'Now', isToday: 'Today', remaining: '{count} days left', elapsed: '{count} days ago', annualSuffix: ' · Yearly', addImportant: 'Add an important day', anticipated: 'Days to look forward to', widgetEmpty: 'Create your first important day in Days', everyDayEchoes: 'Every day leaves an echo',
+    categoryLife: 'Life', categoryBirthday: 'Birthday', categoryAnniversary: 'Anniversary', categoryStudy: 'Study', categoryTravel: 'Travel', categoryOther: 'Other'
+  },
+  'ja-JP': {
+    appName: '日々', subtitle: '楽しみな日も、過ぎた大切な日も、いつでもそばに。', newEvent: '日を追加',
+    nextMeeting: '次の大切な日', emptyHero: '楽しみにしたい日を記録しましょう', startToday: '今日から始める', dayUnit: '日',
+    filterAria: '日の絞り込み', search: '名前やメモを検索', statusFilter: '状態フィルター', all: 'すべて', upcoming: 'これから', pinnedFilter: '固定済み', past: '過ぎた一回限り',
+    momentsTitle: '私の日々', dayCount: '{count} 件', emptyTitle: '条件に合う日がありません', emptyBody: '記念日、誕生日、試験など、楽しみにしたい日を作成しましょう。', createFirst: '最初の日を作成',
+    editorNew: '日を追加', editorEdit: '日を編集', closeEditor: '編集画面を閉じる', name: '名前', namePlaceholder: '例：海を見に行く日', date: '日付', quickDate: '日付のクイック選択', today: '今日', in7Days: '7日後', in30Days: '30日後', inOneYear: '1年後',
+    category: 'カテゴリー', chooseCategory: 'カテゴリーを選択', custom: 'カスタム', categoryPlaceholder: '新しいカテゴリー', newCategoryName: '新しいカテゴリー名', add: '追加', note: 'メモ', notePlaceholder: 'この日への思いや楽しみを書きましょう',
+    annual: '毎年繰り返す', annualHint: '誕生日や記念日に最適', pinEvent: '固定する', pinHint: 'ページとWidgetで優先表示', color: 'マーカー色', delete: '削除', cancel: 'キャンセル', save: '保存', saving: '保存中…',
+    pinned: '固定', soon: 'もうすぐ', yearly: '毎年', once: '一回', remembered: '忘れたくない大切な日。', editAria: '{title}を編集',
+    categoryAdded: 'カテゴリー「{label}」を追加しました', saved: '保存しました', updated: '更新しました', deleted: '削除しました', saveFailed: '保存できませんでした。もう一度お試しください。', categoryFailed: 'カテゴリーを追加できませんでした。', editorFailed: '編集画面を開けませんでした。再読み込みしてください。', deleteConfirm: '「{title}」を削除しますか？',
+    countToday: '今', isToday: '今日です', remaining: 'あと {count} 日', elapsed: '{count} 日前', annualSuffix: ' · 毎年', addImportant: '大切な日を追加', anticipated: '楽しみにしている日', widgetEmpty: '日々で最初の大切な日を作成', everyDayEchoes: '一日一日に余韻がある',
+    categoryLife: '生活', categoryBirthday: '誕生日', categoryAnniversary: '記念日', categoryStudy: '勉強', categoryTravel: '旅行', categoryOther: 'その他'
+  }
 };
-var DAYS_DEFAULT_CATEGORIES = Object.keys(DAYS_CATEGORY_LABELS).map(function (id) { return { id: id, label: DAYS_CATEGORY_LABELS[id], custom: false }; });
+var daysCurrentLocale = 'zh-CN';
+function daysNormalizeLocale(locale) { var value = String(locale || '').toLowerCase(); if (value.indexOf('ja') === 0) return 'ja-JP'; if (value.indexOf('en') === 0) return 'en-US'; return 'zh-CN'; }
+function daysT(key, values) { var text = (DAYS_I18N[daysCurrentLocale] || DAYS_I18N['zh-CN'])[key] || DAYS_I18N['zh-CN'][key] || key; return String(text).replace(/\{(\w+)\}/g, function (_, name) { return values && values[name] != null ? String(values[name]) : ''; }); }
+function daysCategoryKey(id) { return 'category' + String(id || 'other').charAt(0).toUpperCase() + String(id || 'other').slice(1); }
+function daysDefaultCategories() { return Object.keys(DAYS_CATEGORY_IDS).map(function (id) { return { id: id, label: daysT(daysCategoryKey(id)), custom: false }; }); }
 
 function daysPad(value) { return String(value).padStart(2, '0'); }
 function daysTodayKey() {
@@ -44,18 +87,18 @@ function daysNormalizeCategories(value) {
   var seen = {};
   return value.map(function (item) {
     var label = String(item && item.label || '').trim().slice(0, 12); var id = String(item && item.id || '').trim().slice(0, 48);
-    if (!label || !id || DAYS_CATEGORY_LABELS[id] || seen[id]) return null;
+    if (!label || !id || DAYS_CATEGORY_IDS[id] || seen[id]) return null;
     seen[id] = true; return { id: id, label: label, custom: true };
   }).filter(Boolean);
 }
-function daysCategoryLabel(category, fallback) { return DAYS_CATEGORY_LABELS[category] || String(fallback || '').trim().slice(0, 12) || '其他'; }
+function daysCategoryLabel(category, fallback) { return DAYS_CATEGORY_IDS[category] ? daysT(daysCategoryKey(category)) : String(fallback || '').trim().slice(0, 12) || daysT('categoryOther'); }
 function daysNormalizeEvents(value) {
   if (!Array.isArray(value)) return [];
   return value.filter(function (item) { return item && typeof item.title === 'string' && daysParseDate(item.date); }).map(function (item, index) {
     var customLabel = String(item.categoryLabel || '').trim().slice(0, 12); var rawCategory = String(item.category || 'other').slice(0, 48);
     return {
       id: String(item.id || ('legacy-' + index)), title: item.title.trim().slice(0, 80), date: item.date,
-      category: (DAYS_CATEGORY_LABELS[rawCategory] || customLabel) ? rawCategory : 'other', categoryLabel: DAYS_CATEGORY_LABELS[rawCategory] ? '' : customLabel,
+      category: (DAYS_CATEGORY_IDS[rawCategory] || customLabel) ? rawCategory : 'other', categoryLabel: DAYS_CATEGORY_IDS[rawCategory] ? '' : customLabel,
       note: String(item.note || '').slice(0, 240),
       annual: Boolean(item.annual), color: /^#[0-9a-f]{6}$/i.test(item.color || '') ? item.color : DAYS_COLORS[index % DAYS_COLORS.length],
       pinned: Boolean(item.pinned),
@@ -92,16 +135,16 @@ async function daysSaveEvents(events) { await Tapp.storage.set(DAYS_STORAGE_KEY,
 async function daysSaveCategories(categories) { await Tapp.storage.set(DAYS_CATEGORIES_STORAGE_KEY, daysNormalizeCategories(categories)); }
 function daysFormatDate(date, annual) {
   var options = annual ? { month: 'long', day: 'numeric' } : { year: 'numeric', month: 'long', day: 'numeric' };
-  try { return new Intl.DateTimeFormat('zh-CN', options).format(date); } catch (_) { return date.toLocaleDateString(); }
+  try { return new Intl.DateTimeFormat(daysCurrentLocale, options).format(date); } catch (_) { return date.toLocaleDateString(); }
 }
 function daysCountCopy(diff) {
-  if (diff === 0) return { count: '今', unit: '天', phrase: '就是今天' };
-  if (diff > 0) return { count: String(diff), unit: '天', phrase: '还有 ' + diff + ' 天' };
-  return { count: String(Math.abs(diff)), unit: '天', phrase: '已经 ' + Math.abs(diff) + ' 天' };
+  if (diff === 0) return { count: daysT('countToday'), unit: daysT('dayUnit'), phrase: daysT('isToday') };
+  if (diff > 0) return { count: String(diff), unit: daysT('dayUnit'), phrase: daysT('remaining', { count: diff }) };
+  return { count: String(Math.abs(diff)), unit: daysT('dayUnit'), phrase: daysT('elapsed', { count: Math.abs(diff) }) };
 }
 function daysNotify(message, type) {
   if (Tapp.ui && typeof Tapp.ui.showNotification === 'function') {
-    return Tapp.ui.showNotification({ title: '朝夕', message: message, type: type || 'success', duration: 2600 });
+    return Tapp.ui.showNotification({ title: daysT('appName'), message: message, type: type || 'success', duration: 2600 });
   }
   return Promise.resolve();
 }
@@ -118,6 +161,24 @@ async function daysInitTheme(fallbackTheme) {
   }
 }
 function daysSetText(root, selector, value) { var element = root.querySelector(selector); if (element) element.textContent = value; }
+function daysApplyStaticLocale(root) {
+  if (!root) return;
+  document.documentElement.lang = daysCurrentLocale;
+  root.querySelectorAll('[data-i18n]').forEach(function (element) { element.textContent = daysT(element.dataset.i18n); });
+  root.querySelectorAll('[data-i18n-placeholder]').forEach(function (element) { element.setAttribute('placeholder', daysT(element.dataset.i18nPlaceholder)); });
+  root.querySelectorAll('[data-i18n-aria-label]').forEach(function (element) { element.setAttribute('aria-label', daysT(element.dataset.i18nAriaLabel)); });
+}
+var daysLocaleOff = null;
+async function daysInitLocale(fallbackLocale, onChange) {
+  var locale = fallbackLocale;
+  try { if (Tapp.ui && typeof Tapp.ui.getLocale === 'function') locale = await Tapp.ui.getLocale(); } catch (_) {}
+  daysCurrentLocale = daysNormalizeLocale(locale);
+  if (daysLocaleOff) daysLocaleOff(); daysLocaleOff = null;
+  if (Tapp.ui && typeof Tapp.ui.onLocaleChange === 'function') {
+    var off = Tapp.ui.onLocaleChange(function (nextLocale) { daysCurrentLocale = daysNormalizeLocale(nextLocale); if (typeof onChange === 'function') onChange(); });
+    if (typeof off === 'function') daysLocaleOff = off;
+  }
+}
 
 // ========== Widget Code ==========
 var daysWidgetOff = null;
@@ -132,7 +193,8 @@ function daysScheduleWidgetMidnight(root, props) {
 }
 function daysRenderWidget(root, events, props) {
   var sorted = daysSortEvents(events); var now = new Date();
-  daysSetText(root, '[data-widget-date]', (now.getMonth() + 1) + '月' + now.getDate() + '日');
+  daysApplyStaticLocale(root);
+  daysSetText(root, '[data-widget-date]', new Intl.DateTimeFormat(daysCurrentLocale, { month: 'short', day: 'numeric' }).format(now));
   if (props && props.primaryColor) root.style.setProperty('--days-accent', props.primaryColor);
   var primary = sorted[0];
   if (primary) {
@@ -157,13 +219,14 @@ function daysRenderWidget(root, events, props) {
     });
     if (empty) empty.hidden = sorted.length > 0;
   }
-  daysSetText(root, '[data-widget-total]', sorted.length + ' 个日子');
+  daysSetText(root, '[data-widget-total]', daysT('dayCount', { count: sorted.length }));
 }
 if (typeof Tapp !== 'undefined' && Tapp.widgets) {
   Tapp.widgets['days-countdown'] = {
     render: async function (container, props) {
       var root = container.querySelector('[data-widget-root]') || container;
       await daysInitTheme(props && props.theme);
+      await daysInitLocale(props && props.locale, function () { daysLoadEvents().then(function (events) { daysRenderWidget(root, events, props || {}); }); });
       daysRenderWidget(root, await daysLoadEvents(), props || {});
       daysScheduleWidgetMidnight(root, props);
       if (daysWidgetOff) daysWidgetOff();
@@ -174,7 +237,7 @@ if (typeof Tapp !== 'undefined' && Tapp.widgets) {
       }
       if (!daysWidgetDestroyBound) {
         daysWidgetDestroyBound = true;
-        Tapp.lifecycle.onDestroy(function () { if (daysWidgetOff) daysWidgetOff(); if (daysThemeOff) daysThemeOff(); if (daysWidgetMidnightTimer) clearTimeout(daysWidgetMidnightTimer); daysWidgetOff = null; daysThemeOff = null; daysWidgetMidnightTimer = null; });
+        Tapp.lifecycle.onDestroy(function () { if (daysWidgetOff) daysWidgetOff(); if (daysThemeOff) daysThemeOff(); if (daysLocaleOff) daysLocaleOff(); if (daysWidgetMidnightTimer) clearTimeout(daysWidgetMidnightTimer); daysWidgetOff = null; daysThemeOff = null; daysLocaleOff = null; daysWidgetMidnightTimer = null; });
       }
     }
   };
@@ -183,8 +246,8 @@ if (typeof Tapp !== 'undefined' && Tapp.widgets) {
 // ========== Page Code ==========
 var daysPageState = { events: [], categories: [], filter: 'all', query: '', editingId: null, off: null, editorToken: 0, saving: false, editorReturnFocus: null };
 function daysElement(tag, className, text) { var el = document.createElement(tag); if (className) el.className = className; if (text != null) el.textContent = text; return el; }
-function daysAllCategories() { return DAYS_DEFAULT_CATEGORIES.concat(daysPageState.categories); }
-function daysFindCategory(id) { return daysAllCategories().find(function (item) { return item.id === id; }) || DAYS_DEFAULT_CATEGORIES[0]; }
+function daysAllCategories() { return daysDefaultCategories().concat(daysPageState.categories); }
+function daysFindCategory(id) { return daysAllCategories().find(function (item) { return item.id === id; }) || daysDefaultCategories()[0]; }
 function daysSetCategoryPopover(root, open) {
   var popover = root.querySelector('[data-category-popover]'); var trigger = root.querySelector('[data-action="toggle-category"]');
   if (!popover || !trigger) return;
@@ -199,7 +262,7 @@ function daysRenderCategoryPicker(root, selectedId) {
   daysAllCategories().forEach(function (category) {
     var button = daysElement('button', 'category-option', category.label); button.type = 'button'; button.dataset.action = 'select-category'; button.dataset.categoryId = category.id;
     button.setAttribute('role', 'option'); button.setAttribute('aria-selected', category.id === selected.id ? 'true' : 'false');
-    if (category.custom) { var badge = daysElement('small', '', '自定义'); button.appendChild(badge); }
+    if (category.custom) { var badge = daysElement('small', '', daysT('custom')); button.appendChild(badge); }
     options.appendChild(button);
   });
 }
@@ -210,7 +273,7 @@ async function daysAddCategory(root) {
   if (existing) { daysRenderCategoryPicker(root, existing.id); input.value = ''; daysSetCategoryPopover(root, false); return; }
   var category = { id: 'custom-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6), label: label, custom: true };
   daysPageState.categories = daysPageState.categories.concat(category); await daysSaveCategories(daysPageState.categories);
-  input.value = ''; daysRenderCategoryPicker(root, category.id); daysSetCategoryPopover(root, false); await daysNotify('分类“' + label + '”已添加');
+  input.value = ''; daysRenderCategoryPicker(root, category.id); daysSetCategoryPopover(root, false); await daysNotify(daysT('categoryAdded', { label: label }));
 }
 function daysFilteredEvents() {
   var query = daysPageState.query.trim().toLowerCase(); var now = new Date();
@@ -225,27 +288,27 @@ function daysFilteredEvents() {
 function daysRenderHero(root) {
   var event = daysSortEvents(daysPageState.events)[0];
   if (!event) {
-    daysSetText(root, '[data-hero-category]', '下一次相见'); daysSetText(root, '[data-hero-title]', '记录一个值得期待的日子');
-    daysSetText(root, '[data-hero-date]', '从今天开始'); daysSetText(root, '[data-hero-count]', '0'); daysSetText(root, '[data-hero-unit]', '天'); return;
+    daysSetText(root, '[data-hero-category]', daysT('nextMeeting')); daysSetText(root, '[data-hero-title]', daysT('emptyHero'));
+    daysSetText(root, '[data-hero-date]', daysT('startToday')); daysSetText(root, '[data-hero-count]', '0'); daysSetText(root, '[data-hero-unit]', daysT('dayUnit')); return;
   }
   var target = daysOccurrence(event, new Date()); var copy = daysCountCopy(daysDifference(event, new Date()));
   daysSetText(root, '[data-hero-category]', daysCategoryLabel(event.category, event.categoryLabel)); daysSetText(root, '[data-hero-title]', event.title);
-  daysSetText(root, '[data-hero-date]', daysFormatDate(target, event.annual) + (event.annual ? ' · 每年' : ''));
+  daysSetText(root, '[data-hero-date]', daysFormatDate(target, event.annual) + (event.annual ? daysT('annualSuffix') : ''));
   daysSetText(root, '[data-hero-count]', copy.count); daysSetText(root, '[data-hero-unit]', copy.unit);
   var hero = root.querySelector('[data-hero]'); if (hero) hero.style.setProperty('--event-color', event.color);
 }
 function daysRenderPage(root) {
-  daysRenderHero(root); var events = daysFilteredEvents(); var list = root.querySelector('[data-event-list]'); var empty = root.querySelector('[data-empty]');
-  list.textContent = ''; daysSetText(root, '[data-event-total]', events.length + ' 个日子'); empty.hidden = events.length > 0;
+  daysApplyStaticLocale(root); daysRenderHero(root); var events = daysFilteredEvents(); var list = root.querySelector('[data-event-list]'); var empty = root.querySelector('[data-empty]');
+  list.textContent = ''; daysSetText(root, '[data-event-total]', daysT('dayCount', { count: events.length })); empty.hidden = events.length > 0;
   events.forEach(function (event) {
     var diff = daysDifference(event, new Date()); var target = daysOccurrence(event, new Date()); var copy = daysCountCopy(diff);
-    var card = daysElement('article', 'event-card glass' + (event.pinned ? ' is-pinned' : '')); card.style.setProperty('--event-color', event.color); card.tabIndex = 0; card.setAttribute('role', 'button'); card.setAttribute('aria-label', '编辑 ' + event.title); card.dataset.eventId = event.id;
+    var card = daysElement('article', 'event-card glass' + (event.pinned ? ' is-pinned' : '')); card.style.setProperty('--event-color', event.color); card.tabIndex = 0; card.setAttribute('role', 'button'); card.setAttribute('aria-label', daysT('editAria', { title: event.title })); card.dataset.eventId = event.id;
     var top = daysElement('div', 'event-card-top'); var category = daysElement('span', 'event-category', daysCategoryLabel(event.category, event.categoryLabel));
     var badges = daysElement('span', 'event-badges');
-    if (event.pinned) badges.appendChild(daysElement('span', 'event-pin', '置顶'));
-    if (diff >= 0 && diff <= 7) badges.appendChild(daysElement('span', 'event-soon', diff === 0 ? '今天' : '临近'));
-    badges.appendChild(daysElement('span', 'event-repeat', event.annual ? '每年' : '单次')); top.appendChild(category); top.appendChild(badges);
-    var title = daysElement('h3', '', event.title); var note = daysElement('p', 'event-note', event.note || '这一天值得被记住。');
+    if (event.pinned) badges.appendChild(daysElement('span', 'event-pin', daysT('pinned')));
+    if (diff >= 0 && diff <= 7) badges.appendChild(daysElement('span', 'event-soon', diff === 0 ? daysT('today') : daysT('soon')));
+    badges.appendChild(daysElement('span', 'event-repeat', event.annual ? daysT('yearly') : daysT('once'))); top.appendChild(category); top.appendChild(badges);
+    var title = daysElement('h3', '', event.title); var note = daysElement('p', 'event-note', event.note || daysT('remembered'));
     var bottom = daysElement('div', 'event-card-bottom'); var date = daysElement('span', 'event-date', daysFormatDate(target, event.annual));
     var counter = daysElement('strong', 'event-count', copy.phrase); bottom.appendChild(date); bottom.appendChild(counter);
     card.appendChild(top); card.appendChild(title); card.appendChild(note); card.appendChild(bottom); list.appendChild(card);
@@ -264,7 +327,7 @@ function daysOpenEditor(root, event) {
   categoryField.value = event ? event.category : 'life'; noteField.value = event ? event.note : '';
   annualField.checked = event ? event.annual : false; pinnedField.checked = event ? event.pinned : false; colorField.value = event ? event.color : DAYS_COLORS[daysPageState.events.length % DAYS_COLORS.length];
   daysRenderCategoryPicker(root, categoryField.value); daysSetCategoryPopover(root, false);
-  daysSetText(root, '[data-editor-title]', event ? '编辑日子' : '新建日子'); var deleteButton = root.querySelector('[data-action="delete-event"]'); if (deleteButton) deleteButton.hidden = !event;
+  daysSetText(root, '[data-editor-title]', event ? daysT('editorEdit') : daysT('editorNew')); var deleteButton = root.querySelector('[data-action="delete-event"]'); if (deleteButton) deleteButton.hidden = !event;
   requestAnimationFrame(function () { requestAnimationFrame(function () {
     if (daysPageState.editorToken !== token || panel.hidden) return; panel.classList.add('is-open');
     try { titleField.focus({ preventScroll: true }); } catch (_) { titleField.focus(); }
@@ -288,42 +351,42 @@ async function daysSubmitEvent(root, form) {
   var next = { id: id || ('day-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7)), title: String(titleField.value || '').trim(), date: String(dateField.value || ''), category: selectedCategory.id, categoryLabel: selectedCategory.custom ? selectedCategory.label : '', note: String(noteField.value || '').trim(), annual: annualField.checked, pinned: pinnedField.checked, color: String(colorField.value || '#D97757'), createdAt: existing ? existing.createdAt : Date.now() };
   if (!next.title || !daysParseDate(next.date)) return false;
   daysPageState.events = existing ? daysPageState.events.map(function (event) { return event.id === id ? next : event; }) : daysPageState.events.concat(next);
-  await daysSaveEvents(daysPageState.events); daysCloseEditor(root); daysRenderPage(root); await daysNotify(existing ? '日子已更新' : '日子已保存'); return true;
+  await daysSaveEvents(daysPageState.events); daysCloseEditor(root); daysRenderPage(root); await daysNotify(daysT(existing ? 'updated' : 'saved')); return true;
 }
 async function daysHandleSave(root) {
   if (daysPageState.saving) return;
   var form = root.querySelector('[data-event-form]'); var button = root.querySelector('[data-action="save-event"]'); if (!form) throw new Error('[Days] editor form is missing');
-  daysPageState.saving = true; if (button) { button.disabled = true; button.textContent = '保存中…'; }
+  daysPageState.saving = true; if (button) { button.disabled = true; button.textContent = daysT('saving'); }
   try { await daysSubmitEvent(root, form); }
-  catch (error) { console.error('[Days] save failed', error); await daysNotify('保存失败，请稍后重试', 'error'); }
-  finally { daysPageState.saving = false; if (button) { button.disabled = false; button.textContent = '保存日子'; } }
+  catch (error) { console.error('[Days] save failed', error); await daysNotify(daysT('saveFailed'), 'error'); }
+  finally { daysPageState.saving = false; if (button) { button.disabled = false; button.textContent = daysT('save'); } }
 }
 async function daysDeleteEvent(root) {
   var event = daysPageState.events.find(function (item) { return item.id === daysPageState.editingId; }); if (!event) return;
-  var confirmed = await Tapp.ui.confirm('确定删除“' + event.title + '”吗？'); if (!confirmed) return;
+  var confirmed = await Tapp.ui.confirm(daysT('deleteConfirm', { title: event.title })); if (!confirmed) return;
   daysPageState.events = daysPageState.events.filter(function (item) { return item.id !== event.id; });
-  await daysSaveEvents(daysPageState.events); daysCloseEditor(root); daysRenderPage(root); await daysNotify('日子已删除', 'info');
+  await daysSaveEvents(daysPageState.events); daysCloseEditor(root); daysRenderPage(root); await daysNotify(daysT('deleted'), 'info');
 }
 async function daysMountPage(root) {
-  if (root.dataset.ready === 'true' || root.dataset.ready === 'mounting') return; root.dataset.ready = 'mounting'; await daysInitTheme(); var store = await daysLoadStore(); daysPageState.events = store.events; daysPageState.categories = store.categories; daysRenderPage(root);
+  if (root.dataset.ready === 'true' || root.dataset.ready === 'mounting') return; root.dataset.ready = 'mounting'; await daysInitTheme(); await daysInitLocale(null, function () { daysRenderPage(root); if (!root.querySelector('[data-editor]').hidden) { var editing = daysPageState.events.find(function (item) { return item.id === daysPageState.editingId; }); daysSetText(root, '[data-editor-title]', editing ? daysT('editorEdit') : daysT('editorNew')); daysRenderCategoryPicker(root, root.querySelector('[name="category"]').value); } }); var store = await daysLoadStore(); daysPageState.events = store.events; daysPageState.categories = store.categories; daysRenderPage(root);
   root.addEventListener('click', function (event) {
     var action = event.target.closest('[data-action]');
     if (action) {
       var name = action.dataset.action;
-      if (name === 'new-event') { try { daysOpenEditor(root, null); } catch (error) { console.error(error); daysNotify('编辑器打开失败，请重新加载页面', 'error'); } }
+      if (name === 'new-event') { try { daysOpenEditor(root, null); } catch (error) { console.error(error); daysNotify(daysT('editorFailed'), 'error'); } }
       if (name === 'close-editor') daysCloseEditor(root);
       if (name === 'delete-event') daysDeleteEvent(root).catch(console.error);
       if (name === 'save-event') daysHandleSave(root).catch(console.error);
       if (name === 'toggle-category') { var popover = root.querySelector('[data-category-popover]'); daysSetCategoryPopover(root, Boolean(popover && popover.hidden)); }
       if (name === 'select-category') { daysRenderCategoryPicker(root, action.dataset.categoryId); daysSetCategoryPopover(root, false); }
-      if (name === 'add-category') daysAddCategory(root).catch(function (error) { console.error(error); daysNotify('分类添加失败，请稍后重试', 'error'); });
+      if (name === 'add-category') daysAddCategory(root).catch(function (error) { console.error(error); daysNotify(daysT('categoryFailed'), 'error'); });
       if (name === 'set-date') daysSetQuickDate(root, action.dataset.offset);
       return;
     }
     if (!event.target.closest('[data-category-picker]')) daysSetCategoryPopover(root, false);
     var filter = event.target.closest('[data-filter]'); if (filter) { daysPageState.filter = filter.dataset.filter; root.querySelectorAll('[data-filter]').forEach(function (button) { button.classList.toggle('is-active', button === filter); }); daysRenderPage(root); return; }
     var card = event.target.closest('[data-event-id]');
-    if (card) { try { daysOpenEditor(root, daysPageState.events.find(function (item) { return item.id === card.dataset.eventId; })); } catch (error) { console.error(error); daysNotify('编辑器打开失败，请重新加载页面', 'error'); } }
+    if (card) { try { daysOpenEditor(root, daysPageState.events.find(function (item) { return item.id === card.dataset.eventId; })); } catch (error) { console.error(error); daysNotify(daysT('editorFailed'), 'error'); } }
   });
   root.addEventListener('keydown', function (event) {
     var card = event.target.closest('[data-event-id]'); if (card && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); card.click(); return; }
@@ -337,7 +400,7 @@ async function daysMountPage(root) {
     daysPageState.off = Tapp.storage.onChanged(function (event) { if (!event || !event.key || event.key === DAYS_STORAGE_KEY || event.key === DAYS_CATEGORIES_STORAGE_KEY) daysLoadStore().then(function (nextStore) { daysPageState.events = nextStore.events; daysPageState.categories = nextStore.categories; daysRenderPage(root); }); });
   }
   root.dataset.ready = 'true';
-  Tapp.lifecycle.onDestroy(function () { if (daysPageState.off) daysPageState.off(); if (daysThemeOff) daysThemeOff(); daysThemeOff = null; });
+  Tapp.lifecycle.onDestroy(function () { if (daysPageState.off) daysPageState.off(); if (daysThemeOff) daysThemeOff(); if (daysLocaleOff) daysLocaleOff(); daysThemeOff = null; daysLocaleOff = null; });
 }
 if (typeof Tapp !== 'undefined' && Tapp.lifecycle) {
   Tapp.lifecycle.onReady(function () { var root = document.querySelector('[data-days-page]'); if (root) daysMountPage(root).catch(console.error); });

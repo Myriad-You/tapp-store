@@ -2,11 +2,11 @@
   <header class="page-header">
     <div>
       <p class="eyebrow">DAYS THAT MATTER</p>
-      <h1>朝夕</h1>
-      <p class="page-subtitle">把期待写进日历，也把走过的日子留在身边。</p>
+      <h1 data-i18n="appName">朝夕</h1>
+      <p class="page-subtitle" data-i18n="subtitle">把期待写进日历，也把走过的日子留在身边。</p>
     </div>
-    <button class="primary-button" type="button" data-action="new-event" aria-label="新建日子">
-      <span aria-hidden="true">＋</span> 新建日子
+    <button class="primary-button" type="button" data-action="new-event" aria-label="新建日子" data-i18n-aria-label="newEvent">
+      <span aria-hidden="true">＋</span> <span data-i18n="newEvent">新建日子</span>
     </button>
   </header>
 
@@ -23,16 +23,16 @@
     </div>
   </section>
 
-  <section class="toolbar glass" aria-label="筛选日子">
+  <section class="toolbar glass" aria-label="筛选日子" data-i18n-aria-label="filterAria">
     <label class="search-field">
       <span aria-hidden="true">⌕</span>
-      <input type="search" data-search placeholder="搜索名称或备注" aria-label="搜索名称或备注" />
+      <input type="search" data-search placeholder="搜索名称或备注" aria-label="搜索名称或备注" data-i18n-placeholder="search" data-i18n-aria-label="search" />
     </label>
-    <div class="filter-group" role="group" aria-label="状态筛选">
-      <button type="button" class="filter-button is-active" data-filter="all">全部</button>
-      <button type="button" class="filter-button" data-filter="upcoming">即将到来</button>
-      <button type="button" class="filter-button" data-filter="pinned">已置顶</button>
-      <button type="button" class="filter-button" data-filter="past">已过单次</button>
+    <div class="filter-group" role="group" aria-label="状态筛选" data-i18n-aria-label="statusFilter">
+      <button type="button" class="filter-button is-active" data-filter="all" data-i18n="all">全部</button>
+      <button type="button" class="filter-button" data-filter="upcoming" data-i18n="upcoming">即将到来</button>
+      <button type="button" class="filter-button" data-filter="pinned" data-i18n="pinnedFilter">已置顶</button>
+      <button type="button" class="filter-button" data-filter="past" data-i18n="past">已过单次</button>
     </div>
   </section>
 
@@ -40,16 +40,16 @@
     <div class="section-heading">
       <div>
         <p class="eyebrow">YOUR MOMENTS</p>
-        <h2>我的日子</h2>
+        <h2 data-i18n="momentsTitle">我的日子</h2>
       </div>
       <span class="event-total" data-event-total>0 个日子</span>
     </div>
     <div class="event-grid" data-event-list></div>
     <div class="empty-state glass" data-empty hidden>
       <div class="empty-mark" aria-hidden="true">◌</div>
-      <h3>还没有符合条件的日子</h3>
-      <p>创建一个纪念日、生日、考试或任何值得期待的时刻。</p>
-      <button class="secondary-button" type="button" data-action="new-event">创建第一个日子</button>
+      <h3 data-i18n="emptyTitle">还没有符合条件的日子</h3>
+      <p data-i18n="emptyBody">创建一个纪念日、生日、考试或任何值得期待的时刻。</p>
+      <button class="secondary-button" type="button" data-action="new-event" data-i18n="createFirst">创建第一个日子</button>
     </div>
   </section>
 
@@ -61,64 +61,64 @@
           <p class="eyebrow">A MOMENT IN TIME</p>
           <h2 id="editor-title" data-editor-title>新建日子</h2>
         </div>
-        <button class="icon-button" type="button" data-action="close-editor" aria-label="关闭编辑器">×</button>
+        <button class="icon-button" type="button" data-action="close-editor" aria-label="关闭编辑器" data-i18n-aria-label="closeEditor">×</button>
       </header>
 
       <input type="hidden" name="id" />
       <label class="field">
-        <span>名称</span>
-        <input name="title" maxlength="80" required placeholder="例如：去看海的日子" />
+        <span data-i18n="name">名称</span>
+        <input name="title" maxlength="80" required placeholder="例如：去看海的日子" data-i18n-placeholder="namePlaceholder" />
       </label>
       <div class="field-row">
         <label class="field date-field">
-          <span>日期</span>
+          <span data-i18n="date">日期</span>
           <input name="date" type="date" required />
-          <span class="date-shortcuts" aria-label="快捷选择日期">
-            <button type="button" data-action="set-date" data-offset="0">今天</button>
-            <button type="button" data-action="set-date" data-offset="7">7 天后</button>
-            <button type="button" data-action="set-date" data-offset="30">30 天后</button>
-            <button type="button" data-action="set-date" data-offset="365">一年后</button>
+          <span class="date-shortcuts" aria-label="快捷选择日期" data-i18n-aria-label="quickDate">
+            <button type="button" data-action="set-date" data-offset="0" data-i18n="today">今天</button>
+            <button type="button" data-action="set-date" data-offset="7" data-i18n="in7Days">7 天后</button>
+            <button type="button" data-action="set-date" data-offset="30" data-i18n="in30Days">30 天后</button>
+            <button type="button" data-action="set-date" data-offset="365" data-i18n="inOneYear">一年后</button>
           </span>
         </label>
         <div class="field category-field" data-category-picker>
-          <span>分类</span>
+          <span data-i18n="category">分类</span>
           <input name="category" type="hidden" value="life" />
           <button class="category-trigger" type="button" data-action="toggle-category" aria-haspopup="listbox" aria-expanded="false">
             <span data-category-value>生活</span>
             <span class="category-chevron" aria-hidden="true">⌄</span>
           </button>
           <div class="category-popover glass" data-category-popover hidden>
-            <div class="category-options" data-category-options role="listbox" aria-label="选择分类"></div>
+            <div class="category-options" data-category-options role="listbox" aria-label="选择分类" data-i18n-aria-label="chooseCategory"></div>
             <div class="category-create">
-              <input type="text" data-category-input maxlength="12" placeholder="输入新分类" aria-label="新分类名称" />
-              <button type="button" data-action="add-category">添加</button>
+              <input type="text" data-category-input maxlength="12" placeholder="输入新分类" aria-label="新分类名称" data-i18n-placeholder="categoryPlaceholder" data-i18n-aria-label="newCategoryName" />
+              <button type="button" data-action="add-category" data-i18n="add">添加</button>
             </div>
           </div>
         </div>
       </div>
       <label class="field">
-        <span>备注</span>
-        <textarea name="note" maxlength="240" rows="3" placeholder="写下一点期待，或关于这一天的故事"></textarea>
+        <span data-i18n="note">备注</span>
+        <textarea name="note" maxlength="240" rows="3" placeholder="写下一点期待，或关于这一天的故事" data-i18n-placeholder="notePlaceholder"></textarea>
       </label>
       <div class="field-row compact-row">
         <label class="toggle-field">
           <input name="annual" type="checkbox" />
-          <span><b>每年重复</b><small>适合生日与纪念日</small></span>
+          <span><b data-i18n="annual">每年重复</b><small data-i18n="annualHint">适合生日与纪念日</small></span>
         </label>
         <label class="toggle-field">
           <input name="pinned" type="checkbox" />
-          <span><b>置顶日子</b><small>优先展示在首页与 Widget</small></span>
+          <span><b data-i18n="pinEvent">置顶日子</b><small data-i18n="pinHint">优先展示在首页与 Widget</small></span>
         </label>
         <label class="color-field">
-          <span>标记颜色</span>
-          <input name="color" type="color" value="#D97757" aria-label="标记颜色" />
+          <span data-i18n="color">标记颜色</span>
+          <input name="color" type="color" value="#D97757" aria-label="标记颜色" data-i18n-aria-label="color" />
         </label>
       </div>
       <footer>
-        <button class="danger-button" type="button" data-action="delete-event" hidden>删除</button>
+        <button class="danger-button" type="button" data-action="delete-event" hidden data-i18n="delete">删除</button>
         <span class="footer-spacer"></span>
-        <button class="secondary-button" type="button" data-action="close-editor">取消</button>
-        <button class="primary-button" type="button" data-action="save-event">保存日子</button>
+        <button class="secondary-button" type="button" data-action="close-editor" data-i18n="cancel">取消</button>
+        <button class="primary-button" type="button" data-action="save-event" data-i18n="save">保存日子</button>
       </footer>
     </form>
   </section>
