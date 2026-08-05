@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import ts from "../../../tapp-cli/node_modules/typescript/lib/typescript.js";
+import ts from "typescript";
 
 const sourcePath = process.argv[2];
 const outputDir = process.argv[3];

@@ -51,7 +51,8 @@ RSSHub Radar TApp -> 固定声明的 RSSHub 服务 -> 目标网站
 重新生成规则：
 
 ```bash
-node scripts/build-rules.mjs /path/to/RSSHub-Radar/src/lib/radar-rules.ts assets/rules
+npm install
+npm run build:rules -- /path/to/RSSHub-Radar/src/lib/radar-rules.ts assets/rules
 ```
 
 ## 许可

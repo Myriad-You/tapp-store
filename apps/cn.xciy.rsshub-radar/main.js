@@ -911,7 +911,7 @@
     if (items) items.textContent = "";
     setPreviewService("loading", "预览服务 rsshub.app · 正在连接");
     try {
-      var response = await Tapp.api("previewFeed", { path: result.path });
+      var response = await Tapp.api("previewFeed", { path: result.path.replace(/^\/+/, "") });
       var text = apiText(response);
       if (!text) throw new Error("RSSHub 没有返回可读取的 XML 内容");
       if (isCloudflareChallenge(text)) throw new Error("rsshub.app 当前被 Cloudflare 拦截（HTTP 403）");

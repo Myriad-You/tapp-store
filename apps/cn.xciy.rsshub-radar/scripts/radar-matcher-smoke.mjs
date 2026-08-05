@@ -8,6 +8,7 @@ const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const mainPath = resolve(appRoot, 'main.js')
 const marker = '  if (window._TAPP_MODE === "page" || window._TAPP_HAS_HTML) {'
 let source = await readFile(mainPath, 'utf8')
+const manifest = JSON.parse(await readFile(resolve(appRoot, 'manifest.json'), 'utf8'))
 
 assert.ok(source.includes(marker), 'Unable to expose matcher functions from main.js')
 source = source.replace(
@@ -16,6 +17,7 @@ source = source.replace(
 )
 
 let apiCalls = 0
+let lastApiParams = null
 const sandbox = {
   URL,
   TextDecoder,
@@ -27,8 +29,9 @@ const sandbox = {
   },
   setTimeout,
   Tapp: {
-    async api() {
+    async api(_name, params) {
       apiCalls += 1
+      lastApiParams = params
       return ''
     },
     assets: {
@@ -58,15 +61,25 @@ assert.equal(previewFailureKind('request timed out'), 'timeout')
 assert.equal(previewFailureKind('返回内容不是有效的 RSS 或 Atom'), 'invalid')
 assert.equal(canPreviewInstance('https://rsshub.app/'), true)
 assert.equal(canPreviewInstance('https://rsshub.example.com'), false)
+assert.equal(manifest.apis.previewFeed.endpoint, 'https://rsshub.app/{{params.path}}')
+for (const path of ['.evil.com/x', '@evil.com/x', '//evil.com/x']) {
+  const expanded = manifest.apis.previewFeed.endpoint.replace('{{params.path}}', path)
+  assert.equal(new URL(expanded).origin, 'https://rsshub.app', `Preview endpoint escaped origin for ${path}`)
+}
 
 const opml = buildOpml([{ path: '/example/feed', title: 'A & B', siteName: 'Example', sourceUrl: 'https://example.com/?a=1&b=2' }])
 assert.match(opml, /text="A &amp; B"/)
 assert.match(opml, /xmlUrl="https:\/\/rsshub\.app\/example\/feed"/)
 assert.match(opml, /htmlUrl="https:\/\/example\.com\/\?a=1&amp;b=2"/)
 
+setInstance('https://rsshub.app')
+await previewFeed({ path: '/github/topic/rsshub' })
+assert.equal(apiCalls, 1, 'Official preview did not call the declared API')
+assert.equal(lastApiParams.path, 'github/topic/rsshub', 'Preview API path retained a leading slash')
+
 setInstance('https://rsshub.example.com')
 await previewFeed({ path: '/example/feed' })
-assert.equal(apiCalls, 0, 'Custom instance preview silently called the fixed rsshub.app API')
+assert.equal(apiCalls, 1, 'Custom instance preview silently called the fixed rsshub.app API')
 const cases = [
   {
     url: 'https://github.com/DIYgod/RSSHub',

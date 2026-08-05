@@ -1,7 +1,7 @@
 {
   "id": "cn.xciy.rsshub-radar",
   "name": "RSSHub 雷达",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "minSystemVersion": "0.2.1",
   "description": "发现 RSSHub 路由，管理订阅并预览 Feed",
   "locales": {
@@ -76,7 +76,7 @@
     "previewFeed": {
       "type": "http",
       "access": "protected",
-      "endpoint": "https://rsshub.app{{params.path}}",
+      "endpoint": "https://rsshub.app/{{params.path}}",
       "method": "GET",
       "headers": {
         "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.1"
