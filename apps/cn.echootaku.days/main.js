@@ -324,18 +324,24 @@ function daysThemeFromStudio(root) {
   panel.querySelectorAll('[data-glass-toggle]').forEach(function (input) { glass[input.dataset.glassToggle] = input.checked; });
   return daysNormalizeTheme({ version: 1, preset: panel.querySelector('[name="themePreset"]').value, accent: panel.querySelector('[name="themeAccent"]').value, glassStrength: panel.querySelector('[name="glassStrength"]').value, corner: panel.querySelector('[name="themeCorner"]').value, glass: glass });
 }
-async function daysUpdateThemeFromStudio(root, changedField) {
+async function daysUpdateThemeFromStudio(root, changedField, persist) {
   var panel = root.querySelector('[data-theme-panel]'); if (!panel) return;
   if (changedField && changedField.name === 'themePreset' && DAYS_THEME_PRESETS[changedField.value]) panel.querySelector('[name="themeAccent"]').value = DAYS_THEME_PRESETS[changedField.value].accent;
-  daysPageState.theme = daysThemeFromStudio(root); daysRenderThemeStudio(root); daysPageState.theme = await daysSaveTheme(daysPageState.theme);
+  daysPageState.theme = daysThemeFromStudio(root); daysRenderThemeStudio(root);
+  if (persist !== false) daysPageState.theme = await daysSaveTheme(daysPageState.theme);
 }
 function daysOpenThemeStudio(root) {
   var panel = root.querySelector('[data-theme-panel]'); if (!panel) return; daysPageState.themeReturnFocus = document.activeElement; panel.hidden = false; panel.setAttribute('aria-hidden', 'false'); daysRenderThemeStudio(root);
   requestAnimationFrame(function () { requestAnimationFrame(function () { panel.classList.add('is-open'); var first = panel.querySelector('select, input, button'); if (first) { try { first.focus({ preventScroll: true }); } catch (_) { first.focus(); } } }); });
 }
 function daysCloseThemeStudio(root) {
-  var panel = root.querySelector('[data-theme-panel]'); if (!panel || panel.hidden) return; var returnFocus = daysPageState.themeReturnFocus; daysPageState.themeReturnFocus = null; panel.classList.remove('is-open'); panel.setAttribute('aria-hidden', 'true');
-  setTimeout(function () { if (!panel.classList.contains('is-open')) { panel.hidden = true; if (returnFocus && returnFocus.isConnected) { try { returnFocus.focus({ preventScroll: true }); } catch (_) { returnFocus.focus(); } } } }, 260);
+  var panel = root.querySelector('[data-theme-panel]'); if (!panel || panel.hidden) return; var card = panel.querySelector('.theme-card'); var returnFocus = daysPageState.themeReturnFocus; var finished = false; var fallbackTimer = null; daysPageState.themeReturnFocus = null;
+  function finishClose() {
+    if (finished) return; finished = true; if (card) card.removeEventListener('transitionend', handleTransitionEnd); if (fallbackTimer) clearTimeout(fallbackTimer);
+    if (panel.classList.contains('is-open')) return; panel.hidden = true; if (returnFocus && returnFocus.isConnected) { try { returnFocus.focus({ preventScroll: true }); } catch (_) { returnFocus.focus(); } }
+  }
+  function handleTransitionEnd(event) { if (event.target === card && event.propertyName === 'transform') finishClose(); }
+  if (card) card.addEventListener('transitionend', handleTransitionEnd); panel.classList.remove('is-open'); panel.setAttribute('aria-hidden', 'true'); fallbackTimer = setTimeout(finishClose, 380);
 }
 async function daysCopyThemeCode(root) {
   var code = root.querySelector('[data-theme-code]'); if (!code) return; code.focus(); code.select(); var copied = false;
@@ -501,7 +507,7 @@ async function daysMountPage(root) {
   });
   root.querySelector('[data-search]').addEventListener('input', function (event) { daysPageState.query = event.target.value; daysRenderPage(root); });
   root.querySelector('[data-event-form]').addEventListener('submit', function (event) { event.preventDefault(); event.stopPropagation(); daysHandleSave(root).catch(console.error); }, true);
-  root.querySelector('[data-theme-panel]').addEventListener('input', function (event) { if (event.target.matches('[name="glassStrength"]')) daysUpdateThemeFromStudio(root, event.target).catch(console.error); });
+  root.querySelector('[data-theme-panel]').addEventListener('input', function (event) { if (event.target.matches('[name="glassStrength"]')) daysUpdateThemeFromStudio(root, event.target, false).catch(console.error); });
   root.querySelector('[data-theme-panel]').addEventListener('change', function (event) { if (event.target.matches('select, input')) daysUpdateThemeFromStudio(root, event.target).catch(console.error); });
   if (Tapp.storage && typeof Tapp.storage.onChanged === 'function') {
     daysPageState.off = Tapp.storage.onChanged(function (event) {
