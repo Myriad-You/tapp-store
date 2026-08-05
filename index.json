@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.11.2",
+  "version": "1.11.1",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-08-05T01:26:05.944Z",
+  "updated_at": "2026-08-04T09:47:35Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -78,7 +78,7 @@
         "page_styles": "apps/com.myriad.music-player/page.css",
         "page_template": "apps/com.myriad.music-player/page.html"
       },
-      "size": 338878,
+      "size": 326415,
       "downloads": 0,
       "rating": 0,
       "featured": true,
@@ -160,7 +160,7 @@
           }
         }
       },
-      "size": 126376,
+      "size": 28672,
       "downloads": 0,
       "rating": 0,
       "featured": true,
@@ -172,16 +172,16 @@
       "id": "com.myriad.config-generator",
       "name": "Myriad 安装配置生成",
       "version": "1.0.0",
-      "description": "生成 Compose、.env 与 Nginx 部署配置（1Panel / 宝塔 / CLI · 整站反代 + 联邦）",
+      "description": "生成 Compose、.env 与 Nginx 部署配置（1Panel / 宝塔 / CLI）",
       "long_description": "填写域名与数据库参数，按所选面板（1Panel / 宝塔 / 通用 CLI）生成官方生产拓扑的 docker-compose、.env、Nginx 与部署说明。密钥白名单与 .env 再解析防注入；原生表单/通知全自定义；宝塔可粘贴编排或目录部署。",
       "locales": {
         "en-US": {
           "name": "Myriad Install Config Generator",
-          "description": "Generate Compose, .env, and Nginx configs for 1Panel, Baota, or CLI (site-wide reverse proxy + federation)"
+          "description": "Generate Compose, .env, and Nginx configs for 1Panel, Baota, or CLI"
         },
         "ja-JP": {
           "name": "Myriad インストール設定ジェネレーター",
-          "description": "1Panel / 宝塔 / CLI 向け Compose・.env・Nginx 設定を生成（サイト全体リバプロ + フェデレーション）"
+          "description": "1Panel / 宝塔 / CLI 向け Compose・.env・Nginx 設定を生成"
         }
       },
       "author": {
@@ -239,7 +239,7 @@
         "page_styles": "apps/com.myriad.config-generator/page.css",
         "page_template": "apps/com.myriad.config-generator/page.html"
       },
-      "size": 179328,
+      "size": 155000,
       "downloads": 0,
       "rating": 0,
       "featured": true,
@@ -284,7 +284,7 @@
         "federation:write",
         "federation:message"
       ],
-      "icon_svg": "<svg viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"3\" y=\"4\" width=\"12\" height=\"16\" rx=\"1.5\" stroke=\"currentColor\" stroke-width=\"2\"/><rect x=\"9\" y=\"4\" width=\"12\" height=\"16\" rx=\"1.5\" stroke=\"currentColor\" stroke-width=\"2\"/><path d=\"M12 10h2M12 14h3\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg>",
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><rect x='3' y='4' width='12' height='16' rx='1.5' stroke='currentColor' stroke-width='2'/><rect x='9' y='4' width='12' height='16' rx='1.5' stroke='currentColor' stroke-width='2'/><path d='M12 10h2M12 14h3' stroke='currentColor' stroke-width='2' stroke-linecap='round'/></svg>",
       "theme_color": "#ef4444",
       "screenshots": [],
       "preview": {
@@ -313,7 +313,7 @@
         "page_styles": "apps/com.myriad.doudizhu/page.css",
         "page_template": "apps/com.myriad.doudizhu/page.html"
       },
-      "size": 3964466,
+      "size": 4043004,
       "downloads": 0,
       "rating": 0,
       "featured": true,
@@ -427,7 +427,7 @@
           "index.js": "apps/com.myriad.aro/page/index.js"
         }
       },
-      "size": 1396430,
+      "size": 1443119,
       "downloads": 0,
       "rating": 0,
       "featured": true,
@@ -483,7 +483,7 @@
       "preview": {
         "version": 1,
         "type": "snapshot",
-        "html": "apps/cn.wyyzxzyg.cdn-cache/preview.html",
+        "html": "app/scn.wyyzxzyg.cdn-cache/preview.html",
         "styles": [
           "apps/cn.wyyzxzyg.cdn-cache/page.css",
           "apps/cn.wyyzxzyg.cdn-cache/preview.css"
@@ -506,7 +506,7 @@
         "page_styles": "apps/cn.wyyzxzyg.cdn-cache/page.css",
         "page_template": "apps/cn.wyyzxzyg.cdn-cache/page.html"
       },
-      "size": 41806,
+      "size": 45737,
       "downloads": 0,
       "rating": 0,
       "featured": true,
@@ -520,66 +520,19 @@
       "version": "1.0.3",
       "description": "面向玩家的 Java/基岩版服务器查询、收藏与 Minecraft Wiki 搜索工具",
       "long_description": "查询 Minecraft Java 与基岩版服务器的在线状态、版本、MOTD、人数、玩家和软件信息；收藏常用服务器、保存最近查询，支持 Wiki 条目、多服务器首页小组件轮播与自定义状态检测间隔。",
-      "author": {
-        "name": "我願一直向著陽光.℡",
-        "url": "https://github.com/zgzyh"
-      },
+      "author": {"name": "我願一直向著陽光.℡", "url": "https://github.com/zgzyh"},
       "license": "MIT",
       "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.wyyzxzyg.minecraft-hub",
       "repository": "https://github.com/Myriad-You/tapp-store",
-      "category": "game",
-      "tags": [
-        "Minecraft",
-        "服务器",
-        "查服",
-        "Wiki",
-        "Java",
-        "基岩版"
-      ],
-      "permissions": [
-        "storage",
-        "ui:notification",
-        "ui:theme",
-        "ui:openUrl",
-        "network:fetch",
-        "widget:register"
-      ],
-      "icon_svg": "<svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path fill='currentColor' d='M3 5.5 12 2l9 3.5v13L12 22l-9-3.5v-13Zm9-1.35L6.1 6.45 12 8.8l5.9-2.35L12 4.15Zm-7 4v8.98l6 2.34v-8.98L5 8.15Zm8 11.32 6-2.34V8.15l-6 2.34v8.98Z'/></svg>",
+      "category": "games",
+      "tags": ["Minecraft", "服务器", "查服", "Wiki", "Java", "基岩版"],
+      "permissions": ["storage", "ui:notification", "ui:theme", "ui:openUrl", "network:fetch", "widget:register"],
+      "icon_svg": "<svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"currentColor\" d=\"M3 5.5 12 2l9 3.5v13L12 22l-9-3.5v-13Zm9-1.35L6.1 6.45 12 8.8l5.9-2.35L12 4.15Zm-7 4v8.98l6 2.34v-8.98L5 8.15Zm8 11.32 6-2.34V8.15l-6 2.34v8.98Z\"/></svg>",
       "theme_color": "#57a64e",
       "screenshots": [],
-      "preview": {
-        "version": 1,
-        "type": "snapshot",
-        "html": "apps/cn.wyyzxzyg.minecraft-hub/preview.html",
-        "styles": [
-          "apps/cn.wyyzxzyg.minecraft-hub/page.css",
-          "apps/cn.wyyzxzyg.minecraft-hub/preview.css"
-        ],
-        "viewport": {
-          "width": 1440,
-          "height": 900
-        },
-        "fit": "cover",
-        "focus": {
-          "x": 0.5,
-          "y": 0.5
-        },
-        "theme": "light"
-      },
-      "download": {
-        "manifest": "apps/cn.wyyzxzyg.minecraft-hub/manifest.json",
-        "code": "apps/cn.wyyzxzyg.minecraft-hub/main.js",
-        "readme": "apps/cn.wyyzxzyg.minecraft-hub/README.md",
-        "widget_styles": "apps/cn.wyyzxzyg.minecraft-hub/widget.css",
-        "page_styles": "apps/cn.wyyzxzyg.minecraft-hub/page.css",
-        "page_template": "apps/cn.wyyzxzyg.minecraft-hub/page.html",
-        "widget_templates": {
-          "server-status": {
-            "4x2": "apps/cn.wyyzxzyg.minecraft-hub/widget-4x2.html"
-          }
-        }
-      },
-      "size": 30364,
+      "preview": {"version":1,"type":"snapshot","html":"apps/cn.wyyzxzyg.minecraft-hub/preview.html","styles":["apps/cn.wyyzxzyg.minecraft-hub/page.css","apps/cn.wyyzxzyg.minecraft-hub/preview.css"],"viewport":{"width":1440,"height":900},"fit":"cover","focus":{"x":0.5,"y":0.5},"theme":"light"},
+      "download": {"manifest":"apps/cn.wyyzxzyg.minecraft-hub/manifest.json","code":"apps/cn.wyyzxzyg.minecraft-hub/main.js","readme":"apps/cn.wyyzxzyg.minecraft-hub/README.md","page_styles":"apps/cn.wyyzxzyg.minecraft-hub/page.css","page_template":"apps/cn.wyyzxzyg.minecraft-hub/page.html","widget_styles":"apps/cn.wyyzxzyg.minecraft-hub/widget.css","widget_templates":{"server-status":{"4x2":"apps/cn.wyyzxzyg.minecraft-hub/widget-4x2.html"}}},
+      "size": 31564,
       "downloads": 0,
       "rating": 0,
       "featured": false,
@@ -591,12 +544,12 @@
       "id": "site.abloom.meliora",
       "name": "Meliora 播放器",
       "version": "0.1.0",
-      "description": "沉浸式歌词与节拍可视化:逐行/逐字歌词跟随、节拍网格驱动的呼吸背景、八段频谱。播放内核由 Myriad 宿主提供。",
+      "description": "沉浸式歌词与节拍可视化:逐行/逐字歌词跟随、节拍网格驱动的呼吸背景、八段频谱",
       "long_description": "Meliora 的 Myriad Tapp 版本:原样复刻 Meliora 播放页(歌词 FLIP 滚动、逐行/逐字高亮、节拍呼吸背景、五段频谱),播放内核、歌词(网易云 yrc / 酷狗 KRC 逐字)、节拍网格与频谱均由 Myriad 宿主提供。",
       "locales": {
         "en-US": {
           "name": "Meliora Player",
-          "description": "Immersive lyrics & beat visuals: synced lyrics, beat-grid breathing background and an 8-band spectrum. Playback is powered by the Myriad host."
+          "description": "Immersive lyrics & beat visuals powered by the Myriad host player"
         }
       },
       "author": {
@@ -620,7 +573,7 @@
         "storage",
         "network:fetch"
       ],
-      "icon_svg": "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><defs><linearGradient id='a' x1='58' y1='34' x2='454' y2='478' gradientUnits='userSpaceOnUse'><stop stop-color='#baf2ed'/><stop offset='.5' stop-color='#81d8d0'/><stop offset='1' stop-color='#287f7b'/></linearGradient><radialGradient id='b' cx='0' cy='0' r='1' gradientTransform='translate(160 95) rotate(48) scale(360)'><stop stop-color='#fff' stop-opacity='.28'/><stop offset='1' stop-color='#fff' stop-opacity='0'/></radialGradient></defs><rect width='512' height='512' rx='128' fill='#121719'/><rect width='512' height='512' rx='128' fill='url(#b)'/><path d='M82 340V164c0-32 40-46 60-21.6L256 286l114-143.6c20-24.4 60-10.4 60 21.6v176' fill='none' stroke='url(#a)' stroke-width='64' stroke-linecap='round' stroke-linejoin='round'/><circle cx='82' cy='372' r='54' fill='url(#a)'/><circle cx='430' cy='372' r='54' fill='url(#a)'/></svg>",
+      "icon_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\"><defs><linearGradient id=\"a\" x1=\"58\" y1=\"34\" x2=\"454\" y2=\"478\" gradientUnits=\"userSpaceOnUse\"><stop stop-color=\"#baf2ed\"/><stop offset=\".5\" stop-color=\"#81d8d0\"/><stop offset=\"1\" stop-color=\"#287f7b\"/></linearGradient><radialGradient id=\"b\" cx=\"0\" cy=\"0\" r=\"1\" gradientTransform=\"translate(160 95) rotate(48) scale(360)\"><stop stop-color=\"#fff\" stop-opacity=\".28\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\"0\"/></radialGradient></defs><rect width=\"512\" height=\"512\" rx=\"128\" fill=\"#121719\"/><rect width=\"512\" height=\"512\" rx=\"128\" fill=\"url(#b)\"/><path d=\"M82 340V164c0-32 40-46 60-21.6L256 286l114-143.6c20-24.4 60-10.4 60 21.6v176\" fill=\"none\" stroke=\"url(#a)\" stroke-width=\"64\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"82\" cy=\"372\" r=\"54\" fill=\"url(#a)\"/><circle cx=\"430\" cy=\"372\" r=\"54\" fill=\"url(#a)\"/></svg>",
       "theme_color": "#151318",
       "screenshots": [],
       "download": {
@@ -630,7 +583,7 @@
         "page_styles": "apps/site.abloom.meliora/page.css",
         "page_template": "apps/site.abloom.meliora/page.html"
       },
-      "size": 255409,
+      "size": 255488,
       "downloads": 0,
       "rating": 0,
       "featured": false,
@@ -670,7 +623,7 @@
         "storage",
         "widget:register"
       ],
-      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M12 2l2.7 5.7L21 8.6l-4.6 4.4 1.1 6.2L12 16.2 6.5 19.2 7.6 13 3 8.6l6.3-.9L12 2z' stroke='currentColor' stroke-width='1.8' stroke-linejoin='round'/><path d='M12 7v5l3 2' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/></svg>",
+      "icon_svg": "<svg viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 2l2.7 5.7L21 8.6l-4.6 4.4 1.1 6.2L12 16.2 6.5 19.2 7.6 13 3 8.6l6.3-.9L12 2z\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linejoin=\"round\"/><path d=\"M12 7v5l3 2\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\"/></svg>",
       "theme_color": "#745aa8",
       "screenshots": [],
       "preview": {
@@ -707,7 +660,7 @@
           }
         }
       },
-      "size": 142335,
+      "size": 145132,
       "downloads": 0,
       "rating": 0,
       "featured": false,
@@ -779,7 +732,7 @@
           }
         }
       },
-      "size": 99471,
+      "size": 99542,
       "downloads": 0,
       "rating": 0,
       "featured": false,
@@ -861,7 +814,7 @@
           }
         }
       },
-      "size": 57128,
+      "size": 57454,
       "downloads": 0,
       "rating": 0,
       "featured": false,
@@ -886,7 +839,7 @@
         }
       },
       "author": {
-        "name": "sssr7844",
+        "name": "WKSYweb",
         "url": "https://github.com/WKSYweb"
       },
       "license": "MIT",
@@ -915,7 +868,7 @@
         "page_styles": "apps/org.smcresearchhk.math/page.css",
         "page_template": "apps/org.smcresearchhk.math/page.html"
       },
-      "size": 58057,
+      "size": 58058,
       "downloads": 0,
       "rating": 0,
       "featured": false,

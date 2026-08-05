@@ -134,20 +134,22 @@ Manifest 若声明了 `pageStyles` / `pageTemplate`，索引必须提供对应 `
 ## 贡献应用
 
 > **禁止在 PR 中手改 `index.json`。**  
+> **一次 PR 只能修改一个 `apps/<id>/`。** 多应用请拆成多个 PR。  
 > 安装相关字段以 `apps/<id>/manifest.json` 为唯一权威；合并到 `main` 后由 GitHub Actions 自动对齐目录。
 
 1. Fork 本仓库，从 `main` 开分支。
-2. 只在 `apps/{id}/` 添加或修改完整包文件（建议先用 Myriad [`@myriad/tapp-cli`](https://github.com/Myriad-You/Myriad/tree/preview/tools/tapp-cli) 本地 `check` / `pack`）。
+2. **只**在一个 `apps/{id}/` 下添加或修改完整包文件（建议先用 Myriad [`@myriad/tapp-cli`](https://github.com/Myriad-You/Myriad/tree/preview/tools/tapp-cli) 本地 `check` / `pack`）。可附带文档或脚本，但不可夹带第二个 app。
 3. 确保 `manifest.id` === 文件夹名；bump `manifest.version`；`category` 使用稳定 ID。
 4. 本地校验：
 
    ```bash
+   node scripts/check-pr-scope.mjs         # 单 app + 未改 index.json
    node scripts/sync-index.mjs validate   # 包完整性 + 可从 manifest 推导 download
    node scripts/sync-index.mjs report     # 查看与当前 index 的差异（信息用，PR 不必修 index）
    node scripts/validate-previews.mjs     # 若已有 preview 声明
    ```
 
-5. 提交 Pull Request（**不要**包含 `index.json` 改动）。
+5. 提交 Pull Request（**不要**包含 `index.json` 改动；**不要**一次改多个 app）。
 6. 合并后 **Catalog Sync** workflow 会运行 `scripts/sync-index.mjs sync`，按 manifest 重写 `index.json` 的对齐字段与 `download` 表。
 
 ### PR 流程（CI）
@@ -155,6 +157,7 @@ Manifest 若声明了 `pageStyles` / `pageTemplate`，索引必须提供对应 `
 | 阶段 | 行为 |
 | ---- | ---- |
 | PR | 若 diff 含 `index.json` → **失败** |
+| PR | 若 `apps/` 下变更涉及 **超过 1 个 app** → **失败** |
 | PR | `sync-index.mjs validate`：manifest / 文件齐全、可生成 download |
 | PR | `validate-previews.mjs`：现有 index 中的 preview 仍合法 |
 | 合并到 `main` | bot 自动 `sync` 对齐 `index.json` 并提交 |
@@ -176,13 +179,14 @@ node scripts/sync-index.mjs check         # 断言已对齐
 
 ### 发布检查清单
 
+- [ ] **只改了一个** `apps/<id>/`
 - [ ] **未** 修改 `index.json`
 - [ ] `manifest.main` 与包内入口文件名一致（`main.js` / `index.js`）
 - [ ] Manifest 声明的 page/widget CSS、HTML 模板、`pageModules` 均在包内
 - [ ] `manifest.assets` 均在 `{packageRoot}/assets/...`
 - [ ] `category` 为规范 ID（不要用 `games` 等旧别名）
 - [ ] 路径大小写与 Git 一致
-- [ ] `node scripts/sync-index.mjs validate` 通过
+- [ ] `node scripts/check-pr-scope.mjs` 与 `node scripts/sync-index.mjs validate` 通过
 
 ## 当前应用
 

@@ -11,13 +11,14 @@
 
 ## 检查清单
 
+- [ ] **一次 PR 只改一个 app**（`apps/<id>/`；多 app 请拆 PR）
 - [ ] **没有修改** 根目录 `index.json`（禁止手改；合并后由 bot 从 manifest 自动对齐）
-- [ ] 只改了 `apps/<id>/` 包内容（或文档 / 脚本）
+- [ ] 只改了目标 `apps/<id>/` 包内容（可附带文档 / 脚本；不可夹带其他 app）
 - [ ] `manifest.json` 的 `id` 与文件夹名一致
 - [ ] 版本号已按需 bump（`manifest.version`）
 - [ ] `category` 使用稳定 ID：`ai` / `data` / `developer` / `game` / `media` / `productivity` / `social` / `utility`
 - [ ] Manifest 声明的入口、`pageTemplate` / `pageStyles` / widget 模板等文件都在包内
-- [ ] 本地可跑：`node scripts/sync-index.mjs validate`
+- [ ] 本地可跑：`node scripts/check-pr-scope.mjs` 与 `node scripts/sync-index.mjs validate`
 - [ ] 若有 `preview`：`node scripts/validate-previews.mjs`（合并后 index 对齐时也会跑）
 
 ## 对齐说明
