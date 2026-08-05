@@ -1,0 +1,57 @@
+name: PR Check
+
+on:
+  pull_request:
+    branches: [main, preview]
+
+permissions:
+  contents: read
+
+jobs:
+  catalog:
+    name: Catalog & package check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Forbid hand-editing index.json
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          changed=$(git diff --name-only "$BASE_SHA"..."$HEAD_SHA" || true)
+          echo "Changed files:"
+          echo "$changed"
+          if echo "$changed" | grep -qx 'index.json'; then
+            echo
+            echo '::error title=index.json is protected::Do not edit index.json in PRs.'
+            echo 'Manifest is the source of truth. Change apps/<id>/manifest.json and package files only.'
+            echo 'After merge, the Catalog Sync workflow regenerates index.json automatically.'
+            echo
+            echo 'Local preview of what the bot will write:'
+            echo '  node scripts/sync-index.mjs report'
+            echo '  node scripts/sync-index.mjs sync   # maintainers only, on main'
+            exit 1
+          fi
+
+      - name: Validate packages (manifest → download map)
+        run: node scripts/sync-index.mjs validate
+
+      - name: Alignment report (informational)
+        run: |
+          set +e
+          node scripts/sync-index.mjs report
+          # Drift is expected on app PRs; main bot will sync. Do not fail here.
+          exit 0
+
+      - name: Validate static previews
+        run: node scripts/validate-previews.mjs

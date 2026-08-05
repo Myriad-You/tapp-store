@@ -22,18 +22,21 @@
 
 ```text
 tapp-store/
-├── index.json              # 目录入口（必需）
+├── index.json              # 目录入口（由脚本从 manifest 对齐；PR 禁止手改）
 ├── categories.json         # UI 分类元数据（可选；安装权威是 apps[].category）
 ├── README.md
 ├── apps/
 │   └── {app_id}/
-│       ├── manifest.json   # 必需
-│       ├── main.js         # 入口（或与 download.code 一致的 index.js 等）
+│       ├── manifest.json   # 必需（安装与目录对齐的权威源）
+│       ├── main.js         # 入口（或 index.js 等，与 manifest.main 一致）
 │       ├── page.html / page.css / widget.css / …
 │       ├── assets/         # manifest.assets 二进制
 │       ├── i18n/
 │       ├── page/           # pageModules
 │       └── README.md
+├── scripts/
+│   ├── sync-index.mjs      # manifest ↔ index 对齐 / 校验
+│   └── validate-previews.mjs
 └── development/            # 贡献者文档镜像（见下）
 ```
 
@@ -130,21 +133,56 @@ Manifest 若声明了 `pageStyles` / `pageTemplate`，索引必须提供对应 `
 
 ## 贡献应用
 
-1. Fork 本仓库。
-2. 在 `apps/{id}/` 添加完整包文件（建议先用 Myriad [`@myriad/tapp-cli`](https://github.com/Myriad-You/Myriad/tree/preview/tools/tapp-cli) 在本地 `check` / `pack`）。
-3. 更新根目录 `index.json`：版本、权限、`download` 全路径、`category`、`size`（大包必填）、`locales`。
-4. 确认 **索引 `category` / `version` 与 `manifest.json` 一致**。
-5. 若声明 `preview`，运行 `node scripts/validate-previews.mjs` 检查字段、路径与静态资源安全。
-6. 提交 Pull Request。
+> **禁止在 PR 中手改 `index.json`。**  
+> 安装相关字段以 `apps/<id>/manifest.json` 为唯一权威；合并到 `main` 后由 GitHub Actions 自动对齐目录。
+
+1. Fork 本仓库，从 `main` 开分支。
+2. 只在 `apps/{id}/` 添加或修改完整包文件（建议先用 Myriad [`@myriad/tapp-cli`](https://github.com/Myriad-You/Myriad/tree/preview/tools/tapp-cli) 本地 `check` / `pack`）。
+3. 确保 `manifest.id` === 文件夹名；bump `manifest.version`；`category` 使用稳定 ID。
+4. 本地校验：
+
+   ```bash
+   node scripts/sync-index.mjs validate   # 包完整性 + 可从 manifest 推导 download
+   node scripts/sync-index.mjs report     # 查看与当前 index 的差异（信息用，PR 不必修 index）
+   node scripts/validate-previews.mjs     # 若已有 preview 声明
+   ```
+
+5. 提交 Pull Request（**不要**包含 `index.json` 改动）。
+6. 合并后 **Catalog Sync** workflow 会运行 `scripts/sync-index.mjs sync`，按 manifest 重写 `index.json` 的对齐字段与 `download` 表。
+
+### PR 流程（CI）
+
+| 阶段 | 行为 |
+| ---- | ---- |
+| PR | 若 diff 含 `index.json` → **失败** |
+| PR | `sync-index.mjs validate`：manifest / 文件齐全、可生成 download |
+| PR | `validate-previews.mjs`：现有 index 中的 preview 仍合法 |
+| 合并到 `main` | bot 自动 `sync` 对齐 `index.json` 并提交 |
+
+### 谁改什么
+
+| 内容 | 谁维护 | 位置 |
+| ---- | ------ | ---- |
+| 应用代码与 `manifest.json` | 贡献者 | `apps/<id>/` |
+| 目录对齐字段（version、category、permissions、download、size、icon…） | **bot / 脚本** | `index.json`（由 manifest 生成） |
+| 商店展示字段（long_description、tags、featured、preview…） | 首次由 bot 生成；之后随已有条目保留 | `index.json`（勿在普通 PR 手改） |
+
+维护者若需立即预览对齐结果（不经过 PR）：
+
+```bash
+node scripts/sync-index.mjs sync          # 重写 index.json
+node scripts/sync-index.mjs check         # 断言已对齐
+```
 
 ### 发布检查清单
 
-- [ ] `download.manifest` / `download.code` 可公开 GET
-- [ ] Manifest 声明的 page/widget CSS、HTML 模板均在 `download` 中有路径
-- [ ] `page_modules` 的键是安装后文件名
+- [ ] **未** 修改 `index.json`
+- [ ] `manifest.main` 与包内入口文件名一致（`main.js` / `index.js`）
+- [ ] Manifest 声明的 page/widget CSS、HTML 模板、`pageModules` 均在包内
 - [ ] `manifest.assets` 均在 `{packageRoot}/assets/...`
-- [ ] 分类与版本双端一致
+- [ ] `category` 为规范 ID（不要用 `games` 等旧别名）
 - [ ] 路径大小写与 Git 一致
+- [ ] `node scripts/sync-index.mjs validate` 通过
 
 ## 当前应用
 
