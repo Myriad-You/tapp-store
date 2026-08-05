@@ -646,23 +646,30 @@ function buildDesiredIndex(current, { appFilter = null, prune = false } = {}) {
     apps,
   }
 
-  // bump catalog patch version when content changes
-  const contentChanged = stableStringify({ ...current, updated_at: null, version: null }) !==
+  // Catalog version policy: always 1.0.x
+  // - off-scheme versions (e.g. legacy 1.11.1) reset once to 1.0.0
+  // - each content-changing sync (≈ each merged app PR) bumps only the patch: 1.0.0 → 1.0.1 → …
+  const contentChanged =
+    stableStringify({ ...current, updated_at: null, version: null }) !==
     stableStringify({ ...nextIndex, updated_at: null, version: null })
-  if (contentChanged) {
-    nextIndex.version = bumpPatch(current.version || '0.0.0')
-  }
+  nextIndex.version = nextCatalogVersion(current.version, contentChanged)
 
   return { nextIndex, reports, warnings, errors, contentChanged }
 }
 
-function bumpPatch(version) {
-  const parts = String(version).split('.').map((p) => Number.parseInt(p, 10))
-  if (parts.length >= 3 && parts.every((n) => Number.isFinite(n))) {
-    parts[2] += 1
-    return parts.join('.')
+/** Store catalog semver: major.minor fixed at 1.0; only patch increments. */
+const CATALOG_VERSION_LINE = '1.0'
+
+function nextCatalogVersion(current, contentChanged) {
+  const raw = String(current || '').trim()
+  const m = raw.match(/^1\.0\.(\d+)$/)
+  if (!m) {
+    // Reset legacy / non-conforming catalog versions (e.g. 1.11.1) back to 1.0.0.
+    // Do not also +1 on the same migration write.
+    return `${CATALOG_VERSION_LINE}.0`
   }
-  return version
+  if (!contentChanged) return raw
+  return `${CATALOG_VERSION_LINE}.${Number(m[1]) + 1}`
 }
 
 function appsFingerprint(index) {
@@ -756,13 +763,16 @@ function main() {
   }
 
   if (args.mode === 'sync') {
-    if (!contentChanged && alignedNow) {
+    const versionChanged = String(current.version || '') !== String(nextIndex.version || '')
+    if (!contentChanged && !versionChanged && alignedNow) {
       if (!args.json) console.log('No index.json changes written.')
       process.exit(0)
     }
     writeFileSync(indexPath, stableStringify(nextIndex))
     if (!args.json) {
-      console.log(`Wrote ${relative(root, indexPath)} (catalog version ${nextIndex.version})`)
+      console.log(
+        `Wrote ${relative(root, indexPath)} (catalog version ${current.version || '?'} → ${nextIndex.version})`,
+      )
     }
     process.exit(0)
   }
