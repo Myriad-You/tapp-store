@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-08-05T08:06:13.855Z",
+  "updated_at": "2026-08-05T11:24:14.351Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -577,7 +577,7 @@
           }
         }
       },
-      "size": 30870,
+      "size": 48501,
       "downloads": 0,
       "rating": 0,
       "featured": false,
