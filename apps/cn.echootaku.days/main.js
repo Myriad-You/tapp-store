@@ -1,5 +1,6 @@
 var DAYS_STORAGE_KEY = 'days.events.v1';
 var DAYS_CATEGORIES_STORAGE_KEY = 'days.categories.v1';
+var DAYS_THEME_STORAGE_KEY = 'days.theme.v1';
 var DAYS_COLORS = ['#D97757', '#C6924B', '#66917A', '#6687A8', '#8D78A8', '#B56F83'];
 var DAYS_CATEGORY_IDS = { life: true, birthday: true, anniversary: true, study: true, travel: true, other: true };
 var DAYS_I18N = {
@@ -14,6 +15,7 @@ var DAYS_I18N = {
     pinned: '置顶', soon: '临近', yearly: '每年', once: '单次', remembered: '这一天值得被记住。', editAria: '编辑 {title}',
     categoryAdded: '分类“{label}”已添加', saved: '日子已保存', updated: '日子已更新', deleted: '日子已删除', saveFailed: '保存失败，请稍后重试', categoryFailed: '分类添加失败，请稍后重试', editorFailed: '编辑器打开失败，请重新加载页面', deleteConfirm: '确定删除“{title}”吗？',
     countToday: '今', isToday: '就是今天', remaining: '还有 {count} 天', elapsed: '已经 {count} 天', annualSuffix: ' · 每年', addImportant: '添加一个重要日子', anticipated: '值得期待的日子', widgetEmpty: '在朝夕中创建第一个重要日子', everyDayEchoes: '每一天都有回声',
+    themeStudio: '主题工作室', themeSubtitle: '让主界面与小组件拥有同一套气质。', closeTheme: '关闭主题工作室', themePreset: '主题预设', presetSunset: '朝霞', presetViolet: '暮紫', presetOcean: '远海', presetForest: '森语', presetMono: '留白', accentColor: '强调色', glassStrength: 'Glass 强度', cornerStyle: '圆角风格', cornerSoft: '柔和', cornerRound: '圆润', cornerCompact: '利落', glassScope: 'Glass 应用范围', glassPage: '主界面画布', glassHero: '焦点倒数卡', glassToolbar: '搜索与筛选', glassCards: '日子卡片', glassEditor: '编辑器与主题面板', glassWidgets: '主页小组件', themeCode: '分享主题码', themeCodeHint: '主题码只包含外观设置，不包含你的日子。', copyCode: '复制主题码', importCode: '导入主题码', importPlaceholder: '粘贴 CX1- 开头的主题码', applyCode: '应用主题码', resetTheme: '恢复默认', themeSaved: '主题已保存', themeCopied: '主题码已复制', themeSelected: '已选中主题码，请手动复制', themeImported: '主题码已应用', themeInvalid: '主题码无效或版本不受支持', themeReset: '已恢复默认主题',
     categoryLife: '生活', categoryBirthday: '生日', categoryAnniversary: '纪念', categoryStudy: '学习', categoryTravel: '旅行', categoryOther: '其他'
   },
   'en-US': {
@@ -27,6 +29,7 @@ var DAYS_I18N = {
     pinned: 'Pinned', soon: 'Soon', yearly: 'Yearly', once: 'Once', remembered: 'A day worth remembering.', editAria: 'Edit {title}',
     categoryAdded: 'Category “{label}” added', saved: 'Day saved', updated: 'Day updated', deleted: 'Day deleted', saveFailed: 'Could not save. Please try again.', categoryFailed: 'Could not add the category. Please try again.', editorFailed: 'Could not open the editor. Please reload.', deleteConfirm: 'Delete “{title}”?',
     countToday: 'Now', isToday: 'Today', remaining: '{count} days left', elapsed: '{count} days ago', annualSuffix: ' · Yearly', addImportant: 'Add an important day', anticipated: 'Days to look forward to', widgetEmpty: 'Create your first important day in Days', everyDayEchoes: 'Every day leaves an echo',
+    themeStudio: 'Theme studio', themeSubtitle: 'Give the page and widgets one shared visual language.', closeTheme: 'Close theme studio', themePreset: 'Theme preset', presetSunset: 'Sunrise', presetViolet: 'Twilight', presetOcean: 'Ocean', presetForest: 'Forest', presetMono: 'Paper', accentColor: 'Accent color', glassStrength: 'Glass strength', cornerStyle: 'Corner style', cornerSoft: 'Soft', cornerRound: 'Round', cornerCompact: 'Crisp', glassScope: 'Glass surfaces', glassPage: 'Page canvas', glassHero: 'Countdown hero', glassToolbar: 'Search and filters', glassCards: 'Day cards', glassEditor: 'Editor and theme panel', glassWidgets: 'Home widgets', themeCode: 'Share theme code', themeCodeHint: 'Theme codes contain appearance only—never your dates.', copyCode: 'Copy theme code', importCode: 'Import theme code', importPlaceholder: 'Paste a theme code beginning with CX1-', applyCode: 'Apply theme code', resetTheme: 'Reset theme', themeSaved: 'Theme saved', themeCopied: 'Theme code copied', themeSelected: 'Theme code selected; copy it manually', themeImported: 'Theme code applied', themeInvalid: 'Invalid or unsupported theme code', themeReset: 'Default theme restored',
     categoryLife: 'Life', categoryBirthday: 'Birthday', categoryAnniversary: 'Anniversary', categoryStudy: 'Study', categoryTravel: 'Travel', categoryOther: 'Other'
   },
   'ja-JP': {
@@ -40,6 +43,7 @@ var DAYS_I18N = {
     pinned: '固定', soon: 'もうすぐ', yearly: '毎年', once: '一回', remembered: '忘れたくない大切な日。', editAria: '{title}を編集',
     categoryAdded: 'カテゴリー「{label}」を追加しました', saved: '保存しました', updated: '更新しました', deleted: '削除しました', saveFailed: '保存できませんでした。もう一度お試しください。', categoryFailed: 'カテゴリーを追加できませんでした。', editorFailed: '編集画面を開けませんでした。再読み込みしてください。', deleteConfirm: '「{title}」を削除しますか？',
     countToday: '今', isToday: '今日です', remaining: 'あと {count} 日', elapsed: '{count} 日前', annualSuffix: ' · 毎年', addImportant: '大切な日を追加', anticipated: '楽しみにしている日', widgetEmpty: '日々で最初の大切な日を作成', everyDayEchoes: '一日一日に余韻がある',
+    themeStudio: 'テーマスタジオ', themeSubtitle: 'ページとWidgetの雰囲気を一つに整えます。', closeTheme: 'テーマスタジオを閉じる', themePreset: 'テーマプリセット', presetSunset: '朝焼け', presetViolet: '夕紫', presetOcean: '遠い海', presetForest: '森の声', presetMono: '余白', accentColor: 'アクセント色', glassStrength: 'Glass の強さ', cornerStyle: '角のスタイル', cornerSoft: 'やわらか', cornerRound: '丸み', cornerCompact: 'シャープ', glassScope: 'Glass の適用範囲', glassPage: 'ページ全体', glassHero: 'カウントダウンカード', glassToolbar: '検索とフィルター', glassCards: '日カード', glassEditor: '編集・テーマパネル', glassWidgets: 'ホームWidget', themeCode: 'テーマコードを共有', themeCodeHint: 'テーマコードに日付データは含まれません。', copyCode: 'コードをコピー', importCode: 'テーマコードを読み込む', importPlaceholder: 'CX1- から始まるコードを貼り付け', applyCode: 'テーマを適用', resetTheme: '初期設定に戻す', themeSaved: 'テーマを保存しました', themeCopied: 'テーマコードをコピーしました', themeSelected: 'コードを選択しました。手動でコピーしてください', themeImported: 'テーマコードを適用しました', themeInvalid: 'テーマコードが無効か未対応です', themeReset: '初期テーマに戻しました',
     categoryLife: '生活', categoryBirthday: '誕生日', categoryAnniversary: '記念日', categoryStudy: '勉強', categoryTravel: '旅行', categoryOther: 'その他'
   }
 };
@@ -48,6 +52,48 @@ function daysNormalizeLocale(locale) { var value = String(locale || '').toLowerC
 function daysT(key, values) { var text = (DAYS_I18N[daysCurrentLocale] || DAYS_I18N['zh-CN'])[key] || DAYS_I18N['zh-CN'][key] || key; return String(text).replace(/\{(\w+)\}/g, function (_, name) { return values && values[name] != null ? String(values[name]) : ''; }); }
 function daysCategoryKey(id) { return 'category' + String(id || 'other').charAt(0).toUpperCase() + String(id || 'other').slice(1); }
 function daysDefaultCategories() { return Object.keys(DAYS_CATEGORY_IDS).map(function (id) { return { id: id, label: daysT(daysCategoryKey(id)), custom: false }; }); }
+var DAYS_THEME_PRESETS = {
+  sunset: { accent: '#D97757' }, violet: { accent: '#7C68B5' }, ocean: { accent: '#3C87A8' }, forest: { accent: '#54836A' }, mono: { accent: '#6F6A65' }
+};
+var DAYS_DEFAULT_THEME = {
+  version: 1, preset: 'sunset', accent: '#D97757', glassStrength: 72, corner: 'round',
+  glass: { page: true, hero: true, toolbar: true, cards: true, editor: true, widgets: true }
+};
+function daysCloneTheme(theme) { return JSON.parse(JSON.stringify(theme)); }
+function daysValidColor(value, fallback) { return /^#[0-9a-f]{6}$/i.test(String(value || '')) ? String(value).toUpperCase() : fallback; }
+function daysClamp(value, min, max, fallback) { var number = Number(value); return Number.isFinite(number) ? Math.min(max, Math.max(min, number)) : fallback; }
+function daysNormalizeTheme(value) {
+  var source = value && typeof value === 'object' ? value : {}; var glass = source.glass && typeof source.glass === 'object' ? source.glass : {};
+  var preset = DAYS_THEME_PRESETS[source.preset] ? source.preset : DAYS_DEFAULT_THEME.preset; var defaultAccent = DAYS_THEME_PRESETS[preset].accent;
+  return {
+    version: 1, preset: preset, accent: daysValidColor(source.accent, defaultAccent), glassStrength: Math.round(daysClamp(source.glassStrength, 0, 100, DAYS_DEFAULT_THEME.glassStrength)),
+    corner: ['soft', 'round', 'compact'].indexOf(source.corner) >= 0 ? source.corner : DAYS_DEFAULT_THEME.corner,
+    glass: {
+      page: glass.page !== false, hero: glass.hero !== false, toolbar: glass.toolbar !== false, cards: glass.cards !== false,
+      editor: glass.editor !== false, widgets: glass.widgets !== false
+    }
+  };
+}
+function daysHexRgb(hex) { var value = daysValidColor(hex, '#D97757').slice(1); return parseInt(value.slice(0, 2), 16) + ', ' + parseInt(value.slice(2, 4), 16) + ', ' + parseInt(value.slice(4, 6), 16); }
+function daysThemeCode(theme) {
+  var json = JSON.stringify(daysNormalizeTheme(theme)); var bytes = unescape(encodeURIComponent(json));
+  return 'CX1-' + btoa(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+function daysThemeFromCode(code) {
+  var raw = String(code || '').trim(); if (raw.indexOf('CX1-') !== 0) throw new Error('invalid theme code');
+  var encoded = raw.slice(4).replace(/-/g, '+').replace(/_/g, '/'); while (encoded.length % 4) encoded += '=';
+  var parsed = JSON.parse(decodeURIComponent(escape(atob(encoded)))); if (!parsed || parsed.version !== 1) throw new Error('unsupported theme code');
+  return daysNormalizeTheme(parsed);
+}
+async function daysLoadTheme() { try { return daysNormalizeTheme(await Tapp.storage.get(DAYS_THEME_STORAGE_KEY)); } catch (_) { return daysCloneTheme(DAYS_DEFAULT_THEME); } }
+async function daysSaveTheme(theme) { var normalized = daysNormalizeTheme(theme); await Tapp.storage.set(DAYS_THEME_STORAGE_KEY, normalized); return normalized; }
+function daysApplyThemeConfig(root, theme) {
+  if (!root) return; var normalized = daysNormalizeTheme(theme); var radius = normalized.corner === 'soft' ? 14 : normalized.corner === 'compact' ? 10 : 20;
+  root.dataset.themePreset = normalized.preset; root.dataset.corner = normalized.corner; root.style.setProperty('--days-accent', normalized.accent); root.style.setProperty('--days-accent-rgb', daysHexRgb(normalized.accent));
+  root.style.setProperty('--days-glass-alpha', String(.16 + normalized.glassStrength * .0056)); root.style.setProperty('--days-glass-blur', (8 + normalized.glassStrength * .2).toFixed(0) + 'px'); root.style.setProperty('--days-radius', radius + 'px');
+  root.classList.toggle('page-glass-disabled', !normalized.glass.page);
+  root.querySelectorAll('[data-glass-key]').forEach(function (element) { var key = element.dataset.glassKey; element.classList.toggle('glass-disabled', !normalized.glass[key]); });
+}
 
 function daysPad(value) { return String(value).padStart(2, '0'); }
 function daysTodayKey() {
@@ -188,14 +234,31 @@ function daysScheduleWidgetMidnight(root, props) {
   if (daysWidgetMidnightTimer) clearTimeout(daysWidgetMidnightTimer);
   var now = new Date(); var next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 1, 0);
   daysWidgetMidnightTimer = setTimeout(function () {
-    daysLoadEvents().then(function (events) { daysRenderWidget(root, events, props || {}); daysScheduleWidgetMidnight(root, props); }).catch(console.error);
+    Promise.all([daysLoadEvents(), daysLoadTheme()]).then(function (values) { daysRenderWidget(root, values[0], props || {}, values[1]); daysScheduleWidgetMidnight(root, props); }).catch(console.error);
   }, Math.max(1000, next.getTime() - now.getTime()));
 }
-function daysRenderWidget(root, events, props) {
-  var sorted = daysSortEvents(events); var now = new Date();
+function daysWidgetConfig(props) {
+  var source = props && (props.config || props.settings) ? (props.config || props.settings) : {};
+  return {
+    themeSource: source.themeSource === 'instance' ? 'instance' : 'shared', themePreset: DAYS_THEME_PRESETS[source.themePreset] ? source.themePreset : 'sunset',
+    glassMode: ['all', 'shell', 'items', 'none'].indexOf(source.glassMode) >= 0 ? source.glassMode : 'all', density: source.density === 'compact' ? 'compact' : 'comfortable',
+    showBrand: source.showBrand !== false, showDate: source.showDate !== false, showCategory: source.showCategory !== false, showFooter: source.showFooter !== false,
+    highlightPinned: source.highlightPinned !== false, maxItems: Math.round(daysClamp(source.maxItems, 1, 6, 4))
+  };
+}
+function daysApplyWidgetTheme(root, sharedTheme, config, props) {
+  var theme = daysNormalizeTheme(sharedTheme); var preset = config.themeSource === 'instance' ? config.themePreset : theme.preset;
+  var accent = config.themeSource === 'instance' ? DAYS_THEME_PRESETS[preset].accent : theme.accent; if (props && props.primaryColor && config.themeSource === 'shared') accent = props.primaryColor;
+  var glassMode = theme.glass.widgets ? config.glassMode : 'none'; root.dataset.themePreset = preset; root.dataset.glassMode = glassMode; root.dataset.density = config.density;
+  root.style.setProperty('--days-accent', accent); root.style.setProperty('--days-accent-rgb', daysHexRgb(accent)); root.style.setProperty('--days-glass-alpha', String(.16 + theme.glassStrength * .0056)); root.style.setProperty('--days-glass-blur', (8 + theme.glassStrength * .2).toFixed(0) + 'px');
+  root.classList.toggle('glass-disabled', glassMode === 'none' || glassMode === 'items'); root.classList.toggle('widget-items-glass', glassMode === 'all' || glassMode === 'items');
+  [['[data-widget-brand]', config.showBrand], ['[data-widget-date]', config.showDate], ['[data-widget-category]', config.showCategory], ['[data-widget-footer]', config.showFooter]].forEach(function (entry) { root.querySelectorAll(entry[0]).forEach(function (element) { element.hidden = !entry[1]; }); });
+}
+function daysRenderWidget(root, events, props, sharedTheme) {
+  var sorted = daysSortEvents(events); var now = new Date(); var config = daysWidgetConfig(props);
   daysApplyStaticLocale(root);
+  daysApplyWidgetTheme(root, sharedTheme, config, props);
   daysSetText(root, '[data-widget-date]', new Intl.DateTimeFormat(daysCurrentLocale, { month: 'short', day: 'numeric' }).format(now));
-  if (props && props.primaryColor) root.style.setProperty('--days-accent', props.primaryColor);
   var primary = sorted[0];
   if (primary) {
     var target = daysOccurrence(primary, now); var diff = daysDifference(primary, now); var copy = daysCountCopy(diff);
@@ -209,8 +272,8 @@ function daysRenderWidget(root, events, props) {
   var list = root.querySelector('[data-widget-list]'); var empty = root.querySelector('[data-widget-empty]');
   if (list) {
     list.textContent = '';
-    sorted.slice(0, 4).forEach(function (event) {
-      var item = document.createElement('article'); item.className = 'widget-list-item';
+    sorted.slice(0, config.maxItems).forEach(function (event) {
+      var item = document.createElement('article'); item.className = 'widget-list-item' + (event.pinned && config.highlightPinned ? ' is-pinned' : '');
       var mark = document.createElement('i'); mark.style.background = event.color;
       var copy = document.createElement('div'); var title = document.createElement('strong'); title.textContent = event.title;
       var meta = document.createElement('span'); meta.textContent = daysFormatDate(daysOccurrence(event, now), event.annual);
@@ -226,13 +289,13 @@ if (typeof Tapp !== 'undefined' && Tapp.widgets) {
     render: async function (container, props) {
       var root = container.querySelector('[data-widget-root]') || container;
       await daysInitTheme(props && props.theme);
-      await daysInitLocale(props && props.locale, function () { daysLoadEvents().then(function (events) { daysRenderWidget(root, events, props || {}); }); });
-      daysRenderWidget(root, await daysLoadEvents(), props || {});
+      await daysInitLocale(props && props.locale, function () { Promise.all([daysLoadEvents(), daysLoadTheme()]).then(function (values) { daysRenderWidget(root, values[0], props || {}, values[1]); }); });
+      var initial = await Promise.all([daysLoadEvents(), daysLoadTheme()]); daysRenderWidget(root, initial[0], props || {}, initial[1]);
       daysScheduleWidgetMidnight(root, props);
       if (daysWidgetOff) daysWidgetOff();
       if (Tapp.storage && typeof Tapp.storage.onChanged === 'function') {
         daysWidgetOff = Tapp.storage.onChanged(function (event) {
-          if (!event || !event.key || event.key === DAYS_STORAGE_KEY) daysLoadEvents().then(function (events) { daysRenderWidget(root, events, props || {}); });
+          if (!event || !event.key || event.key === DAYS_STORAGE_KEY || event.key === DAYS_THEME_STORAGE_KEY) Promise.all([daysLoadEvents(), daysLoadTheme()]).then(function (values) { daysRenderWidget(root, values[0], props || {}, values[1]); });
         });
       }
       if (!daysWidgetDestroyBound) {
@@ -244,10 +307,47 @@ if (typeof Tapp !== 'undefined' && Tapp.widgets) {
 }
 
 // ========== Page Code ==========
-var daysPageState = { events: [], categories: [], filter: 'all', query: '', editingId: null, off: null, editorToken: 0, saving: false, editorReturnFocus: null };
+var daysPageState = { events: [], categories: [], theme: daysCloneTheme(DAYS_DEFAULT_THEME), filter: 'all', query: '', editingId: null, off: null, editorToken: 0, saving: false, editorReturnFocus: null, themeReturnFocus: null };
 function daysElement(tag, className, text) { var el = document.createElement(tag); if (className) el.className = className; if (text != null) el.textContent = text; return el; }
 function daysAllCategories() { return daysDefaultCategories().concat(daysPageState.categories); }
 function daysFindCategory(id) { return daysAllCategories().find(function (item) { return item.id === id; }) || daysDefaultCategories()[0]; }
+function daysRenderThemeStudio(root) {
+  var panel = root.querySelector('[data-theme-panel]'); if (!panel) return; var theme = daysNormalizeTheme(daysPageState.theme);
+  var preset = panel.querySelector('[name="themePreset"]'); var accent = panel.querySelector('[name="themeAccent"]'); var strength = panel.querySelector('[name="glassStrength"]'); var corner = panel.querySelector('[name="themeCorner"]');
+  if (preset) preset.value = theme.preset; if (accent) accent.value = theme.accent; if (strength) strength.value = String(theme.glassStrength); if (corner) corner.value = theme.corner;
+  panel.querySelectorAll('[data-glass-toggle]').forEach(function (input) { input.checked = Boolean(theme.glass[input.dataset.glassToggle]); });
+  daysSetText(panel, '[data-glass-strength-value]', theme.glassStrength + '%'); var code = panel.querySelector('[data-theme-code]'); if (code) code.value = daysThemeCode(theme);
+  daysApplyThemeConfig(root, theme);
+}
+function daysThemeFromStudio(root) {
+  var panel = root.querySelector('[data-theme-panel]'); if (!panel) return daysCloneTheme(DAYS_DEFAULT_THEME); var glass = {};
+  panel.querySelectorAll('[data-glass-toggle]').forEach(function (input) { glass[input.dataset.glassToggle] = input.checked; });
+  return daysNormalizeTheme({ version: 1, preset: panel.querySelector('[name="themePreset"]').value, accent: panel.querySelector('[name="themeAccent"]').value, glassStrength: panel.querySelector('[name="glassStrength"]').value, corner: panel.querySelector('[name="themeCorner"]').value, glass: glass });
+}
+async function daysUpdateThemeFromStudio(root, changedField) {
+  var panel = root.querySelector('[data-theme-panel]'); if (!panel) return;
+  if (changedField && changedField.name === 'themePreset' && DAYS_THEME_PRESETS[changedField.value]) panel.querySelector('[name="themeAccent"]').value = DAYS_THEME_PRESETS[changedField.value].accent;
+  daysPageState.theme = daysThemeFromStudio(root); daysRenderThemeStudio(root); daysPageState.theme = await daysSaveTheme(daysPageState.theme);
+}
+function daysOpenThemeStudio(root) {
+  var panel = root.querySelector('[data-theme-panel]'); if (!panel) return; daysPageState.themeReturnFocus = document.activeElement; panel.hidden = false; panel.setAttribute('aria-hidden', 'false'); daysRenderThemeStudio(root);
+  requestAnimationFrame(function () { requestAnimationFrame(function () { panel.classList.add('is-open'); var first = panel.querySelector('select, input, button'); if (first) { try { first.focus({ preventScroll: true }); } catch (_) { first.focus(); } } }); });
+}
+function daysCloseThemeStudio(root) {
+  var panel = root.querySelector('[data-theme-panel]'); if (!panel || panel.hidden) return; var returnFocus = daysPageState.themeReturnFocus; daysPageState.themeReturnFocus = null; panel.classList.remove('is-open'); panel.setAttribute('aria-hidden', 'true');
+  setTimeout(function () { if (!panel.classList.contains('is-open')) { panel.hidden = true; if (returnFocus && returnFocus.isConnected) { try { returnFocus.focus({ preventScroll: true }); } catch (_) { returnFocus.focus(); } } } }, 260);
+}
+async function daysCopyThemeCode(root) {
+  var code = root.querySelector('[data-theme-code]'); if (!code) return; code.focus(); code.select(); var copied = false;
+  try { copied = Boolean(document.execCommand && document.execCommand('copy')); } catch (_) {}
+  await daysNotify(daysT(copied ? 'themeCopied' : 'themeSelected'), copied ? 'success' : 'info');
+}
+async function daysImportThemeCode(root) {
+  var input = root.querySelector('[data-theme-import]'); if (!input) return;
+  try { daysPageState.theme = await daysSaveTheme(daysThemeFromCode(input.value)); input.value = ''; daysRenderThemeStudio(root); daysRenderPage(root); await daysNotify(daysT('themeImported')); }
+  catch (_) { await daysNotify(daysT('themeInvalid'), 'error'); input.focus(); }
+}
+async function daysResetTheme(root) { daysPageState.theme = await daysSaveTheme(daysCloneTheme(DAYS_DEFAULT_THEME)); daysRenderThemeStudio(root); daysRenderPage(root); await daysNotify(daysT('themeReset'), 'info'); }
 function daysSetCategoryPopover(root, open) {
   var popover = root.querySelector('[data-category-popover]'); var trigger = root.querySelector('[data-action="toggle-category"]');
   if (!popover || !trigger) return;
@@ -298,11 +398,11 @@ function daysRenderHero(root) {
   var hero = root.querySelector('[data-hero]'); if (hero) hero.style.setProperty('--event-color', event.color);
 }
 function daysRenderPage(root) {
-  daysApplyStaticLocale(root); daysRenderHero(root); var events = daysFilteredEvents(); var list = root.querySelector('[data-event-list]'); var empty = root.querySelector('[data-empty]');
+  daysApplyStaticLocale(root); daysApplyThemeConfig(root, daysPageState.theme); daysRenderHero(root); var events = daysFilteredEvents(); var list = root.querySelector('[data-event-list]'); var empty = root.querySelector('[data-empty]');
   list.textContent = ''; daysSetText(root, '[data-event-total]', daysT('dayCount', { count: events.length })); empty.hidden = events.length > 0;
   events.forEach(function (event) {
     var diff = daysDifference(event, new Date()); var target = daysOccurrence(event, new Date()); var copy = daysCountCopy(diff);
-    var card = daysElement('article', 'event-card glass' + (event.pinned ? ' is-pinned' : '')); card.style.setProperty('--event-color', event.color); card.tabIndex = 0; card.setAttribute('role', 'button'); card.setAttribute('aria-label', daysT('editAria', { title: event.title })); card.dataset.eventId = event.id;
+    var card = daysElement('article', 'event-card glass' + (event.pinned ? ' is-pinned' : '')); card.style.setProperty('--event-color', event.color); card.tabIndex = 0; card.setAttribute('role', 'button'); card.setAttribute('aria-label', daysT('editAria', { title: event.title })); card.dataset.eventId = event.id; card.dataset.glassKey = 'cards'; card.classList.toggle('glass-disabled', !daysPageState.theme.glass.cards);
     var top = daysElement('div', 'event-card-top'); var category = daysElement('span', 'event-category', daysCategoryLabel(event.category, event.categoryLabel));
     var badges = daysElement('span', 'event-badges');
     if (event.pinned) badges.appendChild(daysElement('span', 'event-pin', daysT('pinned')));
@@ -368,12 +468,17 @@ async function daysDeleteEvent(root) {
   await daysSaveEvents(daysPageState.events); daysCloseEditor(root); daysRenderPage(root); await daysNotify(daysT('deleted'), 'info');
 }
 async function daysMountPage(root) {
-  if (root.dataset.ready === 'true' || root.dataset.ready === 'mounting') return; root.dataset.ready = 'mounting'; await daysInitTheme(); await daysInitLocale(null, function () { daysRenderPage(root); if (!root.querySelector('[data-editor]').hidden) { var editing = daysPageState.events.find(function (item) { return item.id === daysPageState.editingId; }); daysSetText(root, '[data-editor-title]', editing ? daysT('editorEdit') : daysT('editorNew')); daysRenderCategoryPicker(root, root.querySelector('[name="category"]').value); } }); var store = await daysLoadStore(); daysPageState.events = store.events; daysPageState.categories = store.categories; daysRenderPage(root);
+  if (root.dataset.ready === 'true' || root.dataset.ready === 'mounting') return; root.dataset.ready = 'mounting'; await daysInitTheme(); await daysInitLocale(null, function () { daysRenderPage(root); if (!root.querySelector('[data-editor]').hidden) { var editing = daysPageState.events.find(function (item) { return item.id === daysPageState.editingId; }); daysSetText(root, '[data-editor-title]', editing ? daysT('editorEdit') : daysT('editorNew')); daysRenderCategoryPicker(root, root.querySelector('[name="category"]').value); } if (!root.querySelector('[data-theme-panel]').hidden) daysRenderThemeStudio(root); }); var initial = await Promise.all([daysLoadStore(), daysLoadTheme()]); daysPageState.events = initial[0].events; daysPageState.categories = initial[0].categories; daysPageState.theme = initial[1]; daysRenderPage(root);
   root.addEventListener('click', function (event) {
     var action = event.target.closest('[data-action]');
     if (action) {
       var name = action.dataset.action;
-      if (name === 'new-event') { try { daysOpenEditor(root, null); } catch (error) { console.error(error); daysNotify(daysT('editorFailed'), 'error'); } }
+      if (name === 'new-event') { daysCloseThemeStudio(root); try { daysOpenEditor(root, null); } catch (error) { console.error(error); daysNotify(daysT('editorFailed'), 'error'); } }
+      if (name === 'open-theme') { daysCloseEditor(root); daysOpenThemeStudio(root); }
+      if (name === 'close-theme') daysCloseThemeStudio(root);
+      if (name === 'copy-theme-code') daysCopyThemeCode(root).catch(console.error);
+      if (name === 'import-theme-code') daysImportThemeCode(root).catch(console.error);
+      if (name === 'reset-theme') daysResetTheme(root).catch(console.error);
       if (name === 'close-editor') daysCloseEditor(root);
       if (name === 'delete-event') daysDeleteEvent(root).catch(console.error);
       if (name === 'save-event') daysHandleSave(root).catch(console.error);
@@ -392,12 +497,17 @@ async function daysMountPage(root) {
     var card = event.target.closest('[data-event-id]'); if (card && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); card.click(); return; }
     if (event.key === 'Enter' && event.target.matches('[data-category-input]')) { event.preventDefault(); daysAddCategory(root).catch(console.error); return; }
     if (event.key === 'Enter' && event.target.closest('[data-event-form]') && !event.target.matches('textarea, button')) { event.preventDefault(); daysHandleSave(root).catch(console.error); return; }
-    if (event.key === 'Escape') { var popover = root.querySelector('[data-category-popover]'); if (popover && !popover.hidden) daysSetCategoryPopover(root, false); else daysCloseEditor(root); }
+    if (event.key === 'Escape') { var popover = root.querySelector('[data-category-popover]'); var themePanel = root.querySelector('[data-theme-panel]'); if (popover && !popover.hidden) daysSetCategoryPopover(root, false); else if (themePanel && !themePanel.hidden) daysCloseThemeStudio(root); else daysCloseEditor(root); }
   });
   root.querySelector('[data-search]').addEventListener('input', function (event) { daysPageState.query = event.target.value; daysRenderPage(root); });
   root.querySelector('[data-event-form]').addEventListener('submit', function (event) { event.preventDefault(); event.stopPropagation(); daysHandleSave(root).catch(console.error); }, true);
+  root.querySelector('[data-theme-panel]').addEventListener('input', function (event) { if (event.target.matches('[name="glassStrength"]')) daysUpdateThemeFromStudio(root, event.target).catch(console.error); });
+  root.querySelector('[data-theme-panel]').addEventListener('change', function (event) { if (event.target.matches('select, input')) daysUpdateThemeFromStudio(root, event.target).catch(console.error); });
   if (Tapp.storage && typeof Tapp.storage.onChanged === 'function') {
-    daysPageState.off = Tapp.storage.onChanged(function (event) { if (!event || !event.key || event.key === DAYS_STORAGE_KEY || event.key === DAYS_CATEGORIES_STORAGE_KEY) daysLoadStore().then(function (nextStore) { daysPageState.events = nextStore.events; daysPageState.categories = nextStore.categories; daysRenderPage(root); }); });
+    daysPageState.off = Tapp.storage.onChanged(function (event) {
+      if (!event || !event.key || event.key === DAYS_STORAGE_KEY || event.key === DAYS_CATEGORIES_STORAGE_KEY) daysLoadStore().then(function (nextStore) { daysPageState.events = nextStore.events; daysPageState.categories = nextStore.categories; daysRenderPage(root); });
+      if (!event || !event.key || event.key === DAYS_THEME_STORAGE_KEY) daysLoadTheme().then(function (theme) { daysPageState.theme = theme; daysRenderPage(root); if (!root.querySelector('[data-theme-panel]').hidden) daysRenderThemeStudio(root); });
+    });
   }
   root.dataset.ready = 'true';
   Tapp.lifecycle.onDestroy(function () { if (daysPageState.off) daysPageState.off(); if (daysThemeOff) daysThemeOff(); if (daysLocaleOff) daysLocaleOff(); daysThemeOff = null; daysLocaleOff = null; });

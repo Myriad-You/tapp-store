@@ -5,12 +5,17 @@
       <h1 data-i18n="appName">朝夕</h1>
       <p class="page-subtitle" data-i18n="subtitle">把期待写进日历，也把走过的日子留在身边。</p>
     </div>
-    <button class="primary-button" type="button" data-action="new-event" aria-label="新建日子" data-i18n-aria-label="newEvent">
-      <span aria-hidden="true">＋</span> <span data-i18n="newEvent">新建日子</span>
-    </button>
+    <div class="header-actions">
+      <button class="theme-button glass" type="button" data-action="open-theme" data-glass-key="toolbar">
+        <span aria-hidden="true">✦</span> <span data-i18n="themeStudio">主题工作室</span>
+      </button>
+      <button class="primary-button" type="button" data-action="new-event" aria-label="新建日子" data-i18n-aria-label="newEvent">
+        <span aria-hidden="true">＋</span> <span data-i18n="newEvent">新建日子</span>
+      </button>
+    </div>
   </header>
 
-  <section class="hero-card glass" data-hero aria-live="polite">
+  <section class="hero-card glass" data-hero data-glass-key="hero" aria-live="polite">
     <div class="hero-orbit" aria-hidden="true"></div>
     <div class="hero-copy">
       <span class="hero-category" data-hero-category>下一次相见</span>
@@ -23,7 +28,7 @@
     </div>
   </section>
 
-  <section class="toolbar glass" aria-label="筛选日子" data-i18n-aria-label="filterAria">
+  <section class="toolbar glass" data-glass-key="toolbar" aria-label="筛选日子" data-i18n-aria-label="filterAria">
     <label class="search-field">
       <span aria-hidden="true">⌕</span>
       <input type="search" data-search placeholder="搜索名称或备注" aria-label="搜索名称或备注" data-i18n-placeholder="search" data-i18n-aria-label="search" />
@@ -45,7 +50,7 @@
       <span class="event-total" data-event-total>0 个日子</span>
     </div>
     <div class="event-grid" data-event-list></div>
-    <div class="empty-state glass" data-empty hidden>
+    <div class="empty-state glass" data-glass-key="cards" data-empty hidden>
       <div class="empty-mark" aria-hidden="true">◌</div>
       <h3 data-i18n="emptyTitle">还没有符合条件的日子</h3>
       <p data-i18n="emptyBody">创建一个纪念日、生日、考试或任何值得期待的时刻。</p>
@@ -55,7 +60,7 @@
 
   <section class="editor-panel" data-editor hidden role="dialog" aria-modal="true" aria-labelledby="editor-title">
     <div class="editor-backdrop" data-action="close-editor"></div>
-    <form class="editor-card glass" data-event-form>
+    <form class="editor-card glass" data-glass-key="editor" data-event-form>
       <header>
         <div>
           <p class="eyebrow">A MOMENT IN TIME</p>
@@ -121,5 +126,76 @@
         <button class="primary-button" type="button" data-action="save-event" data-i18n="save">保存日子</button>
       </footer>
     </form>
+  </section>
+
+  <section class="theme-panel" data-theme-panel hidden role="dialog" aria-modal="true" aria-labelledby="theme-title" aria-hidden="true">
+    <div class="theme-backdrop" data-action="close-theme"></div>
+    <div class="theme-card glass" data-glass-key="editor">
+      <header>
+        <div>
+          <p class="eyebrow">MAKE IT YOURS</p>
+          <h2 id="theme-title" data-i18n="themeStudio">主题工作室</h2>
+          <p data-i18n="themeSubtitle">让主界面与小组件拥有同一套气质。</p>
+        </div>
+        <button class="icon-button" type="button" data-action="close-theme" aria-label="关闭主题工作室" data-i18n-aria-label="closeTheme">×</button>
+      </header>
+
+      <div class="theme-grid">
+        <label class="field">
+          <span data-i18n="themePreset">主题预设</span>
+          <select name="themePreset">
+            <option value="sunset" data-i18n="presetSunset">朝霞</option>
+            <option value="violet" data-i18n="presetViolet">暮紫</option>
+            <option value="ocean" data-i18n="presetOcean">远海</option>
+            <option value="forest" data-i18n="presetForest">森语</option>
+            <option value="mono" data-i18n="presetMono">留白</option>
+          </select>
+        </label>
+        <label class="field theme-color-field">
+          <span data-i18n="accentColor">强调色</span>
+          <input name="themeAccent" type="color" value="#D97757" />
+        </label>
+        <label class="field theme-strength-field">
+          <span><span data-i18n="glassStrength">Glass 强度</span><b data-glass-strength-value>72%</b></span>
+          <input name="glassStrength" type="range" min="0" max="100" step="4" value="72" />
+        </label>
+        <label class="field">
+          <span data-i18n="cornerStyle">圆角风格</span>
+          <select name="themeCorner">
+            <option value="soft" data-i18n="cornerSoft">柔和</option>
+            <option value="round" data-i18n="cornerRound">圆润</option>
+            <option value="compact" data-i18n="cornerCompact">利落</option>
+          </select>
+        </label>
+      </div>
+
+      <fieldset class="glass-scope">
+        <legend data-i18n="glassScope">Glass 应用范围</legend>
+        <label><input type="checkbox" data-glass-toggle="page" /><span data-i18n="glassPage">主界面画布</span></label>
+        <label><input type="checkbox" data-glass-toggle="hero" /><span data-i18n="glassHero">焦点倒数卡</span></label>
+        <label><input type="checkbox" data-glass-toggle="toolbar" /><span data-i18n="glassToolbar">搜索与筛选</span></label>
+        <label><input type="checkbox" data-glass-toggle="cards" /><span data-i18n="glassCards">日子卡片</span></label>
+        <label><input type="checkbox" data-glass-toggle="editor" /><span data-i18n="glassEditor">编辑器与主题面板</span></label>
+        <label><input type="checkbox" data-glass-toggle="widgets" /><span data-i18n="glassWidgets">主页小组件</span></label>
+      </fieldset>
+
+      <section class="theme-code-section">
+        <div><h3 data-i18n="themeCode">分享主题码</h3><p data-i18n="themeCodeHint">主题码只包含外观设置，不包含你的日子。</p></div>
+        <textarea data-theme-code readonly rows="3"></textarea>
+        <button class="secondary-button" type="button" data-action="copy-theme-code" data-i18n="copyCode">复制主题码</button>
+      </section>
+
+      <section class="theme-import-section">
+        <div><h3 data-i18n="importCode">导入主题码</h3></div>
+        <textarea data-theme-import rows="3" placeholder="粘贴 CX1- 开头的主题码" data-i18n-placeholder="importPlaceholder"></textarea>
+        <button class="primary-button" type="button" data-action="import-theme-code" data-i18n="applyCode">应用主题码</button>
+      </section>
+
+      <footer>
+        <button class="danger-button" type="button" data-action="reset-theme" data-i18n="resetTheme">恢复默认</button>
+        <span class="footer-spacer"></span>
+        <button class="secondary-button" type="button" data-action="close-theme" data-i18n="cancel">取消</button>
+      </footer>
+    </div>
   </section>
 </main>
