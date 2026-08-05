@@ -2,7 +2,7 @@ Add-Type -AssemblyName System.Drawing
 
 $ErrorActionPreference = "Stop"
 
-$downloads = "C:\Users\Otaku\Downloads"
+$downloads = if ($env:USERPROFILE) { Join-Path $env:USERPROFILE "Downloads" } else { Join-Path $HOME "Downloads" }
 $appRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $outRoot = Join-Path $appRoot "assets\cards\flame-chasers"
 

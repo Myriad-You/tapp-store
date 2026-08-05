@@ -223,6 +223,22 @@ describe('combinations', () => {
     )
   })
 
+  it('rejects four-with-one-pair as four-with-two singles', () => {
+    assert.equal(
+      identifyCombo(
+        cards(
+          ['S', '6'],
+          ['H', '6'],
+          ['D', '6'],
+          ['C', '6'],
+          ['S', '8'],
+          ['H', '8'],
+        ),
+      ),
+      null,
+    )
+  })
+
   it('rejects illegal straight with 2', () => {
     assert.equal(
       identifyCombo(

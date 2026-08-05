@@ -107,8 +107,11 @@ console.log('[斗地主] core loaded');
       return { type: 'bomb', mainValue: ranks[0], length: 1, cards: cards.slice() };
     if (n === 6) {
       var quad = ranks.find(function (r) { return byRank[r].length === 4; });
-      if (quad !== undefined)
-        return { type: 'four_two_singles', mainValue: quad, length: 1, cards: cards.slice() };
+      if (quad !== undefined) {
+        var kickRanks = ranks.filter(function (r) { return r !== quad; });
+        if (kickRanks.length === 2 && byRank[kickRanks[0]].length === 1 && byRank[kickRanks[1]].length === 1)
+          return { type: 'four_two_singles', mainValue: quad, length: 1, cards: cards.slice() };
+      }
     }
     if (n === 8) {
       var quad2 = ranks.find(function (r) { return byRank[r].length === 4; });
@@ -211,7 +214,7 @@ console.log('[斗地主] core loaded');
       var kickRanks4 = ranks.filter(function (r) { return r !== ranks[qr]; });
       var singlesPool4 = [];
       for (var sk = 0; sk < kickRanks4.length; sk++) {
-        singlesPool4 = singlesPool4.concat(byRank[kickRanks4[sk]]);
+        if (byRank[kickRanks4[sk]].length === 1) singlesPool4 = singlesPool4.concat(byRank[kickRanks4[sk]]);
       }
       if (singlesPool4.length >= 2) {
         singlesPool4.sort(function (x, y) {
@@ -2306,6 +2309,7 @@ console.log('[斗地主] core loaded');
       turnTimer = setInterval(function () {
         updateTurnTimerUI();
         if (turnDeadlineAt > 0 && Date.now() >= turnDeadlineAt) {
+          turnDeadlineAt = 0;
           autoActCurrentTurn(turnStamp);
         }
       }, 250);

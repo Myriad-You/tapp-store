@@ -418,11 +418,14 @@ export function identifyCombo(cards: Card[]): Combo | null {
   if (n === 6) {
     const quadRank = ranks.find(r => byRank.get(r)!.length === 4)
     if (quadRank !== undefined) {
-      return {
-        type: 'four_two_singles',
-        mainValue: quadRank,
-        length: 1,
-        cards: cards.slice(),
+      const kickRanks = ranks.filter(r => r !== quadRank)
+      if (kickRanks.length === 2 && kickRanks.every(r => byRank.get(r)!.length === 1)) {
+        return {
+          type: 'four_two_singles',
+          mainValue: quadRank,
+          length: 1,
+          cards: cards.slice(),
+        }
       }
     }
   }
@@ -845,7 +848,10 @@ export function enumerateLegalPlays(hand: Card[], table: Combo | null): Card[][]
     const body = takeN(quad, 4)
     const kickRanks = ranks.filter(x => x !== r)
     const singlesPool: Card[] = []
-    for (const kr of kickRanks) singlesPool.push(...byRank.get(kr)!)
+    for (const kr of kickRanks) {
+      const group = byRank.get(kr)!
+      if (group.length === 1) singlesPool.push(...group)
+    }
     if (singlesPool.length >= 2) {
       singlesPool.sort((a, b) => rankValue(a.rank) - rankValue(b.rank) || a.suit.localeCompare(b.suit))
       push([...body, ...singlesPool.slice(0, 2)])
