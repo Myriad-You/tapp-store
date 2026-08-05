@@ -10,6 +10,8 @@ var XINGCHEN_THEME_BOUND = new WeakSet();
 var XINGCHEN_RENDER_TOKENS = new WeakMap();
 /** @type {Set<() => void>} */
 var XINGCHEN_THEME_UNSUBSCRIBERS = new Set();
+/** @type {Map<HTMLElement, { timeout: number, interval: number }>} */
+var WORLD_CLOCK_TIMERS = new Map();
 var XINGCHEN_RENDER_SEQUENCE = 0;
 
 /** @typedef {"stats" | "top-langs" | "pin" | "gist" | "wakatime"} XingchenCardType */
@@ -19,6 +21,10 @@ var XINGCHEN_RENDER_SEQUENCE = 0;
  * @property {Record<string, unknown>=} settings
  * @property {string=} size
  * @property {string=} theme
+ * @property {string=} primaryColor
+ * @property {number=} scale
+ * @property {number=} fontScale
+ * @property {string=} locale
  */
 /**
  * @typedef {Object} XingchenResolvedConfig
@@ -771,6 +777,552 @@ Tapp.widgets["photo-wall"] = {
   render: photoWallRender
 };
 
+/** @typedef {"auto" | "countdown" | "countup"} AnniversaryMode */
+/** @typedef {"starlight" | "letter" | "glass" | "minimal"} AnniversaryStyle */
+/** @typedef {"left" | "center" | "right"} AnniversaryAlignment */
+/**
+ * @typedef {Object} AnniversaryResolvedConfig
+ * @property {string} title
+ * @property {string} date
+ * @property {AnniversaryMode} mode
+ * @property {boolean} repeatAnnual
+ * @property {AnniversaryStyle} style
+ * @property {AnniversaryAlignment} alignment
+ * @property {string} icon
+ * @property {string} subtitle
+ * @property {string} label
+ * @property {string} unit
+ * @property {boolean} showIcon
+ * @property {boolean} showDate
+ * @property {boolean} showProgress
+ * @property {boolean} useCustomColors
+ * @property {string} accentColor
+ * @property {string} backgroundColor
+ * @property {string} textColor
+ * @property {string} mutedColor
+ * @property {string} backgroundImage
+ * @property {number} overlayOpacity
+ * @property {number} cornerRadius
+ * @property {number} numberScale
+ * @property {"dot" | "cn" | "slash"} dateFormat
+ */
+
+/** @param {unknown} value @returns {AnniversaryMode} */
+function anniversaryMode(value) {
+  var mode = xingchenText(value).trim();
+  return mode === "countdown" || mode === "countup" ? mode : "auto";
+}
+
+/** @param {unknown} value @returns {AnniversaryStyle} */
+function anniversaryStyle(value) {
+  var style = xingchenText(value).trim();
+  return style === "letter" || style === "glass" || style === "minimal" ? style : "starlight";
+}
+
+/** @param {unknown} value @returns {AnniversaryAlignment} */
+function anniversaryAlignment(value) {
+  var alignment = xingchenText(value).trim();
+  return alignment === "center" || alignment === "right" ? alignment : "left";
+}
+
+/** @param {unknown} value @returns {string} */
+function anniversaryBackgroundImage(value) {
+  var raw = xingchenText(value).trim();
+  if (!raw) return "";
+  try {
+    var url = new URL(raw);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.href : "";
+  } catch (_error) {
+    return "";
+  }
+}
+
+/** @param {XingchenWidgetProps} props @returns {AnniversaryResolvedConfig} */
+function anniversaryResolvedConfig(props) {
+  var config = props && (props.config || props.settings) ? (props.config || props.settings || {}) : {};
+  var dateFormat = xingchenText(config.dateFormat).trim();
+  return {
+    title: (xingchenText(config.title).trim() || "我们的纪念日").slice(0, 64),
+    date: xingchenText(config.date).trim() || "2026-12-31",
+    mode: anniversaryMode(config.mode),
+    repeatAnnual: xingchenBoolean(config.repeatAnnual, true),
+    style: anniversaryStyle(config.style),
+    alignment: anniversaryAlignment(config.alignment),
+    icon: personalLimitCharacters(xingchenText(config.icon).trim() || "♡", 4),
+    subtitle: xingchenText(config.subtitle).trim().slice(0, 120),
+    label: xingchenText(config.label).trim().slice(0, 40),
+    unit: (xingchenText(config.unit).trim() || "天").slice(0, 8),
+    showIcon: xingchenBoolean(config.showIcon, true),
+    showDate: xingchenBoolean(config.showDate, true),
+    showProgress: xingchenBoolean(config.showProgress, true),
+    useCustomColors: xingchenBoolean(config.useCustomColors, false),
+    accentColor: xingchenColor(config.accentColor, "#A78BFA"),
+    backgroundColor: xingchenColor(config.backgroundColor, "#111827"),
+    textColor: xingchenColor(config.textColor, "#F8FAFC"),
+    mutedColor: xingchenColor(config.mutedColor, "#CBD5E1"),
+    backgroundImage: anniversaryBackgroundImage(config.backgroundImage),
+    overlayOpacity: xingchenNumber(config.overlayOpacity, 0.42, 0, 0.9),
+    cornerRadius: xingchenNumber(config.cornerRadius, 22, 0, 40),
+    numberScale: xingchenNumber(config.numberScale, 1, 0.7, 1.4),
+    dateFormat: dateFormat === "cn" || dateFormat === "slash" ? dateFormat : "dot"
+  };
+}
+
+/** @param {string} value @returns {Date | null} */
+function anniversaryParseDate(value) {
+  var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return null;
+  var year = Number(match[1]);
+  var month = Number(match[2]);
+  var day = Number(match[3]);
+  var date = new Date(year, month - 1, day, 12, 0, 0, 0);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+  return date;
+}
+
+/** @returns {Date} */
+function anniversaryToday() {
+  var now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0, 0);
+}
+
+/** @param {Date} date @param {number} year @returns {Date} */
+function anniversaryDateForYear(date, year) {
+  var lastDay = new Date(year, date.getMonth() + 1, 0, 12, 0, 0, 0).getDate();
+  return new Date(year, date.getMonth(), Math.min(date.getDate(), lastDay), 12, 0, 0, 0);
+}
+
+/** @param {Date} from @param {Date} to @returns {number} */
+function anniversaryDiffDays(from, to) {
+  return Math.round((to.getTime() - from.getTime()) / 86400000);
+}
+
+/** @param {Date} date @param {Date} today @returns {Date} */
+function anniversaryNextOccurrence(date, today) {
+  var occurrence = anniversaryDateForYear(date, today.getFullYear());
+  return anniversaryDiffDays(today, occurrence) >= 0
+    ? occurrence
+    : anniversaryDateForYear(date, today.getFullYear() + 1);
+}
+
+/** @param {Date} date @param {Date} today @returns {number} */
+function anniversaryCycleProgress(date, today) {
+  var next = anniversaryNextOccurrence(date, today);
+  var previous = anniversaryDateForYear(date, next.getFullYear() - 1);
+  if (anniversaryDiffDays(today, next) === 0) return 1;
+  var total = Math.max(1, anniversaryDiffDays(previous, next));
+  return Math.min(1, Math.max(0, anniversaryDiffDays(previous, today) / total));
+}
+
+/** @param {Date} date @param {AnniversaryResolvedConfig} config @returns {string} */
+function anniversaryFormatDate(date, config) {
+  var year = date.getFullYear();
+  var month = date.getMonth() + 1;
+  var day = date.getDate();
+  if (config.dateFormat === "cn") return year + "年" + month + "月" + day + "日";
+  var mm = String(month).padStart(2, "0");
+  var dd = String(day).padStart(2, "0");
+  return config.dateFormat === "slash" ? year + "/" + mm + "/" + dd : year + "." + mm + "." + dd;
+}
+
+/**
+ * @param {AnniversaryResolvedConfig} config
+ * @returns {{ days: number, direction: "future" | "past" | "today", label: string, date: Date, progress: number }}
+ */
+function anniversaryState(config) {
+  var originalDate = anniversaryParseDate(config.date);
+  if (!originalDate) throw new Error("日期格式应为 YYYY-MM-DD");
+  var today = anniversaryToday();
+  var displayDate = originalDate;
+  if (config.repeatAnnual && config.mode !== "countup") {
+    displayDate = anniversaryNextOccurrence(originalDate, today);
+  }
+  var diff = anniversaryDiffDays(today, displayDate);
+  var direction = diff === 0 ? "today" : (diff > 0 ? "future" : "past");
+  var days = Math.abs(diff);
+  if (config.mode === "countup") {
+    var countupDiff = anniversaryDiffDays(originalDate, today);
+    direction = countupDiff === 0 ? "today" : (countupDiff > 0 ? "past" : "future");
+    days = Math.abs(countupDiff);
+    displayDate = originalDate;
+  }
+  var automaticLabel = direction === "today"
+    ? "就是今天"
+    : (direction === "future" ? "距离这一天还有" : "已经一起走过");
+  return {
+    days: days,
+    direction: direction,
+    label: config.label || automaticLabel,
+    date: displayDate,
+    progress: anniversaryCycleProgress(originalDate, today)
+  };
+}
+
+/** @param {HTMLElement} container @returns {HTMLElement} */
+function anniversaryEnsureMarkup(container) {
+  var shell = /** @type {HTMLElement | null} */ (container.querySelector("[data-anniversary-shell]"));
+  if (shell && shell.querySelector("[data-anniversary-days]")) return shell;
+  container.innerHTML = [
+    '<section class="anniversary-widget" data-anniversary-shell data-size="4x2" data-style="starlight" role="timer">',
+    '  <div class="anniversary-backdrop" data-anniversary-backdrop aria-hidden="true"></div>',
+    '  <div class="anniversary-pattern" aria-hidden="true"></div>',
+    '  <header class="anniversary-header">',
+    '    <span class="anniversary-icon" data-anniversary-icon aria-hidden="true">♡</span>',
+    '    <span class="anniversary-label" data-anniversary-label>距离这一天还有</span>',
+    '  </header>',
+    '  <div class="anniversary-time">',
+    '    <strong data-anniversary-days>0</strong><span data-anniversary-unit>天</span>',
+    '  </div>',
+    '  <div class="anniversary-copy">',
+    '    <h2 data-anniversary-title>我们的纪念日</h2>',
+    '    <p data-anniversary-subtitle></p>',
+    '  </div>',
+    '  <footer class="anniversary-footer">',
+    '    <time data-anniversary-date>2026.12.31</time>',
+    '    <span class="anniversary-progress-label" data-anniversary-progress-label>年度轨迹 0%</span>',
+    '    <div class="anniversary-progress" data-anniversary-progress><i></i><b></b></div>',
+    '  </footer>',
+    '</section>'
+  ].join("");
+  return /** @type {HTMLElement} */ (container.querySelector("[data-anniversary-shell]"));
+}
+
+/** @param {HTMLElement} shell @param {string} property @param {string} value @param {boolean} enabled */
+function anniversarySetCustomProperty(shell, property, value, enabled) {
+  if (enabled) shell.style.setProperty(property, value);
+  else shell.style.removeProperty(property);
+}
+
+/** @param {HTMLElement} container @param {XingchenWidgetProps} props */
+function anniversaryRender(container, props) {
+  var shell = anniversaryEnsureMarkup(container);
+  var config = anniversaryResolvedConfig(props || {});
+  var size = props && props.size ? props.size : "4x2";
+  var hostScale = xingchenNumber(props && props.scale, 1, 0.1, 2);
+  var hostFontScale = xingchenNumber(props && props.fontScale, 1, 0.6, 1.2);
+  var hostPrimary = xingchenColor(props && props.primaryColor, "#8B5CF6");
+  shell.setAttribute("data-size", size);
+  shell.setAttribute("data-layout-version", "3");
+  shell.setAttribute("data-style", config.style);
+  shell.setAttribute("data-align", config.alignment);
+  shell.setAttribute("data-host-theme", xingchenHostTheme(props || {}));
+  shell.setAttribute("data-show-icon", String(config.showIcon));
+  shell.setAttribute("data-show-date", String(config.showDate));
+  shell.setAttribute("data-show-progress", String(config.showProgress));
+  shell.style.setProperty("--anniversary-host-scale", String(hostScale));
+  shell.style.setProperty("--anniversary-host-font-scale", String(hostFontScale));
+  shell.style.setProperty("--anniversary-host-primary", hostPrimary);
+  var state;
+  try {
+    state = anniversaryState(config);
+  } catch (error) {
+    shell.setAttribute("data-state", "error");
+    shell.setAttribute("aria-label", xingchenErrorMessage(error));
+    /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-label]")).textContent = "日期无法使用";
+    /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-title]")).textContent = xingchenErrorMessage(error);
+    /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-days]")).textContent = "—";
+    return;
+  }
+
+  var backdrop = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-backdrop]"));
+  var icon = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-icon]"));
+  var label = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-label]"));
+  var days = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-days]"));
+  var unit = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-unit]"));
+  var title = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-title]"));
+  var subtitle = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-subtitle]"));
+  var date = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-date]"));
+  var progress = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-progress]"));
+  var progressLabel = /** @type {HTMLElement} */ (shell.querySelector("[data-anniversary-progress-label]"));
+  var progressPercent = Math.round(state.progress * 100);
+
+  container.style.background = "transparent";
+  container.ownerDocument.documentElement.style.background = "transparent";
+  if (container.ownerDocument.body) container.ownerDocument.body.style.background = "transparent";
+  shell.setAttribute("data-direction", state.direction);
+  shell.setAttribute("data-digits", String(Math.min(String(state.days).length, 6)));
+  var titleLength = Array.from(config.title.trim()).length;
+  shell.setAttribute("data-title-length", titleLength > 14 ? "very-long" : titleLength > 8 ? "long" : "normal");
+  shell.setAttribute("data-state", "ready");
+  shell.setAttribute("data-has-image", String(Boolean(config.backgroundImage)));
+  shell.style.setProperty("--anniversary-radius", config.cornerRadius + "px");
+  shell.style.setProperty("--anniversary-number-scale", String(config.numberScale));
+  shell.style.setProperty("--anniversary-overlay-opacity", String(config.overlayOpacity));
+  shell.style.setProperty("--anniversary-progress-value", progressPercent + "%");
+  anniversarySetCustomProperty(shell, "--anniversary-accent", config.accentColor, config.useCustomColors);
+  anniversarySetCustomProperty(shell, "--anniversary-background", config.backgroundColor, config.useCustomColors);
+  anniversarySetCustomProperty(shell, "--anniversary-text", config.textColor, config.useCustomColors);
+  anniversarySetCustomProperty(shell, "--anniversary-muted", config.mutedColor, config.useCustomColors);
+  backdrop.style.backgroundImage = config.backgroundImage ? 'url("' + config.backgroundImage.replace(/"/g, "%22") + '")' : "none";
+  icon.textContent = config.icon;
+  label.textContent = state.label;
+  days.textContent = String(state.days);
+  unit.textContent = config.unit;
+  title.textContent = config.title;
+  subtitle.textContent = config.subtitle;
+  subtitle.hidden = !config.subtitle;
+  date.textContent = anniversaryFormatDate(state.date, config);
+  progressLabel.textContent = "年度轨迹 " + progressPercent + "%";
+  progress.setAttribute("aria-label", "年度轨迹 " + progressPercent + "%");
+  shell.setAttribute("aria-label", state.label + " " + state.days + " " + config.unit + "，" + config.title);
+}
+
+Tapp.widgets["anniversary"] = {
+  render: anniversaryRender
+};
+
+/**
+ * @typedef {Object} WorldClockResolvedConfig
+ * @property {string} timeZone
+ * @property {string} zoneLabel
+ * @property {"12" | "24"} hourCycle
+ * @property {boolean} showSeconds
+ * @property {boolean} showDate
+ * @property {boolean} showRelative
+ * @property {string} bodyColor
+ * @property {number} cornerRadius
+ */
+
+/** @param {string} color @returns {{ red: number, green: number, blue: number }} */
+function worldClockRgb(color) {
+  return {
+    red: parseInt(color.slice(1, 3), 16),
+    green: parseInt(color.slice(3, 5), 16),
+    blue: parseInt(color.slice(5, 7), 16)
+  };
+}
+
+/** @param {number} value @returns {string} */
+function worldClockHexPart(value) {
+  return Math.round(Math.min(255, Math.max(0, value))).toString(16).padStart(2, "0");
+}
+
+/** @param {string} from @param {string} to @param {number} amount @returns {string} */
+function worldClockMixColor(from, to, amount) {
+  var first = worldClockRgb(from);
+  var second = worldClockRgb(to);
+  return "#" +
+    worldClockHexPart(first.red + (second.red - first.red) * amount) +
+    worldClockHexPart(first.green + (second.green - first.green) * amount) +
+    worldClockHexPart(first.blue + (second.blue - first.blue) * amount);
+}
+
+/** @param {string} color @returns {string} */
+function worldClockReadableColor(color) {
+  var rgb = worldClockRgb(color);
+  var luminance = (rgb.red * 299 + rgb.green * 587 + rgb.blue * 114) / 255000;
+  return luminance > 0.58 ? "#101827" : "#F8FAFC";
+}
+
+/** @param {unknown} value @returns {string} */
+function worldClockTimeZone(value) {
+  var timeZone = xingchenText(value).trim() || "America/New_York";
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: timeZone }).format(new Date());
+    return timeZone;
+  } catch (_error) {
+    return "America/New_York";
+  }
+}
+
+/** @param {XingchenWidgetProps} props @returns {WorldClockResolvedConfig} */
+function worldClockResolvedConfig(props) {
+  var config = props && (props.config || props.settings) ? (props.config || props.settings || {}) : {};
+  return {
+    timeZone: worldClockTimeZone(config.timeZone),
+    zoneLabel: xingchenText(config.zoneLabel).trim().slice(0, 12),
+    hourCycle: xingchenText(config.hourCycle) === "12" ? "12" : "24",
+    showSeconds: xingchenBoolean(config.showSeconds, true),
+    showDate: xingchenBoolean(config.showDate, true),
+    showRelative: xingchenBoolean(config.showRelative, true),
+    bodyColor: xingchenColor(config.bodyColor, "#D8E3F8"),
+    cornerRadius: xingchenNumber(config.cornerRadius, 28, 0, 50)
+  };
+}
+
+/** @param {Date} now @param {string} timeZone @returns {Record<string, string>} */
+function worldClockParts(now, timeZone) {
+  var formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: timeZone,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23"
+  });
+  var result = {};
+  formatter.formatToParts(now).forEach(function (part) {
+    if (part.type !== "literal") result[part.type] = part.value;
+  });
+  return result;
+}
+
+/** @param {Date} now @param {string} timeZone @returns {string} */
+function worldClockZoneName(now, timeZone) {
+  var parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timeZone,
+    timeZoneName: "short"
+  }).formatToParts(now);
+  var zonePart = parts.find(function (part) { return part.type === "timeZoneName"; });
+  return zonePart ? zonePart.value.replace(/^GMT/, "UTC") : timeZone;
+}
+
+/** @param {Date} now @param {string} timeZone @returns {number} */
+function worldClockOffsetMinutes(now, timeZone) {
+  var parts = worldClockParts(now, timeZone);
+  var representedUtc = Date.UTC(
+    Number(parts.year),
+    Number(parts.month) - 1,
+    Number(parts.day),
+    Number(parts.hour),
+    Number(parts.minute),
+    Number(parts.second)
+  );
+  var exactSecond = Math.floor(now.getTime() / 1000) * 1000;
+  return Math.round((representedUtc - exactSecond) / 60000);
+}
+
+/** @param {number} minutes @returns {string} */
+function worldClockOffsetLabel(minutes) {
+  if (minutes === 0) return "UTC ±0:00";
+  var absolute = Math.abs(minutes);
+  return "UTC " + (minutes > 0 ? "+" : "-") + Math.floor(absolute / 60) + ":" + String(absolute % 60).padStart(2, "0");
+}
+
+/** @param {number} minutes @returns {string} */
+function worldClockRelativeLabel(minutes) {
+  if (minutes === 0) return "Same time";
+  var absolute = Math.abs(minutes);
+  var hours = Math.floor(absolute / 60);
+  var remainder = absolute % 60;
+  var duration = hours ? hours + "h" : "";
+  if (remainder) duration += (duration ? " " : "") + remainder + "m";
+  return duration + (minutes > 0 ? " ahead" : " behind");
+}
+
+/** @param {HTMLElement} container */
+function worldClockClearTimer(container) {
+  var timer = WORLD_CLOCK_TIMERS.get(container);
+  if (!timer) return;
+  if (timer.timeout) clearTimeout(timer.timeout);
+  if (timer.interval) clearInterval(timer.interval);
+  WORLD_CLOCK_TIMERS.delete(container);
+}
+
+/** @param {HTMLElement} container @returns {HTMLElement} */
+function worldClockEnsureMarkup(container) {
+  var shell = /** @type {HTMLElement | null} */ (container.querySelector("[data-world-clock-shell]"));
+  if (shell && shell.querySelector("[data-clock-hour]")) return shell;
+  container.innerHTML = [
+    '<section class="world-clock-widget" data-world-clock-shell data-size="4x2" role="timer" aria-label="世界时钟">',
+    '  <div class="world-clock-dial" aria-hidden="true">',
+    '    <svg class="world-clock-seal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500"><path d="M469.881,324.15a90.631,90.631,0,0,1,7.616-28.425l15.88-32.267c3.642-7.4,3.642-19.514,0-26.916L477.5,204.275a90.631,90.631,0,0,1-7.616-28.425L467.5,139.967c-.547-8.232-6.6-18.722-13.459-23.311l-29.885-20a90.643,90.643,0,0,1-20.809-20.809l-20-29.885C378.755,39.1,368.265,33.047,360.033,32.5L324.15,30.119A90.631,90.631,0,0,1,295.725,22.5L263.458,6.623c-7.4-3.642-19.514-3.642-26.916,0L204.275,22.5a90.631,90.631,0,0,1-28.425,7.616L139.967,32.5c-8.232.547-18.722,6.6-23.311,13.459l-20,29.885A90.643,90.643,0,0,1,75.844,96.653l-29.885,20C39.1,121.245,33.047,131.735,32.5,139.967L30.119,175.85A90.631,90.631,0,0,1,22.5,204.275L6.623,236.542c-3.642,7.4-3.642,19.514,0,26.916L22.5,295.725a90.631,90.631,0,0,1,7.616,28.425L32.5,360.033c.546,8.232,6.6,18.722,13.458,23.311l29.885,20a90.643,90.643,0,0,1,20.809,20.809l20,29.885c4.589,6.856,15.079,12.912,23.311,13.459l35.883,2.381a90.631,90.631,0,0,1,28.425,7.616l32.267,15.88c7.4,3.642,19.514,3.642,26.916,0l32.267-15.88a90.631,90.631,0,0,1,28.425-7.616l35.883-2.381c8.232-.547,18.722-6.6,23.311-13.459l20-29.885a90.643,90.643,0,0,1,20.809-20.809l29.885-20c6.856-4.589,12.912-15.079,13.458-23.311Z"></path></svg>',
+    '    <i class="world-clock-hand is-hour" data-clock-hour-hand></i>',
+    '    <i class="world-clock-hand is-minute" data-clock-minute-hand></i>',
+    '    <i class="world-clock-hand is-second" data-clock-second-hand></i>',
+    '    <b class="world-clock-pin"></b>',
+    '    <span class="world-clock-mark"></span>',
+    '  </div>',
+    '  <div class="world-clock-readout">',
+    '    <div class="world-clock-meta" data-clock-meta><time data-clock-date>2026/8/4</time><span data-clock-zone>EDT</span></div>',
+    '    <div class="world-clock-digital"><span data-clock-hour>03</span><i>:</i><span data-clock-minute>30</span><i data-clock-second-separator>:</i><span class="world-clock-second" data-clock-second>22</span><span class="world-clock-period" data-clock-period hidden>AM</span></div>',
+    '    <div class="world-clock-offset" data-clock-relative-row><span data-clock-relative>12h behind</span><i>/</i><span data-clock-offset>UTC -4:00</span></div>',
+    '  </div>',
+    '</section>'
+  ].join("");
+  return /** @type {HTMLElement} */ (container.querySelector("[data-world-clock-shell]"));
+}
+
+/** @param {HTMLElement} shell @param {WorldClockResolvedConfig} config */
+function worldClockPaint(shell, config) {
+  var now = new Date();
+  var parts = worldClockParts(now, config.timeZone);
+  var targetOffset = worldClockOffsetMinutes(now, config.timeZone);
+  var localOffset = -now.getTimezoneOffset();
+  var hour24 = Number(parts.hour);
+  var hour = config.hourCycle === "12" ? (hour24 % 12 || 12) : hour24;
+  var periodLabel = hour24 < 12 ? "AM" : "PM";
+  var minute = Number(parts.minute);
+  var second = Number(parts.second);
+  var zoneName = config.zoneLabel || worldClockZoneName(now, config.timeZone);
+
+  /** @type {HTMLElement} */ (shell.querySelector("[data-clock-date]")).textContent = parts.year + "/" + Number(parts.month) + "/" + Number(parts.day);
+  /** @type {HTMLElement} */ (shell.querySelector("[data-clock-zone]")).textContent = zoneName;
+  /** @type {HTMLElement} */ (shell.querySelector("[data-clock-hour]")).textContent = String(hour).padStart(2, "0");
+  /** @type {HTMLElement} */ (shell.querySelector("[data-clock-minute]")).textContent = String(minute).padStart(2, "0");
+  /** @type {HTMLElement} */ (shell.querySelector("[data-clock-second]")).textContent = String(second).padStart(2, "0");
+  var period = /** @type {HTMLElement} */ (shell.querySelector("[data-clock-period]"));
+  period.textContent = periodLabel;
+  period.hidden = config.hourCycle !== "12";
+  /** @type {HTMLElement} */ (shell.querySelector("[data-clock-relative]")).textContent = worldClockRelativeLabel(targetOffset - localOffset);
+  /** @type {HTMLElement} */ (shell.querySelector("[data-clock-offset]")).textContent = worldClockOffsetLabel(targetOffset);
+  /** @type {HTMLElement} */ (shell.querySelector("[data-clock-hour-hand]")).style.setProperty("--clock-hand-angle", ((hour24 % 12) * 30 + minute * 0.5 + second / 120) + "deg");
+  /** @type {HTMLElement} */ (shell.querySelector("[data-clock-minute-hand]")).style.setProperty("--clock-hand-angle", (minute * 6 + second * 0.1) + "deg");
+  /** @type {HTMLElement} */ (shell.querySelector("[data-clock-second-hand]")).style.setProperty("--clock-hand-angle", (second * 6) + "deg");
+  shell.setAttribute("aria-label", parts.year + "年" + Number(parts.month) + "月" + Number(parts.day) + "日 " + zoneName + " " + String(hour).padStart(2, "0") + ":" + String(minute).padStart(2, "0") + (config.showSeconds ? ":" + String(second).padStart(2, "0") : "") + (config.hourCycle === "12" ? " " + periodLabel : ""));
+}
+
+/** @param {HTMLElement} container @param {HTMLElement} shell @param {WorldClockResolvedConfig} config */
+function worldClockStartTimer(container, shell, config) {
+  worldClockClearTimer(container);
+  worldClockPaint(shell, config);
+  var timer = { timeout: 0, interval: 0 };
+  var delay = 1000 - (Date.now() % 1000);
+  timer.timeout = setTimeout(function () {
+    if (WORLD_CLOCK_TIMERS.get(container) !== timer) return;
+    worldClockPaint(shell, config);
+    timer.timeout = 0;
+    timer.interval = setInterval(function () {
+      if (!shell.isConnected) {
+        worldClockClearTimer(container);
+        return;
+      }
+      worldClockPaint(shell, config);
+    }, 1000);
+  }, delay);
+  WORLD_CLOCK_TIMERS.set(container, timer);
+}
+
+/** @param {HTMLElement} container @param {XingchenWidgetProps} props */
+function worldClockRender(container, props) {
+  var safeProps = props || {};
+  var shell = worldClockEnsureMarkup(container);
+  var config = worldClockResolvedConfig(safeProps);
+  var hostScale = xingchenNumber(safeProps.scale, 1, 0.1, 2);
+  var hostFontScale = xingchenNumber(safeProps.fontScale, 1, 0.6, 1.2);
+  var hostPrimary = xingchenColor(safeProps.primaryColor, "#4C7FD1");
+  var textColor = worldClockReadableColor(config.bodyColor);
+  var mutedColor = worldClockMixColor(config.bodyColor, textColor, 0.56);
+  var dialColor = worldClockMixColor(config.bodyColor, hostPrimary, 0.5);
+  var hourColor = worldClockMixColor(hostPrimary, textColor, 0.18);
+
+  container.style.background = "transparent";
+  container.ownerDocument.documentElement.style.background = "transparent";
+  if (container.ownerDocument.body) container.ownerDocument.body.style.background = "transparent";
+  shell.setAttribute("data-size", "4x2");
+  shell.setAttribute("data-show-seconds", String(config.showSeconds));
+  shell.setAttribute("data-show-date", String(config.showDate));
+  shell.setAttribute("data-show-relative", String(config.showRelative));
+  shell.setAttribute("data-host-theme", xingchenHostTheme(safeProps));
+  shell.style.setProperty("--clock-scale", String(hostScale));
+  shell.style.setProperty("--clock-font-scale", String(hostFontScale));
+  shell.style.setProperty("--clock-body", config.bodyColor);
+  shell.style.setProperty("--clock-text", textColor);
+  shell.style.setProperty("--clock-muted", mutedColor);
+  shell.style.setProperty("--clock-dial", dialColor);
+  shell.style.setProperty("--clock-hour", hourColor);
+  shell.style.setProperty("--clock-minute", mutedColor);
+  shell.style.setProperty("--clock-second", textColor);
+  shell.style.setProperty("--clock-radius", config.cornerRadius + "px");
+  worldClockStartTimer(container, shell, config);
+}
+
+Tapp.widgets["world-clock"] = {
+  render: worldClockRender
+};
+
 /** @typedef {"email" | "qq" | "wechat" | "telegram" | "github" | "gitee" | "bilibili" | "custom"} PersonalPlatform */
 /**
  * @typedef {Object} PersonalResolvedConfig
@@ -1014,6 +1566,11 @@ Tapp.widgets["personal-info"] = {
 };
 
 Tapp.lifecycle.onDestroy(function () {
+  WORLD_CLOCK_TIMERS.forEach(function (timer) {
+    if (timer.timeout) clearTimeout(timer.timeout);
+    if (timer.interval) clearInterval(timer.interval);
+  });
+  WORLD_CLOCK_TIMERS.clear();
   XINGCHEN_THEME_UNSUBSCRIBERS.forEach(function (unsubscribe) {
     try {
       unsubscribe();

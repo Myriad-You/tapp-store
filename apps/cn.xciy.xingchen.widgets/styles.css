@@ -655,6 +655,1649 @@ body.dark,
   grid-template-rows: minmax(0, 1fr);
 }
 
+.anniversary-widget {
+  --anniversary-accent: #a78bfa;
+  --anniversary-background: #111827;
+  --anniversary-text: #f8fafc;
+  --anniversary-muted: #cbd5e1;
+  --anniversary-radius: 22px;
+  --anniversary-number-scale: 1;
+  --anniversary-base-number: 92px;
+  --anniversary-overlay-opacity: 0.42;
+  --anniversary-progress-value: 0%;
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-areas:
+    "header"
+    "time"
+    "copy"
+    "footer";
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: clamp(5px, 2.5%, 12px);
+  padding: clamp(14px, 5%, 26px);
+  overflow: hidden;
+  color: var(--anniversary-text);
+  background: var(--anniversary-background);
+  border: 0;
+  border-radius: var(--anniversary-radius);
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.16);
+}
+
+.anniversary-widget::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: #080b16;
+  opacity: 0;
+}
+
+.anniversary-backdrop,
+.anniversary-pattern {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+}
+
+.anniversary-backdrop {
+  background-position: center;
+  background-size: cover;
+  opacity: 0;
+  transform: scale(1.025);
+}
+
+.anniversary-pattern {
+  z-index: -1;
+}
+
+.anniversary-widget[data-has-image="true"] .anniversary-backdrop {
+  opacity: 0.68;
+}
+
+.anniversary-widget[data-has-image="true"]::before {
+  opacity: var(--anniversary-overlay-opacity);
+}
+
+.anniversary-header {
+  grid-area: header;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.anniversary-icon {
+  flex: 0 0 auto;
+  width: clamp(28px, 8cqh, 38px);
+  height: clamp(28px, 8cqh, 38px);
+  display: grid;
+  place-items: center;
+  color: var(--anniversary-accent);
+  font-size: clamp(16px, 5cqh, 22px);
+  line-height: 1;
+  border: 1px solid color-mix(in srgb, var(--anniversary-accent) 46%, transparent);
+  border-radius: 999px;
+}
+
+.anniversary-label {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--anniversary-muted);
+  font-size: clamp(10px, 3cqh, 14px);
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.anniversary-time {
+  grid-area: time;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  align-self: center;
+  color: var(--anniversary-text);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.anniversary-time strong {
+  display: block;
+  min-width: 0;
+  font-family: "Arial Narrow", "Roboto Condensed", "DIN Alternate", ui-sans-serif, system-ui, sans-serif;
+  font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale));
+  font-weight: 760;
+  letter-spacing: -0.075em;
+  line-height: 0.78;
+  text-shadow: 0 9px 28px color-mix(in srgb, var(--anniversary-accent) 30%, transparent);
+}
+
+.anniversary-time span {
+  color: var(--anniversary-accent);
+  font-size: clamp(13px, 5cqh, 22px);
+  font-weight: 750;
+  letter-spacing: 0.05em;
+}
+
+.anniversary-copy {
+  grid-area: copy;
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+}
+
+.anniversary-copy h2,
+.anniversary-copy p {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.anniversary-copy h2 {
+  color: var(--anniversary-text);
+  font-size: clamp(15px, 5.8cqh, 25px);
+  font-weight: 720;
+  letter-spacing: 0;
+  line-height: 1.08;
+  white-space: nowrap;
+}
+
+.anniversary-copy p {
+  display: -webkit-box;
+  color: var(--anniversary-muted);
+  font-size: clamp(10px, 3.5cqh, 14px);
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-footer {
+  grid-area: footer;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.anniversary-footer time,
+.anniversary-progress-label {
+  color: var(--anniversary-muted);
+  font-size: clamp(9px, 2.8cqh, 12px);
+  font-weight: 620;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.anniversary-progress-label {
+  grid-column: 3;
+  text-align: right;
+}
+
+.anniversary-progress {
+  position: relative;
+  grid-column: 1 / -1;
+  height: 3px;
+  overflow: visible;
+  background: color-mix(in srgb, var(--anniversary-muted) 25%, transparent);
+  border-radius: 999px;
+}
+
+.anniversary-progress i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--anniversary-progress-value);
+  background: var(--anniversary-accent);
+  border-radius: inherit;
+}
+
+.anniversary-progress b {
+  position: absolute;
+  top: 50%;
+  left: clamp(0px, calc(var(--anniversary-progress-value) - 5px), calc(100% - 10px));
+  width: 10px;
+  height: 10px;
+  background: var(--anniversary-accent);
+  border: 2px solid var(--anniversary-background);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--anniversary-accent) 20%, transparent);
+  transform: translateY(-50%);
+}
+
+.anniversary-widget[data-show-icon="false"] .anniversary-icon,
+.anniversary-widget[data-show-date="false"] time,
+.anniversary-widget[data-show-progress="false"] .anniversary-progress,
+.anniversary-widget[data-show-progress="false"] .anniversary-progress-label {
+  display: none;
+}
+
+.anniversary-widget[data-show-date="false"][data-show-progress="false"] .anniversary-footer {
+  display: none;
+}
+
+.anniversary-widget[data-show-date="false"][data-show-progress="true"] .anniversary-progress-label {
+  grid-column: 1 / -1;
+}
+
+.anniversary-widget[data-show-date="true"][data-show-progress="false"] .anniversary-footer {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.anniversary-widget[data-align="center"] {
+  text-align: center;
+}
+
+.anniversary-widget[data-align="center"] .anniversary-header,
+.anniversary-widget[data-align="center"] .anniversary-time {
+  justify-content: center;
+}
+
+.anniversary-widget[data-align="right"] {
+  text-align: right;
+}
+
+.anniversary-widget[data-align="right"] .anniversary-header,
+.anniversary-widget[data-align="right"] .anniversary-time {
+  justify-content: flex-end;
+}
+
+.anniversary-widget[data-direction="today"] .anniversary-icon {
+  animation: anniversary-heartbeat 1.8s ease-in-out infinite;
+}
+
+.anniversary-widget[data-state="error"] .anniversary-footer,
+.anniversary-widget[data-state="error"] .anniversary-icon {
+  display: none;
+}
+
+.anniversary-widget[data-style="starlight"] {
+  --anniversary-accent: #a78bfa;
+  --anniversary-background: #101225;
+  --anniversary-text: #f8fafc;
+  --anniversary-muted: #cbd5e1;
+  background:
+    radial-gradient(circle at 18% 14%, color-mix(in srgb, var(--anniversary-accent) 28%, transparent), transparent 38%),
+    radial-gradient(circle at 84% 82%, rgba(34, 211, 238, 0.18), transparent 42%),
+    var(--anniversary-background);
+}
+
+.anniversary-widget[data-style="starlight"] .anniversary-pattern {
+  opacity: 0.55;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.7) 0 1px, transparent 1.4px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.34) 0 1px, transparent 1.3px);
+  background-position: 14px 12px, 47px 38px;
+  background-size: 58px 58px, 74px 74px;
+  mask-image: linear-gradient(120deg, #000, transparent 70%);
+}
+
+.anniversary-widget[data-style="letter"] {
+  --anniversary-accent: #c96b5c;
+  --anniversary-background: #fbf3e4;
+  --anniversary-text: #3f3028;
+  --anniversary-muted: #8a7464;
+  box-shadow: 0 16px 38px rgba(96, 68, 45, 0.15), inset 0 0 0 1px rgba(109, 78, 53, 0.12);
+  background: var(--anniversary-background);
+}
+
+.anniversary-widget[data-style="letter"] .anniversary-pattern {
+  opacity: 0.72;
+  background:
+    linear-gradient(90deg, transparent 0 9%, color-mix(in srgb, var(--anniversary-accent) 36%, transparent) 9% 9.5%, transparent 9.5%),
+    repeating-linear-gradient(180deg, transparent 0 27px, rgba(112, 85, 62, 0.09) 27px 28px);
+}
+
+.anniversary-widget[data-style="letter"] .anniversary-copy h2 {
+  font-family: "Songti SC", "STSong", "Noto Serif CJK SC", serif;
+  font-weight: 700;
+}
+
+.anniversary-widget[data-style="letter"] .anniversary-time strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  text-shadow: none;
+}
+
+.anniversary-widget[data-style="glass"] {
+  --anniversary-accent: #f7d9aa;
+  --anniversary-background: #334155;
+  --anniversary-text: #ffffff;
+  --anniversary-muted: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(125, 211, 252, 0.34), transparent 38%),
+    linear-gradient(135deg, #334155, #1e293b);
+  box-shadow: 0 22px 52px rgba(15, 23, 42, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.34);
+}
+
+.anniversary-widget[data-style="glass"] .anniversary-backdrop {
+  opacity: 1;
+}
+
+.anniversary-widget[data-style="glass"]::before {
+  background: #0f172a;
+  opacity: var(--anniversary-overlay-opacity);
+}
+
+.anniversary-widget[data-style="glass"] .anniversary-pattern {
+  inset: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: max(0px, calc(var(--anniversary-radius) - 8px));
+}
+
+.anniversary-widget[data-style="minimal"] {
+  --anniversary-accent: #2563eb;
+  --anniversary-background: #e8f0ff;
+  --anniversary-text: #10213d;
+  --anniversary-muted: #5e7191;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--anniversary-accent) 14%, transparent);
+  background: var(--anniversary-background);
+}
+
+.anniversary-widget[data-style="minimal"] .anniversary-pattern {
+  left: auto;
+  width: 10px;
+  background: var(--anniversary-accent);
+}
+
+.anniversary-widget[data-style="minimal"] .anniversary-icon {
+  color: var(--anniversary-background);
+  background: var(--anniversary-accent);
+  border-color: transparent;
+}
+
+.anniversary-widget[data-size="2x1"] {
+  --anniversary-base-number: 50px;
+  grid-template-areas:
+    "header time"
+    "copy time"
+    "footer footer";
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: 26px minmax(0, 1fr) 14px;
+  gap: 2px 10px;
+  padding: 10px 12px 9px;
+  border-radius: min(var(--anniversary-radius), 18px);
+}
+
+.anniversary-widget[data-size="2x1"] .anniversary-icon {
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+}
+
+.anniversary-widget[data-size="2x1"] .anniversary-label {
+  font-size: clamp(9px, 2.9cqh, 11px);
+  letter-spacing: 0.045em;
+}
+
+.anniversary-widget[data-size="2x1"] .anniversary-time {
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.anniversary-widget[data-size="2x1"] .anniversary-time span {
+  font-size: clamp(11px, 4.2cqh, 15px);
+}
+
+.anniversary-widget[data-size="2x1"] .anniversary-copy p,
+.anniversary-widget[data-size="2x1"] .anniversary-progress-label {
+  display: none;
+}
+
+.anniversary-widget[data-size="2x1"] .anniversary-copy h2 {
+  display: -webkit-box;
+  font-size: clamp(13px, 4.8cqh, 16px);
+  line-height: 1.08;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-widget[data-size="2x1"] .anniversary-footer {
+  grid-template-columns: auto minmax(18px, 1fr);
+  gap: 7px;
+}
+
+.anniversary-widget[data-size="2x1"] .anniversary-progress {
+  grid-column: 2;
+  height: 2px;
+}
+
+.anniversary-widget[data-size="2x1"][data-show-date="false"] .anniversary-progress {
+  grid-column: 1 / -1;
+}
+
+.anniversary-widget[data-size="2x1"] .anniversary-progress b {
+  width: 8px;
+  height: 8px;
+  left: clamp(0px, calc(var(--anniversary-progress-value) - 4px), calc(100% - 8px));
+}
+
+.anniversary-widget[data-size="2x1"][data-title-length="very-long"] .anniversary-copy h2 {
+  font-size: clamp(11px, 4cqh, 13px);
+}
+
+.anniversary-widget[data-size="2x2"] {
+  --anniversary-base-number: 82px;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: clamp(6px, 2.8%, 10px);
+  padding: clamp(15px, 6.5%, 21px);
+}
+
+.anniversary-widget[data-size="2x2"] .anniversary-time {
+  justify-content: center;
+  align-self: center;
+}
+
+.anniversary-widget[data-size="2x2"] .anniversary-time span {
+  font-size: clamp(14px, 4.8cqh, 19px);
+}
+
+.anniversary-widget[data-size="2x2"] .anniversary-copy p,
+.anniversary-widget[data-size="2x2"] .anniversary-progress-label {
+  display: none;
+}
+
+.anniversary-widget[data-size="2x2"] .anniversary-copy h2 {
+  display: -webkit-box;
+  line-height: 1.15;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-widget[data-size="2x2"] .anniversary-footer {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 7px;
+}
+
+.anniversary-widget[data-size="2x2"] .anniversary-progress {
+  grid-column: 1;
+}
+
+.anniversary-widget[data-size="2x2"][data-title-length="very-long"] .anniversary-copy h2 {
+  font-size: clamp(13px, 4.5cqh, 18px);
+}
+
+.anniversary-widget[data-size="4x1"] {
+  --anniversary-base-number: 62px;
+  grid-template-areas:
+    "header time copy"
+    "footer footer footer";
+  grid-template-columns: minmax(118px, 0.8fr) auto minmax(150px, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 8px clamp(18px, 4vw, 36px);
+  padding: 12px clamp(16px, 3.5%, 26px) 11px;
+}
+
+.anniversary-widget[data-size="4x1"] .anniversary-header {
+  align-self: center;
+}
+
+.anniversary-widget[data-size="4x1"] .anniversary-time {
+  justify-content: center;
+  align-self: center;
+}
+
+.anniversary-widget[data-size="4x1"] .anniversary-copy {
+  align-content: center;
+}
+
+.anniversary-widget[data-size="4x1"] .anniversary-copy h2 {
+  font-size: clamp(16px, 5.2cqh, 21px);
+}
+
+.anniversary-widget[data-size="4x1"] .anniversary-copy p {
+  font-size: clamp(9px, 3.1cqh, 12px);
+  white-space: nowrap;
+  -webkit-line-clamp: 1;
+}
+
+.anniversary-widget[data-size="4x1"] .anniversary-footer {
+  grid-template-columns: auto minmax(54px, 1fr) auto;
+  gap: 10px;
+}
+
+.anniversary-widget[data-size="4x1"][data-title-length="long"] .anniversary-copy h2 {
+  display: -webkit-box;
+  font-size: clamp(14px, 4.7cqh, 19px);
+  line-height: 1.08;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-widget[data-size="4x1"] .anniversary-progress {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.anniversary-widget[data-size="4x1"] .anniversary-progress-label {
+  grid-column: 3;
+}
+
+.anniversary-widget[data-size="4x1"][data-show-date="false"] .anniversary-progress {
+  grid-column: 1 / 3;
+}
+
+.anniversary-widget[data-size="4x1"][data-show-date="false"] .anniversary-progress-label {
+  grid-column: 3;
+}
+
+.anniversary-widget[data-size="4x1"][data-title-length="very-long"] .anniversary-copy h2 {
+  display: -webkit-box;
+  font-size: clamp(13px, 4.3cqh, 17px);
+  line-height: 1.08;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-widget[data-size="4x1"][data-title-length="very-long"] .anniversary-copy p {
+  display: none;
+}
+
+.anniversary-widget[data-size="4x2"] {
+  --anniversary-base-number: 100px;
+  grid-template-areas:
+    "header header"
+    "time copy"
+    "footer footer";
+  grid-template-columns: minmax(0, 0.95fr) minmax(180px, 1.05fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: clamp(8px, 3%, 14px) clamp(24px, 5vw, 52px);
+  padding: clamp(18px, 4.5%, 30px);
+}
+
+.anniversary-widget[data-size="4x2"] .anniversary-time {
+  align-self: center;
+}
+
+.anniversary-widget[data-size="4x2"] .anniversary-copy {
+  align-content: center;
+}
+
+.anniversary-widget[data-size="4x2"] .anniversary-copy h2 {
+  display: -webkit-box;
+  font-size: clamp(20px, 6cqh, 28px);
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-widget[data-size="4x2"] .anniversary-copy p {
+  max-width: 32em;
+}
+
+.anniversary-widget[data-size="4x2"][data-title-length="very-long"] .anniversary-copy h2 {
+  font-size: clamp(16px, 4.8cqh, 22px);
+}
+
+.anniversary-widget[data-size="4x4"] {
+  --anniversary-base-number: 142px;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  padding: clamp(24px, 7%, 40px);
+  gap: clamp(12px, 3.2%, 20px);
+}
+
+.anniversary-widget[data-size="4x4"] .anniversary-time {
+  align-self: center;
+}
+
+.anniversary-widget[data-size="4x4"] .anniversary-copy h2 {
+  font-size: clamp(24px, 6cqh, 34px);
+  text-wrap: balance;
+  white-space: normal;
+}
+
+.anniversary-widget[data-size="4x4"] .anniversary-copy p {
+  max-width: 34em;
+  font-size: clamp(13px, 3.2cqh, 17px);
+}
+
+.anniversary-widget[data-align="center"][data-size="4x4"] .anniversary-copy p {
+  justify-self: center;
+}
+
+.anniversary-widget[data-align="right"][data-size="4x4"] .anniversary-copy p {
+  justify-self: end;
+}
+
+.anniversary-widget[data-size="4x4"][data-title-length="very-long"] .anniversary-copy h2 {
+  font-size: clamp(19px, 4.4cqh, 24px);
+  line-height: 1.12;
+}
+
+.anniversary-widget[data-size="2x1"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.92); }
+.anniversary-widget[data-size="2x1"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.8); }
+.anniversary-widget[data-size="2x1"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.66); }
+.anniversary-widget[data-size="2x1"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.56); }
+
+.anniversary-widget[data-size="4x1"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.95); }
+.anniversary-widget[data-size="4x1"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.85); }
+.anniversary-widget[data-size="4x1"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.72); }
+.anniversary-widget[data-size="4x1"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.62); }
+
+.anniversary-widget[data-size="2x2"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.9); }
+.anniversary-widget[data-size="2x2"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.76); }
+.anniversary-widget[data-size="2x2"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.64); }
+.anniversary-widget[data-size="2x2"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.55); }
+
+.anniversary-widget[data-size="4x2"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.92); }
+.anniversary-widget[data-size="4x2"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.78); }
+.anniversary-widget[data-size="4x2"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.67); }
+.anniversary-widget[data-size="4x2"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.58); }
+
+.anniversary-widget[data-size="4x4"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.95); }
+.anniversary-widget[data-size="4x4"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.84); }
+.anniversary-widget[data-size="4x4"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.74); }
+.anniversary-widget[data-size="4x4"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.66); }
+
+.anniversary-widget[data-style="letter"][data-size="2x1"],
+.anniversary-widget[data-style="letter"][data-size="4x1"] {
+  background-position: 0 -5px;
+}
+
+.anniversary-widget[data-style="glass"][data-size="2x1"] .anniversary-pattern,
+.anniversary-widget[data-style="glass"][data-size="4x1"] .anniversary-pattern {
+  inset: 6px;
+  border-radius: max(0px, calc(var(--anniversary-radius) - 6px));
+}
+
+.anniversary-widget[data-style="minimal"][data-size="2x1"] .anniversary-pattern,
+.anniversary-widget[data-style="minimal"][data-size="4x1"] .anniversary-pattern {
+  width: 7px;
+}
+
+/* Anniversary layout v2: a date poster composed for each supported widget size. */
+.anniversary-widget[data-layout-version="2"] {
+  --anniversary-display: "Bahnschrift Condensed", "Aptos Narrow", "Arial Narrow", ui-sans-serif, system-ui, sans-serif;
+  grid-template-areas:
+    "header"
+    "copy"
+    "time"
+    "footer";
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 20px;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.18);
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-header,
+.anniversary-widget[data-layout-version="2"] .anniversary-copy,
+.anniversary-widget[data-layout-version="2"] .anniversary-time,
+.anniversary-widget[data-layout-version="2"] .anniversary-footer {
+  position: relative;
+  z-index: 1;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-header {
+  gap: 9px;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-label {
+  font-size: clamp(10px, 3.2cqh, 13px);
+  font-weight: 680;
+  letter-spacing: 0.045em;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-time {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+  align-self: stretch;
+  min-height: 0;
+  overflow: visible;
+  gap: 8px;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-time strong {
+  font-family: var(--anniversary-display);
+  font-weight: 760;
+  font-stretch: condensed;
+  letter-spacing: 0;
+  line-height: 0.82;
+  text-shadow: none;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-time span {
+  flex: 0 0 auto;
+  font-size: clamp(13px, 4.4cqh, 20px);
+  font-weight: 780;
+  letter-spacing: 0.02em;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-copy {
+  gap: 7px;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-copy h2 {
+  font-size: clamp(18px, 5.8cqh, 30px);
+  font-weight: 760;
+  line-height: 1.06;
+  text-wrap: balance;
+  white-space: normal;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-copy p {
+  max-width: 36em;
+  line-height: 1.45;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-footer {
+  grid-template-columns: auto minmax(24px, 1fr) auto;
+  gap: 7px 10px;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-progress {
+  height: 2px;
+}
+
+.anniversary-widget[data-layout-version="2"] .anniversary-progress b {
+  width: 9px;
+  height: 9px;
+  left: clamp(0px, calc(var(--anniversary-progress-value) - 4.5px), calc(100% - 9px));
+  border-width: 2px;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] {
+  --anniversary-base-number: 54px;
+  grid-template-areas:
+    "header time"
+    "copy time"
+    "footer time";
+  grid-template-columns: minmax(0, 1fr) minmax(108px, 40%);
+  grid-template-rows: 24px minmax(0, 1fr) 25px;
+  gap: 3px 12px;
+  padding: 10px 12px;
+  border-radius: min(var(--anniversary-radius), 18px);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-icon {
+  width: 22px;
+  height: 22px;
+  font-size: 13px;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-label {
+  font-size: 10px;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-copy {
+  align-content: center;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-copy h2 {
+  display: -webkit-box;
+  font-size: clamp(14px, 4.8cqh, 17px);
+  line-height: 1.06;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-copy p,
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-progress-label {
+  display: none;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-time {
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  padding-left: 10px;
+  border-left: 1px solid color-mix(in srgb, var(--anniversary-muted) 22%, transparent);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-time span {
+  font-size: 13px;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-footer {
+  grid-template-columns: 1fr;
+  align-content: end;
+  gap: 5px;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-footer time,
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-progress {
+  grid-column: 1;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"] .anniversary-progress {
+  grid-row: auto;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] {
+  --anniversary-base-number: 72px;
+  grid-template-areas:
+    "header time footer"
+    "copy time footer";
+  grid-template-columns: minmax(150px, 0.9fr) minmax(180px, 0.86fr) minmax(160px, 0.74fr);
+  grid-template-rows: 30px minmax(0, 1fr);
+  gap: 4px clamp(20px, 4vw, 38px);
+  padding: 12px clamp(18px, 3.5%, 28px);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] .anniversary-copy {
+  align-content: center;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] .anniversary-copy h2 {
+  display: -webkit-box;
+  font-size: clamp(17px, 5.1cqh, 21px);
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] .anniversary-copy p {
+  display: none;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] .anniversary-time {
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] .anniversary-footer {
+  grid-template-columns: 1fr;
+  align-content: center;
+  gap: 9px;
+  padding-left: clamp(16px, 3vw, 28px);
+  border-left: 1px solid color-mix(in srgb, var(--anniversary-muted) 22%, transparent);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] .anniversary-footer time,
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] .anniversary-progress-label,
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] .anniversary-progress {
+  grid-column: 1;
+  text-align: left;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] .anniversary-progress-label {
+  grid-row: auto;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x1"] .anniversary-progress {
+  grid-row: auto;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x2"] {
+  --anniversary-base-number: 96px;
+  grid-template-areas:
+    "header"
+    "copy"
+    "time"
+    "footer";
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: clamp(17px, 6.5%, 22px);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x2"] .anniversary-copy h2 {
+  display: -webkit-box;
+  font-size: clamp(20px, 6.2cqh, 25px);
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x2"] .anniversary-copy p,
+.anniversary-widget[data-layout-version="2"][data-size="2x2"] .anniversary-progress-label {
+  display: none;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x2"] .anniversary-time {
+  align-items: center;
+  justify-content: center;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x2"] .anniversary-footer {
+  grid-template-columns: auto minmax(20px, 1fr);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x2"] .anniversary-progress {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x2"][data-show-date="false"] .anniversary-progress {
+  grid-column: 1 / -1;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x2"] {
+  --anniversary-base-number: 132px;
+  grid-template-areas:
+    "header time"
+    "copy time"
+    "footer time";
+  grid-template-columns: minmax(240px, 0.92fr) minmax(270px, 1.08fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 14px clamp(32px, 5vw, 58px);
+  padding: clamp(22px, 5%, 34px);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x2"] .anniversary-copy {
+  align-content: center;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x2"] .anniversary-copy h2 {
+  display: -webkit-box;
+  font-size: clamp(26px, 7cqh, 34px);
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x2"] .anniversary-copy p {
+  font-size: clamp(11px, 3.5cqh, 15px);
+  -webkit-line-clamp: 3;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x2"] .anniversary-time {
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x4"] {
+  --anniversary-base-number: 176px;
+  grid-template-areas:
+    "header"
+    "copy"
+    "time"
+    "footer";
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: clamp(15px, 3.8%, 22px);
+  padding: clamp(28px, 7%, 40px);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x4"] .anniversary-copy {
+  gap: 10px;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x4"] .anniversary-copy h2 {
+  display: -webkit-box;
+  max-width: 13em;
+  font-size: clamp(31px, 8cqh, 42px);
+  line-height: 1.04;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x4"] .anniversary-copy p {
+  max-width: 30em;
+  font-size: clamp(13px, 3.5cqh, 16px);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x4"] .anniversary-time {
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.anniversary-widget[data-layout-version="2"][data-align="center"][data-size="4x4"] .anniversary-copy h2,
+.anniversary-widget[data-layout-version="2"][data-align="center"][data-size="4x4"] .anniversary-copy p {
+  justify-self: center;
+}
+
+.anniversary-widget[data-layout-version="2"][data-align="right"][data-size="4x4"] .anniversary-copy h2,
+.anniversary-widget[data-layout-version="2"][data-align="right"][data-size="4x4"] .anniversary-copy p {
+  justify-self: end;
+}
+
+.anniversary-widget[data-layout-version="2"][data-align="center"] .anniversary-time {
+  justify-content: center;
+}
+
+.anniversary-widget[data-layout-version="2"][data-align="right"] .anniversary-time {
+  justify-content: flex-end;
+}
+
+.anniversary-widget[data-layout-version="2"][data-title-length="very-long"] .anniversary-copy h2 {
+  font-size: clamp(16px, 5.2cqh, 26px);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="4x4"][data-title-length="very-long"] .anniversary-copy h2 {
+  font-size: clamp(25px, 6.7cqh, 35px);
+}
+
+.anniversary-widget[data-layout-version="2"][data-size="2x1"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.9); }
+.anniversary-widget[data-layout-version="2"][data-size="2x1"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.76); }
+.anniversary-widget[data-layout-version="2"][data-size="2x1"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.62); }
+.anniversary-widget[data-layout-version="2"][data-size="2x1"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.52); }
+
+.anniversary-widget[data-layout-version="2"][data-size="4x1"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.94); }
+.anniversary-widget[data-layout-version="2"][data-size="4x1"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.82); }
+.anniversary-widget[data-layout-version="2"][data-size="4x1"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.68); }
+.anniversary-widget[data-layout-version="2"][data-size="4x1"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.58); }
+
+.anniversary-widget[data-layout-version="2"][data-size="2x2"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.9); }
+.anniversary-widget[data-layout-version="2"][data-size="2x2"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.76); }
+.anniversary-widget[data-layout-version="2"][data-size="2x2"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.63); }
+.anniversary-widget[data-layout-version="2"][data-size="2x2"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.54); }
+
+.anniversary-widget[data-layout-version="2"][data-size="4x2"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.92); }
+.anniversary-widget[data-layout-version="2"][data-size="4x2"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.8); }
+.anniversary-widget[data-layout-version="2"][data-size="4x2"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.68); }
+.anniversary-widget[data-layout-version="2"][data-size="4x2"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.58); }
+
+.anniversary-widget[data-layout-version="2"][data-size="4x4"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.94); }
+.anniversary-widget[data-layout-version="2"][data-size="4x4"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.82); }
+.anniversary-widget[data-layout-version="2"][data-size="4x4"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.7); }
+.anniversary-widget[data-layout-version="2"][data-size="4x4"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * 0.6); }
+
+.anniversary-widget[data-layout-version="2"][data-style="starlight"] {
+  background:
+    radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--anniversary-accent) 30%, transparent), transparent 34%),
+    radial-gradient(circle at 88% 86%, rgba(14, 165, 233, 0.2), transparent 38%),
+    linear-gradient(145deg, color-mix(in srgb, var(--anniversary-background) 88%, #241b47), var(--anniversary-background));
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="starlight"] .anniversary-pattern {
+  opacity: 0.48;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.78) 0 1px, transparent 1.25px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.3) 0 0.8px, transparent 1.1px);
+  background-position: 13px 17px, 42px 31px;
+  background-size: 63px 63px, 79px 79px;
+  mask-image: linear-gradient(125deg, #000 0 50%, transparent 88%);
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="starlight"] .anniversary-time::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: min(88%, 230px);
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in srgb, var(--anniversary-accent) 42%, transparent);
+  border-radius: 50%;
+  box-shadow: inset 0 0 38px color-mix(in srgb, var(--anniversary-accent) 8%, transparent);
+  transform: rotate(-16deg) scaleY(0.54);
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="starlight"] .anniversary-time::after {
+  content: "";
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  top: 28%;
+  right: 15%;
+  background: var(--anniversary-accent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--anniversary-accent) 16%, transparent), 0 0 18px var(--anniversary-accent);
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="starlight"][data-size="2x1"] .anniversary-time::before,
+.anniversary-widget[data-layout-version="2"][data-style="starlight"][data-size="2x1"] .anniversary-time::after,
+.anniversary-widget[data-layout-version="2"][data-style="starlight"][data-size="4x1"] .anniversary-time::before,
+.anniversary-widget[data-layout-version="2"][data-style="starlight"][data-size="4x1"] .anniversary-time::after {
+  display: none;
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="letter"] {
+  background:
+    linear-gradient(90deg, transparent 0 10%, color-mix(in srgb, var(--anniversary-accent) 38%, transparent) 10% 10.35%, transparent 10.35%),
+    repeating-linear-gradient(180deg, transparent 0 27px, rgba(112, 85, 62, 0.085) 27px 28px),
+    var(--anniversary-background);
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="letter"] .anniversary-pattern {
+  display: none;
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="letter"] .anniversary-copy h2 {
+  font-family: "STKaiti", "KaiTi", "Songti SC", "STSong", serif;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="letter"] .anniversary-time strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="letter"] .anniversary-time::after {
+  content: "";
+  position: absolute;
+  left: 7%;
+  right: 5%;
+  bottom: 12%;
+  height: 2px;
+  background: color-mix(in srgb, var(--anniversary-accent) 64%, transparent);
+  border-radius: 999px;
+  transform: rotate(-2deg);
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="glass"] {
+  background:
+    radial-gradient(circle at 8% 12%, rgba(125, 211, 252, 0.34), transparent 34%),
+    radial-gradient(circle at 92% 86%, rgba(244, 114, 182, 0.18), transparent 38%),
+    linear-gradient(145deg, #334155, #172033);
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="glass"] .anniversary-pattern {
+  inset: 8px;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="glass"] .anniversary-time {
+  padding: clamp(10px, 3%, 20px);
+  background: rgba(255, 255, 255, 0.075);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: max(14px, calc(var(--anniversary-radius) - 7px));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="glass"][data-size="2x1"] .anniversary-time,
+.anniversary-widget[data-layout-version="2"][data-style="glass"][data-size="4x1"] .anniversary-time {
+  border-radius: 14px;
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="minimal"] {
+  background:
+    linear-gradient(90deg, transparent 0 calc(100% - 9px), var(--anniversary-accent) calc(100% - 9px)),
+    var(--anniversary-background);
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="minimal"] .anniversary-pattern {
+  display: none;
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="minimal"] .anniversary-time {
+  padding: clamp(10px, 3%, 20px);
+  background: color-mix(in srgb, var(--anniversary-accent) 9%, transparent);
+  border-left: 5px solid var(--anniversary-accent);
+  border-radius: 5px;
+}
+
+.anniversary-widget[data-layout-version="2"][data-style="minimal"] .anniversary-time strong {
+  color: color-mix(in srgb, var(--anniversary-text) 92%, var(--anniversary-accent));
+}
+
+/* Anniversary layout v3 follows the Tapp widget size contract (~100px grid cells). */
+.anniversary-widget[data-layout-version="3"] {
+  --anniversary-host-scale: 1;
+  --anniversary-host-font-scale: 1;
+  --anniversary-host-primary: #8b5cf6;
+  --anniversary-base-number: 52px;
+  grid-template-areas:
+    "header"
+    "time"
+    "copy"
+    "footer";
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: calc(5px * var(--anniversary-host-scale));
+  padding: calc(10px * var(--anniversary-host-scale));
+  overflow: hidden;
+  border-radius: min(var(--anniversary-radius), calc(18px * var(--anniversary-host-scale)));
+}
+
+.anniversary-widget[data-layout-version="3"][data-style="starlight"],
+.anniversary-widget[data-layout-version="3"][data-style="letter"],
+.anniversary-widget[data-layout-version="3"][data-style="glass"],
+.anniversary-widget[data-layout-version="3"][data-style="minimal"] {
+  --anniversary-accent: var(--anniversary-host-primary);
+}
+
+.anniversary-widget[data-layout-version="3"] .anniversary-header,
+.anniversary-widget[data-layout-version="3"] .anniversary-time,
+.anniversary-widget[data-layout-version="3"] .anniversary-copy,
+.anniversary-widget[data-layout-version="3"] .anniversary-footer {
+  min-width: 0;
+  min-height: 0;
+}
+
+.anniversary-widget[data-layout-version="3"] .anniversary-header {
+  gap: calc(5px * var(--anniversary-host-scale));
+}
+
+.anniversary-widget[data-layout-version="3"] .anniversary-icon {
+  width: calc(24px * var(--anniversary-host-scale));
+  height: calc(24px * var(--anniversary-host-scale));
+  font-size: calc(14px * var(--anniversary-host-font-scale));
+}
+
+.anniversary-widget[data-layout-version="3"] .anniversary-label {
+  font-size: calc(10px * var(--anniversary-host-font-scale));
+  letter-spacing: 0.035em;
+}
+
+.anniversary-widget[data-layout-version="3"] .anniversary-time {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+  align-self: stretch;
+  gap: calc(4px * var(--anniversary-host-scale));
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.anniversary-widget[data-layout-version="3"] .anniversary-time strong {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  font-family: "Bahnschrift Condensed", "Aptos Narrow", "Arial Narrow", ui-sans-serif, system-ui, sans-serif;
+  font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * var(--anniversary-host-font-scale));
+  font-weight: 760;
+  font-stretch: condensed;
+  letter-spacing: -0.055em;
+  line-height: 0.84;
+  text-shadow: none;
+}
+
+.anniversary-widget[data-layout-version="3"] .anniversary-time span {
+  flex: 0 0 auto;
+  font-size: calc(13px * var(--anniversary-host-font-scale));
+  font-weight: 760;
+  letter-spacing: 0;
+}
+
+.anniversary-widget[data-layout-version="3"] .anniversary-copy {
+  gap: calc(3px * var(--anniversary-host-scale));
+}
+
+.anniversary-widget[data-layout-version="3"] .anniversary-copy h2 {
+  display: -webkit-box;
+  font-size: calc(15px * var(--anniversary-host-font-scale));
+  line-height: 1.08;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-widget[data-layout-version="3"] .anniversary-copy p {
+  font-size: calc(10px * var(--anniversary-host-font-scale));
+  line-height: 1.3;
+}
+
+.anniversary-widget[data-layout-version="3"] .anniversary-footer {
+  grid-template-columns: auto minmax(12px, 1fr) auto;
+  gap: calc(4px * var(--anniversary-host-scale));
+}
+
+.anniversary-widget[data-layout-version="3"] .anniversary-footer time,
+.anniversary-widget[data-layout-version="3"] .anniversary-progress-label {
+  font-size: calc(8px * var(--anniversary-host-font-scale));
+  letter-spacing: 0.02em;
+}
+
+.anniversary-widget[data-layout-version="3"] .anniversary-progress {
+  height: max(2px, calc(2px * var(--anniversary-host-scale)));
+}
+
+.anniversary-widget[data-layout-version="3"] .anniversary-progress b {
+  width: calc(7px * var(--anniversary-host-scale));
+  height: calc(7px * var(--anniversary-host-scale));
+  left: clamp(0px, calc(var(--anniversary-progress-value) - 3.5px), calc(100% - 7px));
+  border-width: 1px;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--anniversary-accent) 18%, transparent);
+}
+
+/* 2x1: compact core information. The day count is always retained. */
+.anniversary-widget[data-layout-version="3"][data-size="2x1"] {
+  --anniversary-base-number: 34px;
+  grid-template-areas:
+    "copy time"
+    "footer time";
+  grid-template-columns: minmax(0, 47%) minmax(0, 53%);
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: calc(3px * var(--anniversary-host-scale)) calc(6px * var(--anniversary-host-scale));
+  padding: calc(7px * var(--anniversary-host-scale));
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="2x1"] .anniversary-header,
+.anniversary-widget[data-layout-version="3"][data-size="2x1"] .anniversary-copy p,
+.anniversary-widget[data-layout-version="3"][data-size="2x1"] .anniversary-progress-label {
+  display: none;
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="2x1"] .anniversary-copy {
+  align-content: center;
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="2x1"] .anniversary-copy h2 {
+  font-size: calc(11px * var(--anniversary-host-font-scale));
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="2x1"] .anniversary-time {
+  align-items: center;
+  justify-content: center;
+  padding-left: calc(5px * var(--anniversary-host-scale));
+  border-left: 1px solid color-mix(in srgb, var(--anniversary-muted) 22%, transparent);
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="2x1"] .anniversary-time span {
+  font-size: calc(10px * var(--anniversary-host-font-scale));
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="2x1"] .anniversary-footer {
+  grid-template-columns: 1fr;
+  gap: calc(3px * var(--anniversary-host-scale));
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="2x1"] .anniversary-footer time,
+.anniversary-widget[data-layout-version="3"][data-size="2x1"] .anniversary-progress {
+  grid-column: 1;
+}
+
+/* 4x1: documented 75% main area + 25% secondary area. */
+.anniversary-widget[data-layout-version="3"][data-size="4x1"] {
+  --anniversary-base-number: 46px;
+  grid-template-areas:
+    "header time footer"
+    "copy time footer";
+  grid-template-columns: minmax(0, 39%) minmax(0, 36%) minmax(0, 25%);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: calc(2px * var(--anniversary-host-scale)) 0;
+  padding: calc(8px * var(--anniversary-host-scale));
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x1"] .anniversary-header {
+  padding-right: calc(6px * var(--anniversary-host-scale));
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x1"] .anniversary-icon {
+  width: calc(20px * var(--anniversary-host-scale));
+  height: calc(20px * var(--anniversary-host-scale));
+  font-size: calc(12px * var(--anniversary-host-font-scale));
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x1"] .anniversary-label {
+  font-size: calc(9px * var(--anniversary-host-font-scale));
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x1"] .anniversary-copy {
+  align-content: center;
+  padding-right: calc(6px * var(--anniversary-host-scale));
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x1"] .anniversary-copy h2 {
+  font-size: calc(13px * var(--anniversary-host-font-scale));
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x1"] .anniversary-copy p,
+.anniversary-widget[data-layout-version="3"][data-size="4x1"] .anniversary-progress-label {
+  display: none;
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x1"] .anniversary-time {
+  align-items: center;
+  justify-content: center;
+  padding: 0 calc(6px * var(--anniversary-host-scale));
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x1"] .anniversary-time span {
+  font-size: calc(12px * var(--anniversary-host-font-scale));
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x1"] .anniversary-footer {
+  grid-template-columns: 1fr;
+  align-content: center;
+  gap: calc(6px * var(--anniversary-host-scale));
+  padding-left: calc(8px * var(--anniversary-host-scale));
+  border-left: 1px solid color-mix(in srgb, var(--anniversary-muted) 22%, transparent);
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x1"] .anniversary-footer time,
+.anniversary-widget[data-layout-version="3"][data-size="4x1"] .anniversary-progress {
+  grid-column: 1;
+}
+
+/* 2x2: documented vertical stack. */
+.anniversary-widget[data-layout-version="3"][data-size="2x2"] {
+  --anniversary-base-number: 60px;
+  grid-template-areas:
+    "header"
+    "time"
+    "copy"
+    "footer";
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: calc(6px * var(--anniversary-host-scale));
+  padding: calc(10px * var(--anniversary-host-scale));
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="2x2"] .anniversary-time {
+  align-items: center;
+  justify-content: center;
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="2x2"] .anniversary-copy h2 {
+  font-size: calc(15px * var(--anniversary-host-font-scale));
+  -webkit-line-clamp: 2;
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="2x2"] .anniversary-copy p,
+.anniversary-widget[data-layout-version="3"][data-size="2x2"] .anniversary-progress-label {
+  display: none;
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="2x2"] .anniversary-footer {
+  grid-template-columns: auto minmax(12px, 1fr);
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="2x2"] .anniversary-progress {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="2x2"][data-show-date="false"] .anniversary-progress {
+  grid-column: 1 / -1;
+}
+
+/* 4x2: documented 60% main data + 40% supporting information. */
+.anniversary-widget[data-layout-version="3"][data-size="4x2"] {
+  --anniversary-base-number: 84px;
+  grid-template-areas:
+    "header copy"
+    "time copy"
+    "footer copy";
+  grid-template-columns: minmax(0, 60%) minmax(0, 40%);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: calc(6px * var(--anniversary-host-scale)) 0;
+  padding: calc(12px * var(--anniversary-host-scale));
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x2"] .anniversary-header,
+.anniversary-widget[data-layout-version="3"][data-size="4x2"] .anniversary-time,
+.anniversary-widget[data-layout-version="3"][data-size="4x2"] .anniversary-footer {
+  padding-right: calc(12px * var(--anniversary-host-scale));
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x2"] .anniversary-time {
+  align-items: center;
+  justify-content: center;
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x2"] .anniversary-copy {
+  align-content: center;
+  padding-left: calc(12px * var(--anniversary-host-scale));
+  border-left: 1px solid color-mix(in srgb, var(--anniversary-muted) 22%, transparent);
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x2"] .anniversary-copy h2 {
+  font-size: calc(20px * var(--anniversary-host-font-scale));
+  -webkit-line-clamp: 3;
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x2"] .anniversary-copy p {
+  font-size: calc(10px * var(--anniversary-host-font-scale));
+  -webkit-line-clamp: 3;
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x2"] .anniversary-progress-label {
+  display: none;
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x2"] .anniversary-footer {
+  grid-template-columns: auto minmax(12px, 1fr);
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x2"] .anniversary-progress {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x2"][data-show-date="false"] .anniversary-progress {
+  grid-column: 1 / -1;
+}
+
+/* 4x4: detailed vertical layout with all optional information. */
+.anniversary-widget[data-layout-version="3"][data-size="4x4"] {
+  --anniversary-base-number: 126px;
+  grid-template-areas:
+    "header"
+    "copy"
+    "time"
+    "footer";
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: calc(10px * var(--anniversary-host-scale));
+  padding: calc(16px * var(--anniversary-host-scale));
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x4"] .anniversary-copy h2 {
+  font-size: calc(27px * var(--anniversary-host-font-scale));
+  -webkit-line-clamp: 3;
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x4"] .anniversary-copy p {
+  font-size: calc(12px * var(--anniversary-host-font-scale));
+  -webkit-line-clamp: 3;
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x4"] .anniversary-time {
+  align-items: center;
+}
+
+.anniversary-widget[data-layout-version="3"][data-align="center"] .anniversary-header,
+.anniversary-widget[data-layout-version="3"][data-align="center"] .anniversary-time {
+  justify-content: center;
+}
+
+.anniversary-widget[data-layout-version="3"][data-align="right"] .anniversary-header,
+.anniversary-widget[data-layout-version="3"][data-align="right"] .anniversary-time {
+  justify-content: flex-end;
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x4"][data-align="center"] .anniversary-copy h2,
+.anniversary-widget[data-layout-version="3"][data-size="4x4"][data-align="center"] .anniversary-copy p {
+  justify-self: center;
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x4"][data-align="right"] .anniversary-copy h2,
+.anniversary-widget[data-layout-version="3"][data-size="4x4"][data-align="right"] .anniversary-copy p {
+  justify-self: end;
+}
+
+.anniversary-widget[data-layout-version="3"][data-title-length="very-long"] .anniversary-copy h2 {
+  font-size: calc(12px * var(--anniversary-host-font-scale));
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x2"][data-title-length="very-long"] .anniversary-copy h2 {
+  font-size: calc(16px * var(--anniversary-host-font-scale));
+}
+
+.anniversary-widget[data-layout-version="3"][data-size="4x4"][data-title-length="very-long"] .anniversary-copy h2 {
+  font-size: calc(22px * var(--anniversary-host-font-scale));
+}
+
+.anniversary-widget[data-layout-version="3"][data-digits="3"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * var(--anniversary-host-font-scale) * 0.92); }
+.anniversary-widget[data-layout-version="3"][data-digits="4"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * var(--anniversary-host-font-scale) * 0.78); }
+.anniversary-widget[data-layout-version="3"][data-digits="5"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * var(--anniversary-host-font-scale) * 0.64); }
+.anniversary-widget[data-layout-version="3"][data-digits="6"] .anniversary-time strong { font-size: calc(var(--anniversary-base-number) * var(--anniversary-number-scale) * var(--anniversary-host-font-scale) * 0.54); }
+
+.anniversary-widget[data-layout-version="3"][data-style="letter"] .anniversary-copy h2 {
+  font-family: "STKaiti", "KaiTi", "Songti SC", "STSong", serif;
+}
+
+.anniversary-widget[data-layout-version="3"][data-style="letter"] .anniversary-time strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  letter-spacing: -0.035em;
+}
+
+.anniversary-widget[data-layout-version="3"][data-style="glass"] .anniversary-time,
+.anniversary-widget[data-layout-version="3"][data-style="minimal"] .anniversary-time {
+  padding: calc(4px * var(--anniversary-host-scale));
+  border-radius: calc(10px * var(--anniversary-host-scale));
+}
+
+.anniversary-widget[data-layout-version="3"][data-style="glass"] .anniversary-time {
+  background: rgba(255, 255, 255, 0.075);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.anniversary-widget[data-layout-version="3"][data-style="minimal"] .anniversary-time {
+  background: color-mix(in srgb, var(--anniversary-accent) 9%, transparent);
+  border-left: calc(3px * var(--anniversary-host-scale)) solid var(--anniversary-accent);
+}
+
+.anniversary-widget[data-layout-version="3"][data-host-theme="dark"][data-style="letter"] {
+  --anniversary-background: #1c1917;
+  --anniversary-text: #fafaf9;
+  --anniversary-muted: #d6d3d1;
+}
+
+.anniversary-widget[data-layout-version="3"][data-host-theme="dark"][data-style="minimal"] {
+  --anniversary-background: #171717;
+  --anniversary-text: #fafafa;
+  --anniversary-muted: #a3a3a3;
+}
+
+/* Runtime safety: when the host gives less height than the nominal grid cell, keep the count. */
+@media (max-height: 84px) {
+  .anniversary-widget[data-layout-version="3"][data-size="2x1"],
+  .anniversary-widget[data-layout-version="3"][data-size="4x1"] {
+    grid-template-areas: "copy time";
+    grid-template-columns: minmax(0, 45%) minmax(0, 55%);
+    grid-template-rows: minmax(0, 1fr);
+    padding: calc(5px * var(--anniversary-host-scale));
+  }
+
+  .anniversary-widget[data-layout-version="3"][data-size="2x1"] .anniversary-footer,
+  .anniversary-widget[data-layout-version="3"][data-size="4x1"] .anniversary-header,
+  .anniversary-widget[data-layout-version="3"][data-size="4x1"] .anniversary-footer {
+    display: none;
+  }
+}
+
+@media (max-width: 170px) {
+  .anniversary-widget[data-layout-version="3"][data-size="2x1"] {
+    grid-template-areas: "time";
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .anniversary-widget[data-layout-version="3"][data-size="2x1"] .anniversary-copy,
+  .anniversary-widget[data-layout-version="3"][data-size="2x1"] .anniversary-footer {
+    display: none;
+  }
+
+  .anniversary-widget[data-layout-version="3"][data-size="2x1"] .anniversary-time {
+    border-left: 0;
+  }
+}
+
 .photo-wall-widget {
   --photo-wall-gap: 4px;
   --photo-wall-radius: 18px;
@@ -904,9 +2547,250 @@ body.dark,
   grid-area: 1 / 1 / span 2 / span 2;
 }
 
+.world-clock-widget {
+  --clock-scale: 1;
+  --clock-font-scale: 1;
+  --clock-body: #d8e3f8;
+  --clock-text: #101827;
+  --clock-muted: #5f6b82;
+  --clock-dial: #a9c5fb;
+  --clock-hour: #366ab5;
+  --clock-minute: #5f6b82;
+  --clock-second: #101827;
+  --clock-radius: 28px;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.58fr);
+  align-items: center;
+  gap: calc(14px * var(--clock-scale));
+  padding: calc(18px * var(--clock-scale));
+  overflow: hidden;
+  color: var(--clock-text);
+  background: var(--clock-body);
+  border: 0;
+  border-radius: calc(var(--clock-radius) * var(--clock-scale));
+  box-shadow: 0 calc(10px * var(--clock-scale)) calc(28px * var(--clock-scale)) rgba(15, 23, 42, 0.12);
+  isolation: isolate;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.world-clock-dial {
+  position: relative;
+  justify-self: center;
+  width: min(100%, calc(146px * var(--clock-scale)));
+  aspect-ratio: 1;
+  color: var(--clock-dial);
+}
+
+.world-clock-seal {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: currentColor;
+  filter: drop-shadow(0 calc(5px * var(--clock-scale)) calc(10px * var(--clock-scale)) rgba(36, 68, 120, 0.08));
+}
+
+.world-clock-hand {
+  --clock-hand-angle: 0deg;
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 50%;
+  display: block;
+  border-radius: 999px;
+  transform: translateX(-50%) rotate(var(--clock-hand-angle));
+  transform-origin: 50% 100%;
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.world-clock-hand.is-hour {
+  width: calc(12px * var(--clock-scale));
+  height: 27%;
+  background: var(--clock-hour);
+}
+
+.world-clock-hand.is-minute {
+  width: calc(9px * var(--clock-scale));
+  height: 35%;
+  background: var(--clock-minute);
+}
+
+.world-clock-hand.is-second {
+  width: calc(3px * var(--clock-scale));
+  height: 37%;
+  background: var(--clock-second);
+  transition: none;
+}
+
+.world-clock-pin {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 50%;
+  width: calc(13px * var(--clock-scale));
+  height: calc(13px * var(--clock-scale));
+  border: calc(3px * var(--clock-scale)) solid var(--clock-dial);
+  border-radius: 50%;
+  background: var(--clock-text);
+  transform: translate(-50%, -50%);
+}
+
+.world-clock-mark {
+  position: absolute;
+  z-index: 3;
+  left: 80%;
+  top: 50%;
+  width: calc(14px * var(--clock-scale));
+  height: calc(14px * var(--clock-scale));
+  border-radius: 50%;
+  background: var(--clock-hour);
+  transform: translate(-50%, -50%);
+  opacity: 0.84;
+}
+
+.world-clock-readout {
+  min-width: 0;
+  align-self: stretch;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-items: center;
+  padding: calc(11px * var(--clock-scale)) calc(10px * var(--clock-scale)) calc(10px * var(--clock-scale)) 0;
+}
+
+.world-clock-meta,
+.world-clock-offset {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: calc(7px * var(--clock-scale));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.world-clock-meta {
+  color: var(--clock-text);
+  font-size: calc(20px * var(--clock-scale) * var(--clock-font-scale));
+  font-weight: 460;
+  letter-spacing: -0.025em;
+}
+
+.world-clock-meta time {
+  font-weight: 720;
+}
+
+.world-clock-meta span {
+  color: var(--clock-muted);
+}
+
+.world-clock-digital {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  white-space: nowrap;
+  color: var(--clock-text);
+  font-size: calc(44px * var(--clock-scale) * var(--clock-font-scale));
+  font-weight: 760;
+  line-height: 0.96;
+  letter-spacing: -0.055em;
+}
+
+.world-clock-digital i {
+  margin: 0 0.045em;
+  color: var(--clock-muted);
+  font-style: normal;
+  font-weight: 580;
+}
+
+.world-clock-second {
+  color: var(--clock-muted);
+  font-weight: 650;
+}
+
+.world-clock-period {
+  margin-left: 0.42em;
+  color: var(--clock-muted);
+  font-size: 0.34em;
+  font-weight: 720;
+  letter-spacing: 0;
+}
+
+.world-clock-period[hidden] {
+  display: none;
+}
+
+.world-clock-offset {
+  color: var(--clock-muted);
+  font-size: calc(16px * var(--clock-scale) * var(--clock-font-scale));
+  font-weight: 440;
+  letter-spacing: 0;
+}
+
+.world-clock-offset i {
+  font-style: normal;
+  opacity: 0.66;
+}
+
+.world-clock-widget[data-show-seconds="false"] [data-clock-second-separator],
+.world-clock-widget[data-show-seconds="false"] [data-clock-second],
+.world-clock-widget[data-show-date="false"] [data-clock-date],
+.world-clock-widget[data-show-relative="false"] [data-clock-relative-row] {
+  display: none;
+}
+
+.world-clock-widget[data-show-seconds="false"] .world-clock-digital {
+  font-size: calc(50px * var(--clock-scale) * var(--clock-font-scale));
+}
+
+@media (max-width: 360px), (max-height: 170px) {
+  .world-clock-widget {
+    grid-template-columns: minmax(94px, 0.82fr) minmax(0, 1.6fr);
+    gap: calc(9px * var(--clock-scale));
+    padding: calc(12px * var(--clock-scale));
+  }
+
+  .world-clock-dial {
+    width: min(100%, calc(118px * var(--clock-scale)));
+  }
+
+  .world-clock-readout {
+    padding: calc(7px * var(--clock-scale)) calc(5px * var(--clock-scale)) calc(7px * var(--clock-scale)) 0;
+  }
+
+  .world-clock-meta {
+    font-size: calc(16px * var(--clock-scale) * var(--clock-font-scale));
+  }
+
+  .world-clock-digital {
+    font-size: calc(36px * var(--clock-scale) * var(--clock-font-scale));
+  }
+
+  .world-clock-widget[data-show-seconds="false"] .world-clock-digital {
+    font-size: calc(41px * var(--clock-scale) * var(--clock-font-scale));
+  }
+
+  .world-clock-offset {
+    font-size: calc(13px * var(--clock-scale) * var(--clock-font-scale));
+  }
+}
+
 @keyframes photo-wall-shimmer {
   from { background-position: 150% 0; }
   to { background-position: -70% 0; }
+}
+
+@keyframes anniversary-heartbeat {
+  0%, 100% { transform: scale(1); }
+  14% { transform: scale(1.12); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.08); }
 }
 
 @keyframes visitor-pulse {
@@ -939,5 +2823,9 @@ body.dark,
 
   .photo-wall-item img {
     transition: none;
+  }
+
+  .anniversary-widget[data-direction="today"] .anniversary-icon {
+    animation: none;
   }
 }
