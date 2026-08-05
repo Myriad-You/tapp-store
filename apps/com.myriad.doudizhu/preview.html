@@ -1,5 +1,9 @@
 <!doctype html>
 <html class="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
 <body>
   <div id="tapp-background">
     <div class="ddz-bg" aria-hidden="true">
@@ -14,43 +18,50 @@
     </header>
 
     <section class="ddz-table glass" aria-label="牌桌">
-      <div class="ddz-table-status"><div class="ddz-turn-hint">轮到你出牌 · 上家打出一对 9</div><div class="ddz-auction-score">地主倍数 <strong>3</strong></div></div>
+      <div class="ddz-table-status"><div class="ddz-turn-hint">轮到你出牌 · 上家打出一对 9</div><div class="ddz-turn-timer">30s</div><div class="ddz-auction-score">地主倍数 <strong>3</strong></div></div>
+
+      <div class="ddz-match-strip" aria-label="对局信息">
+        <div class="ddz-stat"><span class="ddz-stat-label">当前</span><strong>当前玩家</strong></div>
+        <div class="ddz-stat"><span class="ddz-stat-label">地主</span><strong>当前玩家</strong></div>
+        <div class="ddz-stat"><span class="ddz-stat-label">手牌</span><strong>14 张</strong></div>
+        <div class="ddz-stat"><span class="ddz-stat-label">底牌</span><strong>已公开</strong></div>
+      </div>
 
       <div class="ddz-opponents">
         <div class="ddz-seat ddz-seat-left">
-          <div class="ddz-seat-head"><div class="ddz-avatar">林</div><div class="ddz-seat-meta"><div class="ddz-seat-name-row"><div class="ddz-seat-name">林间客</div></div><div class="ddz-seat-info"><span class="ddz-count-pill">12 张</span><span class="ddz-role-badge is-farmer">农民</span></div></div></div>
+          <div class="ddz-seat-head"><div class="ddz-avatar">林</div><div class="ddz-seat-meta"><div class="ddz-seat-name-row"><div class="ddz-seat-name">林间客</div></div><div class="ddz-seat-info"><span class="ddz-count-pill">剩 12 张</span><span class="ddz-role-badge is-farmer">农民</span></div></div></div>
           <div class="ddz-played"><div class="ddz-card back"></div><div class="ddz-card back"></div><div class="ddz-card back"></div><div class="ddz-card back"></div><div class="ddz-card back"></div><div class="ddz-card back"></div></div>
           <div class="ddz-seat-action"><div class="ddz-action-label">不要</div></div>
         </div>
 
         <div class="ddz-center">
           <div class="ddz-bottom-wrap"><div class="ddz-zone-label">底牌</div><div class="ddz-bottom">
-            <div class="ddz-card mini red"><span class="ddz-card-rank">A</span><span class="ddz-card-suit is-H">♥</span></div>
-            <div class="ddz-card mini black"><span class="ddz-card-rank">8</span><span class="ddz-card-suit is-S">♠</span></div>
-            <div class="ddz-card mini red"><span class="ddz-card-rank">3</span><span class="ddz-card-suit is-D">♦</span></div>
+            <div class="ddz-card mini flame-chaser fc-r-A fc-s-H" title="红桃 A"></div>
+            <div class="ddz-card mini flame-chaser fc-r-8 fc-s-S" title="黑桃 8"></div>
+            <div class="ddz-card mini flame-chaser fc-r-3 fc-s-D" title="方块 3"></div>
           </div></div>
           <div class="ddz-last-wrap"><div class="ddz-zone-label">上家牌型 <span class="ddz-last-meta">对子</span></div><div class="ddz-last">
-            <div class="ddz-card mini red"><span class="ddz-card-rank">9</span><span class="ddz-card-suit is-H">♥</span></div>
-            <div class="ddz-card mini black"><span class="ddz-card-rank">9</span><span class="ddz-card-suit is-C">♣</span></div>
+            <div class="ddz-card mini flame-chaser fc-r-9 fc-s-H" title="红桃 9"></div>
+            <div class="ddz-card mini flame-chaser fc-r-9 fc-s-C" title="梅花 9"></div>
           </div></div>
         </div>
 
         <div class="ddz-seat ddz-seat-right is-alarm">
-          <div class="ddz-seat-head"><div class="ddz-avatar">岚</div><div class="ddz-seat-meta"><div class="ddz-seat-name-row"><div class="ddz-seat-name">山岚</div><span class="ddz-alarm">报牌</span></div><div class="ddz-seat-info"><span class="ddz-count-pill">2 张</span><span class="ddz-role-badge is-farmer">农民</span></div></div></div>
+          <div class="ddz-seat-head"><div class="ddz-avatar">岚</div><div class="ddz-seat-meta"><div class="ddz-seat-name-row"><div class="ddz-seat-name">山岚</div><span class="ddz-alarm">报牌</span></div><div class="ddz-seat-info"><span class="ddz-count-pill">剩 2 张</span><span class="ddz-role-badge is-farmer">农民</span></div></div></div>
           <div class="ddz-played"><div class="ddz-card back"></div><div class="ddz-card back"></div></div>
-          <div class="ddz-seat-action"><div class="ddz-action-label">对 9</div><div class="ddz-action-cards"><div class="ddz-card mini red"><span class="ddz-card-rank">9</span><span class="ddz-card-suit is-D">♦</span></div><div class="ddz-card mini black"><span class="ddz-card-rank">9</span><span class="ddz-card-suit is-S">♠</span></div></div></div>
+          <div class="ddz-seat-action"><div class="ddz-action-label">对 9</div><div class="ddz-action-cards"></div></div>
         </div>
       </div>
 
       <div class="ddz-me is-turn">
         <div class="ddz-me-head"><div class="ddz-seat-head"><div class="ddz-avatar ddz-avatar-me">我</div><div class="ddz-seat-meta"><div class="ddz-seat-name-row"><div class="ddz-seat-name">当前玩家</div></div><div class="ddz-seat-info"><span class="ddz-role-badge is-landlord">地主</span><span class="ddz-count-pill">手牌 14</span></div></div></div><div class="ddz-seat-action ddz-seat-action-me"><div class="ddz-action-label">等待出牌</div></div></div>
         <div class="ddz-hand" role="listbox">
-          <div class="ddz-card joker"><span class="ddz-card-rank">大王</span></div><div class="ddz-card joker is-sj"><span class="ddz-card-rank">小王</span></div>
-          <div class="ddz-card red"><span class="ddz-card-rank">2</span><span class="ddz-card-suit is-H">♥</span></div><div class="ddz-card black"><span class="ddz-card-rank">2</span><span class="ddz-card-suit is-S">♠</span></div>
-          <div class="ddz-card red"><span class="ddz-card-rank">A</span><span class="ddz-card-suit is-D">♦</span></div><div class="ddz-card black"><span class="ddz-card-rank">A</span><span class="ddz-card-suit is-C">♣</span></div>
-          <div class="ddz-card red selected"><span class="ddz-card-rank">Q</span><span class="ddz-card-suit is-H">♥</span></div><div class="ddz-card black selected"><span class="ddz-card-rank">Q</span><span class="ddz-card-suit is-S">♠</span></div>
-          <div class="ddz-card red"><span class="ddz-card-rank">10</span><span class="ddz-card-suit is-D">♦</span></div><div class="ddz-card black"><span class="ddz-card-rank">8</span><span class="ddz-card-suit is-C">♣</span></div>
-          <div class="ddz-card red"><span class="ddz-card-rank">7</span><span class="ddz-card-suit is-H">♥</span></div><div class="ddz-card black"><span class="ddz-card-rank">6</span><span class="ddz-card-suit is-S">♠</span></div><div class="ddz-card red"><span class="ddz-card-rank">5</span><span class="ddz-card-suit is-D">♦</span></div><div class="ddz-card black"><span class="ddz-card-rank">3</span><span class="ddz-card-suit is-C">♣</span></div>
+          <div class="ddz-card joker" style="--ddz-card-layer: 1"><span class="ddz-card-rank">大王</span></div><div class="ddz-card joker is-sj" style="--ddz-card-layer: 2"><span class="ddz-card-rank">小王</span></div>
+          <div class="ddz-card flame-chaser fc-r-2 fc-s-H" style="--ddz-card-layer: 3" title="红桃 2"></div><div class="ddz-card flame-chaser fc-r-2 fc-s-S" style="--ddz-card-layer: 4" title="黑桃 2"></div>
+          <div class="ddz-card flame-chaser fc-r-A fc-s-D" style="--ddz-card-layer: 5" title="方块 A"></div><div class="ddz-card flame-chaser fc-r-A fc-s-C" style="--ddz-card-layer: 6" title="梅花 A"></div>
+          <div class="ddz-card flame-chaser selected fc-r-Q fc-s-H" style="--ddz-card-layer: 7" title="红桃 Q"></div><div class="ddz-card flame-chaser selected fc-r-Q fc-s-S" style="--ddz-card-layer: 8" title="黑桃 Q"></div>
+          <div class="ddz-card flame-chaser fc-r-10 fc-s-D" style="--ddz-card-layer: 9" title="方块 10"></div><div class="ddz-card flame-chaser fc-r-8 fc-s-C" style="--ddz-card-layer: 10" title="梅花 8"></div>
+          <div class="ddz-card flame-chaser fc-r-7 fc-s-H" style="--ddz-card-layer: 11" title="红桃 7"></div><div class="ddz-card flame-chaser fc-r-6 fc-s-S" style="--ddz-card-layer: 12" title="黑桃 6"></div><div class="ddz-card flame-chaser fc-r-5 fc-s-D" style="--ddz-card-layer: 13" title="方块 5"></div><div class="ddz-card flame-chaser fc-r-3 fc-s-C" style="--ddz-card-layer: 14" title="梅花 3"></div>
         </div>
       </div>
 

@@ -24,9 +24,17 @@
 
   <!-- LOBBY -->
   <section id="ddz-lobby" class="ddz-panel glass" aria-label="房间大厅">
-    <div class="ddz-panel-head">
-      <h2>房间大厅</h2>
-      <p class="ddz-hint">创建房间并邀请 2 位好友，三人准备后开始；或一键单机练习。</p>
+    <div class="ddz-lobby-hero">
+      <div class="ddz-panel-head">
+        <p class="ddz-kicker">ROOM SETUP</p>
+        <h2>房间大厅</h2>
+        <p class="ddz-hint">创建房间并邀请 2 位好友，三人准备后开始；或一键单机练习。</p>
+      </div>
+      <div class="ddz-lobby-summary" aria-hidden="true">
+        <span>3 人</span>
+        <span>17 手牌</span>
+        <span>3 底牌</span>
+      </div>
     </div>
 
     <div class="ddz-actions-primary">
@@ -69,8 +77,28 @@
   <section id="ddz-table" class="ddz-table glass hidden" aria-label="牌桌">
     <div class="ddz-table-status">
       <div id="ddz-turn-hint" class="ddz-turn-hint" role="status" aria-live="polite"></div>
+      <div id="ddz-turn-timer" class="ddz-turn-timer" aria-label="回合倒计时">30s</div>
       <div id="ddz-auction-score" class="ddz-auction-score hidden">
         当前叫分 <strong id="ddz-bid-score">0</strong>
+      </div>
+    </div>
+
+    <div class="ddz-match-strip" aria-label="对局信息">
+      <div class="ddz-stat">
+        <span class="ddz-stat-label">当前</span>
+        <strong id="ddz-stat-turn">等待</strong>
+      </div>
+      <div class="ddz-stat">
+        <span class="ddz-stat-label">地主</span>
+        <strong id="ddz-stat-landlord">未确定</strong>
+      </div>
+      <div class="ddz-stat">
+        <span class="ddz-stat-label">手牌</span>
+        <strong><span id="ddz-stat-hand">0</span> 张</strong>
+      </div>
+      <div class="ddz-stat">
+        <span class="ddz-stat-label">底牌</span>
+        <strong id="ddz-stat-bottom">未公开</strong>
       </div>
     </div>
 
@@ -85,7 +113,7 @@
               <span id="ddz-alarm-left" class="ddz-alarm hidden" aria-label="报牌">报牌</span>
             </div>
             <div class="ddz-seat-info">
-              <span class="ddz-count-pill"><span id="ddz-count-left">0</span> 张</span>
+              <span class="ddz-count-pill">剩 <span id="ddz-count-left">0</span> 张</span>
               <span id="ddz-role-left" class="ddz-role-badge"></span>
             </div>
           </div>
@@ -122,7 +150,7 @@
               <span id="ddz-alarm-right" class="ddz-alarm hidden" aria-label="报牌">报牌</span>
             </div>
             <div class="ddz-seat-info">
-              <span class="ddz-count-pill"><span id="ddz-count-right">0</span> 张</span>
+              <span class="ddz-count-pill">剩 <span id="ddz-count-right">0</span> 张</span>
               <span id="ddz-role-right" class="ddz-role-badge"></span>
             </div>
           </div>

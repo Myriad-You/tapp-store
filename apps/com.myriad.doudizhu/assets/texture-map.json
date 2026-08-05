@@ -4,8 +4,8 @@
   "scene": "assets/felt/scene_bg.png",
   "feltTile": "assets/felt/felt_tile.png",
   "centerVelvet": "assets/felt/center_velvet.png",
-  "cardBack": "assets/cards/card_back.png",
-  "cardBackSm": "assets/cards/card_back_sm.png",
+  "cardBack": "assets/cards/card_back.gif",
+  "cardBackSm": "assets/cards/card_back.gif",
   "cardFace": "assets/cards/card_face.png",
   "cardFaceSm": "assets/cards/card_face_sm.png",
   "paper": "assets/cards/paper_texture.png",
@@ -38,5 +38,8 @@
   "coin": "assets/chrome/coin.png",
   "endRibbon": "assets/chrome/end_ribbon.png",
   "crown": "assets/chrome/crown.png",
-  "readyCheck": "assets/chrome/ready_check.png"
+  "readyCheck": "assets/chrome/ready_check.png",
+  "flameChaserAtlas_zh-CN": "assets/cards/flame-chasers/zh-CN-atlas.png",
+  "flameChaserAtlas_en-US": "assets/cards/flame-chasers/en-US-atlas.png",
+  "flameChaserAtlas_ja-JP": "assets/cards/flame-chasers/ja-JP-atlas.png"
 }

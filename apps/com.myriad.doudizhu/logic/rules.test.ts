@@ -192,6 +192,37 @@ describe('combinations', () => {
     )
   })
 
+  it('identifies four-with-two singles and four-with-two pairs', () => {
+    assert.equal(
+      identifyCombo(
+        cards(
+          ['S', '6'],
+          ['H', '6'],
+          ['D', '6'],
+          ['C', '6'],
+          ['S', '8'],
+          ['H', '10'],
+        ),
+      )!.type,
+      'four_two_singles',
+    )
+    assert.equal(
+      identifyCombo(
+        cards(
+          ['S', '7'],
+          ['H', '7'],
+          ['D', '7'],
+          ['C', '7'],
+          ['S', '9'],
+          ['H', '9'],
+          ['D', 'J'],
+          ['C', 'J'],
+        ),
+      )!.type,
+      'four_two_pairs',
+    )
+  })
+
   it('rejects illegal straight with 2', () => {
     assert.equal(
       identifyCombo(
@@ -307,6 +338,38 @@ describe('play / pass / win', () => {
     assert.equal(r.state.hands[0].length, 0)
   })
 
+  it('doubles multiplier for bomb and rocket plays', () => {
+    let s = startDeal(14, 0)
+    let r = applyBid(s, { kind: 'bid', seat: 0, score: 3 })
+    s = r.state
+
+    const bomb = cards(['S', '3'], ['H', '3'], ['D', '3'], ['C', '3'])
+    s = {
+      ...s,
+      hands: [bomb, s.hands[1], s.hands[2]],
+      turn: 0,
+      lastCombo: null,
+      passCount: 0,
+      multiplier: 1,
+    }
+    r = applyPlay(s, { kind: 'play', seat: 0, cards: bomb })
+    assert.equal(r.ok, true, r.error)
+    assert.equal(r.state.multiplier, 2)
+
+    const rocket = cards(['J', 'SJ'], ['J', 'BJ'])
+    s = {
+      ...r.state,
+      phase: 'playing',
+      hands: [rocket, r.state.hands[1], r.state.hands[2]],
+      turn: 0,
+      lastCombo: null,
+      passCount: 0,
+    }
+    r = applyPlay(s, { kind: 'play', seat: 0, cards: rocket })
+    assert.equal(r.ok, true, r.error)
+    assert.equal(r.state.multiplier, 4)
+  })
+
   it('farmer win when non-landlord empties first', () => {
     let s = startDeal(13, 0)
     let r = applyBid(s, { kind: 'bid', seat: 0, score: 3 })
@@ -336,6 +399,101 @@ describe('play / pass / win', () => {
     assert.equal(r.state.winner, 1)
     assert.equal(r.state.winningSide, 'farmers')
   })
+
+  it('auto-play simulation finishes across deterministic deals', () => {
+    function handStrength(hand: Card[]): number {
+      const byRank = new Map<number, Card[]>()
+      for (const card of hand) {
+        const v = rankValue(card.rank)
+        byRank.set(v, [...(byRank.get(v) || []), card])
+      }
+      let score = 0
+      let smallJoker = false
+      let bigJoker = false
+      let singles = 0
+      for (const [rank, group] of byRank) {
+        if (group.length === 4)
+          score += 18
+        if (group.length >= 3)
+          score += 5
+        if (group.length >= 2)
+          score += 2
+        if (group.length === 1)
+          singles += 1
+        if (rank >= 15)
+          score += 5
+      }
+      for (const card of hand) {
+        smallJoker ||= card.rank === 'SJ'
+        bigJoker ||= card.rank === 'BJ'
+      }
+      if (smallJoker && bigJoker)
+        score += 26
+      score -= Math.max(0, singles - 4) * 2
+      return score
+    }
+
+    function bidScoreFor(hand: Card[], current: number): 1 | 2 | 3 | 0 {
+      const strength = handStrength(hand)
+      const wanted = strength >= 68 ? 3 : strength >= 52 ? 2 : strength >= 38 ? 1 : 0
+      return wanted > current ? wanted as 1 | 2 | 3 : 0
+    }
+
+    function pickPlay(state: ReturnType<typeof startDeal>): Card[] | null {
+      const hand = state.hands[state.turn as 0 | 1 | 2]
+      const whole = identifyCombo(hand)
+      if (whole && canBeat(whole, state.lastCombo))
+        return hand
+      const plays = enumerateLegalPlays(hand, state.lastCombo)
+      if (!plays.length)
+        return null
+      const sorted = plays.slice().sort((a, b) => {
+        const ca = identifyCombo(a)!
+        const cb = identifyCombo(b)!
+        const pa = ca.type === 'bomb' || ca.type === 'rocket' ? 1 : 0
+        const pb = cb.type === 'bomb' || cb.type === 'rocket' ? 1 : 0
+        if (pa !== pb)
+          return pa - pb
+        if (!state.lastCombo && a.length !== b.length)
+          return b.length - a.length
+        if (ca.mainValue !== cb.mainValue)
+          return ca.mainValue - cb.mainValue
+        return playKey(a).localeCompare(playKey(b))
+      })
+      return sorted[0]!
+    }
+
+    for (let seed = 100; seed < 120; seed++) {
+      let state = startDeal(seed, seed % PLAYER_COUNT)
+      for (let i = 0; i < 12 && state.phase === 'auction'; i++) {
+        let score = bidScoreFor(state.hands[state.turn as 0 | 1 | 2], state.bidScore)
+        if (score === 0 && state.bidWinner === null && state.auctionActions >= PLAYER_COUNT - 1)
+          score = 1
+        const result = score
+          ? applyBid(state, { kind: 'bid', seat: state.turn, score })
+          : applyBid(state, { kind: 'pass', seat: state.turn })
+        assert.equal(result.ok, true, result.error)
+        state = result.redeal
+          ? startDeal(seed + 10_000, (state.auctionStart + 1) % PLAYER_COUNT)
+          : result.state
+      }
+      assert.equal(state.phase, 'playing', `seed ${seed} should resolve auction`)
+
+      let steps = 0
+      while (state.phase === 'playing' && steps < 500) {
+        const cardsToPlay = pickPlay(state)
+        const result = cardsToPlay
+          ? applyPlay(state, { kind: 'play', seat: state.turn, cards: cardsToPlay })
+          : applyPlay(state, { kind: 'pass', seat: state.turn })
+        assert.equal(result.ok, true, result.error)
+        state = result.state
+        steps += 1
+      }
+      assert.equal(state.phase, 'finished', `seed ${seed} did not finish in ${steps} steps`)
+      assert.ok(state.winner !== null)
+      assert.ok(state.winningSide === 'landlord' || state.winningSide === 'farmers')
+    }
+  })
 })
 
 describe('constants', () => {
@@ -352,6 +510,8 @@ describe('comboTypeLabel', () => {
     assert.equal(comboTypeLabel('rocket'), '王炸')
     assert.equal(comboTypeLabel('straight'), '顺子')
     assert.equal(comboTypeLabel('airplane'), '飞机')
+    assert.equal(comboTypeLabel('four_two_singles'), '四带二')
+    assert.equal(comboTypeLabel('four_two_pairs'), '四带两对')
   })
 
   it('accepts combo object and empty input', () => {
