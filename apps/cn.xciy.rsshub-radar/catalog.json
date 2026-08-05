@@ -1,0 +1,32 @@
+{
+  "long_description": "面向 Myriad TApp 沙箱的 RSSHub Radar 移植版。输入公开网页地址后，从内置规则中匹配 RSSHub 路由，生成官方或自建实例订阅地址，并支持 Feed 实时与缓存预览、收藏、OPML 导出、最近扫描记录和常用阅读器跳转。",
+  "tags": [
+    "RSSHub",
+    "RSS",
+    "订阅",
+    "Feed",
+    "阅读器"
+  ],
+  "license": "AGPL-3.0",
+  "homepage": "https://github.com/Pstarchen",
+  "repository": "https://github.com/Pstarchen/tapp-store",
+  "preview": {
+    "version": 1,
+    "type": "snapshot",
+    "html": "preview.html",
+    "styles": [
+      "page.css",
+      "preview.css"
+    ],
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "fit": "cover",
+    "focus": {
+      "x": 0.5,
+      "y": 0.45
+    },
+    "theme": "dark"
+  }
+}

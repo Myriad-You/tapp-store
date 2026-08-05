@@ -1,0 +1,66 @@
+html,
+body {
+  min-height: 100%;
+  background: #071019;
+}
+
+.preview-shell {
+  padding-top: 22px;
+}
+
+.preview-hero {
+  min-height: 465px;
+}
+
+.preview-hero .scanner {
+  min-height: 465px;
+}
+
+.preview-input {
+  display: flex;
+  height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(152, 187, 187, 0.26);
+  border-radius: 12px;
+  padding-left: 16px;
+  color: #c6d6d4;
+  background: rgba(4, 13, 19, 0.62);
+  font: 12px/1 "Cascadia Mono", Consolas, monospace;
+}
+
+.preview-input span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview-input b {
+  display: grid;
+  height: 100%;
+  flex: 0 0 auto;
+  place-items: center;
+  padding: 0 20px;
+  color: #062019;
+  background: #58f2d0;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.preview-workspace {
+  grid-template-columns: minmax(0, 1.8fr) minmax(320px, 0.72fr);
+}
+
+.preview-side {
+  grid-template-columns: 1fr;
+}
+
+.reader-follow { --reader-color: #ff5c00; }
+.reader-feedly { --reader-color: #2bb24c; }
+.reader-inoreader { --reader-color: #0099eb; }
+.reader-local { --reader-color: #58f2d0; }
+
+@media (max-width: 980px) {
+  .preview-workspace { grid-template-columns: 1fr; }
+}
