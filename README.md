@@ -240,19 +240,6 @@ node scripts/validate-app.mjs --all
 
 Catalog Sync 使用 `GITHUB_TOKEN` 回写 `index.json`；若开启「禁止 bot 推送」，需改用可写的 deploy key / App token。
 
-## 当前应用
-
-以 `index.json` 的 `apps` 为准，包括但不限于：
-
-| ID | 说明 |
-| -- | ---- |
-| `com.myriad.music-player` | 系统音乐控制 |
-| `com.myriad.quick-notes` | 便签 + Widget |
-| `com.myriad.config-generator` | 部署配置生成 |
-| `com.myriad.doudizhu` | 斗地主（含 assets） |
-| `com.myriad.aro` | 社交中心 |
-| `com.myriad.cdn-cache` | CDN 缓存刷新（管理员） |
-
 ## 开发者文档
 
 | 路径 | 说明 |
