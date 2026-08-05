@@ -1,0 +1,16 @@
+{
+  "long_description": "面向玩家的 Java/基岩版服务器查询、收藏与 Minecraft Wiki 搜索工具。支持主页小组件轮询展示多台服务器状态。",
+  "tags": ["Minecraft", "服务器", "Wiki", "小组件"],
+  "featured": false,
+  "verified": false,
+  "preview": {
+    "version": 1,
+    "type": "snapshot",
+    "html": "preview.html",
+    "styles": ["page.css", "preview.css"],
+    "viewport": { "width": 1440, "height": 900 },
+    "fit": "cover",
+    "focus": { "x": 0.5, "y": 0.5 },
+    "theme": "dark"
+  }
+}

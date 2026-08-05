@@ -4,7 +4,8 @@
 // Manifest is the authority for install-critical fields (id/name/version/
 // description/locales/author/category/permissions/icons/theme/download map).
 // Store-only merchandising (long_description, tags, featured, preview, ...) is
-// preserved from the previous index entry, or bootstrapped for new apps.
+// loaded from apps/<id>/catalog.json when present, else preserved from the
+// previous index entry, or bootstrapped for new apps.
 //
 // Usage:
 //   node scripts/sync-index.mjs check     # exit 1 if index out of sync
@@ -373,8 +374,82 @@ function loadManifest(appId) {
   return manifest
 }
 
+/**
+ * Optional per-app merchandising file. Contributors edit this instead of index.json.
+ * Paths in preview may be app-relative (preview.html) or repo-relative (apps/id/...).
+ */
+function loadCatalogMeta(appId) {
+  const path = join(appsDir, appId, 'catalog.json')
+  if (!existsSync(path)) return null
+  const raw = readJson(path)
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    throw new Error(`apps/${appId}/catalog.json must be a JSON object`)
+  }
+  const meta = { ...raw }
+  // do not leak internal flags into index
+  delete meta.securityReview
+  delete meta.security_review
+
+  if (meta.preview && typeof meta.preview === 'object') {
+    const fix = (p) => {
+      if (typeof p !== 'string') return p
+      if (p.startsWith('apps/')) return p
+      return packageRel(appId, p.replace(/^\.\//, ''))
+    }
+    meta.preview = { ...meta.preview }
+    if (meta.preview.html) meta.preview.html = fix(meta.preview.html)
+    if (Array.isArray(meta.preview.styles)) {
+      meta.preview.styles = meta.preview.styles.map(fix)
+    }
+  }
+  return meta
+}
+
+function applyMerchandising(entry, previous, catalog, appId, manifest, now) {
+  if (previous) {
+    for (const key of STORE_ONLY_KEYS) {
+      if (previous[key] !== undefined) entry[key] = previous[key]
+    }
+  } else {
+    entry.long_description = manifest.description || ''
+    entry.tags = []
+    entry.screenshots = []
+    entry.downloads = 0
+    entry.rating = 0
+    entry.featured = false
+    entry.verified = false
+    entry.created_at = now
+  }
+
+  if (catalog) {
+    for (const key of [
+      'long_description',
+      'tags',
+      'icon',
+      'icon_shell',
+      'screenshots',
+      'featured',
+      'verified',
+      'license',
+      'homepage',
+      'repository',
+    ]) {
+      if (catalog[key] !== undefined) entry[key] = catalog[key]
+    }
+    if (catalog.preview) entry.preview = catalog.preview
+  }
+
+  if (entry.preview) {
+    entry.preview = sanitizePreview(appId, entry.preview, manifest)
+  } else {
+    const preview = bootstrapPreview(appId, manifest)
+    if (preview) entry.preview = preview
+  }
+}
+
 function buildAlignedEntry(appId, previous = null) {
   const manifest = loadManifest(appId)
+  const catalog = loadCatalogMeta(appId)
   const download = buildDownload(appId, manifest)
   const missing = validateDownloadFiles(appId, download)
   if (missing.length) {
@@ -395,29 +470,7 @@ function buildAlignedEntry(appId, previous = null) {
   const locales = cleanLocales(manifest.locales)
   if (locales) entry.locales = locales
 
-  // preserve store-only merchandising first, then overlay aligned fields
-  if (previous) {
-    for (const key of STORE_ONLY_KEYS) {
-      if (previous[key] !== undefined) entry[key] = previous[key]
-    }
-    if (entry.preview) {
-      entry.preview = sanitizePreview(appId, entry.preview, manifest)
-    } else {
-      const preview = bootstrapPreview(appId, manifest)
-      if (preview) entry.preview = preview
-    }
-  } else {
-    entry.long_description = manifest.description || ''
-    entry.tags = []
-    entry.screenshots = []
-    entry.downloads = 0
-    entry.rating = 0
-    entry.featured = false
-    entry.verified = false
-    entry.created_at = now
-    const preview = bootstrapPreview(appId, manifest)
-    if (preview) entry.preview = preview
-  }
+  applyMerchandising(entry, previous, catalog, appId, manifest, now)
 
   entry.author = cleanAuthor(manifest.author)
   if (manifest.license && !entry.license) entry.license = manifest.license
@@ -435,7 +488,6 @@ function buildAlignedEntry(appId, previous = null) {
   const rawCategory = manifest.category
   entry.category = normalizeCategory(rawCategory)
   if (rawCategory && entry.category !== rawCategory) {
-    // Non-fatal: host also normalizes aliases; prefer fixing the manifest.
     console.warn(
       `  ! ${appId}: category alias "${rawCategory}" → "${entry.category}" (update manifest to the stable id)`,
     )
@@ -467,7 +519,6 @@ function buildAlignedEntry(appId, previous = null) {
     entry.updated_at = now
   }
 
-  // keep stable field order similar to existing catalog
   return orderEntry(entry)
 }
 

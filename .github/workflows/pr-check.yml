@@ -7,6 +7,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: pr-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   catalog:
     name: Catalog & package check
@@ -22,21 +26,96 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Enforce PR scope (no index.json; one app max)
+      - name: Enforce PR scope (index / one-app / version bump)
+        id: scope
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: node scripts/check-pr-scope.mjs
 
-      - name: Validate packages (manifest → download map)
-        run: node scripts/sync-index.mjs validate
+      - name: Resolve changed app
+        id: app
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(git diff --name-only "$BASE_SHA"..."$HEAD_SHA")
+          app=""
+          for f in "${files[@]}"; do
+            if [[ "$f" =~ ^apps/([^/]+)/ ]]; then
+              app="${BASH_REMATCH[1]}"
+              break
+            fi
+          done
+          echo "app_id=$app" >> "$GITHUB_OUTPUT"
+          if [[ -n "$app" ]]; then
+            echo "Changed app: $app"
+          else
+            echo "No app package changes"
+          fi
+
+      - name: Validate package download map
+        run: |
+          if [[ -n "${{ steps.app.outputs.app_id }}" ]]; then
+            node scripts/sync-index.mjs validate --app "${{ steps.app.outputs.app_id }}"
+          else
+            node scripts/sync-index.mjs validate
+          fi
+
+      - name: Validate app policy (category / catalog / elevated perms)
+        run: |
+          if [[ -n "${{ steps.app.outputs.app_id }}" ]]; then
+            node scripts/validate-app.mjs --app "${{ steps.app.outputs.app_id }}"
+          else
+            node scripts/validate-app.mjs --all
+          fi
+
+      - name: Contract check (myriad-tapp)
+        if: steps.app.outputs.app_id != ''
+        run: |
+          set -euo pipefail
+          app="${{ steps.app.outputs.app_id }}"
+          node tapp-cli/bin/myriad-tapp.mjs check "apps/$app" --json | tee /tmp/tapp-check.json
+          node -e '
+            const fs = require("fs");
+            const report = JSON.parse(fs.readFileSync("/tmp/tapp-check.json", "utf8"));
+            const errors = (report.diagnostics || []).filter((d) => d.severity === "error");
+            if (errors.length) {
+              for (const e of errors) {
+                console.error(`::error title=${e.code || "tapp-check"}::${e.message}`);
+              }
+              process.exit(1);
+            }
+            const warnings = (report.diagnostics || []).filter((d) => d.severity === "warning");
+            for (const w of warnings.slice(0, 20)) {
+              console.warn(`::warning title=${w.code || "tapp-check"}::${w.message}`);
+            }
+            console.log("myriad-tapp check passed");
+          '
+
+      - name: Dry-run catalog sync (workspace only)
+        run: |
+          # Align index.json in the runner so preview checks match post-merge state.
+          # Changes are never committed on PRs (index.json remains protected).
+          node scripts/sync-index.mjs sync --prune
+
+      - name: Validate static previews
+        run: |
+          if [[ -n "${{ steps.app.outputs.app_id }}" ]]; then
+            node scripts/validate-previews.mjs --app "${{ steps.app.outputs.app_id }}"
+          else
+            node scripts/validate-previews.mjs --disk
+          fi
 
       - name: Alignment report (informational)
         run: |
           set +e
-          node scripts/sync-index.mjs report
-          # Drift is expected on app PRs; main bot will sync. Do not fail here.
+          if [[ -n "${{ steps.app.outputs.app_id }}" ]]; then
+            node scripts/sync-index.mjs report --app "${{ steps.app.outputs.app_id }}"
+          else
+            node scripts/sync-index.mjs report
+          fi
+          # Discard dry-run index edits so the job cannot upload them by mistake.
+          git checkout -- index.json 2>/dev/null || true
           exit 0
-
-      - name: Validate static previews
-        run: node scripts/validate-previews.mjs

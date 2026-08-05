@@ -28,6 +28,7 @@ tapp-store/
 ├── apps/
 │   └── {app_id}/
 │       ├── manifest.json   # 必需（安装与目录对齐的权威源）
+│       ├── catalog.json    # 可选（商店展示：简介 / tags / preview / securityReview）
 │       ├── main.js         # 入口（或 index.js 等，与 manifest.main 一致）
 │       ├── page.html / page.css / widget.css / …
 │       ├── assets/         # manifest.assets 二进制
@@ -35,7 +36,9 @@ tapp-store/
 │       ├── page/           # pageModules
 │       └── README.md
 ├── scripts/
-│   ├── sync-index.mjs      # manifest ↔ index 对齐 / 校验
+│   ├── check-pr-scope.mjs  # 单 app / 禁 index / version bump
+│   ├── sync-index.mjs      # manifest + catalog.json → index
+│   ├── validate-app.mjs    # category / 敏感权限 / catalog
 │   └── validate-previews.mjs
 └── development/            # 贡献者文档镜像（见下）
 ```
@@ -135,58 +138,107 @@ Manifest 若声明了 `pageStyles` / `pageTemplate`，索引必须提供对应 `
 
 > **禁止在 PR 中手改 `index.json`。**  
 > **一次 PR 只能修改一个 `apps/<id>/`。** 多应用请拆成多个 PR。  
-> 安装相关字段以 `apps/<id>/manifest.json` 为唯一权威；合并到 `main` 后由 GitHub Actions 自动对齐目录。
+> 包有实质改动时 **必须 bump `manifest.version`**（纯 README 除外）。  
+> 安装相关字段以 `apps/<id>/manifest.json` 为唯一权威；商店展示字段写 `catalog.json`。
 
 1. Fork 本仓库，从 `main` 开分支。
-2. **只**在一个 `apps/{id}/` 下添加或修改完整包文件（建议先用 Myriad [`@myriad/tapp-cli`](https://github.com/Myriad-You/Myriad/tree/preview/tools/tapp-cli) 本地 `check` / `pack`）。可附带文档或脚本，但不可夹带第二个 app。
-3. 确保 `manifest.id` === 文件夹名；bump `manifest.version`；`category` 使用稳定 ID。
-4. 本地校验：
+2. **只**在一个 `apps/{id}/` 下添加或修改完整包文件（建议先用仓库内 CLI 或 Myriad [`@myriad/tapp-cli`](https://github.com/Myriad-You/Myriad/tree/preview/tools/tapp-cli) 本地 `check` / `pack`）。可附带文档或脚本，但不可夹带第二个 app。
+3. 确保 `manifest.id` === 文件夹名；**semver bump**；`category` 使用稳定 ID（见下）。
+4. （可选）写 `apps/{id}/catalog.json` 维护商店文案 / tags / preview / featured（**不要**改根 `index.json`）。
+5. 本地校验：
 
    ```bash
-   node scripts/check-pr-scope.mjs         # 单 app + 未改 index.json
-   node scripts/sync-index.mjs validate   # 包完整性 + 可从 manifest 推导 download
-   node scripts/sync-index.mjs report     # 查看与当前 index 的差异（信息用，PR 不必修 index）
-   node scripts/validate-previews.mjs     # 若已有 preview 声明
+   node scripts/check-pr-scope.mjs              # 单 app、禁 index、version bump
+   node scripts/sync-index.mjs validate --app <id>
+   node scripts/validate-app.mjs --app <id>     # category / catalog / 敏感权限
+   node tapp-cli/bin/myriad-tapp.mjs check apps/<id> --json
+   node scripts/validate-previews.mjs --app <id>
+   node scripts/sync-index.mjs report --app <id>  # 信息用；不必手改 index
    ```
 
-5. 提交 Pull Request（**不要**包含 `index.json` 改动；**不要**一次改多个 app）。
-6. 合并后 **Catalog Sync** workflow 会运行 `scripts/sync-index.mjs sync`，按 manifest 重写 `index.json` 的对齐字段与 `download` 表。
+6. 提交 Pull Request。
+7. 合并后 **Catalog Sync** 自动 `sync` 对齐 `index.json`（manifest + catalog.json → 目录）。
+
+### `catalog.json`（可选，商店展示）
+
+```json
+{
+  "long_description": "详情长文案",
+  "tags": ["标签"],
+  "featured": false,
+  "verified": false,
+  "license": "MIT",
+  "preview": {
+    "version": 1,
+    "type": "snapshot",
+    "html": "preview.html",
+    "styles": ["page.css", "preview.css"],
+    "viewport": { "width": 1440, "height": 900 },
+    "fit": "cover",
+    "theme": "dark"
+  },
+  "securityReview": true
+}
+```
+
+- 路径可写应用内相对路径（`preview.html`），bot 会展开为 `apps/<id>/...`。
+- 第三方 app 若声明联邦 / 平台 / 管理类**敏感权限**，必须经维护者审阅后在 `catalog.json` 写 `"securityReview": true`，否则 CI 失败。
+- `com.myriad.*` 官方应用豁免 `securityReview`。
+
+### 稳定 `category`
+
+`ai` · `data` · `developer` · `game` · `media` · `productivity` · `social` · `utility`  
+
+禁止新包使用 `games` / `tools` / `music` 等别名（CI 会拒绝）。
 
 ### PR 流程（CI）
 
 | 阶段 | 行为 |
 | ---- | ---- |
-| PR | 若 diff 含 `index.json` → **失败** |
-| PR | 若 `apps/` 下变更涉及 **超过 1 个 app** → **失败** |
-| PR | `sync-index.mjs validate`：manifest / 文件齐全、可生成 download |
-| PR | `validate-previews.mjs`：现有 index 中的 preview 仍合法 |
-| 合并到 `main` | bot 自动 `sync` 对齐 `index.json` 并提交 |
+| PR | `index.json` 出现在 diff → **失败** |
+| PR | 变更 **超过 1 个** `apps/<id>` → **失败** |
+| PR | 非文档改动但 **未升高** `manifest.version` → **失败** |
+| PR | `validate-app`：规范 category、catalog 形态、敏感权限 |
+| PR | 仓库内 `myriad-tapp check`：契约 / 资源 / 权限 |
+| PR | dry-run `sync-index` 后校验 preview（含新 app 磁盘预览） |
+| 合并到 `main` | Catalog Sync 串行 `sync --prune` 并推送 `index.json` |
 
 ### 谁改什么
 
 | 内容 | 谁维护 | 位置 |
 | ---- | ------ | ---- |
 | 应用代码与 `manifest.json` | 贡献者 | `apps/<id>/` |
-| 目录对齐字段（version、category、permissions、download、size、icon…） | **bot / 脚本** | `index.json`（由 manifest 生成） |
-| 商店展示字段（long_description、tags、featured、preview…） | 首次由 bot 生成；之后随已有条目保留 | `index.json`（勿在普通 PR 手改） |
+| 商店展示（简介、tags、preview、featured…） | 贡献者 | `apps/<id>/catalog.json`（可选） |
+| 目录对齐字段（version、category、permissions、download、size…） | **bot** | `index.json`（禁止手改） |
 
-维护者若需立即预览对齐结果（不经过 PR）：
+维护者本地对齐：
 
 ```bash
-node scripts/sync-index.mjs sync          # 重写 index.json
-node scripts/sync-index.mjs check         # 断言已对齐
+node scripts/sync-index.mjs sync
+node scripts/sync-index.mjs check
+node scripts/validate-app.mjs --all
 ```
 
 ### 发布检查清单
 
 - [ ] **只改了一个** `apps/<id>/`
 - [ ] **未** 修改 `index.json`
-- [ ] `manifest.main` 与包内入口文件名一致（`main.js` / `index.js`）
-- [ ] Manifest 声明的 page/widget CSS、HTML 模板、`pageModules` 均在包内
-- [ ] `manifest.assets` 均在 `{packageRoot}/assets/...`
-- [ ] `category` 为规范 ID（不要用 `games` 等旧别名）
-- [ ] 路径大小写与 Git 一致
-- [ ] `node scripts/check-pr-scope.mjs` 与 `node scripts/sync-index.mjs validate` 通过
+- [ ] 非文档改动已 **bump** `manifest.version`
+- [ ] `category` 为规范 ID
+- [ ] `manifest.main` 与入口文件名一致
+- [ ] Manifest 声明的 page/widget 资源均在包内
+- [ ] 敏感权限已通过审阅（`catalog.securityReview` 或官方 id）
+- [ ] 下列命令通过：`check-pr-scope` / `validate-app` / `myriad-tapp check` / `validate-previews`
+
+### 维护者：分支保护（建议）
+
+在 GitHub → Settings → Branches → `main`：
+
+- Require a pull request before merging  
+- Require status checks：`Catalog & package check`  
+- Restrict direct pushes（至少非管理员）  
+
+Catalog Sync 使用 `GITHUB_TOKEN` 回写 `index.json`；若开启「禁止 bot 推送」，需改用可写的 deploy key / App token。
 
 ## 当前应用
 

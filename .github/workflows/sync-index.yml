@@ -6,24 +6,28 @@ on:
     paths:
       - 'apps/**'
       - 'scripts/sync-index.mjs'
+      - 'scripts/validate-app.mjs'
+      - 'scripts/validate-previews.mjs'
       - 'index.json'
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: catalog-sync-main
+  cancel-in-progress: false
+
 jobs:
   sync:
     name: Align index.json from manifests
     runs-on: ubuntu-latest
-    # Avoid infinite loop: bot commits should not re-trigger meaningful work,
-    # but path filter + [skip ci] keep it quiet.
+    # GITHUB_TOKEN pushes normally do not re-trigger workflows; keep a guard anyway.
     if: github.actor != 'github-actions[bot]' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # Need a token that can push back to main
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node
@@ -31,11 +35,14 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Sync catalog from manifests
+      - name: Sync catalog from manifests (+ catalog.json)
         run: node scripts/sync-index.mjs sync --prune
 
-      - name: Validate previews against new index
-        run: node scripts/validate-previews.mjs
+      - name: Validate all apps
+        run: node scripts/validate-app.mjs --all
+
+      - name: Validate previews (index + disk orphans)
+        run: node scripts/validate-previews.mjs --disk
 
       - name: Commit index.json if changed
         run: |
