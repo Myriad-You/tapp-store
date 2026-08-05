@@ -20,7 +20,7 @@
     "name": "EchoOtaku",
     "url": "https://echootaku.cn"
   },
-  "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.echootaku.days",
+  "homepage": "https://echootaku.cn",
   "repository": "https://github.com/Myriad-You/tapp-store",
   "permissions": [
     "storage",
