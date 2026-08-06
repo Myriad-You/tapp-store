@@ -57,7 +57,7 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent
 .widget-stats strong{overflow:hidden;font-size:.86em;text-overflow:ellipsis;white-space:nowrap}
 
 .mood-widget{place-items:center;padding:calc(8px*var(--s))}
-.mood-glyph{font-family:Georgia,"Songti SC",serif;font-size:calc(48px*var(--f));line-height:1;color:var(--muted)}
+.mood-glyph{font-family:Georgia,"Songti SC",serif;font-size:min(calc(48px*var(--f)),48vmin);line-height:1;color:var(--muted)}
 .daily-widget[data-size="1x1"][data-mood="win"] .mood-glyph{color:#a16207}
 .daily-widget[data-size="1x1"][data-mood="loss"] .mood-glyph{color:#be123c}
 .daily-widget[data-size="1x1"][data-theme="dark"][data-mood="win"] .mood-glyph{color:#facc15}
@@ -81,5 +81,22 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent
 .daily-widget[data-size="4x2"] .result-art{grid-column:2;grid-row:1/3;align-self:stretch;max-height:calc(132px*var(--s))}
 
 .daily-widget[data-size="2x2"] .widget-stats small,.daily-widget[data-size="4x2"] .widget-stats small{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+@media(max-width:340px){
+  .daily-widget[data-size="4x2"]{gap:calc(5px*var(--s));padding:calc(9px*var(--s)) calc(10px*var(--s))}
+  .daily-widget[data-size="4x2"] .user-avatar{width:calc(28px*var(--s));height:calc(28px*var(--s))}
+  .daily-widget[data-size="4x2"] .brand-mark{width:calc(24px*var(--s));height:calc(24px*var(--s))}
+  .daily-widget[data-size="4x2"] .widget-body{grid-template-columns:minmax(0,1fr) minmax(calc(68px*var(--s)),.42fr);gap:calc(3px*var(--s)) calc(6px*var(--s))}
+  .daily-widget[data-size="4x2"] .record-block strong{font-size:1.9em}
+  .daily-widget[data-size="4x2"] .result-art{max-height:calc(104px*var(--s))}
+}
+
+@media(max-width:185px),(max-height:185px){
+  .daily-widget[data-size="2x2"]{gap:calc(3px*var(--s));padding:calc(7px*var(--s))}
+  .daily-widget[data-size="2x2"] .user-copy small{display:none}
+  .daily-widget[data-size="2x2"] .record-block strong{font-size:1.55em}
+  .daily-widget[data-size="2x2"] .result-art{max-height:calc(60px*var(--s))}
+  .daily-widget[data-size="2x2"] .widget-stats>span{padding:calc(3px*var(--s)) calc(1px*var(--s))}
+}
 
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}

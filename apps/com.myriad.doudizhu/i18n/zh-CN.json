@@ -39,6 +39,7 @@
   "game.ready": "准备发牌",
   "game.yourHand": "你的手牌",
   "game.rotate": "横屏体验更佳 · 请旋转设备",
+  "game.viewportSmall": "空间较小 · 建议全屏或扩大窗口",
   "card.back": "牌背",
   "card.select": "选择{card}",
   "card.named": "{suit}{rank}",

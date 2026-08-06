@@ -4,7 +4,7 @@
   "difficulty.easy": "気軽", "difficulty.normal": "標準", "difficulty.hard": "挑戦",
   "action.newGame": "新しい対局", "action.resume": "前回の続き", "action.rules": "ルール説明", "action.history": "対局履歴を見る →", "action.home": "ロビー", "action.rulesShort": "ルール", "action.pause": "一時停止", "action.resumeGame": "ゲームを再開", "action.close": "閉じる", "action.hint": "ヒント", "action.play": "出す", "action.pass": "パス", "action.clear": "取消", "action.call": "地主を宣言", "action.rob": "地主を奪う", "action.noCall": "宣言しない", "action.noRob": "奪わない", "action.backHome": "ロビーへ", "action.playAgain": "もう一局",
   "stats.games": "総対局", "stats.wins": "勝利", "stats.losses": "敗北", "stats.winRate": "勝率", "stats.score": "得点", "stats.totalScore": "累計得点",
-  "hud.base": "底点", "hud.multiplier": "倍率", "hud.bombs": "爆弾", "game.bottomCards": "底札", "game.ready": "配牌準備", "game.yourHand": "あなたの手札", "game.rotate": "横向きがおすすめです・端末を回転してください",
+  "hud.base": "底点", "hud.multiplier": "倍率", "hud.bombs": "爆弾", "game.bottomCards": "底札", "game.ready": "配牌準備", "game.yourHand": "あなたの手札", "game.rotate": "横向きがおすすめです・端末を回転してください", "game.viewportSmall": "表示領域が狭いです・全画面表示またはウィンドウ拡大をおすすめします",
   "card.back": "カードの裏", "card.select": "{card}を選択", "card.named": "{suit}の{rank}", "suit.spade": "スペード", "suit.heart": "ハート", "suit.club": "クラブ", "suit.diamond": "ダイヤ", "card.smallJoker": "小王", "card.bigJoker": "大王",
   "player.human": "あなた", "player.left-ai": "アム", "player.top-ai": "シャオベイ", "player.initialHuman": "私",
   "role.landlord": "地主", "role.farmer": "農民", "role.unknown": "未定", "seat.summary": "{role}・残り{count}枚", "status.thinking": "考え中", "status.aiThinking": "コンピューター思考中", "timer.remaining": "残り{count}秒",

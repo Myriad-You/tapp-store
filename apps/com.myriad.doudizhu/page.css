@@ -42,10 +42,12 @@ html.dark .menu-screen,html.dark .game-screen,html.dark .table-hud,html.dark .mo
 .toast{background:var(--ink);color:var(--paper)}.pause-layer button{background:var(--primary);color:#fff}
 .ddz-app{font-size:calc(16px * var(--tapp-font-scale,1))}
 button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--primary);outline-offset:3px}
-.orientation-tip{display:none}.felt-table:after{display:none}
+.orientation-tip,.viewport-warning{display:none}.felt-table:after{display:none}
 @media(max-height:760px) and (orientation:landscape){.table-hud{top:calc(5px + var(--tapp-safe-inset-top,0px))}.bottom-cards{top:calc(58px + var(--tapp-safe-inset-top,0px))}.human-hand{bottom:calc(7px + var(--tapp-safe-inset-bottom,0px))}.action-bar{bottom:calc(142px + var(--tapp-safe-inset-bottom,0px))}.turn-banner{bottom:calc(202px + var(--tapp-safe-inset-bottom,0px))}}
 @media(max-width:700px) and (orientation:portrait){.human-hand{bottom:calc(22px + var(--tapp-safe-inset-bottom,0px))}.action-bar{bottom:calc(160px + var(--tapp-safe-inset-bottom,0px))}.turn-banner{bottom:calc(222px + var(--tapp-safe-inset-bottom,0px))}}
 @media(max-width:700px) and (orientation:portrait){.orientation-tip{position:absolute;z-index:60;left:50%;top:calc(72px + var(--tapp-safe-inset-top,0px));display:block;transform:translateX(-50%);padding:8px 14px;border-radius:999px;background:var(--panel);color:var(--ink);font-size:12px;white-space:nowrap}}
+@media(max-width:620px) and (orientation:landscape),(max-height:430px){.viewport-warning{position:absolute;z-index:60;left:50%;top:calc(72px + var(--tapp-safe-inset-top,0px));display:block;max-width:calc(100% - var(--tapp-safe-inset-left,0px) - var(--tapp-safe-inset-right,0px) - 24px);transform:translateX(-50%);padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--ink);box-shadow:0 8px 20px rgba(0,0,0,.16);font-size:12px;text-align:center;white-space:nowrap}}
+@media(max-width:700px) and (orientation:portrait){.viewport-warning{display:none}}
 /* Myriad profile avatar: the text initial remains behind the image as a safe fallback. */
 .avatar{position:relative;overflow:hidden}.avatar span,.avatar img{grid-area:1/1}.avatar img{width:100%;height:100%;object-fit:cover;background:inherit}
 
