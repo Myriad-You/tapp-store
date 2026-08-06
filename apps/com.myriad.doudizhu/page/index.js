@@ -20,6 +20,8 @@
   let actionUnlockTimer = null;
   let initialized = false;
   let initGeneration = 0;
+  let cardDrag = null;
+  let suppressCardClickUntil = 0;
 
   function clearTimers() {
     if (countdownTimer) clearInterval(countdownTimer);
@@ -134,15 +136,16 @@
     state = next;
     announceTransition(previous, next);
     saveState();
-    schedule();
+    if (options && options.preserveSchedule) render(); else schedule();
     if (!options || !options.skipSettlement) settleOnce();
   }
 
   function commit(operation) {
     if (actionLocked) return;
     actionLocked = true;
-    const next = operation(state);
-    update(next);
+    const current = state;
+    const next = operation(current);
+    update(next, { preserveSchedule: Boolean(next && next.actionSerial === current.actionSerial) });
     if (actionUnlockTimer) clearTimeout(actionUnlockTimer);
     actionUnlockTimer = setTimeout(function () { actionLocked = false; actionUnlockTimer = null; }, 130);
   }
@@ -229,8 +232,15 @@
     else if (name === 'bid-no') commit(function (current) { return DDZ.engine.bid(current, 0, false, { sortMode: settings.sortMode }); });
     else if (name === 'play') commit(function (current) { return DDZ.engine.play(current, 0, DDZ.engine.selectedCards(current)); });
     else if (name === 'pass') commit(function (current) { return DDZ.engine.pass(current, 0); });
-    else if (name === 'hint') update(DDZ.engine.hint(state), { skipSettlement: true });
-    else if (name === 'clear') update(Object.assign({}, state, { selectedIds: [], hintIndex: -1 }), { skipSettlement: true });
+    else if (name === 'hint') {
+      const next = DDZ.engine.hint(state);
+      update(next, { skipSettlement: true, preserveSchedule: true });
+      if (next.message && next.message.key === 'message.noPlay') {
+        DDZ.audio.play('notice', settings);
+        toast(DDZ.message(next.message));
+      }
+    }
+    else if (name === 'clear') update(Object.assign({}, state, { selectedIds: [], hintIndex: -1, message: '' }), { skipSettlement: true, preserveSchedule: true });
     else if (name === 'clear-stats') {
       DDZ.storage.clearStats().then(function (value) { stats = value; toast(DDZ.t('toast.statsCleared')); render(); });
     }
@@ -241,8 +251,9 @@
     if (difficulty) { setDifficulty(difficulty.dataset.difficulty); return; }
     const card = event.target.closest('[data-card-id]');
     if (card) {
+      if (event.detail !== 0 && Date.now() < suppressCardClickUntil) return;
       DDZ.audio.play('select', settings);
-      update(DDZ.engine.toggleCard(state, card.dataset.cardId), { skipSettlement: true });
+      update(DDZ.engine.toggleCard(state, card.dataset.cardId), { skipSettlement: true, preserveSchedule: true });
       return;
     }
     const button = event.target.closest('[data-action]');
@@ -254,6 +265,76 @@
     if (!cardNode || !settings.doubleClickPlay || state.currentPlayer !== 0) return;
     const card = state.players[0].hand.find(function (item) { return item.id === cardNode.dataset.cardId; });
     if (card) commit(function (current) { return DDZ.engine.play(current, 0, [card]); });
+  }
+
+  function cardAtPoint(event) {
+    const node = document.elementFromPoint(event.clientX, event.clientY);
+    return node && node.closest ? node.closest('#human-hand [data-card-id]') : null;
+  }
+
+  function applyDragCard(card) {
+    if (!cardDrag || !card || cardDrag.visited.has(card.dataset.cardId)) return;
+    cardDrag.visited.add(card.dataset.cardId);
+    update(DDZ.engine.setCardSelected(state, card.dataset.cardId, cardDrag.select), { skipSettlement: true, preserveSchedule: true });
+  }
+
+  function applyDragThrough(card) {
+    if (!cardDrag || !card) return;
+    const cards = Array.from(document.querySelectorAll('#human-hand [data-card-id]'));
+    const targetIndex = cards.findIndex(function (item) { return item.dataset.cardId === card.dataset.cardId; });
+    const previousIndex = cards.findIndex(function (item) { return item.dataset.cardId === cardDrag.lastCardId; });
+    if (targetIndex < 0) return;
+    if (previousIndex < 0) applyDragCard(cards[targetIndex]);
+    else {
+      const direction = targetIndex >= previousIndex ? 1 : -1;
+      for (let index = previousIndex; index !== targetIndex + direction; index += direction) applyDragCard(cards[index]);
+    }
+    cardDrag.lastCardId = card.dataset.cardId;
+  }
+
+  function endCardDrag(event) {
+    if (!cardDrag || (event && event.pointerId !== cardDrag.pointerId)) return;
+    const wasActive = cardDrag.active;
+    const hand = document.getElementById('human-hand');
+    if (hand) {
+      hand.classList.remove('drag-selecting');
+      if (hand.hasPointerCapture && hand.hasPointerCapture(cardDrag.pointerId)) hand.releasePointerCapture(cardDrag.pointerId);
+    }
+    cardDrag = null;
+    if (wasActive && event && event.type === 'pointerup') suppressCardClickUntil = Date.now() + 250;
+  }
+
+  function onPointerDown(event) {
+    const card = event.target.closest('#human-hand [data-card-id]');
+    if (cardDrag || !card || event.isPrimary === false || (event.pointerType === 'mouse' && event.button !== 0) || state.phase !== 'playing' || state.currentPlayer !== 0 || state.paused || state.busy) return;
+    cardDrag = {
+      pointerId: event.pointerId,
+      startCard: card,
+      startX: event.clientX,
+      startY: event.clientY,
+      select: !state.selectedIds.includes(card.dataset.cardId),
+      visited: new Set(),
+      lastCardId: card.dataset.cardId,
+      active: false
+    };
+  }
+
+  function onPointerMove(event) {
+    if (!cardDrag || event.pointerId !== cardDrag.pointerId) return;
+    if (!cardDrag.active) {
+      const distanceX = Math.abs(event.clientX - cardDrag.startX);
+      const distanceY = Math.abs(event.clientY - cardDrag.startY);
+      if (Math.max(distanceX, distanceY) < 8) return;
+      if (distanceY > distanceX) { suppressCardClickUntil = Date.now() + 250; endCardDrag(event); return; }
+      const hand = document.getElementById('human-hand');
+      cardDrag.active = true;
+      hand.classList.add('drag-selecting');
+      if (hand.setPointerCapture) hand.setPointerCapture(event.pointerId);
+      DDZ.audio.play('select', settings);
+      applyDragCard(cardDrag.startCard);
+    }
+    if (event.cancelable) event.preventDefault();
+    applyDragThrough(cardAtPoint(event));
   }
 
   function onKeyDown(event) {
@@ -289,6 +370,10 @@
     if (!initialized || generation !== initGeneration) return;
     document.addEventListener('click', onClick);
     document.addEventListener('dblclick', onDoubleClick);
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', endCardDrag);
+    document.addEventListener('pointercancel', endCardDrag);
     document.addEventListener('keydown', onKeyDown);
     render();
   }
@@ -304,7 +389,12 @@
     actionLocked = false;
     document.removeEventListener('click', onClick);
     document.removeEventListener('dblclick', onDoubleClick);
+    document.removeEventListener('pointerdown', onPointerDown);
+    document.removeEventListener('pointermove', onPointerMove);
+    document.removeEventListener('pointerup', endCardDrag);
+    document.removeEventListener('pointercancel', endCardDrag);
     document.removeEventListener('keydown', onKeyDown);
+    endCardDrag();
     if (DDZ.render && typeof DDZ.render.reset === 'function') DDZ.render.reset();
     DDZ.audio.destroy();
     if (typeof themeOff === 'function') themeOff();

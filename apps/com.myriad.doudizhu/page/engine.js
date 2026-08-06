@@ -166,7 +166,17 @@
     const selected = state.selectedIds.includes(cardId)
       ? state.selectedIds.filter(function (id) { return id !== cardId; })
       : state.selectedIds.concat(cardId);
-    return Object.assign({}, state, { selectedIds: selected, hintIndex: -1 });
+    return Object.assign({}, state, { selectedIds: selected, hintIndex: -1, message: '' });
+  }
+
+  function setCardSelected(state, cardId, selected) {
+    if (state.phase !== 'playing' || state.currentPlayer !== 0 || state.paused || state.busy) return state;
+    const playerHasCard = state.players[0].hand.some(function (card) { return card.id === cardId; });
+    if (!playerHasCard) return state;
+    const alreadySelected = state.selectedIds.includes(cardId);
+    if (alreadySelected === selected) return state;
+    const selectedIds = selected ? state.selectedIds.concat(cardId) : state.selectedIds.filter(function (id) { return id !== cardId; });
+    return Object.assign({}, state, { selectedIds: selectedIds, hintIndex: -1, message: '' });
   }
 
   function selectedCards(state) {
@@ -215,7 +225,7 @@
 
   DDZ.engine = {
     menuState: menuState, startGame: startGame, beginBidding: beginBidding, bid: bid, play: play, pass: pass,
-    toggleCard: toggleCard, selectedCards: selectedCards, hint: hint, timeout: timeout, sortHuman: sortHuman,
+    toggleCard: toggleCard, setCardSelected: setCardSelected, selectedCards: selectedCards, hint: hint, timeout: timeout, sortHuman: sortHuman,
     validHumanPlay: validHumanPlay, normalizeSavedState: normalizeSavedState
   };
 })(globalThis);

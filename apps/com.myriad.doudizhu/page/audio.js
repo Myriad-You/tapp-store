@@ -16,7 +16,7 @@
     unlock();
     if (!context) return;
     const config = {
-      click: [420, 620, 'sine', 0.07], select: [360, 520, 'triangle', 0.08], deal: [220, 330, 'triangle', 0.12],
+      click: [420, 620, 'sine', 0.07], select: [360, 520, 'triangle', 0.08], notice: [520, 310, 'triangle', 0.16], deal: [220, 330, 'triangle', 0.12],
       play: [260, 440, 'sine', 0.12], pass: [240, 180, 'sine', 0.16], tick: [760, 760, 'square', 0.07],
       bomb: [95, 45, 'sawtooth', 0.42], rocket: [180, 920, 'sawtooth', 0.62],
       win: [440, 880, 'triangle', 0.7], lose: [330, 120, 'sine', 0.75]

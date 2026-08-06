@@ -101,8 +101,10 @@
       return;
     }
     if (state.phase !== 'playing') { $('action-bar').innerHTML = ''; return; }
-    $('action-bar').innerHTML = '<button type="button" data-action="hint"' + (!humanTurn ? ' disabled' : '') + '>' + DDZ.t('action.hint') + '</button>'
-      + '<button type="button" class="primary" data-action="play"' + (!humanTurn || !DDZ.engine.validHumanPlay(state) ? ' disabled' : '') + '>' + DDZ.t('action.play') + '</button>'
+    const hasSelection = state.selectedIds.length > 0;
+    const noPlayFeedback = state.message && state.message.key === 'message.noPlay';
+    $('action-bar').innerHTML = '<button type="button" class="' + (noPlayFeedback ? 'hint-attention' : '') + '" data-action="hint"' + (!humanTurn ? ' disabled' : '') + '>' + DDZ.t('action.hint') + '</button>'
+      + '<button type="button" class="primary play-action" data-action="play"' + (!humanTurn || !hasSelection ? ' disabled' : '') + '>' + DDZ.t('action.play') + '</button>'
       + '<button type="button" data-action="pass"' + (!humanTurn || !state.leadPlay ? ' disabled' : '') + '>' + DDZ.t('action.pass') + '</button>'
       + '<button type="button" data-action="clear"' + (!state.selectedIds.length ? ' disabled' : '') + '>' + DDZ.t('action.clear') + '</button>';
   }
@@ -132,7 +134,9 @@
     else if (state.phase === 'playing' && state.currentPlayer !== 0) turnDetail = DDZ.t('detail.thinking', { name: currentName });
     else if (state.phase === 'playing' && state.message) turnDetail = DDZ.message(state.message);
     else if (state.phase === 'playing') turnDetail = DDZ.t(state.leadPlay ? 'detail.chooseCards' : 'detail.lead');
-    $('turn-banner').querySelector('span').textContent = turnDetail;
+    const turnBanner = $('turn-banner');
+    turnBanner.querySelector('span').textContent = turnDetail;
+    turnBanner.classList.toggle('attention', Boolean(state.message && ['message.noPlay', 'message.invalidPattern', 'message.cannotBeat', 'message.mustLead'].includes(state.message.key)));
     const countdown = $('countdown');
     countdown.textContent = model.remaining === null ? '∞' : model.remaining;
     countdown.classList.toggle('warning', model.remaining !== null && model.remaining <= 5);

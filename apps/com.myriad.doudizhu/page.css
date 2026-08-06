@@ -95,3 +95,49 @@ html,body{background:transparent}
 @media(max-width:1050px){.seat-left,.seat-right{width:130px}.seat-human{width:120px}}
 @media(max-height:760px) and (orientation:landscape){.seat-left,.seat-right{padding:12px}.seat-human{padding:10px}.seat-human{bottom:calc(8px + var(--tapp-safe-inset-bottom,0px))}}
 @media(max-width:700px) and (orientation:portrait){.seat-left,.seat-right{width:108px;padding:14px 10px}.seat-human{width:108px;padding:14px 10px}}
+
+/* Lobby: one safe-area-aware scroll surface, scaled by both width and height. */
+.menu-screen{height:100dvh;min-height:0;grid-template-columns:minmax(0,1.05fr) minmax(360px,.95fr);align-items:center;align-content:center;gap:clamp(28px,4vw,72px);overflow:auto;padding-top:calc(clamp(32px,6vh,72px) + var(--tapp-safe-inset-top,0px));padding-right:calc(clamp(32px,5vw,96px) + var(--tapp-safe-inset-right,0px));padding-bottom:calc(clamp(32px,6vh,72px) + var(--tapp-safe-inset-bottom,0px));padding-left:calc(clamp(32px,5vw,96px) + var(--tapp-safe-inset-left,0px))}
+.hero-card{align-self:auto;width:100%;max-width:780px}
+.hero-card h1{font-size:clamp(48px,min(6vw,9.6vh),92px);margin:clamp(10px,2vh,18px) 0 clamp(14px,3vh,24px)}
+.hero-copy{font-size:clamp(15px,1.1vw,17px);line-height:1.7}
+.difficulty{margin:clamp(16px,3vh,30px) 0 clamp(12px,2.2vh,22px)}
+.menu-side{align-self:auto;gap:clamp(12px,2vh,22px)}
+.mini-table{height:clamp(260px,36vh,350px);min-height:0}
+.stat-grid div{padding:clamp(10px,1.8vh,18px)}
+
+@media(max-width:1050px){
+  .menu-screen{grid-template-columns:1fr;gap:0;padding-top:calc(clamp(24px,5vh,44px) + var(--tapp-safe-inset-top,0px));padding-right:calc(clamp(20px,5vw,40px) + var(--tapp-safe-inset-right,0px));padding-bottom:calc(clamp(24px,5vh,44px) + var(--tapp-safe-inset-bottom,0px));padding-left:calc(clamp(20px,5vw,40px) + var(--tapp-safe-inset-left,0px))}
+  .hero-card{max-width:720px;margin:auto}
+  .menu-side{display:none}
+}
+
+@media(max-height:760px) and (orientation:landscape){
+  .menu-screen{grid-template-columns:minmax(0,1.08fr) minmax(300px,.82fr);gap:clamp(20px,3vw,42px);padding-top:calc(18px + var(--tapp-safe-inset-top,0px));padding-right:calc(clamp(24px,5vw,68px) + var(--tapp-safe-inset-right,0px));padding-bottom:calc(18px + var(--tapp-safe-inset-bottom,0px));padding-left:calc(clamp(24px,5vw,68px) + var(--tapp-safe-inset-left,0px))}
+  .hero-card h1{font-size:clamp(42px,min(5.4vw,9.2vh),64px);margin:8px 0 12px}
+  .hero-copy{line-height:1.55}
+  .difficulty{margin:14px 0 12px}
+  .menu-screen .primary,.menu-screen .secondary{padding:11px 20px}
+  .menu-side{display:flex;gap:10px}
+  .mini-table{height:clamp(210px,44vh,270px);border-width:8px}
+  .stat-grid div{padding:9px}
+}
+
+@media(max-width:1050px) and (max-height:760px){
+  .menu-screen{grid-template-columns:1fr}
+  .menu-side{display:none}
+}
+
+/* Game actions: the playable primary action is unmistakable; guidance failures are visible and announced. */
+.action-bar .play-action:not(:disabled){background:var(--primary)!important;color:#fff!important;box-shadow:0 0 0 2px rgba(255,255,255,.74),0 8px 20px rgba(var(--primary-rgb),.4);filter:saturate(1.18);transform:translateY(-1px)}
+.action-bar .play-action:not(:disabled):hover{filter:saturate(1.18) brightness(.92)}
+.action-bar .play-action:disabled{background:var(--panel-soft)!important;color:var(--muted)!important;box-shadow:none;opacity:.56}
+.turn-banner.attention{background:rgba(78,52,4,.96);box-shadow:0 0 0 3px #f2c94c,0 14px 32px rgba(0,0,0,.28);animation:feedback-flash .46s ease-out}
+.turn-banner.attention span{color:#fff4ae;font-weight:800;opacity:1}
+.action-bar .hint-attention{background:#f2c94c;color:#2b260f;box-shadow:0 0 0 2px rgba(255,255,255,.68)}
+@keyframes feedback-flash{0%{filter:brightness(1.5);transform:translateX(-50%) scale(1.025)}100%{filter:brightness(1);transform:translateX(-50%) scale(1)}}
+
+/* Pointer selection keeps vertical touch gestures available while reserving horizontal sweeps for the hand. */
+.human-hand{touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.human-hand.drag-selecting{cursor:grabbing}
+.human-hand.drag-selecting .card-slot{cursor:grabbing}

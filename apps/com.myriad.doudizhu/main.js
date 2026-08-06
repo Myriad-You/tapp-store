@@ -105,7 +105,7 @@
     setText(scope, '[data-games]', t('widget.gamesValue', { count: daily.games }));
     setText(scope, '[data-win-rate]', rate);
     setText(scope, '[data-score]', t('widget.scoreValue', { score: score }));
-    setText(scope, '[data-mood-label]', size === '1x1' && mood === 'empty' ? '—' : t('widget.' + mood));
+    setText(scope, '[data-mood-label]', t('widget.' + mood + 'Short'));
     scope.querySelectorAll('[data-i18n]').forEach(function (node) { node.textContent = t(node.dataset.i18n); });
 
     const image = scope.querySelector('[data-user-avatar]');
