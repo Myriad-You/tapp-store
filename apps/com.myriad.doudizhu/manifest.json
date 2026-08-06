@@ -1,103 +1,34 @@
 {
   "id": "com.myriad.doudizhu",
   "name": "斗地主",
-  "version": "1.0.1",
+  "version": "2.1.0",
   "minSystemVersion": "0.3.0",
-  "description": "3 人斗地主：逐火十三英桀三语卡面、计时结算、可选 AI 单机与联邦联机",
+  "description": "完整的三人单机斗地主：随机发牌、叫抢地主、20 秒回合、智能提示与本地 AI",
   "locales": {
-    "en-US": {
-      "name": "Fight the Landlord",
-      "description": "3-player Dou Dizhu with federation rooms and realtime multiplayer"
-    },
-    "ja-JP": {
-      "name": "闘地主",
-      "description": "3人制の闘地主。連邦ルームで招待してリアルタイム対戦"
-    }
+    "en-US": { "name": "Fight the Landlord", "description": "A complete offline three-player Dou Dizhu game with local AI" },
+    "ja-JP": { "name": "闘地主", "description": "ローカルAIと遊べる完全オフラインの3人闘地主" }
   },
   "category": "game",
   "main": "main.js",
-  "author": {
-    "name": "Myriad Team",
-    "url": "https://github.com/Myriad-You"
-  },
-  "permissions": [
-    "storage",
-    "ai:chat",
-    "federation:read",
-    "federation:write",
-    "federation:message"
-  ],
-  "settings": [
-    {
-      "key": "aiOpponentEnabled",
-      "type": "toggle",
-      "label": "启用 AI 对手",
-      "description": "单机练习中允许机器人调用 Myriad 管理员配置的 AI；不可用时自动回退本地策略。",
-      "defaultValue": false
-    }
-  ],
-  "ai": {
-    "protocolVersion": 2,
-    "operations": [
-      "chat"
-    ],
-    "modelTier": "standard",
-    "outputFormats": [
-      "text",
-      "json"
-    ]
-  },
-  "iconSvg": "<svg viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"3\" y=\"4\" width=\"12\" height=\"16\" rx=\"1.5\" stroke=\"currentColor\" stroke-width=\"2\"/><rect x=\"9\" y=\"4\" width=\"12\" height=\"16\" rx=\"1.5\" stroke=\"currentColor\" stroke-width=\"2\"/><path d=\"M12 10h2M12 14h3\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg>",
-  "themeColor": "#ef4444",
+  "author": { "name": "Myriad Team", "url": "https://github.com/Myriad-You" },
+  "permissions": ["storage", "ui:fullscreen"],
+  "iconSvg": "<svg viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"4\" y=\"3\" width=\"11\" height=\"16\" rx=\"2\" stroke=\"currentColor\" stroke-width=\"2\"/><rect x=\"9\" y=\"5\" width=\"11\" height=\"16\" rx=\"2\" fill=\"currentColor\" fill-opacity=\".12\" stroke=\"currentColor\" stroke-width=\"2\"/><path d=\"M14.5 10.2c-1.8 0-3 1.7-3 3.1 0 2.2 3 4.5 3 4.5s3-2.3 3-4.5c0-1.4-1.2-3.1-3-3.1Z\" fill=\"currentColor\"/></svg>",
+  "themeColor": "#08745b",
   "hasPage": true,
   "cssMode": "separated",
   "pageStyles": "page.css",
   "pageTemplate": "page.html",
-  "assets": [
-    "assets/badges/badge_alarm.png",
-    "assets/badges/badge_farmer.png",
-    "assets/badges/badge_landlord.png",
-    "assets/cards/card_back.gif",
-    "assets/cards/card_back.png",
-    "assets/cards/card_back_sm.png",
-    "assets/cards/card_face.png",
-    "assets/cards/card_face_sm.png",
-    "assets/cards/joker_bj.png",
-    "assets/cards/joker_sj.png",
-    "assets/cards/paper_texture.png",
-    "assets/cards/suit_C.png",
-    "assets/cards/suit_D.png",
-    "assets/cards/suit_H.png",
-    "assets/cards/suit_S.png",
-    "assets/catalog.json",
-    "assets/chrome/avatar_ring.png",
-    "assets/chrome/bottom_tray.png",
-    "assets/chrome/coin.png",
-    "assets/chrome/crown.png",
-    "assets/chrome/end_ribbon.png",
-    "assets/chrome/last_tray.png",
-    "assets/chrome/logo_plate.png",
-    "assets/chrome/ornament_strip.png",
-    "assets/chrome/ready_check.png",
-    "assets/chrome/seat_frame.png",
-    "assets/chrome/wood_panel.png",
-    "assets/felt/center_velvet.png",
-    "assets/felt/felt_tile.png",
-    "assets/felt/scene_bg.png",
-    "assets/felt/table_felt.png",
-    "assets/felt/table_felt_dark.png",
-    "assets/texture-map.json",
-    "assets/ui/btn_bid.png",
-    "assets/ui/btn_ghost.png",
-    "assets/ui/btn_hint.png",
-    "assets/ui/btn_pass.png",
-    "assets/ui/btn_play.png",
-    "assets/ui/btn_primary.png",
-    "assets/ui/bubble_dark.png",
-    "assets/ui/bubble_gold.png",
-    "assets/ui/turn_ring.png",
-    "assets/cards/flame-chasers/zh-CN-atlas.png",
-    "assets/cards/flame-chasers/en-US-atlas.png",
-    "assets/cards/flame-chasers/ja-JP-atlas.png"
+  "pageModules": ["i18n.js", "cards.js", "rules.js", "ai.js", "engine.js", "storage.js", "audio.js", "render.js", "index.js"],
+  "settings": [
+    { "key": "difficulty", "label": "默认 AI 难度", "type": "select", "description": "安装级默认值；玩家在大厅选择后使用个人覆盖值", "defaultValue": "normal", "options": [{ "value": "easy", "label": "轻松" }, { "value": "normal", "label": "标准" }, { "value": "hard", "label": "挑战" }] },
+    { "key": "turnSeconds", "label": "默认出牌时间", "type": "select", "description": "安装级默认值；叫抢地主固定为 10 秒", "defaultValue": "20", "options": [{ "value": "10", "label": "10 秒" }, { "value": "15", "label": "15 秒" }, { "value": "20", "label": "20 秒" }, { "value": "30", "label": "30 秒" }, { "value": "0", "label": "不限时" }] },
+    { "key": "sound", "label": "默认游戏音效", "type": "toggle", "description": "安装级默认值；播放程序合成的出牌与提示音效", "defaultValue": true },
+    { "key": "music", "label": "默认背景氛围", "type": "toggle", "description": "安装级默认值；播放低音量合成和弦", "defaultValue": false },
+    { "key": "volume", "label": "默认音量", "type": "number", "description": "安装级默认值；控制音效和背景氛围，范围 0 至 1", "defaultValue": 0.65, "min": 0, "max": 1, "step": 0.05 },
+    { "key": "animation", "label": "默认动画效果", "type": "select", "description": "安装级默认值；降低或关闭动态效果", "defaultValue": "full", "options": [{ "value": "full", "label": "完整" }, { "value": "reduced", "label": "降低" }, { "value": "off", "label": "关闭" }] },
+    { "key": "doubleClickPlay", "label": "默认双击出牌", "type": "toggle", "description": "安装级默认值；仅在所选单张合法时直接出牌", "defaultValue": true },
+    { "key": "sortMode", "label": "默认手牌排序", "type": "select", "description": "安装级默认值；选择手牌排列方式", "defaultValue": "rank", "options": [{ "value": "rank", "label": "按点数" }, { "value": "suit", "label": "按花色" }] },
+    { "key": "gameSpeed", "label": "默认游戏速度", "type": "select", "description": "安装级默认值；控制电脑思考和发牌节奏", "defaultValue": "normal", "options": [{ "value": "slow", "label": "从容" }, { "value": "normal", "label": "标准" }, { "value": "fast", "label": "快速" }] },
+    { "key": "cardSize", "label": "默认牌面大小", "type": "select", "description": "安装级默认值；调整玩家手牌显示尺寸", "defaultValue": "medium", "options": [{ "value": "small", "label": "小" }, { "value": "medium", "label": "中" }, { "value": "large", "label": "大" }] }
   ]
 }

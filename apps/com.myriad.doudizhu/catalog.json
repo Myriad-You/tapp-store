@@ -1,15 +1,6 @@
 {
-  "long_description": "经典 3 人 54 张牌斗地主。标准 52 张牌替换为逐火十三英桀主题卡面，并提供中文、英语、日语三套本地化牌面；Joker 使用全幅主题卡面。支持绒毡牌桌、30 秒回合计时、提示循环、报牌、倍率结算、累计分、分座行动、联邦联机与可选 Myriad AI 单机练习。",
-  "tags": [
-    "游戏",
-    "斗地主",
-    "联机",
-    "联邦",
-    "牌类",
-    "逐火十三英桀",
-    "多语言",
-    "卡面"
-  ],
+  "long_description": "从零重写的三人单机斗地主。使用标准 54 张扑克牌，支持随机发牌、叫地主与抢地主、完整牌型校验、连续两家不出后重新领出、默认 20 秒回合倒计时、自动托管、三档本地 AI、提示、倍率、春天与反春天、断局续玩和本地战绩。安装级默认设置嵌入 Myriad 宿主，玩家数据按主体隔离；支持中英日三语和宿主明暗主题，无联网权限，不读取其他玩家隐藏手牌。",
+  "tags": ["游戏", "斗地主", "单机", "牌类", "本地AI", "离线"],
   "featured": true,
   "verified": true,
   "license": "MIT",
@@ -19,19 +10,10 @@
     "version": 1,
     "type": "snapshot",
     "html": "preview.html",
-    "styles": [
-      "page.css",
-      "preview.css"
-    ],
-    "viewport": {
-      "width": 1440,
-      "height": 900
-    },
+    "styles": ["page.css", "preview.css"],
+    "viewport": { "width": 1440, "height": 900 },
     "fit": "cover",
-    "focus": {
-      "x": 0.5,
-      "y": 0.5
-    },
-    "theme": "dark"
+    "focus": { "x": 0.5, "y": 0.5 },
+    "theme": "light"
   }
 }
