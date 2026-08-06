@@ -1,7 +1,7 @@
 {
   "id": "com.myriad.doudizhu",
   "name": "斗地主",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "minSystemVersion": "0.3.0",
   "description": "完整的三人单机斗地主：随机发牌、叫抢地主、20 秒回合、智能提示与本地 AI",
   "locales": {
@@ -20,6 +20,10 @@
   "pageStyles": "page.css",
   "pageTemplate": "page.html",
   "pageModules": ["i18n.js", "cards.js", "rules.js", "ai.js", "engine.js", "storage.js", "audio.js", "render.js", "index.js"],
+  "assets": [
+    "assets/widget/landlord-win.png",
+    "assets/widget/farmer-loss.png"
+  ],
   "widgets": [
     {
       "id": "daily-record",
@@ -28,8 +32,9 @@
       "icon": "spade",
       "category": "stats",
       "defaultSize": "2x2",
-      "sizes": ["2x2", "4x2"],
+      "sizes": ["1x1", "2x2", "4x2"],
       "templates": {
+        "1x1": "templates/widget-1x1.html",
         "2x2": "templates/widget-2x2.html",
         "4x2": "templates/widget-4x2.html"
       },

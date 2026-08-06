@@ -60,3 +60,36 @@ html.dark .difficulty button,html.dark .secondary,html.dark .table-hud button,ht
 html.dark .difficulty button:hover,html.dark .secondary:hover,html.dark .table-hud button:hover{background:var(--panel-soft);color:var(--ink)}
 html.dark .modal,html.dark .modal-head{background:rgba(10,10,10,.96);color:var(--ink)}
 html.dark .modal-head button,html.dark .setting,html.dark .settlement-grid div{background:var(--panel-soft);color:var(--ink)}
+
+/* Standard Page contract: full-bleed decoration and safe interactive content are sibling layers. */
+html,body{background:transparent}
+#tapp-background,#tapp-content{position:absolute;inset:0;width:100%;height:100%;overflow:hidden}
+#tapp-background{z-index:0;pointer-events:none;background:var(--paper)}
+#tapp-content{z-index:1}
+.page-background{position:absolute;inset:0;transition:opacity .2s ease}
+.menu-background{opacity:1;background:radial-gradient(circle at 10% 10%,#fff2f3 0,transparent 35%),radial-gradient(circle at 90% 8%,#e8f5ff 0,transparent 38%),var(--paper)}
+.game-background{opacity:0;background:radial-gradient(ellipse at 50% 45%,#159877 0,#0a785e 45%,#07513f 100%);box-shadow:inset 0 0 90px rgba(0,30,24,.36)}
+.game-background:after{content:"";position:absolute;inset:0;opacity:.16;background-image:repeating-linear-gradient(25deg,transparent 0 4px,rgba(255,255,255,.08) 5px 6px)}
+#tapp-background:not([data-phase="menu"]):not([data-phase="loading"]) .menu-background{opacity:0}
+#tapp-background:not([data-phase="menu"]):not([data-phase="loading"]) .game-background{opacity:1}
+.ddz-app,.game-screen{background:transparent}
+.menu-screen{overflow:auto;padding-top:calc(68px + var(--tapp-safe-inset-top,0px));padding-right:calc(68px + var(--tapp-safe-inset-right,0px));padding-bottom:calc(68px + var(--tapp-safe-inset-bottom,0px));padding-left:calc(68px + var(--tapp-safe-inset-left,0px))}
+.felt-table{z-index:0;background:transparent;box-shadow:none}
+.felt-table:before{display:none}
+.table-hud{z-index:20;min-height:44px}
+.table-hud button{min-width:44px;min-height:44px}
+.difficulty button,.text-action,.action-bar button,.modal-head button{min-height:44px}
+.modal-head button{min-width:44px;width:44px;height:44px}
+.seat-top{top:calc(160px + var(--tapp-safe-inset-top,0px))}
+.toast{bottom:calc(34px + var(--tapp-safe-inset-bottom,0px));max-width:calc(100% - var(--tapp-safe-inset-left,0px) - var(--tapp-safe-inset-right,0px) - 32px)}
+@media(max-width:1050px){.menu-screen{padding-top:calc(34px + var(--tapp-safe-inset-top,0px));padding-right:calc(34px + var(--tapp-safe-inset-right,0px));padding-bottom:calc(34px + var(--tapp-safe-inset-bottom,0px));padding-left:calc(34px + var(--tapp-safe-inset-left,0px))}}
+@media(max-height:760px) and (orientation:landscape){.seat-top{top:calc(118px + var(--tapp-safe-inset-top,0px))}}
+.visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+
+/* Seats are self-contained cards inside the host safe area, never edge-attached drawers. */
+.seat-left{left:calc(14px + var(--tapp-safe-inset-left,0px));width:170px;padding:22px 18px;border-radius:26px}
+.seat-human{left:calc(14px + var(--tapp-safe-inset-left,0px));bottom:calc(14px + var(--tapp-safe-inset-bottom,0px));width:150px;padding:17px 18px;border-radius:24px}
+.seat-right{right:calc(14px + var(--tapp-safe-inset-right,0px));width:170px;padding:22px 18px;border-radius:26px}
+@media(max-width:1050px){.seat-left,.seat-right{width:130px}.seat-human{width:120px}}
+@media(max-height:760px) and (orientation:landscape){.seat-left,.seat-right{padding:12px}.seat-human{padding:10px}.seat-human{bottom:calc(8px + var(--tapp-safe-inset-bottom,0px))}}
+@media(max-width:700px) and (orientation:portrait){.seat-left,.seat-right{width:108px;padding:14px 10px}.seat-human{width:108px;padding:14px 10px}}

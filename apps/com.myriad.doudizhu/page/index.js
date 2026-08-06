@@ -17,6 +17,9 @@
   let settledRound = null;
   let themeOff = null;
   let localeOff = null;
+  let actionUnlockTimer = null;
+  let initialized = false;
+  let initGeneration = 0;
 
   function clearTimers() {
     if (countdownTimer) clearInterval(countdownTimer);
@@ -36,6 +39,8 @@
 
   function render() {
     document.getElementById('ddz-app').dataset.phase = state.phase;
+    const background = document.getElementById('tapp-background');
+    if (background) background.dataset.phase = state.phase;
     if (state.phase === 'menu') DDZ.render.menu(model()); else DDZ.render.game(model());
   }
 
@@ -107,6 +112,7 @@
       score: state.settlement.scoreDelta
     });
     await DDZ.storage.saveStats(stats);
+    if (!initialized || state.phase !== 'finished' || settledRound !== state.round) return;
     DDZ.audio.play(state.settlement.humanWon ? 'win' : 'lose', settings);
     render();
     DDZ.render.showSettlement(state, stats);
@@ -137,7 +143,8 @@
     actionLocked = true;
     const next = operation(state);
     update(next);
-    setTimeout(function () { actionLocked = false; }, 130);
+    if (actionUnlockTimer) clearTimeout(actionUnlockTimer);
+    actionUnlockTimer = setTimeout(function () { actionLocked = false; actionUnlockTimer = null; }, 130);
   }
 
   function startNewGame() {
@@ -181,8 +188,12 @@
   }
 
   async function refreshSettings() {
+    const generation = initGeneration;
     const previousSort = settings && settings.sortMode;
-    [settings, profile] = await Promise.all([DDZ.storage.loadSettings(), loadProfile()]);
+    const values = await Promise.all([DDZ.storage.loadSettings(), loadProfile()]);
+    if (!initialized || generation !== initGeneration) return;
+    settings = values[0];
+    profile = values[1];
     DDZ.profile = profile;
     if (state && previousSort && previousSort !== settings.sortMode) state = DDZ.engine.sortHuman(state, settings.sortMode);
     if (state) DDZ.audio.setMusic(settings.music && state.phase !== 'menu' && !state.paused, settings.volume);
@@ -245,32 +256,60 @@
     if (card) commit(function (current) { return DDZ.engine.play(current, 0, [card]); });
   }
 
+  function onKeyDown(event) {
+    if (!DDZ.render || typeof DDZ.render.handleKeyDown !== 'function') return;
+    const command = DDZ.render.handleKeyDown(event);
+    if (command === 'close') closePanel();
+    if (command === 'resume') pause(false);
+  }
+
   async function init() {
+    if (initialized) return;
+    initialized = true;
+    const generation = ++initGeneration;
     [settings, stats, savedGame, profile] = await Promise.all([
       DDZ.storage.loadSettings(), DDZ.storage.loadStats(), DDZ.storage.loadGame(), loadProfile()
     ]);
+    if (!initialized || generation !== initGeneration) return;
     DDZ.profile = profile;
     savedGame = DDZ.engine.normalizeSavedState(savedGame);
     state = DDZ.engine.menuState();
     DDZ.applyStaticI18n(document);
     try {
       if (typeof Tapp !== 'undefined' && Tapp.ui) {
-        if (typeof Tapp.ui.getTheme === 'function') applyTheme(await Tapp.ui.getTheme());
+        if (typeof Tapp.ui.getTheme === 'function') {
+          const theme = await Tapp.ui.getTheme();
+          if (!initialized || generation !== initGeneration) return;
+          applyTheme(theme);
+        }
         if (typeof Tapp.ui.onThemeChange === 'function') themeOff = Tapp.ui.onThemeChange(applyTheme);
         if (typeof Tapp.ui.onLocaleChange === 'function') localeOff = Tapp.ui.onLocaleChange(function () { DDZ.applyStaticI18n(document); render(); });
       }
     } catch (_) { applyTheme(root.matchMedia && root.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); }
+    if (!initialized || generation !== initGeneration) return;
     document.addEventListener('click', onClick);
     document.addEventListener('dblclick', onDoubleClick);
+    document.addEventListener('keydown', onKeyDown);
     render();
   }
 
   function destroy() {
+    if (!initialized) return;
+    initialized = false;
+    initGeneration += 1;
     clearTimers();
     if (toastTimer) clearTimeout(toastTimer);
+    if (actionUnlockTimer) clearTimeout(actionUnlockTimer);
+    toastTimer = actionUnlockTimer = null;
+    actionLocked = false;
+    document.removeEventListener('click', onClick);
+    document.removeEventListener('dblclick', onDoubleClick);
+    document.removeEventListener('keydown', onKeyDown);
+    if (DDZ.render && typeof DDZ.render.reset === 'function') DDZ.render.reset();
     DDZ.audio.destroy();
     if (typeof themeOff === 'function') themeOff();
     if (typeof localeOff === 'function') localeOff();
+    themeOff = localeOff = null;
   }
 
   function applyTheme(theme) {

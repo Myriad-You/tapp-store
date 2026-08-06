@@ -3,6 +3,8 @@
   const DDZ = root.DDZ = root.DDZ || {};
   const $ = function (id) { return document.getElementById(id); };
   let modalReturnFocus = null;
+  let pauseReturnFocus = null;
+  let lastTimerAnnouncement = null;
 
   function escapeHtml(value) {
     return String(value).replace(/[&<>'"]/g, function (char) {
@@ -12,13 +14,20 @@
 
   function cardMarkup(card, options) {
     const opts = options || {};
-    if (opts.back) return '<i class="card back' + (opts.mini ? ' mini' : '') + '" aria-label="' + escapeHtml(DDZ.t('card.back')) + '"></i>';
+    if (opts.back) return '<i role="img" class="card back' + (opts.mini ? ' mini' : '') + '" aria-label="' + escapeHtml(DDZ.t('card.back')) + '"></i>';
     const red = card.suit === 'heart' || card.suit === 'diamond' || card.rank === 'big-joker';
     const joker = card.suit === 'joker';
     const suit = joker ? '★' : DDZ.cards.symbols[card.suit];
-    return '<i class="card' + (red ? ' red' : '') + (joker ? ' joker' : '') + (opts.mini ? ' mini' : '')
+    const label = joker ? DDZ.cards.rankLabel(card.rank) : DDZ.t('card.named', { suit: DDZ.t('suit.' + card.suit), rank: DDZ.cards.rankLabel(card.rank) });
+    return '<i role="img" class="card' + (red ? ' red' : '') + (joker ? ' joker' : '') + (opts.mini ? ' mini' : '')
       + '" data-rank="' + escapeHtml(DDZ.cards.rankLabel(card.rank)) + '" data-suit="' + suit + '" aria-label="'
-      + escapeHtml(DDZ.cards.rankLabel(card.rank) + suit) + '"></i>';
+      + escapeHtml(label) + '"></i>';
+  }
+
+  function cardLabel(card) {
+    return card.suit === 'joker'
+      ? DDZ.cards.rankLabel(card.rank)
+      : DDZ.t('card.named', { suit: DDZ.t('suit.' + card.suit), rank: DDZ.cards.rankLabel(card.rank) });
   }
 
   function roleLabel(role) { return DDZ.t('role.' + (role === 'landlord' ? 'landlord' : role === 'farmer' ? 'farmer' : 'unknown')); }
@@ -71,7 +80,7 @@
     $('human-hand').innerHTML = state.players[0].hand.map(function (card, index) {
       return '<button type="button" class="card-slot' + (selected.has(card.id) ? ' selected' : '') + '" style="--card-order:' + index
         + '" data-card-id="' + escapeHtml(card.id) + '" aria-pressed="' + selected.has(card.id) + '" aria-label="'
-        + escapeHtml(DDZ.t('card.select', { rank: DDZ.cards.rankLabel(card.rank) })) + '">' + cardMarkup(card) + '</button>';
+        + escapeHtml(DDZ.t('card.select', { card: cardLabel(card) })) + '">' + cardMarkup(card) + '</button>';
     }).join('');
   }
 
@@ -127,6 +136,15 @@
     const countdown = $('countdown');
     countdown.textContent = model.remaining === null ? '∞' : model.remaining;
     countdown.classList.toggle('warning', model.remaining !== null && model.remaining <= 5);
+    const announcement = $('countdown-announcement');
+    if (model.remaining === null || model.remaining > 5) {
+      if (lastTimerAnnouncement !== null) announcement.textContent = '';
+      lastTimerAnnouncement = null;
+    }
+    if ([5, 3, 1].includes(model.remaining) && model.remaining !== lastTimerAnnouncement) {
+      announcement.textContent = DDZ.t('timer.remaining', { count: model.remaining });
+      lastTimerAnnouncement = model.remaining;
+    }
     document.body.classList.toggle('reduced-motion', model.settings.animation === 'reduced');
     document.body.classList.toggle('no-motion', model.settings.animation === 'off');
     const sizeOffset = model.settings.cardSize === 'small' ? '-10px' : model.settings.cardSize === 'large' ? '10px' : '0px';
@@ -138,11 +156,20 @@
 
   function renderPause(state) {
     let layer = document.querySelector('.pause-layer');
-    if (!state.paused) { if (layer) layer.remove(); return; }
+    if (!state.paused) {
+      if (layer) layer.remove();
+      document.querySelectorAll('.felt-table > [data-pause-inert]').forEach(function (node) { node.inert = false; node.removeAttribute('data-pause-inert'); });
+      if (pauseReturnFocus && typeof pauseReturnFocus.focus === 'function') pauseReturnFocus.focus();
+      pauseReturnFocus = null;
+      return;
+    }
     if (!layer) {
+      pauseReturnFocus = document.activeElement;
       layer = document.createElement('div'); layer.className = 'pause-layer';
       layer.innerHTML = '<div role="dialog" aria-modal="true" aria-labelledby="pause-title"><h2 id="pause-title">' + DDZ.t('pause.title') + '</h2><p>' + DDZ.t('pause.description') + '</p><button type="button" data-action="resume-game">' + DDZ.t('action.resumeGame') + '</button></div>';
-      document.querySelector('.felt-table').appendChild(layer);
+      const table = document.querySelector('.felt-table');
+      Array.from(table.children).forEach(function (node) { node.inert = true; node.setAttribute('data-pause-inert', ''); });
+      table.appendChild(layer);
       layer.querySelector('button').focus();
     }
   }
@@ -166,10 +193,61 @@
       + '<div><strong>' + result.baseScore + '</strong><small>' + DDZ.t('hud.base') + '</small></div><div><strong>×' + result.bidMultiplier + '</strong><small>' + DDZ.t('settlement.bidMultiplier') + '</small></div><div><strong>' + result.bombCount + '</strong><small>' + DDZ.t('settlement.bombs') + '</small></div><div><strong>×' + result.finalMultiplier + '</strong><small>' + DDZ.t('settlement.finalMultiplier') + '</small></div><div><strong>' + (result.scoreDelta > 0 ? '+' : '') + result.scoreDelta + '</strong><small>' + DDZ.t('settlement.scoreDelta') + '</small></div><div><strong>' + stats.wins + '/' + stats.games + '</strong><small>' + DDZ.t('settlement.totalWins') + '</small></div></div><div class="modal-actions"><button class="secondary" data-action="home">' + DDZ.t('action.backHome') + '</button><button class="primary" data-action="new-game">' + DDZ.t('action.playAgain') + '</button></div></div></section>';
   }
 
-  function openModal(html) { modalReturnFocus = document.activeElement; $('modal-root').innerHTML = html; $('modal-root').hidden = false; const focusable = $('modal-root').querySelector('button'); if (focusable) focusable.focus(); }
-  function closeModal() { $('modal-root').hidden = true; $('modal-root').innerHTML = ''; if (modalReturnFocus && typeof modalReturnFocus.focus === 'function') modalReturnFocus.focus(); modalReturnFocus = null; }
+  function visibleScreen() { return $('game-screen').hidden ? $('menu-screen') : $('game-screen'); }
+  function openModal(html) {
+    modalReturnFocus = document.activeElement;
+    const screen = visibleScreen();
+    screen.inert = true;
+    screen.setAttribute('aria-hidden', 'true');
+    $('modal-root').innerHTML = html;
+    $('modal-root').hidden = false;
+    const focusable = $('modal-root').querySelector('button');
+    if (focusable) focusable.focus();
+  }
+  function closeModal() {
+    $('modal-root').hidden = true;
+    $('modal-root').innerHTML = '';
+    ['menu-screen', 'game-screen'].forEach(function (id) { const screen = $(id); screen.inert = false; screen.removeAttribute('aria-hidden'); });
+    if (modalReturnFocus && typeof modalReturnFocus.focus === 'function') modalReturnFocus.focus();
+    modalReturnFocus = null;
+  }
+  function trapFocus(event, dialog) {
+    if (event.key !== 'Tab') return;
+    const nodes = Array.from(dialog.querySelectorAll('button:not([disabled]),[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'));
+    if (!nodes.length) { event.preventDefault(); dialog.focus(); return; }
+    const first = nodes[0];
+    const last = nodes[nodes.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  }
+  function handleKeyDown(event) {
+    const modal = !$('modal-root').hidden && $('modal-root').querySelector('[role="dialog"]');
+    const pauseDialog = document.querySelector('.pause-layer [role="dialog"]');
+    const dialog = modal || pauseDialog;
+    if (!dialog) return '';
+    if (event.key === 'Escape') {
+      if (pauseDialog) { event.preventDefault(); return 'resume'; }
+      if (modal && modal.querySelector('[data-action="close-modal"]')) { event.preventDefault(); return 'close'; }
+    }
+    trapFocus(event, dialog);
+    return '';
+  }
+  function reset() {
+    const modalRoot = $('modal-root');
+    if (modalRoot) { modalRoot.hidden = true; modalRoot.innerHTML = ''; }
+    ['menu-screen', 'game-screen'].forEach(function (id) {
+      const screen = $(id);
+      if (screen) { screen.inert = false; screen.removeAttribute('aria-hidden'); }
+    });
+    document.querySelectorAll('.felt-table > [data-pause-inert]').forEach(function (node) { node.inert = false; node.removeAttribute('data-pause-inert'); });
+    const pauseLayer = document.querySelector('.pause-layer');
+    if (pauseLayer) pauseLayer.remove();
+    modalReturnFocus = pauseReturnFocus = null;
+    lastTimerAnnouncement = null;
+  }
   DDZ.render = {
     menu: renderMenu, game: renderGame, cardMarkup: cardMarkup, openModal: openModal, closeModal: closeModal,
+    handleKeyDown: handleKeyDown, reset: reset,
     showRules: function () { openModal(rulesModal()); },
     showHistory: function (stats) { openModal(historyModal(stats)); },
     showSettlement: function (state, stats) { openModal(settlementModal(state, stats)); }

@@ -1,3 +1,9 @@
+<div id="tapp-background" data-phase="loading" aria-hidden="true">
+  <div class="page-background menu-background"></div>
+  <div class="page-background game-background"></div>
+</div>
+
+<div id="tapp-content">
 <main id="ddz-app" class="ddz-app" data-phase="loading">
   <section id="menu-screen" class="screen menu-screen">
     <div class="hero-card">
@@ -46,7 +52,8 @@
       <section id="player-right" class="seat seat-right"></section>
       <section id="player-left" class="seat seat-left"></section>
       <section id="player-human" class="seat seat-human"></section>
-      <div id="turn-banner" class="turn-banner" role="status" aria-live="polite" aria-atomic="true"><strong data-i18n="game.ready"></strong><span></span><b id="countdown">20</b></div>
+      <div id="turn-banner" class="turn-banner" role="status" aria-live="polite" aria-atomic="true"><strong data-i18n="game.ready"></strong><span></span><b id="countdown" aria-hidden="true">20</b></div>
+      <span id="countdown-announcement" class="visually-hidden" aria-live="polite"></span>
       <div id="table-play" class="table-play"></div>
       <div id="action-bar" class="action-bar"></div>
       <div id="human-hand" class="human-hand" data-i18n-aria-label="game.yourHand"></div>
@@ -56,3 +63,4 @@
   <div id="modal-root" class="modal-root" hidden></div>
   <div id="toast" class="toast" role="status" hidden></div>
 </main>
+</div>
