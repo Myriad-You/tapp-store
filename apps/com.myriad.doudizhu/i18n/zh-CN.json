@@ -121,5 +121,6 @@
   "pattern.fourSingles": "四带二",
   "pattern.fourPairs": "四带两对",
   "pattern.bomb": "炸弹",
-  "pattern.rocket": "王炸"
+  "pattern.rocket": "王炸",
+  "widget.title": "今日斗地主", "widget.empty": "今天还没开局", "widget.win": "地主笑了", "widget.loss": "农民哭了", "widget.record": "今日胜负", "widget.games": "对局", "widget.winRate": "胜率", "widget.netScore": "净积分"
 }

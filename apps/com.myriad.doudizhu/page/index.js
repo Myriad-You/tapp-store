@@ -5,6 +5,7 @@
   let settings = null;
   let stats = null;
   let savedGame = null;
+  let profile = null;
   let remaining = null;
   let countdownTimer = null;
   let phaseTimer = null;
@@ -31,7 +32,7 @@
     toastTimer = setTimeout(function () { node.hidden = true; }, 2200);
   }
 
-  function model() { return { state: state, settings: settings, stats: stats, savedGame: savedGame, remaining: remaining, thinking: thinking }; }
+  function model() { return { state: state, settings: settings, stats: stats, savedGame: savedGame, remaining: remaining, thinking: thinking, profile: profile }; }
 
   function render() {
     document.getElementById('ddz-app').dataset.phase = state.phase;
@@ -101,12 +102,10 @@
   async function settleOnce() {
     if (state.phase !== 'finished' || !state.settlement || settledRound === state.round) return;
     settledRound = state.round;
-    stats = {
-      wins: stats.wins + (state.settlement.humanWon ? 1 : 0),
-      losses: stats.losses + (state.settlement.humanWon ? 0 : 1),
-      games: stats.games + 1,
-      score: stats.score + state.settlement.scoreDelta
-    };
+    stats = DDZ.storage.applySettlement(stats, {
+      won: state.settlement.humanWon,
+      score: state.settlement.scoreDelta
+    });
     await DDZ.storage.saveStats(stats);
     DDZ.audio.play(state.settlement.humanWon ? 'win' : 'lose', settings);
     render();
@@ -183,10 +182,26 @@
 
   async function refreshSettings() {
     const previousSort = settings && settings.sortMode;
-    settings = await DDZ.storage.loadSettings();
+    [settings, profile] = await Promise.all([DDZ.storage.loadSettings(), loadProfile()]);
+    DDZ.profile = profile;
     if (state && previousSort && previousSort !== settings.sortMode) state = DDZ.engine.sortHuman(state, settings.sortMode);
     if (state) DDZ.audio.setMusic(settings.music && state.phase !== 'menu' && !state.paused, settings.volume);
     if (state) render();
+  }
+
+  async function loadProfile() {
+    try {
+      if (typeof Tapp !== 'undefined' && Tapp.context && typeof Tapp.context.getUser === 'function') {
+        const user = await Tapp.context.getUser();
+        if (user && typeof user === 'object') {
+          return {
+            name: typeof user.username === 'string' && user.username.trim() ? user.username.trim() : '',
+            avatar: typeof user.avatar === 'string' ? user.avatar : ''
+          };
+        }
+      }
+    } catch (_) { /* Anonymous and older hosts use the local fallback identity. */ }
+    return null;
   }
 
   function action(name, target) {
@@ -231,9 +246,10 @@
   }
 
   async function init() {
-    [settings, stats, savedGame] = await Promise.all([
-      DDZ.storage.loadSettings(), DDZ.storage.loadStats(), DDZ.storage.loadGame()
+    [settings, stats, savedGame, profile] = await Promise.all([
+      DDZ.storage.loadSettings(), DDZ.storage.loadStats(), DDZ.storage.loadGame(), loadProfile()
     ]);
+    DDZ.profile = profile;
     savedGame = DDZ.engine.normalizeSavedState(savedGame);
     state = DDZ.engine.menuState();
     DDZ.applyStaticI18n(document);

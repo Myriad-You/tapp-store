@@ -9,7 +9,10 @@
     return key;
   }
 
-  function playerName(player) { return t('player.' + player.id); }
+  function playerName(player) {
+    if (player && player.human && DDZ.profile && DDZ.profile.name) return DDZ.profile.name;
+    return t('player.' + player.id);
+  }
   function patternName(pattern) { return pattern ? t('pattern.' + pattern.type) : ''; }
   function message(value) {
     if (!value) return '';

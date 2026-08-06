@@ -23,11 +23,24 @@
 
   function roleLabel(role) { return DDZ.t('role.' + (role === 'landlord' ? 'landlord' : role === 'farmer' ? 'farmer' : 'unknown')); }
 
+  function safeAvatarUrl(value) {
+    if (typeof value !== 'string' || !value.trim()) return '';
+    const url = value.trim();
+    if (/^data:image\//i.test(url) || /^blob:/i.test(url) || url.startsWith('/')) return url;
+    try {
+      const parsed = new URL(url, root.location.href);
+      return parsed.origin === root.location.origin && parsed.origin !== 'null' ? parsed.href : '';
+    } catch (_) { return ''; }
+  }
+
   function seatMarkup(player, index, active, thinking) {
     const name = DDZ.playerName(player);
-    const initial = player.human ? DDZ.t('player.initialHuman') : name.slice(0, 1);
+    const initial = player.human && DDZ.profile && DDZ.profile.name ? Array.from(name)[0] : player.human ? DDZ.t('player.initialHuman') : name.slice(0, 1);
+    const avatarUrl = player.human && DDZ.profile ? safeAvatarUrl(DDZ.profile.avatar) : '';
+    const avatar = '<div class="avatar' + (player.human ? ' human' : '') + '"><span>' + escapeHtml(initial) + '</span>'
+      + (avatarUrl ? '<img src="' + escapeHtml(avatarUrl) + '" alt="">' : '') + '</div>';
     const backs = player.human ? '' : '<div class="card-backs">' + Array.from({ length: Math.min(6, player.hand.length) }, function () { return '<i></i>'; }).join('') + '</div>';
-    return '<div class="avatar' + (player.human ? ' human' : '') + '">' + escapeHtml(initial) + '</div>'
+    return avatar
       + '<strong>' + escapeHtml(name) + (player.role === 'landlord' ? ' ♛' : '') + '</strong>'
       + '<small>' + escapeHtml(DDZ.t('seat.summary', { role: roleLabel(player.role), count: player.hand.length })) + '</small>'
       + (player.lastAction ? '<span class="last-action">' + escapeHtml(DDZ.message(player.lastAction)) + '</span>' : '') + backs
@@ -96,6 +109,8 @@
       const node = $('player-' + location);
       node.classList.toggle('active', state.currentPlayer === playerIndex && ['bidding', 'playing'].includes(state.phase));
       node.innerHTML = seatMarkup(state.players[playerIndex], playerIndex, state.currentPlayer === playerIndex, model.thinking && state.currentPlayer === playerIndex);
+      const avatarImage = node.querySelector('.avatar img');
+      if (avatarImage) avatarImage.addEventListener('error', function () { avatarImage.remove(); }, { once: true });
     });
     renderBottom(state); renderHand(state); renderTablePlay(state); renderActions(state);
     const current = state.players[state.currentPlayer];
