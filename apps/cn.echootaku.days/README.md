@@ -14,10 +14,11 @@
 - 按名称和备注搜索
 - `2x2`、`4x2`、`4x4` 三种 Widget
 - Page 与 Widget 通过 `Tapp.storage` 自动同步
-- 亮色、暗色主题、Myriad 原生 `.glass` 材质和响应式页面
-- 内置主题工作室，可选择预设、强调色、Glass 强度、圆角，并按主画布、焦点卡、工具栏、日子卡、编辑器和 Widget 分区启用 Glass
+- 界面文案通过 `Tapp.i18n` 提供中文、英文与日文，并在宿主切换语言时同步刷新
+- 亮色、暗色主题、按 Myriad Glass 规范自行实现的半透明模糊材质和响应式页面
+- 内置主题工作室，默认跟随 Myriad 主色；提供实时效果预览、全界面/重点界面/仅小组件三种 Glass 布局和精细分区调整
 - 可生成和导入 `CX1-` 主题码；主题码仅包含外观配置，不包含日期数据
-- Widget 可跟随共享主题或单独选择主题，并配置 Glass 范围、显示密度、字段显隐、置顶强调和列表数量
+- Widget 可跟随共享主题或单独选择主题，并配置 Glass/纯色材质、显示密度、日子范围、字段显隐和列表数量
 
 ## 包结构
 
@@ -28,6 +29,10 @@ cn.echootaku.days/
 ├── page.html
 ├── page.css
 ├── widget.css
+├── i18n/
+│   ├── zh-CN.json
+│   ├── en-US.json
+│   └── ja-JP.json
 ├── templates/
 │   ├── widget-2x2.html
 │   ├── widget-4x2.html
@@ -44,7 +49,6 @@ cn.echootaku.days/
 | --- | --- |
 | `storage` | 保存日期事件 |
 | `ui:notification` | 显示保存和删除结果 |
-| `ui:theme` | 跟随系统主题 |
 | `ui:confirm` | 删除前确认 |
 | `widget:register` | 声明主页 Widget |
 
@@ -54,10 +58,10 @@ cn.echootaku.days/
 
 ```powershell
 node .\tapp-cli\bin\myriad-tapp.mjs check .\apps\cn.echootaku.days --json
-node .\tapp-cli\bin\myriad-tapp.mjs pack .\apps\cn.echootaku.days --out .\apps\cn.echootaku.days\dist\cn.echootaku.days.tapp --json
+node .\tapp-cli\bin\myriad-tapp.mjs pack .\apps\cn.echootaku.days --out <仓库外测试目录>\cn.echootaku.days-0.3.0.tapp --json
 ```
 
-生成的 `dist/` 仅用于本地安装验证，不提交到商店仓库。
+生成的 `.tapp` 仅用于本地安装验证，不得放入应用目录或提交到商店仓库。将包上传到 Myriad 的 Tapp 管理界面，确认权限后安装；至少回归 Page、新建/编辑/删除、主题与语言切换和三种 Widget 尺寸。
 
 ## 后续方向
 
