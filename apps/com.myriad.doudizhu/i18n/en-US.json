@@ -1,4 +1,5 @@
 {
+  "menu.eyebrow": "OFFLINE TABLE · 2.2.1",
   "menu.titleLine1": "A strong hand.", "menu.titleLine2": "Let the game begin.", "menu.description": "Complete three-player Dou Dizhu. No account, ads, or network requests—and the computer players never peek at your hand.", "menu.difficultyLabel": "AI difficulty",
   "difficulty.easy": "Easy", "difficulty.normal": "Standard", "difficulty.hard": "Challenge",
   "action.newGame": "New game", "action.resume": "Resume game", "action.rules": "How to play", "action.history": "View match history →", "action.home": "Lobby", "action.rulesShort": "Rules", "action.pause": "Pause", "action.resumeGame": "Resume", "action.close": "Close", "action.hint": "Hint", "action.play": "Play", "action.pass": "Pass", "action.clear": "Clear", "action.call": "Call landlord", "action.rob": "Rob landlord", "action.noCall": "No call", "action.noRob": "No rob", "action.backHome": "Back to lobby", "action.playAgain": "Play again",

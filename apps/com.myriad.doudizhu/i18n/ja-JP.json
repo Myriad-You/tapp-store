@@ -1,4 +1,5 @@
 {
+  "menu.eyebrow": "オフライン卓 · 2.2.1",
   "menu.titleLine1": "好配牌を、", "menu.titleLine2": "今ここから。", "menu.description": "3人用の本格的な闘地主。アカウント、広告、通信は不要で、コンピューターはあなたの手札を見ません。", "menu.difficultyLabel": "AI 難易度",
   "difficulty.easy": "気軽", "difficulty.normal": "標準", "difficulty.hard": "挑戦",
   "action.newGame": "新しい対局", "action.resume": "前回の続き", "action.rules": "ルール説明", "action.history": "対局履歴を見る →", "action.home": "ロビー", "action.rulesShort": "ルール", "action.pause": "一時停止", "action.resumeGame": "ゲームを再開", "action.close": "閉じる", "action.hint": "ヒント", "action.play": "出す", "action.pass": "パス", "action.clear": "取消", "action.call": "地主を宣言", "action.rob": "地主を奪う", "action.noCall": "宣言しない", "action.noRob": "奪わない", "action.backHome": "ロビーへ", "action.playAgain": "もう一局",

@@ -1,7 +1,7 @@
 {
   "id": "com.myriad.doudizhu",
   "name": "斗地主",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "minSystemVersion": "0.3.0",
   "description": "完整的三人单机斗地主：随机发牌、叫抢地主、20 秒回合、智能提示与本地 AI",
   "locales": {
