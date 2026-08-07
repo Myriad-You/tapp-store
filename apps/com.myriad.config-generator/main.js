@@ -303,7 +303,7 @@ services:
     volumes:
       - backend_cache:/app/cache
       - backend_data:/app/data
-    networks: [myriad-net, myriad-admin-net]
+    networks: [myriad-net, myriad-admin-net{{BACKEND_EXTRA_NETWORK_REF}}]
     restart: unless-stopped
     security_opt: [no-new-privileges:true]
     read_only: false
@@ -480,7 +480,7 @@ networks:
     name: \${MYRIAD_DOCKER_GUARD_NETWORK:-myriad-docker-guard-net}
     driver: bridge
     internal: true
-`;
+{{EXTRA_NETWORK_DECL}}`;
 
 var ENV_TEMPLATE = `# Myriad .env — chmod 600，勿提交 Git
 # 禁止 :latest
@@ -494,9 +494,10 @@ FRONTEND_IMAGE=docker.io/somekawahitomi/myriad-frontend
 # PROXY_IMAGE=docker.io/somekawahitomi/myriad-proxy
 # UPDATER_IMAGE=docker.io/somekawahitomi/myriad-updater
 COMPOSE_PROJECT_NAME=myriad
-# MYRIAD_DOCKER_NETWORK=myriad-net
-# MYRIAD_ADMIN_NETWORK=myriad-admin-net
-# MYRIAD_DOCKER_GUARD_NETWORK=myriad-docker-guard-net
+MYRIAD_DOCKER_NETWORK={{MYRIAD_DOCKER_NETWORK}}
+MYRIAD_ADMIN_NETWORK={{MYRIAD_ADMIN_NETWORK}}
+MYRIAD_DOCKER_GUARD_NETWORK={{MYRIAD_DOCKER_GUARD_NETWORK}}
+{{BACKEND_EXTRA_NETWORK_LINE}}
 
 UPDATE_TOKEN={{UPDATE_TOKEN}}
 UPDATER_GATEWAY_SECRET={{UPDATER_GATEWAY_SECRET}}
@@ -1625,7 +1626,11 @@ var state = {
   backendCpuLimit: '2.0',
   backendMemLimit: '4G',
   frontendCpuLimit: '2.0',
-  frontendMemLimit: '2G'
+  frontendMemLimit: '2G',
+  netMyriad: 'myriad-net',
+  netAdmin: 'myriad-admin-net',
+  netGuard: 'myriad-docker-guard-net',
+  dbExtraNetwork: ''
 };
 
 // ========================================
@@ -1695,6 +1700,10 @@ function initPage() {
   var backendMemLimitInput = document.getElementById('backend-mem-limit');
   var frontendCpuLimitInput = document.getElementById('frontend-cpu-limit');
   var frontendMemLimitInput = document.getElementById('frontend-mem-limit');
+  var netMyriadInput = document.getElementById('net-myriad');
+  var netAdminInput = document.getElementById('net-admin');
+  var netGuardInput = document.getElementById('net-guard');
+  var dbExtraNetworkInput = document.getElementById('db-extra-network');
   var refreshTagsBtn = document.getElementById('btn-refresh-tags');
 
   var tagInputs = {
@@ -1893,6 +1902,14 @@ function initPage() {
           if (dbSslmodeSelect) dbSslmodeSelect.focus();
           return;
         }
+        // 附加外部子网可选：非空时须为合法 Docker 网络名
+        var dbExtraNetwork = (dbExtraNetworkInput && dbExtraNetworkInput.value.trim()) || '';
+        if (dbExtraNetwork && !/^[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(dbExtraNetwork)) {
+          showNotification('附加子网不是合法 Docker 网络名', 'error');
+          if (dbExtraNetworkInput) dbExtraNetworkInput.focus();
+          return;
+        }
+        state.dbExtraNetwork = dbExtraNetwork;
         // External: keep user password as-is (URL-encoded when building DATABASE_URL)
         if (!dbPassword) {
           showNotification('请填写外置数据库密码', 'error');
@@ -1948,6 +1965,7 @@ function initPage() {
       state.dbHost = dbHost;
       state.dbPort = dbPort;
       state.dbSslmode = dbSslmode;
+      if (!isExternal) state.dbExtraNetwork = '';
 
       state.httpBindAddress = httpBindAddressSelect.value || '127.0.0.1';
       if (state.httpBindAddress !== '127.0.0.1' && state.httpBindAddress !== '0.0.0.0') {
@@ -2048,6 +2066,33 @@ function initPage() {
       if (myriadTagInput) myriadTagInput.value = myriadRef.raw;
       if (proxyTagInput) proxyTagInput.value = proxyRef.raw;
       if (updaterTagInput) updaterTagInput.value = updaterRef.raw;
+
+      var netMyriad = (netMyriadInput && netMyriadInput.value.trim()) || state.netMyriad || 'myriad-net';
+      var netAdmin = (netAdminInput && netAdminInput.value.trim()) || state.netAdmin || 'myriad-admin-net';
+      var netGuard = (netGuardInput && netGuardInput.value.trim()) || state.netGuard || 'myriad-docker-guard-net';
+      var netEntries = [
+        { key: 'MYRIAD_DOCKER_NETWORK', value: netMyriad },
+        { key: 'MYRIAD_ADMIN_NETWORK', value: netAdmin },
+        { key: 'MYRIAD_DOCKER_GUARD_NETWORK', value: netGuard }
+      ];
+      var netNameRe = /^[A-Za-z0-9][A-Za-z0-9_.-]*$/;
+      for (var netIdx = 0; netIdx < netEntries.length; netIdx++) {
+        var netEntry = netEntries[netIdx];
+        if (!netEntry.value) {
+          showNotification(netEntry.key + ' 不能为空', 'error');
+          return;
+        }
+        if (!netNameRe.test(netEntry.value)) {
+          showNotification(
+            netEntry.key + ' 不是合法 Docker 网络名',
+            'error'
+          );
+          return;
+        }
+      }
+      state.netMyriad = netMyriad;
+      state.netAdmin = netAdmin;
+      state.netGuard = netGuard;
 
       try {
         generateConfigs();
@@ -2318,6 +2363,15 @@ function generateConfigs() {
       '# POSTGRES_USER=' + state.dbUser + '\n';
   }
 
+  var extraNetworkName = isExternal ? (state.dbExtraNetwork || '').trim() : '';
+  var backendExtraNetworkRef = extraNetworkName ? ', myriad-backend-ext' : '';
+  var extraNetworkDecl = extraNetworkName
+    ? '  myriad-backend-ext:\n    external: true\n    name: ${MYRIAD_BACKEND_EXTRA_NETWORK}\n'
+    : '';
+  var backendExtraNetworkLine = extraNetworkName
+    ? 'MYRIAD_BACKEND_EXTRA_NETWORK=' + extraNetworkName + '\n'
+    : '';
+
   var map = {
     MYRIAD_DB_MODE: isExternal ? 'external' : 'bundled',
     COMPOSE_START_HINT: composeStartHint,
@@ -2348,6 +2402,12 @@ function generateConfigs() {
     CORS_ORIGINS: corsOrigins,
     HTTP_BIND_ADDRESS: state.httpBindAddress,
     HTTP_PORT: String(state.httpPort),
+    MYRIAD_DOCKER_NETWORK: state.netMyriad || 'myriad-net',
+    MYRIAD_ADMIN_NETWORK: state.netAdmin || 'myriad-admin-net',
+    MYRIAD_DOCKER_GUARD_NETWORK: state.netGuard || 'myriad-docker-guard-net',
+    BACKEND_EXTRA_NETWORK_REF: backendExtraNetworkRef,
+    EXTRA_NETWORK_DECL: extraNetworkDecl,
+    BACKEND_EXTRA_NETWORK_LINE: backendExtraNetworkLine,
     MYRIAD_TAG: state.myriadTag,
     PROXY_TAG: state.proxyTag,
     UPDATER_TAG: state.updaterTag,
