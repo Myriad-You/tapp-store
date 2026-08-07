@@ -1,11 +1,12 @@
 {
   "version": 1,
   "style": "commercial-dou-dizhu-inspired-original",
-  "notes": "Original procedural textures; not scraped proprietary art.",
+  "notes": "Original procedural textures plus localized Flame-Chaser card faces generated from provided source images.",
   "files": [
     "assets/badges/badge_alarm.png",
     "assets/badges/badge_farmer.png",
     "assets/badges/badge_landlord.png",
+    "assets/cards/card_back.gif",
     "assets/cards/card_back.png",
     "assets/cards/card_back_sm.png",
     "assets/cards/card_face.png",
@@ -42,7 +43,10 @@
     "assets/ui/btn_primary.png",
     "assets/ui/bubble_dark.png",
     "assets/ui/bubble_gold.png",
-    "assets/ui/turn_ring.png"
+    "assets/ui/turn_ring.png",
+    "assets/cards/flame-chasers/zh-CN-atlas.png",
+    "assets/cards/flame-chasers/en-US-atlas.png",
+    "assets/cards/flame-chasers/ja-JP-atlas.png"
   ],
   "roles": {
     "felt": [
@@ -54,6 +58,7 @@
     ],
     "cards": [
       "assets/cards/card_back.png",
+      "assets/cards/card_back.gif",
       "assets/cards/card_back_sm.png",
       "assets/cards/card_face.png",
       "assets/cards/card_face_sm.png",
@@ -89,6 +94,11 @@
       "assets/ui/bubble_dark.png",
       "assets/ui/bubble_gold.png",
       "assets/ui/turn_ring.png"
+    ],
+    "flameChaserCards": [
+      "assets/cards/flame-chasers/zh-CN-atlas.png",
+      "assets/cards/flame-chasers/en-US-atlas.png",
+      "assets/cards/flame-chasers/ja-JP-atlas.png"
     ]
   }
 }

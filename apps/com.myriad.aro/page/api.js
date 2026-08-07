@@ -294,7 +294,10 @@ async function openConversation(kind, id) {
 
   state.chatOpening = false;
   renderChatHeader();
-  renderMessages();
+  // Opening a thread lands on the newest message. Say so rather than leaning on
+  // isMessagesNearBottom() reading the short "opening…" placeholder as "at the
+  // bottom" — that inference breaks the moment the placeholder grows.
+  renderMessages({ stickBottom: true });
   renderMembers();
   renderConvList();
   updateSendState();
@@ -664,10 +667,13 @@ async function doSend() {
     if (typeof noteDeliveryEnqueue === 'function') noteDeliveryEnqueue(sendRes);
     if (state.activeKind === ctx.kind && state.activeId === ctx.id) {
       await pollMessages(true);
-      // Ensure optimistic row is gone even if server id differs before prune matched
+      // Ensure optimistic row is gone even if server id differs before prune matched.
+      // pollMessages already prunes and repaints in the common case — only repaint
+      // when this call actually removed a row, or a plain image send would run two
+      // more full innerHTML rebuilds back to back and re-decode the whole transcript.
       if (optId && typeof pruneOptimisticMessages === 'function') {
-        pruneOptimisticMessages({ id: optId });
-        if (typeof scheduleRenderMessages === 'function') {
+        if (pruneOptimisticMessages({ id: optId })
+          && typeof scheduleRenderMessages === 'function') {
           scheduleRenderMessages({ stickBottom: true, forceFull: true });
         }
       }

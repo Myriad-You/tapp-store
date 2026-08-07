@@ -1,0 +1,37 @@
+{
+  "long_description": "经典 3 人 54 张牌斗地主。标准 52 张牌替换为逐火十三英桀主题卡面，并提供中文、英语、日语三套本地化牌面；Joker 使用全幅主题卡面。支持绒毡牌桌、30 秒回合计时、提示循环、报牌、倍率结算、累计分、分座行动、联邦联机与可选 Myriad AI 单机练习。",
+  "tags": [
+    "游戏",
+    "斗地主",
+    "联机",
+    "联邦",
+    "牌类",
+    "逐火十三英桀",
+    "多语言",
+    "卡面"
+  ],
+  "featured": true,
+  "verified": true,
+  "license": "MIT",
+  "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/com.myriad.doudizhu",
+  "repository": "https://github.com/Myriad-You/tapp-store",
+  "preview": {
+    "version": 1,
+    "type": "snapshot",
+    "html": "preview.html",
+    "styles": [
+      "page.css",
+      "preview.css"
+    ],
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "fit": "cover",
+    "focus": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "theme": "dark"
+  }
+}

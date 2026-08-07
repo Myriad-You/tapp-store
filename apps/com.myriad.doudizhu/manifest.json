@@ -1,9 +1,9 @@
 {
   "id": "com.myriad.doudizhu",
   "name": "斗地主",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minSystemVersion": "0.3.0",
-  "description": "3 人斗地主：商业级贴图牌桌（绒毡/扑克/按钮），提示报牌，联邦联机与单机",
+  "description": "3 人斗地主：逐火十三英桀三语卡面、计时结算、可选 AI 单机与联邦联机",
   "locales": {
     "en-US": {
       "name": "Fight the Landlord",
@@ -22,10 +22,31 @@
   },
   "permissions": [
     "storage",
+    "ai:chat",
     "federation:read",
     "federation:write",
     "federation:message"
   ],
+  "settings": [
+    {
+      "key": "aiOpponentEnabled",
+      "type": "toggle",
+      "label": "启用 AI 对手",
+      "description": "单机练习中允许机器人调用 Myriad 管理员配置的 AI；不可用时自动回退本地策略。",
+      "defaultValue": false
+    }
+  ],
+  "ai": {
+    "protocolVersion": 2,
+    "operations": [
+      "chat"
+    ],
+    "modelTier": "standard",
+    "outputFormats": [
+      "text",
+      "json"
+    ]
+  },
   "iconSvg": "<svg viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"3\" y=\"4\" width=\"12\" height=\"16\" rx=\"1.5\" stroke=\"currentColor\" stroke-width=\"2\"/><rect x=\"9\" y=\"4\" width=\"12\" height=\"16\" rx=\"1.5\" stroke=\"currentColor\" stroke-width=\"2\"/><path d=\"M12 10h2M12 14h3\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg>",
   "themeColor": "#ef4444",
   "hasPage": true,
@@ -36,6 +57,7 @@
     "assets/badges/badge_alarm.png",
     "assets/badges/badge_farmer.png",
     "assets/badges/badge_landlord.png",
+    "assets/cards/card_back.gif",
     "assets/cards/card_back.png",
     "assets/cards/card_back_sm.png",
     "assets/cards/card_face.png",
@@ -73,6 +95,9 @@
     "assets/ui/btn_primary.png",
     "assets/ui/bubble_dark.png",
     "assets/ui/bubble_gold.png",
-    "assets/ui/turn_ring.png"
+    "assets/ui/turn_ring.png",
+    "assets/cards/flame-chasers/zh-CN-atlas.png",
+    "assets/cards/flame-chasers/en-US-atlas.png",
+    "assets/cards/flame-chasers/ja-JP-atlas.png"
   ]
 }

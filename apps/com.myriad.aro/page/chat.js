@@ -842,13 +842,7 @@ function renderMessages(opts) {
       }
       if (appendHtml) {
         container.insertAdjacentHTML('beforeend', appendHtml);
-        // Orientation for any new covers that may already be complete
-        container.querySelectorAll('.msg-media-card .msg-media-cover-img').forEach(function (img) {
-          if (!img.complete || !img.naturalWidth) return;
-          var card = img.closest('.msg-media-card');
-          if (!card || card.dataset.orient === 'square') return;
-          card.dataset.orient = (img.naturalWidth / img.naturalHeight >= 1.15) ? 'landscape' : 'portrait';
-        });
+        hydrateMessageMedia(container);
         if (wasNearBottom) {
           settleScrollPosition(container, function () {
             container.scrollTop = container.scrollHeight;
@@ -893,6 +887,7 @@ function renderMessages(opts) {
       }
       if (appendHtmlW) {
         container.insertAdjacentHTML('beforeend', appendHtmlW);
+        hydrateMessageMedia(container);
         if (wasNearBottom) {
           settleScrollPosition(container, function () {
             container.scrollTop = container.scrollHeight;
@@ -921,13 +916,7 @@ function renderMessages(opts) {
   }
   container.innerHTML = html;
 
-  // Apply orientation for already-decoded covers (load event may have fired before insert)
-  container.querySelectorAll('.msg-media-card .msg-media-cover-img').forEach(function (img) {
-    if (!img.complete || !img.naturalWidth) return;
-    var card = img.closest('.msg-media-card');
-    if (!card || card.dataset.orient === 'square') return;
-    card.dataset.orient = (img.naturalWidth / img.naturalHeight >= 1.15) ? 'landscape' : 'portrait';
-  });
+  hydrateMessageMedia(container);
 
   // Re-apply after media decodes: the first pass runs against a collapsed box.
   settleScrollPosition(container, function () {
@@ -943,6 +932,60 @@ function renderMessages(opts) {
   });
 
   renderPinnedBar();
+}
+
+/**
+ * Flag transcript media frames once their image has a natural size.
+ *
+ * Image and sticker bubbles size to their content, and an <img> contributes
+ * 0×0 until it decodes — so a freshly written bubble takes up no room, then
+ * snaps to full height and pushes everything under it. CSS holds a placeholder
+ * tile while the frame lacks `data-loaded`; flipping it here hands the box back
+ * to the natural size exactly when that size becomes known. Link-preview covers
+ * ride along for their landscape/portrait orientation.
+ *
+ * Call after every insertion. Listeners are attached once per <img>, so a
+ * repeat call on rows that are already in the DOM is free.
+ */
+function hydrateMessageMedia(container) {
+  if (!container) return;
+  var settle = function (img) {
+    if (!img.naturalWidth || !img.naturalHeight) return;
+    var frame = img.closest('.msg-media, .msg-sticker');
+    if (frame) {
+      frame.dataset.loaded = '1';
+      // Cache the measurement so the next rebuild of this row reserves the box
+      // in its markup and never collapses in the first place.
+      var row = img.closest('.msg-row[data-msg-id]');
+      if (row && typeof noteMessageMediaSize === 'function') {
+        noteMessageMediaSize(row.getAttribute('data-msg-id'), img.naturalWidth, img.naturalHeight);
+      }
+    }
+    var card = img.closest('.msg-media-card');
+    if (card && card.dataset.orient !== 'square') {
+      card.dataset.orient = (img.naturalWidth / img.naturalHeight >= 1.15) ? 'landscape' : 'portrait';
+    }
+  };
+  var imgs = container.querySelectorAll('.msg-image, .msg-sticker-img, .msg-media-cover-img');
+  for (var i = 0; i < imgs.length; i++) {
+    var img = imgs[i];
+    // The load event can fire before insertAdjacentHTML/innerHTML returns.
+    if (img.complete) {
+      settle(img);
+      continue;
+    }
+    if (img.dataset.aroMediaBound) continue;
+    img.dataset.aroMediaBound = '1';
+    (function (target) {
+      var done = function () {
+        target.removeEventListener('load', done);
+        target.removeEventListener('error', done);
+        settle(target);
+      };
+      target.addEventListener('load', done);
+      target.addEventListener('error', done);
+    })(img);
+  }
 }
 
 /**
@@ -995,44 +1038,80 @@ function cssEscapeAttr(value) {
  * view where the reader left it instead of snapping to the top.
  */
 var _scrollSettleToken = 0;
+var _scrollSettleRelease = null;
+/** Input that means the reader took the viewport over. */
+var SCROLL_SETTLE_TAKEOVER = ['wheel', 'touchstart', 'touchmove', 'pointerdown'];
+
 function settleScrollPosition(container, apply) {
   var token = ++_scrollSettleToken;
-  var lastWritten = null;
+  // Only one settle window at a time; the newest render owns the viewport.
+  if (_scrollSettleRelease) _scrollSettleRelease();
+
+  // Watch for real input rather than diffing scrollTop between runs. A decoding
+  // image resizes the content and browser scroll anchoring answers by writing
+  // scrollTop itself — indistinguishable from a reader scroll by value alone,
+  // and reading it as one abandoned the correction with the view half-placed.
+  var takenOver = false;
+  var markTakeover = function () { takenOver = true; };
+  SCROLL_SETTLE_TAKEOVER.forEach(function (name) {
+    container.addEventListener(name, markTakeover, { passive: true });
+  });
+  document.addEventListener('keydown', markTakeover, true);
+  var released = false;
+  var release = function () {
+    if (released) return;
+    released = true;
+    if (_scrollSettleRelease === release) _scrollSettleRelease = null;
+    SCROLL_SETTLE_TAKEOVER.forEach(function (name) {
+      container.removeEventListener(name, markTakeover);
+    });
+    document.removeEventListener('keydown', markTakeover, true);
+  };
+  _scrollSettleRelease = release;
+
   var run = function () {
-    if (token !== _scrollSettleToken || !container.isConnected) return false;
-    // The reader moved the viewport since our last write — stop correcting, or
-    // late-loading images would drag them back for the rest of the window.
-    if (lastWritten != null && Math.abs(container.scrollTop - lastWritten) > 2) {
-      _scrollSettleToken += 1;
+    if (token !== _scrollSettleToken || !container.isConnected || takenOver) {
+      release();
       return false;
     }
     try { apply(); } catch (eApply) { /* ignore */ }
-    lastWritten = container.scrollTop;
     return true;
   };
   if (!run()) return;
 
+  var settling = 0;
   var raf = typeof requestAnimationFrame === 'function'
     ? requestAnimationFrame
     : function (cb) { return setTimeout(cb, 16); };
-  raf(run);
+  // `settling` is final by the time this frame runs — the loop below is still
+  // part of the current task.
+  raf(function () {
+    run();
+    if (settling <= 0) release();
+  });
 
   var pending = container.querySelectorAll('img');
   var deadline = Date.now() + 4000;
   for (var i = 0; i < pending.length; i++) {
     var img = pending[i];
     if (img.complete) continue;
+    settling++;
     var onSettled = (function (target) {
       return function handler() {
         target.removeEventListener('load', handler);
         target.removeEventListener('error', handler);
-        if (Date.now() > deadline) return;
+        settling--;
+        if (Date.now() > deadline) { release(); return; }
         run();
+        if (settling <= 0) release();
       };
     })(img);
     img.addEventListener('load', onSettled);
     img.addEventListener('error', onSettled);
   }
+  // Backstop for images that never resolve — the takeover listeners must not
+  // outlive the window they guard.
+  setTimeout(release, 4200);
 }
 
 

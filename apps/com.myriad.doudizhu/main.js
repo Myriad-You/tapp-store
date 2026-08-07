@@ -12,6 +12,7 @@ console.log('[斗地主] core loaded');
   var HAND_SIZE = 17;
   var BOTTOM_SIZE = 3;
   var N = 3;
+  var TURN_SECONDS = 30;
   var RANK_ORDER = ['3','4','5','6','7','8','9','10','J','Q','K','A','2','SJ','BJ'];
   var SUITS = ['S','H','D','C'];
   var STD_RANKS = ['3','4','5','6','7','8','9','10','J','Q','K','A','2'];
@@ -104,6 +105,27 @@ console.log('[斗地主] core loaded');
     }
     if (n === 4 && ranks.length === 1 && counts[0] === 4)
       return { type: 'bomb', mainValue: ranks[0], length: 1, cards: cards.slice() };
+    if (n === 6) {
+      var quad = ranks.find(function (r) { return byRank[r].length === 4; });
+      if (quad !== undefined) {
+        var kickRanks = ranks.filter(function (r) { return r !== quad; });
+        if (kickRanks.length === 2 && byRank[kickRanks[0]].length === 1 && byRank[kickRanks[1]].length === 1)
+          return { type: 'four_two_singles', mainValue: quad, length: 1, cards: cards.slice() };
+      }
+    }
+    if (n === 8) {
+      var quad2 = ranks.find(function (r) { return byRank[r].length === 4; });
+      if (quad2 !== undefined) {
+        var pairUnits2 = 0;
+        for (var qi = 0; qi < ranks.length; qi++) {
+          if (ranks[qi] === quad2) continue;
+          if (byRank[ranks[qi]].length !== 2) { pairUnits2 = -999; break; }
+          pairUnits2 += 1;
+        }
+        if (pairUnits2 === 2)
+          return { type: 'four_two_pairs', mainValue: quad2, length: 1, cards: cards.slice() };
+      }
+    }
     if (n === 1)
       return { type: 'single', mainValue: rankValue(cards[0].rank), length: 1, cards: cards.slice() };
     if (n === 2 && ranks.length === 1 && counts[0] === 2)
@@ -184,6 +206,31 @@ console.log('[斗地主] core loaded');
       if (group.length >= 2) push(takeN(group, 2));
       if (group.length >= 3) push(takeN(group, 3));
       if (group.length >= 4) push(takeN(group, 4));
+    }
+    for (var qr = 0; qr < ranks.length; qr++) {
+      var quadGroup = byRank[ranks[qr]];
+      if (quadGroup.length < 4) continue;
+      var quadBody = takeN(quadGroup, 4);
+      var kickRanks4 = ranks.filter(function (r) { return r !== ranks[qr]; });
+      var singlesPool4 = [];
+      for (var sk = 0; sk < kickRanks4.length; sk++) {
+        if (byRank[kickRanks4[sk]].length === 1) singlesPool4 = singlesPool4.concat(byRank[kickRanks4[sk]]);
+      }
+      if (singlesPool4.length >= 2) {
+        singlesPool4.sort(function (x, y) {
+          var dv = rankValue(x.rank) - rankValue(y.rank);
+          return dv !== 0 ? dv : x.suit.localeCompare(y.suit);
+        });
+        push(quadBody.concat(singlesPool4.slice(0, 2)));
+      }
+      var pairs4 = [];
+      for (var pk4 = 0; pk4 < kickRanks4.length; pk4++) {
+        if (byRank[kickRanks4[pk4]].length >= 2) pairs4.push(takeN(byRank[kickRanks4[pk4]], 2));
+      }
+      if (pairs4.length >= 2) {
+        pairs4.sort(function (x, y) { return rankValue(x[0].rank) - rankValue(y[0].rank); });
+        push(quadBody.concat(pairs4[0]).concat(pairs4[1]));
+      }
     }
     var sj = null, bj = null;
     for (var j = 0; j < hand.length; j++) {
@@ -308,7 +355,7 @@ console.log('[斗地主] core loaded');
       phase: 'auction', seed: seed, hands: d.hands, bottom: d.bottom,
       landlord: null, bidScore: 0, bidWinner: null, turn: start,
       trickLeader: null, lastCombo: null, passCount: 0,
-      auctionStart: start, auctionActions: 0, winner: null, winningSide: null
+      auctionStart: start, auctionActions: 0, multiplier: 1, winner: null, winningSide: null
     };
   }
   function finishAuction(state, landlord) {
@@ -408,8 +455,9 @@ console.log('[斗地主] core loaded');
     scene: 'assets/felt/scene_bg.png',
     feltTile: 'assets/felt/felt_tile.png',
     centerVelvet: 'assets/felt/center_velvet.png',
-    cardBack: 'assets/cards/card_back.png',
-    cardBackSm: 'assets/cards/card_back_sm.png',
+    // card_back.png remains in the package for legacy compatibility checks.
+    cardBack: 'assets/cards/card_back.gif',
+    cardBackSm: 'assets/cards/card_back.gif',
     cardFace: 'assets/cards/card_face.png',
     cardFaceSm: 'assets/cards/card_face_sm.png',
     paper: 'assets/cards/paper_texture.png',
@@ -445,6 +493,41 @@ console.log('[斗地主] core loaded');
   };
   var textureUrls = {};
   var texturesReady = false;
+  var LEGACY_CARD_BACK_ASSET = 'assets/cards/card_back.png';
+
+  var FLAME_CHASER_CARD_LOCALES = ['zh-CN', 'en-US', 'ja-JP'];
+  var FLAME_CHASER_RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+  var FLAME_CHASER_SUITS = ['S', 'H', 'D', 'C'];
+
+  function normalizeCardLocale(locale) {
+    var lang = String(locale || '').toLowerCase();
+    if (lang.indexOf('ja') === 0) return 'ja-JP';
+    if (lang.indexOf('en') === 0) return 'en-US';
+    return 'zh-CN';
+  }
+
+  function currentCardLocale() {
+    try {
+      if (typeof Tapp !== 'undefined' && Tapp.i18n && typeof Tapp.i18n.getLocale === 'function') {
+        return normalizeCardLocale(Tapp.i18n.getLocale());
+      }
+    } catch (e) {}
+    if (typeof navigator !== 'undefined') return normalizeCardLocale(navigator.language);
+    return 'zh-CN';
+  }
+
+  function flameChaserTextureKey(locale, rank, suit) {
+    return 'flameChaserAtlas_' + locale;
+  }
+
+  function flameChaserAssetPath(locale) {
+    return 'assets/cards/flame-chasers/' + locale + '-atlas.png';
+  }
+
+  for (var fcl = 0; fcl < FLAME_CHASER_CARD_LOCALES.length; fcl++) {
+    var fcLocale = FLAME_CHASER_CARD_LOCALES[fcl];
+    TEXTURE_MAP[flameChaserTextureKey(fcLocale)] = flameChaserAssetPath(fcLocale);
+  }
 
   function cssUrl(pathOrUrl) {
     if (!pathOrUrl) return 'none';
@@ -494,7 +577,10 @@ console.log('[斗地主] core loaded');
     coin: '--ddz-tex-coin',
     endRibbon: '--ddz-tex-end-ribbon',
     crown: '--ddz-tex-crown',
-    readyCheck: '--ddz-tex-ready'
+    readyCheck: '--ddz-tex-ready',
+    'flameChaserAtlas_zh-CN': '--ddz-tex-flame-chasers-zh',
+    'flameChaserAtlas_en-US': '--ddz-tex-flame-chasers-en',
+    'flameChaserAtlas_ja-JP': '--ddz-tex-flame-chasers-ja'
   };
 
   /**
@@ -565,7 +651,8 @@ console.log('[斗地主] core loaded');
   var COMBO_LABELS = {
     single: '单张', pair: '对子', triple: '三张', triple_one: '三带一', triple_two: '三带二',
     straight: '顺子', pair_seq: '连对', airplane: '飞机', airplane_singles: '飞机带单',
-    airplane_pairs: '飞机带对', bomb: '炸弹', rocket: '王炸'
+    airplane_pairs: '飞机带对', four_two_singles: '四带二',
+    four_two_pairs: '四带两对', bomb: '炸弹', rocket: '王炸'
   };
 
   function comboTypeLabel(typeOrCombo) {
@@ -577,6 +664,21 @@ console.log('[斗地主] core loaded');
   function cardLabel(card) {
     if (card.rank === 'SJ' || card.rank === 'BJ') return RANK_LABEL[card.rank];
     return SUIT_LABEL[card.suit] + RANK_LABEL[card.rank];
+  }
+  function flameChaserCardFaceUrl(card) {
+    if (!card || isJoker(card)) return '';
+    var locale = currentCardLocale();
+    var key = flameChaserTextureKey(locale);
+    return textureUrls[key] || TEXTURE_MAP[key] || '';
+  }
+  function applyFlameChaserCardFace(el, card, url) {
+    var rankIndex = FLAME_CHASER_RANKS.indexOf(card.rank);
+    var suitIndex = FLAME_CHASER_SUITS.indexOf(card.suit);
+    if (rankIndex < 0 || suitIndex < 0) return false;
+    el.style.backgroundImage = cssUrl(url);
+    el.style.backgroundSize = '400% 1300%';
+    el.style.backgroundPosition = (suitIndex * 100 / 3) + '% ' + (rankIndex * 100 / 12) + '%';
+    return true;
   }
   function isRed(card) {
     return card.suit === 'H' || card.suit === 'D' || card.rank === 'BJ';
@@ -613,6 +715,8 @@ console.log('[斗地主] core loaded');
         cls = 'ddz-card back' + (opts.mini ? ' mini' : '');
       } else if (isJoker(card)) {
         cls += ' joker';
+      } else if (flameChaserCardFaceUrl(card)) {
+        cls += ' flame-chaser';
       } else if (isRed(card)) {
         cls += ' red';
       } else {
@@ -622,15 +726,22 @@ console.log('[斗地主] core loaded');
       if (opts.selectedIds && opts.selectedIds[card.id]) cls += ' selected';
       if (isJoker(card) && card.rank === 'SJ') cls += ' is-sj';
       el.className = cls;
+      el.style.setProperty('--ddz-card-layer', String(idx + 1));
       el.title = opts.backs ? '牌背' : cardLabel(card);
       if (opts.backs) {
         el.setAttribute('aria-label', '牌背');
       } else {
-        var rankEl = document.createElement('span');
-        rankEl.className = 'ddz-card-rank';
-        rankEl.textContent = RANK_LABEL[card.rank] || card.rank;
-        el.appendChild(rankEl);
-        if (!isJoker(card)) {
+        var cardFaceUrl = flameChaserCardFaceUrl(card);
+        if (cardFaceUrl) {
+          applyFlameChaserCardFace(el, card, cardFaceUrl);
+          el.setAttribute('aria-label', cardLabel(card));
+        } else {
+          var rankEl = document.createElement('span');
+          rankEl.className = 'ddz-card-rank';
+          rankEl.textContent = RANK_LABEL[card.rank] || card.rank;
+          el.appendChild(rankEl);
+        }
+        if (!isJoker(card) && !cardFaceUrl) {
           var suitEl = document.createElement('span');
           suitEl.className = 'ddz-card-suit is-' + (card.suit || 'S');
           suitEl.setAttribute('aria-hidden', 'true');
@@ -667,10 +778,23 @@ console.log('[斗地主] core loaded');
   var unsubMessage = null;
   var isHost = false;
   var botTimers = [];
+  var turnTimer = null;
+  var turnDeadlineAt = 0;
+  var turnStamp = '';
+  var isAutoActing = false;
+  var aiOpponentEnabled = false;
+  var sessionScores = [0, 0, 0];
 
   function clearBots() {
     botTimers.forEach(function (t) { clearTimeout(t); });
     botTimers = [];
+  }
+
+  function clearTurnTimer() {
+    if (turnTimer) clearInterval(turnTimer);
+    turnTimer = null;
+    turnDeadlineAt = 0;
+    turnStamp = '';
   }
 
   function status(msg) { setText($('ddz-status'), msg); }
@@ -713,6 +837,35 @@ console.log('[斗地主] core loaded');
   function roleLabel(seat) {
     if (!game || game.landlord === null) return '';
     return seat === game.landlord ? '地主' : '农民';
+  }
+
+  function calculateSettlement(state) {
+    var base = Math.max(1, Number(state.bidScore || 1));
+    var multiplier = Math.max(1, Number(state.multiplier || 1));
+    var stake = base * multiplier;
+    var deltas = [0, 0, 0];
+    var landlord = state.landlord == null ? state.winner : state.landlord;
+    if (state.winningSide === 'landlord') {
+      deltas[landlord] = stake * 2;
+      for (var i = 0; i < N; i++) if (i !== landlord) deltas[i] = -stake;
+    } else {
+      deltas[landlord] = -stake * 2;
+      for (var j = 0; j < N; j++) if (j !== landlord) deltas[j] = stake;
+    }
+    return {
+      base: base,
+      multiplier: multiplier,
+      stake: stake,
+      deltas: deltas
+    };
+  }
+
+  function ensureSettlement() {
+    if (!game || game.phase !== 'finished') return null;
+    if (game.settlement) return game.settlement;
+    game.settlement = calculateSettlement(game);
+    for (var i = 0; i < N; i++) sessionScores[i] += game.settlement.deltas[i];
+    return game.settlement;
   }
 
   function updateLobbyUI() {
@@ -803,7 +956,9 @@ console.log('[斗地主] core loaded');
     }
     setText(labelEl, action.label || '');
     if (cardsEl) {
-      if (action.cards && action.cards.length) {
+      if ((view === 'left' || view === 'right') && action.kind === 'play') {
+        cardsEl.textContent = '';
+      } else if (action.cards && action.cards.length) {
         renderCards(cardsEl, action.cards, { mini: true });
       } else {
         cardsEl.textContent = '';
@@ -824,6 +979,7 @@ console.log('[斗地主] core loaded');
 
   function updateTableUI() {
     if (!game) return;
+    sanitizePrivateHands();
     show($('ddz-lobby'), false);
     show($('ddz-table'), true);
     setText($('ddz-phase'), phaseLabel(game.phase));
@@ -871,9 +1027,13 @@ console.log('[斗地主] core loaded');
     show($('ddz-bid-chip'), inAuction || game.bidScore > 0);
     setText($('ddz-bid-score'), game.bidScore);
     setText($('ddz-bid-chip'), '叫分 ' + (game.bidScore || 0));
+    setText($('ddz-stat-turn'), game.phase === 'finished' ? '已结束' : shortName(actorAtSeat(game.turn)));
+    setText($('ddz-stat-landlord'), game.landlord === null ? '未确定' : shortName(actorAtSeat(game.landlord)));
+    setText($('ddz-stat-hand'), game.hands[me].length);
 
     // Bottom cards: hidden (backs) during auction until landlord is set
     var showBottomFaces = game.landlord !== null || game.phase === 'playing' || game.phase === 'finished';
+    setText($('ddz-stat-bottom'), showBottomFaces ? '已公开' : '未公开');
     var bottomCards = showBottomFaces
       ? game.bottom
       : game.bottom.map(function (_, i) { return { id: 'bottom-back-' + i, suit: 'S', rank: '3' }; });
@@ -959,6 +1119,7 @@ console.log('[斗地主] core loaded');
         ? (game.lastCombo ? ('请压牌或过牌 · ' + comboTypeLabel(game.lastCombo)) : '请出牌（首家）')
         : ('等待 ' + shortName(actorAtSeat(game.turn)) + ' 出牌');
     } else if (game.phase === 'finished') {
+      var settlement = ensureSettlement();
       var wname = shortName(actorAtSeat(game.winner));
       var side = game.winningSide === 'landlord' ? '地主胜' : '农民胜';
       turnText = side + ' · ' + wname + ' 出完';
@@ -970,13 +1131,29 @@ console.log('[斗地主] core loaded');
         var sub = document.createElement('span');
         sub.className = 'ddz-end-side';
         sub.textContent = side + ' · 座位 ' + ((game.winner != null ? game.winner : 0) + 1)
-          + (game.bidScore ? ' · 叫分 ' + game.bidScore : '');
+          + (game.bidScore ? ' · 叫分 ' + game.bidScore : '')
+          + (settlement ? (' · 倍数 x' + settlement.multiplier) : '');
+        var score = document.createElement('span');
+        score.className = 'ddz-end-side';
+        score.textContent = settlement
+          ? ('本局 ' + settlement.deltas.map(function (delta, seat) {
+              return shortName(actorAtSeat(seat)) + ' ' + (delta >= 0 ? '+' : '') + delta;
+            }).join(' / '))
+          : '';
+        var total = document.createElement('span');
+        total.className = 'ddz-end-side';
+        total.textContent = '累计 ' + sessionScores.map(function (scoreValue, seat) {
+          return shortName(actorAtSeat(seat)) + ' ' + (scoreValue >= 0 ? '+' : '') + scoreValue;
+        }).join(' / ');
         summary.appendChild(main);
         summary.appendChild(sub);
+        if (score.textContent) summary.appendChild(score);
+        summary.appendChild(total);
       }
     }
     setText($('ddz-turn-hint'), turnText);
     setText($('ddz-room-label'), roomId ? (mode === 'solo' ? '单机' : ('房间 ' + roomId)) : '');
+    syncTurnTimer();
   }
 
   function showLobby() {
@@ -1150,6 +1327,7 @@ console.log('[斗地主] core loaded');
         passCount: 0,
         auctionStart: msg.auctionStart || 0,
         auctionActions: 0,
+        multiplier: 1,
         winner: null,
         winningSide: null
       };
@@ -1183,7 +1361,7 @@ console.log('[斗地主] core loaded');
         if (game.phase === 'playing') seatActions = [null, null, null];
       } else tableMsg(pr.error || '操作失败');
     } else if (msg.type === 'play') {
-      var pl = applyPlay(game, { kind: 'play', seat: msg.seat, cards: msg.cards });
+      var pl = applyTrustedRemotePlay(game, { kind: 'play', seat: msg.seat, cards: msg.cards }, mySeat());
       if (pl.ok) {
         game = pl.state;
         lastPlaySeat = msg.seat;
@@ -1232,56 +1410,476 @@ console.log('[斗地主] core loaded');
     setTimeout(function () { hostEmit(msg); }, 400);
   }
 
-  // ─── Simple bot for solo / fill ─────────────────────────────
+  // ─── Solo bot strategy ──────────────────────────────────────
   function isBot(seat) {
     if (mode !== 'solo') return false;
     return seat !== mySeat();
   }
 
+  function botComboOf(cards) {
+    return identifyCombo(cards) || { type: 'invalid', mainValue: 0, length: 0, cards: cards || [] };
+  }
+
+  function botIsPowerCombo(combo) {
+    return combo && (combo.type === 'bomb' || combo.type === 'rocket');
+  }
+
+  function botCountHandRanks(hand) {
+    var by = countByRank(hand);
+    var ranks = Object.keys(by).map(Number).sort(function (a, b) { return a - b; });
+    var stats = {
+      ranks: ranks,
+      bombs: 0,
+      triples: 0,
+      pairs: 0,
+      singles: 0,
+      highSingles: 0,
+      hasSmallJoker: false,
+      hasBigJoker: false,
+      rocket: false
+    };
+    for (var i = 0; i < ranks.length; i++) {
+      var group = by[ranks[i]];
+      if (group.length === 4) stats.bombs += 1;
+      if (group.length >= 3) stats.triples += 1;
+      if (group.length >= 2) stats.pairs += 1;
+      if (group.length === 1) stats.singles += 1;
+      if (ranks[i] >= 14 && group.length === 1) stats.highSingles += 1;
+    }
+    for (var j = 0; j < hand.length; j++) {
+      if (hand[j].rank === 'SJ') stats.hasSmallJoker = true;
+      if (hand[j].rank === 'BJ') stats.hasBigJoker = true;
+    }
+    stats.rocket = stats.hasSmallJoker && stats.hasBigJoker;
+    return stats;
+  }
+
+  function botHandStrength(hand) {
+    var stats = botCountHandRanks(hand);
+    var score = 0;
+    score += stats.bombs * 18;
+    score += stats.rocket ? 26 : 0;
+    score += stats.triples * 5;
+    score += stats.pairs * 2.2;
+    score -= Math.max(0, stats.singles - 4) * 2.5;
+    for (var i = 0; i < hand.length; i++) {
+      var v = rankValue(hand[i].rank);
+      if (v >= 17) score += 10;
+      else if (v === 16) score += 8;
+      else if (v === 15) score += 5;
+      else if (v === 14) score += 3;
+      else if (v >= 12) score += 1;
+    }
+    return score;
+  }
+
   function botPickBid(state, seat) {
-    if (state.bidScore === 0 && Math.random() < 0.55) return { kind: 'bid', score: 1 };
-    if (state.bidScore === 1 && Math.random() < 0.25) return { kind: 'bid', score: 2 };
-    if (state.bidScore < 3 && Math.random() < 0.08) return { kind: 'bid', score: state.bidScore + 1 };
+    var score = botHandStrength(state.hands[seat]);
+    var wanted = 0;
+    if (score >= 68) wanted = 3;
+    else if (score >= 52) wanted = 2;
+    else if (score >= 38) wanted = 1;
+    if (wanted === 0 && state.bidWinner === null && state.auctionActions >= N - 1) wanted = 1;
+    if (wanted > state.bidScore) return { kind: 'bid', score: wanted };
     return { kind: 'pass' };
   }
 
-  function botPickPlay(state, seat) {
+  function botIsTeammate(seat, other, landlord) {
+    return landlord !== null && seat !== landlord && other !== landlord;
+  }
+
+  function farmerPartnerSeat(seat, landlord) {
+    if (landlord === null || seat === landlord) return null;
+    for (var i = 0; i < N; i++) {
+      if (i !== seat && i !== landlord) return i;
+    }
+    return null;
+  }
+
+  function botLowestOpponentCount(state, seat) {
+    var min = 99;
+    for (var i = 0; i < N; i++) {
+      if (i === seat) continue;
+      if (botIsTeammate(seat, i, state.landlord)) continue;
+      min = Math.min(min, state.hands[i].length);
+    }
+    return min === 99 ? 0 : min;
+  }
+
+  function botMoveScore(state, seat, play, isLead) {
+    var combo = botComboOf(play.cards);
+    var remaining = state.hands[seat].length - play.cards.length;
+    var score = 0;
+    if (remaining === 0) score += 10000;
+    if (isLead) {
+      var leadWeights = {
+        airplane_pairs: 180,
+        airplane_singles: 165,
+        airplane: 155,
+        straight: 135,
+        pair_seq: 128,
+        triple_two: 110,
+        triple_one: 95,
+        triple: 80,
+        four_two_pairs: 75,
+        four_two_singles: 68,
+        pair: 42,
+        single: 20,
+        bomb: 5,
+        rocket: 0
+      };
+      score += leadWeights[combo.type] || 0;
+      score += play.cards.length * 11;
+      score -= combo.mainValue * 0.55;
+      if (botIsPowerCombo(combo) && remaining > 0) score -= 220;
+      if (combo.type === 'single' && combo.mainValue >= 15 && remaining > 0) score -= 90;
+      if (combo.type === 'pair' && combo.mainValue >= 15 && remaining > 0) score -= 60;
+    } else {
+      score += 220 - combo.mainValue * 4;
+      score -= play.cards.length * 2;
+      if (botIsPowerCombo(combo)) score -= 260;
+      if (botLowestOpponentCount(state, seat) <= 2) score += 130;
+      if (remaining <= 2) score += 70;
+    }
+    return score;
+  }
+
+  function botCanFinish(hand, table) {
+    var whole = identifyCombo(hand);
+    if (whole && canBeat(whole, table)) return hand.slice();
+    var plays = enumerateLegalPlays(hand, table);
+    for (var i = 0; i < plays.length; i++) {
+      if (plays[i].length === hand.length) return plays[i];
+    }
+    return null;
+  }
+
+  function botPickBestLead(state, seat) {
     var hand = state.hands[seat];
-    if (!state.lastCombo) {
-      var sorted = sortHand(hand);
-      return { kind: 'play', cards: [sorted[0]] };
+    var finish = botCanFinish(hand, null);
+    if (finish) return finish;
+    var plays = enumerateLegalPlays(hand, null).map(function (cards) {
+      return { cards: cards, combo: botComboOf(cards) };
+    });
+    var filtered = plays.filter(function (p) {
+      return !botIsPowerCombo(p.combo) || p.cards.length === hand.length;
+    });
+    if (!filtered.length) filtered = plays;
+    filtered.sort(function (a, b) {
+      var sa = botMoveScore(state, seat, a, true);
+      var sb = botMoveScore(state, seat, b, true);
+      if (sa !== sb) return sb - sa;
+      return playKey(a.cards).localeCompare(playKey(b.cards));
+    });
+    return filtered.length ? filtered[0].cards : null;
+  }
+
+  function botPickBestResponse(state, seat) {
+    var hand = state.hands[seat];
+    var finish = botCanFinish(hand, state.lastCombo);
+    if (finish) return finish;
+    var plays = enumerateLegalPlays(hand, state.lastCombo).map(function (cards) {
+      return { cards: cards, combo: botComboOf(cards) };
+    });
+    if (!plays.length) return null;
+    var lastSeat = lastPlaySeat;
+    if (lastSeat !== null && botIsTeammate(seat, lastSeat, state.landlord) && botLowestOpponentCount(state, seat) > 2) {
+      return null;
     }
-    if (state.lastCombo.type === 'single') {
-      var sorted2 = sortHand(hand);
-      for (var i = 0; i < sorted2.length; i++) {
-        var combo = identifyCombo([sorted2[i]]);
-        if (combo && canBeat(combo, state.lastCombo))
-          return { kind: 'play', cards: [sorted2[i]] };
+    var pressure = botLowestOpponentCount(state, seat) <= 2;
+    var nonPower = plays.filter(function (p) { return !botIsPowerCombo(p.combo); });
+    var pool = (nonPower.length && !pressure) ? nonPower : plays;
+    pool.sort(function (a, b) {
+      var sa = botMoveScore(state, seat, a, false);
+      var sb = botMoveScore(state, seat, b, false);
+      if (sa !== sb) return sb - sa;
+      return playKey(a.cards).localeCompare(playKey(b.cards));
+    });
+    return pool[0].cards;
+  }
+
+  function botPickPlay(state, seat) {
+    var cards = state.lastCombo ? botPickBestResponse(state, seat) : botPickBestLead(state, seat);
+    return cards && cards.length ? { kind: 'play', cards: cards } : { kind: 'pass' };
+  }
+
+  function isTruthySetting(value) {
+    return value === true || value === 'true' || value === 1 || value === '1';
+  }
+
+  async function loadAiSettings() {
+    aiOpponentEnabled = false;
+    try {
+      if (typeof Tapp === 'undefined' || !Tapp.settings || typeof Tapp.settings.get !== 'function') return;
+      aiOpponentEnabled = isTruthySetting(await Tapp.settings.get('aiOpponentEnabled'));
+    } catch (e) {
+      aiOpponentEnabled = false;
+    }
+  }
+
+  function tappAiAvailable() {
+    return typeof Tapp !== 'undefined'
+      && Tapp.ai
+      && Tapp.ai.tasks
+      && typeof Tapp.ai.tasks.create === 'function';
+  }
+
+  function setAiOpponentStatus(text) {
+    if (mode !== 'solo' || !aiOpponentEnabled) return;
+    status(text || '单机练习 · AI 对手');
+  }
+
+  function cardSummary(card) {
+    return {
+      id: card.id,
+      rank: card.rank,
+      suit: card.suit,
+      value: rankValue(card.rank),
+      label: cardLabel(card)
+    };
+  }
+
+  function comboSummary(cards) {
+    var combo = identifyCombo(cards);
+    if (!combo) return { type: 'invalid', label: '非法', count: cards ? cards.length : 0, mainValue: 0 };
+    return {
+      type: combo.type,
+      label: comboTypeLabel(combo),
+      count: cards.length,
+      mainValue: combo.mainValue,
+      length: combo.length
+    };
+  }
+
+  function aiDecisionStamp(state, seat) {
+    var last = state.lastCombo && state.lastCombo.cards ? playKey(state.lastCombo.cards) : 'lead';
+    return [
+      state.seed || 'seed',
+      state.phase,
+      seat,
+      state.turn,
+      state.auctionActions,
+      state.bidScore,
+      state.passCount,
+      state.hands[seat].map(function (c) { return c.id; }).join(',')
+    ].join('-') + '-' + last;
+  }
+
+  function candidateActionLabel(candidate) {
+    if (candidate.action.kind === 'pass') return '过牌';
+    if (candidate.action.kind === 'bid') return '叫 ' + candidate.action.score + ' 分';
+    if (candidate.action.kind === 'bid_pass') return '不叫';
+    var summary = comboSummary(candidate.action.cards || []);
+    return summary.label + ' · ' + (candidate.action.cards || []).map(cardLabel).join(' ');
+  }
+
+  function buildBidCandidates(state) {
+    var actions = [{ kind: 'bid_pass' }];
+    for (var score = state.bidScore + 1; score <= 3; score++) {
+      actions.push({ kind: 'bid', score: score });
+    }
+    return actions.map(function (action, index) {
+      return { index: index, action: action, label: action.kind === 'bid' ? ('叫 ' + action.score + ' 分') : '不叫' };
+    });
+  }
+
+  function buildPlayCandidates(state, seat) {
+    var isLead = !state.lastCombo;
+    var actions = [];
+    var plays = enumerateLegalPlays(state.hands[seat], state.lastCombo).map(function (cards) {
+      return { action: { kind: 'play', cards: cards }, score: botMoveScore(state, seat, { cards: cards }, isLead) };
+    });
+    plays.sort(function (a, b) {
+      if (a.score !== b.score) return b.score - a.score;
+      return playKey(a.action.cards).localeCompare(playKey(b.action.cards));
+    });
+    if (!isLead) actions.push({ action: { kind: 'pass' }, score: 0 });
+    actions = actions.concat(plays.slice(0, 36));
+    return actions.map(function (item, index) {
+      return {
+        index: index,
+        action: item.action,
+        label: item.action.kind === 'pass' ? '过牌' : candidateActionLabel(item),
+        combo: item.action.kind === 'play' ? comboSummary(item.action.cards) : null,
+        score: item.score
+      };
+    });
+  }
+
+  function buildAiPrompt(state, seat, candidates) {
+    var landlord = state.landlord;
+    var isLandlord = landlord === seat;
+    var partner = farmerPartnerSeat(seat, landlord);
+    var bottomKnown = state.phase !== 'auction' && landlord !== null;
+    var payload = {
+      task: '你是斗地主机器人。只从 candidates 里选择一个 index，返回 JSON，不要 Markdown。',
+      rules: [
+        '只能选择候选动作，不能创造新牌。',
+        '如果能直接出完牌，优先出完。',
+        '农民要合作；通常不要压队友的牌，除非能马上获胜或阻止地主。',
+        '炸弹和王炸是强资源，不到关键压力不要浪费。',
+        '返回格式必须是 {"index":数字,"reason":"一句话理由"}。'
+      ],
+      phase: state.phase,
+      seat: seat,
+      role: isLandlord ? 'landlord' : 'farmer',
+      landlord: landlord,
+      farmerPartner: partner,
+      bidScore: state.bidScore,
+      bidWinner: state.bidWinner,
+      auctionActions: state.auctionActions,
+      passCount: state.passCount,
+      hand: state.hands[seat].map(cardSummary),
+      handCounts: state.hands.map(function (h) { return h.length; }),
+      bottomKnown: bottomKnown,
+      bottom: bottomKnown ? state.bottom.map(cardSummary) : [],
+      bottomCount: state.bottom.length,
+      multiplier: state.multiplier || 1,
+      lastPlaySeat: lastPlaySeat,
+      lastCombo: state.lastCombo ? {
+        type: state.lastCombo.type,
+        label: comboTypeLabel(state.lastCombo),
+        mainValue: state.lastCombo.mainValue,
+        length: state.lastCombo.length,
+        cards: (state.lastCombo.cards || []).map(cardSummary)
+      } : null,
+      candidates: candidates.map(function (c) {
+        return {
+          index: c.index,
+          label: c.label,
+          action: c.action.kind,
+          score: c.action.score,
+          combo: c.combo,
+          cards: c.action.cards ? c.action.cards.map(cardSummary) : []
+        };
+      })
+    };
+    return JSON.stringify(payload);
+  }
+
+  function withTimeout(promise, ms) {
+    return new Promise(function (resolve, reject) {
+      var done = false;
+      var timer = setTimeout(function () {
+        if (done) return;
+        done = true;
+        reject(new Error('AI decision timeout'));
+      }, ms);
+      promise.then(function (value) {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        resolve(value);
+      }, function (err) {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        reject(err);
+      });
+    });
+  }
+
+  function sleep(ms) {
+    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+  }
+
+  function extractAiPayload(value) {
+    if (!value) return null;
+    if (typeof value === 'string') {
+      try { return JSON.parse(value); } catch (e) {
+        var m = value.match(/\{[\s\S]*\}/);
+        if (!m) return null;
+        try { return JSON.parse(m[0]); } catch (e2) { return null; }
       }
     }
-    if (state.lastCombo.type === 'pair') {
-      var by = countByRank(hand);
-      var ranks = Object.keys(by).map(Number).sort(function (a, b) { return a - b; });
-      for (var j = 0; j < ranks.length; j++) {
-        if (by[ranks[j]].length >= 2) {
-          var pair = by[ranks[j]].slice(0, 2);
-          var c2 = identifyCombo(pair);
-          if (c2 && canBeat(c2, state.lastCombo)) return { kind: 'play', cards: pair };
+    if (typeof value === 'object') {
+      if (typeof value.index === 'number') return value;
+      if (value.value !== undefined) return extractAiPayload(value.value);
+      if (value.result !== undefined) return extractAiPayload(value.result);
+      if (value.output !== undefined) return extractAiPayload(value.output);
+      if (value.text !== undefined) return extractAiPayload(value.text);
+      if (value.message !== undefined) return extractAiPayload(value.message);
+    }
+    return null;
+  }
+
+  async function waitAiTask(task, timeoutMs) {
+    if (!task) return null;
+    var direct = extractAiPayload(task);
+    if (direct) return direct;
+    if (!task.taskId || typeof Tapp.ai.tasks.get !== 'function') return null;
+    var started = Date.now();
+    while (Date.now() - started < timeoutMs) {
+      await sleep(350);
+      var latest = await Tapp.ai.tasks.get(task.taskId);
+      var payload = extractAiPayload(latest);
+      if (payload) return payload;
+      if (latest && (latest.status === 'failed' || latest.status === 'cancelled' || latest.status === 'canceled')) return null;
+    }
+    return null;
+  }
+
+  async function cancelAiTask(task) {
+    if (!task || !task.taskId || !tappAiAvailable() || typeof Tapp.ai.tasks.cancel !== 'function') return;
+    try { await Tapp.ai.tasks.cancel(task.taskId); } catch (e) { /* terminal or unavailable */ }
+  }
+
+  async function requestAiDecision(state, seat, candidates) {
+    if (!aiOpponentEnabled || !tappAiAvailable() || !candidates.length) return null;
+    var task = null;
+    try {
+      setAiOpponentStatus('单机练习 · AI 思考中');
+      task = await withTimeout(Tapp.ai.tasks.create({
+        version: 2,
+        operation: 'chat',
+        input: { message: buildAiPrompt(state, seat, candidates) },
+        output: {
+          format: 'json',
+          schema: {
+            type: 'object',
+            properties: {
+              index: { type: 'number' },
+              reason: { type: 'string' }
+            },
+            required: ['index'],
+            additionalProperties: false
+          }
+        },
+        delivery: 'result',
+        idempotencyKey: 'doudizhu-ai-' + aiDecisionStamp(state, seat)
+      }), 6500);
+      var result = await withTimeout(waitAiTask(task, 6500), 7000);
+      if (!result || typeof result.index !== 'number') {
+        await cancelAiTask(task);
+        setAiOpponentStatus('单机练习 · AI 回退本地策略');
+        return null;
+      }
+      var index = Math.floor(result.index);
+      for (var i = 0; i < candidates.length; i++) {
+        if (candidates[i].index === index) {
+          setAiOpponentStatus('单机练习 · AI 对手');
+          return candidates[i].action;
         }
       }
+      setAiOpponentStatus('单机练习 · AI 回退本地策略');
+    } catch (e) {
+      await cancelAiTask(task);
+      setAiOpponentStatus('单机练习 · AI 回退本地策略');
+      console.warn('[斗地主] AI opponent fallback', e);
     }
-    if (hand.length <= 6) {
-      var by2 = countByRank(hand);
-      var rs = Object.keys(by2).map(Number);
-      for (var k = 0; k < rs.length; k++) {
-        if (by2[rs[k]].length === 4) {
-          var bomb = by2[rs[k]];
-          var cb = identifyCombo(bomb);
-          if (cb && canBeat(cb, state.lastCombo)) return { kind: 'play', cards: bomb };
-        }
-      }
-    }
-    return { kind: 'pass' };
+    return null;
+  }
+
+  async function botPickBidWithAi(state, seat) {
+    var fallback = botPickBid(state, seat);
+    var ai = await requestAiDecision(state, seat, buildBidCandidates(state));
+    return ai || fallback;
+  }
+
+  async function botPickPlayWithAi(state, seat) {
+    var fallback = botPickPlay(state, seat);
+    var ai = await requestAiDecision(state, seat, buildPlayCandidates(state, seat));
+    return ai || fallback;
   }
 
   function scheduleBots() {
@@ -1291,10 +1889,11 @@ console.log('[斗地主] core loaded');
     var seat = game.turn;
     if (!isBot(seat)) return;
     var botActor = actorAtSeat(seat);
-    var t = setTimeout(function () {
+    var t = setTimeout(async function () {
       if (!game || game.turn !== seat) return;
       if (game.phase === 'auction') {
-        var b = botPickBid(game, seat);
+        var b = await botPickBidWithAi(game, seat);
+        if (!game || game.turn !== seat || game.phase !== 'auction') return;
         if (b.kind === 'bid') {
           hostHandleIntent({
             type: 'intent', actorId: botActor, clientNonce: makeNonce(),
@@ -1307,7 +1906,8 @@ console.log('[斗地主] core loaded');
           });
         }
       } else if (game.phase === 'playing') {
-        var p = botPickPlay(game, seat);
+        var p = await botPickPlayWithAi(game, seat);
+        if (!game || game.turn !== seat || game.phase !== 'playing') return;
         if (p.kind === 'play') {
           hostHandleIntent({
             type: 'intent', actorId: botActor, clientNonce: makeNonce(),
@@ -1539,33 +2139,34 @@ console.log('[斗地主] core loaded');
     });
   }
 
-  function startSolo() {
+  async function startSolo() {
     clearBots();
-    ensureIdentity().then(function () {
-      mode = 'solo';
-      isHost = true;
-      hostActor = myActorId;
-      roomId = 'solo-local';
-      seats = {};
-      seats[myActorId] = 0;
-      seats['bot:west'] = 1;
-      seats['bot:east'] = 2;
-      readyMap = {};
-      readyMap[myActorId] = true;
-      readyMap['bot:west'] = true;
-      readyMap['bot:east'] = true;
-      seq = 0;
-      lastSeq = 0;
-      seenNonces = {};
-      lobbyMsg('单机练习：你 vs 两位本地对手');
-      status('单机练习');
-      updateLobbyUI();
-      startMatch();
-    });
+    await ensureIdentity();
+    await loadAiSettings();
+    mode = 'solo';
+    isHost = true;
+    hostActor = myActorId;
+    roomId = 'solo-local';
+    seats = {};
+    seats[myActorId] = 0;
+    seats['bot:west'] = 1;
+    seats['bot:east'] = 2;
+    readyMap = {};
+    readyMap[myActorId] = true;
+    readyMap['bot:west'] = true;
+    readyMap['bot:east'] = true;
+    seq = 0;
+    lastSeq = 0;
+    seenNonces = {};
+    lobbyMsg(aiOpponentEnabled ? '单机练习：你 vs 两位 Myriad AI 对手' : '单机练习：你 vs 两位本地对手');
+    status(aiOpponentEnabled ? '单机练习 · AI 对手' : '单机练习');
+    updateLobbyUI();
+    startMatch();
   }
 
   async function leaveRoom() {
     clearBots();
+    clearTurnTimer();
     if (roomId && mode === 'multi' && Tapp.federation && Tapp.federation.leaveRoom) {
       try { await Tapp.federation.leaveRoom(roomId); } catch (e) {}
       try {
@@ -1581,6 +2182,197 @@ console.log('[斗地主] core loaded');
     showLobby();
     status('已离开');
     lobbyMsg('');
+  }
+
+  function handCountStamp() {
+    if (!game || !game.hands) return '';
+    return game.hands.map(function (h) { return h.length; }).join(',');
+  }
+
+  function makeHiddenCards(count, seat) {
+    var cards = [];
+    for (var i = 0; i < count; i++) {
+      cards.push({ id: 'hidden-' + seat + '-' + i, suit: 'J', rank: 'SJ', hidden: true });
+    }
+    return cards;
+  }
+
+  function hasHiddenCards(hand) {
+    return !!(hand && hand.some(function (c) { return c && c.hidden === true; }));
+  }
+
+  function sanitizePrivateHands() {
+    if (!game || mode !== 'multi' || isHost) return;
+    var mine = mySeat();
+    for (var seat = 0; seat < N; seat++) {
+      if (seat === mine) continue;
+      game.hands[seat] = makeHiddenCards(game.hands[seat].length, seat);
+    }
+  }
+
+  function applyTrustedRemotePlay(state, action, viewerSeat) {
+    if (action.seat === viewerSeat || !hasHiddenCards(state.hands[action.seat])) {
+      return applyPlay(state, action);
+    }
+    if (state.phase !== 'playing') return { ok: false, error: 'Not playing', state: state };
+    if (action.seat !== state.turn) return { ok: false, error: 'Not your turn', state: state };
+    var combo = identifyCombo(action.cards);
+    if (!combo) return { ok: false, error: 'Illegal combination', state: state };
+    if (!canBeat(combo, state.lastCombo)) return { ok: false, error: 'Cannot beat', state: state };
+    var next = JSON.parse(JSON.stringify(state));
+    next.hands[action.seat] = next.hands[action.seat].slice(action.cards.length);
+    next.lastCombo = combo;
+    next.passCount = 0;
+    if (combo.type === 'bomb' || combo.type === 'rocket') next.multiplier = (next.multiplier || 1) * 2;
+    if (next.trickLeader === null) next.trickLeader = action.seat;
+    if (next.hands[action.seat].length === 0) {
+      next.phase = 'finished';
+      next.winner = action.seat;
+      next.winningSide = action.seat === next.landlord ? 'landlord' : 'farmers';
+      return { ok: true, state: next };
+    }
+    next.turn = (action.seat + 1) % N;
+    return { ok: true, state: next };
+  }
+
+  function currentTurnStamp() {
+    if (!game || game.phase === 'finished') return '';
+    var comboKey = game.lastCombo && game.lastCombo.cards ? playKey(game.lastCombo.cards) : 'lead';
+    return [
+      game.phase,
+      game.turn,
+      game.bidScore,
+      comboKey,
+      game.passCount,
+      game.landlord,
+      handCountStamp()
+    ].join('|');
+  }
+
+  function updateTurnTimerUI() {
+    var el = $('ddz-turn-timer');
+    if (!el) return;
+    if (!game || game.phase === 'finished' || game.phase === 'lobby') {
+      show(el, false);
+      return;
+    }
+    show(el, true);
+    var remaining = Math.max(0, Math.ceil((turnDeadlineAt - Date.now()) / 1000));
+    setText(el, remaining + 's');
+    el.classList.toggle('is-warning', remaining <= 10);
+    el.classList.toggle('is-critical', remaining <= 5);
+  }
+
+  async function autoActCurrentTurn(stamp) {
+    if (isAutoActing || !game || currentTurnStamp() !== stamp) return;
+    if (!(mode === 'solo' || isHost)) return;
+    if (game.phase !== 'auction' && game.phase !== 'playing') return;
+    isAutoActing = true;
+    try {
+      var seat = game.turn;
+      var actor = actorAtSeat(seat);
+      var action = null;
+      if (game.phase === 'auction') {
+        action = { kind: 'bid_pass' };
+      } else if (game.phase === 'playing') {
+        if (game.lastCombo) {
+          action = { kind: 'pass' };
+        } else {
+          var pick = nextHintPlay(game.hands[seat], null, null);
+          action = pick ? { kind: 'play', cards: pick.cards } : null;
+        }
+      }
+      if (!action) return;
+      await hostHandleIntent({
+        type: 'intent',
+        actorId: actor,
+        clientNonce: 'timeout-' + stamp + '-' + Date.now(),
+        action: action
+      });
+    } finally {
+      isAutoActing = false;
+    }
+  }
+
+  function syncTurnTimer() {
+    if (!game || game.phase === 'finished' || game.phase === 'lobby') {
+      clearTurnTimer();
+      updateTurnTimerUI();
+      return;
+    }
+    var stamp = currentTurnStamp();
+    if (stamp && stamp !== turnStamp) {
+      turnStamp = stamp;
+      turnDeadlineAt = Date.now() + TURN_SECONDS * 1000;
+    }
+    if (!turnTimer) {
+      turnTimer = setInterval(function () {
+        updateTurnTimerUI();
+        if (turnDeadlineAt > 0 && Date.now() >= turnDeadlineAt) {
+          turnDeadlineAt = 0;
+          autoActCurrentTurn(turnStamp);
+        }
+      }, 250);
+    }
+    updateTurnTimerUI();
+  }
+
+  function installStableHandHover() {
+    var hovered = null;
+
+    function setHovered(card) {
+      if (hovered === card) return;
+      if (hovered) hovered.classList.remove('is-hovered');
+      hovered = card;
+      if (hovered) hovered.classList.add('is-hovered');
+    }
+
+    function isInsideStickyCard(card, x, y) {
+      if (!card) return false;
+      var rect = card.getBoundingClientRect();
+      return (
+        x >= rect.left &&
+        x <= rect.right &&
+        y >= rect.top &&
+        y <= rect.bottom + 92
+      );
+    }
+
+    function updateFromPointer(ev) {
+      var hand = $('ddz-hand');
+      if (!hand) {
+        setHovered(null);
+        return;
+      }
+      var handRect = hand.getBoundingClientRect();
+      var x = ev.clientX;
+      var y = ev.clientY;
+      if (
+        x < handRect.left ||
+        x > handRect.right ||
+        y < handRect.top - 84 ||
+        y > handRect.bottom + 8
+      ) {
+        setHovered(null);
+        return;
+      }
+
+      if (isInsideStickyCard(hovered, x, y)) return;
+
+      var stack = document.elementsFromPoint(x, y);
+      var match = null;
+      for (var i = 0; i < stack.length; i++) {
+        var card = stack[i].closest && stack[i].closest('.ddz-card');
+        if (card && hand.contains(card)) {
+          match = card;
+          break;
+        }
+      }
+      setHovered(match);
+    }
+
+    document.addEventListener('pointermove', updateFromPointer, { passive: true });
+    document.addEventListener('pointerleave', function () { setHovered(null); });
   }
 
   // ─── Controls ───────────────────────────────────────────────
@@ -1720,9 +2512,11 @@ console.log('[斗地主] core loaded');
     }
     showLobby();
   });
+  installStableHandHover();
 
   Tapp.lifecycle.onDestroy(function () {
     clearBots();
+    clearTurnTimer();
     if (roomId && mode === 'multi' && Tapp.federation && Tapp.federation.unsubscribeRoom) {
       try { Tapp.federation.unsubscribeRoom(roomId); } catch (e) {}
     }
@@ -1741,6 +2535,7 @@ console.log('[斗地主] core loaded');
 
   Tapp.lifecycle.onReady(async function () {
     await ensureIdentity();
+    await loadAiSettings();
     // Load commercial texture pack before first paint of table chrome
     try {
       await loadTextures();

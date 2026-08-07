@@ -15,6 +15,9 @@
 - `2x2`、`4x2`、`4x4` 三种 Widget
 - Page 与 Widget 通过 `Tapp.storage` 自动同步
 - 亮色、暗色主题、Myriad 原生 `.glass` 材质和响应式页面
+- 内置主题工作室，可选择预设、强调色、Glass 强度、圆角，并按主画布、焦点卡、工具栏、日子卡、编辑器和 Widget 分区启用 Glass
+- 可生成和导入 `CX1-` 主题码；主题码仅包含外观配置，不包含日期数据
+- Widget 可跟随共享主题或单独选择主题，并配置 Glass 范围、显示密度、字段显隐、置顶强调和列表数量
 
 ## 包结构
 
@@ -35,7 +38,7 @@ cn.echootaku.days/
 
 ## 数据与权限
 
-所有日期保存在当前用户的 `days.events.v1` storage key，自定义分类保存在 `days.categories.v1`；数据不会上传到外部服务。
+所有日期保存在当前用户的 `days.events.v1` storage key，自定义分类保存在 `days.categories.v1`，共享主题保存在 `days.theme.v1`；数据不会上传到外部服务。
 
 | 权限 | 用途 |
 | --- | --- |
@@ -59,6 +62,5 @@ node .\tapp-cli\bin\myriad-tapp.mjs pack .\apps\cn.echootaku.days --out .\apps\c
 ## 后续方向
 
 - 定时提醒与 scheduler
-- JSON 导入导出
+- 日期数据 JSON 导入导出
 - 农历和节假日
-- Widget 独立显示设置

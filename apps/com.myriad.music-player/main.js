@@ -650,6 +650,7 @@ var lyricFx = {
   viewW: 0,           // 容器宽度：0 宽时 offsetHeight 会按换行炸高，必须一并校验
   measured: false,
   measuredWithTrans: false, // 本次测量时 show-trans 是否开启（行高与翻译显隐绑定）
+  everMeasured: false, // 本次 DOM 重建后是否成功测过一次（未测过 = 全行叠在 top:0，先藏）
   targetS: 0,         // 虚拟滚动位置
   minS: 0,
   maxS: 0,
@@ -737,6 +738,41 @@ function resetLyricFxLayoutCache(opts) {
 var LYRIC_MIN_VIEW_W = 80;
 var LYRIC_MIN_VIEW_H = 40;
 
+var LYRIC_PREMEASURE_MAX_MS = 1200; // 远长于列宽过渡（约 0.46s）+ settle
+var lyricPremeasureTimer = null;
+
+/**
+ * 首测落地前把歌词整体藏起来。
+ * 歌词行是 position:absolute; top:0，纵向位置全靠引擎写 transform，而 y 要等
+ * measureLyricLayout 量完行高才有——测出来之前每一行的 y/pos 都是 0，**整首叠成一行**。
+ * 侧栏展开时这段尤其长：suspendLyricMeasure 把整个列宽过渡期间的测量全挡掉，
+ * 于是「首次打开歌词」必然先糊一坨再散开。
+ * 只由 buildLyricDom 在**当帧测不出布局时**挂上（测得出就根本不用藏，见那里的注释）。
+ */
+function setLyricPremeasure(on) {
+  var c = $('lyrics-container');
+  if (c) c.classList.toggle('lyrics-premeasure', !!on);
+  if (lyricPremeasureTimer) {
+    clearTimeout(lyricPremeasureTimer);
+    lyricPremeasureTimer = null;
+  }
+  if (!on) return;
+  // 安全阀：测量若因任何原因迟迟不落地（.content-area 上挂了别的动画让
+  // sideLayoutAnimating 一直为真、容器尺寸卡在阈值下……），宁可露出叠在一起的
+  // 歌词，也不能让整块歌词永久隐身——那是比「糊一坨」更难查的坏法。
+  // ⚠️ 计时不能从建 DOM 起算：歌词往往在面板还关着时就建好了，那样这一枪
+  // 早在用户点开之前就放空了。面板没展开就不算「卡住」，继续等
+  lyricPremeasureTimer = setTimeout(function tick() {
+    lyricPremeasureTimer = null;
+    var el = $('lyrics-container');
+    if (el && (el.clientWidth < LYRIC_MIN_VIEW_W || el.clientHeight < LYRIC_MIN_VIEW_H)) {
+      lyricPremeasureTimer = setTimeout(tick, LYRIC_PREMEASURE_MAX_MS);
+      return;
+    }
+    setLyricPremeasure(false);
+  }, LYRIC_PREMEASURE_MAX_MS);
+}
+
 /**
  * 测行高并建立 y 布局。
  * force=true 仅供「过渡真的结束了」的权威重测使用；其余调用在列宽过渡期间一律拒测，
@@ -769,6 +805,11 @@ function measureLyricLayout(force) {
   lyricFx.total = y;
   lyricFx.viewH = h;
   lyricFx.viewW = w;
+  // 首测落地：解除「重建后先藏起来」，此后 resize / 翻译开关的重测都不再遮
+  if (!lyricFx.everMeasured) {
+    lyricFx.everMeasured = true;
+    setLyricPremeasure(false);
+  }
   var first = lyricFx.items[0];
   var last = lyricFx.items[lyricFx.items.length - 1];
   var minS = first.y - h * LYRIC_FOCAL + first.h / 2;
@@ -1464,6 +1505,8 @@ function bindLyricManualScroll(container) {
 // duration 把本句提前踢入「停顿点」；空窗仍须 > INTERLUDE_MIN_GAP 才插呼吸点
 var MIN_LINE_HOLD = 2.2;
 var INTERLUDE_MIN_GAP = 6;
+// 前奏呼吸点的起点：不从 0 起，留一点让点「已经在那儿」而不是和播放同时出现
+var LYRIC_PRELUDE_START = 0.2;
 // 行时长比最后一个字更晚时，通常表示尾音延长；但部分脏 KRC
 // 会把整曲时长误填进单行 duration。无下一句/整曲边界时才用此兜底上限。
 var MAX_VERBATIM_TAIL = 12;
@@ -1541,17 +1584,19 @@ function getVerbatimTimelineEnd(v, lineStart, nextStart) {
 
 // 用于间奏 gap 插入：估算本句「唱完」时刻。卡拉 OK 尾音也共用同一校验结果。
 // 合并可信的字级 end / 行级 duration，无有效时长时才相对 nextStart 兜底。
-function computeLineEnd(i, lyrics, verbatim) {
+// nextStartOverride：末句没有下一句，尾奏判定拿曲末当右边界
+function computeLineEnd(i, lyrics, verbatim, nextStartOverride) {
   var line = lyrics[i];
   var next = lyrics[i + 1];
-  if (!line || !next) return null;
+  var hasOverride = typeof nextStartOverride === 'number' && isFinite(nextStartOverride);
+  if (!line || (!next && !hasOverride)) return null;
 
   var lineStart = (typeof line.time === 'number' && isFinite(line.time))
     ? line.time
     : 0;
-  var nextStart = (typeof next.time === 'number' && isFinite(next.time))
-    ? next.time
-    : NaN;
+  var nextStart = hasOverride
+    ? nextStartOverride
+    : ((typeof next.time === 'number' && isFinite(next.time)) ? next.time : NaN);
   if (!isFinite(nextStart)) return null;
 
   // 两句间隔本身短于 min-hold：永不插入间奏
@@ -1597,12 +1642,48 @@ function demoteActiveLyricLineForInterlude() {
   }
 }
 
+/** 间奏三点的四态。只由播放位置决定，所以 seek 回退能自然退回前一态 */
+var DOTS_STAGE_IDLE = 0;   // 未到：隐身占位
+var DOTS_STAGE_ON = 1;     // 间奏中
+var DOTS_STAGE_OUT = 2;    // 收尾中（鼓起→被重力吸走）
+var DOTS_STAGE_SPENT = 3;  // 已收尾：永久退出，不回常驻态
+
+function interludeStage(it, posSec, animate) {
+  if (posSec < it.start) return DOTS_STAGE_IDLE;
+  // end-0.4 之后一律 spent 且不设上界：旧实现只把收尾态留到 end+2.5，
+  // 过了这个窗口三点会弹回常驻暗态——看着就是「消失完又冒出来」
+  if (posSec >= it.end - 0.4) return DOTS_STAGE_SPENT;
+  if (animate && posSec >= it.end - 0.4 - LYRIC_DOTS_OUTRO) return DOTS_STAGE_OUT;
+  return DOTS_STAGE_ON;
+}
+
+/** 把三点当前呼吸相位的实测 scale 交给 dotOutro 的 0%，让收尾从原地起跑 */
+function captureDotScales(el) {
+  var ds = el.children;
+  for (var i = 0; i < ds.length; i++) {
+    var s = 1;
+    try {
+      var tr = getComputedStyle(ds[i]).transform;
+      var m = tr && tr !== 'none' ? tr.match(/matrix\(\s*([-\d.eE]+)/) : null;
+      if (m) s = parseFloat(m[1]);
+    } catch (e) {}
+    if (!isFinite(s) || s <= 0) s = 1;
+    ds[i].style.setProperty('--dot-s0', s.toFixed(3));
+  }
+}
+
+function clearDotsLit(el) {
+  var ds = el.children;
+  for (var i = 0; i < ds.length; i++) ds[i].classList.remove('on');
+}
+
 // 间奏呼吸点更新（由 eqTick 15fps 驱动）：进度点亮 + 焦点跟随
 function updateInterludeDots() {
   if (!lyricFx.measured) return;
   var dots = lyricFx.dotsItems;
   if (!dots || dots.length === 0) return; // 无间奏的歌零开销
   var posSec = getLyricPosition();
+  var animate = shouldAnimate();
   for (var d0 = 0; d0 < dots.length; d0++) {
     var it = dots[d0];
     // 防御：循环体内的 renderLyrics/demote 可能重建歌词结构，条目失效则跳过
@@ -1611,22 +1692,28 @@ function updateInterludeDots() {
       continue;
     }
     var k = it._k;
-    var inGap = posSec >= it.start && posSec < it.end - 0.4;
+    var stage = interludeStage(it, posSec, animate);
+    var inGap = stage === DOTS_STAGE_ON || stage === DOTS_STAGE_OUT;
+    var cl = it.el.classList;
 
-    // 收尾动效：间奏末尾三点先鼓一下，再被「重力」吸走塌陷消失。
-    // ⚠️ 不能在 inGap 转 false 时就摘掉 .finishing——塌陷才跑到一半，
-    // 点会当场弹回常驻态。一直留到明显离开本段（或 seek 回来）再撤。
-    var wantFin = shouldAnimate() &&
-      posSec >= it.start &&
-      posSec >= it.end - 0.4 - LYRIC_DOTS_OUTRO &&
-      posSec < it.end + 2.5;
-    if (wantFin !== !!it._fin) {
-      it._fin = wantFin;
-      it.el.classList.toggle('finishing', wantFin);
+    // 收尾动效：间奏末尾三点先鼓一下，再被「重力」吸走塌陷消失
+    var wantFin = stage === DOTS_STAGE_OUT;
+    if (wantFin !== cl.contains('finishing')) {
+      // 起跑前先抓住当前呼吸相位，dotOutro 才能从原地鼓起而不是先缩回 1
+      if (wantFin) captureDotScales(it.el);
+      cl.toggle('finishing', wantFin);
     }
 
-    if (inGap !== it.el.classList.contains('active')) {
-      it.el.classList.toggle('active', inGap);
+    // 永久退出：塌陷跑完就定格，之后无论播多久都不再现身（seek 回退才复活）
+    var wantSpent = stage === DOTS_STAGE_SPENT;
+    if (wantSpent !== cl.contains('spent')) {
+      cl.toggle('spent', wantSpent);
+      if (wantSpent) clearDotsLit(it.el);
+    }
+
+    if (inGap !== cl.contains('active')) {
+      cl.toggle('active', inGap);
+      if (!inGap) clearDotsLit(it.el);
       if (inGap) {
         demoteActiveLyricLineForInterlude();
       } else if (posSec >= it.end - 0.45) {
@@ -2107,8 +2194,12 @@ function buildLyricDom(container, lyrics, currentIndex, isKaraoke) {
     });
   }
 
-  // 前奏：第一句前空窗 > 4s → 呼吸点
-  if (lyrics[0].time > 4) pushDots(0.2, lyrics[0].time);
+  // 前奏：与句间空窗同一把尺子（INTERLUDE_MIN_GAP）。
+  // 原来写死 > 4s，比句间的 6s 松，同一首歌里两套标准——间隔 5s 的开头会插点，
+  // 而歌中同样 5s 的空窗不插
+  if (lyrics[0].time - LYRIC_PRELUDE_START > INTERLUDE_MIN_GAP) {
+    pushDots(LYRIC_PRELUDE_START, lyrics[0].time);
+  }
 
   for (var i = 0; i < lyrics.length; i++) {
     var el = document.createElement('div');
@@ -2144,6 +2235,14 @@ function buildLyricDom(container, lyrics, currentIndex, isKaraoke) {
     }
   }
 
+  // 尾奏：末句唱完到曲末空窗足够大 → 呼吸点。不插的话长尾奏里末句会一直亮着，
+  // 而 Apple 是收掉的。曲长此刻未知（宿主还没报 duration）就跳过，下次重建再补
+  var songEnd = getCurrentTrackDurationSec();
+  if (songEnd > 0) {
+    var tailEnd = computeLineEnd(lyrics.length - 1, lyrics, verbatim, songEnd);
+    if (tailEnd != null) pushDots(tailEnd, songEnd);
+  }
+
   // 重建前作废旧布局缓存（含 targetS / 过期 deferred remeasure），避免快切沿用上首歌 y/h
   stopLyricWave();
   resetLyricFxLayoutCache();
@@ -2168,10 +2267,18 @@ function buildLyricDom(container, lyrics, currentIndex, isKaraoke) {
   bindLyricManualScroll(container);
 
   // 立刻测；侧栏未展开则等 settle / ResizeObserver
+  lyricFx.everMeasured = false;
   if (measureLyricLayout()) {
     var k = findLyricItemK(currentIndex >= 0 ? currentIndex : 0);
     if (k < 0) k = 0;
     focusLyricItemK(k, true);
+  } else {
+    // 这一帧测不了（侧栏未展开 / 列宽过渡中）：新 DOM 的 y 全是 0，九行叠在 top:0。
+    // 先藏起来，等后续重测量出布局再淡入。
+    // ⚠️ 只在测失败时才挂：面板已展开时（翻译开关等重建）上面一次就成功了，
+    // 提前挂再摘会因为 measureLyricLayout 内部强制回流而真的提交一次 opacity:0，
+    // 白白闪一下淡入
+    setLyricPremeasure(true);
   }
   scheduleLyricLayoutRemeasure(getSideLayoutSettleMs());
   bindLyricContainerResizeObserver();
@@ -6146,6 +6253,10 @@ function cleanup() {
   if (lyricDeblurTimer) {
     clearTimeout(lyricDeblurTimer);
     lyricDeblurTimer = null;
+  }
+  if (lyricPremeasureTimer) {
+    clearTimeout(lyricPremeasureTimer);
+    lyricPremeasureTimer = null;
   }
   // 歌词布局的延迟重测 / 容器观察者（原先只活在闭包里，销毁后仍会触发）
   if (lyricFx.remeasureRaf) {

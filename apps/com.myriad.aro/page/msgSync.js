@@ -233,6 +233,21 @@ function scheduleDecryptRefresh() {
   }
 }
 
+/** Would these two copies of a row paint the same bubble? */
+function sameRenderedMessage(a, b) {
+  if (!a || !b) return false;
+  if ((a.message_type || '') !== (b.message_type || '')) return false;
+  if (!!a.is_pinned !== !!b.is_pinned) return false;
+  if ((a.reply_to || '') !== (b.reply_to || '')) return false;
+  if (!!a.is_encrypted !== !!b.is_encrypted) return false;
+  if ((a.sender_actor || '') !== (b.sender_actor || '')) return false;
+  try {
+    return JSON.stringify(a.payload) === JSON.stringify(b.payload);
+  } catch (e) {
+    return false;
+  }
+}
+
 function mergeIncomingMessage(msg) {
   if (!msg || !msg.message_id) return false;
   // Realtime can race a conversation switch; never mutate without an active chat.
@@ -241,7 +256,8 @@ function mergeIncomingMessage(msg) {
     && isE2eCiphertextEnvelope(msg.payload);
   for (var i = 0; i < state.messages.length; i++) {
     if (state.messages[i].message_id === msg.message_id) {
-      var merged = preferDisplayPayload(state.messages[i], msg);
+      var prevRow = state.messages[i];
+      var merged = preferDisplayPayload(prevRow, msg);
       // If we still only have ciphertext, keep UI placeholder until poll decrypts
       if (typeof isE2eCiphertextEnvelope === 'function'
         && isE2eCiphertextEnvelope(merged.payload)) {
@@ -249,8 +265,13 @@ function mergeIncomingMessage(msg) {
       }
       state.messages[i] = merged;
       state.messagesFp = messagesFingerprint(state.messages);
-      if (typeof scheduleRenderMessages === 'function') scheduleRenderMessages({ forceFull: true });
-      else renderMessages({ forceFull: true });
+      // The WS echo of a row we already display verbatim is the common case
+      // (notably right after our own send). Repainting it rebuilds the whole
+      // transcript's innerHTML and re-decodes every image for no visible change.
+      if (!sameRenderedMessage(prevRow, merged)) {
+        if (typeof scheduleRenderMessages === 'function') scheduleRenderMessages({ forceFull: true });
+        else renderMessages({ forceFull: true });
+      }
       if (needsDecryptRefresh) scheduleDecryptRefresh();
       return true;
     }

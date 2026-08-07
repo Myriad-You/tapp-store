@@ -1,7 +1,7 @@
 {
   "id": "cn.echootaku.days",
   "name": "朝夕",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "minSystemVersion": "0.3.23",
   "description": "记录值得期待与纪念的日子，在主页随时查看最近倒数。",
   "locales": {
@@ -20,7 +20,7 @@
     "name": "EchoOtaku",
     "url": "https://echootaku.cn"
   },
-  "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.echootaku.days",
+  "homepage": "https://echootaku.cn",
   "repository": "https://github.com/Myriad-You/tapp-store",
   "permissions": [
     "storage",
@@ -50,6 +50,95 @@
         "4x2": "templates/widget-4x2.html",
         "4x4": "templates/widget-4x4.html"
       },
+      "settings": [
+        {
+          "key": "themeSource",
+          "label": "主题来源",
+          "type": "select",
+          "description": "跟随朝夕主题工作室，或为当前小组件单独设置。",
+          "defaultValue": "shared",
+          "options": [
+            { "value": "shared", "label": "跟随共享主题" },
+            { "value": "instance", "label": "当前小组件独立设置" }
+          ]
+        },
+        {
+          "key": "themePreset",
+          "label": "独立主题",
+          "type": "select",
+          "defaultValue": "sunset",
+          "options": [
+            { "value": "sunset", "label": "朝霞" },
+            { "value": "violet", "label": "暮紫" },
+            { "value": "ocean", "label": "远海" },
+            { "value": "forest", "label": "森语" },
+            { "value": "mono", "label": "留白" }
+          ]
+        },
+        {
+          "key": "glassMode",
+          "label": "Glass 范围",
+          "type": "select",
+          "description": "全 Glass、仅外壳、仅列表项或关闭 Glass。",
+          "defaultValue": "all",
+          "options": [
+            { "value": "all", "label": "全 Glass" },
+            { "value": "shell", "label": "仅小组件外壳" },
+            { "value": "items", "label": "仅内容卡片" },
+            { "value": "none", "label": "关闭 Glass" }
+          ]
+        },
+        {
+          "key": "density",
+          "label": "显示密度",
+          "type": "select",
+          "defaultValue": "comfortable",
+          "options": [
+            { "value": "comfortable", "label": "舒适" },
+            { "value": "compact", "label": "紧凑" }
+          ]
+        },
+        {
+          "key": "showBrand",
+          "label": "显示品牌名",
+          "type": "toggle",
+          "defaultValue": true
+        },
+        {
+          "key": "showDate",
+          "label": "显示当前日期",
+          "type": "toggle",
+          "defaultValue": true
+        },
+        {
+          "key": "showCategory",
+          "label": "显示事件分类",
+          "type": "toggle",
+          "defaultValue": true
+        },
+        {
+          "key": "showFooter",
+          "label": "显示底部信息",
+          "type": "toggle",
+          "defaultValue": true
+        },
+        {
+          "key": "highlightPinned",
+          "label": "突出置顶事件",
+          "type": "toggle",
+          "defaultValue": true
+        },
+        {
+          "key": "maxItems",
+          "label": "列表最多显示",
+          "type": "number",
+          "description": "主要用于 4x4 小组件。",
+          "defaultValue": 4,
+          "min": 1,
+          "max": 6,
+          "step": 1
+        }
+      ],
       "refreshPolicy": {
         "mode": "event",
         "refreshOnVisible": true

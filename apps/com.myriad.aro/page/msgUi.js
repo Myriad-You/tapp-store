@@ -267,6 +267,39 @@ function bindMessagesDelegates(container) {
 
 
 /**
+ * Natural size of transcript images, by message id.
+ *
+ * A full innerHTML rebuild discards every decoded <img>, and a fresh one has no
+ * intrinsic size until it decodes again — image bubbles collapse to nothing, the
+ * scrollport shrinks, and whatever scrollTop we restore is clamped to that short
+ * box. Replaying a size we already measured lets the browser reserve the real
+ * box up front, which is what makes a rebuild layout-stable.
+ *
+ * Null-prototype: keys are peer-controlled message ids, so a literal
+ * `constructor` would otherwise read back a truthy inherited value.
+ */
+var _msgMediaSizes = Object.create(null);
+var MSG_MEDIA_SIZE_MAX = 400;
+
+/** Remember a decoded image's natural size for the next rebuild of its row. */
+function noteMessageMediaSize(messageId, w, h) {
+  if (!messageId || !w || !h) return;
+  if (_msgMediaSizes[messageId]) return;
+  var keys = Object.keys(_msgMediaSizes);
+  if (keys.length >= MSG_MEDIA_SIZE_MAX) {
+    // Oldest-inserted first — enumeration order for string keys is insertion order.
+    for (var i = 0; i < 80 && i < keys.length; i++) delete _msgMediaSizes[keys[i]];
+  }
+  _msgMediaSizes[messageId] = { w: w, h: h };
+}
+
+/** `width`/`height` attributes for a row's image, once a decode has told us. */
+function messageMediaSizeAttrs(messageId) {
+  var size = messageId ? _msgMediaSizes[messageId] : null;
+  return size ? (' width="' + size.w + '" height="' + size.h + '"') : '';
+}
+
+/**
  * Build HTML for one message entry (optional day separator + row).
  * @param {object} msg
  * @param {number} idx
@@ -377,17 +410,21 @@ function buildMessageEntryHtml(msg, idx, opts) {
       ? safeMessageImageUrl(payload.data)
       : safeIconUrl(payload.data);
     var isStickerMsg = !!(payload.sticker === true || payload.sticker === 1 || payload.as_sticker);
+    // Replay a size an earlier decode measured so the bubble reserves its box
+    // immediately instead of collapsing until the pixels arrive again.
+    var sizeAttrs = messageMediaSizeAttrs(msg.message_id);
+    var sizedFlag = sizeAttrs ? ' data-sized="1"' : '';
     if (safeImg) {
       if (isStickerMsg) {
         // Compact sticker bubble (no photo chrome)
-        html += '<button type="button" class="msg-sticker" data-media-idx="' + idx + '"'
+        html += '<button type="button" class="msg-sticker" data-media-idx="' + idx + '"' + sizedFlag
           + ' aria-label="' + esc(payload.filename || lang.stickerBtn || 'Sticker') + '">'
-          + '<img class="msg-sticker-img" src="' + esc(safeImg) + '" alt="" loading="lazy" decoding="async" draggable="false" />'
+          + '<img class="msg-sticker-img" src="' + esc(safeImg) + '" alt="" loading="lazy" decoding="async" draggable="false"' + sizeAttrs + ' />'
           + '</button>';
       } else {
-        html += '<figure class="msg-media" data-media-idx="' + idx + '" tabindex="0" role="button"'
+        html += '<figure class="msg-media" data-media-idx="' + idx + '"' + sizedFlag + ' tabindex="0" role="button"'
           + ' aria-label="' + esc(payload.filename || lang.attachImage || 'Image') + '">'
-          + '<img class="msg-image" src="' + esc(safeImg) + '" alt="' + esc(payload.filename || '') + '" loading="lazy" decoding="async" />'
+          + '<img class="msg-image" src="' + esc(safeImg) + '" alt="' + esc(payload.filename || '') + '" loading="lazy" decoding="async"' + sizeAttrs + ' />'
           + '<span class="msg-media-veil"></span>'
           + '<span class="msg-media-zoom">' + SVG_ICONS.expand + '</span>'
           + '</figure>';

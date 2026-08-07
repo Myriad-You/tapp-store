@@ -854,8 +854,16 @@
 .ddz-card.red { color: var(--ddz-card-red); }
 .ddz-card.black { color: var(--ddz-card-black); }
 
+.ddz-card.flame-chaser {
+  padding: 0;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-color: #f8f5ef;
+}
+
 .ddz-card.joker {
-  width: 48px;
+  width: var(--card-w);
   background:
     var(--ddz-tex-joker-bj) center / cover no-repeat,
     linear-gradient(160deg, #fef3c7, #fde68a);
@@ -869,10 +877,7 @@
 }
 
 .ddz-card.joker .ddz-card-rank {
-  font-size: 11px;
-  background: rgba(255,255,255,0.75);
-  border-radius: 4px;
-  padding: 1px 3px;
+  opacity: 0;
 }
 
 .ddz-card.joker .ddz-card-suit { display: none; }
@@ -896,10 +901,18 @@
 
 .ddz-card.back {
   background:
-    var(--ddz-tex-card-back) center / cover no-repeat,
-    linear-gradient(145deg, #1e4a80, #0f2a50);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 34%),
+    var(--ddz-tex-card-back) center / calc(100% - 10px) auto no-repeat,
+    radial-gradient(circle at 50% 50%, #020206 0%, #05040a 58%, rgba(76, 38, 112, 0.44) 59%, rgba(24, 14, 36, 0.96) 73%, #07060d 100%),
+    linear-gradient(145deg, #050408, #171021 54%, #050408);
   color: transparent;
-  border: 1px solid rgba(220, 180, 70, 0.35);
+  border: 1px solid rgba(234, 202, 116, 0.68);
+  box-shadow:
+    0 3px 9px rgba(0, 0, 0, 0.48),
+    inset 0 0 0 2px rgba(0, 0, 0, 0.62),
+    inset 0 0 0 4px rgba(255, 232, 150, 0.1),
+    inset 0 0 24px rgba(177, 87, 255, 0.2),
+    0 0 12px rgba(180, 88, 255, 0.18);
 }
 
 .ddz-card.back .ddz-card-rank,
@@ -919,14 +932,16 @@
 
 .ddz-card.mini .ddz-card-rank { font-size: 11px; }
 .ddz-card.mini .ddz-card-suit { width: 12px; height: 12px; }
-.ddz-card.mini.joker { width: 32px; }
+.ddz-card.mini.joker { width: var(--card-w); }
 
 .ddz-card.mini.back,
 .ddz-played .ddz-card.back {
   background:
-    var(--ddz-tex-card-back-sm) center / cover no-repeat,
-    var(--ddz-tex-card-back) center / cover no-repeat,
-    linear-gradient(145deg, #1e4a80, #0f2a50);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 36%),
+    var(--ddz-tex-card-back-sm) center / calc(100% - 7px) auto no-repeat,
+    var(--ddz-tex-card-back) center / calc(100% - 7px) auto no-repeat,
+    radial-gradient(circle at 50% 50%, #020206 0%, #05040a 58%, rgba(76, 38, 112, 0.42) 59%, rgba(24, 14, 36, 0.96) 73%, #07060d 100%),
+    linear-gradient(145deg, #050408, #171021 54%, #050408);
 }
 
 .ddz-played .ddz-card {
@@ -1064,4 +1079,2726 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ddz-btn, .ddz-card, .ddz-alarm { animation: none; transition: none; }
+}
+
+/* ========== 2026 table refresh ========== */
+.ddz-root {
+  min-height: 100%;
+  padding: 8px 14px 12px;
+  gap: 8px;
+  background:
+    linear-gradient(180deg, rgba(10, 14, 22, 0.16), rgba(10, 14, 22, 0.48));
+  --ddz-hand-card-w: clamp(150px, 9.2vw, 190px);
+  --ddz-hand-card-h: calc(var(--ddz-hand-card-w) * 1.4);
+  --ddz-mini-card-w: clamp(88px, 5.4vw, 112px);
+  --ddz-mini-card-h: calc(var(--ddz-mini-card-w) * 1.4);
+  --ddz-hand-overlap: calc(var(--ddz-hand-card-w) * -0.64);
+}
+
+html,
+body {
+  overflow-x: hidden;
+  height: 100%;
+  margin: 0;
+}
+
+.ddz-bg-scene {
+  filter: saturate(0.86) contrast(0.92);
+}
+
+.ddz-bg-scene::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(9, 12, 18, 0.68), rgba(9, 12, 18, 0.24) 48%, rgba(9, 12, 18, 0.76)),
+    radial-gradient(circle at 52% 42%, rgba(255, 238, 198, 0.08), transparent 38%);
+}
+
+.ddz-bg-felt {
+  inset: 86px 0 0;
+  border-radius: 0;
+  background:
+    var(--ddz-tex-velvet) center / cover no-repeat,
+    linear-gradient(160deg, rgba(16, 103, 67, 0.95), rgba(8, 48, 38, 0.98));
+  box-shadow:
+    inset 0 0 0 2px rgba(235, 198, 105, 0.42),
+    inset 0 38px 90px rgba(255, 255, 255, 0.05),
+    inset 0 -70px 120px rgba(0, 0, 0, 0.4),
+    0 28px 70px rgba(0, 0, 0, 0.58);
+}
+
+.ddz-bg-vignette {
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.64)),
+    radial-gradient(ellipse at center, transparent 42%, rgba(0, 0, 0, 0.42) 100%);
+}
+
+.ddz-header {
+  min-height: 44px;
+  padding: 6px 12px;
+  padding-left: 14px;
+  border-radius: 14px;
+  border-color: rgba(255, 255, 255, 0.14);
+  background:
+    linear-gradient(90deg, rgba(24, 28, 42, 0.82), rgba(41, 35, 44, 0.72)),
+    rgba(16, 18, 25, 0.86);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.32);
+}
+
+.ddz-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  font-size: 18px;
+}
+
+.ddz-title {
+  font-size: 16px;
+  letter-spacing: 0.02em;
+}
+
+.ddz-status {
+  max-width: 56vw;
+  margin-top: 1px;
+}
+
+.ddz-chip {
+  min-height: 26px;
+  padding: 3px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ddz-chip-phase,
+.ddz-chip-bid {
+  border-color: rgba(249, 202, 92, 0.38);
+}
+
+.ddz-panel {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 18px;
+  gap: 14px;
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(22, 24, 32, 0.88), rgba(26, 18, 14, 0.8)),
+    rgba(14, 16, 22, 0.9);
+}
+
+.ddz-lobby-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ddz-kicker {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  color: rgba(249, 202, 92, 0.75);
+}
+
+.ddz-lobby-summary {
+  display: grid;
+  grid-template-columns: repeat(3, max-content);
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ddz-lobby-summary span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 246, 208, 0.86);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.ddz-actions-primary {
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.ddz-btn {
+  border-radius: 10px;
+  min-height: 42px;
+  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.32);
+}
+
+.ddz-btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
+}
+
+.ddz-input {
+  min-height: 42px;
+  border-radius: 10px;
+  background: rgba(7, 9, 13, 0.72);
+}
+
+.ddz-seats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ddz-seat-card {
+  min-height: 82px;
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03)),
+    rgba(11, 15, 21, 0.74);
+}
+
+.ddz-table {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0 auto;
+  padding: 10px 12px 12px;
+  gap: 8px;
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(8, 10, 14, 0.28), rgba(8, 10, 14, 0.16));
+  border-color: rgba(232, 195, 90, 0.2);
+}
+
+.ddz-table-status {
+  min-height: 40px;
+  border-radius: 12px;
+  background:
+    linear-gradient(90deg, rgba(68, 27, 24, 0.82), rgba(22, 30, 36, 0.72));
+}
+
+.ddz-turn-hint {
+  font-size: 14px;
+}
+
+.ddz-match-strip {
+  display: none;
+  gap: 8px;
+}
+
+.ddz-stat {
+  min-width: 0;
+  padding: 9px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(5, 9, 13, 0.48);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.ddz-stat-label {
+  display: block;
+  margin-bottom: 2px;
+  color: rgba(245, 240, 230, 0.58);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.ddz-stat strong {
+  display: block;
+  overflow: hidden;
+  color: #fff6d0;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ddz-opponents {
+  grid-template-columns: minmax(180px, 0.48fr) minmax(460px, 1.7fr) minmax(180px, 0.48fr);
+  align-items: stretch;
+  min-height: 286px;
+}
+
+.ddz-seat,
+.ddz-me,
+.ddz-bottom-wrap,
+.ddz-last-wrap {
+  border-color: rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.035)),
+    rgba(5, 14, 18, 0.58);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.26);
+}
+
+.ddz-seat {
+  min-height: 246px;
+  padding: 12px;
+  align-self: stretch;
+}
+
+.ddz-seat.is-turn,
+.ddz-me.is-turn {
+  box-shadow:
+    0 0 0 2px rgba(90, 216, 142, 0.74),
+    0 16px 36px rgba(0, 0, 0, 0.32),
+    0 0 34px rgba(90, 216, 142, 0.18);
+}
+
+.ddz-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+}
+
+.ddz-center {
+  justify-content: center;
+  gap: 14px;
+}
+
+.ddz-bottom-wrap {
+  min-height: 122px;
+}
+
+.ddz-last-wrap {
+  min-height: 142px;
+  flex: 1;
+}
+
+.ddz-zone-label {
+  color: rgba(255, 246, 208, 0.86);
+  letter-spacing: 0.08em;
+}
+
+.ddz-seat-action {
+  border-style: solid;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.ddz-card {
+  --card-w: var(--ddz-hand-card-w);
+  --card-h: var(--ddz-hand-card-h);
+  border-radius: 7px;
+}
+
+.ddz-card.mini {
+  --card-w: var(--ddz-mini-card-w);
+  --card-h: var(--ddz-mini-card-h);
+}
+
+.ddz-played {
+  justify-content: flex-start;
+  padding-top: 8px;
+}
+
+.ddz-played .ddz-card {
+  --card-w: 42px;
+  --card-h: 58px;
+  margin-left: -29px;
+}
+
+.ddz-hand {
+  min-height: calc(var(--ddz-hand-card-h) + 48px);
+  padding: 12px 28px 18px;
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)),
+    rgba(0, 0, 0, 0.2);
+  align-items: flex-start;
+  align-content: flex-start;
+  flex-wrap: nowrap;
+  justify-content: safe center;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-padding-inline: 42px;
+  scrollbar-width: thin;
+}
+
+.ddz-hand .ddz-card {
+  margin-left: var(--ddz-hand-overlap);
+}
+
+.ddz-hand .ddz-card:first-child {
+  margin-left: 0;
+}
+
+.ddz-me {
+  padding: 12px 16px 14px;
+  border-width: 2px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.035)),
+    rgba(8, 18, 20, 0.72);
+}
+
+.ddz-controls {
+  position: static;
+  z-index: 30;
+  width: auto;
+  max-width: 100%;
+  margin-top: -2px;
+}
+
+.ddz-control-group {
+  width: auto;
+  max-width: 100%;
+  padding: 8px;
+  border-radius: 14px;
+  background: rgba(7, 10, 14, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+}
+
+@media (min-width: 1440px) {
+  .ddz-me {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 840px) {
+  .ddz-root {
+    --ddz-hand-card-w: 138px;
+    --ddz-mini-card-w: 78px;
+    --ddz-hand-overlap: -88px;
+  }
+  .ddz-bg-felt { inset: 76px 0 0; }
+  .ddz-lobby-hero { flex-direction: column; }
+  .ddz-lobby-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; }
+  .ddz-lobby-summary span { justify-content: center; }
+  .ddz-match-strip { display: none; }
+  .ddz-opponents {
+    grid-template-columns: minmax(150px, 0.65fr) minmax(240px, 1.4fr) minmax(150px, 0.65fr);
+    grid-template-areas:
+      "left center right";
+    min-height: 250px;
+  }
+  .ddz-seat-left { grid-area: left; }
+  .ddz-seat-right { grid-area: right; }
+  .ddz-center { grid-area: center; }
+  .ddz-seat { min-height: 220px; }
+  .ddz-bottom-wrap { min-height: 104px; }
+  .ddz-last-wrap { min-height: 122px; }
+}
+
+@media (max-width: 520px) {
+  .ddz-root {
+    --ddz-hand-card-w: 132px;
+    --ddz-mini-card-w: 72px;
+    --ddz-hand-overlap: -86px;
+  }
+  .ddz-root { padding: 8px; }
+  .ddz-header { align-items: flex-start; }
+  .ddz-status { max-width: 72vw; }
+  .ddz-panel,
+  .ddz-table { width: 100%; }
+  .ddz-actions-primary,
+  .ddz-lobby-grid,
+  .ddz-seats { grid-template-columns: 1fr; }
+  .ddz-match-strip { display: none; }
+  .ddz-opponents {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "left right"
+      "center center";
+  }
+  .ddz-opponents { gap: 8px; }
+  .ddz-card { --card-w: var(--ddz-hand-card-w); --card-h: var(--ddz-hand-card-h); }
+  .ddz-card.mini { --card-w: var(--ddz-mini-card-w); --card-h: var(--ddz-mini-card-h); }
+  .ddz-hand .ddz-card { margin-left: var(--ddz-hand-overlap); }
+  .ddz-me-head { align-items: flex-start; flex-direction: column; }
+  .ddz-seat-action-me { width: 100%; text-align: left; }
+  .ddz-seat-action-me .ddz-action-cards { justify-content: flex-start; }
+}
+
+/* ========== 欢乐斗地主参考布局：全屏牌桌 + 底部大手牌 ========== */
+.ddz-root[data-phase="playing"] {
+  height: 100dvh;
+  min-height: min(620px, 100dvh);
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 8px 14px 10px;
+  --ddz-hand-card-w: clamp(168px, 10.2vw, 214px);
+  --ddz-hand-card-h: calc(var(--ddz-hand-card-w) * 1.4);
+  --ddz-mini-card-w: clamp(82px, 5vw, 106px);
+  --ddz-mini-card-h: calc(var(--ddz-mini-card-w) * 1.4);
+  --ddz-hand-overlap: calc(var(--ddz-hand-card-w) * -0.66);
+}
+
+.ddz-root[data-phase="playing"] .ddz-bg-felt {
+  inset: 58px 0 0;
+}
+
+.ddz-root[data-phase="playing"] .ddz-header {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 5px 12px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-title {
+  font-size: 15px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-table {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-table-status {
+  position: absolute;
+  z-index: 20;
+  top: 150px;
+  left: 50%;
+  width: min(520px, calc(100% - 280px));
+  min-height: 30px;
+  transform: translateX(-50%);
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(30, 36, 48, 0.48), rgba(68, 36, 28, 0.58), rgba(30, 36, 48, 0.48));
+  backdrop-filter: blur(12px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-turn-hint {
+  font-size: 14px;
+  text-align: center;
+  flex: 1;
+}
+
+.ddz-root[data-phase="playing"] .ddz-auction-score {
+  font-size: 11px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-opponents {
+  position: absolute;
+  inset: 0;
+  display: block;
+  min-height: 0;
+  pointer-events: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat {
+  position: absolute;
+  z-index: 10;
+  top: 34%;
+  width: clamp(170px, 15vw, 240px);
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-left {
+  left: clamp(10px, 3.8vw, 72px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-right {
+  right: clamp(10px, 3.8vw, 72px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-head {
+  width: max-content;
+  max-width: 100%;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(12, 18, 26, 0.82), rgba(12, 18, 26, 0.48));
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.34);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-right .ddz-seat-head {
+  margin-left: auto;
+  flex-direction: row-reverse;
+  text-align: right;
+  background: linear-gradient(270deg, rgba(12, 18, 26, 0.82), rgba(12, 18, 26, 0.48));
+}
+
+.ddz-root[data-phase="playing"] .ddz-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  font-size: 18px;
+  border-width: 3px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-name {
+  font-size: 15px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-count-pill {
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.ddz-root[data-phase="playing"] .ddz-played {
+  margin-top: 8px;
+  padding-left: 18px;
+  justify-content: flex-start;
+  align-items: center;
+  min-height: 46px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-right .ddz-played {
+  justify-content: flex-end;
+  padding-left: 0;
+  padding-right: 18px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-played .ddz-card {
+  --card-w: 42px;
+  --card-h: 58px;
+  margin-left: -24px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-action {
+  margin-top: 18px;
+  min-height: 34px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.ddz-root[data-phase="playing"] .ddz-action-label {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  padding: 0 20px;
+  border-radius: 999px;
+  color: #c9efff;
+  font-size: clamp(24px, 2.2vw, 40px);
+  font-weight: 900;
+  text-shadow: 0 3px 0 rgba(23, 65, 102, 0.8), 0 0 16px rgba(112, 203, 255, 0.65);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-right .ddz-action-label {
+  float: right;
+}
+
+.ddz-root[data-phase="playing"] .ddz-action-cards {
+  clear: both;
+  margin-top: 8px;
+  justify-content: center;
+}
+
+.ddz-root[data-phase="playing"] .ddz-center {
+  position: absolute;
+  z-index: 8;
+  top: 12px;
+  left: 50%;
+  width: min(620px, 44vw);
+  min-width: 360px;
+  transform: translateX(-50%);
+  gap: 0;
+  pointer-events: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-bottom-wrap,
+.ddz-root[data-phase="playing"] .ddz-last-wrap {
+  position: absolute;
+  left: 50%;
+  width: 100%;
+  transform: translateX(-50%);
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-bottom-wrap {
+  top: 0;
+}
+
+.ddz-root[data-phase="playing"] .ddz-last-wrap {
+  top: 230px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-zone-label {
+  margin-bottom: 8px;
+  color: rgba(255, 246, 208, 0.88);
+  font-size: 13px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.86);
+}
+
+.ddz-root[data-phase="playing"] .ddz-bottom,
+.ddz-root[data-phase="playing"] .ddz-last {
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 0;
+}
+
+.ddz-root[data-phase="playing"] .ddz-bottom .ddz-card {
+  --card-w: clamp(54px, 3.4vw, 72px);
+  --card-h: calc(var(--card-w) * 1.4);
+  margin-left: -10px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-last .ddz-card {
+  --card-w: clamp(102px, 5.8vw, 122px);
+  --card-h: calc(var(--card-w) * 1.4);
+  margin-left: -14px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-action-cards .ddz-card {
+  --card-w: var(--ddz-mini-card-w);
+  --card-h: var(--ddz-mini-card-h);
+  margin-left: -16px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-bottom .ddz-card:first-child,
+.ddz-root[data-phase="playing"] .ddz-last .ddz-card:first-child,
+.ddz-root[data-phase="playing"] .ddz-action-cards .ddz-card:first-child {
+  margin-left: 0;
+}
+
+.ddz-root[data-phase="playing"] .ddz-me {
+  position: absolute;
+  z-index: 15;
+  left: 50%;
+  bottom: 8px;
+  width: min(100%, 1680px);
+  transform: translateX(-50%);
+  padding: 0 18px 12px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-me.is-turn {
+  box-shadow: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-me-head {
+  position: absolute;
+  z-index: 22;
+  left: 30px;
+  bottom: 6px;
+  width: min(280px, 28vw);
+  margin: 0;
+  pointer-events: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-me .ddz-seat-head {
+  padding: 7px 10px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-avatar-me {
+  width: 64px;
+  height: 64px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-action-me {
+  display: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand {
+  min-height: calc(var(--ddz-hand-card-h) + 24px);
+  padding: 18px max(18px, 13vw) 8px;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  justify-content: safe center;
+  align-items: flex-start;
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand::-webkit-scrollbar {
+  display: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card {
+  margin-left: var(--ddz-hand-overlap);
+  overflow: visible;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card:first-child {
+  margin-left: 0;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card.selected {
+  transform: translateY(-16px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card.is-hovered {
+  transform: translateY(-28px);
+  z-index: 40 !important;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card.selected.is-hovered {
+  transform: translateY(-30px);
+  z-index: 45 !important;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card.btnlike:hover:not(.is-hovered) {
+  transform: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card.btnlike.selected:hover:not(.is-hovered) {
+  transform: translateY(-16px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-card.btnlike:hover {
+  transform: translateY(-12px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-card.btnlike.selected:hover {
+  transform: translateY(-16px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-controls {
+  position: absolute;
+  z-index: 30;
+  left: 50%;
+  right: auto;
+  top: auto;
+  bottom: calc(var(--ddz-hand-card-h) + 70px);
+  transform: translateX(-50%);
+  margin: 0;
+}
+
+.ddz-root[data-phase="playing"] .ddz-control-group {
+  gap: 7px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn {
+  min-width: 62px;
+  min-height: 30px;
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 13px;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.24), 0 10px 18px rgba(0, 0, 0, 0.26);
+}
+
+.ddz-root[data-phase="playing"] .ddz-msg {
+  position: absolute;
+  z-index: 22;
+  left: 18px;
+  bottom: 2px;
+  max-width: 48vw;
+  margin: 0;
+}
+
+@media (max-width: 1100px) {
+  .ddz-root[data-phase="playing"] {
+    --ddz-hand-card-w: 156px;
+    --ddz-mini-card-w: 78px;
+    --ddz-hand-overlap: -104px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-table-status {
+    width: min(520px, calc(100% - 42px));
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-seat {
+    top: 30%;
+    width: 170px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-seat-head {
+    max-width: 168px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-avatar {
+    width: 46px;
+    height: 46px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-center {
+    top: 10px;
+    width: min(480px, 52vw);
+    min-width: 300px;
+  }
+}
+
+@media (max-width: 760px) {
+  .ddz-root[data-phase="playing"] {
+    min-height: 580px;
+    --ddz-hand-card-w: 136px;
+    --ddz-mini-card-w: 68px;
+    --ddz-hand-overlap: -92px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-header {
+    gap: 6px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-status,
+  .ddz-root[data-phase="playing"] .ddz-meta {
+    display: none;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-seat {
+    top: 24%;
+    width: 136px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-seat-left {
+    left: 8px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-seat-right {
+    right: 8px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-seat-meta {
+    display: none;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-center {
+    top: 8px;
+    min-width: 220px;
+    width: 48vw;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-action-label {
+    font-size: 24px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn {
+    min-width: 68px;
+    min-height: 36px;
+    font-size: 14px;
+  }
+}
+
+@media (max-height: 760px) {
+  .ddz-root[data-phase="playing"] {
+    --ddz-hand-card-w: clamp(126px, 22dvh, 160px);
+    --ddz-mini-card-w: clamp(64px, 12dvh, 82px);
+    --ddz-hand-overlap: calc(var(--ddz-hand-card-w) * -0.66);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-table-status {
+    top: 114px;
+    width: min(520px, calc(100% - 42px));
+    min-height: 30px;
+    padding: 4px 10px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-turn-hint {
+    font-size: 13px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-center {
+    top: 6px;
+    gap: 14px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-bottom .ddz-card {
+    --card-w: clamp(46px, 8.5dvh, 58px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-last .ddz-card {
+    --card-w: clamp(74px, 13dvh, 88px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-zone-label {
+    margin-bottom: 4px;
+    font-size: 12px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-seat {
+    top: 31%;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-controls {
+    top: clamp(78px, 18dvh, 132px);
+    right: 10px;
+    left: auto;
+    bottom: auto;
+    transform: none;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn {
+    min-width: 54px;
+    min-height: 28px;
+    padding: 4px 9px;
+    font-size: 12px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-hand {
+    min-height: calc(var(--ddz-hand-card-h) + 18px);
+    padding-bottom: 4px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-avatar-me {
+    width: 54px;
+    height: 54px;
+  }
+}
+
+@media (max-height: 560px) {
+  .ddz-root[data-phase="playing"] {
+    --ddz-hand-card-w: clamp(102px, 25dvh, 124px);
+    --ddz-mini-card-w: clamp(54px, 13dvh, 68px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-header {
+    min-height: 34px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-logo {
+    width: 26px;
+    height: 26px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-title {
+    font-size: 14px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-status,
+  .ddz-root[data-phase="playing"] .ddz-meta {
+    display: none;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-bg-felt {
+    inset: 46px 0 0;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-table-status {
+    top: 88px;
+    width: min(460px, calc(100% - 28px));
+    min-height: 28px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-center {
+    top: 4px;
+    gap: 4px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-bottom .ddz-card {
+    --card-w: clamp(34px, 7.4dvh, 42px);
+    margin-left: -7px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-last .ddz-card {
+    --card-w: clamp(44px, 10dvh, 52px);
+    margin-left: -10px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-bottom-wrap {
+    display: block;
+    top: 0;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-last-wrap {
+    top: 150px;
+    transform: translateX(-50%);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-last-meta {
+    display: none;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-seat-head {
+    padding: 5px 8px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-played {
+    margin-top: 4px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-played .ddz-card {
+    --card-w: 36px;
+    --card-h: 50px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-action-label {
+    font-size: 22px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-controls {
+    top: 68px;
+    right: 8px;
+    left: auto;
+    bottom: auto;
+    transform: none;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-control-group {
+    gap: 4px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn {
+    min-width: 46px;
+    min-height: 26px;
+    padding: 3px 7px;
+    font-size: 11px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-me {
+    bottom: 4px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-me-head {
+    display: none;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-hand {
+    min-height: calc(var(--ddz-hand-card-h) + 10px);
+    padding-top: 8px;
+    padding-inline: max(8px, 7vw);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-hand .ddz-card.selected {
+    transform: translateY(-10px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-hand .ddz-card.is-hovered {
+    transform: translateY(-20px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-hand .ddz-card.selected.is-hovered {
+    transform: translateY(-22px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-hand .ddz-card.btnlike:hover:not(.is-hovered) {
+    transform: none;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-card.btnlike.selected:hover {
+    transform: translateY(-10px);
+  }
+}
+
+@media (max-width: 1100px) and (max-height: 560px) {
+  .ddz-root[data-phase="playing"] .ddz-controls {
+    top: 208px;
+    right: 8px;
+  }
+}
+
+/* ========== Table UI v2: responsive theatre table ========== */
+.ddz-root[data-phase="playing"] {
+  --ddz-hand-card-w: clamp(152px, 8.6vw, 210px);
+  --ddz-hand-card-h: calc(var(--ddz-hand-card-w) * 1.4);
+  --ddz-hand-overlap: calc(var(--ddz-hand-card-w) * -0.58);
+  --ddz-mini-card-w: clamp(70px, 4vw, 92px);
+  --ddz-mini-card-h: calc(var(--ddz-mini-card-w) * 1.4);
+  --ddz-side-card-w: clamp(42px, 2.4vw, 58px);
+  --ddz-table-edge: clamp(10px, 1.2vw, 20px);
+  height: 100dvh;
+  min-height: 560px;
+  padding: var(--ddz-table-edge);
+  gap: 8px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 78%, rgba(229, 186, 83, 0.13), transparent 34%),
+    radial-gradient(ellipse at 18% 18%, rgba(47, 172, 141, 0.18), transparent 28%),
+    linear-gradient(180deg, #111018 0%, #061d18 42%, #03120f 100%);
+}
+
+.ddz-root[data-phase="playing"] .ddz-bg-scene {
+  filter: saturate(0.95) contrast(0.82) brightness(0.48);
+  opacity: 0.38;
+}
+
+.ddz-root[data-phase="playing"] .ddz-bg-felt {
+  inset: 58px 0 0;
+  border-radius: 0;
+  background:
+    radial-gradient(ellipse at 50% 58%, rgba(20, 98, 73, 0.72), rgba(3, 29, 24, 0.78) 48%, rgba(0, 6, 7, 0.92) 82%),
+    linear-gradient(90deg, rgba(217, 179, 82, 0.2), transparent 12%, transparent 88%, rgba(217, 179, 82, 0.2));
+  box-shadow: inset 0 0 0 1px rgba(219, 176, 76, 0.22), inset 0 32px 80px rgba(0, 0, 0, 0.4);
+}
+
+.ddz-root[data-phase="playing"] .ddz-bg-vignette {
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.3), transparent 20%, transparent 72%, rgba(0, 0, 0, 0.68)),
+    radial-gradient(ellipse at center, transparent 48%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+.ddz-root[data-phase="playing"] .ddz-header {
+  min-height: 52px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(19, 20, 30, 0.9);
+  border: 1px solid rgba(232, 195, 90, 0.22);
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.36);
+}
+
+.ddz-root[data-phase="playing"] .ddz-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-title {
+  font-size: 17px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-status {
+  font-size: 12px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-chip {
+  min-height: 32px;
+  padding: 5px 12px;
+  border-radius: 9px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-table {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 1px solid rgba(232, 195, 90, 0.22);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(6, 36, 29, 0.54), rgba(2, 12, 12, 0.82)),
+    radial-gradient(ellipse at 50% 54%, rgba(27, 111, 79, 0.52), transparent 52%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 18px 58px rgba(0, 0, 0, 0.36);
+  overflow: hidden;
+}
+
+.ddz-root[data-phase="playing"] .ddz-match-strip {
+  display: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-table-status {
+  position: absolute;
+  z-index: 26;
+  left: 50%;
+  top: clamp(118px, 15dvh, 178px);
+  width: min(680px, calc(100% - 520px));
+  min-width: 420px;
+  min-height: 42px;
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, rgba(8, 18, 21, 0.74), rgba(64, 36, 28, 0.74), rgba(8, 18, 21, 0.74));
+  border: 1px solid rgba(232, 195, 90, 0.42);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.32);
+}
+
+.ddz-root[data-phase="playing"] .ddz-turn-hint {
+  font-size: clamp(14px, 1.05vw, 18px);
+  text-align: center;
+}
+
+.ddz-root[data-phase="playing"] .ddz-auction-score {
+  font-size: 12px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-auction-score strong {
+  font-size: 20px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-center {
+  position: absolute;
+  z-index: 20;
+  left: 50%;
+  top: 8px;
+  width: min(760px, 48vw);
+  min-width: 360px;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: clamp(94px, 14dvh, 152px);
+  pointer-events: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-bottom-wrap,
+.ddz-root[data-phase="playing"] .ddz-last-wrap {
+  position: static;
+  left: auto;
+  top: auto;
+  transform: none;
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-zone-label {
+  margin-bottom: 5px;
+  color: #fff3c5;
+  font-size: 13px;
+  font-weight: 900;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.75);
+}
+
+.ddz-root[data-phase="playing"] .ddz-bottom,
+.ddz-root[data-phase="playing"] .ddz-last {
+  justify-content: center;
+  gap: 0;
+  min-height: 0;
+  padding: 0;
+}
+
+.ddz-root[data-phase="playing"] .ddz-bottom .ddz-card {
+  --card-w: clamp(52px, 3vw, 70px);
+  --card-h: calc(var(--card-w) * 1.4);
+  margin-left: -8px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-last .ddz-card {
+  --card-w: clamp(92px, 5vw, 124px);
+  --card-h: calc(var(--card-w) * 1.4);
+  margin-left: -18px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat {
+  position: absolute;
+  z-index: 18;
+  top: clamp(220px, 38dvh, 430px);
+  width: clamp(188px, 13vw, 260px);
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-left {
+  left: clamp(18px, 4vw, 88px);
+  transform: translateY(-50%);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-right {
+  right: clamp(18px, 4vw, 88px);
+  transform: translateY(-50%);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-head {
+  width: max-content;
+  max-width: 100%;
+  padding: 8px 12px;
+  gap: 10px;
+  border-radius: 999px;
+  background: rgba(11, 19, 23, 0.74);
+  border: 1px solid rgba(194, 219, 207, 0.16);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(16px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-right .ddz-seat-head {
+  margin-left: auto;
+  flex-direction: row-reverse;
+}
+
+.ddz-root[data-phase="playing"] .ddz-avatar {
+  width: clamp(48px, 3.3vw, 66px);
+  height: clamp(48px, 3.3vw, 66px);
+  border-radius: 50%;
+  font-size: clamp(18px, 1.2vw, 24px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-name {
+  font-size: clamp(14px, 1vw, 18px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-info {
+  gap: 6px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-count-pill,
+.ddz-root[data-phase="playing"] .ddz-role-badge {
+  min-height: 22px;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-played {
+  margin-top: 22px;
+  justify-content: flex-start;
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-right .ddz-played {
+  justify-content: flex-end;
+}
+
+.ddz-root[data-phase="playing"] .ddz-played .ddz-card {
+  --card-w: var(--ddz-side-card-w);
+  --card-h: calc(var(--card-w) * 1.4);
+  margin-left: -10px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-action {
+  width: 100%;
+  min-height: 0;
+  margin-top: 14px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-action-label {
+  display: block;
+  color: #c9f1ff;
+  font-size: clamp(34px, 3.1vw, 58px);
+  font-weight: 1000;
+  line-height: 1;
+  text-align: left;
+  text-shadow: 0 0 18px rgba(110, 219, 255, 0.8), 0 3px 16px rgba(0, 0, 0, 0.82);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-right .ddz-action-label {
+  text-align: right;
+}
+
+.ddz-root[data-phase="playing"] .ddz-action-cards {
+  justify-content: flex-start;
+  padding-top: 10px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-right .ddz-action-cards {
+  justify-content: flex-end;
+}
+
+.ddz-root[data-phase="playing"] .ddz-action-cards .ddz-card {
+  --card-w: clamp(82px, 4.4vw, 112px);
+  --card-h: calc(var(--card-w) * 1.4);
+  margin-left: -18px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-me {
+  position: absolute;
+  z-index: 24;
+  left: 50%;
+  right: auto;
+  bottom: 8px;
+  width: min(100%, 1760px);
+  transform: translateX(-50%);
+  padding: 0 clamp(12px, 3vw, 64px) 6px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-me-head {
+  position: absolute;
+  left: clamp(10px, 2vw, 28px);
+  bottom: 8px;
+  z-index: 12;
+  display: block;
+  width: clamp(180px, 15vw, 260px);
+  padding: 0;
+  pointer-events: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-avatar-me {
+  width: clamp(58px, 4vw, 78px);
+  height: clamp(58px, 4vw, 78px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-action-me {
+  display: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand {
+  justify-content: center;
+  align-items: flex-end;
+  width: 100%;
+  min-height: calc(var(--ddz-hand-card-h) + 46px);
+  padding: 34px max(20px, 13vw) 10px;
+  overflow-x: auto;
+  overflow-y: visible;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.1)),
+    radial-gradient(ellipse at 50% 100%, rgba(255, 222, 129, 0.2), transparent 46%);
+  border-radius: 26px 26px 0 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  scrollbar-width: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand::-webkit-scrollbar {
+  display: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card {
+  margin-left: var(--ddz-hand-overlap);
+  overflow: visible;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card:first-child {
+  margin-left: 0;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card.selected {
+  transform: translateY(-18px);
+  z-index: 34 !important;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card.is-hovered {
+  transform: translateY(-34px);
+  z-index: 44 !important;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card.selected.is-hovered {
+  transform: translateY(-38px);
+  z-index: 48 !important;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card.btnlike:hover:not(.is-hovered) {
+  transform: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card.btnlike.selected:hover:not(.is-hovered) {
+  transform: translateY(-18px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-controls {
+  position: absolute;
+  z-index: 40;
+  left: 50%;
+  right: auto;
+  top: auto;
+  bottom: calc(var(--ddz-hand-card-h) + 56px);
+  transform: translateX(-50%);
+  margin: 0;
+  pointer-events: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-control-group {
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(5, 9, 13, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(16px);
+  pointer-events: auto;
+}
+
+.ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn {
+  min-width: clamp(56px, 4vw, 78px);
+  min-height: clamp(30px, 2.3vw, 42px);
+  padding: 5px 13px;
+  border-radius: 999px;
+  font-size: clamp(12px, 0.86vw, 15px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-msg {
+  position: absolute;
+  z-index: 23;
+  left: clamp(12px, 2vw, 40px);
+  bottom: 12px;
+  max-width: min(420px, 42vw);
+  margin: 0;
+  color: #ffe16a;
+  font-size: 13px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+}
+
+@media (min-width: 2560px) {
+  .ddz-root[data-phase="playing"] {
+    --ddz-hand-card-w: clamp(190px, 6.1vw, 236px);
+    --ddz-mini-card-w: clamp(86px, 3vw, 112px);
+    --ddz-side-card-w: 64px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .ddz-root[data-phase="playing"] {
+    --ddz-hand-card-w: clamp(138px, 12vw, 166px);
+    --ddz-mini-card-w: clamp(62px, 5.6vw, 78px);
+    --ddz-hand-overlap: calc(var(--ddz-hand-card-w) * -0.62);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-table-status {
+    width: min(560px, calc(100% - 360px));
+    min-width: 320px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-seat {
+    width: 172px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-seat-meta {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .ddz-root[data-phase="playing"] {
+    --ddz-hand-card-w: clamp(118px, 24vw, 142px);
+    --ddz-mini-card-w: clamp(50px, 10vw, 66px);
+    --ddz-hand-overlap: calc(var(--ddz-hand-card-w) * -0.66);
+    min-height: 560px;
+    padding: 6px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-header {
+    min-height: 38px;
+    padding: 4px 8px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-logo {
+    width: 28px;
+    height: 28px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-status,
+  .ddz-root[data-phase="playing"] .ddz-meta {
+    display: none;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-table-status {
+    top: 88px;
+    width: min(460px, calc(100% - 20px));
+    min-width: 0;
+    min-height: 34px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-turn-hint {
+    font-size: 13px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-center {
+    top: 2px;
+    width: min(420px, 58vw);
+    min-width: 210px;
+    gap: 92px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-last .ddz-card {
+    --card-w: clamp(62px, 13vw, 76px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-seat {
+    top: 38%;
+    width: 96px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-seat-left {
+    left: 8px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-seat-right {
+    right: 8px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-seat-head {
+    padding: 4px;
+    border-radius: 999px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-avatar {
+    width: 42px;
+    height: 42px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-played .ddz-card {
+    --card-w: 32px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-action-label {
+    font-size: 26px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-action-cards .ddz-card {
+    --card-w: 56px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-me {
+    bottom: 2px;
+    padding-inline: 4px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-me-head {
+    display: none;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-hand {
+    min-height: calc(var(--ddz-hand-card-h) + 30px);
+    padding: 24px max(8px, 9vw) 4px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-controls {
+    bottom: calc(var(--ddz-hand-card-h) + 38px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-control-group {
+    gap: 5px;
+    padding: 4px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn {
+    min-width: 50px;
+    min-height: 28px;
+    padding: 3px 8px;
+    font-size: 12px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-msg {
+    left: 8px;
+    bottom: 4px;
+    max-width: 52vw;
+    font-size: 12px;
+  }
+}
+
+@media (max-height: 700px) {
+  .ddz-root[data-phase="playing"] {
+    --ddz-hand-card-w: clamp(118px, 20dvh, 148px);
+    --ddz-mini-card-w: clamp(48px, 9dvh, 66px);
+    min-height: 500px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-header {
+    min-height: 38px;
+    padding-block: 4px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-bg-felt {
+    inset: 44px 0 0;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-table-status {
+    top: 78px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-center {
+    top: 0;
+    gap: 78px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-zone-label {
+    margin-bottom: 2px;
+    font-size: 11px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-last .ddz-card {
+    --card-w: clamp(62px, 12dvh, 78px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-seat {
+    top: 40%;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-controls {
+    bottom: calc(var(--ddz-hand-card-h) + 32px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-hand {
+    min-height: calc(var(--ddz-hand-card-h) + 28px);
+    padding-top: 24px;
+  }
+}
+
+@media (max-height: 540px) {
+  .ddz-root[data-phase="playing"] {
+    --ddz-hand-card-w: clamp(96px, 23dvh, 118px);
+    --ddz-hand-overlap: calc(var(--ddz-hand-card-w) * -0.66);
+    --ddz-mini-card-w: clamp(34px, 8dvh, 44px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-table-status {
+    top: 56px;
+    min-height: 28px;
+    padding: 3px 10px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-turn-hint {
+    font-size: 12px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-center {
+    gap: 54px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-last .ddz-card {
+    --card-w: clamp(44px, 11dvh, 56px);
+    margin-left: -10px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-seat {
+    top: 42%;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-action-label {
+    font-size: 22px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-controls {
+    right: 8px;
+    left: auto;
+    bottom: calc(var(--ddz-hand-card-h) + 18px);
+    transform: none;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn {
+    min-width: 44px;
+    min-height: 24px;
+    padding: 2px 7px;
+    font-size: 11px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-hand {
+    min-height: calc(var(--ddz-hand-card-h) + 18px);
+    padding-top: 14px;
+  }
+}
+
+/* ========== Table UI v2c: corrected hierarchy and safe zones ========== */
+.ddz-root[data-phase="playing"] {
+  --ddz-hand-card-w: clamp(142px, 7.8vw, 184px);
+  --ddz-hand-card-h: calc(var(--ddz-hand-card-w) * 1.4);
+  --ddz-hand-overlap: calc(var(--ddz-hand-card-w) * -0.54);
+}
+
+.ddz-root[data-phase="playing"] .ddz-table-status {
+  top: clamp(128px, 16dvh, 176px);
+  width: min(520px, calc(100% - 640px));
+  min-width: 360px;
+  min-height: 34px;
+  padding: 4px 12px;
+  border-color: rgba(232, 195, 90, 0.32);
+  background: linear-gradient(90deg, rgba(8, 22, 23, 0.52), rgba(38, 31, 25, 0.68), rgba(8, 22, 23, 0.52));
+}
+
+.ddz-root[data-phase="playing"] .ddz-turn-hint {
+  font-size: clamp(13px, 0.86vw, 15px);
+  font-weight: 800;
+}
+
+.ddz-root[data-phase="playing"] .ddz-auction-score {
+  color: rgba(255, 246, 210, 0.78);
+  font-size: 11px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-auction-score strong {
+  font-size: 17px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-action-label {
+  display: inline-flex;
+  min-height: 34px;
+  max-width: 160px;
+  align-items: center;
+  padding: 5px 13px;
+  border-radius: 999px;
+  color: rgba(224, 245, 255, 0.92);
+  background: rgba(9, 19, 24, 0.72);
+  border: 1px solid rgba(165, 219, 242, 0.22);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.32);
+  font-size: clamp(18px, 1.28vw, 25px);
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 1px 8px rgba(68, 196, 255, 0.35);
+  backdrop-filter: blur(12px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-right .ddz-action-label {
+  float: none;
+  margin-left: auto;
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-right .ddz-seat-action,
+.ddz-root[data-phase="playing"] .ddz-seat-right .ddz-action-cards {
+  text-align: right;
+}
+
+.ddz-root[data-phase="playing"] .ddz-me {
+  padding-left: clamp(148px, 14vw, 250px);
+  padding-right: clamp(12px, 4vw, 70px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-me-head {
+  left: clamp(18px, 2vw, 38px);
+  bottom: clamp(18px, 2.5dvh, 34px);
+  width: clamp(180px, 13vw, 238px);
+  transform: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-me-head .ddz-seat-head {
+  transform: none;
+  transform-origin: left bottom;
+  padding: 8px 12px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-avatar-me {
+  width: clamp(54px, 3.3vw, 66px);
+  height: clamp(54px, 3.3vw, 66px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-controls {
+  bottom: calc(var(--ddz-hand-card-h) + 24px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-control-group {
+  gap: 7px;
+  padding: 5px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn {
+  min-height: 31px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn-hint {
+  min-width: 48px;
+  padding-inline: 10px;
+  opacity: 0.92;
+}
+
+.ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn-accent {
+  min-width: clamp(78px, 5vw, 104px);
+  min-height: 38px;
+  padding-inline: 18px;
+  font-size: clamp(15px, 1vw, 18px);
+  box-shadow: 0 7px 18px rgba(22, 168, 89, 0.34), 0 4px 12px rgba(0, 0, 0, 0.38);
+}
+
+.ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn-pass {
+  min-width: 54px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn-ghost {
+  min-width: 68px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand {
+  padding-left: max(14px, 11vw);
+  padding-right: max(14px, 5vw);
+}
+
+@media (max-width: 1280px) {
+  .ddz-root[data-phase="playing"] .ddz-table-status {
+    width: min(480px, calc(100% - 330px));
+    min-width: 300px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-me {
+    padding-left: 118px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-me-head {
+    width: 158px;
+  }
+}
+
+@media (max-width: 760px) {
+  .ddz-root[data-phase="playing"] .ddz-table-status {
+    width: min(390px, calc(100% - 18px));
+    min-width: 0;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-me {
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-me-head {
+    display: none;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn-accent {
+    min-width: 68px;
+    min-height: 34px;
+  }
+}
+
+@media (max-height: 700px) {
+  .ddz-root[data-phase="playing"] .ddz-table-status {
+    top: 74px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-action-label {
+    min-height: 28px;
+    padding: 4px 10px;
+    font-size: clamp(16px, 2.8dvh, 20px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-me-head {
+    bottom: 12px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-controls {
+    bottom: calc(var(--ddz-hand-card-h) + 18px);
+  }
+}
+
+/* ========== Table UI v2b: denser play field, cleaner bottom rail ========== */
+.ddz-root[data-phase="playing"] {
+  --ddz-hand-card-w: clamp(144px, 8vw, 190px);
+  --ddz-hand-card-h: calc(var(--ddz-hand-card-w) * 1.4);
+  --ddz-hand-overlap: calc(var(--ddz-hand-card-w) * -0.55);
+  --ddz-mini-card-w: clamp(66px, 3.6vw, 84px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-table {
+  background:
+    radial-gradient(ellipse at 50% 34%, rgba(37, 125, 91, 0.38), transparent 36%),
+    radial-gradient(ellipse at 50% 76%, rgba(224, 180, 78, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(3, 36, 29, 0.8), rgba(1, 11, 11, 0.96));
+}
+
+.ddz-root[data-phase="playing"] .ddz-center {
+  top: 10px;
+  gap: clamp(54px, 7dvh, 94px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-bottom .ddz-card {
+  --card-w: clamp(46px, 2.7vw, 62px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-table-status {
+  top: clamp(132px, 17dvh, 190px);
+  width: min(640px, calc(100% - 620px));
+  min-width: 430px;
+  min-height: 46px;
+  background:
+    linear-gradient(90deg, rgba(9, 24, 25, 0.68), rgba(51, 38, 28, 0.84), rgba(9, 24, 25, 0.68));
+}
+
+.ddz-root[data-phase="playing"] .ddz-last .ddz-card {
+  --card-w: clamp(86px, 4.7vw, 112px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat {
+  top: clamp(250px, 43dvh, 450px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-action {
+  margin-top: 16px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-action-label {
+  font-size: clamp(30px, 2.7vw, 48px);
+  opacity: 0.95;
+}
+
+.ddz-root[data-phase="playing"] .ddz-action-cards .ddz-card {
+  --card-w: clamp(76px, 4vw, 102px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-me {
+  bottom: 0;
+  padding: 0 clamp(8px, 5vw, 92px) 0;
+}
+
+.ddz-root[data-phase="playing"] .ddz-me::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--ddz-hand-card-h) * 0.52);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  background:
+    linear-gradient(180deg, rgba(7, 19, 18, 0), rgba(6, 12, 13, 0.78) 34%, rgba(4, 8, 10, 0.92));
+  pointer-events: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-me-head {
+  left: clamp(10px, 1.6vw, 24px);
+  bottom: 14px;
+  width: clamp(160px, 13vw, 220px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-me-head .ddz-seat-head {
+  padding: 8px 10px;
+  transform: scale(0.94);
+  transform-origin: left bottom;
+}
+
+.ddz-root[data-phase="playing"] .ddz-avatar-me {
+  width: clamp(52px, 3.4vw, 66px);
+  height: clamp(52px, 3.4vw, 66px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand {
+  min-height: calc(var(--ddz-hand-card-h) + 42px);
+  padding: 30px max(20px, 15vw) 4px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-controls {
+  bottom: calc(var(--ddz-hand-card-h) + 34px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-control-group {
+  gap: 6px;
+  padding: 5px;
+  background: rgba(7, 10, 15, 0.78);
+}
+
+.ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn {
+  min-width: clamp(52px, 3.5vw, 68px);
+  min-height: clamp(28px, 2vw, 36px);
+  padding: 4px 11px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.32);
+}
+
+.ddz-root[data-phase="playing"] .ddz-msg {
+  bottom: 5px;
+  left: clamp(12px, 2vw, 38px);
+}
+
+@media (max-width: 1280px) {
+  .ddz-root[data-phase="playing"] {
+    --ddz-hand-card-w: clamp(124px, 11vw, 152px);
+    --ddz-hand-overlap: calc(var(--ddz-hand-card-w) * -0.6);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-table-status {
+    width: min(540px, calc(100% - 360px));
+    min-width: 320px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-controls {
+    bottom: calc(var(--ddz-hand-card-h) + 28px);
+  }
+}
+
+@media (max-height: 700px) {
+  .ddz-root[data-phase="playing"] {
+    --ddz-hand-card-w: clamp(108px, 18dvh, 136px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-center {
+    gap: 54px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-table-status {
+    top: 78px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-seat {
+    top: 43%;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-controls {
+    bottom: calc(var(--ddz-hand-card-h) + 24px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-hand {
+    min-height: calc(var(--ddz-hand-card-h) + 30px);
+    padding-top: 20px;
+  }
+}
+
+@media (max-height: 540px) {
+  .ddz-root[data-phase="playing"] {
+    --ddz-hand-card-w: clamp(92px, 22dvh, 112px);
+    --ddz-hand-overlap: calc(var(--ddz-hand-card-w) * -0.64);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-table-status {
+    top: 58px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-center {
+    gap: 40px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-last .ddz-card {
+    --card-w: clamp(42px, 10dvh, 54px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-controls {
+    bottom: calc(var(--ddz-hand-card-h) + 12px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn {
+    min-width: 42px;
+    min-height: 24px;
+    padding: 2px 6px;
+  }
+}
+
+/* ========== Table UI v2d: locked safe zones and mature action hierarchy ========== */
+.ddz-root[data-phase="playing"] {
+  --ddz-hand-card-w: clamp(146px, 7.3vw, 178px);
+  --ddz-hand-card-h: calc(var(--ddz-hand-card-w) * 1.4);
+  --ddz-hand-overlap: calc(var(--ddz-hand-card-w) * -0.53);
+  --ddz-mini-card-w: clamp(74px, 3.8vw, 92px);
+  --ddz-mini-card-h: calc(var(--ddz-mini-card-w) * 1.4);
+  padding: 8px 14px 10px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-table {
+  overflow: hidden;
+}
+
+.ddz-root[data-phase="playing"] .ddz-table-status {
+  top: clamp(126px, 17dvh, 188px);
+  width: min(440px, calc(100% - 520px));
+  min-width: 330px;
+  min-height: 32px;
+  padding: 4px 11px;
+  border: 1px solid rgba(232, 195, 90, 0.28);
+  background:
+    linear-gradient(90deg, rgba(9, 24, 25, 0.50), rgba(39, 32, 25, 0.62), rgba(9, 24, 25, 0.50));
+}
+
+.ddz-root[data-phase="playing"] .ddz-turn-hint {
+  font-size: clamp(13px, 0.78vw, 15px);
+  font-weight: 800;
+}
+
+.ddz-root[data-phase="playing"] .ddz-auction-score {
+  font-size: 10px;
+  opacity: 0.88;
+}
+
+.ddz-root[data-phase="playing"] .ddz-auction-score strong {
+  font-size: 17px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-center {
+  top: 8px;
+  width: min(560px, 38vw);
+  min-width: 320px;
+  gap: clamp(72px, 12dvh, 132px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-bottom-wrap {
+  top: 0;
+}
+
+.ddz-root[data-phase="playing"] .ddz-last-wrap {
+  top: clamp(250px, 43dvh, 388px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-bottom .ddz-card {
+  --card-w: clamp(44px, 2.35vw, 58px);
+  --card-h: calc(var(--card-w) * 1.4);
+  margin-left: -8px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-last .ddz-card {
+  --card-w: clamp(88px, 4.6vw, 112px);
+  --card-h: calc(var(--card-w) * 1.4);
+  margin-left: -12px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat {
+  top: clamp(270px, 42dvh, 430px);
+  width: clamp(168px, 14vw, 230px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-left {
+  left: clamp(16px, 4vw, 82px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-right {
+  right: clamp(16px, 4vw, 82px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-action {
+  margin-top: 16px;
+  min-height: 28px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-action-label {
+  min-height: 32px;
+  max-width: 132px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  color: rgba(222, 244, 255, 0.92);
+  background: rgba(7, 18, 22, 0.64);
+  border: 1px solid rgba(151, 217, 244, 0.20);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.30);
+  font-size: clamp(18px, 1.25vw, 24px);
+  line-height: 1;
+  text-shadow: 0 1px 8px rgba(68, 196, 255, 0.34);
+  backdrop-filter: blur(12px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-right .ddz-action-label {
+  float: none;
+  margin-left: auto;
+}
+
+.ddz-root[data-phase="playing"] .ddz-action-cards .ddz-card {
+  --card-w: clamp(72px, 3.7vw, 92px);
+  --card-h: calc(var(--card-w) * 1.4);
+}
+
+.ddz-root[data-phase="playing"] .ddz-me {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  transform: none;
+  padding: 0 clamp(14px, 4vw, 84px) 6px clamp(148px, 12vw, 238px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-me::before {
+  height: calc(var(--ddz-hand-card-h) * 0.58);
+}
+
+.ddz-root[data-phase="playing"] .ddz-me-head {
+  left: clamp(16px, 1.8vw, 34px);
+  bottom: clamp(16px, 2.2dvh, 28px);
+  width: clamp(170px, 12vw, 228px);
+  transform: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-me-head .ddz-seat-head {
+  padding: 7px 10px;
+  transform: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-avatar-me {
+  width: clamp(54px, 3.2vw, 66px);
+  height: clamp(54px, 3.2vw, 66px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand {
+  min-height: calc(var(--ddz-hand-card-h) + 78px);
+  padding: 58px max(14px, 4vw) 2px 0;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card {
+  margin-left: var(--ddz-hand-overlap);
+  will-change: transform;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card.selected {
+  transform: translateY(-26px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card.is-hovered {
+  transform: translateY(-46px);
+  z-index: 70 !important;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card.selected.is-hovered {
+  transform: translateY(-56px);
+  z-index: 75 !important;
+}
+
+.ddz-root[data-phase="playing"] .ddz-controls {
+  bottom: calc(var(--ddz-hand-card-h) + 96px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-control-group {
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(4, 9, 14, 0.62);
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.26);
+}
+
+.ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn {
+  min-width: 46px;
+  min-height: 29px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn-hint {
+  min-width: 44px;
+  opacity: 0.86;
+}
+
+.ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn-accent {
+  min-width: clamp(82px, 4.8vw, 108px);
+  min-height: 38px;
+  padding-inline: 18px;
+  font-size: clamp(15px, 0.95vw, 17px);
+  box-shadow: 0 8px 18px rgba(23, 171, 93, 0.34), 0 5px 12px rgba(0, 0, 0, 0.34);
+}
+
+.ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn-pass {
+  min-width: 50px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn-ghost {
+  min-width: 64px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-msg {
+  bottom: 8px;
+  left: clamp(14px, 2vw, 38px);
+  font-size: 12px;
+}
+
+@media (min-width: 2200px) {
+  .ddz-root[data-phase="playing"] {
+    --ddz-hand-card-w: clamp(156px, 5.2vw, 204px);
+    --ddz-hand-overlap: calc(var(--ddz-hand-card-w) * -0.54);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-table-status {
+    width: 520px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .ddz-root[data-phase="playing"] {
+    --ddz-hand-card-w: clamp(124px, 10.8vw, 152px);
+    --ddz-hand-overlap: calc(var(--ddz-hand-card-w) * -0.60);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-table-status {
+    width: min(390px, calc(100% - 320px));
+    min-width: 290px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-me {
+    padding-left: 116px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-me-head {
+    width: 154px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-hand {
+    padding-top: 50px;
+  }
+}
+
+@media (max-width: 760px) {
+  .ddz-root[data-phase="playing"] .ddz-table-status {
+    width: min(360px, calc(100% - 18px));
+    min-width: 0;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-me {
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-me-head {
+    display: none;
+  }
+}
+
+@media (max-height: 700px) {
+  .ddz-root[data-phase="playing"] {
+    --ddz-hand-card-w: clamp(112px, 18dvh, 140px);
+    --ddz-hand-overlap: calc(var(--ddz-hand-card-w) * -0.61);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-table-status {
+    top: 74px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-last-wrap {
+    top: clamp(186px, 38dvh, 270px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-seat {
+    top: 41%;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-action-label {
+    min-height: 28px;
+    padding: 4px 10px;
+    font-size: clamp(15px, 2.7dvh, 20px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-hand {
+    min-height: calc(var(--ddz-hand-card-h) + 66px);
+    padding-top: 50px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-controls {
+    bottom: calc(var(--ddz-hand-card-h) + 74px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn {
+    min-height: 26px;
+    padding: 3px 8px;
+    font-size: 12px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-control-group .ddz-btn-accent {
+    min-height: 34px;
+  }
+}
+
+@media (max-height: 560px) {
+  .ddz-root[data-phase="playing"] {
+    --ddz-hand-card-w: clamp(96px, 22dvh, 118px);
+    --ddz-hand-overlap: calc(var(--ddz-hand-card-w) * -0.64);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-bottom-wrap {
+    display: none;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-table-status {
+    top: 56px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-last-wrap {
+    top: 142px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-controls {
+    bottom: calc(var(--ddz-hand-card-h) + 58px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-hand {
+    min-height: calc(var(--ddz-hand-card-h) + 52px);
+    padding-top: 40px;
+  }
+}
+
+/* ========== Table UI v2e: readable bottom cards, non-overlap controls, stable hover hit area ========== */
+.ddz-root[data-phase="playing"] {
+  --ddz-bottom-card-w: clamp(62px, 3.2vw, 82px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-center {
+  top: 6px;
+  width: min(620px, 42vw);
+}
+
+.ddz-root[data-phase="playing"] .ddz-bottom-wrap {
+  top: 0;
+  padding: 0 8px;
+  display: block;
+}
+
+.ddz-root[data-phase="playing"] .ddz-bottom .ddz-card {
+  --card-w: var(--ddz-bottom-card-w);
+  --card-h: calc(var(--card-w) * 1.4);
+  margin-left: -10px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-zone-label {
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-table-status {
+  top: clamp(148px, 19dvh, 210px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-last-wrap {
+  top: clamp(262px, 43dvh, 392px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-info {
+  gap: 7px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-count-pill {
+  min-height: 24px;
+  padding: 3px 10px;
+  border: 1px solid rgba(198, 230, 255, 0.20);
+  color: rgba(238, 249, 255, 0.96);
+  background: rgba(0, 0, 0, 0.62);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-right .ddz-count-pill {
+  border-color: rgba(120, 206, 255, 0.34);
+  background: rgba(4, 25, 34, 0.76);
+}
+
+.ddz-root[data-phase="playing"] .ddz-controls {
+  bottom: calc(var(--ddz-hand-card-h) + 142px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-control-group {
+  transform: scale(0.92);
+  transform-origin: center;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand {
+  min-height: calc(var(--ddz-hand-card-h) + 92px);
+  padding-top: 72px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card.is-hovered {
+  transform: translateY(-60px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card.selected.is-hovered {
+  transform: translateY(-68px);
+}
+
+@media (min-width: 2200px) {
+  .ddz-root[data-phase="playing"] {
+    --ddz-bottom-card-w: clamp(76px, 2.45vw, 96px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-controls {
+    bottom: calc(var(--ddz-hand-card-h) + 156px);
+  }
+}
+
+@media (max-height: 700px) {
+  .ddz-root[data-phase="playing"] {
+    --ddz-bottom-card-w: clamp(54px, 8.2dvh, 68px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-table-status {
+    top: 86px;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-last-wrap {
+    top: clamp(198px, 39dvh, 278px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-controls {
+    bottom: calc(var(--ddz-hand-card-h) + 108px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-hand {
+    min-height: calc(var(--ddz-hand-card-h) + 78px);
+    padding-top: 60px;
+  }
+}
+
+@media (max-height: 560px) {
+  .ddz-root[data-phase="playing"] .ddz-bottom-wrap {
+    display: block;
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-controls {
+    bottom: calc(var(--ddz-hand-card-h) + 78px);
+  }
+
+  .ddz-root[data-phase="playing"] .ddz-hand {
+    min-height: calc(var(--ddz-hand-card-h) + 62px);
+    padding-top: 48px;
+  }
+}
+
+/* ========== Table UI v2i: ordered hand depth ========== */
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card {
+  z-index: var(--ddz-card-layer, 1) !important;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card.selected {
+  z-index: calc(var(--ddz-card-layer, 1) + 1) !important;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card.is-hovered {
+  z-index: calc(var(--ddz-card-layer, 1) + 2) !important;
+}
+
+.ddz-root[data-phase="playing"] .ddz-hand .ddz-card.selected.is-hovered {
+  z-index: calc(var(--ddz-card-layer, 1) + 3) !important;
+}
+
+/* ========== Table UI v2j: compact opponent state, center-only played cards ========== */
+.ddz-root[data-phase="playing"] .ddz-seat {
+  width: clamp(150px, 12vw, 204px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-head {
+  padding: 7px 9px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat .ddz-avatar {
+  width: clamp(46px, 2.8vw, 56px);
+  height: clamp(46px, 2.8vw, 56px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-name {
+  font-size: 14px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-count-pill,
+.ddz-root[data-phase="playing"] .ddz-role-badge {
+  min-height: 22px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-played {
+  min-height: 34px;
+  margin-top: 8px;
+  padding-left: 12px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-right .ddz-played {
+  padding-right: 12px;
+}
+
+.ddz-root[data-phase="playing"] .ddz-played .ddz-card {
+  --card-w: clamp(31px, 1.75vw, 40px);
+  --card-h: calc(var(--card-w) * 1.4);
+  margin-left: calc(var(--card-w) * -0.43);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-action {
+  display: flex;
+  min-height: 30px;
+  margin-top: 8px;
+  justify-content: flex-start;
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-right .ddz-seat-action {
+  justify-content: flex-end;
+}
+
+.ddz-root[data-phase="playing"] .ddz-action-label {
+  min-height: 28px;
+  max-width: 118px;
+  padding: 4px 10px;
+  font-size: clamp(16px, 1.05vw, 21px);
+}
+
+.ddz-root[data-phase="playing"] .ddz-seat-left .ddz-action-cards,
+.ddz-root[data-phase="playing"] .ddz-seat-right .ddz-action-cards {
+  display: none;
+}
+
+.ddz-root[data-phase="playing"] .ddz-turn-timer {
+  min-width: 48px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(236, 199, 107, .52);
+  background: linear-gradient(180deg, rgba(22, 29, 27, .92), rgba(6, 15, 13, .86));
+  color: #ffeaa2;
+  font-weight: 900;
+  font-size: 14px;
+  line-height: 1;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .1);
+}
+
+.ddz-root[data-phase="playing"] .ddz-turn-timer.is-warning {
+  color: #ffd15f;
+  border-color: rgba(255, 198, 84, .72);
+}
+
+.ddz-root[data-phase="playing"] .ddz-turn-timer.is-critical {
+  color: #fff;
+  background: linear-gradient(180deg, rgba(214, 75, 50, .94), rgba(120, 22, 18, .9));
+  border-color: rgba(255, 149, 106, .84);
 }

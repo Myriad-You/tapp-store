@@ -50,6 +50,8 @@ export type ComboType =
   | 'airplane'
   | 'airplane_singles'
   | 'airplane_pairs'
+  | 'four_two_singles'
+  | 'four_two_pairs'
   | 'bomb'
   | 'rocket'
 
@@ -89,6 +91,8 @@ export interface GameState {
   auctionStart: number
   /** Number of auction actions taken this round. */
   auctionActions: number
+  /** Bomb / rocket multiplier, starts at 1 and doubles for each bomb/rocket play. */
+  multiplier: number
   /** Winner seat when finished. */
   winner: number | null
   /** 'landlord' | 'farmers' when finished. */
@@ -232,6 +236,7 @@ export function createLobbyState(): GameState {
     passCount: 0,
     auctionStart: 0,
     auctionActions: 0,
+    multiplier: 1,
     winner: null,
     winningSide: null,
   }
@@ -255,6 +260,7 @@ export function startDeal(seed: number, auctionStart = 0): GameState {
     passCount: 0,
     auctionStart: start,
     auctionActions: 0,
+    multiplier: 1,
     winner: null,
     winningSide: null,
   }
@@ -406,6 +412,48 @@ export function identifyCombo(cards: Card[]): Combo | null {
   // Bomb
   if (n === 4 && ranks.length === 1 && counts[0] === 4) {
     return { type: 'bomb', mainValue: ranks[0]!, length: 1, cards: cards.slice() }
+  }
+
+  // Four + two singles (四带二)
+  if (n === 6) {
+    const quadRank = ranks.find(r => byRank.get(r)!.length === 4)
+    if (quadRank !== undefined) {
+      const kickRanks = ranks.filter(r => r !== quadRank)
+      if (kickRanks.length === 2 && kickRanks.every(r => byRank.get(r)!.length === 1)) {
+        return {
+          type: 'four_two_singles',
+          mainValue: quadRank,
+          length: 1,
+          cards: cards.slice(),
+        }
+      }
+    }
+  }
+
+  // Four + two pairs (四带两对)
+  if (n === 8) {
+    const quadRank = ranks.find(r => byRank.get(r)!.length === 4)
+    if (quadRank !== undefined) {
+      let pairUnits = 0
+      for (const r of ranks) {
+        if (r === quadRank)
+          continue
+        const count = byRank.get(r)!.length
+        if (count !== 2) {
+          pairUnits = -999
+          break
+        }
+        pairUnits += 1
+      }
+      if (pairUnits === 2) {
+        return {
+          type: 'four_two_pairs',
+          mainValue: quadRank,
+          length: 1,
+          cards: cards.slice(),
+        }
+      }
+    }
   }
 
   // Single
@@ -663,6 +711,9 @@ export function applyPlay(state: GameState, action: PlayAction): ApplyResult {
   next.hands[seat] = sortHand(remaining)
   next.lastCombo = combo
   next.passCount = 0
+  if (combo.type === 'bomb' || combo.type === 'rocket') {
+    next.multiplier = (next.multiplier || 1) * 2
+  }
   if (next.trickLeader === null) {
     next.trickLeader = action.seat
   }
@@ -737,6 +788,8 @@ export const COMBO_TYPE_LABELS: Record<ComboType, string> = {
   airplane: '飞机',
   airplane_singles: '飞机带单',
   airplane_pairs: '飞机带对',
+  four_two_singles: '四带二',
+  four_two_pairs: '四带两对',
   bomb: '炸弹',
   rocket: '王炸',
 }
@@ -786,6 +839,32 @@ export function enumerateLegalPlays(hand: Card[], table: Combo | null): Card[][]
     if (group.length >= 2) push(takeN(group, 2))
     if (group.length >= 3) push(takeN(group, 3))
     if (group.length >= 4) push(takeN(group, 4))
+  }
+
+  // Four + two singles / two pairs. These are normal combinations, not bombs.
+  for (const r of ranks) {
+    const quad = byRank.get(r)!
+    if (quad.length < 4) continue
+    const body = takeN(quad, 4)
+    const kickRanks = ranks.filter(x => x !== r)
+    const singlesPool: Card[] = []
+    for (const kr of kickRanks) {
+      const group = byRank.get(kr)!
+      if (group.length === 1) singlesPool.push(...group)
+    }
+    if (singlesPool.length >= 2) {
+      singlesPool.sort((a, b) => rankValue(a.rank) - rankValue(b.rank) || a.suit.localeCompare(b.suit))
+      push([...body, ...singlesPool.slice(0, 2)])
+    }
+    const pairs: Card[][] = []
+    for (const kr of kickRanks) {
+      const group = byRank.get(kr)!
+      if (group.length >= 2) pairs.push(takeN(group, 2))
+    }
+    if (pairs.length >= 2) {
+      pairs.sort((a, b) => rankValue(a[0]!.rank) - rankValue(b[0]!.rank))
+      push([...body, ...pairs.slice(0, 2).flat()])
+    }
   }
 
   // Rocket

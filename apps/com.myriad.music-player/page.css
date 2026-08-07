@@ -809,6 +809,17 @@ html.mp-has-lyrics .track-title {
 .lyrics-inner {
   position: absolute;
   inset: 0;
+  transition: opacity 0.22s ease;
+}
+
+/* 首测之前每一行的 y 都还是 0 —— 全叠在 top:0 糊成一坨。
+   打开侧栏时这段能持续整个列宽过渡（测量被 suspendLyricMeasure 挡着），
+   所以「首次打开歌词」必然先看到一坨再散开。这里先藏，测出布局再淡入。
+   JS 侧只在 DOM 重建后到首测落地之间挂这个类（见 setLyricPremeasure）；
+   面板已展开时首测与重建同帧完成，不会闪。 */
+#lyrics-container.lyrics-premeasure .lyrics-inner {
+  opacity: 0;
+  transition: none;
 }
 
 .lyric-line {
@@ -1139,8 +1150,14 @@ html.mp-has-lyrics .track-title {
 }
 
 /* ============ 间奏呼吸点（Apple Music 式）============ */
-/* 默认常驻显示（暗态，与非激活歌词行一致的存在感），间奏进行时点亮；
-   占位与歌词行同节奏：同 padding，槽位高度 = 行框 40px×1.35 + 22px padding ≈ 76px */
+/* 三点是「按需出现」的：默认完全隐身、且不跑任何动画，只把槽位占住
+   （height 与歌词行同节奏，所以点的出现/消失不会让歌词布局位移）。
+   四态由 JS 的 interludeStage 推进：
+     无类     未到间奏 —— 隐身占位
+     .active  间奏中   —— dotIntro 长出来 → dotBreathe 呼吸 → 按进度依次点亮
+     .finishing 收尾中 —— 鼓一下再被重力吸走
+     .spent   已收尾   —— 永久退出，不回常驻态、不留动画
+   槽位高度 = 行框 40px×1.35 + 22px padding ≈ 76px */
 .lyric-interlude {
   position: absolute;
   top: 0;
@@ -1150,9 +1167,11 @@ html.mp-has-lyrics .track-title {
   height: calc(1.35 * var(--lyric-fs, 40px) + 22px);
   display: flex;
   align-items: center;
-  gap: 8px;
+  /* 10px 而非 8px：收尾鼓到 1.5×（含过冲实测 ~1.55 → 直径 15.5px）时，
+     8px 只剩 2.4px 净距，三点几乎糊成一条；10px 留出 ~4.5px，鼓起来仍是三颗 */
+  gap: 10px;
   padding: 11px 8px;
-  opacity: 0.35;
+  opacity: 0;
   transform-origin: left center;
   transition: opacity 0.45s ease;
   pointer-events: none;
@@ -1160,41 +1179,48 @@ html.mp-has-lyrics .track-title {
   will-change: transform;
 }
 
-.lyric-interlude.active {
+/* 现身：间奏进行中，以及收尾塌陷中（.active 与 .finishing 同时摘掉，
+   收尾若被 seek 打断也由这里兜住淡出） */
+.lyric-interlude.active,
+.lyric-interlude.finishing {
   opacity: 1;
 }
 
+/* 点本身不带动画：显隐完全由上面的容器态决定。
+   这样 prefers-reduced-motion 把 animation 全禁掉时，三点依然该现身现身、
+   该消失消失，只是没有长出/呼吸/塌陷的过程 */
 .lyric-interlude span {
   width: 10px;
   height: 10px;
   border-radius: 50%;
   background: var(--text-primary);
-  opacity: 0.22;
+  opacity: 0.26;
   transition: opacity 0.5s ease;
-  /* 暗态常驻慢速微呼吸：平时也有生命，不是摆设 */
-  animation: dotBreatheIdle 3.8s ease-in-out infinite;
 }
-
-.lyric-interlude span:nth-child(2) { animation-delay: 0.65s; }
-.lyric-interlude span:nth-child(3) { animation-delay: 1.3s; }
-
-/* 间奏进行时：完整幅度呼吸（叠加依次点亮） */
-.lyric-interlude.active span {
-  animation: dotBreathe 2.4s ease-in-out infinite;
-}
-
-.lyric-interlude.active span:nth-child(2) { animation-delay: 0.4s; }
-.lyric-interlude.active span:nth-child(3) { animation-delay: 0.8s; }
 
 /* 按间奏进度依次点亮 */
 .lyric-interlude span.on {
   opacity: 0.92;
 }
 
+/* 间奏进行时：先长出来，再交给呼吸。
+   dotIntro 用 both 填充停在 scale(1)，dotBreathe 的 0% 也是 scale(1)，
+   两段在列表里后者靠后 → 接管点上数值相同，衔接无跳变。
+   出场错峰收得紧（70ms 一颗，像被一口气点出来），呼吸错峰仍是原来的
+   0.4s/0.8s 大错峰（波浪感），所以两者的 delay 各算各的。 */
+.lyric-interlude.active span {
+  animation:
+    dotIntro 460ms cubic-bezier(0.34, 1.32, 0.5, 1) both,
+    dotBreathe 2.4s ease-in-out 460ms infinite;
+}
+
+.lyric-interlude.active span:nth-child(2) { animation-delay: 70ms, 930ms; }
+.lyric-interlude.active span:nth-child(3) { animation-delay: 140ms, 1400ms; }
+
 /* 间奏收尾（Apple Music 式）：三点先鼓一下，再被「重力」吸走——加速塌陷至消失。
    JS 在间奏结束前 LYRIC_DOTS_OUTRO 秒挂 .finishing，塌陷完成正好接上下一句。
    ⚠️ 必须排在上面 .active span 之后：两条选择器特异性相同 (0,2,1)，靠源码顺序决胜，
-   挪到 .active 之前收尾就会被常驻呼吸动画盖掉。 */
+   挪到 .active 之前收尾就会被呼吸动画盖掉。 */
 .lyric-interlude.finishing span {
   animation: dotOutro 620ms both;
 }
@@ -1203,10 +1229,39 @@ html.mp-has-lyrics .track-title {
 .lyric-interlude.finishing span:nth-child(2) { animation-delay: 55ms; }
 .lyric-interlude.finishing span:nth-child(3) { animation-delay: 110ms; }
 
+/* 永久退出：收尾跑完就定格在「不存在」——不回常驻态，也不再挂任何动画
+   （dotOutro 是 both 填充的，不显式清掉会在每段走过的间奏上永久留一个动画对象）。
+   ⚠️ 必须是本节最后一条：它跟 .active / .finishing / span.on 的特异性全都相同
+   （(0,2,0) 与 (0,2,1)），靠源码顺序决胜——排在任何一条之前都会被盖掉，
+   「退出」就又变回「闪一下再退出」。 */
+.lyric-interlude.spent {
+  opacity: 0;
+}
+
+.lyric-interlude.spent span {
+  animation: none;
+  opacity: 0;
+}
+
+/* 收尾的起始 scale：由 JS 在挂 .finishing 前把当前呼吸相位的实测 scale
+   写进来（见 captureDotScales）。写死 scale(1) 的话，正鼓到 1.25 的点会先
+   猛缩回 1 再鼓起来——实测 1.25→1.00 的瞬跳，肉眼看就是「顿一下又鼓一下」。
+   必须 @property 注册成 <number>，否则 var() 在 keyframe 里不是可动画的类型值。 */
+@property --dot-s0 {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
+}
+
+@keyframes dotIntro {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+
 /* 两段式：先弹性鼓起（略过冲），再按重力加速塌缩到零 */
 @keyframes dotOutro {
   0% {
-    transform: scale(1);
+    transform: scale(var(--dot-s0));
     opacity: 0.92;
     animation-timing-function: cubic-bezier(0.2, 0.85, 0.3, 1.35);
   }
@@ -1224,12 +1279,6 @@ html.mp-has-lyrics .track-title {
 @keyframes dotBreathe {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.25); }
-}
-
-/* 暗态微呼吸：小幅缩放 + 轻微明暗（无 .on 时 opacity 由动画呼吸） */
-@keyframes dotBreatheIdle {
-  0%, 100% { transform: scale(1); opacity: 0.16; }
-  50% { transform: scale(1.1); opacity: 0.3; }
 }
 
 /* 播放列表面板 */

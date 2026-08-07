@@ -3,7 +3,10 @@
  *
  * Transport: federation Room custom messages with `message_type: 'doudizhu'`.
  * Realtime path: `Tapp.federation.sendRoomMessage` + `subscribeRoom` / `onMessage`
- * (persisted room messages + WebSocket fan-out). No separate ephemeral WS channel.
+ * (persisted room messages + WebSocket fan-out). No separate private/direct hand
+ * channel exists in the current Tapp Federation API, so host-trusted multiplayer
+ * must treat room payloads as visible transport and avoid retaining opponent
+ * hands in honest clients.
  *
  * Sequencing model (critical for multiplayer):
  * - **Host owns the single global `seq` stream.** Only the host assigns `seq`
@@ -84,14 +87,14 @@ export type ProtocolMessage =
     ready: boolean
   }
   | {
-    /** Host starts a match: full deal (hands keyed by seat; clients use own seat only). */
+    /** Host starts a match. Current room transport is visible to members. */
     type: 'deal_start'
     seq: number
     seed: number
     auctionStart: number
     seats: Record<string, SeatIndex>
     hostActor: string
-    /** Full hands for host-authoritative sync (honest clients read only own seat). */
+    /** Full hands for host-authoritative sync; runtime sanitizes opponent hands on non-host clients. */
     hands: [Card[], Card[], Card[]]
     bottom: Card[]
   }
@@ -169,6 +172,7 @@ export interface PublicGameView {
   lastCombo: GameState['lastCombo']
   passCount: number
   auctionStart: number
+  multiplier: number
   winner: number | null
   winningSide: GameState['winningSide']
   seats: Record<string, SeatIndex>
@@ -226,6 +230,7 @@ export function toPublicView(
     lastCombo: game.lastCombo,
     passCount: game.passCount,
     auctionStart: game.auctionStart,
+    multiplier: game.multiplier,
     winner: game.winner,
     winningSide: game.winningSide,
     seats: { ...seats },
@@ -445,6 +450,7 @@ export function applyProtocolMessage(
         lastCombo: msg.public.lastCombo,
         passCount: msg.public.passCount,
         auctionStart: msg.public.auctionStart,
+        multiplier: msg.public.multiplier || 1,
         winner: msg.public.winner,
         winningSide: msg.public.winningSide,
         bottom: msg.public.bottom.map(c => ({ ...c })),
