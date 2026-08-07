@@ -6042,8 +6042,59 @@ var EQ_INTERVAL = 66;       // ~15fps 频谱/间奏数据块
 var EQ_MAINT_MS = 125;      // ~8fps 零消费方维护
 var EQ_LIGHT_MS = 50;       // ~20fps light 级 Aurora
 var EQ_BG_MS = 50;          // 背景漂移 ~20fps（仅 standard + 非移动端）
-// getSpectrum 单飞：上一次 bridge Promise 未 settle 时跳过本拍，不排队
-var spectrumInFlight = false;
+// ——— 频谱数据来源：只走宿主推流 ———
+// 宿主每帧 emit（Tapp.media.onSpectrum），tapp 订阅一次之后零请求。
+//
+// ⚠️ 不要退回「每帧 getSpectrum」：逐帧 request 会在几秒内打满 TappBridge 的
+// 入站限速（240 条/分钟 ≈ 4 条/秒），此后**同一个桥上的所有请求**都被静默丢弃
+// ——包括 media.control（点下一首没反应）与切歌时的 getLyrics（被拒后判成
+// 「本曲无词」）。轮询兜底就是这个 bug 本身，所以整条删掉，不留回落。
+// 宿主没有 onSpectrum（前端 bundle 未更新）时：无频谱，EQ/Aurora 静默降级，
+// 其余功能不受影响。
+var spectrumPush = { active: false, frame: null, unsub: null };
+
+function startSpectrumStream() {
+  if (spectrumPush.active) return;
+  if (!Tapp.media || typeof Tapp.media.onSpectrum !== 'function') return;
+  try {
+    spectrumPush.unsub = Tapp.media.onSpectrum(function(r) {
+      spectrumPush.frame = r;
+    });
+    spectrumPush.active = true;
+  } catch (e) {
+    spectrumPush.active = false;
+    spectrumPush.unsub = null;
+  }
+}
+
+function stopSpectrumStream() {
+  if (spectrumPush.unsub) {
+    try { spectrumPush.unsub(); } catch (e) { /* ignore */ }
+  }
+  spectrumPush.unsub = null;
+  spectrumPush.active = false;
+  spectrumPush.frame = null;
+}
+
+/** 消费一帧频谱 */
+function applySpectrumFrame(r, needEq, eqEl, needFx, ts) {
+  var s = (r && r.spectrum && r.spectrum.length >= 4) ? r.spectrum : [0, 0, 0, 0];
+  if (needEq) updateListEq(s, eqEl);
+  // FX 可能在取到这帧之后被关掉
+  if (needFx && visualFxEnabled()) {
+    // Aurora 数据样本：优先原始 8 频段；旧前端无 bands 时由 4 柱数据降级映射
+    if (r && r.bands && r.bands.length >= 8) {
+      aurora.bands = r.bands;
+    } else {
+      // 降级：s 为重排 4 柱（低-高-高-低），粗略映射三段
+      aurora.bands = [s[0], s[0], 0, s[2], s[2], s[1], s[3], 0];
+    }
+    // light：无涟漪/grid，mood 不驱动 Aurora → 跳过节奏引擎
+    if (!isAnimLight()) {
+      rhythmTick(aurora.bands, ts);
+    }
+  }
+}
 // 循环在飞（含 body 执行中 / timer 等待），防止 progress 回调 ensureEqLoop 双开
 var eqLoopActive = false;
 
@@ -6084,6 +6135,7 @@ function cancelEqSchedule() {
 function scheduleEqNext() {
   if (!(pageState.status && pageState.status.isPlaying)) {
     eqLoopActive = false;
+    stopSpectrumStream(); // 停播就别让宿主继续每帧推
     return;
   }
   // 已有挂起的帧/定时器则不重复排（restartEqLoop 会先 cancel）
@@ -6167,35 +6219,12 @@ function eqTickBody(ts) {
     // needEq 与动效开关无关（列表 EQ 始终可驱动）；Aurora/节奏频谱仅在 FX 开时需要
     var eq = getActiveEqEl();
     var needEq = !!(eq && isLaidOut(eq));
-    // 单飞：上一次 getSpectrum 未 settle 则跳过本拍（不排队堆积）
-    if ((needEq || needFx) && !spectrumInFlight) {
-      spectrumInFlight = true;
-      var pollNeedEq = needEq;
-      var pollNeedFx = needFx;
-      var pollEq = eq;
-      var pollTs = ts;
-      Tapp.media.getSpectrum().then(function(r) {
-        spectrumInFlight = false;
-        var s = (r && r.spectrum && r.spectrum.length >= 4) ? r.spectrum : [0, 0, 0, 0];
-        if (pollNeedEq) updateListEq(s, pollEq);
-        // FX 可能在 Promise 飞行期间被关掉
-        if (pollNeedFx && visualFxEnabled()) {
-          // Aurora 数据样本：优先原始 8 频段；旧前端无 bands 时由 4 柱数据降级映射
-          if (r && r.bands && r.bands.length >= 8) {
-            aurora.bands = r.bands;
-          } else {
-            // 降级：s 为重排 4 柱（低-高-高-低），粗略映射三段
-            aurora.bands = [s[0], s[0], 0, s[2], s[2], s[1], s[3], 0];
-          }
-          // light：无涟漪/grid，mood 不驱动 Aurora → 跳过节奏引擎
-          if (!isAnimLight()) {
-            rhythmTick(aurora.bands, pollTs);
-          }
-        }
-      }).catch(function(e) {
-        spectrumInFlight = false;
-        logTickError('spectrumPoll', e);
-      });
+    if (needEq || needFx) {
+      startSpectrumStream(); // 幂等；宿主没有 onSpectrum 时是空操作
+      // 直接吃宿主推来的最新一帧，本拍零请求
+      if (spectrumPush.frame) {
+        applySpectrumFrame(spectrumPush.frame, needEq, eq, needFx, ts);
+      }
     }
   }
 
@@ -6296,7 +6325,7 @@ function cleanup() {
   }
   // 清理视觉/EQ 循环（rAF + 低帧率 timer）
   cancelEqSchedule();
-  spectrumInFlight = false;
+  stopSpectrumStream();
   // 清理歌词波浪引擎
   stopLyricWave();
   if (lyricResumeTimer) {
