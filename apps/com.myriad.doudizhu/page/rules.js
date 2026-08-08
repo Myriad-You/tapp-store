@@ -49,7 +49,9 @@
       run.forEach(function (value) { groups.get(value).slice(0, 3).forEach(function (card) { bodyIds.add(card.id); }); });
       const wings = cards.filter(function (card) { return !bodyIds.has(card.id); });
       if (wingMode === 'none' && wings.length === 0) return run;
-      if (wingMode === 'single' && wings.length === chainLength && wings.every(function (card) { return !run.includes(card.value); })) return run;
+      // Single wings are the exact cards left after the three-card bodies are
+      // removed. A fourth card of a body rank is a legal single wing.
+      if (wingMode === 'single' && wings.length === chainLength) return run;
       if (wingMode === 'pair' && wings.length === chainLength * 2) {
         const wingGroups = groupsOf(wings);
         if (wingGroups.size === chainLength && Array.from(wingGroups.entries()).every(function (entry) {
@@ -162,8 +164,9 @@
 
     consecutiveRuns(triples.map(function (entry) { return entry[0]; }), 2).forEach(function (run) {
       const body = run.flatMap(function (value) { return groups.get(value).slice(0, 3); });
+      const bodyIds = new Set(body.map(function (card) { return card.id; }));
       add(body);
-      const rest = hand.filter(function (card) { return !run.includes(card.value); });
+      const rest = hand.filter(function (card) { return !bodyIds.has(card.id); });
       combinations(rest, run.length, 2000).forEach(function (wings) { add(body.concat(wings)); });
       const pairs = entries.filter(function (entry) { return !run.includes(entry[0]) && entry[1].length >= 2; });
       combinations(pairs, run.length, 800).forEach(function (chosen) {
