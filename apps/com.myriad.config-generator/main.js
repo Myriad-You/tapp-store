@@ -2090,6 +2090,30 @@ function initPage() {
           return;
         }
       }
+      // 互斥校验：三个内部子网名两两不同；附加外部子网不得与之撞名
+      var extraNetName = (state.dbExtraNetwork || '').trim();
+      var seen = {};
+      for (var exclIdx = 0; exclIdx < netEntries.length; exclIdx++) {
+        var entry = netEntries[exclIdx];
+        var prevKey = seen[entry.value];
+        if (prevKey) {
+          showNotification(
+            prevKey + ' 与 ' + entry.key + ' 使用了相同的 Docker 网络名「' + entry.value + '」' +
+            '，请改为互不相同',
+            'error'
+          );
+          return;
+        }
+        seen[entry.value] = entry.key;
+        if (extraNetName && extraNetName === entry.value) {
+          showNotification(
+            entry.key + ' 与「为 backend 附加 docker 子网」使用了相同的网络名「' + extraNetName + '」' +
+            '，两者必须不同',
+            'error'
+          );
+          return;
+        }
+      }
       state.netMyriad = netMyriad;
       state.netAdmin = netAdmin;
       state.netGuard = netGuard;
