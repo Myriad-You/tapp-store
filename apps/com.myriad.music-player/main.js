@@ -1,8 +1,14 @@
 // Music Player Tapp v1.1.5
 
+// 排查线上问题用：在 tapp 的 iframe 控制台里 `__mpDebug = true` 即可开，
+// 不必改源码重发版（切歌 / 拉词 / 自愈的关键节点都会打点）
 var MP_DEBUG = false;
+function mpDebugOn() {
+  if (MP_DEBUG) return true;
+  try { return !!window.__mpDebug; } catch (e) { return false; }
+}
 function mpDebug() {
-  if (!MP_DEBUG || !console || !console.debug) return;
+  if (!mpDebugOn() || !console || !console.debug) return;
   try { console.debug.apply(console, arguments); } catch (e) {}
 }
 
@@ -805,11 +811,12 @@ function measureLyricLayout(force) {
   lyricFx.total = y;
   lyricFx.viewH = h;
   lyricFx.viewW = w;
-  // 首测落地：解除「重建后先藏起来」，此后 resize / 翻译开关的重测都不再遮
-  if (!lyricFx.everMeasured) {
-    lyricFx.everMeasured = true;
-    setLyricPremeasure(false);
-  }
+  // 有了有效布局就一定要放出来。
+  // ⚠️ 这里刻意不写成 `if (!everMeasured)`：那样一旦漏掉一次清除，歌词就会一直
+  // 隐身且再也没人来解——「藏起来」的坏法比「叠一坨」难查得多，宁可每次多调一次
+  // classList.toggle（无变化时是 no-op）
+  lyricFx.everMeasured = true;
+  setLyricPremeasure(false);
   var first = lyricFx.items[0];
   var last = lyricFx.items[lyricFx.items.length - 1];
   var minS = first.y - h * LYRIC_FOCAL + first.h / 2;
@@ -2920,6 +2927,45 @@ function ensureLyricWordLoop() {
   }
 }
 
+// ——— 歌词加载自愈 ———
+// 拉歌词只挂在 trackChanged / significantChange 上，而 trackChanged 是靠
+// lastStateSnapshot.trackId 一次性判定的：快照在 updatePlayerUI **之前**就推进了
+// （见 handleStateChange），所以那一拍只要中途抛一次异常、或宿主漏推一次切歌事件，
+// 这首歌的 getLyrics 就永远不会再发起——之后只剩进度流，而进度流不带
+// significantChange。表现就是「有歌词也不显示」，且只能靠再切一次歌才恢复。
+// 这里在进度流上做一次有界兜底：只在「明显不一致」时补发。
+var LYRIC_RECONCILE_MS = 1500;   // 两次补发的最小间隔
+var LYRIC_RECONCILE_MAX = 3;     // 同一首最多补发几次，避免异常态下打死宿主
+var lyricReconcile = { at: 0, trackId: null, tries: 0 };
+
+function reconcileLyricsForCurrentTrack(state) {
+  var track = state && state.currentTrack;
+  if (!track || !track.id) return;
+  // 有请求在飞 / 已确认本曲无词：都不是「卡住」，别插手
+  if (pageState.lyricsLoadingTrackId != null) return;
+  if (isConfirmedEmptyForCurrentTrack()) return;
+  // 展示中的歌词已归属本曲 → 一切正常
+  if (pageState.lyricsSongId != null &&
+      String(pageState.lyricsSongId) === String(track.id)) {
+    return;
+  }
+  if (!needsLyricsLoad(track)) return;
+
+  var id = String(track.id);
+  if (lyricReconcile.trackId !== id) {
+    lyricReconcile.trackId = id;
+    lyricReconcile.tries = 0;
+    lyricReconcile.at = 0;
+  }
+  if (lyricReconcile.tries >= LYRIC_RECONCILE_MAX) return;
+  var now = nowMs();
+  if (now - lyricReconcile.at < LYRIC_RECONCILE_MS) return;
+  lyricReconcile.at = now;
+  lyricReconcile.tries++;
+  mpDebug('[music-player] 歌词自愈补发', id, 'try', lyricReconcile.tries);
+  loadLyricsForTrack(track);
+}
+
 /** 是否需要为该曲拉歌词（已在飞 / 已确认则 false） */
 function needsLyricsLoad(track) {
   if (!track || !track.id) return false;
@@ -4539,6 +4585,10 @@ async function initPage() {
       // 旧曲的目标时间当作播放位置，歌词时钟直接落在几十秒处，约 1.5s 才回正
       seekIntent = null;
       bindTrackFromStatus(state);
+      mpDebug('[music-player] 切歌', prevTrackId, '→', nextTrackId,
+        'loadState=', pageState.lyricsLoadState, 'songId=', pageState.lyricsSongId,
+        'inFlight=', pageState.lyricsLoadingTrackId, 'hostLines=',
+        state.lyrics ? state.lyrics.length : 0);
       // 同曲已在飞（常见：init 已 load，首帧 state 仍报 trackChanged）→ 绝不能 gen++ 作废
       var alreadyLoadingSame = nextTrackId != null &&
         pageState.lyricsLoadingTrackId != null &&
@@ -4619,6 +4669,9 @@ async function initPage() {
         loadLyricsForTrack(state.currentTrack);
       }
       if (trackChanged) loadBeatGridForTrack(state.currentTrack);
+    } else {
+      // 纯进度流：只有在切歌那一拍确实漏了的时候才补发（内部自带一致性判断与节流）
+      reconcileLyricsForCurrentTrack(state);
     }
 
     // 有词/无词 verdict：仅切歌
@@ -5989,8 +6042,59 @@ var EQ_INTERVAL = 66;       // ~15fps 频谱/间奏数据块
 var EQ_MAINT_MS = 125;      // ~8fps 零消费方维护
 var EQ_LIGHT_MS = 50;       // ~20fps light 级 Aurora
 var EQ_BG_MS = 50;          // 背景漂移 ~20fps（仅 standard + 非移动端）
-// getSpectrum 单飞：上一次 bridge Promise 未 settle 时跳过本拍，不排队
-var spectrumInFlight = false;
+// ——— 频谱数据来源：只走宿主推流 ———
+// 宿主每帧 emit（Tapp.media.onSpectrum），tapp 订阅一次之后零请求。
+//
+// ⚠️ 不要退回「每帧 getSpectrum」：逐帧 request 会在几秒内打满 TappBridge 的
+// 入站限速（240 条/分钟 ≈ 4 条/秒），此后**同一个桥上的所有请求**都被静默丢弃
+// ——包括 media.control（点下一首没反应）与切歌时的 getLyrics（被拒后判成
+// 「本曲无词」）。轮询兜底就是这个 bug 本身，所以整条删掉，不留回落。
+// 宿主没有 onSpectrum（前端 bundle 未更新）时：无频谱，EQ/Aurora 静默降级，
+// 其余功能不受影响。
+var spectrumPush = { active: false, frame: null, unsub: null };
+
+function startSpectrumStream() {
+  if (spectrumPush.active) return;
+  if (!Tapp.media || typeof Tapp.media.onSpectrum !== 'function') return;
+  try {
+    spectrumPush.unsub = Tapp.media.onSpectrum(function(r) {
+      spectrumPush.frame = r;
+    });
+    spectrumPush.active = true;
+  } catch (e) {
+    spectrumPush.active = false;
+    spectrumPush.unsub = null;
+  }
+}
+
+function stopSpectrumStream() {
+  if (spectrumPush.unsub) {
+    try { spectrumPush.unsub(); } catch (e) { /* ignore */ }
+  }
+  spectrumPush.unsub = null;
+  spectrumPush.active = false;
+  spectrumPush.frame = null;
+}
+
+/** 消费一帧频谱 */
+function applySpectrumFrame(r, needEq, eqEl, needFx, ts) {
+  var s = (r && r.spectrum && r.spectrum.length >= 4) ? r.spectrum : [0, 0, 0, 0];
+  if (needEq) updateListEq(s, eqEl);
+  // FX 可能在取到这帧之后被关掉
+  if (needFx && visualFxEnabled()) {
+    // Aurora 数据样本：优先原始 8 频段；旧前端无 bands 时由 4 柱数据降级映射
+    if (r && r.bands && r.bands.length >= 8) {
+      aurora.bands = r.bands;
+    } else {
+      // 降级：s 为重排 4 柱（低-高-高-低），粗略映射三段
+      aurora.bands = [s[0], s[0], 0, s[2], s[2], s[1], s[3], 0];
+    }
+    // light：无涟漪/grid，mood 不驱动 Aurora → 跳过节奏引擎
+    if (!isAnimLight()) {
+      rhythmTick(aurora.bands, ts);
+    }
+  }
+}
 // 循环在飞（含 body 执行中 / timer 等待），防止 progress 回调 ensureEqLoop 双开
 var eqLoopActive = false;
 
@@ -6031,6 +6135,7 @@ function cancelEqSchedule() {
 function scheduleEqNext() {
   if (!(pageState.status && pageState.status.isPlaying)) {
     eqLoopActive = false;
+    stopSpectrumStream(); // 停播就别让宿主继续每帧推
     return;
   }
   // 已有挂起的帧/定时器则不重复排（restartEqLoop 会先 cancel）
@@ -6114,35 +6219,12 @@ function eqTickBody(ts) {
     // needEq 与动效开关无关（列表 EQ 始终可驱动）；Aurora/节奏频谱仅在 FX 开时需要
     var eq = getActiveEqEl();
     var needEq = !!(eq && isLaidOut(eq));
-    // 单飞：上一次 getSpectrum 未 settle 则跳过本拍（不排队堆积）
-    if ((needEq || needFx) && !spectrumInFlight) {
-      spectrumInFlight = true;
-      var pollNeedEq = needEq;
-      var pollNeedFx = needFx;
-      var pollEq = eq;
-      var pollTs = ts;
-      Tapp.media.getSpectrum().then(function(r) {
-        spectrumInFlight = false;
-        var s = (r && r.spectrum && r.spectrum.length >= 4) ? r.spectrum : [0, 0, 0, 0];
-        if (pollNeedEq) updateListEq(s, pollEq);
-        // FX 可能在 Promise 飞行期间被关掉
-        if (pollNeedFx && visualFxEnabled()) {
-          // Aurora 数据样本：优先原始 8 频段；旧前端无 bands 时由 4 柱数据降级映射
-          if (r && r.bands && r.bands.length >= 8) {
-            aurora.bands = r.bands;
-          } else {
-            // 降级：s 为重排 4 柱（低-高-高-低），粗略映射三段
-            aurora.bands = [s[0], s[0], 0, s[2], s[2], s[1], s[3], 0];
-          }
-          // light：无涟漪/grid，mood 不驱动 Aurora → 跳过节奏引擎
-          if (!isAnimLight()) {
-            rhythmTick(aurora.bands, pollTs);
-          }
-        }
-      }).catch(function(e) {
-        spectrumInFlight = false;
-        logTickError('spectrumPoll', e);
-      });
+    if (needEq || needFx) {
+      startSpectrumStream(); // 幂等；宿主没有 onSpectrum 时是空操作
+      // 直接吃宿主推来的最新一帧，本拍零请求
+      if (spectrumPush.frame) {
+        applySpectrumFrame(spectrumPush.frame, needEq, eq, needFx, ts);
+      }
     }
   }
 
@@ -6243,7 +6325,7 @@ function cleanup() {
   }
   // 清理视觉/EQ 循环（rAF + 低帧率 timer）
   cancelEqSchedule();
-  spectrumInFlight = false;
+  stopSpectrumStream();
   // 清理歌词波浪引擎
   stopLyricWave();
   if (lyricResumeTimer) {

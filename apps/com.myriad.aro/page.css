@@ -1412,13 +1412,20 @@ button.is-busy{opacity:.72;cursor:wait;pointer-events:none}
 .messages-area{
   /* Isolate scrollport paint from composer/header */
   contain:layout style;
+  /* Browser scroll anchoring stays on: it is the only thing holding the view
+     steady when a lazy image above the viewport decodes mid-scroll, which no
+     render-time correction can cover. settleScrollPosition() detects reader
+     takeover from input events, so anchoring's scrollTop writes do not fight
+     it. */
 }
 .msg-row{
   display:flex;gap:8px;align-items:flex-end;position:relative;
-  /* Skip layout/paint for offscreen bubbles (long transcripts) */
-  content-visibility:auto;
-  contain-intrinsic-size:auto 64px;
 }
+/* No content-visibility here on purpose: skipped rows report the intrinsic
+   placeholder height instead of their real one, so right after an innerHTML
+   rebuild scrollHeight is a large underestimate. Every scrollTop we write is
+   clamped to that short box, and the transcript re-grows under the reader as
+   rows render in. The render window (MSG_RENDER_MAX) is what bounds cost. */
 .feed-content{
   contain:layout style;
 }
@@ -1558,6 +1565,8 @@ button.is-busy{opacity:.72;cursor:wait;pointer-events:none}
   max-width:min(160px,46vw);line-height:0;border-radius:12px;
 }
 .msg-sticker-img{display:block;width:100%;height:auto;max-height:160px;object-fit:contain;border-radius:10px;pointer-events:none;user-select:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.08))}
+/* Reserve the box until the pixels land — see .msg-media:not([data-loaded]). */
+.msg-sticker:not([data-loaded]):not([data-sized]){width:min(140px,46vw);height:120px}
 .msg-row.mine .msg-sticker{margin-left:auto}
 .dark .emoji-cat-btn:hover{background:rgba(255,255,255,.08)}
 .dark .emoji-cat-btn.is-active{background:rgba(var(--tapp-primary-rgb,99,102,241),.22)}
@@ -2063,6 +2072,13 @@ button.is-busy{opacity:.72;cursor:wait;pointer-events:none}
 .msg-media::after{content:'';position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px var(--card-hair);pointer-events:none}
 .msg-media:focus-visible{outline:2px solid rgba(var(--tapp-primary-rgb,99,102,241),.6);outline-offset:2px}
 .msg-image{display:block;width:100%;height:auto;max-height:330px;object-fit:cover;border-radius:inherit;transition:transform .35s cubic-bezier(.2,.7,.2,1)}
+/* An <img> contributes 0×0 until it decodes and the frame is width:fit-content,
+   so an image bubble takes up no space at all until the pixels land — then it
+   snaps to full height and shoves every row below it. Reserving a tile keeps
+   scrollHeight honest so the restored scroll position survives the decode.
+   [data-sized] rows already carry real width/height attributes and size
+   themselves; hydrateMessageMedia() sets data-loaded once the image lands. */
+.msg-media:not([data-loaded]):not([data-sized]){width:min(220px,100%);height:150px}
 .msg-media-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.28),transparent 42%,transparent 62%,rgba(0,0,0,.24));opacity:0;transition:opacity .2s;pointer-events:none}
 .msg-media-zoom{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;background:rgba(15,23,42,.42);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;transform:scale(.85);transition:opacity .18s,transform .18s;pointer-events:none}
 .msg-media:hover .msg-image{transform:scale(1.035)}

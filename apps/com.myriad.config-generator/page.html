@@ -151,6 +151,11 @@
             </select>
           </div>
           <span class="form-hint form-hint-block">容器访问宿主机上的库：常用 <code>host.docker.internal</code>（Docker Desktop）、宿主 IP，或 docker bridge 网关（如 <code>172.17.0.1</code>）。托管库填公网/VPC 主机名即可。</span>
+          <div class="form-group">
+            <label for="db-extra-network">为 backend 附加 docker 子网（可选）</label>
+            <input type="text" id="db-extra-network" class="form-input" placeholder="1panel-network" autocomplete="off">
+            <span class="form-hint">如果你的数据库同为容器但是与 myriad 不在同一个子网，你可能需要这个选项。对于 1Panel 部署，它通常为 <code>1panel-network</code>。这可能会增加后端容器的安全风险。</span>
+          </div>
         </div>
 
         <div class="form-row">
@@ -261,6 +266,37 @@
           <div class="form-group form-group-third">
             <label for="updater-tag">UPDATER_TAG</label>
             <input type="text" id="updater-tag" class="form-input" value="" placeholder="自动获取…" autocomplete="off">
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h2 class="section-title">
+          <span class="section-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="10" rx="2"/>
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M5 7V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </span>
+          网络
+        </h2>
+        <p class="section-desc">自定义 compose 子网名</p>
+        <div class="form-row">
+          <div class="form-group form-group-third">
+            <label for="net-myriad">MYRIAD_DOCKER_NETWORK</label>
+            <input type="text" id="net-myriad" class="form-input" value="myriad-net" placeholder="myriad-net" autocomplete="off">
+            <span class="form-hint">myriad-net</span>
+          </div>
+          <div class="form-group form-group-third">
+            <label for="net-admin">MYRIAD_ADMIN_NETWORK</label>
+            <input type="text" id="net-admin" class="form-input" value="myriad-admin-net" placeholder="myriad-admin-net" autocomplete="off">
+            <span class="form-hint">myriad-admin-net</span>
+          </div>
+          <div class="form-group form-group-third">
+            <label for="net-guard">MYRIAD_DOCKER_GUARD_NETWORK</label>
+            <input type="text" id="net-guard" class="form-input" value="myriad-docker-guard-net" placeholder="myriad-docker-guard-net" autocomplete="off">
+            <span class="form-hint">myriad-docker-guard-net(internal)</span>
           </div>
         </div>
       </section>

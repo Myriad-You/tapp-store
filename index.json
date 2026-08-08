@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.9",
+  "version": "1.0.14",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-08-05T13:42:55.586Z",
+  "updated_at": "2026-08-08T03:25:15.873Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -78,7 +78,7 @@
         "page_styles": "apps/com.myriad.music-player/page.css",
         "page_template": "apps/com.myriad.music-player/page.html"
       },
-      "size": 346987,
+      "size": 350836,
       "downloads": 0,
       "rating": 0,
       "featured": true,
@@ -171,7 +171,7 @@
     {
       "id": "com.myriad.config-generator",
       "name": "Myriad 安装配置生成",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "生成 Compose、.env 与 Nginx 部署配置（1Panel / 宝塔 / CLI · 整站反代 + 联邦）",
       "long_description": "填写域名与数据库参数，按所选面板（1Panel / 宝塔 / 通用 CLI）生成官方生产拓扑的 docker-compose、.env、Nginx 与部署说明。密钥白名单与 .env 再解析防注入；原生表单/通知全自定义；宝塔可粘贴编排或目录部署。",
       "locales": {
@@ -239,13 +239,13 @@
         "page_styles": "apps/com.myriad.config-generator/page.css",
         "page_template": "apps/com.myriad.config-generator/page.html"
       },
-      "size": 179328,
+      "size": 185437,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-14T00:00:00Z",
-      "updated_at": "2026-07-27T12:00:00Z"
+      "updated_at": "2026-08-08T03:25:15.862Z"
     },
     {
       "id": "com.myriad.doudizhu",
@@ -328,7 +328,7 @@
     {
       "id": "com.myriad.aro",
       "name": "Aro",
-      "version": "1.0.54",
+      "version": "1.0.55",
       "description": "社交中心，统一管理消息、时间线、环网与个人资料",
       "long_description": "1.0.54: stop the chat repaint storm (poll now compares the server window against itself, not against the merged list), keep reading position across full re-renders via a row anchor that survives media layout, and stop labelling permanently sealed messages as \"decrypting…\".\n\n1.0.50: room chat header — default-collapse meta badges/room id; history & files move into ⋯ menu.\n\n1.0.49: fix feed page scroll/interaction — harden .feed-main scrollport (min-height, -webkit-overflow-scrolling, pan-y), seal fixed overlay click shields on boot/view switch, sticker-target-overlay PE defaults.\n\n1.0.48: mobile text overflow hardening — bubbles, headers, feed cards, share/file names, long URLs wrap on narrow screens.\n\n1.0.47: modular page split (msgUi/feedUi/mentionUi/roomUi/…), chat perf (windowing, optimistic send, scroll smart, feed load-more), room stickers/admin/@ mentions UI, setMemberRole.\n\n1.0.39: click post for detail modal; list cards truncate with show more.\n\n1.0.38: quote/repost full body + click to open original (no follow required).\n\n1.0.37: E2E decrypt race fix + soft delivery banners.\n\n1.0.36: inline composer icon styles for reinstall resilience.\n\n1.0.35: fix emoji button gray plate.\n\n1.0.34: full emoji picker + sticker packs complete.\n\n社交中心：统一管理联邦消息（Channel/Room）、时间线、环网与个人资料。支持后台新消息通知、附件与多语言（中/英/日）。\n\n1.0.33: room avatar + invite policy in edit/create.\n\n1.0.32: sticker button click + panel polish.\n\n1.0.31: fix store install missing page/stickers.js — stickers UI inlined into attachments.js (pageModules must stay in sync with index download.page_modules).\n\n1.0.30: sticker entry + add stickers from chat images (group/personal packs).\n\n1.0.29: composer sticker panel (group pack via host API; personal local).\n\n1.0.28: lock composer during optimistic room open (no false active membership).\n\n1.0.27: snappier view/chat/tab switching — no re-slide on A→B, same-chat no-op, shorter motion.\n\n1.0.26: polish messenger UX — open skeleton, empty CTAs, busy buttons, send spinner, join toast.\n\n1.0.25: debounce list refresh; remove unguarded member fallbacks.\n\n1.0.24: proactive roster confirm burst after join/leave (0–6s retries + 2.5s poll boost).\n\n1.0.23: room member roster refreshes on join/leave (WS + poll), live member_count, optimistic member_joined.\n\n1.0.22: fix large inline chat images falling back to filename only (safeMessageImageUrl).\n\n1.0.21: declare network:fetch so sandbox CSP allows remote https avatars/covers/federation media.\n\n1.0.11: thin main (background-only), close pageModules file boundaries.\n\n1.0.10: harden federation share rendering, safer store install and downloads.\n\n1.0.9: centered Accept/Reject invite CTAs in chat body.\n\n1.0.8: timeline share (X intent only), follow-graph mutual/domain badges.",
       "locales": {
@@ -431,13 +431,13 @@
           "index.js": "apps/com.myriad.aro/page/index.js"
         }
       },
-      "size": 1396430,
+      "size": 1405020,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-01T00:00:00Z",
-      "updated_at": "2026-08-04T13:11:11Z"
+      "updated_at": "2026-08-06T12:58:57.491Z"
     },
     {
       "id": "cn.wyyzxzyg.cdn-cache",
