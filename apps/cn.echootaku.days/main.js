@@ -120,10 +120,14 @@ function daysGlassVisuals(strength) {
 }
 async function daysLoadTheme() { try { var stored = await Tapp.storage.get(DAYS_THEME_STORAGE_KEY); return daysIsLegacyDefaultTheme(stored) ? daysCloneTheme(DAYS_DEFAULT_THEME) : daysNormalizeTheme(stored); } catch (_) { return daysCloneTheme(DAYS_DEFAULT_THEME); } }
 async function daysSaveTheme(theme) { var normalized = daysNormalizeTheme(theme); await Tapp.storage.set(DAYS_THEME_STORAGE_KEY, normalized); return normalized; }
-function daysApplyThemeConfig(root, theme) {
+function daysApplyThemeConfig(root, theme, primaryColor) {
   if (!root) return; var normalized = daysNormalizeTheme(theme); var radius = normalized.corner === 'soft' ? 14 : normalized.corner === 'compact' ? 10 : 20; var styleRoot = document.documentElement || root;
   var preset = DAYS_THEME_PRESETS[normalized.preset]; var glass = daysGlassVisuals(normalized.glassStrength); root.dataset.themePreset = normalized.preset; root.dataset.corner = normalized.corner;
-  if (normalized.preset === 'system') { styleRoot.style.setProperty('--days-accent', 'var(--tapp-primary, #D97757)'); styleRoot.style.setProperty('--days-accent-rgb', 'var(--tapp-primary-rgb, 217, 119, 87)'); }
+  if (normalized.preset === 'system') {
+    var systemAccent = daysValidColor(primaryColor, '');
+    styleRoot.style.setProperty('--days-accent', systemAccent || 'var(--tapp-primary, #D97757)');
+    styleRoot.style.setProperty('--days-accent-rgb', systemAccent ? daysHexRgb(systemAccent) : 'var(--tapp-primary-rgb, 217, 119, 87)');
+  }
   else { styleRoot.style.setProperty('--days-accent', normalized.accent); styleRoot.style.setProperty('--days-accent-rgb', daysHexRgb(normalized.accent)); }
   styleRoot.style.setProperty('--days-theme-tint-rgb', preset.tint); styleRoot.style.setProperty('--days-glass-alpha', glass.surfaceAlpha); styleRoot.style.setProperty('--days-page-glass-alpha', glass.pageAlpha); styleRoot.style.setProperty('--days-overlay-glass-alpha', glass.overlayAlpha); styleRoot.style.setProperty('--days-glass-blur', glass.blur); styleRoot.style.setProperty('--days-glass-saturation', glass.saturation); styleRoot.style.setProperty('--days-glass-sheen-alpha', glass.sheenAlpha); styleRoot.style.setProperty('--days-radius', radius + 'px');
   root.classList.toggle('page-glass-disabled', !normalized.glass.page);
@@ -409,12 +413,38 @@ if (typeof Tapp !== 'undefined' && Tapp.widgets) {
 }
 
 // ========== Page Code ==========
-var daysPageState = { events: [], categories: [], theme: daysCloneTheme(DAYS_DEFAULT_THEME), filter: 'all', query: '', editingId: null, off: null, editorToken: 0, saving: false, editorReturnFocus: null, themeReturnFocus: null, themeSaveTimer: null, themeSaveToken: 0, controller: null, mountToken: 0, storeRefreshToken: 0, themeRefreshToken: 0, glassVisibilityObserver: null, timers: [] };
+var daysPageState = { events: [], categories: [], theme: daysCloneTheme(DAYS_DEFAULT_THEME), primaryColor: null, primaryColorOff: null, primaryColorRevision: 0, filter: 'all', query: '', editingId: null, off: null, editorToken: 0, saving: false, editorReturnFocus: null, themeReturnFocus: null, themeSaveTimer: null, themeSaveToken: 0, controller: null, mountToken: 0, storeRefreshToken: 0, themeRefreshToken: 0, glassVisibilityObserver: null, timers: [] };
 function daysPageSetTimeout(callback, delay) {
   var handle = setTimeout(function () { daysPageState.timers = daysPageState.timers.filter(function (item) { return item !== handle; }); callback(); }, delay);
   daysPageState.timers.push(handle); return handle;
 }
 function daysPageClearTimeout(handle) { if (!handle) return; clearTimeout(handle); daysPageState.timers = daysPageState.timers.filter(function (item) { return item !== handle; }); }
+function daysApplyPagePrimaryColor(root, color) {
+  var normalized = daysValidColor(color, ''); if (!root || !normalized) return false;
+  daysPageState.primaryColor = normalized; var styleRoot = document.documentElement || root; var rgb = daysHexRgb(normalized);
+  styleRoot.style.setProperty('--tapp-primary', normalized); styleRoot.style.setProperty('--tapp-primary-rgb', rgb);
+  if (daysPageState.theme.preset === 'system') { daysApplyThemeConfig(root, daysPageState.theme, normalized); daysRequestGlassComposite(styleRoot); }
+  return true;
+}
+async function daysInitPrimaryColor(root, mountToken) {
+  if (daysPageState.primaryColorOff) daysPageState.primaryColorOff(); daysPageState.primaryColorOff = null;
+  var observedRevision = daysPageState.primaryColorRevision;
+  try {
+    if (Tapp.ui && typeof Tapp.ui.onPrimaryColorChange === 'function') {
+      var off = Tapp.ui.onPrimaryColorChange(function (color) {
+        if (mountToken !== daysPageState.mountToken) return;
+        if (daysApplyPagePrimaryColor(root, color)) ++daysPageState.primaryColorRevision;
+      });
+      if (typeof off === 'function') daysPageState.primaryColorOff = off;
+    }
+  } catch (_) {}
+  try {
+    if (Tapp.ui && typeof Tapp.ui.getPrimaryColor === 'function') {
+      var color = await Tapp.ui.getPrimaryColor();
+      if (mountToken === daysPageState.mountToken && observedRevision === daysPageState.primaryColorRevision) daysApplyPagePrimaryColor(root, color);
+    }
+  } catch (_) {}
+}
 function daysElement(tag, className, text) { var el = document.createElement(tag); if (className) el.className = className; if (text != null) el.textContent = text; return el; }
 function daysSyncOverlayScrollLock(root) {
   var editor = root && root.querySelector('[data-editor]'); var theme = root && root.querySelector('[data-theme-panel]');
@@ -462,7 +492,7 @@ function daysRenderThemeStudio(root) {
   panel.querySelectorAll('[data-glass-toggle]').forEach(function (input) { input.checked = Boolean(theme.glass[input.dataset.glassToggle]); });
   var profile = daysGlassProfile(theme); panel.querySelectorAll('[data-theme-glass-profile]').forEach(function (button) { button.setAttribute('aria-pressed', button.dataset.themeGlassProfile === profile ? 'true' : 'false'); });
   daysSetText(panel, '[data-glass-strength-value]', theme.glassStrength + '%'); var code = panel.querySelector('[data-theme-code]'); if (code) code.value = daysThemeCode(theme);
-  daysApplyThemeConfig(root, theme);
+  daysApplyThemeConfig(root, theme, daysPageState.primaryColor);
 }
 function daysThemeFromStudio(root) {
   var panel = root.querySelector('[data-theme-panel]'); if (!panel) return daysCloneTheme(DAYS_DEFAULT_THEME); var glass = {};
@@ -567,7 +597,7 @@ function daysRenderHero(root) {
   var hero = root.querySelector('[data-hero]'); if (hero) hero.style.setProperty('--event-color', event.color);
 }
 function daysRenderPage(root) {
-  daysApplyStaticLocale(root); daysApplyThemeConfig(root, daysPageState.theme); daysRenderHero(root); var events = daysFilteredEvents(); var list = root.querySelector('[data-event-list]'); var empty = root.querySelector('[data-empty]');
+  daysApplyStaticLocale(root); daysApplyThemeConfig(root, daysPageState.theme, daysPageState.primaryColor); daysRenderHero(root); var events = daysFilteredEvents(); var list = root.querySelector('[data-event-list]'); var empty = root.querySelector('[data-empty]');
   list.textContent = ''; daysSetText(root, '[data-event-total]', daysT('dayCount', { count: events.length })); empty.hidden = events.length > 0;
   events.forEach(function (event) {
     var diff = daysDifference(event, new Date()); var target = daysOccurrence(event, new Date()); var copy = daysCountCopy(diff);
@@ -641,7 +671,7 @@ async function daysMountPage(root) {
   await daysInitTheme(); if (mountToken !== daysPageState.mountToken) return;
   await daysInitLocale(null, function () { daysRenderPage(root); if (!root.querySelector('[data-editor]').hidden) { var editing = daysPageState.events.find(function (item) { return item.id === daysPageState.editingId; }); daysSetText(root, '[data-editor-title]', editing ? daysT('editorEdit') : daysT('editorNew')); daysRenderCategoryPicker(root, root.querySelector('[name="category"]').value); } if (!root.querySelector('[data-theme-panel]').hidden) daysRenderThemeStudio(root); });
   if (mountToken !== daysPageState.mountToken) return;
-  var initial = await Promise.all([daysLoadStore(), daysLoadTheme()]); if (mountToken !== daysPageState.mountToken) return;
+  var initial = await Promise.all([daysLoadStore(), daysLoadTheme(), daysInitPrimaryColor(root, mountToken)]); if (mountToken !== daysPageState.mountToken) return;
   daysPageState.events = initial[0].events; daysPageState.categories = initial[0].categories; daysPageState.theme = initial[1]; daysRenderPage(root);
   if (daysPageState.glassVisibilityObserver) daysPageState.glassVisibilityObserver.disconnect();
   daysPageState.glassVisibilityObserver = daysWatchGlassVisibility(root, function () { daysRequestGlassComposite(document.documentElement); });
@@ -693,8 +723,8 @@ async function daysMountPage(root) {
 }
 function daysDestroyPage() {
   ++daysPageState.mountToken; ++daysPageState.storeRefreshToken; ++daysPageState.themeRefreshToken;
-  if (daysPageState.controller) daysPageState.controller.abort(); if (daysPageState.off) daysPageState.off(); if (daysThemeOff) daysThemeOff(); if (daysLocaleOff) daysLocaleOff(); if (daysPageState.glassVisibilityObserver) daysPageState.glassVisibilityObserver.disconnect();
-  daysPageState.timers.forEach(clearTimeout); daysPageState.timers = []; daysPageState.controller = null; daysPageState.off = null; daysPageState.themeSaveTimer = null; daysPageState.glassVisibilityObserver = null;
+  if (daysPageState.controller) daysPageState.controller.abort(); if (daysPageState.off) daysPageState.off(); if (daysPageState.primaryColorOff) daysPageState.primaryColorOff(); if (daysThemeOff) daysThemeOff(); if (daysLocaleOff) daysLocaleOff(); if (daysPageState.glassVisibilityObserver) daysPageState.glassVisibilityObserver.disconnect();
+  daysPageState.timers.forEach(clearTimeout); daysPageState.timers = []; daysPageState.controller = null; daysPageState.off = null; daysPageState.primaryColor = null; daysPageState.primaryColorOff = null; daysPageState.themeSaveTimer = null; daysPageState.glassVisibilityObserver = null;
   document.documentElement.classList.remove('days-overlay-open'); document.documentElement.style.removeProperty('--days-scrollbar-gap'); if (document.body) document.body.classList.remove('days-overlay-open'); daysThemeOff = null; daysLocaleOff = null;
 }
 if (typeof Tapp !== 'undefined' && Tapp.lifecycle) {
