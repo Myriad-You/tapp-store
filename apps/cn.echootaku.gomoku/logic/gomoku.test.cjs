@@ -14,6 +14,12 @@ test('occupied and out-of-bounds moves are rejected', () => {
   assert.equal(core.applyMove(game,7,7,null).reason, 'occupied'); assert.equal(core.applyMove(game,-1,0,null).reason, 'bounds');
 });
 
+test('corrupted move lists fail closed', () => {
+  assert.equal(core.boardFromMoves(null), null);
+  assert.equal(core.boardFromMoves([null]), null);
+  assert.equal(core.boardFromMoves([{row: -1, col: 0, color: 'black'}]), null);
+});
+
 test('canonical state validation rejects reordered colors and duplicates', () => {
   const base = {protocol:1,kind:'state',seq:1,round:1,hostActor:'@a@x.test',players:{black:'@a@x.test',white:'@b@y.test'},ready:{},phase:'playing',turn:'white',moves:[{row:7,col:7,color:'black',actor:'@a@x.test'}],winner:null,finishReason:null,lastMove:{row:7,col:7,color:'black',actor:'@a@x.test'}};
   assert.ok(core.validateState(base));

@@ -107,3 +107,11 @@ test('federated state is anchored to the room owner and serialized', () => {
   assert.match(source, /intent\.seq !== state\.seq \|\| intent\.round !== state\.round/);
   assert.match(source, /state\.ready\[sender\] = intent\.ready/);
 });
+
+test('rejected placements and room resume fail closed', () => {
+  const source = read('main.js');
+  assert.match(source, /function placementResult\(row, col\)[\s\S]*?if \(!board\) return 'blocked';[\s\S]*?if \(board\[row\]\[col\]\) return 'occupied'/);
+  assert.match(source, /var placement = placementResult\(row, col\);[\s\S]*?placement === 'occupied' \? 'status\.occupied' : 'status\.notYourTurn'/);
+  assert.match(source, /function canResumeRoom\(\)[\s\S]*?savedSession\.roomId && myActor[\s\S]*?federation\.getRoom === 'function'[\s\S]*?federation\.subscribeRoom === 'function'/);
+  assert.match(source, /resumeRoom\.classList\.toggle\('hidden', !canResumeRoom\(\) \|\| inRoom\)/);
+});

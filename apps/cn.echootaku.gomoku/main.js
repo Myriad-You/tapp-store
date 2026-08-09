@@ -11,10 +11,11 @@
   function opposite(color) { return color === 'black' ? 'white' : 'black'; }
   function inBounds(row, col) { return Number.isInteger(row) && Number.isInteger(col) && row >= 0 && row < SIZE && col >= 0 && col < SIZE; }
   function boardFromMoves(moves) {
+    if (!Array.isArray(moves)) return null;
     var board = Array.from({ length: SIZE }, function () { return Array(SIZE).fill(null); });
     for (var i = 0; i < moves.length; i += 1) {
       var move = moves[i];
-      if (!inBounds(move.row, move.col) || COLORS.indexOf(move.color) < 0 || board[move.row][move.col]) return null;
+      if (!move || !inBounds(move.row, move.col) || COLORS.indexOf(move.color) < 0 || board[move.row][move.col]) return null;
       board[move.row][move.col] = move.color;
     }
     return board;
@@ -249,7 +250,7 @@
   function renderRoom() {
     var inRoom = mode === 'online' && !!roomId;
     els.onlineLobby.classList.toggle('hidden', inRoom); els.roomPanel.classList.toggle('hidden', !inRoom);
-    els.resumeRoom.classList.toggle('hidden', !savedSession || inRoom);
+    els.resumeRoom.classList.toggle('hidden', !canResumeRoom() || inRoom);
     if (!inRoom || !state) return;
     els.activeRoom.textContent = shareRoomId || roomId;
     els.blackPlayer.textContent = actorLabel(state.players.black); els.blackPlayer.title = state.players.black || '';
@@ -299,13 +300,16 @@
     els.blackWins.textContent = stats.black; els.whiteWins.textContent = stats.white; els.draws.textContent = stats.draws;
     renderBoard(); renderRoom(); renderGameGuards();
   }
-  function canPlace(row, col) {
+  function placementResult(row, col) {
     var game = activeGame();
-    if (!game || game.phase !== 'playing') return false;
-    var board = C.boardFromMoves(game.moves); if (!board || board[row][col]) return false;
-    if (mode === 'local') return true;
-    return !!myColor() && game.turn === myColor() && !busy;
+    if (!game || game.phase !== 'playing' || !C.inBounds(row, col)) return 'blocked';
+    var board = C.boardFromMoves(game.moves);
+    if (!board) return 'blocked';
+    if (board[row][col]) return 'occupied';
+    if (mode === 'local') return 'allowed';
+    return !!myColor() && game.turn === myColor() && !busy ? 'allowed' : 'blocked';
   }
+  function canPlace(row, col) { return placementResult(row, col) === 'allowed'; }
   async function saveStats() { try { await Tapp.storage.set(STATS_KEY, stats); } catch (_) {} }
   async function saveSession() {
     if (!roomId || !state) return;
@@ -319,7 +323,8 @@
     await saveStats();
   }
   function place(row, col) {
-    if (!canPlace(row, col)) { notice(activeGame() && C.boardFromMoves(activeGame().moves)[row][col] ? 'status.occupied' : 'status.notYourTurn', null, true); return; }
+    var placement = placementResult(row, col);
+    if (placement !== 'allowed') { notice(placement === 'occupied' ? 'status.occupied' : 'status.notYourTurn', null, true); return; }
     if (mode === 'local') {
       var applied = C.applyMove(localGame, row, col, null);
       if (applied.ok) { localGame = applied.game; if (localGame.phase === 'finished') recordResult(localGame); render(); }
@@ -497,8 +502,11 @@
     if (isHost) { if (!state) state = blankLobby(myActor); await emitState(); } else await submitIntent({ action: 'hello' });
     await refreshMemberNames().catch(function () {}); notice('status.roomJoined'); render();
   }
+  function canResumeRoom() {
+    return !!(savedSession && savedSession.roomId && myActor && Tapp.federation && typeof Tapp.federation.getRoom === 'function' && typeof Tapp.federation.subscribeRoom === 'function');
+  }
   async function resumeRoom() {
-    if (!savedSession || !savedSession.roomId) return;
+    if (!canResumeRoom()) return;
     var restoringRoomId = savedSession.roomId;
     var restoringShareId = savedSession.shareRoomId || restoringRoomId;
     var restoringOwner = await fetchRoomOwner(restoringRoomId);
