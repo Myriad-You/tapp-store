@@ -1,0 +1,103 @@
+{
+  "app": {
+    "title": "Federated Gomoku",
+    "subtitle": "Meet across instances, five stones at a time"
+  },
+  "identity": {
+    "loading": "Reading identity…",
+    "guest": "Guest · local mode only",
+    "unavailable": "Federation unavailable"
+  },
+  "mode": {
+    "local": "Local game",
+    "online": "Federated"
+  },
+  "board": {
+    "label": "15 by 15 Gomoku board",
+    "hint": "Use arrow keys to move; Space or Enter to place",
+    "cell": "Row {row}, column {col}, {state}",
+    "empty": "empty"
+  },
+  "local": {
+    "title": "Same-device game",
+    "description": "Black moves first. Take turns; the first line of five or more wins.",
+    "new": "New game"
+  },
+  "online": {
+    "title": "Federation room",
+    "description": "Create a public room or enter a room ID shared by another instance.",
+    "create": "Create public room",
+    "roomId": "Room ID",
+    "join": "Join",
+    "resume": "Resume last room",
+    "permission": "Sign in with federation write and message access to play online."
+  },
+  "room": {
+    "id": "Room ID",
+    "copy": "Copy room ID",
+    "actor": "Federation Actor",
+    "invite": "Invite",
+    "ready": "Ready",
+    "cancelReady": "Cancel ready",
+    "resign": "Resign",
+    "rematch": "Rematch",
+    "dissolve": "Dissolve room",
+    "leave": "Leave",
+    "waiting": "Waiting for player",
+    "readyBadge": "Ready",
+    "notReady": "Not ready",
+    "swapColors": "Swap colors",
+    "boardLocked": "Game not started",
+    "boardLockedHint": "The game starts when both players are ready"
+  },
+  "color": {
+    "black": "Black",
+    "white": "White"
+  },
+  "stats": {
+    "title": "Local record",
+    "blackWins": "Black wins",
+    "whiteWins": "White wins",
+    "draws": "Draws"
+  },
+  "rules": {
+    "title": "Rules and online play",
+    "body": "15×15 freestyle Gomoku with no forbidden moves. Five or more in a row wins. Online moves are validated by the host, while room traffic remains subject to system federation policy and content filters."
+  },
+  "status": {
+    "blackTurn": "Black to move",
+    "whiteTurn": "White to move",
+    "yourTurn": "Your move",
+    "opponentTurn": "Waiting for opponent",
+    "blackWin": "Black wins",
+    "whiteWin": "White wins",
+    "youWin": "You win",
+    "youLose": "Opponent wins",
+    "draw": "Board full — draw",
+    "lobby": "Waiting for both players",
+    "waitingPlayer": "Waiting for a second player",
+    "roomCreated": "Room created — share its room ID",
+    "roomJoined": "Room joined — syncing",
+    "synced": "State synchronized with host",
+    "invited": "Invitation sent",
+    "copied": "Room ID copied",
+    "left": "Room left",
+    "dissolved": "Room dissolved",
+    "resigned": "You resigned",
+    "invalidRoom": "Enter a complete room ID",
+    "invalidActor": "Enter a complete federated Actor address",
+    "busy": "Working…",
+    "error": "Could not complete operation: {message}",
+    "round": "Round {round}",
+    "localReset": "New local game started",
+    "notYourTurn": "It is not your turn",
+    "waitTurn": "Not your turn yet — wait for your opponent",
+    "occupied": "That intersection is occupied",
+    "protocol": "Invalid game state ignored"
+  },
+  "confirm": {
+    "leave": "The game is still active. Leave the room?",
+    "resign": "Resign this game?",
+    "dissolve": "Dissolving removes the room and its game history for every member. Continue?"
+  }
+}

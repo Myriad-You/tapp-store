@@ -1,0 +1,103 @@
+{
+  "app": {
+    "title": "連合五目並べ",
+    "subtitle": "インスタンスを越えて、五石で出会う"
+  },
+  "identity": {
+    "loading": "IDを確認中…",
+    "guest": "ゲスト・ローカルのみ",
+    "unavailable": "連合機能を利用できません"
+  },
+  "mode": {
+    "local": "ローカル対戦",
+    "online": "連合対戦"
+  },
+  "board": {
+    "label": "15×15 五目並べ盤",
+    "hint": "矢印キーで移動し、SpaceまたはEnterで着手",
+    "cell": "{row}行{col}列、{state}",
+    "empty": "空き"
+  },
+  "local": {
+    "title": "同じ端末で対戦",
+    "description": "黒が先手です。交互に打ち、先に五つ以上並べると勝ちです。",
+    "new": "新しい対局"
+  },
+  "online": {
+    "title": "連合ルーム",
+    "description": "公開ルームを作成するか、別インスタンスから共有されたルームIDを入力します。",
+    "create": "公開ルームを作成",
+    "roomId": "ルームID",
+    "join": "参加",
+    "resume": "前回のルームを再開",
+    "permission": "ログインし、連合の書き込み・メッセージ権限を取得するとオンライン対戦できます。"
+  },
+  "room": {
+    "id": "ルームID",
+    "copy": "ルームIDをコピー",
+    "actor": "連合Actor",
+    "invite": "招待",
+    "ready": "準備",
+    "cancelReady": "準備解除",
+    "resign": "投了",
+    "rematch": "再戦",
+    "dissolve": "ルームを解散",
+    "leave": "退出",
+    "waiting": "プレイヤー待ち",
+    "readyBadge": "準備完了",
+    "notReady": "未準備",
+    "swapColors": "黒白を交代",
+    "boardLocked": "対局はまだ始まっていません",
+    "boardLockedHint": "両者が準備すると自動で開始します"
+  },
+  "color": {
+    "black": "黒",
+    "white": "白"
+  },
+  "stats": {
+    "title": "ローカル成績",
+    "blackWins": "黒勝",
+    "whiteWins": "白勝",
+    "draws": "引分"
+  },
+  "rules": {
+    "title": "ルールとオンライン対戦",
+    "body": "15×15の自由五目並べで禁手はありません。縦・横・斜めに五つ以上並べると勝ちです。オンラインではホストが着手を検証し、ルーム通信にはシステムの連合ポリシーとコンテンツフィルターが適用されます。"
+  },
+  "status": {
+    "blackTurn": "黒の手番",
+    "whiteTurn": "白の手番",
+    "yourTurn": "あなたの手番",
+    "opponentTurn": "相手の着手待ち",
+    "blackWin": "黒の勝ち",
+    "whiteWin": "白の勝ち",
+    "youWin": "あなたの勝ち",
+    "youLose": "相手の勝ち",
+    "draw": "盤面が埋まり引き分け",
+    "lobby": "両者の準備待ち",
+    "waitingPlayer": "2人目の参加待ち",
+    "roomCreated": "ルームを作成しました。IDを共有してください",
+    "roomJoined": "参加しました。同期中です",
+    "synced": "ホストと同期しました",
+    "invited": "招待を送信しました",
+    "copied": "ルームIDをコピーしました",
+    "left": "ルームを退出しました",
+    "dissolved": "ルームを解散しました",
+    "resigned": "投了しました",
+    "invalidRoom": "完全なルームIDを入力してください",
+    "invalidActor": "完全な連合Actorアドレスを入力してください",
+    "busy": "処理中…",
+    "error": "操作に失敗しました：{message}",
+    "round": "第{round}局",
+    "localReset": "新しいローカル対局を開始しました",
+    "notYourTurn": "まだあなたの手番ではありません",
+    "waitTurn": "まだあなたの手番ではありません。相手の着手をお待ちください",
+    "occupied": "その位置には石があります",
+    "protocol": "無効な棋局状態を無視しました"
+  },
+  "confirm": {
+    "leave": "対局中です。ルームを退出しますか？",
+    "resign": "この対局を投了しますか？",
+    "dissolve": "解散すると全メンバーがルームと対局履歴を失います。続行しますか？"
+  }
+}

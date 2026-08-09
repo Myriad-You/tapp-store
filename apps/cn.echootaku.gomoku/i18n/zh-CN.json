@@ -1,0 +1,103 @@
+{
+  "app": {
+    "title": "联邦五子棋",
+    "subtitle": "落子相逢，跨站成局"
+  },
+  "identity": {
+    "loading": "正在读取身份…",
+    "guest": "游客 · 仅本地模式",
+    "unavailable": "联邦能力不可用"
+  },
+  "mode": {
+    "local": "本地双人",
+    "online": "联邦联机"
+  },
+  "board": {
+    "label": "15×15 五子棋棋盘",
+    "hint": "方向键移动焦点，空格或回车落子",
+    "cell": "第 {row} 行，第 {col} 列，{state}",
+    "empty": "空位"
+  },
+  "local": {
+    "title": "同屏对弈",
+    "description": "黑方先手，轮流落子；率先连成五子或更多者获胜。",
+    "new": "新对局"
+  },
+  "online": {
+    "title": "联邦房间",
+    "description": "创建公开房间，或输入另一实例分享的房间 ID。",
+    "create": "创建公开房间",
+    "roomId": "房间 ID",
+    "join": "加入",
+    "resume": "恢复上次房间",
+    "permission": "登录并获得联邦写入与消息权限后可联机。"
+  },
+  "room": {
+    "id": "房间 ID",
+    "copy": "复制房间 ID",
+    "actor": "联邦 Actor",
+    "invite": "邀请",
+    "ready": "准备",
+    "cancelReady": "取消准备",
+    "resign": "认输",
+    "rematch": "再来一局",
+    "dissolve": "解散房间",
+    "leave": "离开",
+    "waiting": "等待玩家",
+    "readyBadge": "已准备",
+    "notReady": "未准备",
+    "swapColors": "交换黑白",
+    "boardLocked": "棋局尚未开始",
+    "boardLockedHint": "双方准备后自动开局"
+  },
+  "color": {
+    "black": "黑方",
+    "white": "白方"
+  },
+  "stats": {
+    "title": "本地战绩",
+    "blackWins": "黑胜",
+    "whiteWins": "白胜",
+    "draws": "和棋"
+  },
+  "rules": {
+    "title": "规则与联机说明",
+    "body": "15×15 自由五子棋，无禁手；横、竖或斜线连续五子或更多即胜。联机时房主验证落子，房间消息会受系统联邦策略与内容过滤约束。"
+  },
+  "status": {
+    "blackTurn": "黑方落子",
+    "whiteTurn": "白方落子",
+    "yourTurn": "轮到你落子",
+    "opponentTurn": "等待对手落子",
+    "blackWin": "黑方获胜",
+    "whiteWin": "白方获胜",
+    "youWin": "你获胜了",
+    "youLose": "对手获胜",
+    "draw": "棋盘已满，和棋",
+    "lobby": "等待双方准备",
+    "waitingPlayer": "等待第二位玩家加入",
+    "roomCreated": "房间已创建，请分享房间 ID",
+    "roomJoined": "已加入房间，正在同步",
+    "synced": "状态已与房主同步",
+    "invited": "邀请已发送",
+    "copied": "房间 ID 已复制",
+    "left": "已离开房间",
+    "dissolved": "房间已解散",
+    "resigned": "本局已认输",
+    "invalidRoom": "请输入完整房间 ID",
+    "invalidActor": "请输入完整联邦 Actor 地址",
+    "busy": "正在处理…",
+    "error": "操作失败：{message}",
+    "round": "第 {round} 局",
+    "localReset": "已开始新的本地对局",
+    "notYourTurn": "还没轮到你",
+    "waitTurn": "还没轮到你，请等待对手落子",
+    "occupied": "这个位置已有棋子",
+    "protocol": "收到的棋局状态无效，已忽略"
+  },
+  "confirm": {
+    "leave": "对局尚未结束，确定离开房间吗？",
+    "resign": "确定认输本局吗？",
+    "dissolve": "解散后所有成员都将失去该房间及棋局历史，确定继续吗？"
+  }
+}
