@@ -176,6 +176,7 @@
     if (state.phase !== 'menu' && !state.paused) pause(true);
     if (type === 'rules') DDZ.render.showRules();
     if (type === 'history') DDZ.render.showHistory(stats);
+    if (type === 'preferences') DDZ.render.showPreferences(settings);
   }
 
   function closePanel() {
@@ -190,14 +191,52 @@
     render();
   }
 
+  async function setTheme(value) {
+    if (!['classic', 'iroha'].includes(value) || settings.theme === value) return;
+    settings = Object.assign({}, settings, { theme: value });
+    await DDZ.storage.saveSetting('theme', value);
+    if (DDZ.theme && typeof DDZ.theme.set === 'function') await DDZ.theme.set(value);
+    if (initialized && state) render();
+  }
+
+  function setPreference(key, target) {
+    const allowed = {
+      difficulty: ['easy', 'normal', 'hard'],
+      animation: ['full', 'reduced', 'off'],
+      sortMode: ['rank', 'suit'],
+      gameSpeed: ['slow', 'normal', 'fast'],
+      cardSize: ['small', 'medium', 'large']
+    };
+    if (key === 'theme') { setTheme(target.value); return; }
+    let value = target.type === 'checkbox' ? target.checked : target.value;
+    if (key === 'turnSeconds') {
+      value = Number(value);
+      if (![0, 10, 15, 20, 30].includes(value)) return;
+    } else if (key === 'volume') {
+      value = Math.max(0, Math.min(1, Number(value)));
+      if (!Number.isFinite(value)) return;
+    } else if (allowed[key] && !allowed[key].includes(value)) return;
+    else if (['sound', 'music', 'doubleClickPlay'].includes(key)) value = Boolean(value);
+    else if (!Object.prototype.hasOwnProperty.call(allowed, key)) return;
+    const previousSort = settings.sortMode;
+    settings = Object.assign({}, settings, { [key]: value });
+    DDZ.storage.saveSetting(key, value);
+    if (key === 'sortMode' && state && previousSort !== value) state = DDZ.engine.sortHuman(state, value);
+    if (['music', 'volume'].includes(key) && state) DDZ.audio.setMusic(settings.music && state.phase !== 'menu' && !state.paused, settings.volume);
+    if (state) render();
+  }
+
   async function refreshSettings() {
     const generation = initGeneration;
     const previousSort = settings && settings.sortMode;
+    const previousTheme = settings && settings.theme;
     const values = await Promise.all([DDZ.storage.loadSettings(), loadProfile()]);
     if (!initialized || generation !== initGeneration) return;
     settings = values[0];
     profile = values[1];
     DDZ.profile = profile;
+    if (previousTheme !== settings.theme && DDZ.theme && typeof DDZ.theme.set === 'function') await DDZ.theme.set(settings.theme);
+    if (!initialized || generation !== initGeneration) return;
     if (state && previousSort && previousSort !== settings.sortMode) state = DDZ.engine.sortHuman(state, settings.sortMode);
     if (state) DDZ.audio.setMusic(settings.music && state.phase !== 'menu' && !state.paused, settings.volume);
     if (state) render();
@@ -210,7 +249,9 @@
         if (user && typeof user === 'object') {
           return {
             name: typeof user.username === 'string' && user.username.trim() ? user.username.trim() : '',
-            avatar: typeof user.avatar === 'string' ? user.avatar : ''
+            avatar: typeof user.avatar_url === 'string' && user.avatar_url.trim()
+              ? user.avatar_url.trim()
+              : typeof user.avatar === 'string' ? user.avatar : ''
           };
         }
       }
@@ -224,7 +265,7 @@
     if (name === 'new-game') startNewGame();
     else if (name === 'resume' && savedGame) { state = Object.assign({}, savedGame, { paused: false, busy: false }); schedule(); }
     else if (name === 'home') goHome();
-    else if (name === 'rules' || name === 'history') openPanel(name);
+    else if (name === 'rules' || name === 'history' || name === 'preferences') openPanel(name);
     else if (name === 'close-modal') closePanel();
     else if (name === 'pause') pause();
     else if (name === 'resume-game') pause(false);
@@ -249,6 +290,8 @@
   function onClick(event) {
     const difficulty = event.target.closest('[data-difficulty]');
     if (difficulty) { setDifficulty(difficulty.dataset.difficulty); return; }
+    const themeChoice = event.target.closest('[data-theme-choice]');
+    if (themeChoice) { setTheme(themeChoice.dataset.themeChoice); return; }
     const card = event.target.closest('[data-card-id]');
     if (card) {
       if (event.detail !== 0 && Date.now() < suppressCardClickUntil) return;
@@ -258,6 +301,11 @@
     }
     const button = event.target.closest('[data-action]');
     if (button && !button.disabled) action(button.dataset.action, button);
+  }
+
+  function onChange(event) {
+    const control = event.target.closest('[data-setting]');
+    if (control) setPreference(control.dataset.setting, control);
   }
 
   function onDoubleClick(event) {
@@ -348,9 +396,12 @@
     if (initialized) return;
     initialized = true;
     const generation = ++initGeneration;
-    [settings, stats, savedGame, profile] = await Promise.all([
+    const values = await Promise.all([
       DDZ.storage.loadSettings(), DDZ.storage.loadStats(), DDZ.storage.loadGame(), loadProfile()
     ]);
+    settings = values[0]; stats = values[1]; savedGame = values[2]; profile = values[3];
+    if (!initialized || generation !== initGeneration) return;
+    if (DDZ.theme && typeof DDZ.theme.set === 'function') await DDZ.theme.set(settings.theme);
     if (!initialized || generation !== initGeneration) return;
     DDZ.profile = profile;
     savedGame = DDZ.engine.normalizeSavedState(savedGame);
@@ -369,6 +420,7 @@
     } catch (_) { applyTheme(root.matchMedia && root.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); }
     if (!initialized || generation !== initGeneration) return;
     document.addEventListener('click', onClick);
+    document.addEventListener('change', onChange);
     document.addEventListener('dblclick', onDoubleClick);
     document.addEventListener('pointerdown', onPointerDown);
     document.addEventListener('pointermove', onPointerMove);
@@ -388,6 +440,7 @@
     toastTimer = actionUnlockTimer = null;
     actionLocked = false;
     document.removeEventListener('click', onClick);
+    document.removeEventListener('change', onChange);
     document.removeEventListener('dblclick', onDoubleClick);
     document.removeEventListener('pointerdown', onPointerDown);
     document.removeEventListener('pointermove', onPointerMove);
@@ -397,6 +450,7 @@
     endCardDrag();
     if (DDZ.render && typeof DDZ.render.reset === 'function') DDZ.render.reset();
     DDZ.audio.destroy();
+    if (DDZ.theme && typeof DDZ.theme.destroy === 'function') DDZ.theme.destroy();
     if (typeof themeOff === 'function') themeOff();
     if (typeof localeOff === 'function') localeOff();
     themeOff = localeOff = null;

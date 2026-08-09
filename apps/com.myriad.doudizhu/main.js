@@ -109,7 +109,7 @@
     scope.querySelectorAll('[data-i18n]').forEach(function (node) { node.textContent = t(node.dataset.i18n); });
 
     const image = scope.querySelector('[data-user-avatar]');
-    const avatarUrl = safeAvatarUrl(user.avatar);
+    const avatarUrl = safeAvatarUrl(user.avatar_url || user.avatar);
     if (image) {
       image.hidden = !avatarUrl;
       image.removeAttribute('src');

@@ -14,14 +14,19 @@
 
   function cardMarkup(card, options) {
     const opts = options || {};
-    if (opts.back) return '<i role="img" class="card back' + (opts.mini ? ' mini' : '') + '" aria-label="' + escapeHtml(DDZ.t('card.back')) + '"></i>';
+    if (opts.back) {
+      const backUrl = DDZ.theme && DDZ.theme.backUrl ? DDZ.theme.backUrl() : '';
+      return '<i role="img" class="card back' + (opts.mini ? ' mini' : '') + '" aria-label="' + escapeHtml(DDZ.t('card.back')) + '">'
+        + (backUrl ? '<img class="card-back-art" src="' + escapeHtml(backUrl) + '" alt="">' : '') + '</i>';
+    }
     const red = card.suit === 'heart' || card.suit === 'diamond' || card.rank === 'big-joker';
     const joker = card.suit === 'joker';
     const suit = joker ? '★' : DDZ.cards.symbols[card.suit];
     const label = joker ? DDZ.cards.rankLabel(card.rank) : DDZ.t('card.named', { suit: DDZ.t('suit.' + card.suit), rank: DDZ.cards.rankLabel(card.rank) });
+    const artUrl = DDZ.theme && DDZ.theme.artUrl ? DDZ.theme.artUrl(card.rank) : '';
     return '<i role="img" class="card' + (red ? ' red' : '') + (joker ? ' joker' : '') + (opts.mini ? ' mini' : '')
       + '" data-rank="' + escapeHtml(DDZ.cards.rankLabel(card.rank)) + '" data-suit="' + suit + '" aria-label="'
-      + escapeHtml(label) + '"></i>';
+      + escapeHtml(label) + '">' + (artUrl ? '<img class="card-rank-art" src="' + escapeHtml(artUrl) + '" alt="">' : '') + '</i>';
   }
 
   function cardLabel(card) {
@@ -48,7 +53,7 @@
     const avatarUrl = player.human && DDZ.profile ? safeAvatarUrl(DDZ.profile.avatar) : '';
     const avatar = '<div class="avatar' + (player.human ? ' human' : '') + '"><span>' + escapeHtml(initial) + '</span>'
       + (avatarUrl ? '<img src="' + escapeHtml(avatarUrl) + '" alt="">' : '') + '</div>';
-    const backs = player.human ? '' : '<div class="card-backs">' + Array.from({ length: Math.min(6, player.hand.length) }, function () { return '<i></i>'; }).join('') + '</div>';
+    const backs = player.human ? '' : '<div class="card-backs">' + Array.from({ length: Math.min(6, player.hand.length) }, function () { return cardMarkup(null, { back: true, mini: true }); }).join('') + '</div>';
     return avatar
       + '<strong>' + escapeHtml(name) + (player.role === 'landlord' ? ' ♛' : '') + '</strong>'
       + '<small>' + escapeHtml(DDZ.t('seat.summary', { role: roleLabel(player.role), count: player.hand.length })) + '</small>'
@@ -63,6 +68,11 @@
     $('menu-rate').textContent = model.stats.games ? Math.round(model.stats.wins / model.stats.games * 100) + '%' : '—';
     document.querySelectorAll('[data-difficulty]').forEach(function (button) {
       button.classList.toggle('active', button.dataset.difficulty === model.settings.difficulty);
+    });
+    document.querySelectorAll('[data-theme-choice]').forEach(function (button) {
+      const active = button.dataset.themeChoice === model.settings.theme;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
     const resume = document.querySelector('[data-action="resume"]');
     resume.hidden = !model.savedGame;
@@ -191,6 +201,39 @@
       + '<div><strong>' + stats.games + '</strong><small>' + DDZ.t('stats.games') + '</small></div><div><strong>' + stats.wins + '</strong><small>' + DDZ.t('stats.wins') + '</small></div><div><strong>' + stats.losses + '</strong><small>' + DDZ.t('stats.losses') + '</small></div><div><strong>' + rate + '</strong><small>' + DDZ.t('stats.winRate') + '</small></div><div><strong>' + stats.score + '</strong><small>' + DDZ.t('stats.totalScore') + '</small></div></div></section>';
   }
 
+  function optionMarkup(value, labelKey, current) {
+    return '<option value="' + escapeHtml(value) + '"' + (String(current) === String(value) ? ' selected' : '') + '>' + escapeHtml(DDZ.t(labelKey)) + '</option>';
+  }
+
+  function settingRow(labelKey, descriptionKey, control) {
+    return '<label class="setting"><span><strong>' + escapeHtml(DDZ.t(labelKey)) + '</strong><small>' + escapeHtml(DDZ.t(descriptionKey)) + '</small></span>' + control + '</label>';
+  }
+
+  function preferencesModal(settings) {
+    const theme = '<select data-setting="theme">' + optionMarkup('classic', 'theme.classic', settings.theme) + optionMarkup('iroha', 'theme.iroha', settings.theme) + '</select>';
+    const difficulty = '<select data-setting="difficulty">' + optionMarkup('easy', 'difficulty.easy', settings.difficulty) + optionMarkup('normal', 'difficulty.normal', settings.difficulty) + optionMarkup('hard', 'difficulty.hard', settings.difficulty) + '</select>';
+    const turnSeconds = '<select data-setting="turnSeconds">' + [10, 15, 20, 30, 0].map(function (value) { return optionMarkup(String(value), value === 0 ? 'setting.unlimited' : 'setting.seconds' + value, settings.turnSeconds); }).join('') + '</select>';
+    const animation = '<select data-setting="animation">' + optionMarkup('full', 'setting.animationFull', settings.animation) + optionMarkup('reduced', 'setting.animationReduced', settings.animation) + optionMarkup('off', 'setting.animationOff', settings.animation) + '</select>';
+    const sortMode = '<select data-setting="sortMode">' + optionMarkup('rank', 'setting.sortRank', settings.sortMode) + optionMarkup('suit', 'setting.sortSuit', settings.sortMode) + '</select>';
+    const gameSpeed = '<select data-setting="gameSpeed">' + optionMarkup('slow', 'setting.speedSlow', settings.gameSpeed) + optionMarkup('normal', 'setting.speedNormal', settings.gameSpeed) + optionMarkup('fast', 'setting.speedFast', settings.gameSpeed) + '</select>';
+    const cardSize = '<select data-setting="cardSize">' + optionMarkup('small', 'setting.sizeSmall', settings.cardSize) + optionMarkup('medium', 'setting.sizeMedium', settings.cardSize) + optionMarkup('large', 'setting.sizeLarge', settings.cardSize) + '</select>';
+    const toggle = function (key, checked, labelKey) { return '<input type="checkbox" data-setting="' + key + '"' + (checked ? ' checked' : '') + ' aria-label="' + escapeHtml(DDZ.t(labelKey)) + '">'; };
+    const volume = '<input type="range" data-setting="volume" min="0" max="1" step="0.05" value="' + escapeHtml(settings.volume) + '" aria-label="' + escapeHtml(DDZ.t('setting.volume')) + '">';
+    return '<section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="preferences-title"><header class="modal-head"><h2 id="preferences-title">' + DDZ.t('preferences.title') + '</h2><button type="button" data-action="close-modal" aria-label="' + DDZ.t('action.close') + '">×</button></header><div class="modal-body"><p class="preferences-note">' + escapeHtml(DDZ.t('preferences.personalNote')) + '</p><div class="setting-grid">'
+      + settingRow('theme.label', 'setting.themeDescription', theme)
+      + settingRow('setting.difficulty', 'setting.difficultyDescription', difficulty)
+      + settingRow('setting.turnSeconds', 'setting.turnSecondsDescription', turnSeconds)
+      + settingRow('setting.sound', 'setting.soundDescription', toggle('sound', settings.sound, 'setting.sound'))
+      + settingRow('setting.music', 'setting.musicDescription', toggle('music', settings.music, 'setting.music'))
+      + settingRow('setting.volume', 'setting.volumeDescription', volume)
+      + settingRow('setting.animation', 'setting.animationDescription', animation)
+      + settingRow('setting.doubleClick', 'setting.doubleClickDescription', toggle('doubleClickPlay', settings.doubleClickPlay, 'setting.doubleClick'))
+      + settingRow('setting.sortMode', 'setting.sortModeDescription', sortMode)
+      + settingRow('setting.gameSpeed', 'setting.gameSpeedDescription', gameSpeed)
+      + settingRow('setting.cardSize', 'setting.cardSizeDescription', cardSize)
+      + '</div></div></section>';
+  }
+
   function settlementModal(state, stats) {
     const result = state.settlement;
     return '<section class="modal" role="dialog" aria-modal="true" aria-labelledby="settlement-title"><header class="modal-head"><h2 id="settlement-title">' + DDZ.t('settlement.title') + '</h2></header><div class="modal-body settlement"><div class="result-mark' + (result.humanWon ? '' : ' lose') + '">' + DDZ.t(result.humanWon ? 'settlement.winMark' : 'settlement.loseMark') + '</div><h2>' + DDZ.t(result.humanWon ? 'settlement.winTitle' : 'settlement.loseTitle') + '</h2><p>' + (result.spring ? DDZ.t('settlement.spring') : result.antiSpring ? DDZ.t('settlement.antiSpring') : DDZ.t('settlement.team', { role: roleLabel(state.players[0].role) })) + '</p><div class="settlement-grid">'
@@ -254,6 +297,7 @@
     handleKeyDown: handleKeyDown, reset: reset,
     showRules: function () { openModal(rulesModal()); },
     showHistory: function (stats) { openModal(historyModal(stats)); },
+    showPreferences: function (settings) { openModal(preferencesModal(settings)); },
     showSettlement: function (state, stats) { openModal(settlementModal(state, stats)); }
   };
 })(globalThis);

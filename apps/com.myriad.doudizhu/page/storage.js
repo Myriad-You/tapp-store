@@ -6,7 +6,7 @@
     settings: {
       difficulty: 'normal', turnSeconds: 20, sound: true, music: false, volume: 0.65,
       animation: 'full', doubleClickPlay: true, sortMode: 'rank',
-      gameSpeed: 'normal', cardSize: 'medium'
+      gameSpeed: 'normal', cardSize: 'medium', theme: 'classic'
     },
     stats: {
       wins: 0, losses: 0, games: 0, score: 0,
@@ -84,6 +84,7 @@
     if (!['rank', 'suit'].includes(next.sortMode)) next.sortMode = 'rank';
     if (!['slow', 'normal', 'fast'].includes(next.gameSpeed)) next.gameSpeed = 'normal';
     if (!['small', 'medium', 'large'].includes(next.cardSize)) next.cardSize = 'medium';
+    if (!['classic', 'iroha'].includes(next.theme)) next.theme = 'classic';
     return next;
   }
 
@@ -108,14 +109,7 @@
   }
 
   async function loadSettings() {
-    const personal = await get(keys.settings, {});
-    let installationDefaults = {};
-    try {
-      if (typeof Tapp !== 'undefined' && Tapp.settings) {
-        installationDefaults = await Tapp.settings.getAll() || {};
-      }
-    } catch (_) { /* Manifest defaults remain available when the host is unavailable. */ }
-    return normalizeSettings(Object.assign({}, installationDefaults, personal));
+    return normalizeSettings(await get(keys.settings, {}));
   }
 
   async function saveSetting(key, value) {

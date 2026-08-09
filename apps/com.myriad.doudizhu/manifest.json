@@ -1,12 +1,12 @@
 {
   "id": "com.myriad.doudizhu",
   "name": "斗地主",
-  "version": "2.3.3",
+  "version": "2.4.3",
   "minSystemVersion": "0.3.0",
-  "description": "完整的三人单机斗地主：随机发牌、叫抢地主、20 秒回合、智能提示与本地 AI",
+  "description": "三人单机斗地主：经典牌桌与若泉绮羽㥹銯麏主题、完整规则、智能提示与本地 AI",
   "locales": {
-    "en-US": { "name": "Fight the Landlord", "description": "A complete offline three-player Dou Dizhu game with local AI" },
-    "ja-JP": { "name": "闘地主", "description": "ローカルAIと遊べる完全オフラインの3人闘地主" }
+    "en-US": { "name": "Fight the Landlord", "description": "Offline Dou Dizhu with local AI, a classic table, and the 若泉绮羽㥹銯麏 theme" },
+    "ja-JP": { "name": "闘地主", "description": "クラシック卓と若泉绮羽㥹銯麏テーマを切り替えられる完全オフライン闘地主" }
   },
   "category": "game",
   "main": "main.js",
@@ -19,10 +19,26 @@
   "widgetStyles": "widget.css",
   "pageStyles": "page.css",
   "pageTemplate": "page.html",
-  "pageModules": ["i18n.js", "cards.js", "rules.js", "ai.js", "engine.js", "storage.js", "audio.js", "render.js", "index.js"],
+  "pageModules": ["i18n.js", "cards.js", "rules.js", "ai.js", "engine.js", "storage.js", "audio.js", "theme.js", "render.js", "index.js"],
   "assets": [
     "assets/widget/landlord-win.png",
-    "assets/widget/farmer-loss.png"
+    "assets/widget/farmer-loss.png",
+    "assets/theme/iroha/a.webp",
+    "assets/theme/iroha/2.webp",
+    "assets/theme/iroha/3.webp",
+    "assets/theme/iroha/4.webp",
+    "assets/theme/iroha/5.webp",
+    "assets/theme/iroha/6.webp",
+    "assets/theme/iroha/7.webp",
+    "assets/theme/iroha/8.webp",
+    "assets/theme/iroha/9.webp",
+    "assets/theme/iroha/10.webp",
+    "assets/theme/iroha/j.webp",
+    "assets/theme/iroha/q.webp",
+    "assets/theme/iroha/k.webp",
+    "assets/theme/iroha/small-joker.webp",
+    "assets/theme/iroha/big-joker.webp",
+    "assets/theme/iroha/card-back.webp"
   ],
   "widgets": [
     {
@@ -40,17 +56,5 @@
       },
       "refreshPolicy": { "mode": "event", "refreshOnVisible": true }
     }
-  ],
-  "settings": [
-    { "key": "difficulty", "label": "默认 AI 难度", "type": "select", "description": "安装级默认值；玩家在大厅选择后使用个人覆盖值", "defaultValue": "normal", "options": [{ "value": "easy", "label": "轻松" }, { "value": "normal", "label": "标准" }, { "value": "hard", "label": "挑战" }] },
-    { "key": "turnSeconds", "label": "默认出牌时间", "type": "select", "description": "安装级默认值；叫抢地主固定为 10 秒", "defaultValue": "20", "options": [{ "value": "10", "label": "10 秒" }, { "value": "15", "label": "15 秒" }, { "value": "20", "label": "20 秒" }, { "value": "30", "label": "30 秒" }, { "value": "0", "label": "不限时" }] },
-    { "key": "sound", "label": "默认游戏音效", "type": "toggle", "description": "安装级默认值；播放程序合成的出牌与提示音效", "defaultValue": true },
-    { "key": "music", "label": "默认背景氛围", "type": "toggle", "description": "安装级默认值；播放低音量合成和弦", "defaultValue": false },
-    { "key": "volume", "label": "默认音量", "type": "number", "description": "安装级默认值；控制音效和背景氛围，范围 0 至 1", "defaultValue": 0.65, "min": 0, "max": 1, "step": 0.05 },
-    { "key": "animation", "label": "默认动画效果", "type": "select", "description": "安装级默认值；降低或关闭动态效果", "defaultValue": "full", "options": [{ "value": "full", "label": "完整" }, { "value": "reduced", "label": "降低" }, { "value": "off", "label": "关闭" }] },
-    { "key": "doubleClickPlay", "label": "默认双击出牌", "type": "toggle", "description": "安装级默认值；仅在所选单张合法时直接出牌", "defaultValue": true },
-    { "key": "sortMode", "label": "默认手牌排序", "type": "select", "description": "安装级默认值；选择手牌排列方式", "defaultValue": "rank", "options": [{ "value": "rank", "label": "按点数" }, { "value": "suit", "label": "按花色" }] },
-    { "key": "gameSpeed", "label": "默认游戏速度", "type": "select", "description": "安装级默认值；控制电脑思考和发牌节奏", "defaultValue": "normal", "options": [{ "value": "slow", "label": "从容" }, { "value": "normal", "label": "标准" }, { "value": "fast", "label": "快速" }] },
-    { "key": "cardSize", "label": "默认牌面大小", "type": "select", "description": "安装级默认值；调整玩家手牌显示尺寸", "defaultValue": "medium", "options": [{ "value": "small", "label": "小" }, { "value": "medium", "label": "中" }, { "value": "large", "label": "大" }] }
   ]
 }
