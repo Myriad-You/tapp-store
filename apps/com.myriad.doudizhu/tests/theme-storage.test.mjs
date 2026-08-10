@@ -104,4 +104,39 @@ describe('personal theme preference', () => {
     await context.DDZ.storage.saveSetting('theme', 'iroha');
     assert.equal((await context.DDZ.storage.loadSettings()).theme, 'iroha');
   });
+
+  it('serializes rapid writes so independent preferences are not lost', async () => {
+    const values = new Map([['settings:v2', { difficulty: 'normal' }]]);
+    const context = {
+      console,
+      Date,
+      Tapp: {
+        storage: {
+          async get(key) {
+            await new Promise((resolve) => setTimeout(resolve, 2));
+            const value = values.get(key);
+            return value ? { ...value } : value;
+          },
+          async set(key, value) {
+            await new Promise((resolve) => setTimeout(resolve, 2));
+            values.set(key, { ...value });
+          },
+          async remove(key) { values.delete(key); }
+        }
+      }
+    };
+    context.globalThis = context;
+    vm.createContext(context);
+    vm.runInContext(source('storage.js'), context, { filename: 'storage.js' });
+
+    await Promise.all([
+      context.DDZ.storage.saveSetting('theme', 'iroha'),
+      context.DDZ.storage.saveSetting('volume', 0.2),
+      context.DDZ.storage.saveSetting('sound', false)
+    ]);
+
+    assert.deepEqual(values.get('settings:v2'), {
+      difficulty: 'normal', theme: 'iroha', volume: 0.2, sound: false
+    });
+  });
 });

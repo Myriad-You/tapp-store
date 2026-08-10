@@ -2,6 +2,7 @@
   'use strict';
   const DDZ = root.DDZ = root.DDZ || {};
   const keys = { settings: 'settings:v2', stats: 'stats:v2', game: 'saved-game:v2' };
+  let settingsWriteQueue = Promise.resolve();
   const defaults = {
     settings: {
       difficulty: 'normal', turnSeconds: 20, sound: true, music: false, volume: 0.65,
@@ -112,9 +113,12 @@
     return normalizeSettings(await get(keys.settings, {}));
   }
 
-  async function saveSetting(key, value) {
-    const current = await get(keys.settings, {});
-    await set(keys.settings, Object.assign({}, current, { [key]: value }));
+  function saveSetting(key, value) {
+    settingsWriteQueue = settingsWriteQueue.then(async function () {
+      const current = await get(keys.settings, {});
+      await set(keys.settings, Object.assign({}, current, { [key]: value }));
+    });
+    return settingsWriteQueue;
   }
 
   DDZ.storage = {
