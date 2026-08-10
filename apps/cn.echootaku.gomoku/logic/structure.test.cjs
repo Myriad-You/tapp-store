@@ -101,11 +101,11 @@ test('federated state is anchored to the room owner and serialized', () => {
   assert.match(source, /fetchRoomOwner\(joinedRoomId\)/);
   assert.match(source, /fetchRoomOwner\(restoringRoomId\)/);
   assert.match(source, /owner_actor \|\| detail\.ownerActor/);
-  assert.match(source, /sender !== hostActor \|\| next\.hostActor !== hostActor/);
+  assert.match(source, /!C\.sameActor\(sender, hostActor\) \|\| !C\.sameActor\(next\.hostActor, hostActor\)/);
   assert.match(source, /queueRoomTask\(async function \(\)/);
   assert.match(source, /candidate\.indexOf\('@'\) >= 0\) return false/);
   assert.match(source, /intent\.seq !== state\.seq \|\| intent\.round !== state\.round/);
-  assert.match(source, /state\.ready\[sender\] = intent\.ready/);
+  assert.match(source, /state\.ready\[state\.players\[color\]\] = intent\.ready/);
 });
 
 test('rejected placements and room resume fail closed', () => {
@@ -114,4 +114,15 @@ test('rejected placements and room resume fail closed', () => {
   assert.match(source, /var placement = placementResult\(row, col\);[\s\S]*?placement === 'occupied' \? 'status\.occupied' : 'status\.notYourTurn'/);
   assert.match(source, /function canResumeRoom\(\)[\s\S]*?savedSession\.roomId && myActor[\s\S]*?federation\.getRoom === 'function'[\s\S]*?federation\.subscribeRoom === 'function'/);
   assert.match(source, /resumeRoom\.classList\.toggle\('hidden', !canResumeRoom\(\) \|\| inRoom\)/);
+});
+
+test('reviewed federation edge cases are wired into the runtime', () => {
+  const source = read('main.js');
+  assert.match(source, /state = C\.resignGame\(state, color\)/);
+  assert.match(source, /federation\.onRoomUpdate\(function \(event\)[\s\S]*?member_left[\s\S]*?member_removed[\s\S]*?handleMemberDeparture/);
+  assert.match(source, /if \(!departed \|\| departedActors\[departed\]\) return;[\s\S]*?departedActors\[departed\] = true/);
+  assert.match(source, /function scheduleIntentSync\(expectedSeq\)[\s\S]*?loadLatestState\(roomId\)/);
+  assert.match(source, /movePendingSeq = expectedSeq; render\(\)/);
+  assert.match(source, /C\.validRoomReference\(id\)/);
+  assert.match(source, /offRoomUpdate\) offRoomUpdate\(\)/);
 });

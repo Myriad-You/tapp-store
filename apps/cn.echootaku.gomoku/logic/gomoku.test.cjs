@@ -20,11 +20,29 @@ test('corrupted move lists fail closed', () => {
   assert.equal(core.boardFromMoves([{row: -1, col: 0, color: 'black'}]), null);
 });
 
+test('actor comparison normalizes hosts and trailing slashes without folding paths', () => {
+  assert.equal(core.normalizeActor(' HTTPS://Example.COM/users/Alice/ '), 'https://example.com/users/Alice');
+  assert.equal(core.sameActor('https://EXAMPLE.com/users/Alice/', 'https://example.com/users/Alice'), true);
+  assert.equal(core.sameActor('https://example.com/users/Alice', 'https://example.com/users/alice'), false);
+  assert.equal(core.sameActor('@Alice@EXAMPLE.COM', '@Alice@example.com'), true);
+});
+
 test('canonical state validation rejects reordered colors and duplicates', () => {
   const base = {protocol:1,kind:'state',seq:1,round:1,hostActor:'@a@x.test',players:{black:'@a@x.test',white:'@b@y.test'},ready:{},phase:'playing',turn:'white',moves:[{row:7,col:7,color:'black',actor:'@a@x.test'}],winner:null,finishReason:null,lastMove:{row:7,col:7,color:'black',actor:'@a@x.test'}};
   assert.ok(core.validateState(base));
   assert.equal(core.validateState({...base,moves:[{row:7,col:7,color:'white',actor:'@b@y.test'}]}), null);
   assert.equal(core.validateState({...base,turn:'black',moves:[...base.moves,{...base.moves[0],color:'white',actor:'@b@y.test'}]}), null);
+});
+
+test('state validation canonicalizes equivalent actor spellings and ready keys', () => {
+  const black = 'https://EXAMPLE.com/users/Alice/';
+  const white = 'https://peer.test/users/Bob';
+  const state = {protocol:1,kind:'state',seq:1,round:1,hostActor:black,players:{black:'https://example.com/users/Alice',white},ready:{[black]:true,[white + '/']:false},phase:'lobby',turn:'black',moves:[],winner:null,finishReason:null,lastMove:null,winLine:[]};
+  const clean = core.validateState(state);
+  assert.ok(clean);
+  assert.equal(clean.hostActor, 'https://example.com/users/Alice');
+  assert.deepEqual(clean.ready, {'https://example.com/users/Alice':true,'https://peer.test/users/Bob':false});
+  assert.equal(core.validateState({...state,players:{black,white:'https://example.com/users/Alice'}}), null);
 });
 
 test('state validation rejects a self-declared host and incomplete active seats', () => {
@@ -51,6 +69,51 @@ test('finished state keeps the authoritative turn and complete last move', () =>
   const resigned = {protocol:1,kind:'state',seq:2,round:3,hostActor:actors.black,players:actors,ready:{},phase:'finished',turn:'white',moves:[{row:7,col:7,color:'black',actor:actors.black}],lastMove:{row:7,col:7,color:'black',actor:actors.black},winner:'black',finishReason:'resign',winLine:[]};
   assert.ok(core.validateState(resigned));
   assert.equal(core.validateState({...resigned,winner:'white'}), null);
+});
+
+test('either player can resign on either turn without producing an invalid snapshot', () => {
+  const actors = {black:'https://host.test/users/alice',white:'https://peer.test/users/bob'};
+  for (const currentTurn of ['black', 'white']) {
+    let game = core.newGame(4);
+    if (currentTurn === 'white') game = core.applyMove(game, 7, 7, actors.black).game;
+    const state = Object.assign({protocol:1,kind:'state',seq:8,hostActor:actors.black,players:actors,ready:{}}, game);
+    for (const resigningColor of ['black', 'white']) {
+      const resigned = core.resignGame(state, resigningColor);
+      assert.equal(resigned.turn, resigningColor);
+      assert.equal(resigned.winner, core.opposite(resigningColor));
+      assert.ok(core.validateState(resigned), `${resigningColor} resignation on ${currentTurn} turn must validate`);
+    }
+  }
+});
+
+test('member departure clears lobbies and awards active games to the remaining player', () => {
+  const host = 'https://host.test/users/alice';
+  const peer = 'https://peer.test/users/bob';
+  const lobby = {protocol:1,kind:'state',seq:2,round:1,hostActor:host,players:{black:peer,white:host},ready:{[peer]:true,[host]:false},phase:'lobby',turn:'black',moves:[],winner:null,finishReason:null,lastMove:null,winLine:[]};
+  const vacatedLobby = core.memberDeparture(lobby, peer + '/');
+  assert.equal(vacatedLobby.players.black, null);
+  assert.equal(Object.keys(vacatedLobby.ready).some((actor) => core.sameActor(actor, peer)), false);
+  assert.ok(core.validateState(vacatedLobby));
+
+  const playing = {...lobby,seq:3,players:{black:host,white:peer},ready:{},phase:'playing'};
+  const forfeited = core.memberDeparture(playing, peer);
+  assert.equal(forfeited.phase, 'finished');
+  assert.equal(forfeited.turn, 'white');
+  assert.equal(forfeited.winner, 'black');
+  assert.ok(core.validateState(forfeited));
+
+  const reopened = core.memberDeparture(forfeited, peer);
+  assert.equal(reopened.phase, 'lobby');
+  assert.equal(reopened.players.white, null);
+  assert.equal(reopened.round, 2);
+  assert.ok(core.validateState(reopened));
+});
+
+test('room references accept local and cross-instance forms only', () => {
+  assert.equal(core.validRoomReference('rm_local123'), true);
+  assert.equal(core.validRoomReference('rm_remote123@example.com:8443'), true);
+  assert.equal(core.validRoomReference('room-123'), false);
+  assert.equal(core.validRoomReference('rm_bad@'), false);
 });
 
 test('realtime room message wrappers decode the authenticated sender', () => {

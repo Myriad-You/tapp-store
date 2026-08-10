@@ -25,7 +25,7 @@
   },
   "online": {
     "title": "Federation room",
-    "description": "Create a public room or enter a room ID shared by another instance.",
+    "description": "Create a public room; use a bare room ID locally or a complete shared ID across instances.",
     "create": "Create public room",
     "roomId": "Room ID",
     "join": "Join",
@@ -62,7 +62,7 @@
   },
   "rules": {
     "title": "Rules and online play",
-    "body": "15×15 freestyle Gomoku with no forbidden moves. Five or more in a row wins. Online moves are validated by the host, while room traffic remains subject to system federation policy and content filters."
+    "body": "15×15 freestyle Gomoku with no forbidden moves. Five or more in a row wins, and rematches automatically swap colors. Online moves are validated by the host, while room traffic remains subject to system federation policy and content filters."
   },
   "status": {
     "blackTurn": "Black to move",
@@ -84,7 +84,7 @@
     "left": "Room left",
     "dissolved": "Room dissolved",
     "resigned": "You resigned",
-    "invalidRoom": "Enter a complete room ID",
+    "invalidRoom": "Enter a valid room ID",
     "invalidActor": "Enter a complete federated Actor address",
     "busy": "Working…",
     "error": "Could not complete operation: {message}",

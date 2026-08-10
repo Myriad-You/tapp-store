@@ -10,6 +10,30 @@
 
   function opposite(color) { return color === 'black' ? 'white' : 'black'; }
   function inBounds(row, col) { return Number.isInteger(row) && Number.isInteger(col) && row >= 0 && row < SIZE && col >= 0 && col < SIZE; }
+  function normalizeActor(value) {
+    var text = typeof value === 'string' ? value.trim() : '';
+    if (!text) return '';
+    if (/^https?:\/\//i.test(text)) {
+      try {
+        var parsed = new URL(text);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '';
+        return parsed.protocol.toLowerCase() + '//' + parsed.host.toLowerCase() + parsed.pathname.replace(/\/+$/, '');
+      } catch (_) { return ''; }
+    }
+    var at = text.lastIndexOf('@');
+    if (at > 0 && text.indexOf('/') < 0) return text.slice(0, at) + '@' + text.slice(at + 1).toLowerCase();
+    return text.replace(/\/+$/, '');
+  }
+  function sameActor(left, right) {
+    var normalizedLeft = normalizeActor(left), normalizedRight = normalizeActor(right);
+    return !!normalizedLeft && normalizedLeft === normalizedRight;
+  }
+  function playerColor(players, actor) {
+    if (!players || !actor) return null;
+    if (sameActor(players.black, actor)) return 'black';
+    if (sameActor(players.white, actor)) return 'white';
+    return null;
+  }
   function boardFromMoves(moves) {
     if (!Array.isArray(moves)) return null;
     var board = Array.from({ length: SIZE }, function () { return Array(SIZE).fill(null); });
@@ -61,21 +85,46 @@
     } else next.turn = opposite(color);
     return { ok: true, game: next };
   }
-  function validActor(value) { return value === null || (typeof value === 'string' && value.length > 0 && value.length <= 320); }
+  function validActor(value) { return value === null || (typeof value === 'string' && normalizeActor(value).length > 0 && value.length <= 320); }
+  function resignGame(game, color) {
+    if (!game || game.phase !== 'playing' || COLORS.indexOf(color) < 0) return null;
+    var next = JSON.parse(JSON.stringify(game));
+    next.phase = 'finished'; next.turn = color; next.winner = opposite(color); next.finishReason = 'resign'; next.winLine = [];
+    return next;
+  }
+  function resetLobby(game, incrementRound) {
+    game.phase = 'lobby'; game.turn = 'black'; game.moves = []; game.winner = null; game.finishReason = null; game.lastMove = null; game.winLine = [];
+    if (incrementRound) game.round += 1;
+    return game;
+  }
+  function memberDeparture(game, actor) {
+    if (!game || !game.players || !actor || sameActor(game.hostActor, actor)) return null;
+    var color = playerColor(game.players, actor);
+    if (!color) return null;
+    if (game.phase === 'playing') return resignGame(game, color);
+    var next = JSON.parse(JSON.stringify(game));
+    next.players[color] = null;
+    Object.keys(next.ready || {}).forEach(function (key) { if (sameActor(key, actor)) delete next.ready[key]; });
+    if (next.phase === 'finished') resetLobby(next, true);
+    return next;
+  }
+  function validRoomReference(value) { return /^rm_[^\s@]+(?:@[^\s@]+)?$/.test(String(value || '').trim()); }
   function validateState(input) {
     if (!input || input.protocol !== 1 || input.kind !== 'state' || !Number.isInteger(input.seq) || input.seq < 1) return null;
     if (!validActor(input.hostActor) || !input.hostActor || !input.players || !validActor(input.players.black) || !validActor(input.players.white)) return null;
-    if (input.players.black && input.players.white && input.players.black === input.players.white) return null;
-    if (input.hostActor !== input.players.black && input.hostActor !== input.players.white) return null;
+    if (input.players.black && input.players.white && sameActor(input.players.black, input.players.white)) return null;
+    if (!sameActor(input.hostActor, input.players.black) && !sameActor(input.hostActor, input.players.white)) return null;
     if (!Number.isInteger(input.round) || input.round < 1 || input.round > 100000) return null;
     if (['lobby', 'playing', 'finished'].indexOf(input.phase) < 0 || COLORS.indexOf(input.turn) < 0) return null;
     if (!Array.isArray(input.moves) || input.moves.length > MAX_MOVES || !input.ready || typeof input.ready !== 'object' || Array.isArray(input.ready)) return null;
     if (input.phase !== 'lobby' && (!input.players.black || !input.players.white)) return null;
     if (input.phase === 'lobby' && (input.moves.length || input.turn !== 'black' || input.winner !== null || input.finishReason !== null || input.lastMove !== null)) return null;
-    var readyActors = Object.keys(input.ready);
+    var readyActors = Object.keys(input.ready), readyColors = Object.create(null);
     for (var readyIndex = 0; readyIndex < readyActors.length; readyIndex += 1) {
       var readyActor = readyActors[readyIndex];
-      if ((readyActor !== input.players.black && readyActor !== input.players.white) || typeof input.ready[readyActor] !== 'boolean') return null;
+      var readyColor = playerColor(input.players, readyActor);
+      if (!readyColor || readyColors[readyColor] || typeof input.ready[readyActor] !== 'boolean') return null;
+      readyColors[readyColor] = true;
     }
     var seen = Object.create(null), board = Array.from({ length: SIZE }, function () { return Array(SIZE).fill(null); });
     for (var i = 0; i < input.moves.length; i += 1) {
@@ -85,12 +134,12 @@
       if (seen[key]) return null;
       seen[key] = true; board[m.row][m.col] = m.color;
       var expectedActor = input.players[m.color];
-      if (!expectedActor || m.actor !== expectedActor) return null;
+      if (!expectedActor || !sameActor(m.actor, expectedActor)) return null;
       if (winningLine(board, m.row, m.col, m.color).length >= 5 && (i !== input.moves.length - 1 || input.phase !== 'finished' || input.finishReason !== 'line')) return null;
     }
     if (input.lastMove) {
       var last = input.moves[input.moves.length - 1];
-      if (!last || last.row !== input.lastMove.row || last.col !== input.lastMove.col || last.color !== input.lastMove.color || last.actor !== input.lastMove.actor) return null;
+      if (!last || last.row !== input.lastMove.row || last.col !== input.lastMove.col || last.color !== input.lastMove.color || !sameActor(last.actor, input.lastMove.actor)) return null;
     } else if (input.moves.length) return null;
     var winner = input.winner;
     if (winner !== null && COLORS.indexOf(winner) < 0) return null;
@@ -104,6 +153,16 @@
       if (input.finishReason === 'resign' && (COLORS.indexOf(winner) < 0 || winner !== opposite(input.turn))) return null;
     }
     var clean = JSON.parse(JSON.stringify(input));
+    clean.hostActor = normalizeActor(input.hostActor);
+    clean.players.black = input.players.black ? normalizeActor(input.players.black) : null;
+    clean.players.white = input.players.white ? normalizeActor(input.players.white) : null;
+    clean.ready = {};
+    readyActors.forEach(function (actor) {
+      var color = playerColor(input.players, actor);
+      clean.ready[clean.players[color]] = input.ready[actor];
+    });
+    clean.moves.forEach(function (move) { move.actor = move.actor ? normalizeActor(move.actor) : null; });
+    if (clean.lastMove && clean.lastMove.actor) clean.lastMove.actor = normalizeActor(clean.lastMove.actor);
     clean.winLine = input.phase === 'finished' && input.finishReason === 'line' ? winningLine(board, input.lastMove.row, input.lastMove.col, winner) : [];
     return clean;
   }
@@ -129,9 +188,9 @@
     var messageType = content.message_type || message.message_type || data.message_type || outer.message_type;
     var payload = content.payload !== undefined ? content.payload : (message.payload !== undefined ? message.payload : (data.payload !== undefined ? data.payload : null));
     if (messageType !== expectedType || !payload || typeof payload !== 'object') return null;
-    return { payload: payload, sender: senderFrom(message) || senderFrom(data) || senderFrom(outer), room: outer.roomId || outer.room_id || data.roomId || data.room_id || '' };
+    return { payload: payload, sender: normalizeActor(senderFrom(message) || senderFrom(data) || senderFrom(outer)), room: outer.roomId || outer.room_id || data.roomId || data.room_id || '' };
   }
-  return { SIZE: SIZE, MAX_MOVES: MAX_MOVES, opposite: opposite, inBounds: inBounds, boardFromMoves: boardFromMoves, winningLine: winningLine, newGame: newGame, applyMove: applyMove, validateState: validateState, decodeFederationEnvelope: decodeFederationEnvelope, nicknameFromActor: nicknameFromActor };
+  return { SIZE: SIZE, MAX_MOVES: MAX_MOVES, opposite: opposite, inBounds: inBounds, normalizeActor: normalizeActor, sameActor: sameActor, playerColor: playerColor, boardFromMoves: boardFromMoves, winningLine: winningLine, newGame: newGame, applyMove: applyMove, resignGame: resignGame, resetLobby: resetLobby, memberDeparture: memberDeparture, validRoomReference: validRoomReference, validateState: validateState, decodeFederationEnvelope: decodeFederationEnvelope, nicknameFromActor: nicknameFromActor };
 });
 
 (function () {
@@ -143,12 +202,12 @@
   var SESSION_KEY = 'gomoku.session.v1';
   var els = {};
   var cells = [];
-  var offMessage = null, offTheme = null, offLocale = null;
+  var offMessage = null, offRoomUpdate = null, offTheme = null, offLocale = null;
   var roomTask = Promise.resolve();
   var mode = 'local', myActor = '', myDisplayName = '', roomId = '', shareRoomId = '', hostActor = '', isHost = false;
   var identityState = 'loading';
   var state = null, localGame = C.newGame(1), stats = { black: 0, white: 0, draws: 0 };
-  var savedSession = null, seenNonces = Object.create(null), memberNames = Object.create(null), busy = false, destroyed = false;
+  var savedSession = null, seenNonces = Object.create(null), memberNames = Object.create(null), departedActors = Object.create(null), busy = false, movePendingSeq = null, syncTimer = null, destroyed = false;
 
   function $(id) { return document.getElementById(id); }
   function t(key, vars) {
@@ -156,7 +215,8 @@
   }
   function actorLabel(actor) {
     if (!actor) return t('room.waiting');
-    var label = (actor === myActor && myDisplayName) || memberNames[actor] || C.nicknameFromActor(actor) || actor;
+    var normalized = C.normalizeActor(actor);
+    var label = (C.sameActor(actor, myActor) && myDisplayName) || memberNames[normalized] || C.nicknameFromActor(actor) || actor;
     return label.length > 34 ? label.slice(0, 31) + '…' : label;
   }
   function errorText(error) { return String(error && error.message ? error.message : error || 'Unknown error').slice(0, 180); }
@@ -192,15 +252,21 @@
     roomTask = next.catch(function () {});
     return next;
   }
+  function readyFor(game, actor) {
+    if (!game || !game.ready || !actor) return false;
+    var key = Object.keys(game.ready).find(function (candidate) { return C.sameActor(candidate, actor); });
+    return !!(key && game.ready[key]);
+  }
+  function clearSyncTimer() { if (syncTimer) clearTimeout(syncTimer); syncTimer = null; }
+  function clearMovePending() { movePendingSeq = null; }
+  function resetOnlineRuntime() { clearSyncTimer(); clearMovePending(); seenNonces = Object.create(null); memberNames = Object.create(null); departedActors = Object.create(null); }
   function blankLobby(host) {
     return { protocol: 1, kind: 'state', seq: 0, round: 1, hostActor: host, players: { black: host, white: null }, ready: {}, phase: 'lobby', turn: 'black', moves: [], winner: null, finishReason: null, lastMove: null, winLine: [] };
   }
   function activeGame() { return mode === 'local' ? localGame : state; }
   function myColor() {
     if (!state) return null;
-    if (state.players.black === myActor) return 'black';
-    if (state.players.white === myActor) return 'white';
-    return null;
+    return C.playerColor(state.players, myActor);
   }
   function setMode(next) {
     mode = next;
@@ -218,7 +284,7 @@
   function renderBoard() {
     var game = activeGame();
     var locked = mode === 'online' && !!roomId && !!game && game.phase === 'lobby';
-    var previewEnabled = !!game && game.phase === 'playing' && (mode === 'local' || (!!myColor() && game.turn === myColor() && !busy));
+    var previewEnabled = !!game && game.phase === 'playing' && (mode === 'local' || (!!myColor() && game.turn === myColor() && !busy && movePendingSeq === null));
     els.board.classList.toggle('turn-black', !!game && game.turn === 'black');
     els.board.classList.toggle('turn-white', !!game && game.turn === 'white');
     els.board.classList.toggle('preview-enabled', previewEnabled);
@@ -238,7 +304,7 @@
   }
   function statusKey(game) {
     if (!game) return 'status.lobby';
-    if (game.phase === 'lobby') return game.players && !game.players.white ? 'status.waitingPlayer' : 'status.lobby';
+    if (game.phase === 'lobby') return game.players && (!game.players.black || !game.players.white) ? 'status.waitingPlayer' : 'status.lobby';
     if (game.phase === 'finished') {
       if (!game.winner) return 'status.draw';
       if (mode === 'online' && myColor()) return game.winner === myColor() ? 'status.youWin' : 'status.youLose';
@@ -255,23 +321,24 @@
     els.activeRoom.textContent = shareRoomId || roomId;
     els.blackPlayer.textContent = actorLabel(state.players.black); els.blackPlayer.title = state.players.black || '';
     els.whitePlayer.textContent = actorLabel(state.players.white); els.whitePlayer.title = state.players.white || '';
-    var blackIsReady = !!state.players.black && !!state.ready[state.players.black];
-    var whiteIsReady = !!state.players.white && !!state.ready[state.players.white];
+    var blackIsReady = !!state.players.black && readyFor(state, state.players.black);
+    var whiteIsReady = !!state.players.white && readyFor(state, state.players.white);
     els.blackReady.textContent = t(!state.players.black ? 'room.waiting' : blackIsReady ? 'room.readyBadge' : 'room.notReady');
     els.whiteReady.textContent = t(!state.players.white ? 'room.waiting' : whiteIsReady ? 'room.readyBadge' : 'room.notReady');
     els.blackReady.classList.toggle('ready', blackIsReady);
     els.whiteReady.classList.toggle('ready', whiteIsReady);
     els.blackReady.classList.toggle('hidden', state.phase === 'playing');
     els.whiteReady.classList.toggle('hidden', state.phase === 'playing');
-    var mine = myColor(), mineReady = mine && state.ready[myActor];
+    var mine = myColor(), mineReady = mine && readyFor(state, state.players[mine]);
     els.ready.textContent = t(mineReady ? 'room.cancelReady' : 'room.ready');
     els.ready.classList.toggle('hidden', state.phase === 'playing' || !mine);
     els.swapColors.classList.toggle('hidden', state.phase !== 'lobby' || !mine || !state.players.black || !state.players.white);
     els.resign.classList.toggle('hidden', state.phase !== 'playing' || !mine);
+    els.resign.disabled = busy || movePendingSeq !== null;
     els.rematch.classList.toggle('hidden', state.phase !== 'finished' || !mine);
     $('dissolve-room').classList.toggle('hidden', !isHost);
     $('leave-room').classList.toggle('hidden', isHost);
-    els.invitePlayer.disabled = busy || !isHost || !!state.players.white;
+    els.invitePlayer.disabled = busy || !isHost || (!!state.players.black && !!state.players.white);
   }
   function renderGameGuards() {
     var game = activeGame();
@@ -280,8 +347,8 @@
     els.lobbyLock.classList.toggle('hidden', !locked);
     els.turnAlert.classList.toggle('visible', waitingTurn);
     if (locked) {
-      var blackReady = !!game.players.black && !!game.ready[game.players.black];
-      var whiteReady = !!game.players.white && !!game.ready[game.players.white];
+      var blackReady = !!game.players.black && readyFor(game, game.players.black);
+      var whiteReady = !!game.players.white && readyFor(game, game.players.white);
       els.lockBlackStatus.textContent = t(!game.players.black ? 'room.waiting' : blackReady ? 'room.readyBadge' : 'room.notReady');
       els.lockWhiteStatus.textContent = t(!game.players.white ? 'room.waiting' : whiteReady ? 'room.readyBadge' : 'room.notReady');
       els.lockBlackStatus.classList.toggle('ready', blackReady);
@@ -307,7 +374,7 @@
     if (!board) return 'blocked';
     if (board[row][col]) return 'occupied';
     if (mode === 'local') return 'allowed';
-    return !!myColor() && game.turn === myColor() && !busy ? 'allowed' : 'blocked';
+    return !!myColor() && game.turn === myColor() && !busy && movePendingSeq === null ? 'allowed' : 'blocked';
   }
   function canPlace(row, col) { return placementResult(row, col) === 'allowed'; }
   async function saveStats() { try { await Tapp.storage.set(STATS_KEY, stats); } catch (_) {} }
@@ -330,7 +397,11 @@
       if (applied.ok) { localGame = applied.game; if (localGame.phase === 'finished') recordResult(localGame); render(); }
       return;
     }
-    submitIntent({ action: 'move', row: row, col: col }).catch(function (error) { notice('status.error', { message: errorText(error) }, true); });
+    var expectedSeq = state && state.seq;
+    movePendingSeq = expectedSeq; render();
+    submitIntent({ action: 'move', row: row, col: col }).then(function () {
+      if (isHost) { clearMovePending(); render(); }
+    }).catch(function (error) { clearMovePending(); render(); notice('status.error', { message: errorText(error) }, true); });
   }
   function newLocal() { localGame = C.newGame((localGame.round || 0) + 1); notice('status.localReset'); render(); }
 
@@ -368,7 +439,7 @@
     if (!detail || typeof detail !== 'object') return '';
     var owner = detail.owner_actor || detail.ownerActor || detail.owner || '';
     if (owner && typeof owner === 'object') owner = owner.actor_url || owner.actor || owner.id || '';
-    return typeof owner === 'string' ? owner.trim() : '';
+    return C.normalizeActor(owner);
   }
   async function fetchRoomOwner(id) {
     if (!Tapp.federation || typeof Tapp.federation.getRoom !== 'function') throw new Error('Federation room detail API unavailable');
@@ -382,7 +453,7 @@
     var response = await Tapp.federation.getRoomMembers(targetRoom);
     if (targetRoom !== roomId) return;
     memberList(response).forEach(function (member) {
-      var actor = member && (member.actor_url || member.actor || member.actor_id || member.id || '');
+      var actor = C.normalizeActor(member && (member.actor_url || member.actor || member.actor_id || member.id || ''));
       if (actor) memberNames[actor] = memberDisplayName(member) || C.nicknameFromActor(actor);
     });
     renderIdentity(); render();
@@ -397,25 +468,55 @@
     state.seq += 1; state.protocol = 1; state.kind = 'state'; state.hostActor = hostActor;
     render(); await saveSession(); await sendPayload(state);
   }
+  function scheduleIntentSync(expectedSeq) {
+    clearSyncTimer();
+    syncTimer = setTimeout(function () {
+      syncTimer = null;
+      if (destroyed || isHost || !roomId) { if (movePendingSeq === expectedSeq) clearMovePending(); return; }
+      loadLatestState(roomId).catch(function () {}).finally(function () {
+        if (movePendingSeq === expectedSeq) clearMovePending();
+        render();
+      });
+    }, 1500);
+  }
   async function submitIntent(intent) {
     if (!roomId || !myActor) return;
     var payload = { protocol: 1, kind: 'intent', nonce: makeNonce(), action: intent.action };
     Object.keys(intent).forEach(function (key) { if (key !== 'action') payload[key] = intent[key]; });
     if (state) { if (payload.seq === undefined) payload.seq = state.seq; if (payload.round === undefined) payload.round = state.round; }
-    if (isHost) await queueRoomTask(function () { return handleIntent(payload, myActor); }); else await sendPayload(payload);
+    if (isHost) await queueRoomTask(function () { return handleIntent(payload, myActor); });
+    else {
+      await sendPayload(payload);
+      if (intent.action !== 'hello' && intent.action !== 'sync') scheduleIntentSync(payload.seq);
+    }
   }
   async function handleIntent(intent, sender) {
+    sender = C.normalizeActor(sender);
     if (destroyed || !isHost || !state || !sender || !intent || intent.protocol !== 1 || intent.kind !== 'intent' || !rememberNonce(intent.nonce)) return;
     if (intent.action === 'hello' || intent.action === 'sync') {
-      if (!state.players.white && sender !== state.players.black) { state.players.white = sender; state.ready[sender] = false; }
+      var senderColor = C.playerColor(state.players, sender);
+      if (senderColor) delete departedActors[sender];
+      if (!senderColor) {
+        var openColor = !state.players.black ? 'black' : !state.players.white ? 'white' : null;
+        if (!openColor && state.phase === 'finished') {
+          var hostColor = C.playerColor(state.players, hostActor);
+          if (hostColor) { openColor = C.opposite(hostColor); C.resetLobby(state, true); }
+        }
+        if (openColor) {
+          state.players[openColor] = sender; state.ready = {};
+          delete departedActors[sender];
+          if (state.players.black) state.ready[state.players.black] = false;
+          if (state.players.white) state.ready[state.players.white] = false;
+        }
+      }
       await emitState(); refreshMemberNames().catch(function () {}); return;
     }
-    var color = state.players.black === sender ? 'black' : state.players.white === sender ? 'white' : null;
+    var color = C.playerColor(state.players, sender);
     if (!color) return;
     if (intent.action === 'ready') {
       if (state.phase === 'playing' || intent.round !== state.round || typeof intent.ready !== 'boolean') return;
-      state.ready[sender] = intent.ready;
-      if (state.players.black && state.players.white && state.ready[state.players.black] && state.ready[state.players.white]) {
+      state.ready[state.players[color]] = intent.ready;
+      if (state.players.black && state.players.white && readyFor(state, state.players.black) && readyFor(state, state.players.white)) {
         if (state.phase === 'finished') {
           var previousBlack = state.players.black; state.players.black = state.players.white; state.players.white = previousBlack; state.round += 1;
         }
@@ -439,14 +540,15 @@
       await emitState(); return;
     }
     if (intent.action === 'resign' && state.phase === 'playing' && intent.seq === state.seq && intent.round === state.round) {
-      state.phase = 'finished'; state.winner = C.opposite(color); state.finishReason = 'resign'; state.winLine = [];
+      state = C.resignGame(state, color);
       await emitState();
     }
   }
   async function applyRemoteState(payload, sender) {
     var next = C.validateState(payload);
-    if (!next || !sender || !hostActor || sender !== hostActor || next.hostActor !== hostActor) { notice('status.protocol', null, true); return false; }
+    if (!next || !sender || !hostActor || !C.sameActor(sender, hostActor) || !C.sameActor(next.hostActor, hostActor)) { notice('status.protocol', null, true); return false; }
     if (state && next.seq <= state.seq) return false;
+    clearSyncTimer(); clearMovePending();
     state = next;
     await saveSession(); render(); notice('status.synced'); return true;
   }
@@ -461,9 +563,28 @@
       }).catch(function (error) { console.warn('[联邦五子棋] message', error); });
     });
   }
+  async function handleMemberDeparture(actor) {
+    if (!isHost || !state) return;
+    var departed = C.normalizeActor(actor);
+    if (!departed || departedActors[departed]) return;
+    var next = C.memberDeparture(state, departed);
+    if (!next) return;
+    departedActors[departed] = true; state = next; delete memberNames[departed];
+    await emitState();
+  }
+  function wireRoomUpdates() {
+    if (offRoomUpdate || !Tapp.federation || typeof Tapp.federation.onRoomUpdate !== 'function') return;
+    offRoomUpdate = Tapp.federation.onRoomUpdate(function (event) {
+      queueRoomTask(async function () {
+        var eventRoom = event && (event.roomId || event.room_id);
+        if (!eventRoom || !sameActiveRoom(eventRoom)) return;
+        if (event.event === 'member_left' || event.event === 'member_removed' || event.event === 'member_kicked') await handleMemberDeparture(event.actor);
+      }).catch(function (error) { console.warn('[联邦五子棋] room update', error); });
+    });
+  }
   async function subscribe(id) {
     if (!Tapp.federation || typeof Tapp.federation.subscribeRoom !== 'function') throw new Error('Federation subscribe API unavailable');
-    await Tapp.federation.subscribeRoom(id); wireMessages();
+    await Tapp.federation.subscribeRoom(id); wireMessages(); wireRoomUpdates();
   }
   async function loadLatestState(id) {
     if (!Tapp.federation || typeof Tapp.federation.getRoomMessages !== 'function') return false;
@@ -473,7 +594,7 @@
       var decoded = decodeEnvelope(list[i]);
       if (!decoded || decoded.payload.kind !== 'state') continue;
       var candidate = C.validateState(decoded.payload);
-      if (candidate && hostActor && decoded.sender === hostActor && candidate.hostActor === hostActor && (!best || candidate.seq > best.payload.seq)) best = { payload: candidate, sender: decoded.sender };
+      if (candidate && hostActor && C.sameActor(decoded.sender, hostActor) && C.sameActor(candidate.hostActor, hostActor) && (!best || candidate.seq > best.payload.seq)) best = { payload: candidate, sender: decoded.sender };
     }
     return best ? applyRemoteState(best.payload, best.sender) : false;
   }
@@ -483,11 +604,11 @@
     var id = result && (result.room_id || result.id);
     if (!id) throw new Error('Missing room_id');
     roomId = id; shareRoomId = id.indexOf('@') >= 0 || !result.home_server ? id : id + '@' + result.home_server;
-    hostActor = myActor; isHost = true; seenNonces = Object.create(null); memberNames = Object.create(null); state = blankLobby(myActor); state.ready[myActor] = false;
+    hostActor = myActor; isHost = true; resetOnlineRuntime(); state = blankLobby(myActor); state.ready[myActor] = false;
     await subscribe(roomId); await emitState(); await refreshMemberNames().catch(function () {}); notice('status.roomCreated'); render();
   }
   async function joinRoom(id) {
-    id = String(id || '').trim(); if (!/^rm_[^\s@]+@[^\s@]+$/.test(id)) { notice('status.invalidRoom', null, true); return; }
+    id = String(id || '').trim(); if (!C.validRoomReference(id)) { notice('status.invalidRoom', null, true); return; }
     if (!myActor || !Tapp.federation) throw new Error(t('online.permission'));
     var joined = typeof Tapp.federation.joinRoom === 'function' ? await Tapp.federation.joinRoom(id) : null;
     var joinedRoomId = joined && (joined.room_id || joined.id) || id;
@@ -497,7 +618,9 @@
       if (typeof Tapp.federation.leaveRoom === 'function') { try { await Tapp.federation.leaveRoom(joinedRoomId); } catch (_) {} }
       throw error;
     }
-    roomId = joinedRoomId; shareRoomId = id; hostActor = owner; isHost = hostActor === myActor; state = null; seenNonces = Object.create(null); memberNames = Object.create(null);
+    roomId = joinedRoomId;
+    shareRoomId = id.indexOf('@') >= 0 ? id : String(joinedRoomId).indexOf('@') >= 0 ? joinedRoomId : joined && joined.home_server ? joinedRoomId + '@' + joined.home_server : joinedRoomId;
+    hostActor = owner; isHost = C.sameActor(hostActor, myActor); state = null; resetOnlineRuntime();
     await subscribe(roomId); await loadLatestState(roomId);
     if (isHost) { if (!state) state = blankLobby(myActor); await emitState(); } else await submitIntent({ action: 'hello' });
     await refreshMemberNames().catch(function () {}); notice('status.roomJoined'); render();
@@ -510,9 +633,9 @@
     var restoringRoomId = savedSession.roomId;
     var restoringShareId = savedSession.shareRoomId || restoringRoomId;
     var restoringOwner = await fetchRoomOwner(restoringRoomId);
-    roomId = restoringRoomId; shareRoomId = restoringShareId; hostActor = restoringOwner; isHost = hostActor === myActor; state = null; seenNonces = Object.create(null); memberNames = Object.create(null);
+    roomId = restoringRoomId; shareRoomId = restoringShareId; hostActor = restoringOwner; isHost = C.sameActor(hostActor, myActor); state = null; resetOnlineRuntime();
     var storedState = C.validateState(savedSession.state);
-    if (!storedState || storedState.hostActor !== hostActor) { await clearSession(); throw new Error('Saved session is invalid'); }
+    if (!storedState || !C.sameActor(storedState.hostActor, hostActor)) { await clearSession(); throw new Error('Saved session is invalid'); }
     await subscribe(roomId); await loadLatestState(roomId);
     if (!state || storedState.seq > state.seq) state = storedState;
     if (isHost) await emitState(); else await submitIntent({ action: 'sync' });
@@ -524,7 +647,7 @@
     var leaving = roomId;
     if (leaving && Tapp.federation && typeof Tapp.federation.unsubscribeRoom === 'function') await Tapp.federation.unsubscribeRoom(leaving);
     if (leaving && Tapp.federation && typeof Tapp.federation.leaveRoom === 'function') await Tapp.federation.leaveRoom(leaving);
-    roomId = ''; shareRoomId = ''; hostActor = ''; isHost = false; state = null; memberNames = Object.create(null); await clearSession(); notice('status.left'); render();
+    roomId = ''; shareRoomId = ''; hostActor = ''; isHost = false; state = null; resetOnlineRuntime(); await clearSession(); notice('status.left'); render();
   }
   async function dissolveRoom() {
     if (!roomId || !isHost || !Tapp.federation || typeof Tapp.federation.deleteRoom !== 'function') return;
@@ -534,7 +657,7 @@
     if (Tapp.federation && typeof Tapp.federation.unsubscribeRoom === 'function') {
       try { await Tapp.federation.unsubscribeRoom(deleting); } catch (_) {}
     }
-    roomId = ''; shareRoomId = ''; hostActor = ''; isHost = false; state = null; memberNames = Object.create(null);
+    roomId = ''; shareRoomId = ''; hostActor = ''; isHost = false; state = null; resetOnlineRuntime();
     await clearSession(); notice('status.dissolved'); render();
   }
   async function invite() {
@@ -588,9 +711,9 @@
     $('new-local').addEventListener('click', newLocal); $('create-room').addEventListener('click', function () { runBusy(createRoom); });
     $('join-room').addEventListener('click', function () { runBusy(function () { return joinRoom($('room-id').value); }); });
     els.resumeRoom.addEventListener('click', function () { runBusy(resumeRoom); }); $('copy-room').addEventListener('click', function () { runBusy(copyRoom); });
-    els.invitePlayer.addEventListener('click', function () { runBusy(invite); }); els.ready.addEventListener('click', function () { runBusy(function () { return submitIntent({ action: 'ready', ready: !(state && state.ready[myActor]) }); }); });
+    els.invitePlayer.addEventListener('click', function () { runBusy(invite); }); els.ready.addEventListener('click', function () { runBusy(function () { var color = myColor(); return submitIntent({ action: 'ready', ready: !(color && readyFor(state, state.players[color])) }); }); });
     els.swapColors.addEventListener('click', function () { runBusy(function () { return submitIntent({ action: 'swap', seq: state && state.seq }); }); });
-    els.rematch.addEventListener('click', function () { runBusy(function () { return submitIntent({ action: 'ready', ready: !(state && state.ready[myActor]) }); }); }); els.resign.addEventListener('click', function () { runBusy(confirmResign); });
+    els.rematch.addEventListener('click', function () { runBusy(function () { var color = myColor(); return submitIntent({ action: 'ready', ready: !(color && readyFor(state, state.players[color])) }); }); }); els.resign.addEventListener('click', function () { runBusy(confirmResign); });
     $('dissolve-room').addEventListener('click', function () { runBusy(dissolveRoom); });
     $('leave-room').addEventListener('click', function () { runBusy(leaveRoom); });
   }
@@ -599,7 +722,7 @@
       if (!Tapp.federation || typeof Tapp.federation.getIdentity !== 'function') throw new Error('unavailable');
       var role = Tapp.user && typeof Tapp.user.getRole === 'function' ? await Tapp.user.getRole() : '';
       if (role === 'guest') throw new Error('guest');
-      var identity = await Tapp.federation.getIdentity(); myActor = identity && (identity.actor_url || identity.actor || identity.actor_id || identity.id || '');
+      var identity = await Tapp.federation.getIdentity(); myActor = C.normalizeActor(identity && (identity.actor_url || identity.actor || identity.actor_id || identity.id || ''));
       if (!myActor) throw new Error('guest');
       myDisplayName = memberDisplayName(identity) || C.nicknameFromActor(myActor);
       identityState = 'online'; renderIdentity(); $('connection-dot').classList.add('online');
@@ -626,9 +749,10 @@
   Tapp.lifecycle.onReady(function () { init().catch(function (error) { console.error('[联邦五子棋] init', error); }); });
   Tapp.lifecycle.onDestroy(function () {
     destroyed = true;
-    if (offMessage) offMessage(); if (offTheme) offTheme(); if (offLocale) offLocale();
+    clearSyncTimer(); clearMovePending();
+    if (offMessage) offMessage(); if (offRoomUpdate) offRoomUpdate(); if (offTheme) offTheme(); if (offLocale) offLocale();
     if (roomId && Tapp.federation && typeof Tapp.federation.unsubscribeRoom === 'function') Tapp.federation.unsubscribeRoom(roomId).catch(function () {});
-    offMessage = offTheme = offLocale = null;
+    offMessage = offRoomUpdate = offTheme = offLocale = null;
   });
   Tapp.lifecycle.onPause(function () { if (roomId) saveSession(); });
   Tapp.lifecycle.onResume(function () { if (!destroyed && roomId && !isHost) loadLatestState(roomId).catch(function () {}); });
