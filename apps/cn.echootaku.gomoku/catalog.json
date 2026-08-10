@@ -3,6 +3,7 @@
   "tags": ["游戏", "五子棋", "联邦", "联机", "双人", "棋类", "多语言"],
   "featured": false,
   "verified": false,
+  "securityReview": true,
   "license": "MIT",
   "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.echootaku.gomoku",
   "repository": "https://github.com/Myriad-You/tapp-store",
