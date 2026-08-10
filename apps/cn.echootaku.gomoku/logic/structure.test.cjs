@@ -120,9 +120,26 @@ test('reviewed federation edge cases are wired into the runtime', () => {
   const source = read('main.js');
   assert.match(source, /state = C\.resignGame\(state, color\)/);
   assert.match(source, /federation\.onRoomUpdate\(function \(event\)[\s\S]*?member_left[\s\S]*?member_removed[\s\S]*?handleMemberDeparture/);
-  assert.match(source, /if \(!departed \|\| departedActors\[departed\]\) return;[\s\S]*?departedActors\[departed\] = true/);
+  assert.match(source, /if \(!departed \|\| !roomId \|\| !sameActiveRoom\(expectedRoom\) \|\| departedActors\[departed\]\) return;[\s\S]*?departedActors\[departed\] = true/);
   assert.match(source, /function scheduleIntentSync\(expectedSeq\)[\s\S]*?loadLatestState\(roomId\)/);
   assert.match(source, /movePendingSeq = expectedSeq; render\(\)/);
   assert.match(source, /C\.validRoomReference\(id\)/);
   assert.match(source, /offRoomUpdate\) offRoomUpdate\(\)/);
+});
+
+test('room deletion and failed remote leave always clear the local session', () => {
+  const source = read('main.js');
+  assert.match(source, /kind === 'deleted' \|\| kind === 'room_deleted'[\s\S]*?clearActiveRoom\(eventRoom, 'status\.dissolved'\)/);
+  assert.match(source, /async function leaveRoom\(\)[\s\S]*?try \{[\s\S]*?federation\.leaveRoom\(leaving\)[\s\S]*?\} finally \{[\s\S]*?clearActiveRoom\(leaving, 'status\.left'\)/);
+  assert.match(source, /async function clearActiveRoom\(expectedRoom, statusKey\)[\s\S]*?roomId = ''; shareRoomId = ''; hostActor = ''; isHost = false; state = null; resetOnlineRuntime\(\);[\s\S]*?clearSession\(\)/);
+});
+
+test('room updates confirm current membership and recover disconnects without open-ended polling', () => {
+  const source = read('main.js');
+  assert.match(source, /handleMemberDeparture\(actor, expectedRoom, attempt\)[\s\S]*?getRoomMembers\(roomId\)[\s\S]*?membersContainActor\(memberList\(response\), departed\)[\s\S]*?C\.memberDeparture\(state, departed\)/);
+  assert.match(source, /var delays = \[300, 1000\]/);
+  assert.match(source, /kind === 'disconnected'[\s\S]*?scheduleRoomRecovery\(eventRoom\)/);
+  assert.match(source, /function scheduleRoomRecovery\(expectedRoom\)[\s\S]*?var delays = \[300, 1200, 3500\][\s\S]*?subscribe\(roomId\)/);
+  assert.match(source, /function sameActiveRoom\(candidate\) \{[\s\S]*?if \(!candidate \|\| !roomId\) return false;/);
+  assert.match(source, /onDestroy\(function \(\) \{[\s\S]*?clearReconnectTimer\(\); clearDepartureRetries\(\)/);
 });

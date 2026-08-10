@@ -27,6 +27,17 @@ test('actor comparison normalizes hosts and trailing slashes without folding pat
   assert.equal(core.sameActor('@Alice@EXAMPLE.COM', '@Alice@example.com'), true);
 });
 
+test('room membership checks use canonical actor identity', () => {
+  const members = [
+    {actor_url:'https://EXAMPLE.com/users/Alice/'},
+    {actor:'@Bob@PEER.test'},
+  ];
+  assert.equal(core.membersContainActor(members, 'https://example.com/users/Alice'), true);
+  assert.equal(core.membersContainActor(members, '@Bob@peer.test'), true);
+  assert.equal(core.membersContainActor(members, 'https://example.com/users/alice'), false);
+  assert.equal(core.membersContainActor(null, '@Bob@peer.test'), false);
+});
+
 test('canonical state validation rejects reordered colors and duplicates', () => {
   const base = {protocol:1,kind:'state',seq:1,round:1,hostActor:'@a@x.test',players:{black:'@a@x.test',white:'@b@y.test'},ready:{},phase:'playing',turn:'white',moves:[{row:7,col:7,color:'black',actor:'@a@x.test'}],winner:null,finishReason:null,lastMove:{row:7,col:7,color:'black',actor:'@a@x.test'}};
   assert.ok(core.validateState(base));

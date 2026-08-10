@@ -179,6 +179,13 @@
     var label = slash >= 0 ? clean.slice(slash + 1) : clean;
     try { return decodeURIComponent(label); } catch (_) { return label; }
   }
+  function membersContainActor(members, actor) {
+    if (!Array.isArray(members) || !normalizeActor(actor)) return false;
+    return members.some(function (member) {
+      if (!member || typeof member !== 'object') return false;
+      return sameActor(member.actor_url || member.actor || member.actor_id || member.id || '', actor);
+    });
+  }
   function decodeFederationEnvelope(raw, expectedType) {
     if (!raw || typeof raw !== 'object') return null;
     var outer = raw;
@@ -190,7 +197,7 @@
     if (messageType !== expectedType || !payload || typeof payload !== 'object') return null;
     return { payload: payload, sender: normalizeActor(senderFrom(message) || senderFrom(data) || senderFrom(outer)), room: outer.roomId || outer.room_id || data.roomId || data.room_id || '' };
   }
-  return { SIZE: SIZE, MAX_MOVES: MAX_MOVES, opposite: opposite, inBounds: inBounds, normalizeActor: normalizeActor, sameActor: sameActor, playerColor: playerColor, boardFromMoves: boardFromMoves, winningLine: winningLine, newGame: newGame, applyMove: applyMove, resignGame: resignGame, resetLobby: resetLobby, memberDeparture: memberDeparture, validRoomReference: validRoomReference, validateState: validateState, decodeFederationEnvelope: decodeFederationEnvelope, nicknameFromActor: nicknameFromActor };
+  return { SIZE: SIZE, MAX_MOVES: MAX_MOVES, opposite: opposite, inBounds: inBounds, normalizeActor: normalizeActor, sameActor: sameActor, playerColor: playerColor, membersContainActor: membersContainActor, boardFromMoves: boardFromMoves, winningLine: winningLine, newGame: newGame, applyMove: applyMove, resignGame: resignGame, resetLobby: resetLobby, memberDeparture: memberDeparture, validRoomReference: validRoomReference, validateState: validateState, decodeFederationEnvelope: decodeFederationEnvelope, nicknameFromActor: nicknameFromActor };
 });
 
 (function () {
@@ -207,7 +214,7 @@
   var mode = 'local', myActor = '', myDisplayName = '', roomId = '', shareRoomId = '', hostActor = '', isHost = false;
   var identityState = 'loading';
   var state = null, localGame = C.newGame(1), stats = { black: 0, white: 0, draws: 0 };
-  var savedSession = null, seenNonces = Object.create(null), memberNames = Object.create(null), departedActors = Object.create(null), busy = false, movePendingSeq = null, syncTimer = null, destroyed = false;
+  var savedSession = null, seenNonces = Object.create(null), memberNames = Object.create(null), departedActors = Object.create(null), departureRetryTimers = Object.create(null), busy = false, movePendingSeq = null, syncTimer = null, reconnectTimer = null, roomEpoch = 0, destroyed = false;
 
   function $(id) { return document.getElementById(id); }
   function t(key, vars) {
@@ -258,8 +265,18 @@
     return !!(key && game.ready[key]);
   }
   function clearSyncTimer() { if (syncTimer) clearTimeout(syncTimer); syncTimer = null; }
+  function clearReconnectTimer() { if (reconnectTimer) clearTimeout(reconnectTimer); reconnectTimer = null; }
+  function clearDepartureRetry(actor) {
+    var key = C.normalizeActor(actor);
+    if (key && departureRetryTimers[key]) clearTimeout(departureRetryTimers[key]);
+    if (key) delete departureRetryTimers[key];
+  }
+  function clearDepartureRetries() {
+    Object.keys(departureRetryTimers).forEach(function (actor) { clearTimeout(departureRetryTimers[actor]); });
+    departureRetryTimers = Object.create(null);
+  }
   function clearMovePending() { movePendingSeq = null; }
-  function resetOnlineRuntime() { clearSyncTimer(); clearMovePending(); seenNonces = Object.create(null); memberNames = Object.create(null); departedActors = Object.create(null); }
+  function resetOnlineRuntime() { roomEpoch += 1; clearSyncTimer(); clearReconnectTimer(); clearDepartureRetries(); clearMovePending(); seenNonces = Object.create(null); memberNames = Object.create(null); departedActors = Object.create(null); }
   function blankLobby(host) {
     return { protocol: 1, kind: 'state', seq: 0, round: 1, hostActor: host, players: { black: host, white: null }, ready: {}, phase: 'lobby', turn: 'black', moves: [], winner: null, finishReason: null, lastMove: null, winLine: [] };
   }
@@ -406,7 +423,7 @@
   function newLocal() { localGame = C.newGame((localGame.round || 0) + 1); notice('status.localReset'); render(); }
 
   function sameActiveRoom(candidate) {
-    if (!candidate) return true;
+    if (!candidate || !roomId) return false;
     candidate = String(candidate);
     if (candidate === roomId || candidate === shareRoomId) return true;
     if (candidate.indexOf('@') >= 0) return false;
@@ -548,9 +565,9 @@
     var next = C.validateState(payload);
     if (!next || !sender || !hostActor || !C.sameActor(sender, hostActor) || !C.sameActor(next.hostActor, hostActor)) { notice('status.protocol', null, true); return false; }
     if (state && next.seq <= state.seq) return false;
-    clearSyncTimer(); clearMovePending();
+    clearSyncTimer(); clearReconnectTimer(); clearMovePending();
     state = next;
-    await saveSession(); render(); notice('status.synced'); return true;
+    await saveSession(); render(); return true;
   }
   function wireMessages() {
     if (offMessage || !Tapp.federation || typeof Tapp.federation.onMessage !== 'function') return;
@@ -563,14 +580,75 @@
       }).catch(function (error) { console.warn('[联邦五子棋] message', error); });
     });
   }
-  async function handleMemberDeparture(actor) {
-    if (!isHost || !state) return;
+  async function clearActiveRoom(expectedRoom, statusKey) {
+    if (!roomId || (expectedRoom && !sameActiveRoom(expectedRoom))) return '';
+    var leaving = roomId;
+    roomId = ''; shareRoomId = ''; hostActor = ''; isHost = false; state = null; resetOnlineRuntime();
+    var clearingSession = clearSession();
+    render(); notice(statusKey);
+    await clearingSession;
+    return leaving;
+  }
+  function scheduleDepartureRetry(actor, expectedRoom, expectedEpoch, attempt) {
+    var key = C.normalizeActor(actor);
+    var delays = [300, 1000];
+    if (!key || attempt >= delays.length || departureRetryTimers[key]) return;
+    departureRetryTimers[key] = setTimeout(function () {
+      delete departureRetryTimers[key];
+      if (destroyed || roomEpoch !== expectedEpoch || !roomId || !sameActiveRoom(expectedRoom)) return;
+      queueRoomTask(function () { return handleMemberDeparture(key, expectedRoom, attempt + 1); })
+        .catch(function (error) { console.warn('[联邦五子棋] departure retry', error); });
+    }, delays[attempt]);
+  }
+  async function handleMemberDeparture(actor, expectedRoom, attempt) {
     var departed = C.normalizeActor(actor);
-    if (!departed || departedActors[departed]) return;
+    var expectedEpoch = roomEpoch;
+    if (!departed || !roomId || !sameActiveRoom(expectedRoom) || departedActors[departed]) return;
+    var isSelf = C.sameActor(departed, myActor);
+    if (!isHost && !isSelf) return;
+    if (!Tapp.federation || typeof Tapp.federation.getRoomMembers !== 'function') return;
+    try {
+      var response = await Tapp.federation.getRoomMembers(roomId);
+      if (destroyed || roomEpoch !== expectedEpoch || !roomId || !sameActiveRoom(expectedRoom)) return;
+      if (C.membersContainActor(memberList(response), departed)) { clearDepartureRetry(departed); delete departedActors[departed]; return; }
+    } catch (error) {
+      console.warn('[联邦五子棋] confirm departure', error);
+      scheduleDepartureRetry(departed, expectedRoom, expectedEpoch, attempt || 0);
+      return;
+    }
+    clearDepartureRetry(departed);
+    if (isSelf && !isHost) { await clearActiveRoom(expectedRoom, 'status.removed'); return; }
+    if (!isHost || !state) return;
     var next = C.memberDeparture(state, departed);
     if (!next) return;
     departedActors[departed] = true; state = next; delete memberNames[departed];
     await emitState();
+  }
+  function scheduleRoomRecovery(expectedRoom) {
+    if (reconnectTimer || destroyed || !roomId || !sameActiveRoom(expectedRoom)) return;
+    var expectedEpoch = roomEpoch;
+    var delays = [300, 1200, 3500];
+    var attempt = 0;
+    function next() {
+      if (destroyed || roomEpoch !== expectedEpoch || !roomId || !sameActiveRoom(expectedRoom)) return;
+      if (attempt >= delays.length) { notice('status.disconnected', null, true); return; }
+      var delay = delays[attempt]; attempt += 1;
+      reconnectTimer = setTimeout(function () {
+        reconnectTimer = null;
+        if (destroyed || roomEpoch !== expectedEpoch || !roomId || !sameActiveRoom(expectedRoom)) return;
+        subscribe(roomId).then(async function () {
+          if (destroyed || roomEpoch !== expectedEpoch || !roomId || !sameActiveRoom(expectedRoom)) return;
+          if (isHost) await emitState();
+          else { await loadLatestState(roomId); await submitIntent({ action: 'sync' }); }
+          await refreshMemberNames().catch(function () {});
+          notice('status.reconnected');
+        }).catch(function (error) {
+          console.warn('[联邦五子棋] reconnect', error);
+          next();
+        });
+      }, delay);
+    }
+    next();
   }
   function wireRoomUpdates() {
     if (offRoomUpdate || !Tapp.federation || typeof Tapp.federation.onRoomUpdate !== 'function') return;
@@ -578,7 +656,16 @@
       queueRoomTask(async function () {
         var eventRoom = event && (event.roomId || event.room_id);
         if (!eventRoom || !sameActiveRoom(eventRoom)) return;
-        if (event.event === 'member_left' || event.event === 'member_removed' || event.event === 'member_kicked') await handleMemberDeparture(event.actor);
+        var kind = event.event || event.type;
+        if (kind === 'deleted' || kind === 'room_deleted') {
+          var deletedRoom = await clearActiveRoom(eventRoom, 'status.dissolved');
+          if (deletedRoom && Tapp.federation && typeof Tapp.federation.unsubscribeRoom === 'function') {
+            try { await Tapp.federation.unsubscribeRoom(deletedRoom); } catch (_) {}
+          }
+          return;
+        }
+        if (kind === 'disconnected') { scheduleRoomRecovery(eventRoom); return; }
+        if (kind === 'member_left' || kind === 'member_removed' || kind === 'member_kicked') await handleMemberDeparture(event.actor, eventRoom, 0);
       }).catch(function (error) { console.warn('[联邦五子棋] room update', error); });
     });
   }
@@ -596,7 +683,9 @@
       var candidate = C.validateState(decoded.payload);
       if (candidate && hostActor && C.sameActor(decoded.sender, hostActor) && C.sameActor(candidate.hostActor, hostActor) && (!best || candidate.seq > best.payload.seq)) best = { payload: candidate, sender: decoded.sender };
     }
-    return best ? applyRemoteState(best.payload, best.sender) : false;
+    var applied = best ? await applyRemoteState(best.payload, best.sender) : false;
+    if (applied) notice('status.synced');
+    return applied;
   }
   async function createRoom() {
     if (!myActor || !Tapp.federation || typeof Tapp.federation.createRoom !== 'function') throw new Error(t('online.permission'));
@@ -645,9 +734,16 @@
   async function leaveRoom() {
     if (state && state.phase === 'playing' && Tapp.ui && typeof Tapp.ui.confirm === 'function' && !(await Tapp.ui.confirm(t('confirm.leave')))) return;
     var leaving = roomId;
-    if (leaving && Tapp.federation && typeof Tapp.federation.unsubscribeRoom === 'function') await Tapp.federation.unsubscribeRoom(leaving);
-    if (leaving && Tapp.federation && typeof Tapp.federation.leaveRoom === 'function') await Tapp.federation.leaveRoom(leaving);
-    roomId = ''; shareRoomId = ''; hostActor = ''; isHost = false; state = null; resetOnlineRuntime(); await clearSession(); notice('status.left'); render();
+    try {
+      if (leaving && Tapp.federation && typeof Tapp.federation.unsubscribeRoom === 'function') {
+        try { await Tapp.federation.unsubscribeRoom(leaving); } catch (error) { console.warn('[联邦五子棋] unsubscribe before leave', error); }
+      }
+      if (leaving && Tapp.federation && typeof Tapp.federation.leaveRoom === 'function') {
+        try { await Tapp.federation.leaveRoom(leaving); } catch (error) { console.warn('[联邦五子棋] remote leave', error); }
+      }
+    } finally {
+      await clearActiveRoom(leaving, 'status.left');
+    }
   }
   async function dissolveRoom() {
     if (!roomId || !isHost || !Tapp.federation || typeof Tapp.federation.deleteRoom !== 'function') return;
@@ -657,8 +753,7 @@
     if (Tapp.federation && typeof Tapp.federation.unsubscribeRoom === 'function') {
       try { await Tapp.federation.unsubscribeRoom(deleting); } catch (_) {}
     }
-    roomId = ''; shareRoomId = ''; hostActor = ''; isHost = false; state = null; resetOnlineRuntime();
-    await clearSession(); notice('status.dissolved'); render();
+    await clearActiveRoom(deleting, 'status.dissolved');
   }
   async function invite() {
     var actor = els.actorId.value.trim();
@@ -749,11 +844,11 @@
   Tapp.lifecycle.onReady(function () { init().catch(function (error) { console.error('[联邦五子棋] init', error); }); });
   Tapp.lifecycle.onDestroy(function () {
     destroyed = true;
-    clearSyncTimer(); clearMovePending();
+    clearSyncTimer(); clearReconnectTimer(); clearDepartureRetries(); clearMovePending();
     if (offMessage) offMessage(); if (offRoomUpdate) offRoomUpdate(); if (offTheme) offTheme(); if (offLocale) offLocale();
     if (roomId && Tapp.federation && typeof Tapp.federation.unsubscribeRoom === 'function') Tapp.federation.unsubscribeRoom(roomId).catch(function () {});
     offMessage = offRoomUpdate = offTheme = offLocale = null;
   });
   Tapp.lifecycle.onPause(function () { if (roomId) saveSession(); });
-  Tapp.lifecycle.onResume(function () { if (!destroyed && roomId && !isHost) loadLatestState(roomId).catch(function () {}); });
+  Tapp.lifecycle.onResume(function () { if (!destroyed && roomId) scheduleRoomRecovery(roomId); });
 })();
