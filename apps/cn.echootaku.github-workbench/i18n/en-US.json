@@ -5,7 +5,6 @@
   "sync": "Sync GitHub",
   "syncing": "Syncing…",
   "neverSynced": "Never synced",
-  "managerOnly": "Installation owner / admin only",
   "managerOnlyBody": "The GitHub credential belongs to this installation and can only be used by its owner or a site admin.",
   "setupTitle": "Connect your GitHub",
   "setupBody": "Save a read-only token in the Tapp details, then return to sync.",

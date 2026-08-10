@@ -5,7 +5,6 @@
   "sync": "同步 GitHub",
   "syncing": "同步中…",
   "neverSynced": "尚未同步",
-  "managerOnly": "仅安装 owner / 管理员可使用",
   "managerOnlyBody": "GitHub 凭据属于当前安装，只有安装 owner 或站点管理员可以调用。",
   "setupTitle": "连接你的 GitHub",
   "setupBody": "请先在 Tapp 详情页保存只读 Token，再回来同步。",
