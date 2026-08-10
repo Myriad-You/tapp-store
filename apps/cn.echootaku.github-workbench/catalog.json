@@ -1,0 +1,19 @@
+{
+  "long_description": "面向程序员的只读 GitHub 工作台：集中查看请求你审阅的 Pull Request、分配给你的 Issue，以及所选仓库最近失败的 GitHub Actions 和 Releases。支持 2x2、4x2、4x4 桌面小组件。GitHub Token 使用 Myriad 安装级只写凭据保存，沙箱无法读取；所有 GitHub API 均限制为安装 owner / 管理员调用。首版不提供合并、评论、关闭 Issue 或重跑工作流等写操作。",
+  "tags": ["GitHub", "Pull Request", "Issue", "Actions", "Release", "开发者", "小组件"],
+  "featured": false,
+  "verified": false,
+  "license": "MIT",
+  "homepage": "https://echootaku.cn",
+  "repository": "https://github.com/Myriad-You/tapp-store",
+  "preview": {
+    "version": 1,
+    "type": "snapshot",
+    "html": "preview.html",
+    "styles": ["preview.css"],
+    "viewport": { "width": 1280, "height": 720 },
+    "fit": "cover",
+    "focus": { "x": 0.5, "y": 0.48 },
+    "theme": "dark"
+  }
+}
