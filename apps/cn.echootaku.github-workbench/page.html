@@ -1,0 +1,60 @@
+<div class="workbench-background" aria-hidden="true"></div>
+<main class="workbench-page" data-page>
+  <header class="topbar">
+    <div class="brand-block">
+      <span class="brand-mark" aria-hidden="true">GH</span>
+      <div>
+        <p class="eyebrow" data-i18n="eyebrow">DEVELOPER CONTROL CENTER</p>
+        <h1 data-i18n="appName">GitHub 工作台</h1>
+        <p class="subtitle" data-i18n="subtitle">把需要你处理的代码协作，收进一张清晰的桌面。</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="sync-meta" data-sync-meta>尚未同步</span>
+      <button class="primary-button" type="button" data-action="sync">
+        <span class="button-icon" aria-hidden="true">↻</span><span data-i18n="sync">同步 GitHub</span>
+      </button>
+    </div>
+  </header>
+
+  <section class="notice-card" data-setup hidden role="status">
+    <div class="notice-icon" aria-hidden="true">●</div>
+    <div class="notice-copy"><h2 data-i18n="setupTitle">连接你的 GitHub</h2><p data-i18n="setupBody">请先在 Tapp 详情页保存只读 Token，再回来同步。</p></div>
+    <button class="secondary-button" type="button" data-action="token-help" data-i18n="createToken">创建 fine-grained PAT</button>
+  </section>
+
+  <div data-dashboard>
+    <section class="profile-strip" aria-live="polite">
+      <div class="avatar-placeholder" data-avatar aria-hidden="true">GH</div>
+      <div class="profile-copy"><span data-i18n="signedInAs">当前 GitHub 身份</span><strong data-login>等待连接</strong></div>
+      <span class="status-pill" data-status><i></i><span data-i18n="localSnapshot">本地快照</span></span>
+      <label class="repo-picker"><span data-i18n="focusRepo">关注仓库</span><select data-repo-select aria-label="关注仓库"></select></label>
+    </section>
+
+    <section class="stats-grid" aria-label="GitHub 概览" data-i18n-aria-label="overview">
+      <article class="stat-card stat-review"><span data-i18n="reviewRequests">待审 PR</span><strong data-stat="reviews">—</strong><small data-i18n="reviewHint">等待你的 Review</small></article>
+      <article class="stat-card stat-issues"><span data-i18n="assignedIssues">分配给我</span><strong data-stat="issues">—</strong><small data-i18n="issueHint">开放 Issue</small></article>
+      <article class="stat-card stat-failures"><span data-i18n="failedActions">失败 Actions</span><strong data-stat="failures">—</strong><small data-i18n="failureHint">所选仓库最近记录</small></article>
+      <article class="stat-card stat-releases"><span data-i18n="releases">Releases</span><strong data-stat="releases">—</strong><small data-i18n="releaseHint">所选仓库最近发布</small></article>
+    </section>
+
+    <section class="content-grid">
+      <article class="panel">
+        <header class="panel-heading"><div><p class="eyebrow" data-i18n="codeReview">CODE REVIEW</p><h2 data-i18n="reviewQueue">待审 Pull Request</h2></div><button type="button" class="text-button" data-open-list="reviews" data-i18n="viewGitHub">在 GitHub 查看</button></header>
+        <div class="item-list" data-list="reviews"></div>
+      </article>
+      <article class="panel">
+        <header class="panel-heading"><div><p class="eyebrow" data-i18n="myWork">MY WORK</p><h2 data-i18n="issueQueue">分配给我的 Issue</h2></div><button type="button" class="text-button" data-open-list="issues" data-i18n="viewGitHub">在 GitHub 查看</button></header>
+        <div class="item-list" data-list="issues"></div>
+      </article>
+      <article class="panel">
+        <header class="panel-heading"><div><p class="eyebrow" data-i18n="delivery">DELIVERY</p><h2 data-i18n="failureQueue">失败的工作流</h2></div></header>
+        <div class="item-list compact" data-list="failures"></div>
+      </article>
+      <article class="panel">
+        <header class="panel-heading"><div><p class="eyebrow" data-i18n="shipping">SHIPPING</p><h2 data-i18n="releaseQueue">最近 Releases</h2></div></header>
+        <div class="item-list compact" data-list="releases"></div>
+      </article>
+    </section>
+  </div>
+</main>

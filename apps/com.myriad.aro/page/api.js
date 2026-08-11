@@ -666,6 +666,19 @@ async function doSend() {
     }
     if (typeof noteDeliveryEnqueue === 'function') noteDeliveryEnqueue(sendRes);
     if (state.activeKind === ctx.kind && state.activeId === ctx.id) {
+      // Tie the bubble to the id the server just minted, so the confirmed copy
+      // retires it on arrival even when the payload comes back encrypted and
+      // there is no text left to compare. Then settle whatever already landed
+      // (the room WS echo fires before this call returns) before the poll.
+      var serverMsgId = sendRes && (sendRes.message_id || (sendRes.data && sendRes.data.message_id));
+      if (optId && serverMsgId && typeof noteOptimisticServerId === 'function') {
+        noteOptimisticServerId(optId, serverMsgId);
+        if (typeof pruneOptimisticMessages === 'function'
+          && pruneOptimisticMessages({})
+          && typeof scheduleRenderMessages === 'function') {
+          scheduleRenderMessages({ stickBottom: true, forceFull: true });
+        }
+      }
       await pollMessages(true);
       // Ensure optimistic row is gone even if server id differs before prune matched.
       // pollMessages already prunes and repaints in the common case — only repaint

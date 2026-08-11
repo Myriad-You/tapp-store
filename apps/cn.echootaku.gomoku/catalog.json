@@ -1,0 +1,20 @@
+{
+  "long_description": "一款遵循自由五子棋规则的 15×15 棋盘游戏。可在同一设备上双人对弈，也可创建 Myriad 联邦房间，通过房间 ID 跨实例加入或邀请联邦 Actor。房主负责验证落子并广播完整棋局快照，支持准备、认输、再来一局、历史恢复和本地战绩。",
+  "tags": ["游戏", "五子棋", "联邦", "联机", "双人", "棋类", "多语言"],
+  "featured": false,
+  "verified": false,
+  "securityReview": true,
+  "license": "MIT",
+  "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.echootaku.gomoku",
+  "repository": "https://github.com/Myriad-You/tapp-store",
+  "preview": {
+    "version": 1,
+    "type": "snapshot",
+    "html": "preview.html",
+    "styles": ["page.css", "preview.css"],
+    "viewport": {"width": 1440, "height": 900},
+    "fit": "cover",
+    "focus": {"x": 0.5, "y": 0.5},
+    "theme": "dark"
+  }
+}

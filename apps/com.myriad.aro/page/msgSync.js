@@ -130,6 +130,26 @@ function mergeMessageLists(prev, next) {
   return out;
 }
 
+/**
+ * Bind the server's message id to the optimistic bubble we are still showing.
+ *
+ * Content matching cannot settle an encrypted send: the confirmed copy comes
+ * back as a ciphertext envelope, so there is no text (or filename) to compare
+ * against the draft we painted. The id the send call returns is the one thing
+ * both rows agree on, so record it and let the prune retire the bubble the
+ * moment a row carrying that id lands — from the poll or from the WS echo.
+ */
+function noteOptimisticServerId(optId, serverId) {
+  if (!optId || !serverId || !state.messages) return;
+  for (var i = 0; i < state.messages.length; i++) {
+    var m = state.messages[i];
+    if (m && m._optimistic && m.message_id === optId) {
+      m._serverId = serverId;
+      return;
+    }
+  }
+}
+
 /** Drop optimistic bubbles once real server copies (or send failure) settle. */
 function pruneOptimisticMessages(opts) {
   opts = opts || {};
@@ -144,8 +164,10 @@ function pruneOptimisticMessages(opts) {
   } else {
     // Match optimistic text OR light media filename+size against confirmed local messages
     var localKeys = Object.create(null);
+    var confirmedIds = Object.create(null);
     state.messages.forEach(function (m) {
       if (!m || m._optimistic) return;
+      if (m.message_id) confirmedIds[m.message_id] = true;
       if (typeof isLocalActor === 'function' && !isLocalActor(m.sender_actor)) return;
       var t = typeof getPayloadText === 'function' ? getPayloadText(m.payload) : '';
       if (t) localKeys['t:' + t] = true;
@@ -157,6 +179,9 @@ function pruneOptimisticMessages(opts) {
     });
     state.messages = state.messages.filter(function (m) {
       if (!m || !m._optimistic) return true;
+      // Server id the send call handed back is already on screen — this bubble
+      // is that same message (works for ciphertext, where text cannot match).
+      if (m._serverId && confirmedIds[m._serverId]) return false;
       var t = typeof getPayloadText === 'function' ? getPayloadText(m.payload) : '';
       if (t && localKeys['t:' + t]) return false;
       var p = m.payload && typeof m.payload === 'object' ? m.payload : {};
@@ -277,11 +302,29 @@ function mergeIncomingMessage(msg) {
     }
   }
   state.messages.push(msg);
+  // The host broadcasts our own send to the room *before* it answers the send
+  // call, so this echo lands while the optimistic bubble is still on screen and
+  // doSend is still awaiting its confirmation poll. Retiring the draft here —
+  // rather than a round trip later — is what keeps the send from showing as two
+  // identical bubbles, one greyed "sending" and one delivered.
+  var replacedOptimistic = false;
+  if (
+    typeof isLocalActor === 'function'
+    && isLocalActor(msg.sender_actor)
+    && typeof pruneOptimisticMessages === 'function'
+  ) {
+    replacedOptimistic = pruneOptimisticMessages({});
+  }
   state.messagesFp = messagesFingerprint(state.messages);
+  // A prune removes a row further up the list, so the append-only fast path
+  // would leave the retired bubble in the DOM — repaint in full instead.
+  var paintOpts = replacedOptimistic
+    ? { forceFull: true, stickBottom: true }
+    : { animateNew: true, newCount: 1 };
   if (typeof scheduleRenderMessages === 'function') {
-    scheduleRenderMessages({ animateNew: true, newCount: 1 });
+    scheduleRenderMessages(paintOpts);
   } else {
-    renderMessages({ animateNew: true, newCount: 1 });
+    renderMessages(paintOpts);
   }
   if (needsDecryptRefresh) scheduleDecryptRefresh();
   return true;

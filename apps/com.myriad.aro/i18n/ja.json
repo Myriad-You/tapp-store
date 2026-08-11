@@ -118,6 +118,7 @@
   "creating": "作成中…",
   "dateToday": "今日",
   "dateYesterday": "昨日",
+  "timeNow": "たった今",
   "deleteChannel": "チャットを削除",
   "deleteChannelConfirm": "終了したチャットを完全に削除しますか？この端末の履歴も消えます。",
   "deleteChannelFail": "削除に失敗しました",

@@ -116,20 +116,74 @@ function bindConvListClicks() {
   });
 }
 
-/** Skip full list rewrite when tab/search/selection/items are unchanged. */
+/**
+ * Skip full list rewrite when tab/search/selection/items are unchanged.
+ *
+ * Covers every field the row paints, not just id/unread/order: the subtitle
+ * carries a group's member count, and sampling a window of the list left counts
+ * outside it frozen until something else forced a rebuild.
+ */
 function convListFingerprint(items, tab, q, activeId) {
   var n = (items && items.length) || 0;
   var unreadSum = 0;
-  var idSig = '';
+  var sig = '';
   for (var i = 0; i < n; i++) {
     var it = items[i];
     unreadSum += (it.unread || 0);
-    // Compact id order signature (order changes when last_activity moves)
-    if (i < 12 || i >= n - 3) {
-      idSig += (it.kind || '')[0] + ':' + (it.id || '') + ':' + (it.unread || 0) + ':' + (it.sortTime || '') + ';';
-    }
+    sig += (it.kind || '')[0] + ':' + (it.id || '')
+      + ':' + (it.unread || 0)
+      + ':' + (it.sortTime || '')
+      + ':' + (it.name || '')
+      + ':' + (it.preview || '')
+      + ':' + (it.avatar || '')
+      + ':' + (it.status || '')
+      + ';';
   }
-  return [tab || '', q || '', activeId || '', n, unreadSum, idSig].join('|');
+  return [tab || '', q || '', activeId || '', n, unreadSum, sig].join('|');
+}
+
+/**
+ * Rewrite the relative timestamps already on screen ("now", "7m", "2h").
+ *
+ * Those labels are rendered once and then frozen: the list only repaints when
+ * the data behind it changes, and time passing is not such a change. A chat
+ * that arrived a moment ago therefore sat at its send-time label until the next
+ * message. Patch the text in place rather than invalidating the fingerprint —
+ * a tick then costs nothing beyond the labels that actually moved.
+ */
+function refreshConvListTimes() {
+  var list = $('conv-list');
+  if (!list) return;
+  var rows = list.querySelectorAll('.conv-item[data-time]');
+  for (var i = 0; i < rows.length; i++) {
+    var iso = rows[i].getAttribute('data-time');
+    if (!iso) continue;
+    var timeEl = rows[i].querySelector('.conv-time');
+    if (!timeEl) continue;
+    var next = relTimeStr(iso);
+    if (next && timeEl.textContent !== next) timeEl.textContent = next;
+  }
+}
+
+var CONV_TIME_TICK_MS = 30000;
+var _convTimeTimer = null;
+
+/** Keep sidebar timestamps honest while the page stays open (ARO-14 tracked). */
+function startConvTimeTicker() {
+  if (_convTimeTimer) return;
+  _convTimeTimer = setInterval(function () {
+    if (typeof document !== 'undefined' && document.hidden) return;
+    refreshConvListTimes();
+  }, CONV_TIME_TICK_MS);
+  // Returning from a backgrounded tab: catch up before the next tick lands.
+  pageListen(document, 'visibilitychange', function () {
+    if (!document.hidden) refreshConvListTimes();
+  });
+  if (typeof getPageDisposables === 'function') {
+    getPageDisposables().add(function () {
+      if (_convTimeTimer) { clearInterval(_convTimeTimer); _convTimeTimer = null; }
+    });
+  }
 }
 
 function renderConvList() {
@@ -137,6 +191,7 @@ function renderConvList() {
   if (!list) return;
 
   bindConvListClicks();
+  startConvTimeTicker();
   syncConvTabsUi();
 
   var allItems = buildConversationItems();
@@ -189,7 +244,8 @@ function renderConvList() {
     var avatarClass = item.kind === 'channel' ? 'avatar-channel' : 'avatar-room';
     var rel = item.sortTime ? relTimeStr(item.sortTime) : '';
     // type=button avoids accidental form submit if host wraps page content
-    html += '<button type="button" class="conv-item' + (isActive ? ' conv-active' : '') + (item.unread > 0 ? ' conv-unread' : '') + '" data-kind="' + item.kind + '" data-id="' + esc(item.id) + '">'
+    html += '<button type="button" class="conv-item' + (isActive ? ' conv-active' : '') + (item.unread > 0 ? ' conv-unread' : '') + '" data-kind="' + item.kind + '" data-id="' + esc(item.id) + '"'
+      + (item.sortTime ? ' data-time="' + esc(item.sortTime) + '"' : '') + '>'
       + '<span class="conv-accent" aria-hidden="true"></span>'
       + '<div class="conv-avatar ' + avatarClass + '">' + avatarContentHtml(item.avatar || '', item.name) + '</div>'
       + '<div class="conv-info">'
@@ -842,6 +898,7 @@ function renderMessages(opts) {
       }
       if (appendHtml) {
         container.insertAdjacentHTML('beforeend', appendHtml);
+        if (typeof syncRunTailAvatar === 'function') syncRunTailAvatar(container, prevLen - 1);
         hydrateMessageMedia(container);
         if (wasNearBottom) {
           settleScrollPosition(container, function () {
@@ -887,6 +944,7 @@ function renderMessages(opts) {
       }
       if (appendHtmlW) {
         container.insertAdjacentHTML('beforeend', appendHtmlW);
+        if (typeof syncRunTailAvatar === 'function') syncRunTailAvatar(container, prevLenW - 1);
         hydrateMessageMedia(container);
         if (wasNearBottom) {
           settleScrollPosition(container, function () {

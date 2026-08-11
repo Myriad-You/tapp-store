@@ -1,0 +1,37 @@
+{
+  "id": "cn.echootaku.gomoku",
+  "name": "联邦五子棋",
+  "version": "0.1.9",
+  "minSystemVersion": "0.3.0",
+  "description": "15×15 五子棋，支持本地双人和跨实例联邦房间对战",
+  "locales": {
+    "en-US": {
+      "name": "Federated Gomoku",
+      "description": "15×15 Gomoku for local play and cross-instance federation rooms"
+    },
+    "ja-JP": {
+      "name": "連合五目並べ",
+      "description": "ローカル対戦とインスタンス間の連合ルームに対応した15×15五目並べ"
+    }
+  },
+  "category": "game",
+  "main": "main.js",
+  "author": {
+    "name": "EchoOtaku",
+    "url": "https://echootaku.cn"
+  },
+  "permissions": [
+    "storage",
+    "ui:theme",
+    "ui:confirm",
+    "federation:read",
+    "federation:write",
+    "federation:message"
+  ],
+  "iconSvg": "<svg viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" stroke=\"currentColor\" stroke-width=\"1.5\"/><path d=\"M7.5 3v18M12 3v18M16.5 3v18M3 7.5h18M3 12h18M3 16.5h18\" stroke=\"currentColor\" stroke-width=\".75\" opacity=\".55\"/><circle cx=\"9.75\" cy=\"9.75\" r=\"2.1\" fill=\"currentColor\"/><circle cx=\"14.25\" cy=\"14.25\" r=\"2.1\" stroke=\"currentColor\" stroke-width=\"1.2\"/></svg>",
+  "themeColor": "#7257c7",
+  "hasPage": true,
+  "cssMode": "separated",
+  "pageStyles": "page.css",
+  "pageTemplate": "page.html"
+}

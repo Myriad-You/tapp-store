@@ -1,21 +1,22 @@
+<div class="days-background" data-days-background aria-hidden="true"></div>
 <main class="days-page" data-days-page>
   <header class="page-header">
     <div>
-      <p class="eyebrow">DAYS THAT MATTER</p>
+      <p class="eyebrow" data-i18n="eyebrowIntro">值得铭记的日子</p>
       <h1 data-i18n="appName">朝夕</h1>
       <p class="page-subtitle" data-i18n="subtitle">把期待写进日历，也把走过的日子留在身边。</p>
     </div>
     <div class="header-actions">
-      <button class="theme-button glass" type="button" data-action="open-theme" data-glass-key="toolbar">
-        <span aria-hidden="true">✦</span> <span data-i18n="themeStudio">主题工作室</span>
+      <button class="theme-button glass days-glass-surface" type="button" data-action="open-theme" data-glass-key="toolbar">
+        <span data-i18n="themeStudio">主题工作室</span>
       </button>
       <button class="primary-button" type="button" data-action="new-event" aria-label="新建日子" data-i18n-aria-label="newEvent">
-        <span aria-hidden="true">＋</span> <span data-i18n="newEvent">新建日子</span>
+        <span data-i18n="newEvent">新建日子</span>
       </button>
     </div>
   </header>
 
-  <section class="hero-card glass" data-hero data-glass-key="hero" aria-live="polite">
+  <section class="hero-card glass days-glass-surface" data-hero data-glass-key="hero" aria-live="polite">
     <div class="hero-orbit" aria-hidden="true"></div>
     <div class="hero-copy">
       <span class="hero-category" data-hero-category>下一次相见</span>
@@ -28,29 +29,29 @@
     </div>
   </section>
 
-  <section class="toolbar glass" data-glass-key="toolbar" aria-label="筛选日子" data-i18n-aria-label="filterAria">
+  <section class="toolbar glass days-glass-surface" data-glass-key="toolbar" aria-label="筛选日子" data-i18n-aria-label="filterAria">
     <label class="search-field">
       <span aria-hidden="true">⌕</span>
       <input type="search" data-search placeholder="搜索名称或备注" aria-label="搜索名称或备注" data-i18n-placeholder="search" data-i18n-aria-label="search" />
     </label>
     <div class="filter-group" role="group" aria-label="状态筛选" data-i18n-aria-label="statusFilter">
-      <button type="button" class="filter-button is-active" data-filter="all" data-i18n="all">全部</button>
-      <button type="button" class="filter-button" data-filter="upcoming" data-i18n="upcoming">即将到来</button>
-      <button type="button" class="filter-button" data-filter="pinned" data-i18n="pinnedFilter">已置顶</button>
-      <button type="button" class="filter-button" data-filter="past" data-i18n="past">已过单次</button>
+      <button type="button" class="filter-button is-active" data-filter="all" aria-pressed="true" data-i18n="all">全部</button>
+      <button type="button" class="filter-button" data-filter="upcoming" aria-pressed="false" data-i18n="upcoming">即将到来</button>
+      <button type="button" class="filter-button" data-filter="pinned" aria-pressed="false" data-i18n="pinnedFilter">已置顶</button>
+      <button type="button" class="filter-button" data-filter="past" aria-pressed="false" data-i18n="past">已过单次</button>
     </div>
   </section>
 
   <section class="event-section">
     <div class="section-heading">
       <div>
-        <p class="eyebrow">YOUR MOMENTS</p>
+        <p class="eyebrow" data-i18n="eyebrowMoments">你的时刻</p>
         <h2 data-i18n="momentsTitle">我的日子</h2>
       </div>
       <span class="event-total" data-event-total>0 个日子</span>
     </div>
     <div class="event-grid" data-event-list></div>
-    <div class="empty-state glass" data-glass-key="cards" data-empty hidden>
+    <div class="empty-state glass days-glass-surface" data-glass-key="cards" data-empty hidden>
       <div class="empty-mark" aria-hidden="true">◌</div>
       <h3 data-i18n="emptyTitle">还没有符合条件的日子</h3>
       <p data-i18n="emptyBody">创建一个纪念日、生日、考试或任何值得期待的时刻。</p>
@@ -58,12 +59,12 @@
     </div>
   </section>
 
-  <section class="editor-panel" data-editor hidden role="dialog" aria-modal="true" aria-labelledby="editor-title">
+  <section class="editor-panel" data-editor hidden role="dialog" aria-modal="true" aria-labelledby="editor-title" aria-hidden="true">
     <div class="editor-backdrop" data-action="close-editor"></div>
-    <form class="editor-card glass" data-glass-key="editor" data-event-form>
+    <form class="editor-card glass days-glass-surface" data-glass-key="editor" data-event-form>
       <header>
         <div>
-          <p class="eyebrow">A MOMENT IN TIME</p>
+          <p class="eyebrow" data-i18n="editorEyebrow">时间中的一刻</p>
           <h2 id="editor-title" data-editor-title>新建日子</h2>
         </div>
         <button class="icon-button" type="button" data-action="close-editor" aria-label="关闭编辑器" data-i18n-aria-label="closeEditor">×</button>
@@ -78,7 +79,7 @@
         <label class="field date-field">
           <span data-i18n="date">日期</span>
           <input name="date" type="date" required />
-          <span class="date-shortcuts" aria-label="快捷选择日期" data-i18n-aria-label="quickDate">
+          <span class="date-shortcuts" role="group" aria-label="快捷选择日期" data-i18n-aria-label="quickDate">
             <button type="button" data-action="set-date" data-offset="0" data-i18n="today">今天</button>
             <button type="button" data-action="set-date" data-offset="7" data-i18n="in7Days">7 天后</button>
             <button type="button" data-action="set-date" data-offset="30" data-i18n="in30Days">30 天后</button>
@@ -86,14 +87,14 @@
           </span>
         </label>
         <div class="field category-field" data-category-picker>
-          <span data-i18n="category">分类</span>
+          <span id="category-label" data-i18n="category">分类</span>
           <input name="category" type="hidden" value="life" />
-          <button class="category-trigger" type="button" data-action="toggle-category" aria-haspopup="listbox" aria-expanded="false">
-            <span data-category-value>生活</span>
+          <button class="category-trigger" type="button" data-action="toggle-category" aria-haspopup="true" aria-expanded="false" aria-controls="category-popover" aria-labelledby="category-label category-value">
+            <span id="category-value" data-category-value>生活</span>
             <span class="category-chevron" aria-hidden="true">⌄</span>
           </button>
-          <div class="category-popover glass" data-category-popover hidden>
-            <div class="category-options" data-category-options role="listbox" aria-label="选择分类" data-i18n-aria-label="chooseCategory"></div>
+          <div class="category-popover glass" id="category-popover" data-category-popover hidden>
+            <div class="category-options" data-category-options role="group" aria-label="选择分类" data-i18n-aria-label="chooseCategory"></div>
             <div class="category-create">
               <input type="text" data-category-input maxlength="12" placeholder="输入新分类" aria-label="新分类名称" data-i18n-placeholder="categoryPlaceholder" data-i18n-aria-label="newCategoryName" />
               <button type="button" data-action="add-category" data-i18n="add">添加</button>
@@ -130,10 +131,10 @@
 
   <section class="theme-panel" data-theme-panel hidden role="dialog" aria-modal="true" aria-labelledby="theme-title" aria-hidden="true">
     <div class="theme-backdrop" data-action="close-theme"></div>
-    <div class="theme-card glass" data-glass-key="editor">
+    <div class="theme-card glass days-glass-surface" data-glass-key="editor">
       <header>
         <div>
-          <p class="eyebrow">MAKE IT YOURS</p>
+          <p class="eyebrow" data-i18n="themeEyebrow">定义你的风格</p>
           <h2 id="theme-title" data-i18n="themeStudio">主题工作室</h2>
           <p data-i18n="themeSubtitle">让主界面与小组件拥有同一套气质。</p>
         </div>
@@ -144,6 +145,7 @@
         <label class="field">
           <span data-i18n="themePreset">主题预设</span>
           <select name="themePreset">
+            <option value="system" data-i18n="presetSystem">跟随 Myriad</option>
             <option value="sunset" data-i18n="presetSunset">朝霞</option>
             <option value="violet" data-i18n="presetViolet">暮紫</option>
             <option value="ocean" data-i18n="presetOcean">远海</option>
@@ -157,7 +159,7 @@
         </label>
         <label class="field theme-strength-field">
           <span><span data-i18n="glassStrength">Glass 强度</span><b data-glass-strength-value>72%</b></span>
-          <input name="glassStrength" type="range" min="0" max="100" step="4" value="72" />
+          <input name="glassStrength" type="range" min="0" max="100" step="1" value="64" />
         </label>
         <label class="field">
           <span data-i18n="cornerStyle">圆角风格</span>
@@ -168,6 +170,23 @@
           </select>
         </label>
       </div>
+
+      <section class="theme-preview-section" aria-labelledby="theme-preview-title">
+        <h3 id="theme-preview-title" data-i18n="themePreview">效果预览</h3>
+        <article class="theme-preview-widget glass days-glass-surface" data-glass-key="widgets">
+          <div><span data-i18n="themePreviewTitle">下一次相见</span><strong>28</strong></div>
+          <div><b data-i18n="dayUnit">天</b><small data-i18n="themePreviewMeta">主题会同步到主页小组件</small></div>
+        </article>
+      </section>
+
+      <section class="glass-profile-section" aria-labelledby="glass-profile-title">
+        <h3 id="glass-profile-title" data-i18n="glassProfile">Glass 布局</h3>
+        <div class="glass-profile-buttons">
+          <button type="button" data-action="set-glass-profile" data-theme-glass-profile="all" aria-pressed="false" data-i18n="glassProfileAll">全界面</button>
+          <button type="button" data-action="set-glass-profile" data-theme-glass-profile="focus" aria-pressed="false" data-i18n="glassProfileFocus">重点界面</button>
+          <button type="button" data-action="set-glass-profile" data-theme-glass-profile="minimal" aria-pressed="false" data-i18n="glassProfileMinimal">仅小组件</button>
+        </div>
+      </section>
 
       <fieldset class="glass-scope">
         <legend data-i18n="glassScope">Glass 应用范围</legend>
@@ -181,13 +200,13 @@
 
       <section class="theme-code-section">
         <div><h3 data-i18n="themeCode">分享主题码</h3><p data-i18n="themeCodeHint">主题码只包含外观设置，不包含你的日子。</p></div>
-        <textarea data-theme-code readonly rows="3"></textarea>
+        <textarea data-theme-code readonly rows="3" aria-label="分享主题码" data-i18n-aria-label="themeCode"></textarea>
         <button class="secondary-button" type="button" data-action="copy-theme-code" data-i18n="copyCode">复制主题码</button>
       </section>
 
       <section class="theme-import-section">
         <div><h3 data-i18n="importCode">导入主题码</h3></div>
-        <textarea data-theme-import rows="3" placeholder="粘贴 CX1- 开头的主题码" data-i18n-placeholder="importPlaceholder"></textarea>
+        <textarea data-theme-import rows="3" maxlength="4096" placeholder="粘贴 CX1- 开头的主题码" aria-label="导入主题码" data-i18n-placeholder="importPlaceholder" data-i18n-aria-label="importCode"></textarea>
         <button class="primary-button" type="button" data-action="import-theme-code" data-i18n="applyCode">应用主题码</button>
       </section>
 

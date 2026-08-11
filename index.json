@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.10",
+  "version": "1.0.19",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-08-06T12:58:57.498Z",
+  "updated_at": "2026-08-10T22:16:30.796Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -78,7 +78,7 @@
         "page_styles": "apps/com.myriad.music-player/page.css",
         "page_template": "apps/com.myriad.music-player/page.html"
       },
-      "size": 346987,
+      "size": 350836,
       "downloads": 0,
       "rating": 0,
       "featured": true,
@@ -171,7 +171,7 @@
     {
       "id": "com.myriad.config-generator",
       "name": "Myriad 安装配置生成",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "生成 Compose、.env 与 Nginx 部署配置（1Panel / 宝塔 / CLI · 整站反代 + 联邦）",
       "long_description": "填写域名与数据库参数，按所选面板（1Panel / 宝塔 / 通用 CLI）生成官方生产拓扑的 docker-compose、.env、Nginx 与部署说明。密钥白名单与 .env 再解析防注入；原生表单/通知全自定义；宝塔可粘贴编排或目录部署。",
       "locales": {
@@ -239,28 +239,28 @@
         "page_styles": "apps/com.myriad.config-generator/page.css",
         "page_template": "apps/com.myriad.config-generator/page.html"
       },
-      "size": 179328,
+      "size": 185437,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-14T00:00:00Z",
-      "updated_at": "2026-07-27T12:00:00Z"
+      "updated_at": "2026-08-08T03:25:15.862Z"
     },
     {
       "id": "com.myriad.doudizhu",
       "name": "斗地主",
-      "version": "1.0.1",
-      "description": "3 人斗地主：逐火十三英桀三语卡面、计时结算、可选 AI 单机与联邦联机",
-      "long_description": "经典 3 人 54 张牌斗地主。标准 52 张牌替换为逐火十三英桀主题卡面，并提供中文、英语、日语三套本地化牌面；Joker 使用全幅主题卡面。支持绒毡牌桌、30 秒回合计时、提示循环、报牌、倍率结算、累计分、分座行动、联邦联机与可选 Myriad AI 单机练习。",
+      "version": "2.4.3",
+      "description": "三人单机斗地主：经典牌桌与若泉绮羽㥹銯麏主题、完整规则、智能提示与本地 AI",
+      "long_description": "从零重写的三人单机斗地主。使用标准 54 张扑克牌，支持随机发牌、叫地主与抢地主、完整牌型校验、连续两家不出后重新领出、默认 20 秒回合倒计时、自动托管、三档本地 AI、提示、倍率、春天与反春天、断局续玩和本地战绩。默认使用经典绿色牌桌，并可在 Tapp 内切换若泉绮羽㥹銯麏主题；主题覆盖人物卡面、卡背、大厅、牌桌、按钮与回合提示，同时保留高对比点数和花色。提供 1×1、2×2 与 4×2 今日战绩小组件，并优先显示当前 Myriad 用户名与头像。个人游戏偏好和玩家数据均按主体隔离；支持中英日三语和宿主明暗主题，无联网权限，不读取其他玩家隐藏手牌。",
       "locales": {
         "en-US": {
           "name": "Fight the Landlord",
-          "description": "3-player Dou Dizhu with federation rooms and realtime multiplayer"
+          "description": "Offline Dou Dizhu with local AI, a classic table, and the 若泉绮羽㥹銯麏 theme"
         },
         "ja-JP": {
           "name": "闘地主",
-          "description": "3人制の闘地主。連邦ルームで招待してリアルタイム対戦"
+          "description": "クラシック卓と若泉绮羽㥹銯麏テーマを切り替えられる完全オフライン闘地主"
         }
       },
       "author": {
@@ -274,22 +274,19 @@
       "tags": [
         "游戏",
         "斗地主",
-        "联机",
-        "联邦",
+        "单机",
         "牌类",
-        "逐火十三英桀",
-        "多语言",
-        "卡面"
+        "若泉绮羽㥹銯麏",
+        "本地AI",
+        "离线"
       ],
       "permissions": [
         "storage",
-        "ai:chat",
-        "federation:read",
-        "federation:write",
-        "federation:message"
+        "ui:fullscreen",
+        "widget:register"
       ],
-      "icon_svg": "<svg viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"3\" y=\"4\" width=\"12\" height=\"16\" rx=\"1.5\" stroke=\"currentColor\" stroke-width=\"2\"/><rect x=\"9\" y=\"4\" width=\"12\" height=\"16\" rx=\"1.5\" stroke=\"currentColor\" stroke-width=\"2\"/><path d=\"M12 10h2M12 14h3\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg>",
-      "theme_color": "#ef4444",
+      "icon_svg": "<svg viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"4\" y=\"3\" width=\"11\" height=\"16\" rx=\"2\" stroke=\"currentColor\" stroke-width=\"2\"/><rect x=\"9\" y=\"5\" width=\"11\" height=\"16\" rx=\"2\" fill=\"currentColor\" fill-opacity=\".12\" stroke=\"currentColor\" stroke-width=\"2\"/><path d=\"M14.5 10.2c-1.8 0-3 1.7-3 3.1 0 2.2 3 4.5 3 4.5s3-2.3 3-4.5c0-1.4-1.2-3.1-3-3.1Z\" fill=\"currentColor\"/></svg>",
+      "theme_color": "#08745b",
       "screenshots": [],
       "preview": {
         "version": 1,
@@ -308,29 +305,54 @@
           "x": 0.5,
           "y": 0.5
         },
-        "theme": "dark"
+        "theme": "light"
       },
       "download": {
         "manifest": "apps/com.myriad.doudizhu/manifest.json",
         "code": "apps/com.myriad.doudizhu/main.js",
         "readme": "apps/com.myriad.doudizhu/README.md",
+        "widget_styles": "apps/com.myriad.doudizhu/widget.css",
         "page_styles": "apps/com.myriad.doudizhu/page.css",
-        "page_template": "apps/com.myriad.doudizhu/page.html"
+        "page_template": "apps/com.myriad.doudizhu/page.html",
+        "widget_templates": {
+          "daily-record": {
+            "1x1": "apps/com.myriad.doudizhu/templates/widget-1x1.html",
+            "2x2": "apps/com.myriad.doudizhu/templates/widget-2x2.html",
+            "4x2": "apps/com.myriad.doudizhu/templates/widget-4x2.html"
+          }
+        },
+        "i18n": {
+          "en-US": "apps/com.myriad.doudizhu/i18n/en-US.json",
+          "ja-JP": "apps/com.myriad.doudizhu/i18n/ja-JP.json",
+          "zh-CN": "apps/com.myriad.doudizhu/i18n/zh-CN.json"
+        },
+        "page_modules": {
+          "i18n.js": "apps/com.myriad.doudizhu/page/i18n.js",
+          "cards.js": "apps/com.myriad.doudizhu/page/cards.js",
+          "rules.js": "apps/com.myriad.doudizhu/page/rules.js",
+          "ai.js": "apps/com.myriad.doudizhu/page/ai.js",
+          "engine.js": "apps/com.myriad.doudizhu/page/engine.js",
+          "storage.js": "apps/com.myriad.doudizhu/page/storage.js",
+          "audio.js": "apps/com.myriad.doudizhu/page/audio.js",
+          "theme.js": "apps/com.myriad.doudizhu/page/theme.js",
+          "render.js": "apps/com.myriad.doudizhu/page/render.js",
+          "index.js": "apps/com.myriad.doudizhu/page/index.js"
+        }
       },
-      "size": 9462734,
+      "size": 2359650,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2026-07-20T00:00:00Z",
-      "updated_at": "2026-08-05T13:42:06.477Z"
+      "updated_at": "2026-08-10T22:09:40.327Z"
     },
     {
       "id": "com.myriad.aro",
       "name": "Aro",
-      "version": "1.0.55",
+      "version": "1.0.56",
       "description": "社交中心，统一管理消息、时间线、环网与个人资料",
-      "long_description": "1.0.54: stop the chat repaint storm (poll now compares the server window against itself, not against the merged list), keep reading position across full re-renders via a row anchor that survives media layout, and stop labelling permanently sealed messages as \"decrypting…\".\n\n1.0.50: room chat header — default-collapse meta badges/room id; history & files move into ⋯ menu.\n\n1.0.49: fix feed page scroll/interaction — harden .feed-main scrollport (min-height, -webkit-overflow-scrolling, pan-y), seal fixed overlay click shields on boot/view switch, sticker-target-overlay PE defaults.\n\n1.0.48: mobile text overflow hardening — bubbles, headers, feed cards, share/file names, long URLs wrap on narrow screens.\n\n1.0.47: modular page split (msgUi/feedUi/mentionUi/roomUi/…), chat perf (windowing, optimistic send, scroll smart, feed load-more), room stickers/admin/@ mentions UI, setMemberRole.\n\n1.0.39: click post for detail modal; list cards truncate with show more.\n\n1.0.38: quote/repost full body + click to open original (no follow required).\n\n1.0.37: E2E decrypt race fix + soft delivery banners.\n\n1.0.36: inline composer icon styles for reinstall resilience.\n\n1.0.35: fix emoji button gray plate.\n\n1.0.34: full emoji picker + sticker packs complete.\n\n社交中心：统一管理联邦消息（Channel/Room）、时间线、环网与个人资料。支持后台新消息通知、附件与多语言（中/英/日）。\n\n1.0.33: room avatar + invite policy in edit/create.\n\n1.0.32: sticker button click + panel polish.\n\n1.0.31: fix store install missing page/stickers.js — stickers UI inlined into attachments.js (pageModules must stay in sync with index download.page_modules).\n\n1.0.30: sticker entry + add stickers from chat images (group/personal packs).\n\n1.0.29: composer sticker panel (group pack via host API; personal local).\n\n1.0.28: lock composer during optimistic room open (no false active membership).\n\n1.0.27: snappier view/chat/tab switching — no re-slide on A→B, same-chat no-op, shorter motion.\n\n1.0.26: polish messenger UX — open skeleton, empty CTAs, busy buttons, send spinner, join toast.\n\n1.0.25: debounce list refresh; remove unguarded member fallbacks.\n\n1.0.24: proactive roster confirm burst after join/leave (0–6s retries + 2.5s poll boost).\n\n1.0.23: room member roster refreshes on join/leave (WS + poll), live member_count, optimistic member_joined.\n\n1.0.22: fix large inline chat images falling back to filename only (safeMessageImageUrl).\n\n1.0.21: declare network:fetch so sandbox CSP allows remote https avatars/covers/federation media.\n\n1.0.11: thin main (background-only), close pageModules file boundaries.\n\n1.0.10: harden federation share rendering, safer store install and downloads.\n\n1.0.9: centered Accept/Reject invite CTAs in chat body.\n\n1.0.8: timeline share (X intent only), follow-graph mutual/domain badges.",
+      "long_description": "1.0.56: chat fixes — a confirmed send no longer shows as a sending/sent pair, the avatar sits on the last bubble of a burst, sidebar timestamps and group member counts refresh on their own, and a late joiner now receives the full room roster (so earlier members’ messages and keys reach them).\n\n1.0.54: stop the chat repaint storm (poll now compares the server window against itself, not against the merged list), keep reading position across full re-renders via a row anchor that survives media layout, and stop labelling permanently sealed messages as \"decrypting…\".\n\n1.0.50: room chat header — default-collapse meta badges/room id; history & files move into ⋯ menu.\n\n1.0.49: fix feed page scroll/interaction — harden .feed-main scrollport (min-height, -webkit-overflow-scrolling, pan-y), seal fixed overlay click shields on boot/view switch, sticker-target-overlay PE defaults.\n\n1.0.48: mobile text overflow hardening — bubbles, headers, feed cards, share/file names, long URLs wrap on narrow screens.\n\n1.0.47: modular page split (msgUi/feedUi/mentionUi/roomUi/…), chat perf (windowing, optimistic send, scroll smart, feed load-more), room stickers/admin/@ mentions UI, setMemberRole.\n\n1.0.39: click post for detail modal; list cards truncate with show more.\n\n1.0.38: quote/repost full body + click to open original (no follow required).\n\n1.0.37: E2E decrypt race fix + soft delivery banners.\n\n1.0.36: inline composer icon styles for reinstall resilience.\n\n1.0.35: fix emoji button gray plate.\n\n1.0.34: full emoji picker + sticker packs complete.\n\n社交中心：统一管理联邦消息（Channel/Room）、时间线、环网与个人资料。支持后台新消息通知、附件与多语言（中/英/日）。\n\n1.0.33: room avatar + invite policy in edit/create.\n\n1.0.32: sticker button click + panel polish.\n\n1.0.31: fix store install missing page/stickers.js — stickers UI inlined into attachments.js (pageModules must stay in sync with index download.page_modules).\n\n1.0.30: sticker entry + add stickers from chat images (group/personal packs).\n\n1.0.29: composer sticker panel (group pack via host API; personal local).\n\n1.0.28: lock composer during optimistic room open (no false active membership).\n\n1.0.27: snappier view/chat/tab switching — no re-slide on A→B, same-chat no-op, shorter motion.\n\n1.0.26: polish messenger UX — open skeleton, empty CTAs, busy buttons, send spinner, join toast.\n\n1.0.25: debounce list refresh; remove unguarded member fallbacks.\n\n1.0.24: proactive roster confirm burst after join/leave (0–6s retries + 2.5s poll boost).\n\n1.0.23: room member roster refreshes on join/leave (WS + poll), live member_count, optimistic member_joined.\n\n1.0.22: fix large inline chat images falling back to filename only (safeMessageImageUrl).\n\n1.0.21: declare network:fetch so sandbox CSP allows remote https avatars/covers/federation media.\n\n1.0.11: thin main (background-only), close pageModules file boundaries.\n\n1.0.10: harden federation share rendering, safer store install and downloads.\n\n1.0.9: centered Accept/Reject invite CTAs in chat body.\n\n1.0.8: timeline share (X intent only), follow-graph mutual/domain badges.",
       "locales": {
         "en-US": {
           "description": "Social hub for messages, timeline, ring network and profile in one place"
@@ -431,13 +453,13 @@
           "index.js": "apps/com.myriad.aro/page/index.js"
         }
       },
-      "size": 1405020,
+      "size": 1412866,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-01T00:00:00Z",
-      "updated_at": "2026-08-06T12:58:57.491Z"
+      "updated_at": "2026-08-08T11:36:18.231Z"
     },
     {
       "id": "cn.wyyzxzyg.cdn-cache",
@@ -802,9 +824,9 @@
     {
       "id": "cn.echootaku.days",
       "name": "朝夕",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "记录值得期待与纪念的日子，在主页随时查看最近倒数。",
-      "long_description": "用朝夕记录生日、纪念日、旅行、考试和其他重要时刻。支持置顶、快捷日期、临近标识、每年重复、自定义分类与颜色、搜索筛选，以及 2x2、4x2、4x4 三种主页小组件。主题工作室可按界面区域启用 Glass、调整配色与圆角，并通过不含日期数据的主题码分享外观；小组件还可独立配置主题、Glass 范围、密度和显示内容。所有数据仅保存在当前用户的私有存储中。",
+      "long_description": "用朝夕记录生日、纪念日、旅行、考试和其他重要时刻。支持置顶、快捷日期、临近标识、每年重复、自定义分类与颜色、搜索筛选，以及 2x2、4x2、4x4 三种主页小组件。主题工作室默认跟随 Myriad 主色，提供实时预览、三种 Glass 布局、精细分区、圆角和主题码；小组件可选择 Glass/纯色材质、日子范围和显示密度。所有数据仅保存在当前用户的私有存储中。",
       "locales": {
         "en-US": {
           "name": "Days",
@@ -836,7 +858,6 @@
       "permissions": [
         "storage",
         "ui:notification",
-        "ui:theme",
         "ui:confirm",
         "widget:register"
       ],
@@ -874,15 +895,20 @@
             "4x2": "apps/cn.echootaku.days/templates/widget-4x2.html",
             "4x4": "apps/cn.echootaku.days/templates/widget-4x4.html"
           }
+        },
+        "i18n": {
+          "en-US": "apps/cn.echootaku.days/i18n/en-US.json",
+          "ja-JP": "apps/cn.echootaku.days/i18n/ja-JP.json",
+          "zh-CN": "apps/cn.echootaku.days/i18n/zh-CN.json"
         }
       },
-      "size": 103944,
+      "size": 143830,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-04T05:52:10Z",
-      "updated_at": "2026-08-05T13:42:22.830Z"
+      "updated_at": "2026-08-08T05:52:52.228Z"
     },
     {
       "id": "org.smcresearchhk.math",
@@ -1011,6 +1037,179 @@
       "verified": false,
       "created_at": "2026-08-05T02:21:21.976Z",
       "updated_at": "2026-08-05T02:21:21.976Z"
+    },
+    {
+      "id": "cn.echootaku.github-workbench",
+      "name": "GitHub 工作台",
+      "version": "0.1.1",
+      "description": "集中查看待审 PR、分配给我的 Issue、失败 Actions 与仓库发布动态。",
+      "long_description": "面向程序员的只读 GitHub 工作台：集中查看请求你审阅的 Pull Request、分配给你的 Issue，以及所选仓库最近失败的 GitHub Actions 和 Releases。支持 2x2、4x2、4x4 桌面小组件。GitHub Token 使用 Myriad 安装级只写凭据保存，沙箱无法读取；所有 GitHub API 均限制为安装 owner / 管理员调用。首版不提供合并、评论、关闭 Issue 或重跑工作流等写操作。",
+      "locales": {
+        "en-US": {
+          "name": "GitHub Workbench",
+          "description": "Review pull requests, assigned issues, failed Actions, and releases in one place."
+        },
+        "ja-JP": {
+          "name": "GitHub ワークベンチ",
+          "description": "レビュー待ちPR、担当Issue、失敗したActions、リリースをまとめて確認できます。"
+        }
+      },
+      "author": {
+        "name": "EchoOtaku",
+        "url": "https://echootaku.cn"
+      },
+      "license": "MIT",
+      "homepage": "https://echootaku.cn",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "developer",
+      "tags": [
+        "GitHub",
+        "Pull Request",
+        "Issue",
+        "Actions",
+        "Release",
+        "开发者",
+        "小组件"
+      ],
+      "permissions": [
+        "network:fetch",
+        "storage",
+        "ui:notification",
+        "ui:openUrl",
+        "ui:theme",
+        "widget:register"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M9 19c-4.2 1.3-4.2-2.2-6-2.7M15 21v-3.4c0-1 .1-1.4-.5-2 2.8-.3 5.7-1.4 5.7-6.2A4.8 4.8 0 0 0 19 6.1a4.5 4.5 0 0 0-.1-3.3s-1-.3-3.4 1.3a11.7 11.7 0 0 0-6.2 0C6.9 2.5 5.9 2.8 5.9 2.8a4.5 4.5 0 0 0-.1 3.3 4.8 4.8 0 0 0-1.2 3.3c0 4.8 2.9 5.9 5.7 6.2-.5.5-.6 1-.6 2V21' stroke='currentColor' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/></svg>",
+      "theme_color": "#6E5EA8",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.echootaku.github-workbench/preview.html",
+        "styles": [
+          "apps/cn.echootaku.github-workbench/preview.css"
+        ],
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.48
+        },
+        "theme": "dark"
+      },
+      "download": {
+        "manifest": "apps/cn.echootaku.github-workbench/manifest.json",
+        "code": "apps/cn.echootaku.github-workbench/main.js",
+        "readme": "apps/cn.echootaku.github-workbench/README.md",
+        "widget_styles": "apps/cn.echootaku.github-workbench/widget.css",
+        "page_styles": "apps/cn.echootaku.github-workbench/page.css",
+        "page_template": "apps/cn.echootaku.github-workbench/page.html",
+        "widget_templates": {
+          "github-workbench-overview": {
+            "2x2": "apps/cn.echootaku.github-workbench/templates/widget-2x2.html",
+            "4x2": "apps/cn.echootaku.github-workbench/templates/widget-4x2.html",
+            "4x4": "apps/cn.echootaku.github-workbench/templates/widget-4x4.html"
+          }
+        },
+        "i18n": {
+          "en-US": "apps/cn.echootaku.github-workbench/i18n/en-US.json",
+          "ja-JP": "apps/cn.echootaku.github-workbench/i18n/ja-JP.json",
+          "zh-CN": "apps/cn.echootaku.github-workbench/i18n/zh-CN.json"
+        }
+      },
+      "size": 55397,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-08-10T22:16:30.796Z",
+      "updated_at": "2026-08-10T22:16:30.796Z"
+    },
+    {
+      "id": "cn.echootaku.gomoku",
+      "name": "联邦五子棋",
+      "version": "0.1.9",
+      "description": "15×15 五子棋，支持本地双人和跨实例联邦房间对战",
+      "long_description": "一款遵循自由五子棋规则的 15×15 棋盘游戏。可在同一设备上双人对弈，也可创建 Myriad 联邦房间，通过房间 ID 跨实例加入或邀请联邦 Actor。房主负责验证落子并广播完整棋局快照，支持准备、认输、再来一局、历史恢复和本地战绩。",
+      "locales": {
+        "en-US": {
+          "name": "Federated Gomoku",
+          "description": "15×15 Gomoku for local play and cross-instance federation rooms"
+        },
+        "ja-JP": {
+          "name": "連合五目並べ",
+          "description": "ローカル対戦とインスタンス間の連合ルームに対応した15×15五目並べ"
+        }
+      },
+      "author": {
+        "name": "EchoOtaku",
+        "url": "https://echootaku.cn"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.echootaku.gomoku",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "game",
+      "tags": [
+        "游戏",
+        "五子棋",
+        "联邦",
+        "联机",
+        "双人",
+        "棋类",
+        "多语言"
+      ],
+      "permissions": [
+        "storage",
+        "ui:theme",
+        "ui:confirm",
+        "federation:read",
+        "federation:write",
+        "federation:message"
+      ],
+      "icon_svg": "<svg viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" stroke=\"currentColor\" stroke-width=\"1.5\"/><path d=\"M7.5 3v18M12 3v18M16.5 3v18M3 7.5h18M3 12h18M3 16.5h18\" stroke=\"currentColor\" stroke-width=\".75\" opacity=\".55\"/><circle cx=\"9.75\" cy=\"9.75\" r=\"2.1\" fill=\"currentColor\"/><circle cx=\"14.25\" cy=\"14.25\" r=\"2.1\" stroke=\"currentColor\" stroke-width=\"1.2\"/></svg>",
+      "theme_color": "#7257c7",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.echootaku.gomoku/preview.html",
+        "styles": [
+          "apps/cn.echootaku.gomoku/page.css",
+          "apps/cn.echootaku.gomoku/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "theme": "dark"
+      },
+      "download": {
+        "manifest": "apps/cn.echootaku.gomoku/manifest.json",
+        "code": "apps/cn.echootaku.gomoku/main.js",
+        "readme": "apps/cn.echootaku.gomoku/README.md",
+        "page_styles": "apps/cn.echootaku.gomoku/page.css",
+        "page_template": "apps/cn.echootaku.gomoku/page.html",
+        "i18n": {
+          "en-US": "apps/cn.echootaku.gomoku/i18n/en-US.json",
+          "ja-JP": "apps/cn.echootaku.gomoku/i18n/ja-JP.json",
+          "zh-CN": "apps/cn.echootaku.gomoku/i18n/zh-CN.json"
+        }
+      },
+      "size": 88052,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-08-10T22:16:30.796Z",
+      "updated_at": "2026-08-10T22:16:30.796Z"
     }
   ],
   "last_updated": "2026-08-04T09:47:35Z"

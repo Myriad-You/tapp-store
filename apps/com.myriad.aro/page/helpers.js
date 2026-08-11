@@ -716,7 +716,7 @@ function relTimeStr(iso) {
   try {
     var d = new Date(iso);
     var sec = Math.floor((Date.now() - d) / 1000);
-    if (sec < 60) return sec + 's';
+    if (sec < 60) return lang.timeNow || 'now';
     var min = Math.floor(sec / 60);
     if (min < 60) return min + 'm';
     var hr = Math.floor(min / 60);

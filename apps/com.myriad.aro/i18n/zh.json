@@ -118,6 +118,7 @@
   "creating": "创建中…",
   "dateToday": "今天",
   "dateYesterday": "昨天",
+  "timeNow": "刚刚",
   "deleteChannel": "删除会话",
   "deleteChannelConfirm": "永久删除此已关闭会话？本机消息记录将一并移除。",
   "deleteChannelFail": "删除失败",

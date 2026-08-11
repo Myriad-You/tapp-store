@@ -299,6 +299,82 @@ function messageMediaSizeAttrs(messageId) {
   return size ? (' width="' + size.w + '" height="' + size.h + '"') : '';
 }
 
+/** Calendar-day key used for day separators and run grouping. */
+function msgDayKey(iso) {
+  try {
+    var d = new Date(iso);
+    if (isNaN(d)) return '';
+    return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+  } catch (e) {
+    return '';
+  }
+}
+
+/** Gap after which consecutive messages stop reading as one burst. */
+var MSG_RUN_GAP_MS = 5 * 60 * 1000;
+
+/**
+ * Would `msg` render as a continuation of `prevMsg`'s bubble run?
+ *
+ * Same author, within the burst window, and on the same side of a day
+ * separator — a separator visually breaks the run even when the two messages
+ * are minutes apart across midnight.
+ */
+function isSameSenderRun(prevMsg, msg) {
+  if (!prevMsg || !msg) return false;
+  if (!sameActorUrl(prevMsg.sender_actor, msg.sender_actor)) return false;
+  if (!prevMsg.created_at || !msg.created_at) return false;
+  if (msgDayKey(prevMsg.created_at) !== msgDayKey(msg.created_at)) return false;
+  try {
+    return Math.abs(new Date(msg.created_at) - new Date(prevMsg.created_at)) < MSG_RUN_GAP_MS;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * Neighbouring message that actually paints a bubble.
+ *
+ * Key-exchange rows render as system separators, so they must not be read as
+ * "someone else spoke" when deciding where a run starts and ends.
+ */
+function adjacentBubbleMessage(idx, step) {
+  var list = state.messages || [];
+  for (var i = idx + step; i >= 0 && i < list.length; i += step) {
+    var m = list[i];
+    if (!m) continue;
+    var p = (typeof m.payload === 'object' && m.payload) ? m.payload : {};
+    if (isE2eKeyExchangeMessage(m, resolveMessageType(m, p), p)) continue;
+    return m;
+  }
+  return null;
+}
+
+/**
+ * Hand the avatar down to the new end of a burst after an append-only paint.
+ *
+ * The fast path writes only the rows it adds, so the bubble that *was* the last
+ * of a run still carries the face. Swap it for a spacer once an appended
+ * message extends that same run.
+ *
+ * @param {HTMLElement} container #messages
+ * @param {number} tailIdx index of the row that was last before the append
+ */
+function syncRunTailAvatar(container, tailIdx) {
+  if (!container || tailIdx < 0) return;
+  var tailMsg = state.messages && state.messages[tailIdx];
+  if (!tailMsg || !tailMsg.message_id) return;
+  if (typeof isLocalActor === 'function' && isLocalActor(tailMsg.sender_actor)) return;
+  if (!isSameSenderRun(tailMsg, adjacentBubbleMessage(tailIdx, 1))) return;
+  var row = container.querySelector('.msg-row[data-msg-id="' + cssEscapeAttr(tailMsg.message_id) + '"]');
+  if (!row) return;
+  var avatar = row.querySelector(':scope > .msg-avatar');
+  if (!avatar) return;
+  var spacer = document.createElement('div');
+  spacer.className = 'msg-avatar-spacer';
+  row.replaceChild(spacer, avatar);
+}
+
 /**
  * Build HTML for one message entry (optional day separator + row).
  * @param {object} msg
@@ -342,36 +418,28 @@ function buildMessageEntryHtml(msg, idx, opts) {
   }
 
   // Day separators
-  var dayKey = '';
-  try {
-    var md = new Date(msg.created_at);
-    if (!isNaN(md)) dayKey = md.getFullYear() + '-' + md.getMonth() + '-' + md.getDate();
-  } catch (e) { dayKey = ''; }
+  var dayKey = msgDayKey(msg.created_at);
   if (dayKey && dayKey !== dayCtx.lastDayKey) {
     dayCtx.lastDayKey = dayKey;
     html += '<div class="msg-day-sep"><span class="msg-day-label">' + esc(dayLabel(msg.created_at)) + '</span></div>';
   }
 
-  // Compact: same sender within ~5 minutes
-  var prevMsg = idx > 0 ? state.messages[idx - 1] : null;
-  var sameSender = prevMsg && sameActorUrl(prevMsg.sender_actor, msg.sender_actor);
-  var compact = false;
-  if (sameSender && prevMsg && prevMsg.created_at && msg.created_at) {
-    try {
-      var dt = Math.abs(new Date(msg.created_at) - new Date(prevMsg.created_at));
-      compact = dt < 5 * 60 * 1000;
-    } catch (e2) { compact = false; }
-  }
+  // Compact: continues the previous author's burst (drops the name + top gap).
+  var compact = isSameSenderRun(adjacentBubbleMessage(idx, -1), msg);
+  // The avatar belongs to the *last* bubble of a burst, level with where the
+  // run ends — the name at the top already says who is speaking, and pinning
+  // the face to the first bubble leaves it floating above the reply target.
+  var runEnd = !isSameSenderRun(msg, adjacentBubbleMessage(idx, 1));
 
   html += '<div class="msg-row ' + (local ? 'msg-local' : 'msg-remote') + (compact ? ' msg-compact' : '')
     + (idx >= appearFrom ? ' msg-appear' : '')
     + (msg._optimistic ? ' msg-optimistic' : '')
     + '" data-msg-id="' + esc(msg.message_id || '') + '">';
   if (!local) {
-    if (compact) {
-      html += '<div class="msg-avatar-spacer"></div>';
-    } else {
+    if (runEnd) {
       html += '<div class="msg-avatar">' + avatarContentHtml(avatarUrl, displayName) + '</div>';
+    } else {
+      html += '<div class="msg-avatar-spacer"></div>';
     }
   }
   // Rich media / share cards carry their own surface — the card *is* the bubble

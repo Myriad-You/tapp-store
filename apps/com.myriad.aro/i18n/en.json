@@ -118,6 +118,7 @@
   "creating": "Creating…",
   "dateToday": "Today",
   "dateYesterday": "Yesterday",
+  "timeNow": "now",
   "deleteChannel": "Delete chat",
   "deleteChannelConfirm": "Delete this closed chat permanently? Message history on this device will be removed.",
   "deleteChannelFail": "Couldn't delete chat",

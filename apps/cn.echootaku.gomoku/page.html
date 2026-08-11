@@ -1,0 +1,70 @@
+<div id="gomoku-background" aria-hidden="true"></div>
+<main id="gomoku-content">
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">五</span><div><h1 data-i18n="app.title">联邦五子棋</h1><p data-i18n="app.subtitle">落子相逢，跨站成局</p></div></div>
+    <div class="identity"><span class="status-dot" id="connection-dot"></span><span id="identity-text">正在读取身份…</span></div>
+  </header>
+
+  <div class="game-layout">
+    <section class="board-card" aria-labelledby="game-status">
+      <div class="board-heading"><div><p class="eyebrow" id="mode-label" data-i18n="mode.local">本地双人</p><h2 id="game-status" aria-live="polite">黑方落子</h2></div><div class="turn-chip" id="turn-chip"><span class="mini-stone black"></span><span id="turn-label">黑方</span></div></div>
+      <div id="turn-alert" class="turn-alert" role="status" aria-live="polite" data-i18n="status.waitTurn">还没轮到你，请等待对手落子</div>
+      <div class="board-stage">
+        <div id="board" class="board" role="grid" aria-label="15×15 五子棋棋盘"></div>
+        <div id="lobby-lock" class="lobby-lock hidden" role="status" aria-live="polite">
+          <div class="lock-card">
+            <span class="lock-mark" aria-hidden="true">◇</span>
+            <h3 data-i18n="room.boardLocked">棋局尚未开始</h3>
+            <p data-i18n="room.boardLockedHint">双方准备后自动开局</p>
+            <div class="lock-readiness">
+              <span><i class="mini-stone black" aria-hidden="true"></i><b data-i18n="color.black">黑方</b><strong id="lock-black-status">未准备</strong></span>
+              <span><i class="mini-stone white" aria-hidden="true"></i><b data-i18n="color.white">白方</b><strong id="lock-white-status">未准备</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="board-hint" data-i18n="board.hint">方向键移动焦点，空格或回车落子</p>
+    </section>
+
+    <aside class="side-panel">
+      <nav class="mode-tabs" aria-label="游戏模式">
+        <button id="local-tab" class="tab active" type="button" data-i18n="mode.local">本地双人</button>
+        <button id="online-tab" class="tab" type="button" data-i18n="mode.online">联邦联机</button>
+      </nav>
+
+      <section id="local-panel" class="panel-section">
+        <h2 data-i18n="local.title">同屏对弈</h2>
+        <p data-i18n="local.description">黑方先手，轮流落子；率先连成五子或更多者获胜。</p>
+        <button id="new-local" class="button primary wide" type="button" data-i18n="local.new">新对局</button>
+      </section>
+
+      <section id="online-panel" class="panel-section hidden">
+        <div id="online-lobby">
+          <h2 data-i18n="online.title">联邦房间</h2>
+          <p id="online-help" data-i18n="online.description">创建公开房间；同实例可输入裸房间 ID，跨实例请输入完整分享 ID。</p>
+          <button id="create-room" class="button primary wide" type="button" data-i18n="online.create">创建公开房间</button>
+          <div class="join-row"><label class="sr-only" for="room-id" data-i18n="online.roomId">房间 ID</label><input id="room-id" autocomplete="off" placeholder="rm_… / rm_…@home"><button id="join-room" class="button" type="button" data-i18n="online.join">加入</button></div>
+          <button id="resume-room" class="button ghost wide hidden" type="button" data-i18n="online.resume">恢复上次房间</button>
+        </div>
+
+        <div id="room-panel" class="hidden">
+          <div class="room-line"><div><span class="label" data-i18n="room.id">房间 ID</span><strong id="active-room-id"></strong></div><button id="copy-room" class="icon-button" type="button" data-i18n-aria="room.copy" aria-label="复制房间 ID">⧉</button></div>
+          <div class="invite-row"><label class="sr-only" for="actor-id" data-i18n="room.actor">联邦 Actor</label><input id="actor-id" autocomplete="off" placeholder="https://example.com/users/alice"><button id="invite-player" class="button" type="button" data-i18n="room.invite">邀请</button></div>
+          <div class="players">
+            <div class="player"><span class="stone black"></span><div><span data-i18n="color.black">黑方</span><strong id="black-player">等待玩家</strong></div><span id="black-ready" class="ready-badge"></span></div>
+            <div class="player"><span class="stone white"></span><div><span data-i18n="color.white">白方</span><strong id="white-player">等待玩家</strong></div><span id="white-ready" class="ready-badge"></span></div>
+          </div>
+          <div class="room-actions"><button id="ready" class="button primary" type="button" data-i18n="room.ready">准备</button><button id="swap-colors" class="button ghost hidden" type="button" data-i18n="room.swapColors">交换黑白</button><button id="resign" class="button danger hidden" type="button" data-i18n="room.resign">认输</button><button id="rematch" class="button primary hidden" type="button" data-i18n="room.rematch">再来一局</button><button id="dissolve-room" class="button danger hidden" type="button" data-i18n="room.dissolve">解散房间</button><button id="leave-room" class="button ghost" type="button" data-i18n="room.leave">离开</button></div>
+        </div>
+      </section>
+
+      <section class="panel-section match-info">
+        <div class="section-title"><h2 data-i18n="stats.title">本地战绩</h2><span id="round-label">第 1 局</span></div>
+        <div class="score"><div><strong id="black-wins">0</strong><span data-i18n="stats.blackWins">黑胜</span></div><div><strong id="white-wins">0</strong><span data-i18n="stats.whiteWins">白胜</span></div><div><strong id="draws">0</strong><span data-i18n="stats.draws">和棋</span></div></div>
+      </section>
+
+      <details class="rules"><summary data-i18n="rules.title">规则与联机说明</summary><p data-i18n="rules.body">15×15 自由五子棋，无禁手；横、竖或斜线连续五子或更多即胜。联机时房主验证落子，房间消息会受系统联邦策略与内容过滤约束。</p></details>
+      <p id="notice" class="notice" role="status" aria-live="polite"></p>
+    </aside>
+  </div>
+</main>

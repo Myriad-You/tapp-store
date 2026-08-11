@@ -545,7 +545,9 @@ function timeAgo(iso) {
   var d = new Date(iso);
   var now = new Date();
   var sec = Math.floor((now - d) / 1000);
-  if (sec < 60) return sec + 's';
+  // Counting out the first minute second by second reads as a stopwatch, and a
+  // server clock a little ahead of ours would otherwise render "-4s".
+  if (sec < 60) return lang.timeNow || 'now';
   var min = Math.floor(sec / 60);
   if (min < 60) return min + 'm';
   var hr = Math.floor(min / 60);

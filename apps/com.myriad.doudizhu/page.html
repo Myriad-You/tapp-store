@@ -1,213 +1,75 @@
-<div id="tapp-background">
-  <div class="ddz-bg" aria-hidden="true" data-texture-layers="scene,felt">
-    <div class="ddz-bg-scene"></div>
-    <div class="ddz-bg-felt"></div>
-    <div class="ddz-bg-vignette"></div>
-  </div>
+<div id="tapp-background" data-phase="loading" aria-hidden="true">
+  <div class="page-background menu-background"></div>
+  <div class="page-background game-background"></div>
 </div>
 
-<div id="tapp-content" class="ddz-root" data-phase="lobby">
-  <header class="ddz-header glass" role="banner">
-    <div class="ddz-brand">
-      <div class="ddz-logo" aria-hidden="true">♠</div>
-      <div class="ddz-brand-text">
-        <h1 class="ddz-title">斗地主</h1>
-        <p id="ddz-status" class="ddz-status">准备中…</p>
+<div id="tapp-content">
+<main id="ddz-app" class="ddz-app" data-phase="loading">
+  <section id="menu-screen" class="screen menu-screen">
+    <div class="hero-card">
+      <p class="eyebrow" data-i18n="menu.eyebrow"></p>
+      <h1><span data-i18n="menu.titleLine1"></span><br><span data-i18n="menu.titleLine2"></span></h1>
+      <p class="hero-copy" data-i18n="menu.description"></p>
+      <div class="difficulty" role="group" data-i18n-aria-label="menu.difficultyLabel">
+        <button type="button" data-difficulty="easy" data-i18n="difficulty.easy"></button>
+        <button type="button" data-difficulty="normal" class="active" data-i18n="difficulty.normal"></button>
+        <button type="button" data-difficulty="hard" data-i18n="difficulty.hard"></button>
       </div>
-    </div>
-    <div class="ddz-meta" aria-live="polite">
-      <span id="ddz-phase" class="ddz-chip ddz-chip-phase">大厅</span>
-      <span id="ddz-room-label" class="ddz-chip ddz-chip-muted"></span>
-      <span id="ddz-bid-chip" class="ddz-chip ddz-chip-bid hidden" title="当前叫分">叫分 0</span>
-    </div>
-  </header>
-
-  <!-- LOBBY -->
-  <section id="ddz-lobby" class="ddz-panel glass" aria-label="房间大厅">
-    <div class="ddz-lobby-hero">
-      <div class="ddz-panel-head">
-        <p class="ddz-kicker">ROOM SETUP</p>
-        <h2>房间大厅</h2>
-        <p class="ddz-hint">创建房间并邀请 2 位好友，三人准备后开始；或一键单机练习。</p>
-      </div>
-      <div class="ddz-lobby-summary" aria-hidden="true">
-        <span>3 人</span>
-        <span>17 手牌</span>
-        <span>3 底牌</span>
-      </div>
-    </div>
-
-    <div class="ddz-actions-primary">
-      <button type="button" id="ddz-create" class="ddz-btn ddz-btn-primary">
-        <span class="ddz-btn-icon" aria-hidden="true">＋</span>创建房间
-      </button>
-      <button type="button" id="ddz-solo" class="ddz-btn ddz-btn-accent">
-        <span class="ddz-btn-icon" aria-hidden="true">▶</span>单机练习
-      </button>
-    </div>
-
-    <div class="ddz-lobby-grid">
-      <div class="ddz-field-group">
-        <label class="ddz-label" for="ddz-join-id">加入房间</label>
-        <div class="ddz-row">
-          <input id="ddz-join-id" class="ddz-input" placeholder="房间 ID" autocomplete="off" />
-          <button type="button" id="ddz-join" class="ddz-btn ddz-btn-ghost">加入</button>
+      <div class="theme-choice-row">
+        <span data-i18n="theme.label"></span>
+        <div class="theme-choice" role="group" data-i18n-aria-label="theme.label">
+          <button type="button" class="active" data-theme-choice="classic" data-i18n="theme.classic"></button>
+          <button type="button" data-theme-choice="iroha" data-i18n="theme.iroha"></button>
         </div>
       </div>
-      <div class="ddz-field-group">
-        <label class="ddz-label" for="ddz-invite-actor">邀请好友</label>
-        <div class="ddz-row">
-          <input id="ddz-invite-actor" class="ddz-input" placeholder="好友 Actor（用户名或 URL）" autocomplete="off" />
-          <button type="button" id="ddz-invite" class="ddz-btn ddz-btn-ghost">邀请</button>
-        </div>
+      <div class="hero-actions">
+        <button type="button" class="primary" data-action="new-game" data-i18n="action.newGame"></button>
+        <button type="button" class="secondary" data-action="resume" data-i18n="action.resume" hidden></button>
+        <button type="button" class="secondary" data-action="rules" data-i18n="action.rules"></button>
+        <button type="button" class="secondary" data-action="preferences" data-i18n="action.preferences"></button>
       </div>
     </div>
-
-    <div class="ddz-row ddz-lobby-ops">
-      <button type="button" id="ddz-ready" class="ddz-btn ddz-btn-primary" disabled>准备</button>
-      <button type="button" id="ddz-start" class="ddz-btn ddz-btn-accent" disabled>开始对局</button>
-      <button type="button" id="ddz-leave" class="ddz-btn ddz-btn-ghost" disabled>离开</button>
-    </div>
-
-    <div id="ddz-seats" class="ddz-seats" role="list" aria-label="座位"></div>
-    <p id="ddz-lobby-msg" class="ddz-msg" role="status" aria-live="polite"></p>
+    <aside class="menu-side">
+      <div class="mini-table" aria-hidden="true"><i></i><i></i><i></i><span>♠</span></div>
+      <div class="stat-grid">
+        <div><span id="menu-wins">0</span><small data-i18n="stats.wins"></small></div>
+        <div><span id="menu-rate">—</span><small data-i18n="stats.winRate"></small></div>
+        <div><span id="menu-score">0</span><small data-i18n="stats.score"></small></div>
+      </div>
+      <button type="button" class="text-action" data-action="history" data-i18n="action.history"></button>
+    </aside>
   </section>
 
-  <!-- TABLE -->
-  <section id="ddz-table" class="ddz-table glass hidden" aria-label="牌桌">
-    <div class="ddz-table-status">
-      <div id="ddz-turn-hint" class="ddz-turn-hint" role="status" aria-live="polite"></div>
-      <div id="ddz-turn-timer" class="ddz-turn-timer" aria-label="回合倒计时">30s</div>
-      <div id="ddz-auction-score" class="ddz-auction-score hidden">
-        当前叫分 <strong id="ddz-bid-score">0</strong>
+  <section id="game-screen" class="screen game-screen" hidden>
+    <div class="table-hud">
+      <div class="hud-scores">
+        <span><i data-i18n="hud.base"></i> <strong id="base-score">1</strong></span>
+        <span><i data-i18n="hud.multiplier"></i> <strong id="multiplier">×1</strong></span>
+        <span><i data-i18n="hud.bombs"></i> <strong id="bomb-count">0</strong></span>
+      </div>
+      <div class="hud-actions">
+        <button type="button" data-action="home" data-i18n="action.home"></button>
+        <button type="button" data-action="rules" data-i18n="action.rulesShort"></button>
+        <button type="button" data-action="pause" data-i18n="action.pause"></button>
       </div>
     </div>
 
-    <div class="ddz-match-strip" aria-label="对局信息">
-      <div class="ddz-stat">
-        <span class="ddz-stat-label">当前</span>
-        <strong id="ddz-stat-turn">等待</strong>
-      </div>
-      <div class="ddz-stat">
-        <span class="ddz-stat-label">地主</span>
-        <strong id="ddz-stat-landlord">未确定</strong>
-      </div>
-      <div class="ddz-stat">
-        <span class="ddz-stat-label">手牌</span>
-        <strong><span id="ddz-stat-hand">0</span> 张</strong>
-      </div>
-      <div class="ddz-stat">
-        <span class="ddz-stat-label">底牌</span>
-        <strong id="ddz-stat-bottom">未公开</strong>
-      </div>
+    <div class="felt-table">
+      <div class="orientation-tip" role="status" data-i18n="game.rotate"></div>
+      <div class="viewport-warning" role="status" data-i18n="game.viewportSmall"></div>
+      <div id="bottom-cards" class="bottom-cards"><span data-i18n="game.bottomCards"></span><div class="mini-hand"></div></div>
+      <section id="player-right" class="seat seat-right"></section>
+      <section id="player-left" class="seat seat-left"></section>
+      <section id="player-human" class="seat seat-human"></section>
+      <div id="turn-banner" class="turn-banner" role="status" aria-live="polite" aria-atomic="true"><strong data-i18n="game.ready"></strong><span></span><b id="countdown" aria-hidden="true">20</b></div>
+      <span id="countdown-announcement" class="visually-hidden" aria-live="polite"></span>
+      <div id="table-play" class="table-play"></div>
+      <div id="action-bar" class="action-bar"></div>
+      <div id="human-hand" class="human-hand" data-i18n-aria-label="game.yourHand"></div>
     </div>
-
-    <div class="ddz-opponents">
-      <!-- LEFT seat -->
-      <div class="ddz-seat ddz-seat-left" data-view="left" data-seat-view="left">
-        <div class="ddz-seat-head">
-          <div class="ddz-avatar" id="ddz-avatar-left" aria-hidden="true">左</div>
-          <div class="ddz-seat-meta">
-            <div class="ddz-seat-name-row">
-              <div class="ddz-seat-name" id="ddz-name-left">玩家</div>
-              <span id="ddz-alarm-left" class="ddz-alarm hidden" aria-label="报牌">报牌</span>
-            </div>
-            <div class="ddz-seat-info">
-              <span class="ddz-count-pill">剩 <span id="ddz-count-left">0</span> 张</span>
-              <span id="ddz-role-left" class="ddz-role-badge"></span>
-            </div>
-          </div>
-        </div>
-        <div class="ddz-played" id="ddz-played-left" aria-label="左侧手牌背"></div>
-        <div class="ddz-seat-action" id="ddz-action-left" data-seat-action="left" aria-label="左侧最近行动">
-          <div class="ddz-action-label" id="ddz-action-label-left"></div>
-          <div class="ddz-action-cards" id="ddz-local-left"></div>
-        </div>
-      </div>
-
-      <!-- CENTER: bottom + last play -->
-      <div class="ddz-center">
-        <div class="ddz-bottom-wrap">
-          <div class="ddz-zone-label">底牌</div>
-          <div id="ddz-bottom" class="ddz-bottom" aria-label="底牌"></div>
-        </div>
-        <div class="ddz-last-wrap">
-          <div class="ddz-zone-label">
-            上家牌型
-            <span id="ddz-last-meta" class="ddz-last-meta"></span>
-          </div>
-          <div id="ddz-last" class="ddz-last" aria-label="上一手牌"></div>
-        </div>
-      </div>
-
-      <!-- RIGHT seat -->
-      <div class="ddz-seat ddz-seat-right" data-view="right" data-seat-view="right">
-        <div class="ddz-seat-head">
-          <div class="ddz-avatar" id="ddz-avatar-right" aria-hidden="true">右</div>
-          <div class="ddz-seat-meta">
-            <div class="ddz-seat-name-row">
-              <div class="ddz-seat-name" id="ddz-name-right">玩家</div>
-              <span id="ddz-alarm-right" class="ddz-alarm hidden" aria-label="报牌">报牌</span>
-            </div>
-            <div class="ddz-seat-info">
-              <span class="ddz-count-pill">剩 <span id="ddz-count-right">0</span> 张</span>
-              <span id="ddz-role-right" class="ddz-role-badge"></span>
-            </div>
-          </div>
-        </div>
-        <div class="ddz-played" id="ddz-played-right" aria-label="右侧手牌背"></div>
-        <div class="ddz-seat-action" id="ddz-action-right" data-seat-action="right" aria-label="右侧最近行动">
-          <div class="ddz-action-label" id="ddz-action-label-right"></div>
-          <div class="ddz-action-cards" id="ddz-local-right"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- SELF -->
-    <div class="ddz-me" data-view="me" data-seat-view="me">
-      <div class="ddz-me-head">
-        <div class="ddz-seat-head">
-          <div class="ddz-avatar ddz-avatar-me" id="ddz-avatar-me" aria-hidden="true">我</div>
-          <div class="ddz-seat-meta">
-            <div class="ddz-seat-name-row">
-              <div class="ddz-seat-name" id="ddz-name-me">我</div>
-              <span id="ddz-alarm-me" class="ddz-alarm hidden" aria-label="报牌">报牌</span>
-            </div>
-            <div class="ddz-seat-info">
-              <span id="ddz-role-me" class="ddz-role-badge"></span>
-              <span class="ddz-count-pill">手牌 <span id="ddz-count-me">0</span></span>
-            </div>
-          </div>
-        </div>
-        <div class="ddz-seat-action ddz-seat-action-me" id="ddz-action-me" data-seat-action="me" aria-label="我的最近行动">
-          <div class="ddz-action-label" id="ddz-action-label-me"></div>
-          <div class="ddz-action-cards" id="ddz-local-me"></div>
-        </div>
-      </div>
-      <div id="ddz-hand" class="ddz-hand" role="listbox" aria-label="手牌" aria-multiselectable="true"></div>
-    </div>
-
-    <div class="ddz-controls">
-      <div id="ddz-auction-btns" class="ddz-control-group hidden" role="group" aria-label="叫分">
-        <button type="button" class="ddz-btn ddz-btn-bid" data-bid="1">1 分</button>
-        <button type="button" class="ddz-btn ddz-btn-bid" data-bid="2">2 分</button>
-        <button type="button" class="ddz-btn ddz-btn-bid" data-bid="3">3 分</button>
-        <button type="button" class="ddz-btn ddz-btn-ghost" id="ddz-bid-pass">不叫</button>
-      </div>
-      <div id="ddz-play-btns" class="ddz-control-group hidden" role="group" aria-label="出牌">
-        <button type="button" class="ddz-btn ddz-btn-hint" id="ddz-hint" title="提示可出牌型，再次点击切换">提示</button>
-        <button type="button" class="ddz-btn ddz-btn-accent" id="ddz-play">出牌</button>
-        <button type="button" class="ddz-btn ddz-btn-pass" id="ddz-pass">过牌</button>
-        <button type="button" class="ddz-btn ddz-btn-ghost" id="ddz-clear">取消选择</button>
-      </div>
-      <div id="ddz-end-btns" class="ddz-control-group hidden" role="group" aria-label="终局">
-        <div id="ddz-end-summary" class="ddz-end-summary" aria-live="polite"></div>
-        <div class="ddz-row">
-          <button type="button" class="ddz-btn ddz-btn-accent" id="ddz-again">再来一局</button>
-          <button type="button" class="ddz-btn ddz-btn-ghost" id="ddz-to-lobby">回大厅</button>
-        </div>
-      </div>
-    </div>
-    <p id="ddz-table-msg" class="ddz-msg" role="status" aria-live="assertive"></p>
   </section>
+
+  <div id="modal-root" class="modal-root" hidden></div>
+  <div id="toast" class="toast" role="status" hidden></div>
+</main>
 </div>

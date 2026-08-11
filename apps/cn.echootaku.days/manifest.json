@@ -1,7 +1,7 @@
 {
   "id": "cn.echootaku.days",
   "name": "朝夕",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "minSystemVersion": "0.3.23",
   "description": "记录值得期待与纪念的日子，在主页随时查看最近倒数。",
   "locales": {
@@ -25,7 +25,6 @@
   "permissions": [
     "storage",
     "ui:notification",
-    "ui:theme",
     "ui:confirm",
     "widget:register"
   ],
@@ -66,8 +65,9 @@
           "key": "themePreset",
           "label": "独立主题",
           "type": "select",
-          "defaultValue": "sunset",
+          "defaultValue": "system",
           "options": [
+            { "value": "system", "label": "跟随 Myriad" },
             { "value": "sunset", "label": "朝霞" },
             { "value": "violet", "label": "暮紫" },
             { "value": "ocean", "label": "远海" },
@@ -76,16 +76,14 @@
           ]
         },
         {
-          "key": "glassMode",
-          "label": "Glass 范围",
+          "key": "surface",
+          "label": "卡片材质",
           "type": "select",
-          "description": "全 Glass、仅外壳、仅列表项或关闭 Glass。",
-          "defaultValue": "all",
+          "description": "Glass 使用透明磨砂表面，实际透景能力取决于 Myriad 宿主；纯色更强调可读性。",
+          "defaultValue": "glass",
           "options": [
-            { "value": "all", "label": "全 Glass" },
-            { "value": "shell", "label": "仅小组件外壳" },
-            { "value": "items", "label": "仅内容卡片" },
-            { "value": "none", "label": "关闭 Glass" }
+            { "value": "glass", "label": "Glass" },
+            { "value": "solid", "label": "纯色" }
           ]
         },
         {
@@ -97,12 +95,6 @@
             { "value": "comfortable", "label": "舒适" },
             { "value": "compact", "label": "紧凑" }
           ]
-        },
-        {
-          "key": "showBrand",
-          "label": "显示品牌名",
-          "type": "toggle",
-          "defaultValue": true
         },
         {
           "key": "showDate",
@@ -117,16 +109,16 @@
           "defaultValue": true
         },
         {
-          "key": "showFooter",
-          "label": "显示底部信息",
-          "type": "toggle",
-          "defaultValue": true
-        },
-        {
-          "key": "highlightPinned",
-          "label": "突出置顶事件",
-          "type": "toggle",
-          "defaultValue": true
+          "key": "eventScope",
+          "label": "日子范围",
+          "type": "select",
+          "description": "决定小组件优先展示哪些日子。",
+          "defaultValue": "smart",
+          "options": [
+            { "value": "smart", "label": "智能排序" },
+            { "value": "upcoming", "label": "只看将来" },
+            { "value": "pinned", "label": "只看置顶" }
+          ]
         },
         {
           "key": "maxItems",
