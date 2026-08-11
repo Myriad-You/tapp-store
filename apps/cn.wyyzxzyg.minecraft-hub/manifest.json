@@ -8,6 +8,11 @@
   "main":"main.js",
   "author":{"name":"我願一直向著陽光.℡","url":"https://github.com/zgzyh"},
   "permissions":["storage","ui:notification","ui:theme","ui:openUrl","network:fetch","widget:register"],
+  "settings":[
+    {"key":"homeServers","label":"首页服务器列表","type":"input","description":"由 Tapp 管理页面维护的共享服务器配置，请勿手动修改。","defaultValue":"[]"},
+    {"key":"homeSwitchSeconds","label":"服务器轮播间隔（秒）","type":"number","defaultValue":8,"min":3,"max":300,"step":1},
+    {"key":"homeRefreshSeconds","label":"状态检测间隔（秒）","type":"number","defaultValue":60,"min":15,"max":3600,"step":1}
+  ],
   "iconSvg":"<svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path fill='currentColor' d='M3 5.5 12 2l9 3.5v13L12 22l-9-3.5v-13Zm9-1.35L6.1 6.45 12 8.8l5.9-2.35L12 4.15Zm-7 4v8.98l6 2.34v-8.98L5 8.15Zm8 11.32 6-2.34V8.15l-6 2.34v8.98Z'/></svg>",
   "themeColor":"#57a64e",
   "hasPage":true,
