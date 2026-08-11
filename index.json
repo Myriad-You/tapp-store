@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-08-10T22:16:30.796Z",
+  "updated_at": "2026-08-11T06:51:21.041Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -1210,6 +1210,71 @@
       "verified": false,
       "created_at": "2026-08-10T22:16:30.796Z",
       "updated_at": "2026-08-10T22:16:30.796Z"
+    },
+    {
+      "id": "cn.wyyzxzyg.search-submit",
+      "name": "搜索引擎收录提交",
+      "version": "1.0.0",
+      "description": "仅管理员可用的百度主动推送与 IndexNow URL 提交工具",
+      "long_description": "面向 Myriad 站点管理员的搜索引擎 URL 主动提交工具，支持百度搜索资源平台和 IndexNow，并提供 URL 清洗、提交确认与本地日志。",
+      "author": {
+        "name": "我願一直向著陽光.℡",
+        "url": "https://github.com/zgzyh"
+      },
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.wyyzxzyg.search-submit",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "developer",
+      "tags": [
+        "搜索引擎",
+        "SEO",
+        "百度",
+        "IndexNow",
+        "站长工具"
+      ],
+      "permissions": [
+        "storage",
+        "ui:notification",
+        "ui:confirm",
+        "ui:theme",
+        "ui:openUrl",
+        "network:fetch"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='11' cy='11' r='6' stroke='currentColor' stroke-width='2'/><path d='m16 16 4 4M8 11h6M11 8v6' stroke='currentColor' stroke-width='2'/></svg>",
+      "theme_color": "#2563eb",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.wyyzxzyg.search-submit/preview.html",
+        "styles": [
+          "apps/cn.wyyzxzyg.search-submit/page.css",
+          "apps/cn.wyyzxzyg.search-submit/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "theme": "light"
+      },
+      "download": {
+        "manifest": "apps/cn.wyyzxzyg.search-submit/manifest.json",
+        "code": "apps/cn.wyyzxzyg.search-submit/main.js",
+        "readme": "apps/cn.wyyzxzyg.search-submit/README.md",
+        "page_styles": "apps/cn.wyyzxzyg.search-submit/page.css",
+        "page_template": "apps/cn.wyyzxzyg.search-submit/page.html"
+      },
+      "size": 17571,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-08-11T06:51:21.040Z",
+      "updated_at": "2026-08-11T06:51:21.040Z"
     }
   ],
   "last_updated": "2026-08-04T09:47:35Z"
