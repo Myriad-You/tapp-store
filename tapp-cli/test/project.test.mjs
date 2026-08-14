@@ -692,6 +692,175 @@ Tapp.storage.get(key)
     assert.match(messages, /Credential unused must be bound/)
   })
 
+  it('accepts a signed inbound /tapi route bound to a write-only credential', async () => {
+    const root = await temporaryDirectory('inbound-route-valid')
+    await createProject(root, { type: 'page' })
+    const manifestPath = join(root, 'manifest.json')
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+    manifest.permissions.push('network:fetch')
+    manifest.credentials = [{ key: 'hookSecret', label: 'Hook HMAC' }]
+    manifest.apis = {
+      hook: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/hook',
+          methods: ['POST'],
+          verify: {
+            key: 'hookSecret',
+            alg: 'hmac-sha256-raw',
+            header: 'X-Signature',
+            over: 'raw-body',
+            timestampHeader: 'X-Timestamp',
+            nonceHeader: 'X-Nonce',
+          },
+        },
+      },
+    }
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
+
+    const report = await inspectProject(root)
+    assert.deepEqual(
+      report.diagnostics.filter(({ code }) => code === 'invalid-api-route' || code.includes('credential')),
+      [],
+    )
+  })
+
+  it('rejects inbound route access, path, header, over, and credential mistakes', async () => {
+    const root = await temporaryDirectory('inbound-route-invalid')
+    await createProject(root, { type: 'page' })
+    const manifestPath = join(root, 'manifest.json')
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+    manifest.permissions.push('network:fetch')
+    manifest.credentials = [{ key: 'hookSecret', label: 'Hook HMAC' }]
+    const verify = {
+      key: 'hookSecret',
+      alg: 'hmac-sha256-raw',
+      header: 'X-Signature',
+      over: 'raw-body',
+      timestampHeader: 'X-Timestamp',
+      nonceHeader: 'X-Nonce',
+    }
+    manifest.apis = {
+      privateHook: {
+        type: 'http',
+        access: 'protected',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: { path: '/private', methods: ['POST'], verify },
+      },
+      firstDup: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: { path: '/dup', methods: ['POST'], verify },
+      },
+      secondDup: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: { path: '/dup', methods: ['POST'], verify },
+      },
+      lowercaseHeader: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/lower',
+          methods: ['POST'],
+          verify: { ...verify, header: 'x-signature' },
+        },
+      },
+      reservedHeader: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/reserved',
+          methods: ['POST'],
+          verify: { ...verify, header: 'X-Forwarded-For' },
+        },
+      },
+      duplicateHeaders: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/same-headers',
+          methods: ['POST'],
+          verify: { ...verify, timestampHeader: 'X-Signature' },
+        },
+      },
+      badOver: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/bad-over',
+          methods: ['POST'],
+          verify: { ...verify, over: 'unsigned' },
+        },
+      },
+      overMethodMismatch: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'GET',
+        route: {
+          path: '/query-post',
+          methods: ['GET', 'POST'],
+          verify: { ...verify, over: 'canonical-query' },
+        },
+      },
+      missingOver: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/missing-over',
+          methods: ['POST'],
+          verify: { ...verify, over: undefined },
+        },
+      },
+      missingCred: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/missing',
+          methods: ['POST'],
+          verify: { ...verify, key: 'missing' },
+        },
+      },
+    }
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
+
+    const report = await inspectProject(root)
+    const messages = report.diagnostics
+      .filter(({ code }) => code === 'invalid-api-route')
+      .map(({ message }) => message)
+      .join('\n')
+    assert.match(messages, /privateHook inbound route requires access public/)
+    assert.match(messages, /secondDup inbound path \/dup is duplicated/)
+    assert.match(messages, /lowercaseHeader inbound verify headers are invalid/)
+    assert.match(messages, /reservedHeader inbound verify headers are invalid/)
+    assert.match(messages, /duplicateHeaders inbound verify headers must be distinct/)
+    assert.match(messages, /badOver inbound verify\.over must be one of/)
+    assert.match(messages, /missingOver inbound verify\.over must be one of/)
+    assert.match(messages, /overMethodMismatch canonical-query verify requires GET-only methods/)
+    assert.match(messages, /missingCred inbound route references an undeclared credential/)
+  })
+
   it('rejects invalid declared API body mode shapes', async () => {
     const root = await temporaryDirectory('invalid-http-body-modes')
     await createProject(root, { type: 'page' })

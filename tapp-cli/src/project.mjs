@@ -303,9 +303,10 @@ function validateInboundRoute(definition, name, credentialKeys, boundCredentialK
     inboundRoutePaths.add(route.path)
   }
   const methods = route.methods || ['GET']
-  const allowed = new Set(contract.rules.routeMethods || ['GET', 'POST'])
+  const allowedMethods = contract.rules.routeMethods || ['GET', 'POST']
+  const allowed = new Set(allowedMethods)
   if (!Array.isArray(methods) || methods.length === 0 || new Set(methods).size !== methods.length || methods.some((method) => !allowed.has(method))) {
-    diagnostics.push(diagnostic('error', 'invalid-api-route', `API ${name} inbound route methods must be GET and/or POST`))
+    diagnostics.push(diagnostic('error', 'invalid-api-route', `API ${name} inbound route methods must be one of: ${allowedMethods.join(', ')}`))
   }
   const verifyPath = `${path}.verify`
   if (!validateFields(route.verify, schemaFields('TappRouteVerify'), verifyPath, diagnostics)) {
@@ -326,13 +327,18 @@ function validateInboundRoute(definition, name, credentialKeys, boundCredentialK
   } else if (new Set([verify.header, verify.timestampHeader, verify.nonceHeader].map((header) => header.toLowerCase())).size !== 3) {
     diagnostics.push(diagnostic('error', 'invalid-api-route', `API ${name} inbound verify headers must be distinct`))
   }
-  const allowsGet = methods.includes('GET')
-  const allowsPost = methods.includes('POST')
-  if (verify.over === 'canonical-query' && (!allowsGet || allowsPost)) {
-    diagnostics.push(diagnostic('error', 'invalid-api-route', `API ${name} canonical-query verify requires GET-only methods`))
-  }
-  if (verify.over === 'raw-body' && (!allowsPost || allowsGet)) {
-    diagnostics.push(diagnostic('error', 'invalid-api-route', `API ${name} raw-body verify requires POST-only methods`))
+  const allowedOver = new Set(contract.rules.routeVerifyOver || ['raw-body', 'canonical-query'])
+  if (!allowedOver.has(verify.over)) {
+    diagnostics.push(diagnostic('error', 'invalid-api-route', `API ${name} inbound verify.over must be one of: ${[...allowedOver].join(', ')}`))
+  } else {
+    const allowsGet = methods.includes('GET')
+    const allowsPost = methods.includes('POST')
+    if (verify.over === 'canonical-query' && (!allowsGet || allowsPost)) {
+      diagnostics.push(diagnostic('error', 'invalid-api-route', `API ${name} canonical-query verify requires GET-only methods`))
+    }
+    if (verify.over === 'raw-body' && (!allowsPost || allowsGet)) {
+      diagnostics.push(diagnostic('error', 'invalid-api-route', `API ${name} raw-body verify requires POST-only methods`))
+    }
   }
   const maxPrefix = contract.limits.routeVerifyPrefixLength || 256
   if (verify.prefix !== undefined && (typeof verify.prefix !== 'string' || verify.prefix.length > maxPrefix)) {
