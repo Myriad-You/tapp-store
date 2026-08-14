@@ -148,14 +148,14 @@ flowchart TB
 | `name` | ✅ | 展示名（可被 `locales` 覆盖） |
 | `version` | ✅ | 应与 `manifest.version` 同步 |
 | `description` | ✅ | 短描述 |
-| `long_description` | ❌ | 详情长文案 |
-| `locales` | ❌ | BCP-47 → `{ name?, description? }`，同 Manifest 规则 |
+| `long_description` | ❌ | 详情长文案（默认语言；可被 `locales` 覆盖） |
+| `locales` | ❌ | BCP-47 → `{ name?, description?, long_description?, preview? }`。`name`/`description` 与 Manifest 回退规则相同；长介绍与预览只属于商店目录，不进入安装 Manifest |
 | `author` | ✅ | `{ name, email?, url? }` |
 | `category` | ✅ | 稳定用途 ID；**安装时必须与 Manifest 分类一致**（含旧别名规范化后） |
 | `permissions` | ✅ | 申请权限列表（展示与安装同意用） |
 | `download` | ✅ | 相对 `base_url` 的下载路径表 |
 | `icon` / `icon_svg` | ❌ | emoji/URL 或内联 SVG（`icon_svg` 优先） |
-| `icon_shell` | ❌ | 对应 Manifest `iconShell`：`true` 时全彩自定义图标仍套 material 色壳；省略时 auto（全彩图 standalone 铺满色壳外） |
+| `icon_shell` | ❌ | **仅商店索引 UI**（`index.json` → `RemoteStoreService` / 商店卡片）：`true` 时全彩自定义图标仍套 material 色壳；省略时 auto。**不是**可安装的 Manifest 字段（`TappManifest` 为 `deny_unknown_fields`，写入包内 `manifest.json` 会导致安装失败） |
 | `theme_color` | ❌ | `#RRGGBB` |
 | `tags` | ❌ | 搜索标签；`demo` / `test` 用标签表达发布阶段 |
 | `license` / `homepage` / `repository` | ❌ | 元数据 |
@@ -183,10 +183,15 @@ flowchart TB
 
 #### 加载优先级
 
-1. **显式 `preview` 快照**（`preview.html` + `preview.styles[]` 路径）— 推荐
-2. 否则 **`download.page_template`**（+ `styles` / `page_styles`）
-3. 再否则（仅已安装本地项且无远程模板）用本地 `pageHtml` 壳
-4. 仍不可用 / 清洗失败 / 详情页布局极端溢出 → **主题色 + 图标占位**（`TappPreviewPlaceholder`）
+宿主按当前系统语言先选目录字段，再拉取资源。预览 iframe 不执行脚本，也不继承页面 `lang`，因此语言必须在装入 iframe 之前选定。
+
+1. 当前语言的 `locales[tag].preview`（精确 BCP-47，再语言前缀）
+2. 顶层默认 `preview` 快照
+3. 否则 **`download.page_template`**（+ `styles` / `page_styles`）
+4. 再否则（仅已安装本地项且无远程模板）用本地 `pageHtml` 壳
+5. 仍不可用 / 清洗失败 / 详情页布局极端溢出 → **主题色 + 图标占位**（`TappPreviewPlaceholder`）
+
+长介绍回退：`locales[tag].long_description` → 顶层 `long_description` → 已本地化的短 `description`。语言切换后详情页与精选预览会重新选择路径；清洗与 CSP 规则不变。每个语言的 `preview` 与默认预览使用同一套 `parseStorePreview` 校验。
 
 预览失败 **永不阻断** 浏览与安装。
 
@@ -444,28 +449,27 @@ REST 商店安装仍是 body `source: "store"` + `storeSource: catalogRef`（源
 
 ## 发布到商店
 
-官方仓库 [Myriad-You/tapp-store](https://github.com/Myriad-You/tapp-store) 的贡献规则（以仓库 README 为准）：
+官方源仓库 [Myriad-You/tapp-store](https://github.com/Myriad-You/tapp-store) 的发布流程以该仓库 README 为准（CI 强制执行）。摘要：
 
 ### 开发者流程（官方源）
 
-1. 用 `@myriad/tapp-cli`（或仓库内 `tapp-cli/`）初始化、`check`、可选 `pack`（见 [QUICKSTART](QUICKSTART.md)）。
+1. 用 `@myriad/tapp-cli` 初始化、`check`、可选 `pack`（见 [QUICKSTART](QUICKSTART.md)）。
 2. 确认 `manifest.json`：`category`（稳定 ID）、`permissions`、`main`、模板/CSS/assets；**semver `version`**。
-3. 在商店仓库 **只改一个** `apps/{id}/` 包目录；入口文件名与 `manifest.main` 一致。
-4. **不要手改** 根目录 `index.json`。可选写 `apps/{id}/catalog.json`（`long_description` / `tags` / `preview` / `featured` 等商店展示字段）。
-5. 本地 / CI 门禁：`check-pr-scope`（单 app、禁 index、version bump）→ `validate-app` → `myriad-tapp check` → preview 校验。
-6. PR 合并到 `main` 后，**Catalog Sync** bot 从 manifest + catalog.json 自动对齐 `index.json`（含 `download`、`size`、permissions 等）。
-7. 在 Myriad 商店 UI 强制刷新源缓存并试装。
+3. 在商店仓库 **只改一个** `apps/{id}/`；**不要手改** 根 `index.json`。
+4. 可选：`apps/{id}/catalog.json` 写商店展示字段（`long_description` / `tags` / `preview` / `featured` / `locales`…）。`locales` 里的长介绍与预览由索引同步合并进 `index.json`；不要手改根索引。
+5. PR 门禁：单 app、禁 index、非文档改动须 bump version、`validate-app`、`myriad-tapp check`、preview 校验。
+6. 合并到 `main` 后 Catalog Sync bot 从 manifest + catalog.json 自动对齐 `index.json`。
+7. Myriad 商店 UI 强制刷新源缓存并试装。
 
-第三方自建源仍可手维护 `index.json`；官方仓库禁止贡献者编辑索引。
+自建第三方源仍可手维护完整 `index.json`；与官方仓库贡献规则不同。
 
 ### 索引检查清单
 
-- [ ] 官方仓库：PR **未** 包含 `index.json`；合并后 bot 已对齐
+- [ ] 官方仓库：PR 未改 `index.json`；合并后 bot 已对齐 version / category / permissions / download / size
 - [ ] `download.manifest` / `download.code` 可 `GET` 且 200
-- [ ] Manifest 声明的 `pageStyles` / `pageTemplate` / `widgetStyles` / 每个 widget 模板在索引中有对应路径且文件存在（由 sync 从 manifest 生成）
-- [ ] `page_modules` 的 **键** 是安装后文件名（如 `index.js`），值是商店相对路径
-- [ ] `manifest.assets` 中每个路径在 `{packageRoot}/assets/...` 可下载
-- [ ] `permissions` / `category` / `version` 与 Manifest 一致（官方由 bot 保证）
+- [ ] Manifest 声明的 page/widget 资源在索引中有对应路径（官方由 sync 生成）
+- [ ] `page_modules` 的 **键** 是安装后文件名，值是商店相对路径
+- [ ] `manifest.assets` 在 `{packageRoot}/assets/...` 可下载
 - [ ] `minSystemVersion`（若声明）仅在 Manifest 维护
 - [ ] 路径大小写与托管源一致（GitHub raw 区分大小写）
 
@@ -537,14 +541,38 @@ REST 商店安装仍是 body `source: "store"` + `storeSource: catalogRef`（源
 | 代码 | 商店仓库 [`edge/`](https://github.com/Myriad-You/tapp-store/tree/main/edge) |
 | 正式 URL | **`https://stats.store.myriad.you`** |
 | 计什么 | **安装成功**（`event=install`）；`update` 单独计数；不计 preview / 浏览 |
-| 真值 | Edge 计数（DO + KV 镜像）；**不**写回 `index.json` |
-| 计数规则 | **每实例 / 每 app / 每 event / 每 UTC 日最多 +1**（`instance_hash`） |
-| 密钥 | **默认不需要**；HMAC 可选 |
-| 读路径 | 纯读；admin 可选修 top |
+| 真值 | Edge DO 原子计数 + KV 镜像；**不**写回 `index.json` |
+| 写入口 | 仅 Myriad 后端（**无密钥**；`instance_hash` 标识实例） |
+| 计数上限 | **每实例 / 每 app / 每 event / 每 UTC 日最多 +1** |
+| 本地 | **默认不上报** |
+| 万级应用 | stats 必须 `apps=` / `app=` / `top=`；读路径不写 KV |
 
-Myriad：store 安装成功 → `store_stats_beacon`（无密钥）；fallback → `/store/stats-report`（须已安装）。本地：`dev.sh` 写 BASE_URL；edge `npm run dev` 用 `TAPP_STORE_STATS_URL=http://127.0.0.1:8787`。
+### Myriad 双路径打点
 
-详见 `edge/README.md`。
+| 路径 | 谁上报 | 如何到 edge |
+| ---- | ------ | ----------- |
+| `source=store` 安装/更新成功 | 后端 `store_stats_beacon` | 直连 hit + `instance_hash` |
+| 浏览器 fallback 成功 | FE → `POST /api/tapps/store/stats-report`（须已安装） | 后端 hit + `instance_hash` |
+| direct / 文件安装 | **不上报** | — |
+
+实例身份（优先顺序）：
+
+1. `TAPP_STORE_INSTANCE_ID`（本地多实例联调）
+2. `BASE_URL`
+3. `FRONTEND_URL`
+4. `http://{SERVER_HOST}:{SERVER_PORT}`（native dev 默认）
+
+环境变量：
+
+| 变量 | 默认 | 说明 |
+| ---- | ---- | ---- |
+| `TAPP_STORE_STATS_ENABLED` | **本地关 / 生产开** | 显式 `true`/`false` 优先；未设时：仅 `ENVIRONMENT=production` 且非 localhost 才上报 |
+| `TAPP_STORE_STATS_URL` | `https://stats.store.myriad.you` | 上报目标 |
+| `TAPP_STORE_INSTANCE_ID` | 无 | 覆盖实例桶 |
+| `BASE_URL` / `FRONTEND_URL` | — | 生产必设公网 URL；dev.sh 写本地 URL |
+
+**本地默认不统计**（不污染线上数字）。要测统计再设 `TAPP_STORE_STATS_ENABLED=true`。  
+默认 **零密钥**。详见 `tapp-store/edge/README.md`。
 
 ---
 

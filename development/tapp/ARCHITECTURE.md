@@ -50,15 +50,15 @@ flowchart LR
 | 层         | 主要位置                                                   | 职责                                               |
 | ---------- | ---------------------------------------------------------- | -------------------------------------------------- |
 | 页面入口   | `frontend/src/tapp/pages/`                                 | 列表、详情、单窗口/多窗口运行入口                  |
-| 列表布局   | `pages/TappListPage.tsx`、`services/TappListCardSizesApi.ts`、`backend/.../list_card_sizes.rs` | 卡片 1x1/2x1、mine/site 范围、个人 vs 站点布局偏好 |
-| 运行壳     | `components/TappAppShell.tsx`、`TappWindowManager.tsx`、`hooks/useTappMultiWindowSession.ts` | 多窗口会话、全屏 chrome、关闭/presence             |
-| 安装/卸载 UI | `InstallTappDialog.tsx`、`UninstallConfirmDialog.tsx`    | 权限同意安装、卸载确认与清理预设文案               |
+| 列表布局   | `frontend/src/tapp/pages/TappListPage.tsx`、`frontend/src/tapp/services/TappListCardSizesApi.ts`、`backend/src/api/tapp_store/list_card_sizes.rs`、`backend/src/services/tapp_list_card_sizes.rs` | 卡片 1x1/2x1、mine/site 范围、个人 vs 站点布局偏好 |
+| 运行壳     | `frontend/src/tapp/components/TappAppShell.tsx`、`frontend/src/tapp/components/TappWindowManager.tsx`、`frontend/src/tapp/hooks/useTappMultiWindowSession.ts` | 多窗口会话、全屏 chrome、关闭/presence             |
+| 安装/卸载 UI | `frontend/src/tapp/components/InstallTappDialog.tsx`、`frontend/src/tapp/components/UninstallConfirmDialog.tsx` | 权限同意安装、卸载确认与清理预设文案               |
 | 宿主状态   | `frontend/src/tapp/runtime/TappRuntime.ts`                 | 已安装/运行状态缓存、Widget 注册、后台需求         |
 | 资源加载   | `frontend/src/tapp/runtime/sandbox/resourceLoader.ts`      | 获取、拆分、缓存代码/CSS/HTML/i18n/Page 模块       |
-| 沙箱宿主   | `TappPageSandbox.tsx`、`TappWidgetSandbox.tsx`             | 创建 iframe、生成 HTML、注册对应 handler、清理实例 |
-| Widget 加载面 | `widgets/shared/WidgetSkeleton.tsx`、`hooks/useTappWidgets.ts` | Dashboard 第三方 Widget 默认骨架（defer / 屏外静态 / themeColor） |
+| 沙箱宿主   | `frontend/src/tapp/runtime/TappPageSandbox.tsx`、`frontend/src/tapp/runtime/TappWidgetSandbox.tsx` | 创建 iframe、生成 HTML、注册对应 handler、清理实例 |
+| Widget 加载面 | `frontend/src/components/widgets/shared/WidgetSkeleton.tsx`、`frontend/src/hooks/useTappWidgets.ts` | Dashboard 第三方 Widget 默认骨架（defer / 屏外静态 / themeColor） |
 | 后台宿主   | `frontend/src/tapp/components/TappBackgroundRunner.tsx`    | 为需要常驻的运行中 Tapp 拉起 headless core         |
-| SDK/Bridge | `runtime/sandbox/sdkGenerator.ts`、`runtime/TappBridge.ts` | 生成沙箱 SDK、验证消息、权限预检、分发 handler     |
+| SDK/Bridge | `frontend/src/tapp/runtime/sandbox/sdkGenerator.ts`、`frontend/src/tapp/runtime/TappBridge.ts` | 生成沙箱 SDK、验证消息、权限预检、分发 handler     |
 | 前端 API facade | `frontend/src/tapp/services/TappApiService.ts`        | 领域 API 聚合导出与默认对象装配                    |
 | Tapp 路由装配 | `backend/src/api/tapp_store.rs`                         | 路由组合、子模块声明与公共重导出                    |
 | 访问上下文 | `backend/src/api/tapp_store/access.rs`                    | 可见安装选择、所有权、权限过滤与存储访问身份        |
@@ -68,11 +68,11 @@ flowchart LR
 | 预处理安装包 | `backend/src/api/tapp_store/prepared_package.rs`          | 统一结构化/归档包校验、资源落盘与安装代际写入       |
 | 商店包获取 | `backend/src/api/tapp_store/store_package.rs`               | 可信出站访问、索引匹配、分类校验与远程资源下载      |
 | 卸载事务   | `backend/src/api/tapp_store/uninstall.rs`                  | private-first 鉴权、事务清理、目录隔离与失败恢复；`cleanup-temporary` 按站点策略 |
-| 列表卡片尺寸 | `backend/src/api/tapp_store/list_card_sizes.rs`、`services/tapp_list_card_sizes.rs` | GET 双布局 / PUT 纯个人；游客只读站点布局 |
+| 列表卡片尺寸 | `backend/src/api/tapp_store/list_card_sizes.rs`、`backend/src/services/tapp_list_card_sizes.rs` | GET 双布局 / PUT 纯个人；游客只读站点布局 |
 | 运行时 API | `backend/src/api/tapp_runtime/`                            | AI、数据、上下文、媒体、事件、报告、访问统计、声明 API 等 |
 | 调度入口   | `backend/src/api/tapp_scheduler.rs`                        | HTTP/WS 协议、身份/所有权/权限检查                 |
 | 调度引擎   | `backend/src/services/tapp_scheduler.rs`                   | 任务持久化、触发、重试、前端回执、后端动作         |
-| Manifest 契约 | `backend/src/api/tapp_store/manifest.rs`                | 安装清单、声明能力、Widget/设置/API 数据结构        |
+| Manifest 契约 | `crates/tapp-contract/src/manifest.rs`                  | 可安装 `TappManifest`（`deny_unknown_fields`）、声明能力、Widget/设置/API 数据结构 |
 | Tapp 目录查询 | `backend/src/api/tapp_store/catalog.rs`                  | 角色权限过滤、private-first 列表与详情查询          |
 | Manifest 校验 | `backend/src/api/tapp_store/validation.rs`              | 路径、权限、资源配额及声明能力的纯校验边界          |
 | 包文件生命周期 | `backend/src/api/tapp_store/package_files.rs`           | staging/activate/recovery、资源读写与归档安全边界   |
@@ -81,13 +81,13 @@ flowchart LR
 | Tapp 存储 | `backend/src/api/tapp_store/storage.rs`                      | 设置鉴权、私有命名空间、事务配额与存储路由          |
 | Widget 注册表 | `backend/src/api/tapp_store/widgets.rs`                  | Manifest 同步、所有权可见性与动态注册事务           |
 | 前端传输层 | `frontend/src/tapp/services/TappHttpClient.ts`              | CSRF、Runtime Grant 恢复、响应 envelope 与 SSE 解析 |
-| 前端运行时 API | `TappContextApi.ts` / `TappHostIntegrationApi.ts` / `TappInteractionApi.ts` | Context/Declared API、报告媒体、组件与事件交互 |
-| 前端数据 API | `TappStorageApi.ts` / `TappPlatformApi.ts` / `TappReportCatalogApi.ts` | 私有存储、平台数据与只读报告目录 |
-| 前端 Widget API | `TappWidgetApi.ts`                                     | Widget 注册、查询与注销                             |
-| 前端包资源 API | `TappPackageResourceApi.ts`                            | 已安装代码、资源、静态资产与导出                    |
-| 前端治理 API | `TappRuntimeAccessApi.ts` / `TappAiApi.ts`             | Runtime Grant、数据交换与服务端治理 AI 任务        |
-| 前端安装 API | `TappInstallationApi.ts`                                    | 安装、更新、卸载与临时安装清理                      |
-| 前端生命周期 API | `TappLifecycleApi.ts`                                | 列表、详情、最近使用、启动与停止                    |
+| 前端运行时 API | `frontend/src/tapp/services/TappContextApi.ts` / `TappHostIntegrationApi.ts` / `TappInteractionApi.ts` | Context/Declared API、报告媒体、组件与事件交互 |
+| 前端数据 API | `frontend/src/tapp/services/TappStorageApi.ts` / `TappPlatformApi.ts` / `TappReportCatalogApi.ts` / `TappAnalyticsApi.ts` | 私有存储、平台数据、只读报告目录与站点访问统计聚合 |
+| 前端 Widget API | `frontend/src/tapp/services/TappWidgetApi.ts`         | Widget 注册、查询与注销                             |
+| 前端包资源 API | `frontend/src/tapp/services/TappPackageResourceApi.ts` | 已安装代码、资源、静态资产与导出                    |
+| 前端治理 API | `frontend/src/tapp/services/TappRuntimeAccessApi.ts` / `TappAiApi.ts` | Runtime Grant、数据交换与服务端治理 AI 任务        |
+| 前端安装 API | `frontend/src/tapp/services/TappInstallationApi.ts`      | 安装、更新、卸载与临时安装清理                      |
+| 前端生命周期 API | `frontend/src/tapp/services/TappLifecycleApi.ts`      | 列表、详情、最近使用、启动与停止                    |
 | 声明 API   | `backend/src/services/tapp_api_service.rs`                 | 模板注入、出站请求、builtin、上下文隔离缓存        |
 
 `frontend/src/tapp/types/index.ts` 是前端运行时类型入口。运行时类型不得依赖
@@ -151,10 +151,11 @@ Manifest 会经历 Rust 结构的反序列化和再序列化。因此新增 Mani
   因而普通用户不能用私有副本抢占 ID、阻止管理员后续发布。详情、资源、Widget、最终授权和
   Manifest 声明 API 必须选择同一安装记录。storage/Widget 的 ORM 不提供仅按 `tappId`
   的关联，查询必须显式携带 `user_id + tapp_id`。
-- **主体私有 Storage**：`Tapp.storage` 的 `user_id` 是 Runtime Grant subject。打开管理员
-  公开安装时，每个已登录用户仍读写自己的 `user_id + tapp_id` 空间，不会读取站点 owner
-  数据。Manifest 声明的安装级设置继续存放在安装 owner 命名空间；owner 或管理员可写，
-  其他已登录运行者只读。宿主内部键不会出现在通用 storage API 中。
+- **主体私有 Storage**：`Tapp.storage` 的 `user_id` 是 Runtime Grant subject（持久用户或
+  **签名游客 session**）。打开管理员公开安装时，每个 subject 读写自己的
+  `user_id + tapp_id` 空间（游客为负 id 命名空间），不会读取站点 owner 数据。
+  Manifest 声明的安装级设置继续存放在安装 owner 命名空间；owner 或管理员可写，
+  能打开该安装的运行者（含游客）可读已保存声明键。宿主内部键不会出现在通用 storage API 中。
 - 管理员控制面权限不等于普通用户私有安装的运行时访问权。代码、资源、Manifest、授权和
   Runtime Grant 只能解析到规范公开 owner 或当前主体自己的 owner，不能从其他用户同 ID
   记录中任意选择。
@@ -175,12 +176,13 @@ Manifest 会经历 Rust 结构的反序列化和再序列化。因此新增 Mani
 
 站点可配置 `tapp_private_install_cleanup`：
 
-| 值 | 登出时 `POST /api/tapps/cleanup-temporary` | 每日 worker |
+| 值 | 登出时 `POST /api/tapps/cleanup-temporary` | 每日 worker（`main.rs` 后台循环） |
 | -- | ------------------------------------------ | ----------- |
 | `inactivity`（默认） | no-op | 按 `tapp_private_install_inactivity_days` 全局 prune 不活跃用户私有安装 |
-| `logout` | 仅卸载**当前用户**私有安装 | 仍可配合 worker；登出路径禁止全局 prune |
+| `logout` | 仅卸载**当前用户**私有安装 | **no-op**（`mode != "inactivity"` 时 `continue`；不跑全局 prune） |
 
-实现：`uninstall.rs`（`cleanup_temporary_tapps` + worker）、配置读写
+实现：`backend/src/api/tapp_store/uninstall.rs`（`cleanup_temporary_tapps` +
+`prune_stale_private_tapps`）、`backend/src/main.rs` worker、配置读写
 `permissions_oauth` / DynamicConfig。详情见 [REST_API · 私有安装清理](REST_API.md#私有安装清理-post-apitappscleanup-temporary)。
 
 ## `core`、`widget`、`page` 三层
@@ -225,8 +227,10 @@ SDK 的 `lifecycle.onDestroy` 同时监听 `pagehide` 与 `beforeunload`，并�
 
 **Storage 与 Settings 分离**：
 
-- 私有 `Tapp.storage` 经 Runtime Grant 挂在 **subject** 命名空间；`_settings.` 等为宿主
-  保留前缀，storage API 不可访问。访客 Grant 不含 `storage`，无持久 storage。
+- 私有 `Tapp.storage` 经 Runtime Grant 挂在 **subject** 命名空间（持久用户或签名游客）；
+  `_settings.` 等为宿主保留前缀，storage API 不可访问。`storage` / `platform:read` 均为
+  **guest-safe basic**（与 [REST_API · Widget 与存储](REST_API.md#widget-与存储) 一致）：
+  签名游客可获 Grant 与负 id 下持久 storage、以及平台公开缓存读；无签名 session 则无。
 - 安装级 `Tapp.settings` 走专用 REST：`GET` 在 **optional_auth** 上（游客打开公开安装可读
   installation owner 已保存值；未写入回落 Manifest 默认）；`POST` 仅登录且 owner/管理员，
   并校验类型/选项/数值范围。详情页宿主设置**编辑器**仍是控制面：访客不展示写 UI。
@@ -257,7 +261,7 @@ Widget/平台内存注册和安装资源；是否保留用户数据由 `keep_dat
 
 ### 浏览器边界
 
-沙箱 HTML 使用随机 nonce CSP，默认 `connect-src 'none'`，并禁用 `fetch`、
+沙箱 HTML 使用随机 nonce CSP，`connect-src` 仅 `blob:` / `data:`，并禁用网络 `fetch`、
 `XMLHttpRequest`、`eval`、`Function`、本地存储和直接父窗口访问。图片允许 HTTP(S)
 是为了展示头像/封面，不代表脚本可以直接发网络请求。
 
@@ -345,9 +349,12 @@ Grant 不能继续保留已撤销能力，安装 owner 改变则令牌失效并�
 媒体控制与语音等宿主本地敏感动作在执行前还会调用 Runtime Grant authorize 路由实时复核；
 配置保存会同步有效权限并重建受影响的 Page、Widget 和 headless 沙箱。
 
-访客 Grant 只包含真实使用可选认证路由或纯宿主本地处理的能力。`storage`、平台数据、报告读取、
-统一通知、组件/快捷键注册、scheduler、语音服务，以及 Brew 写入/评论都要求持久登录主体，
-不会仅因 broad permission level 为 basic/elevated 就出现在访客 Grant 中。动态 Widget 的
+访客 Grant 只包含真实使用可选认证路由或纯宿主本地处理的能力。**guest-safe basic** 可进入
+签名游客 Grant：`storage`（负 id 私有命名空间）、`platform:read`（站点公开缓存）、
+`analytics:read`（**仅** visitor-card 聚合；完整 admin summary 在 handler 内按 Admin 角色
+门控，见 `tapp_runtime/analytics.rs`）。下列能力的真实后端路由仍要求**持久登录**主体，
+不会仅因 broad level 为 basic/elevated 就出现在访客 Grant 中：`report:read`、统一通知、
+组件/快捷键注册、scheduler、语音服务、Brew 写入/评论、`platform:write`。动态 Widget 的
 注册与注销属于 `privileged` 控制面，只允许当前管理员调用。
 
 ## 调度器
@@ -521,7 +528,7 @@ DNS 结果钉扎到本次客户端并禁止自动重定向；URL credentials、�
 无界响应内存占用。
 宿主配置密钥不进入 Tapp 模板上下文；`{{secrets.*}}` 在 Manifest 校验和运行时都 fail closed。
 第三方凭据使用安装级只写 credential capability：Manifest 声明描述项，并把每个凭据绑定到
-具名 HTTP API 的固定 HTTPS origin 与固定请求头；复用 `tapp_storage` 的宿主保留记录，在
+具名 HTTP API 的固定 HTTPS origin，并按声明放入请求头、query、form 或仅用于签名；复用 `tapp_storage` 的宿主保留记录，在
 `encrypted_value` / `binding_fingerprint` 字段保存密文和授权指纹，状态 API 不返回值。
 完整 storage entity 的序列化会跳过这两个宿主字段；普通 storage 列表、entries、单键读取与
 clear 只投影公开列并在 SQL 层排除所有宿主 key。数据库 CHECK 进一步限制只有

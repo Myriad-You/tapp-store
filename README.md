@@ -77,7 +77,7 @@ tapp-store/
 | `category` | ✅ | 稳定用途 ID（见下）；**必须与 Manifest 一致** |
 | `permissions` | ✅ | 申请权限 |
 | `download` | ✅ | 相对 `base_url` 的路径表 |
-| `locales` | ❌ | BCP-47 → `{ name?, description? }` |
+| `locales` | ❌ | BCP-47 → `{ name?, description?, long_description?, preview? }`。`name`/`description` 来自 Manifest；长介绍与预览来自 `catalog.json` |
 | `long_description` / `tags` / `icon` / `icon_svg` / `icon_shell` / `theme_color` | ❌ | 展示；`icon_shell: true` 时全彩图标仍套 material 色壳（默认 auto 铺满） |
 | `preview` | ❌ | 无脚本静态预览（HTML、CSS、桌面画布与裁切参数） |
 | `size` | ❌ | 字节；**≥ 1 MiB 时 Myriad 走客户端下载进度** |
@@ -154,7 +154,7 @@ Manifest 若声明了 `pageStyles` / `pageTemplate`，索引必须提供对应 `
 1. Fork 本仓库，从 `main` 开分支。
 2. **只**在一个 `apps/{id}/` 下添加或修改完整包文件（建议先用仓库内 CLI 或 Myriad [`@myriad/tapp-cli`](https://github.com/Myriad-You/Myriad/tree/preview/tools/tapp-cli) 本地 `check` / `pack`）。可附带文档或脚本，但不可夹带第二个 app。
 3. 确保 `manifest.id` === 文件夹名；**semver bump**；`category` 使用稳定 ID（见下）。
-4. （可选）写 `apps/{id}/catalog.json` 维护商店文案 / tags / preview / featured（**不要**改根 `index.json`）。
+4. （可选）写 `apps/{id}/catalog.json` 维护商店文案 / tags / preview / `locales` / featured（**不要**改根 `index.json`）。
 5. 本地校验：
 
    ```bash
@@ -187,11 +187,27 @@ Manifest 若声明了 `pageStyles` / `pageTemplate`，索引必须提供对应 `
     "fit": "cover",
     "theme": "dark"
   },
+  "locales": {
+    "en-US": {
+      "long_description": "Long description in English.",
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "preview.en-US.html",
+        "styles": ["preview.css"],
+        "viewport": { "width": 1280, "height": 720 },
+        "fit": "cover",
+        "theme": "light"
+      }
+    }
+  },
   "securityReview": true
 }
 ```
 
 - 路径可写应用内相对路径（`preview.html`），bot 会展开为 `apps/<id>/...`。
+- `locales` 只写商店展示层：`long_description` 与 `preview`。标题/短描述仍走 `manifest.locales`。
+- 每个语言的 preview 与默认 preview 使用同一套无脚本校验。缺少某语言时，Myriad 回退到默认长介绍/预览。
 - 第三方 app 若声明联邦 / 平台 / 管理类**敏感权限**，必须经维护者审阅后在 `catalog.json` 写 `"securityReview": true`，否则 CI 失败。
 - `com.myriad.*` 官方应用豁免 `securityReview`。
 

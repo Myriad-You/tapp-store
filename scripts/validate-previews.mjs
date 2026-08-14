@@ -104,21 +104,46 @@ function bootstrapFromDisk(appId) {
   }
 }
 
+function fixPreviewPaths(appId, preview) {
+  if (!preview || typeof preview !== 'object') return preview
+  const next = { ...preview }
+  const fix = (p) => {
+    if (typeof p !== 'string') return p
+    if (p.startsWith('apps/')) return p
+    return packageRel(appId, p.replace(/^\.\//, ''))
+  }
+  if (next.html) next.html = fix(next.html)
+  if (Array.isArray(next.styles)) next.styles = next.styles.map(fix)
+  return next
+}
+
 function loadCatalogPreview(appId) {
   const catalogPath = join(root, 'apps', appId, 'catalog.json')
   if (!existsSync(catalogPath)) return null
   try {
     const catalog = JSON.parse(readFileSync(catalogPath, 'utf8'))
     if (!catalog.preview) return null
-    const preview = { ...catalog.preview }
-    const fix = (p) => {
-      if (typeof p !== 'string') return p
-      if (p.startsWith('apps/')) return p
-      return packageRel(appId, p.replace(/^\.\//, ''))
+    return fixPreviewPaths(appId, catalog.preview)
+  } catch {
+    return null
+  }
+}
+
+function collectLocalePreviews(appId, locales, sourcePrefix, targets) {
+  if (!locales || typeof locales !== 'object' || Array.isArray(locales)) return
+  for (const [tag, entry] of Object.entries(locales)) {
+    if (entry?.preview) {
+      pushTarget(targets, appId, fixPreviewPaths(appId, entry.preview), `${sourcePrefix} locales.${tag}`)
     }
-    if (preview.html) preview.html = fix(preview.html)
-    if (Array.isArray(preview.styles)) preview.styles = preview.styles.map(fix)
-    return preview
+  }
+}
+
+function loadCatalogLocales(appId) {
+  const catalogPath = join(root, 'apps', appId, 'catalog.json')
+  if (!existsSync(catalogPath)) return null
+  try {
+    const catalog = JSON.parse(readFileSync(catalogPath, 'utf8'))
+    return catalog.locales ?? null
   } catch {
     return null
   }
@@ -138,12 +163,15 @@ async function main() {
   if (args.app) {
     const entry = byId.get(args.app)
     if (entry?.preview) pushTarget(targets, args.app, entry.preview, 'index')
+    collectLocalePreviews(args.app, entry?.locales, 'index', targets)
     pushTarget(targets, args.app, loadCatalogPreview(args.app), 'catalog.json')
+    collectLocalePreviews(args.app, loadCatalogLocales(args.app), 'catalog.json', targets)
     const disk = bootstrapFromDisk(args.app)
     if (disk) pushTarget(targets, args.app, disk, 'disk')
   } else {
     for (const app of index.apps || []) {
       if (app.preview) pushTarget(targets, app.id, app.preview, 'index')
+      collectLocalePreviews(app.id, app.locales, 'index', targets)
     }
     if (args.disk) {
       for (const name of readdirSync(join(root, 'apps'))) {
@@ -155,6 +183,7 @@ async function main() {
         }
         if (byId.get(name)?.preview) continue
         const fromCatalog = loadCatalogPreview(name)
+        collectLocalePreviews(name, loadCatalogLocales(name), 'catalog.json', targets)
         if (fromCatalog) {
           pushTarget(targets, name, fromCatalog, 'catalog.json')
           continue

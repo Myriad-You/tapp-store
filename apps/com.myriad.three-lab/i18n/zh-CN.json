@@ -1,0 +1,13 @@
+{
+  "kicker": "官方示例",
+  "title": "Three 实验室",
+  "subtitle": "包内贴图与 GLB。没有 CDN。离开页面会暂停渲染。",
+  "spin": "暂停旋转",
+  "spinPause": "暂停旋转",
+  "spinResume": "继续旋转",
+  "fullscreen": "全屏",
+  "ready": "贴图与 GLB 均来自 Tapp.assets",
+  "failed": "场景加载失败。请确认 assets 已声明，且没有走 CDN。",
+  "missingCanvas": "找不到画布",
+  "contextLost": "WebGL 上下文已丢失"
+}

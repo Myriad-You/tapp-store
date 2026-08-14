@@ -1,0 +1,13 @@
+{
+  "kicker": "Official sample",
+  "title": "Three Lab",
+  "subtitle": "Packaged texture and GLB. No CDN. Leaving the page pauses the loop.",
+  "spin": "Pause spin",
+  "spinPause": "Pause spin",
+  "spinResume": "Resume spin",
+  "fullscreen": "Fullscreen",
+  "ready": "Texture and GLB both come from Tapp.assets",
+  "failed": "The scene failed to load. Confirm assets are declared and nothing is fetched from a CDN.",
+  "missingCanvas": "Canvas not found",
+  "contextLost": "WebGL context lost"
+}
