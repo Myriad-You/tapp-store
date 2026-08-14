@@ -5,22 +5,18 @@
   "description": "社交中心，统一管理消息、时间线、环网与个人资料",
   "locales": {
     "en-US": {
-      "name": null,
       "description": "Social hub for messages, timeline, ring network and profile in one place"
     },
     "ja-JP": {
-      "name": null,
       "description": "メッセージ・タイムライン・リングネット・プロフィールをまとめるソーシャルハブ"
     }
   },
   "author": {
     "name": "Myriad Team",
-    "email": null,
     "url": "https://github.com/Myriad-You"
   },
   "main": "index.js",
   "styles": "styles.css",
-  "widgetStyles": null,
   "pageStyles": "page.css",
   "pageTemplate": "page.html",
   "cssMode": "separated",
@@ -41,13 +37,9 @@
     "media:read",
     "network:fetch"
   ],
-  "icon": null,
   "iconSvg": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M2 12h20\"/><path d=\"M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z\"/></svg>",
   "themeColor": "#6366f1",
-  "homepage": null,
-  "repository": null,
   "minSystemVersion": "0.2.1",
-  "widgets": null,
   "hasPage": true,
   "backgroundRequirements": [
     "notification"
@@ -57,25 +49,16 @@
       "key": "pollInterval",
       "label": "轮询间隔 (秒)",
       "type": "number",
-      "description": null,
       "defaultValue": 15,
-      "options": null,
       "min": 5,
       "max": 120,
-      "step": 5,
-      "placeholder": null
+      "step": 5
     },
     {
       "key": "notifyOnMessage",
       "label": "新消息通知",
       "type": "toggle",
-      "description": null,
-      "defaultValue": true,
-      "options": null,
-      "min": null,
-      "max": null,
-      "step": null,
-      "placeholder": null
+      "defaultValue": true
     }
   ],
   "category": "social",
@@ -102,10 +85,5 @@
     "views.js",
     "events.js",
     "index.js"
-  ],
-  "apis": null,
-  "dataExchange": null,
-  "ai": null,
-  "events": null,
-  "agent": null
+  ]
 }
