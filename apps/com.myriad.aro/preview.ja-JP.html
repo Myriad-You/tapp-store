@@ -1,0 +1,55 @@
+<!doctype html>
+<html class="dark">
+<body class="dark">
+  <div id="tapp-background"><div class="page-bg-base"></div><div class="page-bg-glow page-bg-glow-1"></div><div class="page-bg-glow page-bg-glow-2"></div></div>
+
+  <div id="tapp-content">
+    <nav id="aro-nav" class="aro-nav">
+      <button class="aro-nav-item" type="button"><div class="nav-feed-avatar">H</div><span class="nav-feed-name">Haru</span></button>
+      <button class="aro-nav-item aro-nav-active" type="button">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg><span>メッセージ</span>
+      </button>
+      <button class="aro-nav-item" type="button">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M0 15L24 9"/></svg><span>リング</span>
+      </button>
+    </nav>
+
+    <div id="view-messages" class="aro-view aro-view-active">
+      <div class="messenger-app">
+        <aside class="sidebar">
+          <div class="sidebar-header"><h2 class="sidebar-title">メッセージ</h2><button class="create-btn" type="button" aria-label="新規">+</button></div>
+          <div class="conv-tabs-bar"><div class="conv-tabs" role="tablist"><button class="conv-tab conv-tab-active" type="button">最近</button><button class="conv-tab" type="button">DM</button><button class="conv-tab" type="button">グループ</button></div></div>
+          <div class="aro-search-bar"><span class="aro-search-icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span><input class="aro-search-input" type="search" placeholder="チャットを検索…"></div>
+          <div class="conv-list">
+            <button class="conv-item conv-active" type="button"><span class="conv-accent"></span><div class="conv-avatar avatar-room preview-avatar-purple">M</div><div class="conv-info"><div class="conv-top"><span class="conv-name">Myriad デザインチーム</span><span class="conv-time">21:18</span></div><div class="conv-bottom"><span class="conv-preview">プレビューシーンの同期が完了しました</span></div></div></button>
+            <button class="conv-item conv-unread" type="button"><span class="conv-accent"></span><div class="conv-avatar avatar-channel preview-avatar-coral">N</div><div class="conv-info"><div class="conv-top"><span class="conv-name">Noa</span><span class="conv-time">20:42</span></div><div class="conv-bottom"><span class="conv-preview">新しいカードレイアウトはとても見やすい</span><span class="conv-badge">2</span></div></div></button>
+            <button class="conv-item" type="button"><span class="conv-accent"></span><div class="conv-avatar avatar-room preview-avatar-blue">L</div><div class="conv-info"><div class="conv-top"><span class="conv-name">Lumen コミュニティ</span><span class="conv-time">18:05</span></div><div class="conv-bottom"><span class="conv-preview">Mira：週末のイベントで会おう</span></div></div></button>
+            <button class="conv-item" type="button"><span class="conv-accent"></span><div class="conv-avatar avatar-channel preview-avatar-green">A</div><div class="conv-info"><div class="conv-top"><span class="conv-name">Aki</span><span class="conv-time">昨日</span></div><div class="conv-bottom"><span class="conv-preview">ファイルを安全に受信しました</span></div></div></button>
+            <button class="conv-item" type="button"><span class="conv-accent"></span><div class="conv-avatar avatar-room preview-avatar-amber">S</div><div class="conv-info"><div class="conv-top"><span class="conv-name">Studio Notes</span><span class="conv-time">水曜</span></div><div class="conv-bottom"><span class="conv-preview">新しい投稿が 3 件</span></div></div></button>
+          </div>
+        </aside>
+
+        <main class="chat-main">
+          <div class="chat-container">
+            <div class="chat-header">
+              <div class="chat-hdr-avatar preview-avatar-purple">M</div>
+              <div class="chat-header-info"><div class="chat-name">Myriad デザインチーム</div><div class="chat-meta"><span class="meta-badge badge-public">6 人のメンバー</span><span class="meta-badge">エンドツーエンド暗号化</span></div></div>
+              <div class="chat-actions"><button class="aro-icon-btn" type="button" aria-label="検索"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button><button class="aro-icon-btn" type="button" aria-label="その他">•••</button></div>
+            </div>
+
+            <div class="messages-area">
+              <div class="msg-day-sep"><span class="msg-day-label">今日</span></div>
+              <div class="msg-row msg-remote"><div class="msg-avatar preview-avatar-coral">N</div><div class="msg-bubble bubble-remote"><div class="msg-sender">Noa</div><div class="msg-text">詳細ページの情報階層は整理済みで、権限エリアも設定ページと同じスタイルに揃えました。</div><div class="msg-footer"><span class="msg-time">20:54</span></div></div></div>
+              <div class="msg-row msg-remote"><div class="msg-avatar preview-avatar-blue">L</div><div class="msg-bubble bubble-remote"><div class="msg-sender">Lumen</div><div class="msg-text">デスクトッププレビューは 1440 × 900 なので、本番ページのレイアウトと余白をそのまま残せます。</div><div class="msg-footer"><span class="msg-time">21:03</span></div></div></div>
+              <div class="msg-row msg-local"><div class="msg-bubble bubble-local"><div class="msg-text">この仕様でいきましょう。静的データはすべてマスキングしたサンプルで、実際の会話は読み取りません。</div><div class="msg-footer"><span class="msg-time">21:12</span></div></div></div>
+              <div class="msg-row msg-remote"><div class="msg-avatar preview-avatar-purple">M</div><div class="msg-bubble bubble-remote"><div class="msg-sender">Mira</div><div class="msg-text">プレビューシーンの同期が完了しました ✨</div><div class="msg-footer"><span class="msg-time">21:18</span></div></div></div>
+            </div>
+
+            <div class="input-float-wrap"><div class="input-bar"><button class="attach-btn" type="button" aria-label="添付"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button><button class="sticker-btn" type="button" aria-label="絵文字"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01M8.5 14c1 1.3 2.4 2 3.5 2s2.5-.7 3.5-2"/></svg></button><textarea class="msg-input" rows="1" placeholder="メッセージを入力…"></textarea><button class="send-btn send-ready" type="button" aria-label="送信"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V4M5 11l7-7 7 7"/></svg></button></div></div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
