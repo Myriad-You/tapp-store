@@ -15,33 +15,5 @@
     "fit": "cover",
     "focus": { "x": 0.5, "y": 0.5 },
     "theme": "light"
-  },
-  "locales": {
-    "en-US": {
-      "long_description": "A three-player offline Dou Dizhu rebuilt from scratch. It uses a standard 54-card deck and supports random dealing, calling and robbing the landlord, full pattern validation, a new lead after two consecutive passes, a default 20-second turn timer, auto-play on timeout, three local AI levels, hints, multipliers, spring and anti-spring, resume after an interrupted game, and local match history. The default table is the classic green felt, and you can switch to the 若泉绮羽㥹銯麏 theme inside the Tapp. That theme covers character card faces, card backs, the lobby, table, buttons, and turn banners while keeping high-contrast ranks and suits. 1×1, 2×2, and 4×2 today's-record widgets prefer the current Myriad username and avatar. Personal game preferences and player data are isolated by subject. Chinese, English, and Japanese plus the host light and dark themes are supported. There is no network permission, and computer players never read other players' hidden hands.",
-      "preview": {
-        "version": 1,
-        "type": "snapshot",
-        "html": "preview.en-US.html",
-        "styles": ["page.css", "preview.css"],
-        "viewport": { "width": 1440, "height": 900 },
-        "fit": "cover",
-        "focus": { "x": 0.5, "y": 0.5 },
-        "theme": "light"
-      }
-    },
-    "ja-JP": {
-      "long_description": "ゼロから作り直した3人用オフライン闘地主です。標準の54枚トランプを使い、ランダム配牌、地主宣言と強奪、完全な役判定、連続2人がパスした後の再先手、既定20秒のターン制限時間、タイムアウト時の自動操作、3段階のローカルAI、ヒント、倍率、春天と反春天、中断からの再開、ローカル対局履歴に対応します。既定はクラシックな緑の卓で、Tapp内から若泉绮羽㥹銯麏テーマに切り替えられます。テーマは人物カード面、カード裏、ロビー、卓、ボタン、ターン表示を覆い、高コントラストの点数とスートはそのままです。1×1、2×2、4×2の今日の戦績ウィジェットは、現在のMyriadユーザー名とアバターを優先表示します。個人のゲーム設定とプレイヤーデータは主体ごとに隔離され、中国語・英語・日本語とホストの明暗テーマに対応します。通信権限はなく、他プレイヤーの非公開手札は読みません。",
-      "preview": {
-        "version": 1,
-        "type": "snapshot",
-        "html": "preview.ja-JP.html",
-        "styles": ["page.css", "preview.css"],
-        "viewport": { "width": 1440, "height": 900 },
-        "fit": "cover",
-        "focus": { "x": 0.5, "y": 0.5 },
-        "theme": "light"
-      }
-    }
   }
 }

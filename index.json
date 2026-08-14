@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.29",
+  "version": "1.0.21",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-08-14T09:08:40.884Z",
+  "updated_at": "2026-08-12T03:33:17.432Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -14,57 +14,17 @@
     {
       "id": "com.myriad.music-player",
       "name": "音乐播放器",
-      "version": "1.0.1",
+      "version": "1.0.0",
       "description": "控制系统音乐播放，查看歌词与播放列表",
       "long_description": "对接系统播放器，显示封面、进度与播放控制；支持同步歌词、列表搜索，以及顺序、循环、单曲和随机模式。",
       "locales": {
         "en-US": {
           "name": "Music Player",
-          "description": "Control system music playback, view lyrics and playlists",
-          "long_description": "Connects to the system music player and shows artwork, progress, and playback controls. Supports synced lyrics, playlist search, and sequential, repeat, single-track, and shuffle modes.",
-          "preview": {
-            "version": 1,
-            "type": "snapshot",
-            "html": "apps/com.myriad.music-player/preview.en-US.html",
-            "styles": [
-              "apps/com.myriad.music-player/page.css",
-              "apps/com.myriad.music-player/preview.css"
-            ],
-            "viewport": {
-              "width": 1440,
-              "height": 900
-            },
-            "fit": "cover",
-            "focus": {
-              "x": 0.5,
-              "y": 0.5
-            },
-            "theme": "dark"
-          }
+          "description": "Control system music playback, view lyrics and playlists"
         },
         "ja-JP": {
           "name": "ミュージックプレーヤー",
-          "description": "システム音楽の再生を操作し、歌詞とプレイリストを表示",
-          "long_description": "システム音楽プレーヤーに接続し、ジャケット、再生位置、再生コントロールを表示します。同期歌詞、プレイリスト検索、および順再生・リピート・1曲リピート・シャッフルに対応します。",
-          "preview": {
-            "version": 1,
-            "type": "snapshot",
-            "html": "apps/com.myriad.music-player/preview.ja-JP.html",
-            "styles": [
-              "apps/com.myriad.music-player/page.css",
-              "apps/com.myriad.music-player/preview.css"
-            ],
-            "viewport": {
-              "width": 1440,
-              "height": 900
-            },
-            "fit": "cover",
-            "focus": {
-              "x": 0.5,
-              "y": 0.5
-            },
-            "theme": "dark"
-          }
+          "description": "システム音楽の再生を操作し、歌詞とプレイリストを表示"
         }
       },
       "author": {
@@ -124,62 +84,22 @@
       "featured": true,
       "verified": true,
       "created_at": "2025-12-10T00:00:00Z",
-      "updated_at": "2026-08-14T06:38:07.057Z"
+      "updated_at": "2026-07-29T00:07:16Z"
     },
     {
       "id": "com.myriad.quick-notes",
       "name": "便携便签",
-      "version": "1.0.1",
+      "version": "1.0.0",
       "description": "快速记录想法，支持搜索与主页小组件",
-      "long_description": "在页面中编写、搜索和整理便签，并通过 4×2 / 4×4 小组件在主页速览或速记。支持置顶、颜色、排序、导出导入与可选时间戳；便签保存在当前用户的私有存储中。跟随宿主明暗主题，内置中英日三语。",
+      "long_description": "在页面中编写、搜索和整理便签，并通过 4×2 / 4×4 小组件在主页速览或速记。支持明暗主题与中英日。",
       "locales": {
         "en-US": {
           "name": "Quick Notes",
-          "description": "Quickly jot down ideas with search and home screen widgets",
-          "long_description": "Write, search, and organize notes on the page, and use the 4×2 / 4×4 home widgets to glance or jot them down. Supports pinning, colors, sort, export/import, and optional timestamps; notes stay in the current user's private storage. Follows the host light/dark theme and includes Chinese, English, and Japanese.",
-          "preview": {
-            "version": 1,
-            "type": "snapshot",
-            "html": "apps/com.myriad.quick-notes/preview.en-US.html",
-            "styles": [
-              "apps/com.myriad.quick-notes/page.css",
-              "apps/com.myriad.quick-notes/preview.css"
-            ],
-            "viewport": {
-              "width": 1440,
-              "height": 900
-            },
-            "fit": "cover",
-            "focus": {
-              "x": 0.5,
-              "y": 0.5
-            },
-            "theme": "dark"
-          }
+          "description": "Quickly jot down ideas with search and home screen widgets"
         },
         "ja-JP": {
           "name": "クイックノート",
-          "description": "アイデアを素早くメモ。検索とホームウィジェット対応",
-          "long_description": "ページでメモを作成・検索・整理し、4×2 / 4×4 ホームウィジェットで一覧または素早くメモできます。固定、色、並び替え、エクスポート/インポート、任意のタイムスタンプに対応し、メモは現在のユーザーのプライベートストレージに保存されます。ホストのライト/ダークテーマに追従し、中国語・英語・日本語を内蔵しています。",
-          "preview": {
-            "version": 1,
-            "type": "snapshot",
-            "html": "apps/com.myriad.quick-notes/preview.ja-JP.html",
-            "styles": [
-              "apps/com.myriad.quick-notes/page.css",
-              "apps/com.myriad.quick-notes/preview.css"
-            ],
-            "viewport": {
-              "width": 1440,
-              "height": 900
-            },
-            "fit": "cover",
-            "focus": {
-              "x": 0.5,
-              "y": 0.5
-            },
-            "theme": "dark"
-          }
+          "description": "アイデアを素早くメモ。検索とホームウィジェット対応"
         }
       },
       "author": {
@@ -246,62 +166,22 @@
       "featured": true,
       "verified": true,
       "created_at": "2025-12-04T00:00:00Z",
-      "updated_at": "2026-08-14T06:38:07.112Z"
+      "updated_at": "2026-07-26T00:00:00Z"
     },
     {
       "id": "com.myriad.config-generator",
       "name": "Myriad 安装配置生成",
-      "version": "1.0.2",
+      "version": "1.0.1",
       "description": "生成 Compose、.env 与 Nginx 部署配置（1Panel / 宝塔 / CLI · 整站反代 + 联邦）",
       "long_description": "填写域名与数据库参数，按所选面板（1Panel / 宝塔 / 通用 CLI）生成官方生产拓扑的 docker-compose、.env、Nginx 与部署说明。密钥白名单与 .env 再解析防注入；原生表单/通知全自定义；宝塔可粘贴编排或目录部署。",
       "locales": {
         "en-US": {
           "name": "Myriad Install Config Generator",
-          "description": "Generate Compose, .env, and Nginx configs for 1Panel, Baota, or CLI (site-wide reverse proxy + federation)",
-          "long_description": "Enter domain and database settings, then generate official production docker-compose, .env, Nginx, and deploy notes for the selected panel (1Panel / Baota / generic CLI). Secrets are allowlisted and the .env is parsed again to block injection; native forms and notifications are fully custom-drawn. On Baota you can paste compose or deploy from a directory.",
-          "preview": {
-            "version": 1,
-            "type": "snapshot",
-            "html": "apps/com.myriad.config-generator/preview.en-US.html",
-            "styles": [
-              "apps/com.myriad.config-generator/page.css",
-              "apps/com.myriad.config-generator/preview.css"
-            ],
-            "viewport": {
-              "width": 1440,
-              "height": 900
-            },
-            "fit": "cover",
-            "focus": {
-              "x": 0.5,
-              "y": 0.5
-            },
-            "theme": "dark"
-          }
+          "description": "Generate Compose, .env, and Nginx configs for 1Panel, Baota, or CLI (site-wide reverse proxy + federation)"
         },
         "ja-JP": {
           "name": "Myriad インストール設定ジェネレーター",
-          "description": "1Panel / 宝塔 / CLI 向け Compose・.env・Nginx 設定を生成（サイト全体リバプロ + フェデレーション）",
-          "long_description": "ドメインとデータベースのパラメータを入力し、選択したパネル（1Panel / 宝塔 / 汎用 CLI）向けに公式本番トポロジの docker-compose、.env、Nginx、デプロイ手順を生成します。シークレットはホワイトリスト検証し、.env を再パースしてインジェクションを防ぎます。ネイティブのフォームと通知はすべてカスタム描画です。宝塔では編成の貼り付けまたはディレクトリ配置が可能です。",
-          "preview": {
-            "version": 1,
-            "type": "snapshot",
-            "html": "apps/com.myriad.config-generator/preview.ja-JP.html",
-            "styles": [
-              "apps/com.myriad.config-generator/page.css",
-              "apps/com.myriad.config-generator/preview.css"
-            ],
-            "viewport": {
-              "width": 1440,
-              "height": 900
-            },
-            "fit": "cover",
-            "focus": {
-              "x": 0.5,
-              "y": 0.5
-            },
-            "theme": "dark"
-          }
+          "description": "1Panel / 宝塔 / CLI 向け Compose・.env・Nginx 設定を生成（サイト全体リバプロ + フェデレーション）"
         }
       },
       "author": {
@@ -365,62 +245,22 @@
       "featured": true,
       "verified": true,
       "created_at": "2025-12-14T00:00:00Z",
-      "updated_at": "2026-08-14T06:38:07.156Z"
+      "updated_at": "2026-08-08T03:25:15.862Z"
     },
     {
       "id": "com.myriad.doudizhu",
       "name": "斗地主",
-      "version": "2.4.4",
+      "version": "2.4.3",
       "description": "三人单机斗地主：经典牌桌与若泉绮羽㥹銯麏主题、完整规则、智能提示与本地 AI",
       "long_description": "从零重写的三人单机斗地主。使用标准 54 张扑克牌，支持随机发牌、叫地主与抢地主、完整牌型校验、连续两家不出后重新领出、默认 20 秒回合倒计时、自动托管、三档本地 AI、提示、倍率、春天与反春天、断局续玩和本地战绩。默认使用经典绿色牌桌，并可在 Tapp 内切换若泉绮羽㥹銯麏主题；主题覆盖人物卡面、卡背、大厅、牌桌、按钮与回合提示，同时保留高对比点数和花色。提供 1×1、2×2 与 4×2 今日战绩小组件，并优先显示当前 Myriad 用户名与头像。个人游戏偏好和玩家数据均按主体隔离；支持中英日三语和宿主明暗主题，无联网权限，不读取其他玩家隐藏手牌。",
       "locales": {
         "en-US": {
           "name": "Fight the Landlord",
-          "description": "Offline Dou Dizhu with local AI, a classic table, and the 若泉绮羽㥹銯麏 theme",
-          "long_description": "A three-player offline Dou Dizhu rebuilt from scratch. It uses a standard 54-card deck and supports random dealing, calling and robbing the landlord, full pattern validation, a new lead after two consecutive passes, a default 20-second turn timer, auto-play on timeout, three local AI levels, hints, multipliers, spring and anti-spring, resume after an interrupted game, and local match history. The default table is the classic green felt, and you can switch to the 若泉绮羽㥹銯麏 theme inside the Tapp. That theme covers character card faces, card backs, the lobby, table, buttons, and turn banners while keeping high-contrast ranks and suits. 1×1, 2×2, and 4×2 today's-record widgets prefer the current Myriad username and avatar. Personal game preferences and player data are isolated by subject. Chinese, English, and Japanese plus the host light and dark themes are supported. There is no network permission, and computer players never read other players' hidden hands.",
-          "preview": {
-            "version": 1,
-            "type": "snapshot",
-            "html": "apps/com.myriad.doudizhu/preview.en-US.html",
-            "styles": [
-              "apps/com.myriad.doudizhu/page.css",
-              "apps/com.myriad.doudizhu/preview.css"
-            ],
-            "viewport": {
-              "width": 1440,
-              "height": 900
-            },
-            "fit": "cover",
-            "focus": {
-              "x": 0.5,
-              "y": 0.5
-            },
-            "theme": "light"
-          }
+          "description": "Offline Dou Dizhu with local AI, a classic table, and the 若泉绮羽㥹銯麏 theme"
         },
         "ja-JP": {
           "name": "闘地主",
-          "description": "クラシック卓と若泉绮羽㥹銯麏テーマを切り替えられる完全オフライン闘地主",
-          "long_description": "ゼロから作り直した3人用オフライン闘地主です。標準の54枚トランプを使い、ランダム配牌、地主宣言と強奪、完全な役判定、連続2人がパスした後の再先手、既定20秒のターン制限時間、タイムアウト時の自動操作、3段階のローカルAI、ヒント、倍率、春天と反春天、中断からの再開、ローカル対局履歴に対応します。既定はクラシックな緑の卓で、Tapp内から若泉绮羽㥹銯麏テーマに切り替えられます。テーマは人物カード面、カード裏、ロビー、卓、ボタン、ターン表示を覆い、高コントラストの点数とスートはそのままです。1×1、2×2、4×2の今日の戦績ウィジェットは、現在のMyriadユーザー名とアバターを優先表示します。個人のゲーム設定とプレイヤーデータは主体ごとに隔離され、中国語・英語・日本語とホストの明暗テーマに対応します。通信権限はなく、他プレイヤーの非公開手札は読みません。",
-          "preview": {
-            "version": 1,
-            "type": "snapshot",
-            "html": "apps/com.myriad.doudizhu/preview.ja-JP.html",
-            "styles": [
-              "apps/com.myriad.doudizhu/page.css",
-              "apps/com.myriad.doudizhu/preview.css"
-            ],
-            "viewport": {
-              "width": 1440,
-              "height": 900
-            },
-            "fit": "cover",
-            "focus": {
-              "x": 0.5,
-              "y": 0.5
-            },
-            "theme": "light"
-          }
+          "description": "クラシック卓と若泉绮羽㥹銯麏テーマを切り替えられる完全オフライン闘地主"
         }
       },
       "author": {
@@ -505,60 +345,20 @@
       "featured": true,
       "verified": true,
       "created_at": "2026-07-20T00:00:00Z",
-      "updated_at": "2026-08-14T06:38:07.196Z"
+      "updated_at": "2026-08-10T22:09:40.327Z"
     },
     {
       "id": "com.myriad.aro",
       "name": "Aro",
-      "version": "1.0.57",
+      "version": "1.0.56",
       "description": "社交中心，统一管理消息、时间线、环网与个人资料",
-      "long_description": "Aro 是 Myriad 官方社交中心，把联邦私信与群聊、时间线、环网和个人资料收在同一处。信使支持 Channel / Room、端到端加密、群共享与本机贴纸包、表情、附件（图片、文件、Tapp、Brew、资料库与报告）、@ 提及、置顶与转发，以及后台轮询新消息通知。时间线可发帖、引用转发、收藏与关注；环网用于实例目录、Brew 推荐、资料交换和 Tapp 商店等节点协作。设置页可查看出站投递队列（取消 / 重试）并轮换联邦签名密钥。聊天记录可在本机导出或导入 JSON 备份。界面支持中英日与宿主明暗主题。",
+      "long_description": "1.0.56: chat fixes — a confirmed send no longer shows as a sending/sent pair, the avatar sits on the last bubble of a burst, sidebar timestamps and group member counts refresh on their own, and a late joiner now receives the full room roster (so earlier members’ messages and keys reach them).\n\n1.0.54: stop the chat repaint storm (poll now compares the server window against itself, not against the merged list), keep reading position across full re-renders via a row anchor that survives media layout, and stop labelling permanently sealed messages as \"decrypting…\".\n\n1.0.50: room chat header — default-collapse meta badges/room id; history & files move into ⋯ menu.\n\n1.0.49: fix feed page scroll/interaction — harden .feed-main scrollport (min-height, -webkit-overflow-scrolling, pan-y), seal fixed overlay click shields on boot/view switch, sticker-target-overlay PE defaults.\n\n1.0.48: mobile text overflow hardening — bubbles, headers, feed cards, share/file names, long URLs wrap on narrow screens.\n\n1.0.47: modular page split (msgUi/feedUi/mentionUi/roomUi/…), chat perf (windowing, optimistic send, scroll smart, feed load-more), room stickers/admin/@ mentions UI, setMemberRole.\n\n1.0.39: click post for detail modal; list cards truncate with show more.\n\n1.0.38: quote/repost full body + click to open original (no follow required).\n\n1.0.37: E2E decrypt race fix + soft delivery banners.\n\n1.0.36: inline composer icon styles for reinstall resilience.\n\n1.0.35: fix emoji button gray plate.\n\n1.0.34: full emoji picker + sticker packs complete.\n\n社交中心：统一管理联邦消息（Channel/Room）、时间线、环网与个人资料。支持后台新消息通知、附件与多语言（中/英/日）。\n\n1.0.33: room avatar + invite policy in edit/create.\n\n1.0.32: sticker button click + panel polish.\n\n1.0.31: fix store install missing page/stickers.js — stickers UI inlined into attachments.js (pageModules must stay in sync with index download.page_modules).\n\n1.0.30: sticker entry + add stickers from chat images (group/personal packs).\n\n1.0.29: composer sticker panel (group pack via host API; personal local).\n\n1.0.28: lock composer during optimistic room open (no false active membership).\n\n1.0.27: snappier view/chat/tab switching — no re-slide on A→B, same-chat no-op, shorter motion.\n\n1.0.26: polish messenger UX — open skeleton, empty CTAs, busy buttons, send spinner, join toast.\n\n1.0.25: debounce list refresh; remove unguarded member fallbacks.\n\n1.0.24: proactive roster confirm burst after join/leave (0–6s retries + 2.5s poll boost).\n\n1.0.23: room member roster refreshes on join/leave (WS + poll), live member_count, optimistic member_joined.\n\n1.0.22: fix large inline chat images falling back to filename only (safeMessageImageUrl).\n\n1.0.21: declare network:fetch so sandbox CSP allows remote https avatars/covers/federation media.\n\n1.0.11: thin main (background-only), close pageModules file boundaries.\n\n1.0.10: harden federation share rendering, safer store install and downloads.\n\n1.0.9: centered Accept/Reject invite CTAs in chat body.\n\n1.0.8: timeline share (X intent only), follow-graph mutual/domain badges.",
       "locales": {
         "en-US": {
-          "description": "Social hub for messages, timeline, ring network and profile in one place",
-          "long_description": "Aro is the official Myriad social hub: federated direct messages and group rooms, a timeline, the ring network, and your profile in one place. Messenger covers Channel / Room chats, end-to-end encryption, shared and personal sticker packs, emoji, attachments (images, files, Tapps, Brew, library, and reports), @mentions, pins, forwards, and background new-message notifications. The timeline supports posts, quote-reposts, bookmarks, and follows; rings connect instance directories, Brew picks, library exchange, and Tapp store peers. Settings show the outbound delivery queue (cancel / retry) and can rotate federation signing keys. Chat history can be exported or imported as a local JSON backup. The UI follows Chinese, English, and Japanese, plus the host light/dark theme.",
-          "preview": {
-            "version": 1,
-            "type": "snapshot",
-            "html": "apps/com.myriad.aro/preview.en-US.html",
-            "styles": [
-              "apps/com.myriad.aro/page.css",
-              "apps/com.myriad.aro/preview.css"
-            ],
-            "viewport": {
-              "width": 1440,
-              "height": 900
-            },
-            "fit": "cover",
-            "focus": {
-              "x": 0.5,
-              "y": 0.5
-            },
-            "theme": "dark"
-          }
+          "description": "Social hub for messages, timeline, ring network and profile in one place"
         },
         "ja-JP": {
-          "description": "メッセージ・タイムライン・リングネット・プロフィールをまとめるソーシャルハブ",
-          "long_description": "Aro は Myriad 公式のソーシャルハブです。連邦のダイレクトメッセージとグループ、タイムライン、リングネット、プロフィールをひとつにまとめます。メッセンジャーは Channel / Room、エンドツーエンド暗号化、グループ共有と端末内のステッカーパック、絵文字、添付（画像・ファイル・Tapp・Brew・ライブラリ・レポート）、@メンション、ピン留め、転送、バックグラウンドの新着通知に対応します。タイムラインでは投稿、引用リポスト、ブックマーク、フォローができ、リングはインスタンス一覧、Brew おすすめ、資料交換、Tapp ストアなどのノード連携に使います。設定では送信キューの確認（キャンセル / 再試行）と連邦署名鍵のローテーションができます。チャット履歴は端末上の JSON バックアップとして書き出し・読み込みできます。UI は中・英・日とホストのライト / ダークテーマに追従します。",
-          "preview": {
-            "version": 1,
-            "type": "snapshot",
-            "html": "apps/com.myriad.aro/preview.ja-JP.html",
-            "styles": [
-              "apps/com.myriad.aro/page.css",
-              "apps/com.myriad.aro/preview.css"
-            ],
-            "viewport": {
-              "width": 1440,
-              "height": 900
-            },
-            "fit": "cover",
-            "focus": {
-              "x": 0.5,
-              "y": 0.5
-            },
-            "theme": "dark"
-          }
+          "description": "メッセージ・タイムライン・リングネット・プロフィールをまとめるソーシャルハブ"
         }
       },
       "author": {
@@ -659,7 +459,7 @@
       "featured": true,
       "verified": true,
       "created_at": "2025-12-01T00:00:00Z",
-      "updated_at": "2026-08-14T06:38:07.233Z"
+      "updated_at": "2026-08-08T11:36:18.231Z"
     },
     {
       "id": "cn.wyyzxzyg.cdn-cache",
@@ -1475,126 +1275,6 @@
       "verified": false,
       "created_at": "2026-08-11T06:51:21.040Z",
       "updated_at": "2026-08-11T06:51:21.040Z"
-    },
-    {
-      "id": "com.myriad.three-lab",
-      "name": "Three 实验室",
-      "version": "1.0.1",
-      "description": "官方 Three.js 示例：包内贴图与 GLB、pause 停帧、销毁时释放 WebGL",
-      "long_description": "演示如何在 Tapp Page 里使用 Three.js：库打成 pageModules IIFE，先 getUrlMap 再用 rewriteUrl 接到 LoadingManager。棋盘贴图和立方体 GLB 都走包内路径。离开页面会暂停 rAF，销毁时释放渲染器。不是宿主内置引擎，也不走 CDN。",
-      "locales": {
-        "en-US": {
-          "name": "Three Lab",
-          "description": "Official Three.js sample: packaged textures and GLB, paused frames, WebGL dispose",
-          "long_description": "Shows Three.js inside a Tapp Page: the library is an IIFE page module. Call getUrlMap, then hand rewriteUrl to LoadingManager so the checker texture and cube GLB load from packaged paths. The loop pauses off-screen and the renderer is disposed on destroy. This is not a host engine and does not use a CDN.",
-          "preview": {
-            "version": 1,
-            "type": "snapshot",
-            "html": "apps/com.myriad.three-lab/preview.en-US.html",
-            "styles": [
-              "apps/com.myriad.three-lab/page.css",
-              "apps/com.myriad.three-lab/preview.css"
-            ],
-            "viewport": {
-              "width": 1440,
-              "height": 900
-            },
-            "fit": "cover",
-            "focus": {
-              "x": 0.5,
-              "y": 0.5
-            },
-            "theme": "dark"
-          }
-        },
-        "ja-JP": {
-          "name": "Three ラボ",
-          "description": "公式 Three.js サンプル。パッケージ内テクスチャと GLB、一時停止、破棄時の解放",
-          "long_description": "Tapp Page で Three.js を使う方法の公式サンプルです。ライブラリは pageModules の IIFE で、先に getUrlMap し、rewriteUrl を LoadingManager に渡してパッケージ内のテクスチャと GLB を読みます。非表示時は rAF を止め、破棄時にレンダラーを解放します。ホスト内蔵エンジンではなく、CDN も使いません。",
-          "preview": {
-            "version": 1,
-            "type": "snapshot",
-            "html": "apps/com.myriad.three-lab/preview.ja-JP.html",
-            "styles": [
-              "apps/com.myriad.three-lab/page.css",
-              "apps/com.myriad.three-lab/preview.css"
-            ],
-            "viewport": {
-              "width": 1440,
-              "height": 900
-            },
-            "fit": "cover",
-            "focus": {
-              "x": 0.5,
-              "y": 0.5
-            },
-            "theme": "dark"
-          }
-        }
-      },
-      "author": {
-        "name": "Myriad Team",
-        "url": "https://github.com/Myriad-You"
-      },
-      "license": "MIT",
-      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/com.myriad.three-lab",
-      "repository": "https://github.com/Myriad-You/tapp-store",
-      "category": "developer",
-      "tags": [
-        "Three.js",
-        "WebGL",
-        "示例",
-        "开发者",
-        "图形"
-      ],
-      "permissions": [
-        "ui:theme",
-        "ui:fullscreen"
-      ],
-      "icon_svg": "<svg viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 3 4 7.5v9L12 21l8-4.5v-9L12 3Z\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\"/><path d=\"M12 12 4 7.5M12 12v9M12 12l8-4.5\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\"/></svg>",
-      "theme_color": "#6366f1",
-      "screenshots": [],
-      "preview": {
-        "version": 1,
-        "type": "snapshot",
-        "html": "apps/com.myriad.three-lab/preview.html",
-        "styles": [
-          "apps/com.myriad.three-lab/page.css",
-          "apps/com.myriad.three-lab/preview.css"
-        ],
-        "viewport": {
-          "width": 1440,
-          "height": 900
-        },
-        "fit": "cover",
-        "focus": {
-          "x": 0.5,
-          "y": 0.5
-        },
-        "theme": "dark"
-      },
-      "download": {
-        "manifest": "apps/com.myriad.three-lab/manifest.json",
-        "code": "apps/com.myriad.three-lab/main.js",
-        "readme": "apps/com.myriad.three-lab/README.md",
-        "page_styles": "apps/com.myriad.three-lab/page.css",
-        "page_template": "apps/com.myriad.three-lab/page.html",
-        "i18n": {
-          "en-US": "apps/com.myriad.three-lab/i18n/en-US.json",
-          "ja-JP": "apps/com.myriad.three-lab/i18n/ja-JP.json",
-          "zh-CN": "apps/com.myriad.three-lab/i18n/zh-CN.json"
-        },
-        "page_modules": {
-          "scene.js": "apps/com.myriad.three-lab/page/scene.js"
-        }
-      },
-      "size": 571722,
-      "downloads": 0,
-      "rating": 0,
-      "featured": false,
-      "verified": true,
-      "created_at": "2026-08-14T04:34:55.869Z",
-      "updated_at": "2026-08-14T09:08:40.883Z"
     }
   ],
   "last_updated": "2026-08-04T09:47:35Z"
