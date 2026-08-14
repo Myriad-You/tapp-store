@@ -1,0 +1,47 @@
+{
+  "long_description": "在页面中编写、搜索和整理便签，并通过 4×2 / 4×4 小组件在主页速览或速记。支持置顶、颜色、排序、导出导入与可选时间戳；便签保存在当前用户的私有存储中。跟随宿主明暗主题，内置中英日三语。",
+  "tags": ["笔记", "便签", "搜索", "小组件", "多语言"],
+  "featured": true,
+  "verified": true,
+  "license": "MIT",
+  "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/com.myriad.quick-notes",
+  "repository": "https://github.com/Myriad-You/tapp-store",
+  "preview": {
+    "version": 1,
+    "type": "snapshot",
+    "html": "preview.html",
+    "styles": ["page.css", "preview.css"],
+    "viewport": { "width": 1440, "height": 900 },
+    "fit": "cover",
+    "focus": { "x": 0.5, "y": 0.5 },
+    "theme": "dark"
+  },
+  "locales": {
+    "en-US": {
+      "long_description": "Write, search, and organize notes on the page, and use the 4×2 / 4×4 home widgets to glance or jot them down. Supports pinning, colors, sort, export/import, and optional timestamps; notes stay in the current user's private storage. Follows the host light/dark theme and includes Chinese, English, and Japanese.",
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "preview.en-US.html",
+        "styles": ["page.css", "preview.css"],
+        "viewport": { "width": 1440, "height": 900 },
+        "fit": "cover",
+        "focus": { "x": 0.5, "y": 0.5 },
+        "theme": "dark"
+      }
+    },
+    "ja-JP": {
+      "long_description": "ページでメモを作成・検索・整理し、4×2 / 4×4 ホームウィジェットで一覧または素早くメモできます。固定、色、並び替え、エクスポート/インポート、任意のタイムスタンプに対応し、メモは現在のユーザーのプライベートストレージに保存されます。ホストのライト/ダークテーマに追従し、中国語・英語・日本語を内蔵しています。",
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "preview.ja-JP.html",
+        "styles": ["page.css", "preview.css"],
+        "viewport": { "width": 1440, "height": 900 },
+        "fit": "cover",
+        "focus": { "x": 0.5, "y": 0.5 },
+        "theme": "dark"
+      }
+    }
+  }
+}

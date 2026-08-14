@@ -1,7 +1,7 @@
 {
   "id": "com.myriad.quick-notes",
   "name": "便携便签",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minSystemVersion": "0.2.1",
   "description": "快速记录想法，支持搜索与主页小组件",
   "locales": {
