@@ -20,3 +20,5 @@ await esbuild.build({
   legalComments: 'none',
   logLevel: 'info',
 })
+// Host injects THREE + GLTFLoader when manifest.runtimeModules includes "three".
+// Do not bundle three itself — that is the host IIFE.

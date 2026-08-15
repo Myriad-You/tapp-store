@@ -16,15 +16,19 @@ describe('three-lab scene contract', () => {
     assert.match(source, /onPause/)
     assert.match(source, /onDestroy/)
     assert.match(source, /revokeAll/)
+    assert.match(source, /globalThis\.THREE/)
+    assert.match(source, /globalThis\.GLTFLoader/)
+    assert.doesNotMatch(source, /from ['"]three['"]/)
     assert.doesNotMatch(source, /unpkg|jsdelivr|cdnjs|esm\.sh/)
     assert.doesNotMatch(source, /https:\/\//)
   })
 
-  it('ships a bundled IIFE page module', async () => {
+  it('ships a host-Three page module, not a vendored engine', async () => {
     const bundle = await readFile(join(root, 'page/scene.js'), 'utf8')
-    assert.ok(bundle.length > 10_000)
+    assert.ok(bundle.length > 200)
+    assert.ok(bundle.length < 80_000)
     assert.doesNotMatch(bundle.slice(0, 80), /^\s*import\s/)
-    assert.match(bundle, /WebGLRenderer/)
+    assert.match(bundle, /getUrlMap/)
   })
 
   it('ships a GLB that GLTFLoader.parse accepts without extra fetches', async () => {

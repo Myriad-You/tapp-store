@@ -1,5 +1,5 @@
-import * as THREE from 'three'
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+const THREE = globalThis.THREE
+const GLTFLoader = globalThis.GLTFLoader
 
 const TEXTURE_PATH = 'assets/check.png'
 const MODEL_PATH = 'assets/cube.glb'
@@ -41,6 +41,12 @@ function setStatus(message) {
 
 async function start() {
   applyStaticI18n()
+
+  if (!THREE || !GLTFLoader) {
+    setStatus(t('missingCanvas'))
+    console.error('[three-lab] host THREE/GLTFLoader missing; declare runtimeModules: ["three"]')
+    return
+  }
 
   const canvas = document.getElementById('lab-canvas')
   const spinButton = document.getElementById('lab-spin')
