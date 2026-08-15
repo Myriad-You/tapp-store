@@ -4,11 +4,12 @@
 
 ## 版本
 
-`1.0.0`
+`1.0.4`
 
 ## 安全
 
-- **密钥白名单**：`JWT_SECRET` / `UPDATE_TOKEN` / `UPDATER_GATEWAY_SECRET`（及 bundled `POSTGRES_PASSWORD`）须匹配 `[A-Za-z0-9_-]{32,512}`；拒绝 CR/LF/NUL、`#`、`=`、空白，避免未加引号 `.env` 注入。
+- **密钥白名单**：`JWT_SECRET` / `UPDATE_TOKEN` / `UPDATER_GATEWAY_SECRET` / `MYRIAD_SETUP_SECRET`（及 bundled `POSTGRES_PASSWORD`）须匹配 `[A-Za-z0-9_-]{32,512}`；拒绝 CR/LF/NUL、`#`、`=`、空白，避免未加引号 `.env` 注入。
+- **安装暗号**：`MYRIAD_SETUP_SECRET` 写入 `.env` 并注入 backend。生成页和结果区都会提醒先复制，首次向导创建所有者必须对上。
 - **生成后自检**：对产物再 `parseDotenvStrict`，校验密钥一致、期望键齐全、`PROXY_ALLOW_DIRECT_UPDATER=false` 仅一次。
 - **Nginx 上传**：≤512KB、`.conf`/文本、拒 NUL。
 - **Docker Hub**：`Promise.allSettled`，单仓失败不拖垮；优先四组件共同 versioned tag。

@@ -229,6 +229,19 @@
           </div>
           <span class="form-hint">backend ↔ gateway</span>
         </div>
+        <div class="form-group">
+          <label for="setup-secret">MYRIAD_SETUP_SECRET</label>
+          <div class="input-with-action">
+            <input type="text" id="setup-secret" class="form-input" placeholder="[A-Za-z0-9_-] ≥32" autocomplete="off" spellcheck="false">
+            <button type="button" id="gen-setup-secret" class="btn-generate" title="生成安装暗号">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/>
+              </svg>
+            </button>
+            <button type="button" id="copy-setup-secret" class="btn-copy-field" title="复制安装暗号">复制</button>
+          </div>
+          <span class="form-hint">首次打开站点<strong>创建所有者时要填</strong>。先点「复制」存下来，或从生成结果的 .env 里找 <code>MYRIAD_SETUP_SECRET</code>。不要发到群里。</span>
+        </div>
       </section>
 
       <section class="form-section">
@@ -507,6 +520,23 @@
       <p class="section-desc results-intro" id="results-intro">
         1Panel：复制 docker-compose.yml 到“编排”，复制 .env 到“环境变量”。
       </p>
+
+      <div class="section-warning" id="setup-secret-reminder" hidden>
+        <span class="section-warning-icon" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </span>
+        <div class="section-warning-content">
+          <span class="section-warning-title">先复制安装暗号</span>
+          第一次打开站点、创建所有者时要填这一项。现在复制，或从下面的 .env 找 <code>MYRIAD_SETUP_SECRET</code>。
+          <div class="setup-secret-reminder-row">
+            <code id="setup-secret-reminder-value"></code>
+            <button type="button" id="copy-setup-secret-result" class="btn-copy-field">复制暗号</button>
+          </div>
+        </div>
+      </div>
 
       <!-- Docker Compose -->
       <div class="result-card">
