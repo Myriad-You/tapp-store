@@ -9,8 +9,6 @@
 | Myriad 权威文档 | [Tapp 商店](https://github.com/Myriad-You/Myriad/blob/preview/docs/development/tapp/STORE.md) · [Tapp 开发索引](https://github.com/Myriad-You/Myriad/blob/preview/docs/development/TAPP_DEVELOPMENT.md) |
 
 > **开发/运行时契约以 Myriad 主仓库为准。** 本仓库的 `development/` 为面向商店贡献者的镜像与摘要，可能滞后；冲突时以 Myriad `docs/development/tapp/` 为准。
->
-> 新 3D 包请声明 `runtimeModules: ["three"]`，不要把 Three 打进商店包。新联机包用 `Tapp.game`（`game:session` + 联邦权限）。已上架的五子棋 / 斗地主仍走普通房间自定义 `message_type`，在未声明 `game` 时保持兼容。
 
 ## 在 Myriad 中使用
 
