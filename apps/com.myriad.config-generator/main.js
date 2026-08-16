@@ -524,7 +524,7 @@ COSIGN_VERIFY={{COSIGN_VERIFY}}
 MYRIAD_DB_MODE={{MYRIAD_DB_MODE}}
 {{POSTGRES_ENV_BLOCK}}DATABASE_URL={{DATABASE_URL}}
 JWT_SECRET={{JWT_SECRET}}
-# First-owner claim passphrase. Required by /api/setup/create-admin.
+# First-owner claim passphrase. The setup wizard asks for this when creating the site owner.
 MYRIAD_SETUP_SECRET={{MYRIAD_SETUP_SECRET}}
 
 CORS_ORIGINS={{CORS_ORIGINS}}
