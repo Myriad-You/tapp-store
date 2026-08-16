@@ -31,6 +31,7 @@ assert.match(main, /isValidMemoryLimit/)
 assert.match(main, /isValidPgMajor/)
 assert.match(main, /parseImageRef/)
 assert.match(main, /nginx -t/)
+assert.match(main, /MYRIAD_SETUP_SECRET/)
 assert.doesNotMatch(main, /await Promise\.all\(\s*\[\s*fetchDockerHubTags/)
 
 // Extract pure helpers by executing a slice of main.js (no DOM / Tapp)
@@ -83,6 +84,7 @@ const injected =
   'UPDATE_TOKEN=' + goodSecret + '\nPROXY_ALLOW_DIRECT_UPDATER=true\n' +
   'UPDATER_GATEWAY_SECRET=' + goodSecret + '\n' +
   'JWT_SECRET=' + goodSecret + '\n' +
+  'MYRIAD_SETUP_SECRET=' + goodSecret + '\n' +
   'PROXY_ALLOW_DIRECT_UPDATER=false\n' +
   'MYRIAD_TAG=v1.0.0\nPROXY_TAG=v1.0.0\nUPDATER_TAG=v1.0.0\n' +
   'BACKEND_IMAGE=x\nFRONTEND_IMAGE=x\nCOMPOSE_PROJECT_NAME=myriad\n' +
@@ -95,7 +97,8 @@ assert.throws(
   () => h.validateGeneratedEnv(injected, {
     JWT_SECRET: goodSecret,
     UPDATE_TOKEN: goodSecret,
-    UPDATER_GATEWAY_SECRET: goodSecret
+    UPDATER_GATEWAY_SECRET: goodSecret,
+    MYRIAD_SETUP_SECRET: goodSecret
   }, { bundled: false }),
   /PROXY_ALLOW_DIRECT_UPDATER|重复/
 )
@@ -131,6 +134,7 @@ function buildCleanEnv(secrets, bundled) {
   lines.push(
     'DATABASE_URL=postgres://myriad:x@postgres:5432/myriad',
     'JWT_SECRET=' + secrets.JWT_SECRET,
+    'MYRIAD_SETUP_SECRET=' + secrets.MYRIAD_SETUP_SECRET,
     'CORS_ORIGINS=https://example.com',
     'BASE_URL=https://example.com',
     'FRONTEND_URL=https://example.com'
@@ -142,6 +146,7 @@ const secrets = {
   JWT_SECRET: 'J'.repeat(40),
   UPDATE_TOKEN: 'U'.repeat(40),
   UPDATER_GATEWAY_SECRET: 'G'.repeat(40),
+  MYRIAD_SETUP_SECRET: 'S'.repeat(40),
   POSTGRES_PASSWORD: 'P'.repeat(40)
 }
 const clean = buildCleanEnv(secrets, true)

@@ -1,0 +1,13 @@
+{
+  "kicker": "公式サンプル",
+  "title": "Three ラボ",
+  "subtitle": "パッケージ内のテクスチャと GLB。CDN なし。ページを離れるとループを止めます。",
+  "spin": "回転を止める",
+  "spinPause": "回転を止める",
+  "spinResume": "回転を再開",
+  "fullscreen": "全画面",
+  "ready": "テクスチャと GLB はどちらも Tapp.assets からです",
+  "failed": "シーンを読み込めませんでした。assets の宣言と CDN 未使用を確認してください。",
+  "missingCanvas": "キャンバスが見つかりません",
+  "contextLost": "WebGL コンテキストが失われました"
+}

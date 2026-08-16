@@ -178,7 +178,8 @@ const allSettings = await Tapp.settings.getAll();
   storage API 读写。
 - 不要在 settings 里存放密钥或仅管理员应知的敏感串：凡能打开该公开安装的 visitor 均可读。
 - 公开 Tapp 需要代站主调用第三方 API 时，在 Manifest 使用顶层 `credentials` 和
-  `apis.*.credential` 固定 HTTPS 请求头绑定。凭据只有安装管理界面的写入/删除/状态接口，
+  `apis.*.credential`。放置方式为 `header` / `query` / `form` / `sign`（互斥）；
+  旧清单的 `{header, prefix}` 仍视为请求头绑定。凭据只有安装管理界面的写入/删除/状态接口，
   不进入 `Tapp.settings`、模板上下文或任何沙箱读取 API。
 
 ---
@@ -1492,10 +1493,13 @@ const declaredApis = await Tapp.api.list();
   `form` 字段顺序不属于契约；需要固定顺序或按最终字节签名时应使用 `raw`。
 - Tapp 不能传入任意 URL，也不能使用历史文档中的 `Tapp.http.request()`。
 - 安装级第三方 Key 使用 Manifest `credentials` + `apis.*.credential`；SDK 只能执行绑定的具名
-  API，不能读取凭据。声明、固定 HTTPS origin、请求头和重新授权规则见
+  API，不能读取凭据。放置方式为 `header` / `query` / `form` / `sign`（互斥）。声明、固定
+  HTTPS origin 和重新授权规则见
   [Manifest · 安装级 API 凭据](MANIFEST.md#安装级-api-凭据-credentials)。
 - 详细 Manifest 字段和 REST 链路见 [Manifest](MANIFEST.md#api-声明-apis) 与
   [REST API](REST_API.md#manifest-声明-api)。
+- 给其他程序挂稳定 URL 时使用 `apis.*.route`（必须 HMAC）。沙箱不要自己拼 `/tapi`；
+  见 [入站路由](MANIFEST.md#入站路由-apisroute) 与 [REST API · 入站声明路由](REST_API.md#入站声明路由)。
 
 ## 文件与语音 API
 
@@ -1526,20 +1530,29 @@ const text = await Tapp.speech.asr({ audio }); // speech:asr
 
 **权限**: public（仅可读本安装 `manifest.assets` 声明路径）
 
-用于游戏贴图、音频、wasm、关卡 JSON 等包内静态文件。不走 `Tapp.storage`。
+用于游戏贴图、音频、wasm、glTF/GLB、关卡 JSON 等包内静态文件。不走 `Tapp.storage`。
+Three.js 等引擎库不能放在 `assets/`（禁止 `.js`），应打成 IIFE 放进 `pageModules`。
 
 ```javascript
 const paths = await Tapp.assets.list();
 
-// 在沙箱内创建 blob URL（可赋给 Image / Audio）
+// 在沙箱内创建 blob URL（可赋给 Image / Audio / Loader）
 const { url, mimeType, size } = await Tapp.assets.getUrl("assets/sprite.png");
 
 // 需要二进制时
 const { buffer, mimeType: mt } = await Tapp.assets.getArrayBuffer("assets/level.json");
 
+// 一次缓存全部声明资源，供 Three LoadingManager.setURLModifier
+const urls = await Tapp.assets.getUrlMap();
+manager.setURLModifier((href) => Tapp.assets.rewriteUrl(href));
+
 Tapp.assets.revoke(url);
 Tapp.assets.revokeAll(); // 也会在 onDestroy 时自动调用
 ```
+
+`rewriteUrl` / `resolve` 只接受已声明的 `assets/` 路径（或能唯一对应到其中一项的
+文件名）。`fetch` 仅允许 `blob:` / `data:`，不能用来拉 CDN。完整约定见
+[图形与轻量游戏](GRAPHICS.md)。
 
 后端入口：`GET /api/tapps/{tappId}/asset?path=assets/...`（返回 base64）。
 约定与配额见 [图形与轻量游戏](GRAPHICS.md)。

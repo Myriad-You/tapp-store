@@ -3,7 +3,7 @@
 //
 // Manifest is the authority for install-critical fields (id/name/version/
 // description/locales/author/category/permissions/icons/theme/download map).
-// Store-only merchandising (long_description, tags, featured, preview, ...) is
+// Store-only merchandising (long_description, tags, featured, preview, locales, ...) is
 // loaded from apps/<id>/catalog.json when present, else preserved from the
 // previous index entry, or bootstrapped for new apps.
 //
@@ -378,6 +378,50 @@ function loadManifest(appId) {
  * Optional per-app merchandising file. Contributors edit this instead of index.json.
  * Paths in preview may be app-relative (preview.html) or repo-relative (apps/id/...).
  */
+function normalizeCatalogPreview(appId, preview) {
+  if (!preview || typeof preview !== 'object' || Array.isArray(preview)) return preview
+  const fix = (path) => {
+    if (typeof path !== 'string') return path
+    if (path.startsWith('apps/')) return path
+    return packageRel(appId, path.replace(/^\.\//, ''))
+  }
+  const next = { ...preview }
+  if (next.html) next.html = fix(next.html)
+  if (Array.isArray(next.styles)) next.styles = next.styles.map(fix)
+  return next
+}
+
+function mergeStoreLocales(manifestLocales, catalogLocales, appId, manifest) {
+  const fromManifest = cleanLocales(manifestLocales) || {}
+  const catalog =
+    catalogLocales && typeof catalogLocales === 'object' && !Array.isArray(catalogLocales)
+      ? catalogLocales
+      : {}
+  const tags = [...Object.keys(fromManifest)]
+  for (const tag of Object.keys(catalog)) {
+    if (!tags.includes(tag)) tags.push(tag)
+  }
+  const out = {}
+  for (const tag of tags) {
+    const entry = { ...(fromManifest[tag] || {}) }
+    const extra = catalog[tag]
+    if (extra && typeof extra === 'object' && !Array.isArray(extra)) {
+      if (typeof extra.long_description === 'string' && extra.long_description.trim()) {
+        entry.long_description = extra.long_description
+      }
+      if (extra.preview) {
+        entry.preview = sanitizePreview(
+          appId,
+          normalizeCatalogPreview(appId, extra.preview),
+          manifest,
+        )
+      }
+    }
+    if (Object.keys(entry).length) out[tag] = entry
+  }
+  return Object.keys(out).length ? out : undefined
+}
+
 function loadCatalogMeta(appId) {
   const path = join(appsDir, appId, 'catalog.json')
   if (!existsSync(path)) return null
@@ -390,17 +434,17 @@ function loadCatalogMeta(appId) {
   delete meta.securityReview
   delete meta.security_review
 
-  if (meta.preview && typeof meta.preview === 'object') {
-    const fix = (p) => {
-      if (typeof p !== 'string') return p
-      if (p.startsWith('apps/')) return p
-      return packageRel(appId, p.replace(/^\.\//, ''))
+  if (meta.preview) meta.preview = normalizeCatalogPreview(appId, meta.preview)
+  if (meta.locales && typeof meta.locales === 'object' && !Array.isArray(meta.locales)) {
+    const locales = {}
+    for (const [tag, entry] of Object.entries(meta.locales)) {
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue
+      locales[tag] = { ...entry }
+      if (locales[tag].preview) {
+        locales[tag].preview = normalizeCatalogPreview(appId, locales[tag].preview)
+      }
     }
-    meta.preview = { ...meta.preview }
-    if (meta.preview.html) meta.preview.html = fix(meta.preview.html)
-    if (Array.isArray(meta.preview.styles)) {
-      meta.preview.styles = meta.preview.styles.map(fix)
-    }
+    meta.locales = locales
   }
   return meta
 }
@@ -467,10 +511,11 @@ function buildAlignedEntry(appId, previous = null) {
     description: manifest.description || '',
   }
 
-  const locales = cleanLocales(manifest.locales)
-  if (locales) entry.locales = locales
-
   applyMerchandising(entry, previous, catalog, appId, manifest, now)
+
+  const locales = mergeStoreLocales(manifest.locales, catalog?.locales, appId, manifest)
+  if (locales) entry.locales = locales
+  else delete entry.locales
 
   entry.author = cleanAuthor(manifest.author)
   if (manifest.license && !entry.license) entry.license = manifest.license

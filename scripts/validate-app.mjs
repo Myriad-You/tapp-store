@@ -64,6 +64,7 @@ const CATALOG_ALLOWED_KEYS = new Set([
   'icon_shell',
   'screenshots',
   'preview',
+  'locales',
   'featured',
   'verified',
   'license',
@@ -72,6 +73,11 @@ const CATALOG_ALLOWED_KEYS = new Set([
   'securityReview',
   'security_review',
 ])
+
+const CATALOG_LOCALE_KEYS = new Set(['long_description', 'preview'])
+const LOCALE_TAG = /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{1,8})*$/
+const MAX_CATALOG_LOCALES = 32
+const MAX_LONG_DESCRIPTION = 20000
 
 const JUNK_NAME = /^(?:\.DS_Store|Thumbs\.db|\.env.*)$/i
 const MAX_PACKAGE_BYTES = 50 * 1024 * 1024 // 50 MiB hard
@@ -126,6 +132,44 @@ function isOfficial(appId) {
   return appId === 'com.myriad' || appId.startsWith('com.myriad.')
 }
 
+function validateCatalogLocales(appId, locales, errors) {
+  if (!locales || typeof locales !== 'object' || Array.isArray(locales)) {
+    errors.push(`${appId}: catalog.locales must be an object`)
+    return
+  }
+  const tags = Object.keys(locales)
+  if (tags.length > MAX_CATALOG_LOCALES) {
+    errors.push(`${appId}: catalog.locales accepts at most ${MAX_CATALOG_LOCALES} languages`)
+  }
+  for (const [tag, entry] of Object.entries(locales)) {
+    if (!LOCALE_TAG.test(tag)) {
+      errors.push(`${appId}: catalog.locales key "${tag}" must be a BCP-47 tag (e.g. zh-CN)`)
+    }
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+      errors.push(`${appId}: catalog.locales.${tag} must be an object`)
+      continue
+    }
+    for (const key of Object.keys(entry)) {
+      if (!CATALOG_LOCALE_KEYS.has(key)) {
+        errors.push(
+          `${appId}: catalog.locales.${tag} unknown key "${key}" (name/description belong in manifest.locales)`,
+        )
+      }
+    }
+    if (entry.long_description !== undefined && typeof entry.long_description !== 'string') {
+      errors.push(`${appId}: catalog.locales.${tag}.long_description must be a string`)
+    }
+    if (entry.long_description && entry.long_description.length > MAX_LONG_DESCRIPTION) {
+      errors.push(
+        `${appId}: catalog.locales.${tag}.long_description too long (max ${MAX_LONG_DESCRIPTION})`,
+      )
+    }
+    if (entry.preview != null && (typeof entry.preview !== 'object' || Array.isArray(entry.preview))) {
+      errors.push(`${appId}: catalog.locales.${tag}.preview must be an object`)
+    }
+  }
+}
+
 function validateCatalogJson(appId, catalog, errors, warnings) {
   if (!catalog || typeof catalog !== 'object' || Array.isArray(catalog)) {
     errors.push(`${appId}: catalog.json must be a JSON object`)
@@ -146,8 +190,11 @@ function validateCatalogJson(appId, catalog, errors, warnings) {
   if (catalog.long_description !== undefined && typeof catalog.long_description !== 'string') {
     errors.push(`${appId}: catalog.long_description must be a string`)
   }
-  if (catalog.long_description && catalog.long_description.length > 20000) {
-    errors.push(`${appId}: catalog.long_description too long (max 20000)`)
+  if (catalog.long_description && catalog.long_description.length > MAX_LONG_DESCRIPTION) {
+    errors.push(`${appId}: catalog.long_description too long (max ${MAX_LONG_DESCRIPTION})`)
+  }
+  if (catalog.locales !== undefined) {
+    validateCatalogLocales(appId, catalog.locales, errors)
   }
   for (const flag of ['featured', 'verified', 'icon_shell', 'securityReview', 'security_review']) {
     if (catalog[flag] !== undefined && typeof catalog[flag] !== 'boolean') {

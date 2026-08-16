@@ -1,7 +1,7 @@
 {
   "id": "com.myriad.config-generator",
   "name": "Myriad 安装配置生成",
-  "version": "1.0.1",
+  "version": "1.0.4",
   "minSystemVersion": "0.2.1",
   "description": "生成 Compose、.env 与 Nginx 部署配置（1Panel / 宝塔 / CLI · 整站反代 + 联邦）",
   "locales": {

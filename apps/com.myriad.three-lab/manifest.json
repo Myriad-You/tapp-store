@@ -1,0 +1,30 @@
+{
+  "id": "com.myriad.three-lab",
+  "name": "Three 实验室",
+  "version": "1.0.2",
+  "minSystemVersion": "0.3.29",
+  "description": "官方 Three.js 示例：包内贴图与 GLB、pause 停帧、销毁时释放 WebGL",
+  "locales": {
+    "en-US": {
+      "name": "Three Lab",
+      "description": "Official Three.js sample: packaged textures and GLB, paused frames, WebGL dispose"
+    },
+    "ja-JP": {
+      "name": "Three ラボ",
+      "description": "公式 Three.js サンプル。パッケージ内テクスチャと GLB、一時停止、破棄時の解放"
+    }
+  },
+  "category": "developer",
+  "runtimeModules": ["three"],
+  "main": "main.js",
+  "author": { "name": "Myriad Team", "url": "https://github.com/Myriad-You" },
+  "permissions": ["ui:theme", "ui:fullscreen"],
+  "iconSvg": "<svg viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 3 4 7.5v9L12 21l8-4.5v-9L12 3Z\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\"/><path d=\"M12 12 4 7.5M12 12v9M12 12l8-4.5\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\"/></svg>",
+  "themeColor": "#6366f1",
+  "hasPage": true,
+  "cssMode": "separated",
+  "pageStyles": "page.css",
+  "pageTemplate": "page.html",
+  "pageModules": ["scene.js"],
+  "assets": ["assets/check.png", "assets/cube.glb"]
+}

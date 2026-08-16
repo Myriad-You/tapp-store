@@ -8,11 +8,11 @@
 | 文档 | 说明 |
 | ---- | ---- |
 | [架构总览](tapp/ARCHITECTURE.md) | 安装态、运行态、列表布局、私有安装清理、沙箱与调度器 |
-| [Tapp 商店](tapp/STORE.md) | 远程目录 `index.json`、源管理、安装链路、`icon_shell` 与发布 |
+| [Tapp 商店](tapp/STORE.md) | 远程目录 `index.json`、源管理、安装链路、商店索引 UI 字段（如 `icon_shell`）与发布 |
 | [Tapp Playground](tapp/PLAYGROUND.md) | Pro AI 双模式（Page / Widget-only）生成、预览、导出与安装边界 |
 | [Playground 生成上下文](tapp/PLAYGROUND_GENERATION_CONTEXT.md) | 注入模型的开发上下文与能力边界 |
 | [快速入门](tapp/QUICKSTART.md) | CLI 创建/校验/打包，代码架构，生命周期 |
-| [Manifest 配置](tapp/MANIFEST.md) | 完整的 manifest.json 配置参考（含 `iconShell`、`analytics:read`） |
+| [Manifest 配置](tapp/MANIFEST.md) | 完整的可安装 `manifest.json` 配置参考（含 `analytics:read` 等权限） |
 | [SDK API 参考](tapp/API_REFERENCE.md) | 所有 Tapp SDK API（含 `Tapp.analytics`） |
 | [小组件开发](tapp/WIDGET.md) | Widget 开发指南、尺寸适配、样式规范 |
 | [页面样式规范](tapp/PAGE.md) | Page 布局、深色模式与 i18n |

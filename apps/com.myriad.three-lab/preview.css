@@ -1,0 +1,40 @@
+:root { --tapp-primary: #6366f1; }
+body { padding: 0 !important; background: #0a0a0a; }
+*, *::before, *::after { animation: none !important; }
+button { pointer-events: none !important; }
+
+.preview-app { padding-top: 36px; }
+.preview-stage { min-height: 520px; }
+.preview-scene {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  perspective: 900px;
+}
+.preview-cube {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  transform-style: preserve-3d;
+  transform: rotateX(-18deg) rotateY(28deg);
+}
+.preview-cube.textured { transform: translateX(-110px) rotateX(-18deg) rotateY(32deg); }
+.preview-cube.solid { transform: translateX(110px) rotateX(-18deg) rotateY(-18deg); }
+.preview-cube::before,
+.preview-cube::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+}
+.preview-cube.textured::before {
+  background:
+    linear-gradient(#0000 49%, #0002 50%),
+    repeating-conic-gradient(#f4f4f5 0% 25%, #4f46e5 0% 50%) 0 0 / 36px 36px;
+  box-shadow: 18px 22px 0 #312e81;
+}
+.preview-cube.solid::before {
+  background: linear-gradient(145deg, #818cf8, #4338ca);
+  box-shadow: 18px 22px 0 #1e1b4b;
+}

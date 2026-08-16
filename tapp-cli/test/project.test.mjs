@@ -198,6 +198,25 @@ describe('Tapp project core', () => {
     assert.ok(report.permissions.missing.some(({ permission }) => permission === 'storage'))
   })
 
+  it('warns when page HTML or JS loads an engine from a CDN', async () => {
+    const root = await temporaryDirectory('remote-engine')
+    await createProject(root, { type: 'page' })
+    await writeFile(
+      join(root, 'page.html'),
+      '<canvas id="scene"></canvas>\n<script src="https://unpkg.com/three@0.170.0/build/three.min.js"></script>\n',
+    )
+    await writeFile(
+      join(root, 'main.js'),
+      `import * as THREE from 'https://esm.sh/three'\n`,
+    )
+
+    const report = await inspectProject(root)
+    const remote = report.diagnostics.filter(({ code }) => code === 'remote-engine-script')
+    assert.ok(remote.some((item) => item.file === 'page.html'))
+    assert.ok(remote.some((item) => item.file === 'main.js'))
+    assert.equal(remote.every((item) => item.severity === 'warning'), true)
+  })
+
   it('uses the TypeScript AST for calls without matching comments or strings', async () => {
     const root = await temporaryDirectory('ast-analysis')
     await createProject(root, { type: 'page' })
@@ -466,6 +485,116 @@ Tapp.storage.get(key)
     )
   })
 
+  it('accepts signed-body and query credential placements', async () => {
+    const root = await temporaryDirectory('api-credential-placements')
+    await createProject(root, { type: 'page' })
+    const manifestPath = join(root, 'manifest.json')
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+    manifest.permissions.push('network:fetch')
+    manifest.settings = [{ key: 'userId', label: 'Creator ID', type: 'input' }]
+    manifest.credentials = [
+      { key: 'afdianToken', label: 'Afdian token' },
+      { key: 'owm', label: 'OpenWeather key' },
+    ]
+    manifest.apis = {
+      sponsors: {
+        type: 'http',
+        access: 'public',
+        method: 'POST',
+        endpoint: 'https://afdian.com/api/open/query-sponsor',
+        body: {
+          user_id: '{{settings.userId}}',
+          params: '{"page":1,"per_page":20}',
+        },
+        credential: {
+          key: 'afdianToken',
+          in: 'sign',
+          field: 'sign',
+          sign: {
+            alg: 'md5-sorted-kv',
+            over: ['params', 'ts', 'user_id'],
+            timestampField: 'ts',
+          },
+        },
+      },
+      weather: {
+        type: 'http',
+        endpoint: 'https://api.openweathermap.org/data/2.5/weather?q={{params.city}}',
+        credential: { key: 'owm', in: 'query', field: 'appid' },
+      },
+    }
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
+
+    const report = await inspectProject(root)
+    assert.deepEqual(
+      report.diagnostics.filter(({ code }) => code.includes('credential')),
+      [],
+    )
+  })
+
+  it('rejects signed credentials on GET and object over fields', async () => {
+    const root = await temporaryDirectory('api-credential-sign-shape')
+    await createProject(root, { type: 'page' })
+    const manifestPath = join(root, 'manifest.json')
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+    manifest.permissions.push('network:fetch')
+    manifest.credentials = [{ key: 'afdianToken', label: 'Afdian token' }]
+    manifest.apis = {
+      sponsors: {
+        type: 'http',
+        endpoint: 'https://afdian.com/api/open/query-sponsor',
+        body: {
+          user_id: 'abc',
+          params: { page: 1 },
+        },
+        credential: {
+          key: 'afdianToken',
+          in: 'sign',
+          field: 'sign',
+          sign: {
+            alg: 'md5-sorted-kv',
+            over: ['params', 'user_id'],
+          },
+        },
+      },
+    }
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
+
+    const report = await inspectProject(root)
+    const messages = report.diagnostics
+      .filter(({ code }) => code.includes('credential'))
+      .map(({ message }) => message)
+      .join('\n')
+    assert.match(messages, /signed credentials require one of/)
+    assert.match(messages, /must be a scalar/)
+  })
+
+  it('rejects form credentials on GET and without an object body', async () => {
+    const root = await temporaryDirectory('api-credential-form-shape')
+    await createProject(root, { type: 'page' })
+    const manifestPath = join(root, 'manifest.json')
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+    manifest.permissions.push('network:fetch')
+    manifest.credentials = [{ key: 'wegame', label: 'WeGame API Key' }]
+    manifest.apis = {
+      games: {
+        type: 'http',
+        endpoint: 'https://api.example.com/submit',
+        bodyMode: 'form',
+        credential: { key: 'wegame', in: 'form', field: 'token' },
+      },
+    }
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
+
+    const report = await inspectProject(root)
+    const messages = report.diagnostics
+      .filter(({ code }) => code.includes('credential'))
+      .map(({ message }) => message)
+      .join('\n')
+    assert.match(messages, /form credentials require one of/)
+    assert.match(messages, /form credentials require a form object body/)
+  })
+
   it('rejects credential bindings with a templated destination host', async () => {
     const root = await temporaryDirectory('api-credential-host')
     await createProject(root, { type: 'page' })
@@ -561,6 +690,175 @@ Tapp.storage.get(key)
     assert.match(messages, /credential header is invalid or forbidden/)
     assert.match(messages, /credential prefix is invalid/)
     assert.match(messages, /Credential unused must be bound/)
+  })
+
+  it('accepts a signed inbound /tapi route bound to a write-only credential', async () => {
+    const root = await temporaryDirectory('inbound-route-valid')
+    await createProject(root, { type: 'page' })
+    const manifestPath = join(root, 'manifest.json')
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+    manifest.permissions.push('network:fetch')
+    manifest.credentials = [{ key: 'hookSecret', label: 'Hook HMAC' }]
+    manifest.apis = {
+      hook: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/hook',
+          methods: ['POST'],
+          verify: {
+            key: 'hookSecret',
+            alg: 'hmac-sha256-raw',
+            header: 'X-Signature',
+            over: 'raw-body',
+            timestampHeader: 'X-Timestamp',
+            nonceHeader: 'X-Nonce',
+          },
+        },
+      },
+    }
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
+
+    const report = await inspectProject(root)
+    assert.deepEqual(
+      report.diagnostics.filter(({ code }) => code === 'invalid-api-route' || code.includes('credential')),
+      [],
+    )
+  })
+
+  it('rejects inbound route access, path, header, over, and credential mistakes', async () => {
+    const root = await temporaryDirectory('inbound-route-invalid')
+    await createProject(root, { type: 'page' })
+    const manifestPath = join(root, 'manifest.json')
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+    manifest.permissions.push('network:fetch')
+    manifest.credentials = [{ key: 'hookSecret', label: 'Hook HMAC' }]
+    const verify = {
+      key: 'hookSecret',
+      alg: 'hmac-sha256-raw',
+      header: 'X-Signature',
+      over: 'raw-body',
+      timestampHeader: 'X-Timestamp',
+      nonceHeader: 'X-Nonce',
+    }
+    manifest.apis = {
+      privateHook: {
+        type: 'http',
+        access: 'protected',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: { path: '/private', methods: ['POST'], verify },
+      },
+      firstDup: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: { path: '/dup', methods: ['POST'], verify },
+      },
+      secondDup: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: { path: '/dup', methods: ['POST'], verify },
+      },
+      lowercaseHeader: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/lower',
+          methods: ['POST'],
+          verify: { ...verify, header: 'x-signature' },
+        },
+      },
+      reservedHeader: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/reserved',
+          methods: ['POST'],
+          verify: { ...verify, header: 'X-Forwarded-For' },
+        },
+      },
+      duplicateHeaders: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/same-headers',
+          methods: ['POST'],
+          verify: { ...verify, timestampHeader: 'X-Signature' },
+        },
+      },
+      badOver: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/bad-over',
+          methods: ['POST'],
+          verify: { ...verify, over: 'unsigned' },
+        },
+      },
+      overMethodMismatch: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'GET',
+        route: {
+          path: '/query-post',
+          methods: ['GET', 'POST'],
+          verify: { ...verify, over: 'canonical-query' },
+        },
+      },
+      missingOver: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/missing-over',
+          methods: ['POST'],
+          verify: { ...verify, over: undefined },
+        },
+      },
+      missingCred: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/missing',
+          methods: ['POST'],
+          verify: { ...verify, key: 'missing' },
+        },
+      },
+    }
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
+
+    const report = await inspectProject(root)
+    const messages = report.diagnostics
+      .filter(({ code }) => code === 'invalid-api-route')
+      .map(({ message }) => message)
+      .join('\n')
+    assert.match(messages, /privateHook inbound route requires access public/)
+    assert.match(messages, /secondDup inbound path \/dup is duplicated/)
+    assert.match(messages, /lowercaseHeader inbound verify headers are invalid/)
+    assert.match(messages, /reservedHeader inbound verify headers are invalid/)
+    assert.match(messages, /duplicateHeaders inbound verify headers must be distinct/)
+    assert.match(messages, /badOver inbound verify\.over must be one of/)
+    assert.match(messages, /missingOver inbound verify\.over must be one of/)
+    assert.match(messages, /overMethodMismatch canonical-query verify requires GET-only methods/)
+    assert.match(messages, /missingCred inbound route references an undeclared credential/)
   })
 
   it('rejects invalid declared API body mode shapes', async () => {

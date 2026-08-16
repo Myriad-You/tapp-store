@@ -281,6 +281,7 @@ services:
       DATA_DIR: /app/data
       CACHE_DIR: /app/cache
       JWT_SECRET: \${JWT_SECRET}
+      MYRIAD_SETUP_SECRET: \${MYRIAD_SETUP_SECRET}
       TRUST_PROXY_HEADERS: "true"
       CORS_ORIGINS: \${CORS_ORIGINS:-http://localhost}
       CSP_CONNECT_SRC: \${CSP_CONNECT_SRC:-'self' https:}
@@ -523,6 +524,8 @@ COSIGN_VERIFY={{COSIGN_VERIFY}}
 MYRIAD_DB_MODE={{MYRIAD_DB_MODE}}
 {{POSTGRES_ENV_BLOCK}}DATABASE_URL={{DATABASE_URL}}
 JWT_SECRET={{JWT_SECRET}}
+# First-owner claim passphrase. The setup wizard asks for this when creating the site owner.
+MYRIAD_SETUP_SECRET={{MYRIAD_SETUP_SECRET}}
 
 CORS_ORIGINS={{CORS_ORIGINS}}
 # BASE_URL / FRONTEND_URL = public HTTPS origin (required for federation Actor URLs)
@@ -680,6 +683,8 @@ docker compose pull && docker compose up -d
 
 \`backend-volume-init\` 会在 backend 启动前修复持久卷权限；无需手工 chown。
 
+首次打开站点会进入安装向导。创建所有者时必须填写 **安装暗号**（\`.env\` 里的 \`MYRIAD_SETUP_SECRET\`）。能读到这份配置的人才能当站长。
+
 可选：\`scripts/docker/deploy.sh up\`（含环境初始化与部署检查）。
 
 ## HTTPS
@@ -764,6 +769,10 @@ function generatePassword() {
   return generateSecret(40);
 }
 
+function generateSetupSecret() {
+  return generateSecret(48);
+}
+
 // ========================================
 // 安全：dotenv token / 内存 / PG / 上传限制
 // ========================================
@@ -781,7 +790,7 @@ var EXPECTED_ENV_KEYS_BASE = [
   'UPDATE_MODE', 'MYRIAD_GITHUB_REPO', 'CHECK_INTERVAL_SECS',
   'HTTP_BIND_ADDRESS', 'HTTP_PORT', 'PROXY_ALLOW_DIRECT_UPDATER',
   'COSIGN_VERIFY', 'MYRIAD_DB_MODE', 'DATABASE_URL', 'JWT_SECRET',
-  'CORS_ORIGINS', 'BASE_URL', 'FRONTEND_URL'
+  'MYRIAD_SETUP_SECRET', 'CORS_ORIGINS', 'BASE_URL', 'FRONTEND_URL'
 ];
 
 function isSafeDotenvToken(value) {
@@ -841,7 +850,7 @@ function parseDotenvStrict(text) {
 function validateGeneratedEnv(envText, secrets, opts) {
   opts = opts || {};
   var parsed = parseDotenvStrict(envText);
-  var requiredSecrets = ['JWT_SECRET', 'UPDATE_TOKEN', 'UPDATER_GATEWAY_SECRET'];
+  var requiredSecrets = ['JWT_SECRET', 'UPDATE_TOKEN', 'UPDATER_GATEWAY_SECRET', 'MYRIAD_SETUP_SECRET'];
   for (var i = 0; i < requiredSecrets.length; i++) {
     var k = requiredSecrets[i];
     if (parsed.map[k] !== secrets[k]) {
@@ -1595,6 +1604,7 @@ var state = {
   jwtSecret: '',
   updateToken: '',
   updaterGatewaySecret: '',
+  setupSecret: '',
   nginxConfig: null,
   nginxFileName: '',
   extraNginxConfig: null,
@@ -1664,6 +1674,7 @@ function initPage() {
   var jwtSecretInput = document.getElementById('jwt-secret');
   var updateTokenInput = document.getElementById('update-token');
   var gatewaySecretInput = document.getElementById('updater-gateway-secret');
+  var setupSecretInput = document.getElementById('setup-secret');
   var dbNameInput = document.getElementById('db-name');
   var dbUserInput = document.getElementById('db-user');
   var dbHostInput = document.getElementById('db-host');
@@ -1678,6 +1689,7 @@ function initPage() {
   var genJwtSecretBtn = document.getElementById('gen-jwt-secret');
   var genUpdateTokenBtn = document.getElementById('gen-update-token');
   var genGatewaySecretBtn = document.getElementById('gen-updater-gateway-secret');
+  var genSetupSecretBtn = document.getElementById('gen-setup-secret');
   var generateAllBtn = document.getElementById('btn-generate-all');
 
   var uploadNginx = document.getElementById('upload-nginx-conf');
@@ -1806,6 +1818,38 @@ function initPage() {
     });
   }
 
+  if (genSetupSecretBtn && setupSecretInput) {
+    pageListen(genSetupSecretBtn, 'click', function() {
+      setupSecretInput.value = generateSetupSecret();
+      animateButton(genSetupSecretBtn);
+    });
+  }
+
+  var copySetupSecretBtn = document.getElementById('copy-setup-secret');
+  if (copySetupSecretBtn && setupSecretInput) {
+    pageListen(copySetupSecretBtn, 'click', function() {
+      var value = setupSecretInput.value.trim();
+      if (!value) {
+        showNotification('还没有安装暗号，先点生成', 'error');
+        return;
+      }
+      copyToClipboard(value, copySetupSecretBtn);
+    });
+  }
+
+  var copySetupSecretResultBtn = document.getElementById('copy-setup-secret-result');
+  if (copySetupSecretResultBtn) {
+    pageListen(copySetupSecretResultBtn, 'click', function() {
+      var node = document.getElementById('setup-secret-reminder-value');
+      var value = ((node && node.textContent) || state.setupSecret || '').trim();
+      if (!value) {
+        showNotification('还没有安装暗号', 'error');
+        return;
+      }
+      copyToClipboard(value, copySetupSecretResultBtn);
+    });
+  }
+
   if (refreshTagsBtn) {
     pageListen(refreshTagsBtn, 'click', function() {
       // 用户明确刷新：覆盖自动/当前值为最新
@@ -1844,6 +1888,7 @@ function initPage() {
       var jwtSecret = jwtSecretInput.value.trim();
       var updateToken = updateTokenInput.value.trim();
       var gatewaySecret = gatewaySecretInput ? gatewaySecretInput.value.trim() : '';
+      var setupSecret = setupSecretInput ? setupSecretInput.value.trim() : '';
       var dbName = dbNameInput.value.trim();
       var dbUser = dbUserInput.value.trim();
       var dbMode = getSelectedDbMode();
@@ -1944,10 +1989,15 @@ function initPage() {
         gatewaySecret = generateUpdaterGatewaySecret();
         if (gatewaySecretInput) gatewaySecretInput.value = gatewaySecret;
       }
+      if (!setupSecret || setupSecret.length < 32) {
+        setupSecret = generateSetupSecret();
+        if (setupSecretInput) setupSecretInput.value = setupSecret;
+      }
       try {
         requireSafeDotenvToken(jwtSecret, 'JWT_SECRET');
         requireSafeDotenvToken(updateToken, 'UPDATE_TOKEN');
         requireSafeDotenvToken(gatewaySecret, 'UPDATER_GATEWAY_SECRET');
+        requireSafeDotenvToken(setupSecret, 'MYRIAD_SETUP_SECRET');
       } catch (secErr) {
         showNotification(secErr.message, 'error');
         return;
@@ -1959,6 +2009,7 @@ function initPage() {
       state.jwtSecret = jwtSecret;
       state.updateToken = updateToken;
       state.updaterGatewaySecret = gatewaySecret;
+      state.setupSecret = setupSecret;
       state.dbName = dbName;
       state.dbUser = dbUser;
       state.dbMode = dbMode;
@@ -2421,6 +2472,7 @@ function generateConfigs() {
     JWT_SECRET: state.jwtSecret,
     UPDATE_TOKEN: state.updateToken,
     UPDATER_GATEWAY_SECRET: state.updaterGatewaySecret,
+    MYRIAD_SETUP_SECRET: state.setupSecret,
     MAIN_DOMAIN: state.mainDomain,
     EXTRA_DOMAIN: state.extraDomain || '',
     CORS_ORIGINS: corsOrigins,
@@ -2497,6 +2549,7 @@ function generateConfigs() {
     JWT_SECRET: state.jwtSecret,
     UPDATE_TOKEN: state.updateToken,
     UPDATER_GATEWAY_SECRET: state.updaterGatewaySecret,
+    MYRIAD_SETUP_SECRET: state.setupSecret,
     POSTGRES_PASSWORD: isExternal ? undefined : state.dbPassword
   }, { bundled: !isExternal });
 
@@ -2593,11 +2646,18 @@ function generateConfigs() {
     nameExtra.textContent = state.extraDomain + '.conf';
   }
 
+  var reminder = document.getElementById('setup-secret-reminder');
+  var reminderValue = document.getElementById('setup-secret-reminder-value');
+  if (reminder && reminderValue && state.setupSecret) {
+    reminderValue.textContent = state.setupSecret;
+    reminder.hidden = false;
+  }
+
   var resultsSection = document.getElementById('results-section');
   resultsSection.hidden = false;
   resultsSection.scrollIntoView({ behavior: 'smooth' });
 
-  showNotification(panel.successNotify, 'success');
+  showNotification('已生成。请先复制安装暗号，创建所有者时要填。', 'success');
 }
 
 // ========================================

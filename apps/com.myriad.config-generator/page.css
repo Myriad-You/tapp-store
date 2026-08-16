@@ -1081,6 +1081,48 @@ select.form-select:not(.cg-select-native) {
   transform: translateY(0);
 }
 
+.btn-copy-field {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--config-border);
+  border-radius: var(--config-radius-xs);
+  background: var(--config-input-bg);
+  color: var(--config-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--config-transition);
+}
+
+.btn-copy-field:hover {
+  border-color: var(--config-primary);
+  color: var(--config-primary);
+}
+
+.btn-copy-field.copied {
+  border-color: var(--config-primary);
+  color: var(--config-primary);
+}
+
+.setup-secret-reminder-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.setup-secret-reminder-row code {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+
 /* ========================================
    File Upload
    ======================================== */

@@ -1,0 +1,15 @@
+{
+  "name": "com.myriad.three-lab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "assets": "node scripts/generate-assets.mjs",
+    "bundle": "node scripts/bundle.mjs",
+    "build": "npm run assets && npm run bundle",
+    "test": "node --test tests/scene-contract.test.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.9",
+    "three": "0.170.0"
+  }
+}
