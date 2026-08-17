@@ -1,5 +1,5 @@
 {
-  "long_description": "填写域名与数据库参数，按所选面板（1Panel / 宝塔 / 通用 CLI）生成官方生产拓扑的 docker-compose、.env、Nginx 与部署说明。密钥白名单与 .env 再解析防注入；原生表单/通知全自定义；宝塔可粘贴编排或目录部署。",
+  "long_description": "按欢迎 → 面板 → 域名 → 站点 → 数据库 → 限额分步生成官方生产拓扑的 docker-compose、.env、Nginx 与部署说明。先建好网站和 SSL 再丢站点 conf。密钥和镜像版本自动填好，高级选项默认收起。密钥白名单与 .env 再解析防注入；宝塔可粘贴编排或目录部署。",
   "tags": ["配置", "部署", "Docker", "Nginx", "Updater", "1Panel", "宝塔", "工具", "开发者"],
   "featured": true,
   "verified": true,
@@ -18,7 +18,7 @@
   },
   "locales": {
     "en-US": {
-      "long_description": "Enter domain and database settings, then generate official production docker-compose, .env, Nginx, and deploy notes for the selected panel (1Panel / Baota / generic CLI). Secrets are allowlisted and the .env is parsed again to block injection; native forms and notifications are fully custom-drawn. On Baota you can paste compose or deploy from a directory.",
+      "long_description": "A step wizard (welcome, panel, domain, site, database, limits) generates official production docker-compose, .env, Nginx, and deploy notes. Create the site and SSL first, then drop the existing conf. Secrets and image tags are filled in automatically; advanced options stay collapsed. Secrets are allowlisted and the .env is parsed again to block injection. On Baota you can paste compose or deploy from a directory.",
       "preview": {
         "version": 1,
         "type": "snapshot",
@@ -31,7 +31,7 @@
       }
     },
     "ja-JP": {
-      "long_description": "ドメインとデータベースのパラメータを入力し、選択したパネル（1Panel / 宝塔 / 汎用 CLI）向けに公式本番トポロジの docker-compose、.env、Nginx、デプロイ手順を生成します。シークレットはホワイトリスト検証し、.env を再パースしてインジェクションを防ぎます。ネイティブのフォームと通知はすべてカスタム描画です。宝塔では編成の貼り付けまたはディレクトリ配置が可能です。",
+      "long_description": "ようこそ → パネル → ドメイン → サイト → データベース → 上限のステップで、公式本番トポロジの docker-compose、.env、Nginx、デプロイ手順を生成します。先にサイトと SSL を用意し、既存 conf を渡します。シークレットとイメージタグは自動入力、詳細設定は折りたたみです。シークレットはホワイトリスト検証し、.env を再パースしてインジェクションを防ぎます。宝塔では編成の貼り付けまたはディレクトリ配置が可能です。",
       "preview": {
         "version": 1,
         "type": "snapshot",

@@ -4,7 +4,7 @@
 
 ## 版本
 
-`1.0.4`
+`1.1.0`
 
 ## 安全
 
@@ -13,12 +13,16 @@
 - **生成后自检**：对产物再 `parseDotenvStrict`，校验密钥一致、期望键齐全、`PROXY_ALLOW_DIRECT_UPDATER=false` 仅一次。
 - **Nginx 上传**：≤512KB、`.conf`/文本、拒 NUL。
 - **Docker Hub**：`Promise.allSettled`，单仓失败不拖垮；优先四组件共同 versioned tag。
-- **资源边界**：内存 16M–256G；PostgreSQL 主版本 18–20。
+- **资源边界**：内存 16M–256G；PostgreSQL 主版本 18–20。限额「小型」会写入 `MYRIAD_MEMORY_PROFILE=saver`。
+- **内存节约**：`.env` / backend 注入 `MYRIAD_MEMORY_PROFILE`（`saver`|`default`）。选小型档自动打开，高级页可改。
 - **Digest**：tag 可写 `vX.Y.Z@sha256:<64hex>`。
 - 自检脚本：`node apps/com.myriad.config-generator/scripts/security-smoke.mjs`
 
 ## UI
 
+- **分步向导**：铺满宿主窗口。欢迎 → 面板 → 域名 → 站点 → 数据库 → 限额 → 完成。高级可选。每次只问一件事。背景用壁纸主色做淡渐变（沙箱无法真透明，不再套浮卡）。
+- **站点独立一步**：先去面板/服务器创建网站并配好 SSL，再把现成 `.conf` 丢过来；生成时尽量保留证书，改成整站反代。没有文件也能继续，会写默认 conf。
+- **主路径极简**：密钥自动填。限额默认可直接过。完成页先复制安装暗号。
 - **自定义下拉**：`select.form-select` 在运行时增强为 `.cg-select`（自绘 trigger + option 列表），跟随壁纸主色/深色模式；原生 `<select>` 仅作值载体（系统 option 菜单无法主题化）。
 
 ## 面板适配（用户可选）
@@ -101,10 +105,12 @@ curl -sS "https://YOUR_DOMAIN/.well-known/nodeinfo" | head -c 200
 
 ## 用法
 
-1. 选择面板（1Panel / 宝塔 / 通用）  
-2. 填域名 / 数据库（内置或外置），确认密钥  
-3. 可选上传 Nginx 站点配置（会规范为整站反代 + ACME 本地挑战）  
-4. 生成并下载  
+1. 选面板（1Panel / 宝塔 / 命令行）  
+2. 填域名（额外域名可选）  
+3. 先在服务器创建网站并配好 SSL，再把站点 `.conf` 拖进来  
+4. 选数据库（内置或外置；密钥与版本自动填）  
+5. 按机器大小调整 CPU / 内存限额（默认可直接过）  
+6. 生成后先复制安装暗号，再按面板提示拿走文件  
 
 **1Panel：** YAML → 编排，`.env` → 环境变量。  
 **宝塔：** 目录内同时放 compose + `.env` → Docker 容器编排添加项目；网站反向代理目标 `127.0.0.1:HTTP_PORT`，代理 `/`。  

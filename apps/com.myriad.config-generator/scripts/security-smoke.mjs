@@ -122,6 +122,7 @@ function buildCleanEnv(secrets, bundled) {
     'HTTP_PORT=8080',
     'PROXY_ALLOW_DIRECT_UPDATER=false',
     'COSIGN_VERIFY=strict',
+    'MYRIAD_MEMORY_PROFILE=default',
     'MYRIAD_DB_MODE=' + (bundled ? 'bundled' : 'external'),
   ]
   if (bundled) {

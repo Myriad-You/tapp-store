@@ -24,8 +24,14 @@ var PANEL_PROFILES = {
     envBadge: '1Panel 环境变量框 · 勿公开',
     envCopyLabel: '复制到 1Panel',
     composeBadge: '1Panel 编排 · 粘贴 YAML',
-    resultsIntro: '1Panel：docker-compose.yml →「容器 / 编排」；.env →「环境变量」。站点整站反代到 HTTP_BIND:HTTP_PORT。',
-    successNotify: '生成成功：1Panel 将 YAML 粘到「编排」，.env 粘到「环境变量」',
+    wizardHint: '生成后：编排里贴 YAML，环境变量里贴 .env。',
+    siteSteps: [
+      '打开 1Panel → 网站，创建 {domain}',
+      '先申请并开启 SSL',
+      '把站点配置文件拖到下面'
+    ],
+    siteConfPath: '也可在服务器上找网站目录或 OpenResty conf.d 里的 {domain}.conf',
+    resultsIntro: '1Panel：把 docker-compose.yml 贴到「容器 / 编排」，把 .env 贴到「环境变量」。网站整站反代到本机端口。',
     // Baota-specific include patterns not used; 1Panel proxy includes stripped in transform
     proxyIncludeRe: /^[ \t]*include\s+[^;\n]*\/proxy\/\*\.conf\s*;[ \t]*$/gm
   },
@@ -40,8 +46,14 @@ var PANEL_PROFILES = {
     envBadge: '与 compose 同目录 · .env 文件',
     envCopyLabel: '复制 .env',
     composeBadge: '粘贴 YAML 或目录部署',
-    resultsIntro: '宝塔：可「创建编排」粘贴 YAML，或目录内放 compose+.env；内置库务必 chown 70:70 pgdata（见部署说明）。',
-    successNotify: '生成成功：宝塔可粘贴编排或目录部署；内置 Postgres 请先 chown 70:70 pgdata',
+    wizardHint: '生成后：可以粘编排，也可以把两个文件放到同一目录。',
+    siteSteps: [
+      '打开宝塔 → 网站，添加 {domain}',
+      '在站点设置里申请 SSL',
+      '把站点配置文件拖到下面'
+    ],
+    siteConfPath: '常见路径：/www/server/panel/vhost/nginx/{domain}.conf',
+    resultsIntro: '宝塔：可「创建编排」粘贴 YAML，或目录内放 compose + .env。内置库请先看部署说明里的目录权限。',
     // 宝塔反向代理 / 扩展 include
     proxyIncludeRe: /^[ \t]*include\s+[^;\n]*(?:\/proxy\/|\/extension\/)[^;\n]*\*\.conf\s*;[ \t]*$/gm
   },
@@ -56,14 +68,165 @@ var PANEL_PROFILES = {
     envBadge: 'compose 同目录 · .env 文件',
     envCopyLabel: '复制 .env',
     composeBadge: 'docker compose · CLI',
-    resultsIntro: '通用部署：同目录放置 docker-compose.yml 与 .env，执行 docker compose up -d；外层 Nginx/Caddy 整站反代。',
-    successNotify: '生成成功：请将文件放到同一目录后执行 docker compose up -d',
+    wizardHint: '生成后：两个文件放到同一目录，再执行 docker compose up -d。',
+    siteSteps: [
+      '先给 {domain} 签好证书',
+      '确认 HTTPS 能打开',
+      '把现有 nginx conf 拖到下面'
+    ],
+    siteConfPath: '常见路径：/etc/nginx/sites-available/{domain} 或 /etc/nginx/conf.d/{domain}.conf',
+    resultsIntro: '命令行：把 docker-compose.yml 和 .env 放在同一目录，执行 docker compose up -d。外层再整站反代。',
     proxyIncludeRe: /^[ \t]*include\s+[^;\n]*\/proxy\/\*\.conf\s*;[ \t]*$/gm
   }
 };
 
 function getPanelProfile(panelId) {
   return PANEL_PROFILES[panelId] || PANEL_PROFILES['1panel'];
+}
+
+function buildDoneGuide(panelId, ctx) {
+  var external = !!ctx.external;
+  var domain = ctx.domain || '你的域名';
+  var port = ctx.httpPort || 8080;
+  var bind = (ctx.httpBind || '127.0.0.1') + ':' + port;
+  var extra = ctx.extraDomain || '';
+  var pgCmd = 'mkdir -p pgdata state backups && chown -R 70:70 pgdata && chmod 700 pgdata && chmod 600 .env';
+  var cliCmd = external
+    ? 'mkdir -p state backups && chmod 600 .env && docker compose pull && docker compose up -d'
+    : pgCmd + ' && docker compose pull && docker compose up -d';
+
+  var overview;
+  var steps = [];
+
+  if (panelId === 'generic') {
+    overview = ['收暗号', '放文件启动', '接上反代', '打开站点'];
+    steps.push({
+      title: '把文件放到同一目录并启动',
+      body: '在服务器建一个目录，放入 docker-compose.yml 和 .env，再执行命令。',
+      files: ['compose', 'env'],
+      command: cliCmd
+    });
+    steps.push({
+      title: '接上外层反代',
+      body: '把生成的 ' + domain + '.conf 放到 Nginx，整站反代到 ' + bind + '。不要只反代 /api。',
+      files: extra ? ['nginx', 'nginx-extra'] : ['nginx']
+    });
+  } else if (panelId === 'baota') {
+    overview = ['收暗号', '贴编排', '覆盖 conf', '打开站点'];
+    steps.push({
+      title: '把编排贴进宝塔',
+      body: '打开宝塔 → Docker → 容器编排 → 创建编排，粘贴 docker-compose.yml。.env 放到同一目录。',
+      files: ['compose', 'env']
+    });
+    steps.push({
+      title: '覆盖站点配置',
+      body: '到宝塔网站 → 设置 → 配置文件，用生成的 ' + domain + '.conf 覆盖。反代目标 ' + bind + '，必须是整站 /。',
+      files: extra ? ['nginx', 'nginx-extra'] : ['nginx']
+    });
+  } else {
+    overview = ['收暗号', '贴编排', '覆盖 conf', '打开站点'];
+    steps.push({
+      title: '把编排贴进 1Panel',
+      body: '打开 1Panel → 容器 → 编排 → 创建。YAML 贴 docker-compose.yml，环境变量贴 .env 全文。',
+      files: ['compose', 'env']
+    });
+    steps.push({
+      title: '覆盖站点配置',
+      body: '到 1Panel 网站 → 配置文件，用生成的 ' + domain + '.conf 覆盖。目标 http://' + bind + '，必须整站反代。',
+      files: extra ? ['nginx', 'nginx-extra'] : ['nginx']
+    });
+  }
+
+  steps.push({
+    title: '打开站点创建所有者',
+    body: '容器起来后打开安装链接。向导会自动填入暗号。'
+  });
+
+  return { overview: overview, steps: steps };
+}
+
+var GUIDE_FILE_ACTIONS = {
+  compose: { target: 'docker-compose', filename: 'docker-compose.yml', label: 'docker-compose.yml' },
+  env: { target: 'env', filename: '.env', label: '.env' },
+  nginx: { target: 'main-nginx', filename: '', label: '站点 .conf' },
+  'nginx-extra': { target: 'extra-nginx', filename: '', label: '额外域名 .conf' }
+};
+
+function renderDoneGuide(panelId, ctx) {
+  var guide = buildDoneGuide(panelId, ctx);
+  var overviewEl = document.getElementById('cg-guide-overview');
+  var listEl = document.getElementById('cg-guide-list');
+  if (overviewEl) {
+    overviewEl.style.setProperty('--cg-guide-cols', String(guide.overview.length || 5));
+    overviewEl.innerHTML = '';
+    guide.overview.forEach(function (label, index) {
+      var item = document.createElement('li');
+      var num = document.createElement('b');
+      num.textContent = String(index + 1);
+      var span = document.createElement('span');
+      span.textContent = label;
+      item.appendChild(num);
+      item.appendChild(span);
+      overviewEl.appendChild(item);
+    });
+  }
+  if (!listEl) return;
+  listEl.innerHTML = '';
+  guide.steps.forEach(function (step, index) {
+    var card = document.createElement('article');
+    card.className = 'cg-guide-card';
+    var header = document.createElement('header');
+    var num = document.createElement('b');
+    num.textContent = String(index + 2);
+    var title = document.createElement('h2');
+    title.textContent = step.title;
+    header.appendChild(num);
+    header.appendChild(title);
+    card.appendChild(header);
+    var body = document.createElement('p');
+    body.textContent = step.body;
+    card.appendChild(body);
+    if (step.files && step.files.length) {
+      var actions = document.createElement('div');
+      actions.className = 'cg-guide-actions';
+      step.files.forEach(function (key) {
+        var spec = GUIDE_FILE_ACTIONS[key];
+        if (!spec) return;
+        var copyBtn = document.createElement('button');
+        copyBtn.type = 'button';
+        copyBtn.className = 'btn-copy';
+        copyBtn.setAttribute('data-target', spec.target);
+        copyBtn.textContent = '复制 ' + spec.label;
+        var downBtn = document.createElement('button');
+        downBtn.type = 'button';
+        downBtn.className = 'btn-download';
+        downBtn.setAttribute('data-target', spec.target);
+        downBtn.setAttribute(
+          'data-filename',
+          spec.filename || ((key === 'nginx' ? ctx.domain : ctx.extraDomain) || spec.label) + '.conf'
+        );
+        downBtn.textContent = '下载';
+        actions.appendChild(copyBtn);
+        actions.appendChild(downBtn);
+      });
+      card.appendChild(actions);
+    }
+    if (step.command) {
+      var cmd = document.createElement('div');
+      cmd.className = 'cg-guide-cmd';
+      var code = document.createElement('code');
+      code.textContent = step.command;
+      var cmdBtn = document.createElement('button');
+      cmdBtn.type = 'button';
+      cmdBtn.className = 'btn-copy-field';
+      cmdBtn.setAttribute('data-copy-text', step.command);
+      cmdBtn.textContent = '复制命令';
+      cmd.appendChild(code);
+      cmd.appendChild(cmdBtn);
+      card.appendChild(cmd);
+    }
+    listEl.appendChild(card);
+  });
 }
 
 /**
@@ -291,6 +454,7 @@ services:
       RUST_LOG: \${RUST_LOG:-info}
       TZ: Asia/Shanghai
       MYRIAD_VERSION: \${MYRIAD_TAG}
+      MYRIAD_MEMORY_PROFILE: \${MYRIAD_MEMORY_PROFILE:-default}
       MYRIAD_UPDATER_URL: http://updater-gateway:1104
       UPDATER_GATEWAY_SECRET: \${UPDATER_GATEWAY_SECRET}
     depends_on:
@@ -519,6 +683,8 @@ PROXY_ALLOW_DIRECT_UPDATER=false
 
 COSIGN_VERIFY={{COSIGN_VERIFY}}
 {{COSIGN_INSECURE_HINT}}
+# saver = 小主机内存节约（收紧缓存/连接池）；default = 均衡
+MYRIAD_MEMORY_PROFILE={{MYRIAD_MEMORY_PROFILE}}
 
 # MYRIAD_DB_MODE=bundled|external — external: no compose postgres; updater skips pgdata snapshots
 MYRIAD_DB_MODE={{MYRIAD_DB_MODE}}
@@ -683,7 +849,7 @@ docker compose pull && docker compose up -d
 
 \`backend-volume-init\` 会在 backend 启动前修复持久卷权限；无需手工 chown。
 
-首次打开站点会进入安装向导。创建所有者时必须填写 **安装暗号**（\`.env\` 里的 \`MYRIAD_SETUP_SECRET\`）。能读到这份配置的人才能当站长。
+首次打开站点会进入安装向导。创建所有者时必须填写 **安装暗号**（\`.env\` 里的 \`MYRIAD_SETUP_SECRET\`）。也可以打开 \`https://{{MAIN_DOMAIN}}/#setup_secret=…\`，向导会自动填入。能读到这份配置或链接的人才能当站长。
 
 可选：\`scripts/docker/deploy.sh up\`（含环境初始化与部署检查）。
 
@@ -789,7 +955,7 @@ var EXPECTED_ENV_KEYS_BASE = [
   'COMPOSE_PROJECT_NAME', 'UPDATE_TOKEN', 'UPDATER_GATEWAY_SECRET', 'CHANNEL',
   'UPDATE_MODE', 'MYRIAD_GITHUB_REPO', 'CHECK_INTERVAL_SECS',
   'HTTP_BIND_ADDRESS', 'HTTP_PORT', 'PROXY_ALLOW_DIRECT_UPDATER',
-  'COSIGN_VERIFY', 'MYRIAD_DB_MODE', 'DATABASE_URL', 'JWT_SECRET',
+  'COSIGN_VERIFY', 'MYRIAD_MEMORY_PROFILE', 'MYRIAD_DB_MODE', 'DATABASE_URL', 'JWT_SECRET',
   'MYRIAD_SETUP_SECRET', 'CORS_ORIGINS', 'BASE_URL', 'FRONTEND_URL'
 ];
 
@@ -860,6 +1026,9 @@ function validateGeneratedEnv(envText, secrets, opts) {
   }
   if (parsed.map.PROXY_ALLOW_DIRECT_UPDATER !== 'false') {
     throw new Error('PROXY_ALLOW_DIRECT_UPDATER 必须为 false（生成器固定值）');
+  }
+  if (parsed.map.MYRIAD_MEMORY_PROFILE !== 'saver' && parsed.map.MYRIAD_MEMORY_PROFILE !== 'default') {
+    throw new Error('MYRIAD_MEMORY_PROFILE 必须是 saver 或 default');
   }
   var allowCount = (String(envText).match(/^PROXY_ALLOW_DIRECT_UPDATER=/gm) || []).length;
   if (allowCount !== 1) {
@@ -1621,8 +1790,9 @@ var state = {
   dbHost: '',
   dbPort: 5432,
   dbSslmode: '',
-  dbCpuLimit: '2.0',
-  dbMemLimit: '2G',
+  dbCpuLimit: '1.0',
+  dbMemLimit: '1G',
+  memoryProfile: 'default',
   // 运行时由 Docker Hub 解析填充，不在源码中写死版本
   myriadTag: '',
   proxyTag: '',
@@ -1634,9 +1804,9 @@ var state = {
   cosignVerify: 'strict',
   // PostgreSQL / backend / frontend 可按宿主机条件限制
   backendCpuLimit: '2.0',
-  backendMemLimit: '4G',
-  frontendCpuLimit: '2.0',
-  frontendMemLimit: '2G',
+  backendMemLimit: '2G',
+  frontendCpuLimit: '1.0',
+  frontendMemLimit: '512M',
   netMyriad: 'myriad-net',
   netAdmin: 'myriad-admin-net',
   netGuard: 'myriad-docker-guard-net',
@@ -1653,7 +1823,269 @@ var pageLifecycle = {
   unsubs: []
 };
 
+/**
+ * 向导：欢迎 → 面板 → 域名 → 站点 → 数据库 → 限额 → 完成；高级为限额页可选。
+ * 主路径每次只问一件事。
+ */
+var WIZARD_FLOW = ['welcome', 'panel', 'domain', 'site', 'database', 'limits', 'advanced', 'done'];
+var WIZARD_META = {
+  welcome: { index: 0, name: '欢迎', back: '', backLabel: '' },
+  panel: { index: 1, name: '面板', back: 'welcome', backLabel: '欢迎' },
+  domain: { index: 2, name: '域名', back: 'panel', backLabel: '面板' },
+  site: { index: 3, name: '站点', back: 'domain', backLabel: '域名' },
+  database: { index: 4, name: '数据库', back: 'site', backLabel: '站点' },
+  limits: { index: 5, name: '限额', back: 'database', backLabel: '数据库' },
+  advanced: { index: 0, name: '高级', back: 'limits', backLabel: '限额' },
+  done: { index: 0, name: '', back: 'limits', backLabel: '限额' }
+};
+var WIZARD_TOTAL = 5;
+var wizardStep = 'welcome';
+var wizardDoneFrom = 'limits';
+
+var LIMIT_PRESETS = {
+  small: {
+    hint: '小型档：数据库 0.5 核 / 512M，后端 1 核 / 1G，前端 0.5 核 / 256M。已自动打开内存节约。',
+    dbCpu: '0.5', dbMem: '512M',
+    backendCpu: '1.0', backendMem: '1G',
+    frontendCpu: '0.5', frontendMem: '256M',
+    memorySaver: true
+  },
+  standard: {
+    hint: '推荐档：数据库 1 核 / 1G，后端 2 核 / 2G，前端 1 核 / 512M。',
+    dbCpu: '1.0', dbMem: '1G',
+    backendCpu: '2.0', backendMem: '2G',
+    frontendCpu: '1.0', frontendMem: '512M',
+    memorySaver: false
+  },
+  large: {
+    hint: '宽裕档：数据库 2 核 / 2G，后端 2 核 / 2G，前端 1 核 / 1G。',
+    dbCpu: '2.0', dbMem: '2G',
+    backendCpu: '2.0', backendMem: '2G',
+    frontendCpu: '1.0', frontendMem: '1G',
+    memorySaver: false
+  }
+};
+
+function wizardPane(step) {
+  return document.querySelector('.cg-ob__pane[data-step="' + step + '"]');
+}
+
+function setWizardNote(step, message, tone) {
+  var host = document.getElementById('cg-note-' + step);
+  if (!host) return;
+  host.innerHTML = '';
+  if (!message) return;
+  var note = document.createElement('p');
+  note.className = 'cg-ob-note' + (tone === 'error' ? ' is-error' : '');
+  note.textContent = message;
+  host.appendChild(note);
+}
+
+function renderWizardChrome(step, dir) {
+  var meta = WIZARD_META[step] || WIZARD_META.welcome;
+  if (step === 'done') {
+    meta = {
+      index: 0,
+      name: '',
+      back: wizardDoneFrom,
+      backLabel: wizardDoneFrom === 'advanced' ? '高级' : '限额'
+    };
+  }
+  var side = document.getElementById('cg-top-side');
+  var stepEl = document.getElementById('cg-top-step');
+  var nameEl = document.getElementById('cg-top-name');
+  var progressEl = document.getElementById('cg-top-progress');
+
+  if (side) {
+    if (meta.back) {
+      side.innerHTML =
+        '<div class="cg-ob-back">' +
+        '<button type="button" class="cg-ob-back__hit" data-wizard-back aria-label="返回' + meta.backLabel + '">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' +
+        '</button>' +
+        '<span class="cg-ob-back__label">' + meta.backLabel + '</span>' +
+        '</div>';
+    } else {
+      side.innerHTML = '<span class="cg-ob-brand">配置生成</span>';
+    }
+  }
+
+  if (stepEl && nameEl && progressEl) {
+    if (meta.index) {
+      stepEl.hidden = false;
+      nameEl.textContent = meta.name;
+      progressEl.textContent = meta.index + ' / ' + WIZARD_TOTAL;
+    } else {
+      stepEl.hidden = true;
+    }
+  }
+
+  WIZARD_FLOW.forEach(function (id) {
+    var pane = wizardPane(id);
+    if (!pane) return;
+    var active = id === step;
+    pane.hidden = !active;
+    if (active) {
+      pane.setAttribute('data-dir', dir || 'fade');
+    }
+  });
+}
+
+var topBarScroll = { el: null, fn: null };
+
+function unbindTopBarDense() {
+  if (topBarScroll.el && topBarScroll.fn) {
+    topBarScroll.el.removeEventListener('scroll', topBarScroll.fn);
+  }
+  topBarScroll.el = null;
+  topBarScroll.fn = null;
+}
+
+function bindTopBarDense(scroller) {
+  var card = document.getElementById('cg-card');
+  unbindTopBarDense();
+  if (!card) return;
+  function sync() {
+    var top = scroller ? scroller.scrollTop : 0;
+    var t = Math.min(1, Math.max(0, top / 128));
+    card.style.setProperty('--sob-top-dense', (t * t * (3 - 2 * t)).toFixed(3));
+  }
+  sync();
+  if (!scroller) return;
+  topBarScroll.el = scroller;
+  topBarScroll.fn = sync;
+  scroller.addEventListener('scroll', sync, { passive: true });
+}
+
+function goWizard(next, dir) {
+  if (WIZARD_FLOW.indexOf(next) < 0) return;
+  wizardStep = next;
+  renderWizardChrome(next, dir || 'fade');
+  var pane = wizardPane(next);
+  if (pane) pane.scrollTop = 0;
+  bindTopBarDense(pane);
+  if (next === 'site') syncSiteStepUi();
+}
+
+function selectedPanelIdFromUi() {
+  var selected = document.querySelector('input[name="panel-mode"]:checked');
+  var v = selected && selected.value;
+  if (v === 'baota' || v === 'generic' || v === '1panel') return v;
+  return '1panel';
+}
+
+function syncSiteStepUi() {
+  var profile = getPanelProfile(selectedPanelIdFromUi());
+  var mainInput = document.getElementById('main-domain');
+  var extraInput = document.getElementById('extra-domain');
+  var mainDomain = normalizeDomain(mainInput ? mainInput.value : '');
+  var extraDomain = normalizeDomain(extraInput ? extraInput.value : '');
+  var domainNote = document.getElementById('cg-site-domain-note');
+  var stepsEl = document.getElementById('cg-site-steps');
+  var pathEl = document.getElementById('cg-site-path');
+  var extraItem = document.getElementById('site-extra-upload');
+  var group = document.getElementById('site-upload-group');
+  var mainLabel = document.getElementById('site-main-upload-label');
+  var extraLabel = document.getElementById('site-extra-upload-label');
+  var shown = mainDomain || '这个域名';
+
+  if (domainNote) {
+    domainNote.textContent = '';
+    if (!mainDomain) {
+      domainNote.textContent = '请先回到上一步填写域名。';
+    } else {
+      domainNote.appendChild(document.createTextNode('当前域名  '));
+      var strong = document.createElement('strong');
+      strong.textContent = extraDomain ? mainDomain + '  ·  ' + extraDomain : mainDomain;
+      domainNote.appendChild(strong);
+    }
+  }
+  if (stepsEl) {
+    stepsEl.innerHTML = '';
+    (profile.siteSteps || []).forEach(function (text, index) {
+      var item = document.createElement('li');
+      var num = document.createElement('b');
+      num.textContent = String(index + 1);
+      var span = document.createElement('span');
+      span.textContent = String(text).split('{domain}').join(shown);
+      item.appendChild(num);
+      item.appendChild(span);
+      stepsEl.appendChild(item);
+    });
+  }
+  if (pathEl) {
+    var pathText = profile.siteConfPath
+      ? String(profile.siteConfPath).split('{domain}').join(mainDomain || '<domain>')
+      : '';
+    pathEl.hidden = !pathText;
+    pathEl.textContent = pathText;
+  }
+  if (mainLabel) mainLabel.textContent = (mainDomain || '主域名') + ' .conf';
+  if (extraLabel) extraLabel.textContent = (extraDomain || '额外域名') + ' .conf';
+  if (extraItem) extraItem.hidden = !extraDomain;
+  if (group) group.classList.toggle('is-single', !extraDomain);
+}
+
+function validateWizardStep(step) {
+  if (step === 'domain') {
+    var mainInput = document.getElementById('main-domain');
+    var extraInput = document.getElementById('extra-domain');
+    var mainDomain = normalizeDomain(mainInput ? mainInput.value : '');
+    var extraDomain = normalizeDomain(extraInput ? extraInput.value : '');
+    if (!mainDomain) {
+      setWizardNote('domain', '请先填写主域名', 'error');
+      if (mainInput) mainInput.focus();
+      return false;
+    }
+    if (!isValidDomain(mainDomain)) {
+      setWizardNote('domain', '主域名格式不对，写成 myriad.example.com 这样', 'error');
+      if (mainInput) mainInput.focus();
+      return false;
+    }
+    if (extraDomain && !isValidDomain(extraDomain)) {
+      setWizardNote('domain', '额外域名格式不对，没有就留空', 'error');
+      if (extraInput) extraInput.focus();
+      return false;
+    }
+    setWizardNote('domain', '');
+    return true;
+  }
+  if (step === 'database') {
+    var mode = document.querySelector('input[name="db-mode"]:checked');
+    var isExternal = mode && mode.value === 'external';
+    if (!isExternal) {
+      setWizardNote('database', '');
+      return true;
+    }
+    var hostInput = document.getElementById('db-host');
+    var passInput = document.getElementById('db-password');
+    if (!isValidDbHost(hostInput ? hostInput.value.trim() : '')) {
+      setWizardNote('database', '请填写外置库的主机地址', 'error');
+      if (hostInput) hostInput.focus();
+      return false;
+    }
+    if (!passInput || !passInput.value.trim()) {
+      setWizardNote('database', '请填写外置库密码', 'error');
+      if (passInput) passInput.focus();
+      return false;
+    }
+    setWizardNote('database', '');
+    return true;
+  }
+  return true;
+}
+
+function wizardNextFrom(step) {
+  if (step === 'welcome') return 'panel';
+  if (step === 'panel') return 'domain';
+  if (step === 'domain') return 'site';
+  if (step === 'site') return 'database';
+  if (step === 'database') return 'limits';
+  return '';
+}
+
 function disposePage() {
+  unbindTopBarDense();
   var list = pageLifecycle.unsubs.slice();
   pageLifecycle.unsubs = [];
   pageLifecycle.ready = false;
@@ -1668,6 +2100,79 @@ function initPage() {
   }
   pageLifecycle.ready = true;
 
+  var card = document.getElementById('cg-card');
+  function onWizardClick(event) {
+    var backBtn = event.target.closest('[data-wizard-back]');
+    if (backBtn) {
+      event.preventDefault();
+      var backTo = (WIZARD_META[wizardStep] || {}).back;
+      if (backTo) goWizard(backTo, 'back');
+      return;
+    }
+    var nextBtn = event.target.closest('[data-wizard-next]');
+    if (!nextBtn) return;
+    event.preventDefault();
+    if (!validateWizardStep(wizardStep)) return;
+    var next = wizardNextFrom(wizardStep);
+    if (next) goWizard(next, 'forward');
+  }
+  if (card) pageListen(card, 'click', onWizardClick);
+
+  var domainForm = wizardPane('domain');
+  if (domainForm) {
+    pageListen(domainForm, 'submit', function (event) {
+      event.preventDefault();
+    });
+    pageListen(domainForm, 'keydown', function (event) {
+      if (event.key !== 'Enter' || event.target.tagName === 'TEXTAREA') return;
+      event.preventDefault();
+      if (!validateWizardStep('domain')) return;
+      goWizard('site', 'forward');
+    });
+  }
+
+  var databaseForm = wizardPane('database');
+  if (databaseForm) {
+    pageListen(databaseForm, 'submit', function (event) {
+      event.preventDefault();
+    });
+    pageListen(databaseForm, 'keydown', function (event) {
+      if (event.key !== 'Enter' || event.target.tagName === 'TEXTAREA') return;
+      event.preventDefault();
+      if (!validateWizardStep('database')) return;
+      goWizard('limits', 'forward');
+    });
+  }
+
+  var limitsPane = wizardPane('limits');
+  if (limitsPane) {
+    pageListen(limitsPane, 'keydown', function (event) {
+      if (event.key !== 'Enter' || event.target.tagName === 'TEXTAREA') return;
+      event.preventDefault();
+      var generateBtn = document.getElementById('btn-generate-all');
+      if (generateBtn && !generateBtn.disabled) generateBtn.click();
+    });
+  }
+
+  var gotoAdvancedBtn = document.getElementById('btn-goto-advanced');
+  if (gotoAdvancedBtn) {
+    pageListen(gotoAdvancedBtn, 'click', function () {
+      goWizard('advanced', 'forward');
+    });
+  }
+
+  var advancedPane = wizardPane('advanced');
+  if (advancedPane) {
+    pageListen(advancedPane, 'keydown', function (event) {
+      if (event.key !== 'Enter' || event.target.tagName === 'TEXTAREA') return;
+      event.preventDefault();
+      var generateBtn = document.getElementById('btn-generate-advanced');
+      if (generateBtn && !generateBtn.disabled) generateBtn.click();
+    });
+  }
+
+  goWizard('welcome', 'fade');
+
   var mainDomainInput = document.getElementById('main-domain');
   var extraDomainInput = document.getElementById('extra-domain');
   var dbPasswordInput = document.getElementById('db-password');
@@ -1680,17 +2185,13 @@ function initPage() {
   var dbHostInput = document.getElementById('db-host');
   var dbPortInput = document.getElementById('db-port');
   var dbSslmodeSelect = document.getElementById('db-sslmode');
-  var dbModeBundledFields = document.getElementById('db-mode-bundled-fields');
   var dbModeExternalFields = document.getElementById('db-mode-external-fields');
   var dbResourceGroup = document.getElementById('db-resource-group');
   var dbModeRadios = document.querySelectorAll('input[name="db-mode"]');
 
   var genDbPasswordBtn = document.getElementById('gen-db-password');
-  var genJwtSecretBtn = document.getElementById('gen-jwt-secret');
-  var genUpdateTokenBtn = document.getElementById('gen-update-token');
-  var genGatewaySecretBtn = document.getElementById('gen-updater-gateway-secret');
-  var genSetupSecretBtn = document.getElementById('gen-setup-secret');
   var generateAllBtn = document.getElementById('btn-generate-all');
+  var generateAdvancedBtn = document.getElementById('btn-generate-advanced');
 
   var uploadNginx = document.getElementById('upload-nginx-conf');
   var fileNginx = document.getElementById('file-nginx-conf');
@@ -1729,15 +2230,8 @@ function initPage() {
     return (selected && selected.value === 'external') ? 'external' : 'bundled';
   }
 
-  function getSelectedPanelId() {
-    var selected = document.querySelector('input[name="panel-mode"]:checked');
-    var v = selected && selected.value;
-    if (v === 'baota' || v === 'generic' || v === '1panel') return v;
-    return '1panel';
-  }
-
   function syncPanelModeUi() {
-    state.panelId = getSelectedPanelId();
+    state.panelId = selectedPanelIdFromUi();
     document.querySelectorAll('.panel-mode-option').forEach(function (label) {
       var input = label.querySelector('input[name="panel-mode"]');
       if (!input) return;
@@ -1745,16 +2239,21 @@ function initPage() {
     });
     var profile = getPanelProfile(state.panelId);
     var info = document.getElementById('panel-mode-hint');
-    if (info) info.textContent = profile.resultsIntro;
+    if (info) info.textContent = profile.wizardHint || profile.resultsIntro;
   }
 
   function syncDbModeUi() {
     var mode = getSelectedDbMode();
     state.dbMode = mode;
     var isExternal = mode === 'external';
-    if (dbModeBundledFields) dbModeBundledFields.hidden = isExternal;
     if (dbModeExternalFields) dbModeExternalFields.hidden = !isExternal;
     if (dbResourceGroup) dbResourceGroup.hidden = isExternal;
+    var dbVersionField = document.getElementById('db-version-field');
+    if (dbVersionField) dbVersionField.hidden = isExternal;
+    var bundledHint = document.getElementById('db-bundled-hint');
+    if (bundledHint) bundledHint.hidden = isExternal;
+    var passwordField = document.getElementById('db-password-field');
+    if (passwordField) passwordField.hidden = !isExternal;
     // Segmented control active styles
     document.querySelectorAll('.db-mode-option').forEach(function(label) {
       var input = label.querySelector('input[name="db-mode"]');
@@ -1778,6 +2277,82 @@ function initPage() {
     syncDbModeUi();
   }
 
+  function applyLimitPreset(preset) {
+    var spec = LIMIT_PRESETS[preset];
+    if (!spec) return;
+    function setVal(id, value) {
+      var el = document.getElementById(id);
+      if (el) el.value = value;
+    }
+    setVal('db-cpu-limit', spec.dbCpu);
+    setVal('db-mem-limit', spec.dbMem);
+    setVal('backend-cpu-limit', spec.backendCpu);
+    setVal('backend-mem-limit', spec.backendMem);
+    setVal('frontend-cpu-limit', spec.frontendCpu);
+    setVal('frontend-mem-limit', spec.frontendMem);
+    var saver = document.getElementById('memory-saver');
+    if (saver) saver.checked = !!spec.memorySaver;
+  }
+
+  function syncLimitPresetUi(mode) {
+    var customFields = document.getElementById('limit-custom-fields');
+    var hint = document.getElementById('limit-preset-hint');
+    var customBtn = document.getElementById('limit-preset-custom');
+    var isCustom = mode === 'custom';
+    if (customFields) customFields.hidden = !isCustom;
+    if (customBtn) customBtn.setAttribute('aria-pressed', isCustom ? 'true' : 'false');
+    document.querySelectorAll('.limit-preset-toggle .cg-choice__card').forEach(function (label) {
+      var input = label.querySelector('input[name="limit-preset"]');
+      if (!input) return;
+      if (isCustom) {
+        input.checked = false;
+        label.classList.remove('is-active');
+      } else {
+        label.classList.toggle('is-active', input.checked);
+      }
+    });
+    if (!isCustom) {
+      if (customBtn) customBtn.dataset.lastPreset = mode;
+      applyLimitPreset(mode);
+      if (hint && LIMIT_PRESETS[mode]) hint.textContent = LIMIT_PRESETS[mode].hint;
+    } else if (hint) {
+      hint.textContent = '自己填每个服务的 CPU 和内存。内存写成 512M、2G 这样。';
+    }
+    syncDbModeUi();
+  }
+
+  function getSelectedLimitPreset() {
+    if (document.getElementById('limit-preset-custom') &&
+        document.getElementById('limit-preset-custom').getAttribute('aria-pressed') === 'true') {
+      return 'custom';
+    }
+    var selected = document.querySelector('input[name="limit-preset"]:checked');
+    return (selected && selected.value) || 'standard';
+  }
+
+  var limitPresetRadios = document.querySelectorAll('input[name="limit-preset"]');
+  if (limitPresetRadios && limitPresetRadios.length) {
+    limitPresetRadios.forEach(function (radio) {
+      pageListen(radio, 'change', function () {
+        syncLimitPresetUi(radio.value);
+      });
+    });
+  }
+  var customLimitBtn = document.getElementById('limit-preset-custom');
+  if (customLimitBtn) {
+    pageListen(customLimitBtn, 'click', function () {
+      if (customLimitBtn.getAttribute('aria-pressed') === 'true') {
+        var last = customLimitBtn.dataset.lastPreset || 'standard';
+        var radio = document.querySelector('input[name="limit-preset"][value="' + last + '"]');
+        if (radio) radio.checked = true;
+        syncLimitPresetUi(last);
+        return;
+      }
+      syncLimitPresetUi('custom');
+    });
+  }
+  syncLimitPresetUi(getSelectedLimitPreset());
+
   function markTagManual(input) {
     if (!input) return;
     input.dataset.autoFilled = 'false';
@@ -1796,44 +2371,10 @@ function initPage() {
     });
   }
 
-  pageListen(genDbPasswordBtn, 'click', function() {
-    dbPasswordInput.value = generatePassword();
-    animateButton(genDbPasswordBtn);
-  });
-
-  pageListen(genJwtSecretBtn, 'click', function() {
-    jwtSecretInput.value = generateJwtSecret();
-    animateButton(genJwtSecretBtn);
-  });
-
-  pageListen(genUpdateTokenBtn, 'click', function() {
-    updateTokenInput.value = generateUpdateToken();
-    animateButton(genUpdateTokenBtn);
-  });
-
-  if (genGatewaySecretBtn && gatewaySecretInput) {
-    pageListen(genGatewaySecretBtn, 'click', function() {
-      gatewaySecretInput.value = generateUpdaterGatewaySecret();
-      animateButton(genGatewaySecretBtn);
-    });
-  }
-
-  if (genSetupSecretBtn && setupSecretInput) {
-    pageListen(genSetupSecretBtn, 'click', function() {
-      setupSecretInput.value = generateSetupSecret();
-      animateButton(genSetupSecretBtn);
-    });
-  }
-
-  var copySetupSecretBtn = document.getElementById('copy-setup-secret');
-  if (copySetupSecretBtn && setupSecretInput) {
-    pageListen(copySetupSecretBtn, 'click', function() {
-      var value = setupSecretInput.value.trim();
-      if (!value) {
-        showNotification('还没有安装暗号，先点生成', 'error');
-        return;
-      }
-      copyToClipboard(value, copySetupSecretBtn);
+  if (genDbPasswordBtn && dbPasswordInput) {
+    pageListen(genDbPasswordBtn, 'click', function() {
+      dbPasswordInput.value = generatePassword();
+      animateButton(genDbPasswordBtn);
     });
   }
 
@@ -1847,6 +2388,19 @@ function initPage() {
         return;
       }
       copyToClipboard(value, copySetupSecretResultBtn);
+    });
+  }
+
+  var copySetupSecretLinkBtn = document.getElementById('copy-setup-secret-link');
+  if (copySetupSecretLinkBtn) {
+    pageListen(copySetupSecretLinkBtn, 'click', function() {
+      var node = document.getElementById('setup-secret-link-value');
+      var value = ((node && node.textContent) || '').trim();
+      if (!value) {
+        showNotification('还没有安装链接', 'error');
+        return;
+      }
+      copyToClipboard(value, copySetupSecretLinkBtn);
     });
   }
 
@@ -1877,9 +2431,10 @@ function initPage() {
     });
   }
 
-  pageListen(generateAllBtn, 'click', async function() {
-    if (generateAllBtn.disabled) return;
+  async function runGenerateAll() {
+    if (!generateAllBtn || generateAllBtn.disabled) return;
     generateAllBtn.disabled = true;
+    if (generateAdvancedBtn) generateAdvancedBtn.disabled = true;
 
     try {
       var mainDomain = normalizeDomain(mainDomainInput.value);
@@ -1893,7 +2448,7 @@ function initPage() {
       var dbUser = dbUserInput.value.trim();
       var dbMode = getSelectedDbMode();
       var isExternal = dbMode === 'external';
-      state.panelId = getSelectedPanelId();
+      state.panelId = selectedPanelIdFromUi();
 
       if (!mainDomain) {
         showNotification('请输入主域名', 'error');
@@ -2066,12 +2621,14 @@ function initPage() {
       state.channel = channelSelect.value || 'stable';
       state.cosignVerify = cosignSelect.value || 'strict';
 
-      state.dbCpuLimit = (dbCpuLimitInput && dbCpuLimitInput.value.trim()) || '2.0';
-      state.dbMemLimit = (dbMemLimitInput && dbMemLimitInput.value.trim()) || '2G';
+      state.dbCpuLimit = (dbCpuLimitInput && dbCpuLimitInput.value.trim()) || '1.0';
+      state.dbMemLimit = (dbMemLimitInput && dbMemLimitInput.value.trim()) || '1G';
       state.backendCpuLimit = backendCpuLimitInput.value.trim() || '2.0';
-      state.backendMemLimit = backendMemLimitInput.value.trim() || '4G';
-      state.frontendCpuLimit = frontendCpuLimitInput.value.trim() || '2.0';
-      state.frontendMemLimit = frontendMemLimitInput.value.trim() || '2G';
+      state.backendMemLimit = backendMemLimitInput.value.trim() || '2G';
+      state.frontendCpuLimit = frontendCpuLimitInput.value.trim() || '1.0';
+      state.frontendMemLimit = frontendMemLimitInput.value.trim() || '512M';
+      var memorySaverEl = document.getElementById('memory-saver');
+      state.memoryProfile = (memorySaverEl && memorySaverEl.checked) ? 'saver' : 'default';
 
       var cpuValues = isExternal
         ? [state.backendCpuLimit, state.frontendCpuLimit]
@@ -2176,41 +2733,55 @@ function initPage() {
       }
     } finally {
       generateAllBtn.disabled = false;
+      if (generateAdvancedBtn) generateAdvancedBtn.disabled = false;
     }
-  });
+  }
 
-  document.querySelectorAll('.btn-copy').forEach(function(btn) {
-    pageListen(btn, 'click', function() {
-      var target = btn.getAttribute('data-target');
-      var content = document.getElementById('result-' + target).textContent;
-      copyToClipboard(content, btn);
-    });
-  });
+  pageListen(generateAllBtn, 'click', function () { void runGenerateAll(); });
+  if (generateAdvancedBtn) {
+    pageListen(generateAdvancedBtn, 'click', function () { void runGenerateAll(); });
+  }
 
-  document.querySelectorAll('.btn-download').forEach(function(btn) {
-    pageListen(btn, 'click', function() {
-      var target = btn.getAttribute('data-target');
-      var content = document.getElementById('result-' + target).textContent;
-      var filename = btn.getAttribute('data-filename');
-
-      if (target === 'main-nginx') {
-        filename = state.mainDomain + '.conf';
-      } else if (target === 'extra-nginx') {
-        filename = (state.extraDomain || 'extra') + '.conf';
+  var resultsHost = document.getElementById('results-section') || card;
+  if (resultsHost) {
+    pageListen(resultsHost, 'click', function (event) {
+      var header = event.target.closest('.result-header');
+      if (header && !event.target.closest('button')) {
+        var resultCard = header.closest('.result-card');
+        if (resultCard) resultCard.classList.toggle('is-open');
+        return;
       }
-
-      downloadFile(content, filename);
+      var copyTextBtn = event.target.closest('[data-copy-text]');
+      if (copyTextBtn) {
+        copyToClipboard(copyTextBtn.getAttribute('data-copy-text') || '', copyTextBtn);
+        return;
+      }
+      var copyBtn = event.target.closest('.btn-copy');
+      if (copyBtn) {
+        var copyTarget = copyBtn.getAttribute('data-target');
+        var copyNode = document.getElementById('result-' + copyTarget);
+        if (copyNode) copyToClipboard(copyNode.textContent, copyBtn);
+        return;
+      }
+      var downBtn = event.target.closest('.btn-download');
+      if (downBtn) {
+        var downTarget = downBtn.getAttribute('data-target');
+        var downNode = document.getElementById('result-' + downTarget);
+        if (!downNode) return;
+        var filename = downBtn.getAttribute('data-filename');
+        if (downTarget === 'main-nginx') filename = state.mainDomain + '.conf';
+        else if (downTarget === 'extra-nginx') filename = (state.extraDomain || 'extra') + '.conf';
+        downloadFile(downNode.textContent, filename);
+      }
     });
-  });
+  }
 
   // 自定义下拉（系统 option 列表无法按主题着色）
   enhanceAllSelects();
 
-  // 自动生成密钥
-  genDbPasswordBtn.click();
-  genJwtSecretBtn.click();
-  genUpdateTokenBtn.click();
-  if (genGatewaySecretBtn) genGatewaySecretBtn.click();
+  if (jwtSecretInput) jwtSecretInput.value = generateJwtSecret();
+  if (updateTokenInput) updateTokenInput.value = generateUpdateToken();
+  if (gatewaySecretInput) gatewaySecretInput.value = generateUpdaterGatewaySecret();
 
   // 启动时解析 Docker Hub 最新 versioned tag（不写死版本号）
   refreshLatestTags(tagInputs, channelSelect, { notify: false });
@@ -2335,10 +2906,15 @@ function hideUploadSuccess(uploadBox) {
 }
 
 function animateButton(btn) {
-  btn.style.transform = 'rotate(180deg)';
-  setTimeout(function() {
-    btn.style.transform = '';
-  }, 300);
+  if (!btn) return;
+  btn.classList.remove('is-spinning');
+  void btn.offsetWidth;
+  btn.classList.add('is-spinning');
+  var svg = btn.querySelector('svg');
+  if (!svg) return;
+  svg.addEventListener('animationend', function () {
+    btn.classList.remove('is-spinning');
+  }, { once: true });
 }
 
 // ========================================
@@ -2489,6 +3065,7 @@ function generateConfigs() {
     UPDATER_TAG: state.updaterTag,
     CHANNEL: state.channel,
     COSIGN_VERIFY: state.cosignVerify,
+    MYRIAD_MEMORY_PROFILE: state.memoryProfile === 'saver' ? 'saver' : 'default',
     COSIGN_INSECURE_HINT: cosignInsecureHint,
     PANEL_LABEL: panel.label,
     PANEL_DEPLOY_SECTION: buildPanelDeploySection(
@@ -2629,10 +3206,10 @@ function generateConfigs() {
   if (envCopyBtn) {
     var label = panel.envCopyLabel || '复制';
     envCopyBtn.innerHTML =
-      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
       '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>' +
       '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>' +
-      '</svg> ' + label;
+      '</svg><span>' + label + '</span>';
   }
 
   var extraResult = document.getElementById('result-extra-nginx');
@@ -2651,11 +3228,23 @@ function generateConfigs() {
   if (reminder && reminderValue && state.setupSecret) {
     reminderValue.textContent = state.setupSecret;
     reminder.hidden = false;
+    var linkValue = document.getElementById('setup-secret-link-value');
+    if (linkValue && state.mainDomain) {
+      linkValue.textContent =
+        'https://' + state.mainDomain + '/#setup_secret=' + encodeURIComponent(state.setupSecret);
+    }
   }
 
-  var resultsSection = document.getElementById('results-section');
-  resultsSection.hidden = false;
-  resultsSection.scrollIntoView({ behavior: 'smooth' });
+  renderDoneGuide(panelId, {
+    domain: state.mainDomain,
+    extraDomain: state.extraDomain,
+    httpPort: state.httpPort,
+    httpBind: state.httpBindAddress,
+    external: isExternal
+  });
+
+  wizardDoneFrom = wizardStep === 'advanced' ? 'advanced' : 'limits';
+  goWizard('done', 'forward');
 
   showNotification('已生成。请先复制安装暗号，创建所有者时要填。', 'success');
 }
@@ -2669,7 +3258,7 @@ function copyToClipboard(text, btn) {
 
   function onSuccess() {
     btn.classList.add('copied');
-    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> 已复制';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>已复制</span>';
 
     setTimeout(function() {
       btn.classList.remove('copied');
@@ -2779,13 +3368,11 @@ async function showNotification(message, type) {
 
 var CHEVRON_SVG =
   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
-var CHECK_SVG =
-  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
 
 function closeAllCustomSelects(exceptRoot) {
   document.querySelectorAll('.cg-select.is-open').forEach(function (root) {
     if (exceptRoot && root === exceptRoot) return;
-    root.classList.remove('is-open');
+    root.classList.remove('is-open', 'is-up');
     var menu = root.querySelector('.cg-select-menu');
     var trigger = root.querySelector('.cg-select-trigger');
     if (menu) menu.hidden = true;
@@ -2837,7 +3424,13 @@ function enhanceNativeSelect(select) {
     trigger.setAttribute('aria-labelledby', select.getAttribute('aria-labelledby'));
   } else if (select.id) {
     var lab = document.querySelector('label[for="' + select.id + '"]');
-    if (lab && lab.id) trigger.setAttribute('aria-labelledby', lab.id);
+    var title = !lab && select.closest('.cg-ob-field');
+    if (title) title = title.querySelector('.cg-ob-field__label');
+    var named = (lab && lab.id) ? lab : title;
+    if (named) {
+      if (!named.id) named.id = select.id + '-label';
+      trigger.setAttribute('aria-labelledby', named.id);
+    }
   }
 
   var labelSpan = document.createElement('span');
@@ -2869,13 +3462,7 @@ function enhanceNativeSelect(select) {
           btn.disabled = true;
           btn.setAttribute('aria-disabled', 'true');
         }
-        var text = document.createElement('span');
-        text.textContent = opt.textContent;
-        var check = document.createElement('span');
-        check.className = 'cg-select-option-check';
-        check.innerHTML = CHECK_SVG;
-        btn.appendChild(text);
-        btn.appendChild(check);
+        btn.textContent = opt.textContent;
         pageListen(btn, 'click', function (e) {
           e.preventDefault();
           e.stopPropagation();
@@ -2912,10 +3499,21 @@ function enhanceNativeSelect(select) {
     root.classList.add('is-open');
     menu.hidden = false;
     trigger.setAttribute('aria-expanded', 'true');
+    var triggerRect = trigger.getBoundingClientRect();
+    var spaceBelow = window.innerHeight - triggerRect.bottom;
+    var spaceAbove = triggerRect.top;
+    var need = Math.min(240, menu.scrollHeight + 12);
+    root.classList.toggle('is-up', spaceBelow < need && spaceAbove > spaceBelow);
     var selected = menu.querySelector('.cg-select-option.is-selected');
     if (selected) {
       selected.classList.add('is-active');
-      try { selected.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ }
+      var menuRect = menu.getBoundingClientRect();
+      var selRect = selected.getBoundingClientRect();
+      if (selRect.top < menuRect.top) {
+        menu.scrollTop -= menuRect.top - selRect.top;
+      } else if (selRect.bottom > menuRect.bottom) {
+        menu.scrollTop += selRect.bottom - menuRect.bottom;
+      }
     }
   }
 

@@ -1,84 +1,61 @@
 <!doctype html>
 <html class="dark">
 <body>
-  <div id="tapp-background">
-    <div class="page-bg-base"></div>
-    <div class="page-bg-glow page-bg-glow-1"></div>
-    <div class="page-bg-glow page-bg-glow-2"></div>
-  </div>
+  <div id="tapp-background" aria-hidden="true"></div>
 
   <div id="tapp-content">
-    <div class="page-content">
-      <header class="page-header">
-        <div class="header-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6M9 15l3 3 3-3"/>
-          </svg>
-        </div>
-        <div class="header-info">
-          <h1 class="header-title">Myriad Install Config Generator</h1>
-          <p class="header-subtitle">Compose · .env · Nginx · Deploy notes</p>
-        </div>
-      </header>
-
-      <div class="section-info">
-        <span class="section-info-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-        </span>
-        <div class="section-info-content"><span class="section-info-title">Notes</span>Generate Compose / .env / Nginx and deploy steps for your panel. Do not commit secrets.</div>
-      </div>
-
-      <div class="config-form">
-        <section class="form-section">
-          <h2 class="section-title">
-            <span class="section-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-            </span>
-            Panel
-          </h2>
-          <div class="form-group">
-            <span class="form-label-text">Deploy panel</span>
-            <div class="panel-mode-toggle" role="radiogroup">
-              <label class="panel-mode-option is-active"><input type="radio" checked><span class="panel-mode-option-title">1Panel</span><span class="panel-mode-option-desc">Paste YAML into compose · env vars box</span></label>
-              <label class="panel-mode-option"><input type="radio"><span class="panel-mode-option-title">Baota Panel</span><span class="panel-mode-option-desc">Paste compose · watch pgdata owner</span></label>
-              <label class="panel-mode-option"><input type="radio"><span class="panel-mode-option-title">Generic / CLI</span><span class="panel-mode-option-desc">Standard paths · docker compose</span></label>
+    <section class="cg-ob">
+      <div class="cg-ob__card">
+        <header class="cg-ob-top">
+          <div class="cg-ob-top__side"><span class="cg-ob-brand">Config</span></div>
+          <p class="cg-ob-top__step" hidden><b>Welcome</b><span>1 / 5</span></p>
+        </header>
+        <div class="cg-ob__viewport">
+          <div class="cg-ob__pane is-welcome">
+            <div class="cg-ob-welcome">
+              <div class="cg-ob-welcome__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <path d="M12 18v-6M9 15l3 3 3-3"/>
+                </svg>
+              </div>
+              <div class="cg-ob-hero">
+                <h1>Get your install files ready</h1>
+                <p class="cg-ob-hero__lead">Pick a panel, enter a domain, then create the site and SSL on your server first.</p>
+              </div>
+              <div class="cg-ob-body">
+                <div class="cg-ob-features">
+                  <div>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                    <span>Panel</span>
+                  </div>
+                  <div>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <span>Domain</span>
+                  </div>
+                  <div>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                    <span>Site</span>
+                  </div>
+                  <div>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    <span>Files</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <span class="form-hint">1Panel: docker-compose.yml → “Containers / Compose”; .env → “Environment”. Reverse-proxy the whole site to HTTP_BIND:HTTP_PORT.</span>
-          </div>
-        </section>
-
-        <section class="form-section">
-          <h2 class="section-title">
-            <span class="section-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            </span>
-            Domain
-          </h2>
-          <div class="form-group"><label>Primary domain</label><input class="form-input" type="text" value="myriad.example.net"><span class="form-hint">Do not include <code>https://</code>. Written to <code>BASE_URL</code> and <code>FRONTEND_URL</code>.</span></div>
-          <div class="form-group"><label>Extra domains (optional)</label><input class="form-input" type="text" value="www.example.net"></div>
-        </section>
-
-        <section class="form-section preview-database-section">
-          <h2 class="section-title">
-            <span class="section-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
-            </span>
-            Database
-          </h2>
-          <div class="form-group">
-            <span class="form-label-text">Deploy mode</span>
-            <div class="db-mode-toggle">
-              <label class="db-mode-option is-active"><input type="radio" checked><span class="db-mode-option-title">Bundled Postgres</span><span class="db-mode-option-desc">postgres in compose · default</span></label>
-              <label class="db-mode-option"><input type="radio"><span class="db-mode-option-title">External Postgres</span><span class="db-mode-option-desc">Panel / hosted DB · no postgres service</span></label>
+            <div class="cg-ob-bar is-split">
+              <p class="cg-ob-bar__note">This only generates files. It never touches your server.</p>
+              <button type="button" class="cg-ob-cta" title="Start" aria-label="Start">
+                <span>Start</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </button>
             </div>
           </div>
-          <div class="form-row">
-            <div class="form-group form-group-half"><label>Database name</label><input class="form-input" type="text" value="myriad"></div>
-            <div class="form-group form-group-half"><label>Username</label><input class="form-input" type="text" value="myriad"></div>
-          </div>
-        </section>
+        </div>
       </div>
-    </div>
+    </section>
   </div>
 </body>
 </html>
