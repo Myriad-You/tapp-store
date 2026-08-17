@@ -154,7 +154,7 @@ Manifest 若声明了 `pageStyles` / `pageTemplate`，索引必须提供对应 `
 > 安装相关字段以 `apps/<id>/manifest.json` 为唯一权威；商店展示字段写 `catalog.json`。
 
 1. Fork 本仓库，从 `main` 开分支。
-2. **只**在一个 `apps/{id}/` 下添加或修改完整包文件（建议先用仓库内 CLI 或 Myriad [`@myriad/tapp-cli`](https://github.com/Myriad-You/Myriad/tree/preview/tools/tapp-cli) 本地 `check` / `pack`）。可附带文档或脚本，但不可夹带第二个 app。
+2. **只**在一个 `apps/{id}/` 下添加或修改完整包文件（建议先用仓库内 CLI 或 Myriad [`@myriad-you/tapp-cli`](https://github.com/Myriad-You/Myriad/tree/preview/tools/tapp-cli) 本地 `check` / `pack`）。可附带文档或脚本，但不可夹带第二个 app。
 3. 确保 `manifest.id` === 文件夹名；**semver bump**；`category` 使用稳定 ID（见下）。
 4. （可选）写 `apps/{id}/catalog.json` 维护商店文案 / tags / preview / `locales` / featured（**不要**改根 `index.json`）。
 5. 本地校验：
