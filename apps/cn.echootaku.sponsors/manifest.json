@@ -1,0 +1,263 @@
+{
+  "id": "cn.echootaku.sponsors",
+  "name": "赞助者名单",
+  "version": "0.1.13",
+  "minSystemVersion": "0.3.29",
+  "description": "聚合多个赞助平台的支持者，在一个私密仪表盘中查看。",
+  "locales": {
+    "en-US": {
+      "name": "Sponsor Roster",
+      "description": "Review supporters from multiple funding platforms in one private dashboard."
+    },
+    "ja-JP": {
+      "name": "スポンサー名簿",
+      "description": "複数の支援プラットフォームのサポーターを非公開ダッシュボードで確認します。"
+    }
+  },
+  "category": "social",
+  "main": "main.js",
+  "author": {
+    "name": "EchoOtaku",
+    "url": "https://echootaku.cn"
+  },
+  "homepage": "https://echootaku.cn",
+  "repository": "https://github.com/Myriad-You/tapp-store",
+  "permissions": [
+    "storage:read",
+    "storage:write",
+    "network:fetch",
+    "ui:openUrl"
+  ],
+  "openUrls": [
+    {
+      "id": "github-token",
+      "url": "https://github.com/settings/personal-access-tokens/new"
+    },
+    {
+      "id": "patreon-token",
+      "url": "https://www.patreon.com/portal/registration/register-clients"
+    },
+    {
+      "id": "afdian-token",
+      "url": "https://ifdian.net/dashboard/dev"
+    }
+  ],
+  "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M12 20.5S4 16 4 9.5A4.5 4.5 0 0 1 12 6.7a4.5 4.5 0 0 1 8 2.8c0 6.5-8 11-8 11Z' stroke='currentColor' stroke-width='1.8' stroke-linejoin='round'/><path d='M8.5 11.5h7M12 8v7' stroke='currentColor' stroke-width='1.6' stroke-linecap='round'/></svg>",
+  "themeColor": "#C06C58",
+  "hasPage": true,
+  "cssMode": "separated",
+  "pageStyles": "page.css",
+  "pageTemplate": "page.html",
+  "assets": [
+    "assets/deep-field-observatory.png"
+  ],
+  "settings": [
+    {
+      "key": "githubLogin",
+      "label": "GitHub Sponsors 用户名",
+      "type": "input",
+      "description": "需要读取赞助记录的 GitHub 个人账号登录名。",
+      "defaultValue": "",
+      "placeholder": "例如 EchoOtaku"
+    },
+    {
+      "key": "afdianUserId",
+      "label": "爱发电 user_id",
+      "type": "input",
+      "description": "爱发电创作者后台开发者页面显示的 user_id。",
+      "defaultValue": "",
+      "placeholder": "例如 adf397fe8374811eaacee52540025c377"
+    },
+    {
+      "key": "showGithub",
+      "label": "显示 GitHub Sponsors",
+      "type": "toggle",
+      "description": "关闭后不展示也不同步 GitHub；已有快照不会删除。",
+      "defaultValue": true
+    },
+    {
+      "key": "showPatreon",
+      "label": "显示 Patreon",
+      "type": "toggle",
+      "description": "关闭后不展示也不同步 Patreon；已有快照不会删除。",
+      "defaultValue": true
+    },
+    {
+      "key": "showAfdian",
+      "label": "显示爱发电",
+      "type": "toggle",
+      "description": "关闭后不展示也不同步爱发电；已有快照不会删除。",
+      "defaultValue": true
+    }
+  ],
+  "credentials": [
+    {
+      "key": "githubToken",
+      "label": "GitHub access token",
+      "description": "只写凭据，用于 GitHub Sponsors GraphQL API；不会暴露给 Tapp 沙箱。",
+      "placeholder": "github_pat_…"
+    },
+    {
+      "key": "patreonToken",
+      "label": "Patreon 创作者访问令牌",
+      "description": "只写凭据，需要 campaigns.members scope；不会暴露给 Tapp 沙箱。"
+    },
+    {
+      "key": "afdianToken",
+      "label": "爱发电 API Token",
+      "description": "只写凭据，仅由 Myriad 宿主用于爱发电官方 API 的 MD5 签名；Token 不会发送给爱发电或暴露给 Tapp 沙箱。"
+    }
+  ],
+  "apis": {
+    "afdianSponsors": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "https://ifdian.net/api/open/query-sponsor",
+      "method": "POST",
+      "headers": { "Accept": "application/json" },
+      "body": {
+        "user_id": "{{settings.afdianUserId}}",
+        "params": "{{params.query}}",
+        "ts": 0
+      },
+      "credential": {
+        "key": "afdianToken",
+        "in": "sign",
+        "field": "sign",
+        "sign": {
+          "alg": "md5-sorted-kv",
+          "over": ["params", "ts", "user_id"],
+          "timestampField": "ts"
+        }
+      },
+      "cacheTtl": 300,
+      "description": "通过爱发电官方开放 API 分页读取赞助者"
+    },
+    "patreonCampaigns": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "https://www.patreon.com/api/oauth2/v2/campaigns?fields%5Bcampaign%5D=currency",
+      "method": "GET",
+      "headers": { "Accept": "application/json" },
+      "credential": {
+        "key": "patreonToken",
+        "header": "Authorization",
+        "prefix": "Bearer "
+      },
+      "cacheTtl": 300,
+      "description": "自动识别 Patreon 创作者活动与结算币种"
+    },
+    "githubSponsorsFirst": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "https://api.github.com/graphql",
+      "method": "POST",
+      "headers": {
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28"
+      },
+      "credential": {
+        "key": "githubToken",
+        "header": "Authorization",
+        "prefix": "Bearer "
+      },
+      "body": {
+        "query": "query SponsorRoster($login: String!) { user(login: $login) { sponsorshipsAsMaintainer(first: 100, activeOnly: false, includePrivate: true, orderBy: {field: CREATED_AT, direction: DESC}) { nodes { createdAt isActive isOneTimePayment privacyLevel sponsorEntity { __typename ... on User { login name } ... on Organization { login name } } tier { name monthlyPriceInCents } } pageInfo { hasNextPage endCursor } totalCount totalRecurringMonthlyPriceInCents } } }",
+        "variables": { "login": "{{params.login}}" }
+      },
+      "cacheTtl": 300,
+      "description": "读取 GitHub 个人账号收到的首批 Sponsors 记录"
+    },
+    "githubSponsorsNext": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "https://api.github.com/graphql",
+      "method": "POST",
+      "headers": {
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28"
+      },
+      "credential": {
+        "key": "githubToken",
+        "header": "Authorization",
+        "prefix": "Bearer "
+      },
+      "body": {
+        "query": "query SponsorRoster($login: String!, $after: String!) { user(login: $login) { sponsorshipsAsMaintainer(first: 100, after: $after, activeOnly: false, includePrivate: true, orderBy: {field: CREATED_AT, direction: DESC}) { nodes { createdAt isActive isOneTimePayment privacyLevel sponsorEntity { __typename ... on User { login name } ... on Organization { login name } } tier { name monthlyPriceInCents } } pageInfo { hasNextPage endCursor } totalCount totalRecurringMonthlyPriceInCents } } }",
+        "variables": { "login": "{{params.login}}", "after": "{{params.after}}" }
+      },
+      "cacheTtl": 300,
+      "description": "继续读取 GitHub Sponsors 分页记录"
+    },
+    "githubLifetimeFirst": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "https://api.github.com/graphql",
+      "method": "POST",
+      "headers": {
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28"
+      },
+      "credential": {
+        "key": "githubToken",
+        "header": "Authorization",
+        "prefix": "Bearer "
+      },
+      "body": {
+        "query": "query SponsorLifetime($login: String!) { user(login: $login) { lifetimeReceivedSponsorshipValues(first: 100) { nodes { amountInCents sponsor { __typename ... on User { login } ... on Organization { login } } } pageInfo { hasNextPage endCursor } } } }",
+        "variables": { "login": "{{params.login}}" }
+      },
+      "cacheTtl": 300,
+      "description": "读取 GitHub Sponsors 首批累计赞助金额"
+    },
+    "githubLifetimeNext": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "https://api.github.com/graphql",
+      "method": "POST",
+      "headers": {
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28"
+      },
+      "credential": {
+        "key": "githubToken",
+        "header": "Authorization",
+        "prefix": "Bearer "
+      },
+      "body": {
+        "query": "query SponsorLifetime($login: String!, $after: String!) { user(login: $login) { lifetimeReceivedSponsorshipValues(first: 100, after: $after) { nodes { amountInCents sponsor { __typename ... on User { login } ... on Organization { login } } } pageInfo { hasNextPage endCursor } } } }",
+        "variables": { "login": "{{params.login}}", "after": "{{params.after}}" }
+      },
+      "cacheTtl": 300,
+      "description": "继续读取 GitHub Sponsors 累计赞助金额"
+    },
+    "patreonMembersFirst": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "https://www.patreon.com/api/oauth2/v2/campaigns/{{params.campaignId}}/members?fields%5Bmember%5D=full_name,patron_status,last_charge_date,campaign_lifetime_support_cents,currently_entitled_amount_cents&page%5Bcount%5D=1000",
+      "method": "GET",
+      "headers": { "Accept": "application/json" },
+      "credential": {
+        "key": "patreonToken",
+        "header": "Authorization",
+        "prefix": "Bearer "
+      },
+      "cacheTtl": 300,
+      "description": "读取 Patreon 活动的首批成员"
+    },
+    "patreonMembersNext": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "https://www.patreon.com/api/oauth2/v2/campaigns/{{params.campaignId}}/members?fields%5Bmember%5D=full_name,patron_status,last_charge_date,campaign_lifetime_support_cents,currently_entitled_amount_cents&page%5Bcount%5D=1000&page%5Bcursor%5D={{params.cursor}}",
+      "method": "GET",
+      "headers": { "Accept": "application/json" },
+      "credential": {
+        "key": "patreonToken",
+        "header": "Authorization",
+        "prefix": "Bearer "
+      },
+      "cacheTtl": 300,
+      "description": "继续读取 Patreon 成员分页记录"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "long_description": "面向创作者的私密赞助者聚合仪表盘。提供深空观测站与传统名册双视图：每位支持者是一颗具有自然色温的恒星，同币种内累计赞助越高越明亮，当前支持金额决定大小；可缩放星图、调整景深并查看支持者的观测档案。通过 Myriad 只写凭据与声明式网络 API 接入 GitHub Sponsors、Patreon 和爱发电；各平台可独立隐藏并停止同步，已有快照不会因此删除。",
+  "tags": ["赞助", "GitHub Sponsors", "Patreon", "爱发电", "创作者"],
+  "featured": false,
+  "verified": false,
+  "license": "MIT",
+  "homepage": "https://echootaku.cn",
+  "repository": "https://github.com/Myriad-You/tapp-store",
+  "preview": {
+    "version": 1,
+    "type": "snapshot",
+    "html": "preview.html",
+    "styles": ["page.css", "preview.css"],
+    "viewport": { "width": 1280, "height": 800 },
+    "fit": "cover",
+    "focus": { "x": 0.5, "y": 0.45 },
+    "theme": "dark"
+  }
+}
