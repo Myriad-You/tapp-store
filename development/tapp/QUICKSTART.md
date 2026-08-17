@@ -10,9 +10,7 @@ Tapp (Third-party App) 是 Myriad 的扩展应用系统，允许开发者创建�
 Agent 和 CI 应固定包版本、显式指定 `myriad-tapp` binary，并始终使用 `--json`：
 
 ```bash
-npx --yes --package=@myriad/tapp-cli@0.1.0 myriad-tapp init ./my-tapp --type page
-npx --yes --package=@myriad/tapp-cli@0.1.0 myriad-tapp check ./my-tapp --json
-npx --yes --package=@myriad/tapp-cli@0.1.0 myriad-tapp pack ./my-tapp --json
+npx @myriad-you/tapp-cli
 ```
 
 任何非零退出状态都表示失败。`check` 返回状态 `1` 时，读取 `diagnostics`、修复项目并重新
