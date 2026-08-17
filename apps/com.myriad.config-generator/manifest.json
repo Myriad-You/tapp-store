@@ -1,17 +1,17 @@
 {
   "id": "com.myriad.config-generator",
   "name": "Myriad 安装配置生成",
-  "version": "1.1.0",
+  "version": "1.3.0",
   "minSystemVersion": "0.2.1",
-  "description": "分步生成 Compose、.env 与 Nginx（1Panel / 宝塔 / 命令行）",
+  "description": "分步生成 Compose、.env 与反代配置，覆盖常见面板、编排界面与外层反代",
   "locales": {
     "en-US": {
       "name": "Myriad Install Config Generator",
-      "description": "Step-by-step Compose, .env, and Nginx files for 1Panel, Baota, or CLI"
+      "description": "Generate Compose, .env, and reverse-proxy files for common panels, compose UIs, and outer proxies"
     },
     "ja-JP": {
       "name": "Myriad インストール設定ジェネレーター",
-      "description": "ステップ形式で 1Panel / 宝塔 / CLI 向け Compose・.env・Nginx を生成"
+      "description": "一般的なパネル、編成 UI、外側リバースプロキシ向けに Compose・.env・リバースプロキシ設定を手順に沿って生成"
     }
   },
   "category": "developer",

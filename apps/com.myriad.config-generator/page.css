@@ -610,6 +610,23 @@ html.dark #tapp-background {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.panel-mode-toggle.cg-choice {
+  gap: 8px;
+}
+
+.panel-mode-toggle .cg-choice__card {
+  min-height: 7.1rem;
+  padding: 0.85rem 0.85rem 0.9rem;
+}
+
+.panel-mode-toggle .cg-choice__logo {
+  margin-bottom: 0.4rem;
+}
+
+.panel-mode-toggle .cg-choice__desc {
+  font-size: 11.5px;
+}
+
 .cg-choice--two {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -1724,6 +1741,12 @@ select.form-select:not(.cg-select-native) {
 @media (width >= 1100px) {
   [data-step='advanced'] .cg-ob-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (width <= 900px) and (width > 640px) {
+  .panel-mode-toggle.cg-choice {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

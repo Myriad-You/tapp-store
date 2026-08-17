@@ -1,7 +1,7 @@
 <div id="tapp-background" aria-hidden="true"></div>
 
 <div id="tapp-content">
-  <section class="cg-ob" aria-label="Myriad 安装配置">
+  <section class="cg-ob" aria-label="Myriad 安装配置" data-i18n-aria-label="app.aria">
     <div class="cg-ob__card" id="cg-card">
       <header class="cg-ob-top">
         <div class="cg-ob-top__side" id="cg-top-side"></div>
@@ -23,34 +23,34 @@
               </svg>
             </div>
             <div class="cg-ob-hero">
-              <h1>先把安装文件准备好</h1>
-              <p class="cg-ob-hero__lead">选面板、填域名，先在服务器建好网站和证书。密钥和版本会自动填。</p>
+              <h1 data-i18n="welcome.title">准备安装配置</h1>
+              <p class="cg-ob-hero__lead" data-i18n="welcome.lead">选择部署方式并填写站点域名。部分方式须先创建站点并完成证书配置。密钥与镜像版本将自动填入。</p>
             </div>
             <div class="cg-ob-body">
               <div class="cg-ob-features">
                 <div>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-                  <span>选面板</span>
+                  <span data-i18n="welcome.feature.panel">选择方式</span>
                 </div>
                 <div>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                  <span>填域名</span>
+                  <span data-i18n="welcome.feature.domain">填写域名</span>
                 </div>
                 <div>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-                  <span>建站点</span>
+                  <span data-i18n="welcome.feature.site">准备站点</span>
                 </div>
                 <div>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                  <span>拿走文件</span>
+                  <span data-i18n="welcome.feature.files">导出文件</span>
                 </div>
               </div>
             </div>
           </div>
           <div class="cg-ob-bar is-split">
-            <p class="cg-ob-bar__note">只生成文件，不会动你的服务器。</p>
-            <button type="button" class="cg-ob-cta" data-wizard-next title="开始" aria-label="开始">
-              <span>开始</span>
+            <p class="cg-ob-bar__note" data-i18n="welcome.note">本工具仅生成配置文件，不会修改服务器。</p>
+            <button type="button" class="cg-ob-cta" data-wizard-next title="开始" aria-label="开始" data-i18n-title="common.start" data-i18n-aria-label="common.start">
+              <span data-i18n="common.start">开始</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </button>
           </div>
@@ -59,11 +59,11 @@
         <!-- 2. 面板 -->
         <div class="cg-ob__pane" data-step="panel" hidden>
           <div class="cg-ob-hero">
-            <h1>你用什么装？</h1>
-            <p class="cg-ob-hero__lead">选你已经在用的面板。没有面板，就选「命令行」。</p>
+            <h1 data-i18n="panel.title">选择部署方式</h1>
+            <p class="cg-ob-hero__lead" data-i18n="panel.lead">请选择当前使用的面板、编排界面或外层反代。若直接使用 Docker，请选择「命令行」。</p>
           </div>
           <div class="cg-ob-body">
-            <div class="panel-mode-toggle cg-choice" role="radiogroup" aria-label="部署面板">
+            <div class="panel-mode-toggle cg-choice" role="radiogroup" aria-label="部署方式" data-i18n-aria-label="panel.group">
               <label class="panel-mode-option cg-choice__card is-active">
                 <input type="radio" name="panel-mode" value="1panel" checked>
                 <span class="cg-choice__logo" aria-hidden="true">
@@ -77,15 +77,26 @@
                   </svg>
                 </span>
                 <span class="panel-mode-option-title cg-choice__title">1Panel</span>
-                <span class="panel-mode-option-desc cg-choice__desc">编排里贴 YAML，环境变量里贴 .env</span>
+                <span class="panel-mode-option-desc cg-choice__desc" data-i18n="panel.1panel.desc">在编排中粘贴 YAML，在环境变量中粘贴 .env</span>
               </label>
               <label class="panel-mode-option cg-choice__card">
                 <input type="radio" name="panel-mode" value="baota">
                 <span class="cg-choice__logo" aria-hidden="true">
                   <img class="cg-logo-baota" alt="" src="data:image/png;base64,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">
                 </span>
-                <span class="panel-mode-option-title cg-choice__title">宝塔</span>
-                <span class="panel-mode-option-desc cg-choice__desc">粘编排，或放到网站目录</span>
+                <span class="panel-mode-option-title cg-choice__title" data-i18n="panel.baota.short">宝塔</span>
+                <span class="panel-mode-option-desc cg-choice__desc" data-i18n="panel.baota.desc">可粘贴编排，或将文件置于网站目录</span>
+              </label>
+              <label class="panel-mode-option cg-choice__card">
+                <input type="radio" name="panel-mode" value="aapanel">
+                <span class="cg-choice__logo" aria-hidden="true">
+                  <svg class="cg-logo-cli" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="16" rx="3"/>
+                    <path d="M8 9h8M8 13h5"/>
+                  </svg>
+                </span>
+                <span class="panel-mode-option-title cg-choice__title">aaPanel</span>
+                <span class="panel-mode-option-desc cg-choice__desc" data-i18n="panel.aapanel.desc">宝塔国际版。可粘贴编排，或将文件置于网站目录</span>
               </label>
               <label class="panel-mode-option cg-choice__card">
                 <input type="radio" name="panel-mode" value="generic">
@@ -95,15 +106,79 @@
                     <path d="M7 9l3 3-3 3M13 15h4"/>
                   </svg>
                 </span>
-                <span class="panel-mode-option-title cg-choice__title">命令行</span>
-                <span class="panel-mode-option-desc cg-choice__desc">自己用 docker compose 启动</span>
+                <span class="panel-mode-option-title cg-choice__title" data-i18n="panel.generic.short">命令行</span>
+                <span class="panel-mode-option-desc cg-choice__desc" data-i18n="panel.generic.desc">使用 docker compose 在命令行启动</span>
+              </label>
+              <label class="panel-mode-option cg-choice__card">
+                <input type="radio" name="panel-mode" value="portainer">
+                <span class="cg-choice__logo" aria-hidden="true">
+                  <svg class="cg-logo-cli" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="7" width="7" height="10" rx="1.5"/>
+                    <rect x="14" y="4" width="7" height="16" rx="1.5"/>
+                  </svg>
+                </span>
+                <span class="panel-mode-option-title cg-choice__title">Portainer</span>
+                <span class="panel-mode-option-desc cg-choice__desc" data-i18n="panel.portainer.desc">在 Stacks 中粘贴编排，.env 与项目同目录</span>
+              </label>
+              <label class="panel-mode-option cg-choice__card">
+                <input type="radio" name="panel-mode" value="dockge">
+                <span class="cg-choice__logo" aria-hidden="true">
+                  <svg class="cg-logo-cli" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 8h16M4 12h16M4 16h16"/>
+                  </svg>
+                </span>
+                <span class="panel-mode-option-title cg-choice__title">Dockge</span>
+                <span class="panel-mode-option-desc cg-choice__desc" data-i18n="panel.dockge.desc">在 Dockge 中创建 compose 项目，与 .env 同目录</span>
+              </label>
+              <label class="panel-mode-option cg-choice__card">
+                <input type="radio" name="panel-mode" value="coolify">
+                <span class="cg-choice__logo" aria-hidden="true">
+                  <svg class="cg-logo-cli" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/>
+                  </svg>
+                </span>
+                <span class="panel-mode-option-title cg-choice__title">Coolify</span>
+                <span class="panel-mode-option-desc cg-choice__desc" data-i18n="panel.coolify.desc">以 Docker Compose 部署，域名与证书在 Coolify 中配置</span>
+              </label>
+              <label class="panel-mode-option cg-choice__card">
+                <input type="radio" name="panel-mode" value="dokploy">
+                <span class="cg-choice__logo" aria-hidden="true">
+                  <svg class="cg-logo-cli" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3l7 4v6c0 4-3 7-7 8-4-1-7-4-7-8V7l7-4z"/>
+                  </svg>
+                </span>
+                <span class="panel-mode-option-title cg-choice__title">Dokploy</span>
+                <span class="panel-mode-option-desc cg-choice__desc" data-i18n="panel.dokploy.desc">以 Compose 部署，在 Domains 中绑定站点并签发证书</span>
+              </label>
+              <label class="panel-mode-option cg-choice__card">
+                <input type="radio" name="panel-mode" value="npm">
+                <span class="cg-choice__logo" aria-hidden="true">
+                  <svg class="cg-logo-cli" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="6" cy="12" r="3"/>
+                    <circle cx="18" cy="12" r="3"/>
+                    <path d="M9 12h6"/>
+                  </svg>
+                </span>
+                <span class="panel-mode-option-title cg-choice__title">NPM</span>
+                <span class="panel-mode-option-desc cg-choice__desc" data-i18n="panel.npm.desc">用 compose 启动后，在 Nginx Proxy Manager 中新建 Proxy Host</span>
+              </label>
+              <label class="panel-mode-option cg-choice__card">
+                <input type="radio" name="panel-mode" value="caddy">
+                <span class="cg-choice__logo" aria-hidden="true">
+                  <svg class="cg-logo-cli" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3l8 4v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"/>
+                    <path d="M9 12l2 2 4-4"/>
+                  </svg>
+                </span>
+                <span class="panel-mode-option-title cg-choice__title">Caddy</span>
+                <span class="panel-mode-option-desc cg-choice__desc" data-i18n="panel.caddy.desc">用 compose 启动，外层使用 Caddy 自动 HTTPS</span>
               </label>
             </div>
-            <p class="cg-ob-note" id="panel-mode-hint">下一步会告诉你，文件该贴到面板的哪里。</p>
+            <p class="cg-ob-note" id="panel-mode-hint">生成后，请将 YAML 粘贴至编排，将 .env 粘贴至环境变量。</p>
           </div>
           <div class="cg-ob-bar">
-            <button type="button" class="cg-ob-cta" data-wizard-next title="下一步" aria-label="下一步">
-              <span>下一步</span>
+            <button type="button" class="cg-ob-cta" data-wizard-next title="下一步" aria-label="下一步" data-i18n-title="common.next" data-i18n-aria-label="common.next">
+              <span data-i18n="common.next">下一步</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </button>
           </div>
@@ -112,25 +187,25 @@
         <!-- 3. 域名 -->
         <form class="cg-ob__pane" data-step="domain" hidden>
           <div class="cg-ob-hero">
-            <h1>站点域名</h1>
-            <p class="cg-ob-hero__lead">以后用这个地址打开 Myriad。不用写 https://。</p>
+            <h1 data-i18n="domain.title">站点域名</h1>
+            <p class="cg-ob-hero__lead" data-i18n="domain.lead">站点将通过此地址访问 Myriad。无需填写 https://。</p>
             <div class="cg-ob-hero__notes" id="cg-note-domain"></div>
           </div>
           <div class="cg-ob-body">
             <label class="cg-ob-field">
-              <span class="cg-ob-field__label">主域名</span>
+              <span class="cg-ob-field__label" data-i18n="domain.main">主域名</span>
               <input type="text" id="main-domain" class="form-input cg-ob-input" placeholder="myriad.example.com" autocomplete="off" spellcheck="false">
-              <span class="cg-ob-field__hint">写成 myriad.example.com 这样即可</span>
+              <span class="cg-ob-field__hint" data-i18n="domain.mainHint">例如 myriad.example.com</span>
             </label>
             <label class="cg-ob-field">
-              <span class="cg-ob-field__label">额外域名 <i class="cg-ob-field__optional">可选</i></span>
+              <span class="cg-ob-field__label"><span data-i18n="domain.extra">额外域名</span> <i class="cg-ob-field__optional" data-i18n="common.optional">可选</i></span>
               <input type="text" id="extra-domain" class="form-input cg-ob-input" placeholder="www.example.com" autocomplete="off" spellcheck="false">
-              <span class="cg-ob-field__hint">没有就留空</span>
+              <span class="cg-ob-field__hint" data-i18n="domain.extraHint">如无额外域名，请留空</span>
             </label>
           </div>
           <div class="cg-ob-bar">
-            <button type="button" class="cg-ob-cta" data-wizard-next title="下一步" aria-label="下一步">
-              <span>下一步</span>
+            <button type="button" class="cg-ob-cta" data-wizard-next title="下一步" aria-label="下一步" data-i18n-title="common.next" data-i18n-aria-label="common.next">
+              <span data-i18n="common.next">下一步</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </button>
           </div>
@@ -139,21 +214,21 @@
         <!-- 4. 站点 Nginx -->
         <div class="cg-ob__pane" data-step="site" hidden>
           <div class="cg-ob-hero">
-            <h1>先建好网站和证书</h1>
-            <p class="cg-ob-hero__lead">先去服务器创建站点、把 SSL 配好，再把站点 .conf 丢到这里。我们会尽量留住证书，只改成整站反代。</p>
+            <h1 id="site-hero-title" data-i18n="site.title">准备站点与证书</h1>
+            <p class="cg-ob-hero__lead" id="site-hero-lead" data-i18n="site.lead">请先创建站点并完成 SSL，再上传现有 .conf。将尽量保留证书配置，仅改为整站反代。</p>
           </div>
           <div class="cg-ob-body">
-            <p class="cg-site-domain" id="cg-site-domain-note">当前域名还没填。</p>
+            <p class="cg-site-domain" id="cg-site-domain-note">请先返回上一步填写域名。</p>
             <ol class="cg-site-steps" id="cg-site-steps"></ol>
             <div class="upload-group is-single" id="site-upload-group">
               <div class="upload-item">
                 <label id="site-main-upload-label">主域名 .conf</label>
                 <div class="upload-box" id="upload-nginx-conf">
                   <input type="file" id="file-nginx-conf" accept=".conf,.txt" hidden>
-                  <div class="upload-placeholder"><span>把配好 SSL 的 .conf 拖到这里</span></div>
+                  <div class="upload-placeholder"><span data-i18n="site.dropMain">将已配置 SSL 的 .conf 拖放到此处</span></div>
                   <div class="upload-success" hidden>
                     <span class="file-name"></span>
-                    <button type="button" class="btn-remove" title="移除" aria-label="移除">×</button>
+                    <button type="button" class="btn-remove" title="移除" aria-label="移除" data-i18n-title="common.remove" data-i18n-aria-label="common.remove">×</button>
                   </div>
                 </div>
               </div>
@@ -161,20 +236,20 @@
                 <label id="site-extra-upload-label">额外域名 .conf</label>
                 <div class="upload-box" id="upload-extra-nginx-conf">
                   <input type="file" id="file-extra-nginx-conf" accept=".conf,.txt" hidden>
-                  <div class="upload-placeholder"><span>把额外域名的 .conf 拖到这里</span></div>
+                  <div class="upload-placeholder"><span data-i18n="site.dropExtra">将额外域名的 .conf 拖放到此处</span></div>
                   <div class="upload-success" hidden>
                     <span class="file-name"></span>
-                    <button type="button" class="btn-remove" title="移除" aria-label="移除">×</button>
+                    <button type="button" class="btn-remove" title="移除" aria-label="移除" data-i18n-title="common.remove" data-i18n-aria-label="common.remove">×</button>
                   </div>
                 </div>
               </div>
             </div>
             <p class="cg-ob-field__hint" id="cg-site-path" hidden></p>
-            <p class="cg-ob-field__hint">没有现成文件也能继续，我们会生成一份默认配置，证书要之后自己贴。</p>
+            <p class="cg-ob-field__hint" id="site-nofile-hint" data-i18n="site.noFile">未上传文件时将生成默认配置，证书需随后自行补全。</p>
           </div>
           <div class="cg-ob-bar">
-            <button type="button" class="cg-ob-cta" data-wizard-next title="下一步" aria-label="下一步">
-              <span>下一步</span>
+            <button type="button" class="cg-ob-cta" data-wizard-next title="下一步" aria-label="下一步" data-i18n-title="common.next" data-i18n-aria-label="common.next">
+              <span data-i18n="common.next">下一步</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </button>
           </div>
@@ -183,13 +258,13 @@
         <!-- 5. 数据库 -->
         <form class="cg-ob__pane" data-step="database" hidden>
           <div class="cg-ob-hero">
-            <h1>数据库怎么放？</h1>
-            <p class="cg-ob-hero__lead">第一次装，用内置的就行。已经有 Postgres，再选外置。</p>
+            <h1 data-i18n="db.title">选择数据库部署方式</h1>
+            <p class="cg-ob-hero__lead" data-i18n="db.lead">首次安装建议使用内置 PostgreSQL。若已有可用实例，请选择外置。</p>
             <div class="cg-ob-hero__notes" id="cg-note-database"></div>
           </div>
           <div class="cg-ob-body">
             <div class="db-mode-toggle cg-choice cg-choice--two" role="radiogroup" aria-labelledby="db-mode-label">
-              <span class="visually-hidden" id="db-mode-label">数据库方式</span>
+              <span class="visually-hidden" id="db-mode-label" data-i18n="db.modeLabel">数据库部署方式</span>
               <label class="db-mode-option cg-choice__card is-active">
                 <input type="radio" name="db-mode" value="bundled" checked>
                 <span class="cg-choice__logo" aria-hidden="true">
@@ -199,8 +274,8 @@
                     <path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>
                   </svg>
                 </span>
-                <span class="db-mode-option-title cg-choice__title">内置</span>
-                <span class="db-mode-option-desc cg-choice__desc">一起装好，不用自己建库</span>
+                <span class="db-mode-option-title cg-choice__title" data-i18n="db.bundled">内置</span>
+                <span class="db-mode-option-desc cg-choice__desc" data-i18n="db.bundledDesc">随编排一并部署，无需另行建库</span>
               </label>
               <label class="db-mode-option cg-choice__card">
                 <input type="radio" name="db-mode" value="external">
@@ -210,35 +285,35 @@
                     <path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/>
                   </svg>
                 </span>
-                <span class="db-mode-option-title cg-choice__title">外置</span>
-                <span class="db-mode-option-desc cg-choice__desc">填你现有库的地址</span>
+                <span class="db-mode-option-title cg-choice__title" data-i18n="db.external">外置</span>
+                <span class="db-mode-option-desc cg-choice__desc" data-i18n="db.externalDesc">填写现有数据库的连接信息</span>
               </label>
             </div>
 
-            <p class="cg-ob-note" id="db-bundled-hint">库名、用户、密码都会自动写好。你不用记这些。</p>
+            <p class="cg-ob-note" id="db-bundled-hint" data-i18n="db.bundledHint">数据库名、用户与密码将自动写入，无需另行记录。</p>
 
             <div id="db-mode-external-fields" hidden>
               <div class="cg-ob-grid">
                 <label class="cg-ob-field">
-                  <span class="cg-ob-field__label">主机</span>
-                  <input type="text" id="db-host" class="form-input cg-ob-input" placeholder="host.docker.internal 或 IP" autocomplete="off">
+                  <span class="cg-ob-field__label" data-i18n="db.host">主机</span>
+                  <input type="text" id="db-host" class="form-input cg-ob-input" placeholder="host.docker.internal 或 IP" data-i18n-placeholder="db.hostPlaceholder" autocomplete="off">
                 </label>
                 <label class="cg-ob-field">
-                  <span class="cg-ob-field__label">端口</span>
+                  <span class="cg-ob-field__label" data-i18n="db.port">端口</span>
                   <input type="number" id="db-port" class="form-input cg-ob-input" value="5432" min="1" max="65535">
                 </label>
                 <label class="cg-ob-field">
-                  <span class="cg-ob-field__label">数据库名</span>
+                  <span class="cg-ob-field__label" data-i18n="db.name">数据库名</span>
                   <input type="text" id="db-name" class="form-input cg-ob-input" value="myriad" autocomplete="off">
                 </label>
                 <label class="cg-ob-field">
-                  <span class="cg-ob-field__label">用户名</span>
+                  <span class="cg-ob-field__label" data-i18n="db.user">用户名</span>
                   <input type="text" id="db-user" class="form-input cg-ob-input" value="myriad" autocomplete="off">
                 </label>
                 <label class="cg-ob-field is-wide">
-                  <span class="cg-ob-field__label">sslmode <i class="cg-ob-field__optional">可选</i></span>
+                  <span class="cg-ob-field__label"><span data-i18n="db.sslmode">sslmode</span> <i class="cg-ob-field__optional" data-i18n="common.optional">可选</i></span>
                   <select id="db-sslmode" class="form-input form-select">
-                    <option value="" selected>不设置</option>
+                    <option value="" selected data-i18n="db.sslUnset">不设置</option>
                     <option value="disable">disable</option>
                     <option value="allow">allow</option>
                     <option value="prefer">prefer</option>
@@ -248,26 +323,26 @@
                   </select>
                 </label>
                 <label class="cg-ob-field is-wide">
-                  <span class="cg-ob-field__label">附加 Docker 子网 <i class="cg-ob-field__optional">可选</i></span>
+                  <span class="cg-ob-field__label"><span data-i18n="db.extraNetwork">附加 Docker 子网</span> <i class="cg-ob-field__optional" data-i18n="common.optional">可选</i></span>
                   <input type="text" id="db-extra-network" class="form-input cg-ob-input" placeholder="1panel-network" autocomplete="off">
-                  <span class="cg-ob-field__hint">库和 Myriad 不在同一个 Docker 网络时才需要。1Panel 常见值是 1panel-network。</span>
+                  <span class="cg-ob-field__hint" data-i18n="db.extraNetworkHint">仅当数据库与 Myriad 不在同一 Docker 网络时需要。1Panel 常见值为 1panel-network。</span>
                 </label>
               </div>
             </div>
 
             <div class="cg-ob-field" id="db-password-field" hidden>
-              <span class="cg-ob-field__label">数据库密码</span>
+              <span class="cg-ob-field__label" data-i18n="db.password">数据库密码</span>
               <div class="input-with-action">
-                <input type="text" id="db-password" class="form-input cg-ob-input" placeholder="填外置库的真实密码" autocomplete="off" spellcheck="false">
-                <button type="button" id="gen-db-password" class="btn-generate" title="生成随机密码" aria-label="生成随机密码">
+                <input type="text" id="db-password" class="form-input cg-ob-input" placeholder="请填写外置数据库的实际密码" data-i18n-placeholder="db.passwordPlaceholder" autocomplete="off" spellcheck="false">
+                <button type="button" id="gen-db-password" class="btn-generate" title="生成随机密码" aria-label="生成随机密码" data-i18n-title="db.genPassword" data-i18n-aria-label="db.genPassword">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
                 </button>
               </div>
             </div>
           </div>
           <div class="cg-ob-bar">
-            <button type="button" class="cg-ob-cta" data-wizard-next title="下一步" aria-label="下一步">
-              <span>下一步</span>
+            <button type="button" class="cg-ob-cta" data-wizard-next title="下一步" aria-label="下一步" data-i18n-title="common.next" data-i18n-aria-label="common.next">
+              <span data-i18n="common.next">下一步</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </button>
           </div>
@@ -276,61 +351,61 @@
         <!-- 6. 限额 -->
         <div class="cg-ob__pane" data-step="limits" hidden>
           <div class="cg-ob-hero">
-            <h1>给机器留多少资源？</h1>
-            <p class="cg-ob-hero__lead">按你服务器大概有多大来选。不确定就用推荐。</p>
+            <h1 data-i18n="limits.title">资源配置</h1>
+            <p class="cg-ob-hero__lead" data-i18n="limits.lead">请按服务器可用资源选择限额。不确定时请使用推荐档。</p>
           </div>
           <div class="cg-ob-body">
-            <div class="limit-preset-toggle cg-choice" role="radiogroup" aria-label="资源档">
+            <div class="limit-preset-toggle cg-choice" role="radiogroup" aria-label="资源档" data-i18n-aria-label="limits.group">
               <label class="cg-choice__card">
                 <input type="radio" name="limit-preset" value="small">
-                <span class="cg-choice__title">小型</span>
-                <span class="cg-choice__desc">大约 1–2G</span>
+                <span class="cg-choice__title" data-i18n="limits.small">小型</span>
+                <span class="cg-choice__desc" data-i18n="limits.smallDesc">约 1–2 GB</span>
               </label>
               <label class="cg-choice__card is-active">
                 <input type="radio" name="limit-preset" value="standard" checked>
-                <span class="cg-choice__title">推荐</span>
-                <span class="cg-choice__desc">大约 2–4G</span>
+                <span class="cg-choice__title" data-i18n="limits.standard">推荐</span>
+                <span class="cg-choice__desc" data-i18n="limits.standardDesc">约 2–4 GB</span>
               </label>
               <label class="cg-choice__card">
                 <input type="radio" name="limit-preset" value="large">
-                <span class="cg-choice__title">宽裕</span>
-                <span class="cg-choice__desc">4G 以上</span>
+                <span class="cg-choice__title" data-i18n="limits.large">宽裕</span>
+                <span class="cg-choice__desc" data-i18n="limits.largeDesc">4 GB 以上</span>
               </label>
             </div>
-            <button type="button" id="limit-preset-custom" class="cg-limit-custom-btn" aria-pressed="false">自定义数额</button>
+            <button type="button" id="limit-preset-custom" class="cg-limit-custom-btn" aria-pressed="false" data-i18n="limits.custom">自定义限额</button>
             <p class="cg-ob-note" id="limit-preset-hint">推荐档：数据库 1 核 / 1G，后端 2 核 / 2G，前端 1 核 / 512M。</p>
 
             <div id="limit-custom-fields" class="cg-limit-custom" hidden>
               <div class="cg-setting-block" id="db-resource-group">
-                <p class="cg-setting-block__title">数据库</p>
-                <p class="cg-setting-block__desc">内置 Postgres 用。外置库不会生成这个容器。</p>
+                <p class="cg-setting-block__title" data-i18n="limits.db">数据库</p>
+                <p class="cg-setting-block__desc" data-i18n="limits.dbDesc">供内置 PostgreSQL 使用。选择外置时不会生成该容器。</p>
                 <div class="cg-setting-row">
-                  <label class="cg-setting-item" for="db-cpu-limit"><span>CPU（核）</span><input type="text" id="db-cpu-limit" class="form-input cg-ob-input" value="1.0" inputmode="decimal"></label>
-                  <label class="cg-setting-item" for="db-mem-limit"><span>内存</span><input type="text" id="db-mem-limit" class="form-input cg-ob-input" value="1G"></label>
+                  <label class="cg-setting-item" for="db-cpu-limit"><span data-i18n="limits.cpu">CPU（核）</span><input type="text" id="db-cpu-limit" class="form-input cg-ob-input" value="1.0" inputmode="decimal"></label>
+                  <label class="cg-setting-item" for="db-mem-limit"><span data-i18n="limits.memory">内存</span><input type="text" id="db-mem-limit" class="form-input cg-ob-input" value="1G"></label>
                 </div>
               </div>
               <div class="cg-setting-block">
-                <p class="cg-setting-block__title">后端</p>
-                <p class="cg-setting-block__desc">API 和后台任务。</p>
+                <p class="cg-setting-block__title" data-i18n="limits.backend">后端</p>
+                <p class="cg-setting-block__desc" data-i18n="limits.backendDesc">API 与后台任务。</p>
                 <div class="cg-setting-row">
-                  <label class="cg-setting-item" for="backend-cpu-limit"><span>CPU（核）</span><input type="text" id="backend-cpu-limit" class="form-input cg-ob-input" value="2.0" inputmode="decimal"></label>
-                  <label class="cg-setting-item" for="backend-mem-limit"><span>内存</span><input type="text" id="backend-mem-limit" class="form-input cg-ob-input" value="2G"></label>
+                  <label class="cg-setting-item" for="backend-cpu-limit"><span data-i18n="limits.cpu">CPU（核）</span><input type="text" id="backend-cpu-limit" class="form-input cg-ob-input" value="2.0" inputmode="decimal"></label>
+                  <label class="cg-setting-item" for="backend-mem-limit"><span data-i18n="limits.memory">内存</span><input type="text" id="backend-mem-limit" class="form-input cg-ob-input" value="2G"></label>
                 </div>
               </div>
               <div class="cg-setting-block">
-                <p class="cg-setting-block__title">前端</p>
-                <p class="cg-setting-block__desc">网站页面。</p>
+                <p class="cg-setting-block__title" data-i18n="limits.frontend">前端</p>
+                <p class="cg-setting-block__desc" data-i18n="limits.frontendDesc">站点页面。</p>
                 <div class="cg-setting-row">
-                  <label class="cg-setting-item" for="frontend-cpu-limit"><span>CPU（核）</span><input type="text" id="frontend-cpu-limit" class="form-input cg-ob-input" value="1.0" inputmode="decimal"></label>
-                  <label class="cg-setting-item" for="frontend-mem-limit"><span>内存</span><input type="text" id="frontend-mem-limit" class="form-input cg-ob-input" value="512M"></label>
+                  <label class="cg-setting-item" for="frontend-cpu-limit"><span data-i18n="limits.cpu">CPU（核）</span><input type="text" id="frontend-cpu-limit" class="form-input cg-ob-input" value="1.0" inputmode="decimal"></label>
+                  <label class="cg-setting-item" for="frontend-mem-limit"><span data-i18n="limits.memory">内存</span><input type="text" id="frontend-mem-limit" class="form-input cg-ob-input" value="512M"></label>
                 </div>
               </div>
             </div>
           </div>
           <div class="cg-ob-bar">
-            <button type="button" id="btn-goto-advanced" class="cg-ob-bar__text">进行高级设置</button>
-            <button type="button" id="btn-generate-all" class="cg-ob-cta js-generate" title="生成配置" aria-label="生成配置">
-              <span>生成配置</span>
+            <button type="button" id="btn-goto-advanced" class="cg-ob-bar__text" data-i18n="limits.advanced">高级选项</button>
+            <button type="button" id="btn-generate-all" class="cg-ob-cta js-generate" title="生成配置" aria-label="生成配置" data-i18n-title="common.generate" data-i18n-aria-label="common.generate">
+              <span data-i18n="common.generate">生成配置</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 18v-6M9 15l3 3 3-3"/><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             </button>
           </div>
@@ -339,14 +414,14 @@
         <!-- 7. 高级 -->
         <div class="cg-ob__pane" data-step="advanced" hidden>
           <div class="cg-ob-hero">
-            <h1>高级选项</h1>
-            <p class="cg-ob-hero__lead">默认已经能用。没有特殊需求，直接生成就行。</p>
+            <h1 data-i18n="advanced.title">高级选项</h1>
+            <p class="cg-ob-hero__lead" data-i18n="advanced.lead">默认配置已可用于生产。无特殊需求时可直接生成。</p>
           </div>
           <div class="cg-ob-body">
             <div class="cg-switch-item">
               <div class="cg-switch-item__text">
-                <span class="cg-switch-item__label" id="memory-saver-label">内存节约</span>
-                <span class="cg-switch-item__desc">小主机收紧缓存、连接池和联邦并发。选「小型」会自动打开。</span>
+                <span class="cg-switch-item__label" id="memory-saver-label" data-i18n="advanced.memorySaver">内存节约</span>
+                <span class="cg-switch-item__desc" data-i18n="advanced.memorySaverDesc">收紧缓存、连接池与联邦并发。选择「小型」时将自动启用。</span>
               </div>
               <label class="cg-toggle">
                 <input type="checkbox" id="memory-saver" aria-labelledby="memory-saver-label">
@@ -355,85 +430,85 @@
             </div>
 
             <div class="resource-group">
-              <div class="resource-label"><span>镜像版本</span></div>
+              <div class="resource-label"><span data-i18n="advanced.images">镜像版本</span></div>
               <div class="tag-status-row">
                 <span id="tag-status" class="tag-status">正在获取最新版本…</span>
-                <button type="button" id="btn-refresh-tags" class="btn-secondary" title="从 Docker Hub 刷新">刷新</button>
+                <button type="button" id="btn-refresh-tags" class="btn-secondary" title="从 Docker Hub 刷新" data-i18n="advanced.refresh" data-i18n-title="advanced.refreshTitle">刷新</button>
               </div>
               <div class="cg-ob-grid">
                 <label class="cg-ob-field">
-                  <span class="cg-ob-field__label">应用</span>
-                  <input type="text" id="myriad-tag" class="form-input cg-ob-input" value="" placeholder="自动获取…" autocomplete="off">
+                  <span class="cg-ob-field__label" data-i18n="advanced.app">应用</span>
+                  <input type="text" id="myriad-tag" class="form-input cg-ob-input" value="" placeholder="自动获取…" data-i18n-placeholder="advanced.autoPlaceholder" autocomplete="off">
                 </label>
                 <label class="cg-ob-field">
-                  <span class="cg-ob-field__label">反代</span>
-                  <input type="text" id="proxy-tag" class="form-input cg-ob-input" value="" placeholder="自动获取…" autocomplete="off">
+                  <span class="cg-ob-field__label" data-i18n="advanced.proxy">反代</span>
+                  <input type="text" id="proxy-tag" class="form-input cg-ob-input" value="" placeholder="自动获取…" data-i18n-placeholder="advanced.autoPlaceholder" autocomplete="off">
                 </label>
                 <label class="cg-ob-field">
-                  <span class="cg-ob-field__label">更新器</span>
-                  <input type="text" id="updater-tag" class="form-input cg-ob-input" value="" placeholder="自动获取…" autocomplete="off">
+                  <span class="cg-ob-field__label" data-i18n="advanced.updater">更新器</span>
+                  <input type="text" id="updater-tag" class="form-input cg-ob-input" value="" placeholder="自动获取…" data-i18n-placeholder="advanced.autoPlaceholder" autocomplete="off">
                 </label>
                 <label class="cg-ob-field">
-                  <span class="cg-ob-field__label">通道</span>
+                  <span class="cg-ob-field__label" data-i18n="advanced.channel">通道</span>
                   <select id="channel" class="form-input form-select">
                     <option value="stable" selected>stable</option>
                     <option value="preview">preview</option>
                   </select>
                 </label>
                 <label class="cg-ob-field">
-                  <span class="cg-ob-field__label">签名校验</span>
+                  <span class="cg-ob-field__label" data-i18n="advanced.cosign">签名校验</span>
                   <select id="cosign-verify" class="form-input form-select">
                     <option value="strict" selected>strict</option>
                     <option value="soft">soft</option>
-                    <option value="off">off（需双钥匙）</option>
+                    <option value="off" data-i18n="advanced.cosignOff">off（需双钥匙）</option>
                   </select>
                 </label>
               </div>
             </div>
 
             <div class="resource-group">
-              <div class="resource-label"><span>入口</span></div>
+              <div class="resource-label"><span data-i18n="advanced.entry">入口</span></div>
               <div class="cg-ob-grid">
                 <label class="cg-ob-field">
-                  <span class="cg-ob-field__label">监听地址</span>
+                  <span class="cg-ob-field__label" data-i18n="advanced.bind">监听地址</span>
                   <select id="http-bind-address" class="form-input form-select">
                     <option value="127.0.0.1" selected>127.0.0.1</option>
                     <option value="0.0.0.0">0.0.0.0</option>
                   </select>
                 </label>
                 <label class="cg-ob-field">
-                  <span class="cg-ob-field__label">HTTP 端口</span>
+                  <span class="cg-ob-field__label" data-i18n="advanced.httpPort">HTTP 端口</span>
                   <input type="number" id="http-port" class="form-input cg-ob-input" value="8080" min="1" max="65535">
                 </label>
               </div>
             </div>
 
             <div class="resource-group">
-              <div class="resource-label"><span>Docker 网络</span></div>
+              <div class="resource-label"><span data-i18n="advanced.networks">Docker 网络</span></div>
               <div class="cg-ob-grid">
                 <label class="cg-ob-field">
-                  <span class="cg-ob-field__label">业务网</span>
+                  <span class="cg-ob-field__label" data-i18n="advanced.netBusiness">业务网</span>
                   <input type="text" id="net-myriad" class="form-input cg-ob-input" value="myriad-net" autocomplete="off">
                 </label>
                 <label class="cg-ob-field">
-                  <span class="cg-ob-field__label">管理网</span>
+                  <span class="cg-ob-field__label" data-i18n="advanced.netAdmin">管理网</span>
                   <input type="text" id="net-admin" class="form-input cg-ob-input" value="myriad-admin-net" autocomplete="off">
                 </label>
                 <label class="cg-ob-field">
-                  <span class="cg-ob-field__label">守卫网</span>
+                  <span class="cg-ob-field__label" data-i18n="advanced.netGuard">守卫网</span>
                   <input type="text" id="net-guard" class="form-input cg-ob-input" value="myriad-docker-guard-net" autocomplete="off">
                 </label>
               </div>
             </div>
 
             <label class="cg-ob-field" id="db-version-field">
-              <span class="cg-ob-field__label">PostgreSQL 版本</span>
+              <span class="cg-ob-field__label" data-i18n="advanced.pgVersion">PostgreSQL 版本</span>
               <input type="number" id="db-version" class="form-input cg-ob-input" value="18" min="18" max="20" step="1">
             </label>
           </div>
           <div class="cg-ob-bar">
-            <button type="button" id="btn-generate-advanced" class="cg-ob-cta js-generate" title="生成配置" aria-label="生成配置">
-              <span>生成配置</span>
+            <button type="button" id="btn-generate-advanced" class="cg-ob-cta js-generate" title="生成配置" aria-label="生成配置" data-i18n-title="common.generate" data-i18n-aria-label="common.generate">
+              <span data-i18n="common.generate">生成配置</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 18v-6M9 15l3 3 3-3"/><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             </button>
           </div>
@@ -442,8 +517,8 @@
         <!-- 8. 完成 -->
         <div class="cg-ob__pane" data-step="done" id="results-section" hidden>
           <div class="cg-ob-hero">
-            <h1>按这个顺序装</h1>
-            <p class="cg-ob-hero__lead" id="results-intro">先收好暗号，再按面板把文件放进去。</p>
+            <h1 data-i18n="done.title">按下列顺序完成部署</h1>
+            <p class="cg-ob-hero__lead" id="results-intro">请先保存安装暗号，再按面板说明放置文件。</p>
           </div>
           <div class="cg-ob-body">
             <ol class="cg-guide-overview" id="cg-guide-overview"></ol>
@@ -451,29 +526,29 @@
             <article class="cg-guide-card" id="setup-secret-reminder" hidden>
               <header>
                 <b>1</b>
-                <h2>先收好安装暗号</h2>
+                <h2 data-i18n="done.secretTitle">保存安装暗号</h2>
               </header>
-              <p>第一次打开站点、创建所有者时要填。也可以复制链接，打开后向导会自动填入。</p>
+              <p data-i18n="done.secretBody">首次打开站点并创建所有者时须填写。亦可复制安装链接，打开后向导将自动填入。</p>
               <div class="setup-secret-reminder-row">
                 <code id="setup-secret-reminder-value"></code>
-                <button type="button" id="copy-setup-secret-result" class="btn-copy-field">复制暗号</button>
+                <button type="button" id="copy-setup-secret-result" class="btn-copy-field" data-i18n="done.copySecret">复制暗号</button>
               </div>
               <div class="setup-secret-reminder-row">
                 <code id="setup-secret-link-value"></code>
-                <button type="button" id="copy-setup-secret-link" class="btn-copy-field">复制链接</button>
+                <button type="button" id="copy-setup-secret-link" class="btn-copy-field" data-i18n="done.copyLink">复制链接</button>
               </div>
             </article>
 
             <div class="cg-guide-list" id="cg-guide-list"></div>
 
-            <p class="cg-files-kicker">全部文件</p>
+            <p class="cg-files-kicker" data-i18n="done.filesKicker">全部文件</p>
             <div class="cg-files">
               <div class="result-card cg-file" data-file="compose">
                 <div class="result-header">
                   <span class="result-name">docker-compose.yml</span>
                   <span class="result-badge" id="badge-compose">编排</span>
-                  <button type="button" class="btn-copy" data-target="docker-compose">复制</button>
-                  <button type="button" class="btn-download" data-filename="docker-compose.yml" data-target="docker-compose">下载</button>
+                  <button type="button" class="btn-copy" data-target="docker-compose" data-i18n="common.copy">复制</button>
+                  <button type="button" class="btn-download" data-filename="docker-compose.yml" data-target="docker-compose" data-i18n="common.download">下载</button>
                 </div>
                 <pre class="result-content"><code id="result-docker-compose"></code></pre>
               </div>
@@ -481,9 +556,9 @@
               <div class="result-card cg-file" data-file="env">
                 <div class="result-header">
                   <span class="result-name">.env</span>
-                  <span class="result-badge" id="badge-env">密钥 · 勿公开</span>
-                  <button type="button" class="btn-copy" data-target="env">复制</button>
-                  <button type="button" class="btn-download" data-filename=".env" data-target="env">下载</button>
+                  <span class="result-badge" id="badge-env">密钥 · 请勿公开</span>
+                  <button type="button" class="btn-copy" data-target="env" data-i18n="common.copy">复制</button>
+                  <button type="button" class="btn-download" data-filename=".env" data-target="env" data-i18n="common.download">下载</button>
                 </div>
                 <pre class="result-content"><code id="result-env"></code></pre>
               </div>
@@ -491,19 +566,29 @@
               <div class="result-card cg-file" id="card-main-nginx" data-file="nginx">
                 <div class="result-header">
                   <span class="result-name" id="name-main-nginx">site.conf</span>
-                  <span class="result-badge">反代</span>
-                  <button type="button" class="btn-copy" data-target="main-nginx">复制</button>
-                  <button type="button" class="btn-download" data-filename="main.conf" data-target="main-nginx">下载</button>
+                  <span class="result-badge" data-i18n="done.badgeNginx">反代</span>
+                  <button type="button" class="btn-copy" data-target="main-nginx" data-i18n="common.copy">复制</button>
+                  <button type="button" class="btn-download" data-filename="main.conf" data-target="main-nginx" data-i18n="common.download">下载</button>
                 </div>
                 <pre class="result-content"><code id="result-main-nginx"></code></pre>
+              </div>
+
+              <div class="result-card cg-file" id="card-caddy" data-file="caddy" hidden>
+                <div class="result-header">
+                  <span class="result-name">Caddyfile</span>
+                  <span class="result-badge" data-i18n="done.badgeCaddy">Caddy</span>
+                  <button type="button" class="btn-copy" data-target="caddyfile" data-i18n="common.copy">复制</button>
+                  <button type="button" class="btn-download" data-filename="Caddyfile" data-target="caddyfile" data-i18n="common.download">下载</button>
+                </div>
+                <pre class="result-content"><code id="result-caddyfile"></code></pre>
               </div>
 
               <div class="result-card cg-file" id="card-extra-nginx" data-file="nginx-extra" hidden>
                 <div class="result-header">
                   <span class="result-name" id="name-extra-nginx">extra.conf</span>
-                  <span class="result-badge">额外域名</span>
-                  <button type="button" class="btn-copy" data-target="extra-nginx">复制</button>
-                  <button type="button" class="btn-download" data-filename="extra.conf" data-target="extra-nginx">下载</button>
+                  <span class="result-badge" data-i18n="done.badgeExtra">额外域名</span>
+                  <button type="button" class="btn-copy" data-target="extra-nginx" data-i18n="common.copy">复制</button>
+                  <button type="button" class="btn-download" data-filename="extra.conf" data-target="extra-nginx" data-i18n="common.download">下载</button>
                 </div>
                 <pre class="result-content"><code id="result-extra-nginx"></code></pre>
               </div>
@@ -511,17 +596,17 @@
               <div class="result-card cg-file" data-file="deploy">
                 <div class="result-header">
                   <span class="result-name">DEPLOY.md</span>
-                  <span class="result-badge">步骤</span>
-                  <button type="button" class="btn-copy" data-target="deploy-notes">复制</button>
-                  <button type="button" class="btn-download" data-filename="DEPLOY.md" data-target="deploy-notes">下载</button>
+                  <span class="result-badge" data-i18n="done.badgeDeploy">步骤</span>
+                  <button type="button" class="btn-copy" data-target="deploy-notes" data-i18n="common.copy">复制</button>
+                  <button type="button" class="btn-download" data-filename="DEPLOY.md" data-target="deploy-notes" data-i18n="common.download">下载</button>
                 </div>
                 <pre class="result-content"><code id="result-deploy-notes"></code></pre>
               </div>
 
               <div class="result-card cg-file" id="card-validation" data-file="check">
                 <div class="result-header">
-                  <span class="result-name">生成校验</span>
-                  <span class="result-badge">自检</span>
+                  <span class="result-name" data-i18n="done.validationName">生成校验</span>
+                  <span class="result-badge" data-i18n="done.badgeCheck">自检</span>
                 </div>
                 <pre class="result-content"><code id="result-validation"></code></pre>
               </div>

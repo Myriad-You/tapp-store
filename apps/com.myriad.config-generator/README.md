@@ -4,7 +4,7 @@
 
 ## 版本
 
-`1.1.0`
+`1.3.0`
 
 ## 安全
 
@@ -20,18 +20,26 @@
 
 ## UI
 
-- **分步向导**：铺满宿主窗口。欢迎 → 面板 → 域名 → 站点 → 数据库 → 限额 → 完成。高级可选。每次只问一件事。背景用壁纸主色做淡渐变（沙箱无法真透明，不再套浮卡）。
-- **站点独立一步**：先去面板/服务器创建网站并配好 SSL，再把现成 `.conf` 丢过来；生成时尽量保留证书，改成整站反代。没有文件也能继续，会写默认 conf。
-- **主路径极简**：密钥自动填。限额默认可直接过。完成页先复制安装暗号。
+- **分步向导**：铺满宿主窗口。欢迎 → 面板 → 域名 → 站点 → 数据库 → 限额 → 完成。高级可选。每步只处理一项。背景使用壁纸主色淡渐变（沙箱无法真透明，不再套浮卡）。
+- **站点独立一步**：Nginx 类方式请先创建网站并完成 SSL，再上传现有 `.conf`；生成时尽量保留证书，仅改为整站反代。未上传文件时将写入默认 conf。Coolify / Dokploy / NPM 在平台中绑定域名；Caddy 生成 `Caddyfile`，均无需上传 Nginx。
+- **主路径极简**：密钥自动填入。限额默认可直接继续。完成页请先复制安装暗号。
+- **应用内 i18n**：`i18n/{zh-CN,en-US,ja-JP}.json` + `Tapp.i18n.t()`；语言切换后重绘向导与完成页。
 - **自定义下拉**：`select.form-select` 在运行时增强为 `.cg-select`（自绘 trigger + option 列表），跟随壁纸主色/深色模式；原生 `<select>` 仅作值载体（系统 option 菜单无法主题化）。
 
-## 面板适配（用户可选）
+## 部署方式（用户可选）
 
-| 面板 | Compose 用法 | 站点路径（默认 conf） | 日志 | 依据 |
-|------|--------------|----------------------|------|------|
-| **1Panel** | 编排粘贴 YAML；环境变量框粘贴 `.env` | `/www/sites/<domain>/index` | `/www/sites/<domain>/log/…` | 1Panel 编排文档 + 本生成器历史默认 |
-| **宝塔** | **也可「创建编排」粘贴 YAML**（官方教程）；或目录+终端；应用商店编排常改同目录 `.env` | `/www/wwwroot/<domain>` | `/www/wwwlogs/<domain>.log` | 站点 conf 默认（论坛示例）；Compose [140412](https://www.bt.cn/bbs/thread-140412-1-1.html)；`.env` 端口 [141215](https://www.bt.cn/bbs/thread-141215-1-1.html)；`.env` 未加载 [124845](https://www.bt.cn/bbs/thread-124845-1-1.html) |
-| **通用 / CLI** | `docker compose up -d` | `/var/www/<domain>/html` | `/var/log/nginx/…` | 常规 Linux 约定 |
+| 方式 | Compose 用法 | 外层反代 | 站点路径（默认 conf） | 说明 |
+|------|--------------|----------|----------------------|------|
+| **1Panel** | 编排粘贴 YAML；环境变量框粘贴 `.env` | 上传 / 覆盖 Nginx | `/www/sites/<domain>/index` | 1Panel 编排文档 + 本生成器历史默认 |
+| **宝塔** | 可「创建编排」粘贴 YAML，或目录 + 终端 | 上传 / 覆盖 Nginx | `/www/wwwroot/<domain>` | Compose [140412](https://www.bt.cn/bbs/thread-140412-1-1.html)；`.env` 端口 [141215](https://www.bt.cn/bbs/thread-141215-1-1.html) |
+| **aaPanel** | Docker → Compose 粘贴 YAML，`.env` 同目录 | 上传 / 覆盖 Nginx | `/www/wwwroot/<domain>` | 宝塔国际版，路径与宝塔相近 |
+| **Portainer** | Stacks 粘贴 YAML，`.env` 同目录 | 仍需 Nginx / Caddy / NPM | `/var/www/<domain>/html` | 外层必须整站反代 |
+| **Dockge** | 创建 compose 项目，`.env` 同目录 | 仍需 Nginx / Caddy / NPM | `/var/www/<domain>/html` | 外层必须整站反代 |
+| **Coolify** | Compose 服务 + 环境变量 | 平台绑定域名与证书 | — | 不生成 Nginx；须整站转发与 WebSocket |
+| **Dokploy** | Compose 应用 + 环境变量 | Domains 绑定站点 | — | 不生成 Nginx；须整站转发与 WebSocket |
+| **Nginx Proxy Manager** | `docker compose up -d` | 新建 Proxy Host | — | 整站转发到 `bind`，开启 WebSocket / SSL |
+| **Caddy** | `docker compose up -d` | 生成 `Caddyfile` | `/etc/caddy/Caddyfile` | `reverse_proxy` + 自动 HTTPS |
+| **通用 / CLI** | `docker compose up -d` | 上传 / 覆盖 Nginx | `/var/www/<domain>/html` | 常规 Linux 约定 |
 
 ### 数据库权限（用户反馈 · Docker 通病，宝塔更易触发）
 
@@ -46,8 +54,9 @@ DEPLOY：`chown -R 70:70 pgdata && chmod 700 pgdata`。
 |------|------|
 | `docker-compose.yml` | proxy / frontend / backend / backend-volume-init / [postgres] / docker-guard / updater / updater-gateway |
 | `.env` | 密钥、tag、`MYRIAD_DB_MODE`（勿提交） |
-| `<domain>.conf` | 外层整站反代到 proxy（含 ACME 本地挑战） |
-| `DEPLOY.md` | 启动、联邦与救援（含所选面板专章） |
+| `<domain>.conf` | Nginx 类方式：外层整站反代到 proxy（含 ACME 本地挑战） |
+| `Caddyfile` | 仅 Caddy：自动 HTTPS + 整站 `reverse_proxy` |
+| `DEPLOY.md` | 启动、联邦与救援（含所选方式专章） |
 
 ## 数据库模式 `MYRIAD_DB_MODE`
 
@@ -105,15 +114,19 @@ curl -sS "https://YOUR_DOMAIN/.well-known/nodeinfo" | head -c 200
 
 ## 用法
 
-1. 选面板（1Panel / 宝塔 / 命令行）  
-2. 填域名（额外域名可选）  
-3. 先在服务器创建网站并配好 SSL，再把站点 `.conf` 拖进来  
-4. 选数据库（内置或外置；密钥与版本自动填）  
-5. 按机器大小调整 CPU / 内存限额（默认可直接过）  
-6. 生成后先复制安装暗号，再按面板提示拿走文件  
+1. 选择部署方式（面板、编排界面或外层反代）  
+2. 填写域名（额外域名可选）  
+3. Nginx 类方式：先创建网站并完成 SSL，再上传站点 `.conf`；平台反代与 Caddy 按完成页说明绑定  
+4. 选择数据库（内置或外置；密钥与版本自动填入）  
+5. 按机器规格调整 CPU / 内存限额（默认可直接继续）  
+6. 生成后先复制安装暗号，再按所选方式放置文件  
 
 **1Panel：** YAML → 编排，`.env` → 环境变量。  
-**宝塔：** 目录内同时放 compose + `.env` → Docker 容器编排添加项目；网站反向代理目标 `127.0.0.1:HTTP_PORT`，代理 `/`。  
+**宝塔 / aaPanel：** 目录内同时放 compose + `.env`，或粘贴编排；网站反向代理目标 `127.0.0.1:HTTP_PORT`，代理 `/`。  
+**Portainer / Dockge：** Stacks 或项目粘贴 YAML，外层仍须整站反代。  
+**Coolify / Dokploy：** 在平台中粘贴 Compose 并绑定域名，必须整站转发。  
+**NPM：** 先启动编排，再新建 Proxy Host，整站转发并开启 WebSocket。  
+**Caddy：** 同目录启动后，使用生成的 `Caddyfile`。  
 站点反代均到 `HTTP_BIND_ADDRESS:HTTP_PORT`。
 
 **内置：**
