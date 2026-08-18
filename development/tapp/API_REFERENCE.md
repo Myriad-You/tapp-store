@@ -62,9 +62,9 @@ const allTranslations = Tapp.i18n.getAll(); // 返回只读数据的深拷贝
 
 ## 存储 API
 
-**权限**: `storage`
+**权限**: 读取方法使用 `storage:read`；写入、删除与清空使用 `storage:write`
 
-`storage` 为 **guest-safe basic**：真实用户与**签名游客 session** 均可进入 Runtime Grant。
+`storage:read` 为 **guest-safe basic**：真实用户与**签名游客 session** 均可进入 Runtime Grant。
 持久主体是 Grant subject（`user_id + tapp_id`）；游客落在负 id 命名空间，不与登录用户或
 站点 owner 共享。无签名 session 的纯匿名调用不会获得 Grant。
 
@@ -150,7 +150,8 @@ runtime 中选择提供方，不会为没有后台实例的 Tapp 隐式启动完
 
 ## 设置 API
 
-**权限**: `storage`（宿主 gate；与私有 `Tapp.storage` 共用权限位，但**数据命名空间不同**）
+**权限**: `settings.get/getAll` 使用 `storage:read`，`settings.set` 使用 `storage:write`；与私有
+`Tapp.storage` 共用权限位，但**数据命名空间不同**
 
 ```javascript
 // 获取设置项（未保存时回落 Manifest defaultValue）
@@ -709,7 +710,8 @@ Tapp.dom.renderList(container, items, (item, index) => {
 ## 数据处理 API
 
 权限按数据流动态计算：inline 输入且无输出不需要静态权限；platform 输入需要
-`platform:read`，platform 输出需要 `platform:write`，storage 输入/输出需要 `storage`。
+`platform:read`，platform 输出需要 `platform:write`，storage 输入需要 `storage:read`，
+storage 输出需要 `storage:write`。
 纯 inline 输入与返回值不需要额外权限，访客也可使用；一旦请求 platform 或 storage，
 服务端仍按当前 Runtime Grant 拒绝未获授权的访问。
 后端同时校验 Runtime Grant 与安装授权。
@@ -1108,6 +1110,50 @@ Channel/Room **JSON 消息**（含内联 base64 图）后端载荷上限 **36 Mi
 参数与 REST 字段以 `frontend/src/types/federation.ts`、后端路由与
 `fixtures/action_permissions.json` 为准，勿从方法名臆造字段。
 
+## Game API
+
+**权限**: `game:session`（另需 `federation:read` / `federation:write` / `federation:message`）
+
+Page 上的 `Tapp.game` 把联邦房间收成对局会话。消息类型固定为
+`game:<tappId>:<protocol>`，载荷只能是
+`{ kind: "intent"|"state", seq, nonce, body }`。单条默认 ≤ 64 KiB，房间可在
+`manifest.game.maxMessageBytes`（1024–256 KiB）里放宽；宿主按**该房间**的上限校验，
+不能 E2E 加密。`seq` / `nonce` 只给对局自己去重和排序，宿主不保证单调、也不拦重放。
+`body` 是不透明 JSON，关键词过滤看不到里面的文本。
+
+`Tapp.game.create()` 默认**不公开**（`isPublic: false`），`invite_policy` 仍是 `open`。
+同一实例上，分享 ID 可以直接 `join`。跨实例时：
+
+- 公开房（`{ isPublic: true }`）：对端用 `room_id@home` 走公开房间接口，副本会带上
+  `game` 配置；
+- 私房：对端必须被邀请。`RoomInvite` 会带上同一份 `game` 配置，副本才能收意图。
+  私房的分享 ID **不能**跨实例自助加入（公开目录接口会 404 / `REMOTE_NOT_PUBLIC`）。
+
+发送和入站都会核对 `message_type` 必须是这间房绑定的 `game:<tappId>:<protocol>`；
+别的 Tapp 的 `game:…` 信封会被 400。`Tapp.game.onMessage` 也只收本包这一条类型。
+
+跨实例入站时**不**对这段 JSON 做关键词过滤，但仍检查成员、签名、体积、频率和域名拉黑。
+
+```javascript
+const room = await Tapp.game.create({ name: "Gomoku", maxPlayers: 2 });
+// room.share_id === `${room.room_id}@${room.home_server}`
+await navigator.clipboard.writeText(room.share_id);
+
+const joined = await Tapp.game.join("rm_…@peer.example:8443");
+await Tapp.federation.subscribeRoom(joined.room_id);
+
+Tapp.game.onMessage((ev) => {
+  const envelope = ev.data.message.payload; // kind / seq / nonce / body
+});
+
+await Tapp.game.sendIntent(joined.room_id, { action: "place", row: 7, col: 7 }, 1);
+await Tapp.game.sendState(room.room_id, snapshot, seq);
+```
+
+失败时 `join` 可能带 `code`：`ROOM_NOT_FOUND`、`REMOTE_HOME_UNREACHABLE`、
+`REMOTE_NOT_PUBLIC`、`INSTANCE_BLOCKED`。Playground 预览不注册这些 handler。
+权威仍在房主客户端；房主掉线不会自动选主。
+
 ---
 
 ## Tapp 列表 API
@@ -1126,7 +1172,7 @@ await Tapp.tappList.install({
   source: "store",
   storeSource: "1", // 或完整 index.json URL；禁止 "store"/"direct"
   tappId: "com.example.app",
-  permissions: ["storage:read", "storage:write"],
+  permissions: ["storage:read"],
 });
 // 等价：source 为 http(s) catalog URL（可省略 storeSource）
 // await Tapp.tappList.install({
@@ -1141,7 +1187,7 @@ await Tapp.tappList.install({
 //   manifest: { id: "com.example.app", name: "App", version: "1.0.0",
 //               category: "utility", main: "main.js", permissions: [] },
 //   code: "/* ... */",
-//   permissions: ["storage:read", "storage:write"],
+//   permissions: ["storage:read"],
 // });
 // ❌ 无效：source:"direct" 且缺少 manifest 或 code
 
@@ -1503,7 +1549,7 @@ const declaredApis = await Tapp.api.list();
 
 ## 文件与语音 API
 
-**权限**: `storage`（`file.download`）
+**权限**: `storage:read`（`file.download`）
 
 文件下载由宿主创建 Blob 并触发下载，不依赖 iframe 的 download sandbox 权限：
 
@@ -1566,7 +1612,7 @@ Tapp.assets.revokeAll(); // 也会在 onDestroy 时自动调用
 
 | 命名空间                                   | 主要能力                                            | 权限族                             |
 | ------------------------------------------ | --------------------------------------------------- | ---------------------------------- |
-| `storage`, `settings`                      | Tapp 私有键值存储与设置（`storage` 含签名游客）     | `storage`                          |
+| `storage`, `settings`                      | Tapp 私有键值存储与设置（读权限含签名游客）         | `storage:read`, `storage:write`    |
 | `dataExchange`                             | 逐次授权的跨 Tapp 具名数据交换                      | Manifest + one-shot consent        |
 | `ui`, `animation`, `dynamicContent`, `dom` | 宿主 UI、主题、动画和安全 DOM helper                | `ui:*` 或 public                   |
 | `platform`, `data`                         | 平台数据读取、写入、转换和注册                      | `platform:*`                       |
@@ -1579,7 +1625,7 @@ Tapp.assets.revokeAll(); // 也会在 onDestroy 时自动调用
 | `event`, `background`, `scheduler`         | 在线 Event Broker、常驻需求和持久化任务             | `event:*`（含 background.require/release→`event:subscribe`）、`scheduler:register` |
 | `agent`                                    | schema 约束的 Agent Interaction                     | Manifest + Runtime Grant           |
 | `api`                                      | Manifest 声明的 HTTP/builtin 能力                   | HTTP 需 `network:fetch`；`access` 仅控制调用者范围 |
-| `file`, `speech`                           | 文件下载、TTS 和 ASR                                | `storage`, `speech:*`              |
+| `file`, `speech`                           | 文件下载、TTS 和 ASR                                | `storage:read`, `speech:*`         |
 | `assets`                                   | 包内静态资源 list/get/blob URL                      | public（限 manifest.assets）       |
 | `tappList`                                 | Tapp 查询、安装、启停、卸载与导出                   | `tappList:*`                       |
 | `brewList`                                 | Brew 列表、源、用户分类 create/delete、评论和 OPML  | `brew:*`                           |

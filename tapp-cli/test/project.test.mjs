@@ -198,6 +198,25 @@ describe('Tapp project core', () => {
     assert.ok(report.permissions.missing.some(({ permission }) => permission === 'storage:write'))
   })
 
+  it('rejects retired storage permission instead of satisfying storage writes', async () => {
+    const root = await temporaryDirectory('retired-storage-permission')
+    await createProject(root, { type: 'page' })
+    const manifestPath = join(root, 'manifest.json')
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+    manifest.permissions = ['storage']
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
+    await writeFile(join(root, 'main.js'), `Tapp.storage.set('key', 'value');\n`)
+
+    const report = await inspectProject(root)
+    assert.ok(
+      report.diagnostics.some(
+        ({ code, message }) =>
+          code === 'unknown-permission' && message.includes("Unknown permission: storage"),
+      ),
+    )
+    assert.ok(report.permissions.missing.some(({ permission }) => permission === 'storage:write'))
+  })
+
   it('warns when page HTML or JS loads an engine from a CDN', async () => {
     const root = await temporaryDirectory('remote-engine')
     await createProject(root, { type: 'page' })

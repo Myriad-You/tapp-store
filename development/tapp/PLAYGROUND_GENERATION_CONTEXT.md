@@ -21,10 +21,16 @@ Playground 项目至少需要 **Page** 或 **Widgets** 之一（允许 Widget-on
   CSP 使用每实例 nonce。Widget-only 预览不挂载 Page 沙箱。
 - Canvas / WebGL / Three.js 只放在 **Page**。不要在 Widget 里跑 rAF 主循环或 3D 场景。
 - 禁止输出 CDN 脚本（`unpkg` / `jsdelivr` / `cdnjs` / `esm.sh` / `threejs.org/build`）。
-  沙箱 `connect-src` 只有 `blob:` / `data:`，也不能 `import` npm。Three 等库必须预打成 IIFE 写入
-  `page/`，由 `manifest.pageModules` 加载；贴图和 `.glb` 走 `Tapp.assets`。
+  沙箱 `connect-src` 只有 `blob:` / `data:`，也不能 `import` npm。
+  3D 预览请声明 `runtimeModules: ["three"]`（game / developer），使用宿主注入的
+  `THREE` / `GLTFLoader`；贴图和 `.glb` 走 `Tapp.assets`。
   先 `Tapp.assets.getUrlMap()`，再用 `rewriteUrl` 接 LoadingManager。
   `fetch` 只能打 blob/data。详见 [GRAPHICS.md](GRAPHICS.md)。
+- 不要在预览里调用 `Tapp.game` 或联邦房间。联机只写正式安装后的代码。
+  若生成安装后才跑的对局：Manifest 同时声明 `game:session` 与
+  `federation:read` / `federation:write` / `federation:message`，用 `Tapp.game`
+  （不要自己拼 `gomoku.v1`）。`create()` 默认不公开；跨实例私房靠邀请，
+  跨实例分享 ID 自助加入必须 `{ isPublic: true }`。
 
 ## 宿主展示文案 vs 应用内 i18n（勿混淆）
 
@@ -165,8 +171,10 @@ Bridge 默认 payload 约 **1 MiB**；正式运行特例：`file.download` 内�
   `javascript:` URL。
 - 不读取 Cookie、localStorage、sessionStorage、父窗口 DOM 或宿主 token。
 - 页面在窄屏和宽屏都必须可用，并支持浅色/深色背景。
-- Manifest 只声明代码真实调用的权限；读取主题和语言不需要额外权限，storage 需要
-  `storage`，确认和全屏分别需要 `ui:confirm` 与 `ui:fullscreen`。
+- Manifest 只声明代码真实调用的权限；读取主题和语言不需要额外权限。读取
+  `Tapp.storage` / `Tapp.settings` 需要 `storage:read`，写入、删除与清空需要
+  `storage:write`。不要再声明已移除的 `storage`。确认和全屏分别需要
+  `ui:confirm` 与 `ui:fullscreen`。
 - 应用分类和 Widget 分类不是同一枚举；Widget 分类仅允许 `stats`、`activity`、
   `visualization`、`utility`、`custom`，声明 Widget 时必须请求 `widget:register`。
 - 顶层 `manifest.settings` 是安装级设置；用户个人偏好放入 `Tapp.storage`，单个 Widget

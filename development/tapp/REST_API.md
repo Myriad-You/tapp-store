@@ -77,7 +77,7 @@ Tapp 管理接口大多返回：
 
 Storage 按当前 **subject**（持久用户或签名游客 session）命名空间隔离：打开公开安装时，
 每个 subject 读写自己的 `user_id + tapp_id` 数据，不会读取站点 owner 的 storage。
-`storage` / `platform:read` 可进入访客 Runtime Grant（见下「Widget 与存储」）。
+`storage:read` / `platform:read` 可进入访客 Runtime Grant（见下「Widget 与存储」）。
 安装级 Manifest 设置仍由安装 owner 或管理员写入；能打开该安装的运行者（含游客）可读已
 保存的声明键。
 
@@ -217,7 +217,7 @@ PUT body 只写调用者个人行：`{ "sizes": { "<tappId>": "1x1"|"2x1" }, "or
   "source": "store",
   "storeSource": "1",
   "tappId": "com.example.app",
-  "permissions": ["storage:read", "storage:write"]
+  "permissions": ["storage:read"]
 }
 ```
 
@@ -313,8 +313,8 @@ storage entity 也不会序列化密文；数据库约束只允许 `_credentials
 | POST   | `/api/tapps/{tappId}/storage/{key}`      | 写入值                                      |
 | DELETE | `/api/tapps/{tappId}/storage/{key}`      | 删除值                                      |
 
-`storage` 路由要求 optional_auth + Runtime Grant。`storage` 与 `platform:read` 均为
-**guest-safe basic**（见 [MANIFEST · 权限](MANIFEST.md) 与
+storage 路由要求 optional_auth + Runtime Grant。读取需要 `storage:read`；写入、删除和清空
+需要 `storage:write`。`storage:read` 与 `platform:read` 均为 **guest-safe basic**（见 [MANIFEST · 权限](MANIFEST.md) 与
 `permission_service::requires_authenticated_subject`）：签名游客 session 可作为 subject，
 私有 storage 落在负 id 命名空间下，平台 **读** 走 optional_auth 的公开站点缓存。
 通用 storage 使用当前 subject 命名空间，并拒绝访问 `_settings.`、`_component:`、
@@ -600,7 +600,7 @@ WebSocket 位于不同后端副本时仍可投递，每个标签页都能按自�
 
 | 方法 | 路径 | 说明 |
 | ---- | ---- | ---- |
-| GET/POST | `/tapi/{tappId}/{path}` | 执行对应 `apis.*.route` |
+| GET/POST | `/tapi/{tappId}/{path}` | 执行对应 `apis.*.route`。`HEAD` 不按 GET 处理 |
 
 没有未签名的目录接口。调用方必须事先知道 Manifest 里的 `path` 和验签头，不能靠探测本机安装列表。
 未安装、无此 route、方法不对、缺头或 HMAC 错误一律 401 `ROUTE_VERIFY_INVALID`，不区分「有没有这条路由」。
@@ -612,7 +612,7 @@ WebSocket 位于不同后端副本时仍可投递，每个标签页都能按自�
 拉黑：10 分钟内对同一 Tapp 验签失败 25 次会自动封该调用方指纹 1 小时；全站 10 分钟失败 80 次会封全站入站 1 小时。不保存原始 IP。
 owner 可在 Tapp 详情里暂停**该安装**的 `/tapi`，或解除该安装下已列出的指纹。暂停/拉黑按安装 owner 隔离，私有副本不能冻结或解封公开安装。解除只清本安装拉黑，不清全站自动封禁。暂停返回 403 `ROUTE_PAUSED`，拉黑返回 403 `ROUTE_BLOCKED`。
 `/tapi` 验签替代 CSRF；带站点 Cookie 的 POST 也不要求 `X-CSRF-Token`。
-请求体上限 1 MiB。入站密钥泄露后应立刻在详情页轮换。
+请求体超过 1 MiB 返回 413 `ROUTE_BODY_TOO_LARGE`。入站密钥泄露后应立刻在详情页轮换。
 
 签名规则见 [Manifest · 入站路由](MANIFEST.md#入站路由-apisroute)。
 

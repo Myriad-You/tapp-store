@@ -1,7 +1,7 @@
 {
   "id": "com.myriad.config-generator",
   "name": "Myriad 安装配置生成",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minSystemVersion": "0.2.1",
   "description": "分步生成 Compose、.env 与反代配置，覆盖常见面板、编排界面与外层反代",
   "locales": {
@@ -33,6 +33,13 @@
       "type": "http",
       "method": "GET",
       "endpoint": "https://hub.docker.com/v2/repositories/somekawahitomi/{{params.repo}}/tags?page_size=100&ordering=-last_updated",
+      "cacheTtl": 300
+    },
+    "dockerHubTag": {
+      "access": "public",
+      "type": "http",
+      "method": "GET",
+      "endpoint": "https://hub.docker.com/v2/repositories/somekawahitomi/{{params.repo}}/tags/{{params.tag}}",
       "cacheTtl": 300
     }
   }

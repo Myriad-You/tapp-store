@@ -1,7 +1,7 @@
 # Tapp 快速入门
 
 Tapp (Third-party App) 是 Myriad 的扩展应用系统，允许开发者创建自定义小组件、工具和功能扩展。
-当前推荐使用 `@myriad/tapp-cli` 创建、校验和打包项目；Manifest 字段与 SDK 能力分别见
+当前推荐使用 `@myriad-you/tapp-cli` 创建、校验和打包项目；Manifest 字段与 SDK 能力分别见
 [Manifest 配置](MANIFEST.md)和 [API 参考](API_REFERENCE.md)。CLI 的完整命令契约见
 [Myriad Tapp CLI](../../../tools/tapp-cli/README.md)。
 
@@ -10,9 +10,9 @@ Tapp (Third-party App) 是 Myriad 的扩展应用系统，允许开发者创建�
 Agent 和 CI 应固定包版本、显式指定 `myriad-tapp` binary，并始终使用 `--json`：
 
 ```bash
-npx --yes --package=@myriad/tapp-cli@0.1.0 myriad-tapp init ./my-tapp --type page
-npx --yes --package=@myriad/tapp-cli@0.1.0 myriad-tapp check ./my-tapp --json
-npx --yes --package=@myriad/tapp-cli@0.1.0 myriad-tapp pack ./my-tapp --json
+npx --yes --package=@myriad-you/tapp-cli@0.1.0 myriad-tapp init ./my-tapp --type page
+npx --yes --package=@myriad-you/tapp-cli@0.1.0 myriad-tapp check ./my-tapp --json
+npx --yes --package=@myriad-you/tapp-cli@0.1.0 myriad-tapp pack ./my-tapp --json
 ```
 
 任何非零退出状态都表示失败。`check` 返回状态 `1` 时，读取 `diagnostics`、修复项目并重新
@@ -25,7 +25,7 @@ npx --yes --package=@myriad/tapp-cli@0.1.0 myriad-tapp pack ./my-tapp --json
 starter：
 
 ```bash
-npm install --global @myriad/tapp-cli@0.1.0
+npm install --global @myriad-you/tapp-cli@0.1.0
 myriad-tapp init ./my-tapp --type page
 ```
 
@@ -390,8 +390,8 @@ Widget: render() 里 Tapp.storage.get(key)   （或 onChanged 局部更新）
 }
 ```
 
-> 权限字符串必须是宿主白名单里的完整 token。存储请声明 **`storage:read`**
-> 和/或 **`storage:write`**（不要再用已移除的 `storage`）；定时任务权限是 **`scheduler:register`**
+> 权限字符串必须是宿主白名单里的完整 token。存储读取使用 **`storage:read`**，写入使用
+> **`storage:write`**；定时任务权限是 **`scheduler:register`**
 > （`backgroundRequirements` 里的 `"scheduler"` 是后台能力类型，不是权限 token）。
 > 未知权限会在安装时被拒绝或过滤。
 
