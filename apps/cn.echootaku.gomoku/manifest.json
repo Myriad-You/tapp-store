@@ -1,7 +1,7 @@
 {
   "id": "cn.echootaku.gomoku",
   "name": "联邦五子棋",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "minSystemVersion": "0.3.0",
   "description": "15×15 五子棋，支持本地双人和跨实例联邦房间对战",
   "locales": {
@@ -21,7 +21,8 @@
     "url": "https://echootaku.cn"
   },
   "permissions": [
-    "storage",
+    "storage:read",
+    "storage:write",
     "ui:theme",
     "ui:confirm",
     "federation:read",

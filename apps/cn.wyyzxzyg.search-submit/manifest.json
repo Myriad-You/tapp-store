@@ -1,7 +1,7 @@
 {
   "id": "cn.wyyzxzyg.search-submit",
   "name": "搜索引擎收录提交",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minSystemVersion": "0.3.27",
   "description": "仅管理员可用的百度主动推送与 IndexNow URL 提交工具",
   "category": "developer",
@@ -11,7 +11,7 @@
     "url": "https://github.com/zgzyh"
   },
   "permissions": [
-    "storage",
+    "storage:read",
     "ui:notification",
     "ui:confirm",
     "ui:theme",

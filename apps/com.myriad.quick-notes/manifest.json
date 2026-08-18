@@ -1,7 +1,7 @@
 {
   "id": "com.myriad.quick-notes",
   "name": "便携便签",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "minSystemVersion": "0.2.1",
   "description": "快速记录想法，支持搜索与主页小组件",
   "locales": {
@@ -21,7 +21,8 @@
     "url": "https://github.com/Myriad-You"
   },
   "permissions": [
-    "storage",
+    "storage:read",
+    "storage:write",
     "ui:notification",
     "ui:theme",
     "ui:confirm",

@@ -1,7 +1,7 @@
 {
   "id": "cn.echootaku.days",
   "name": "朝夕",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "minSystemVersion": "0.3.23",
   "description": "记录值得期待与纪念的日子，在主页随时查看最近倒数。",
   "locales": {
@@ -23,7 +23,8 @@
   "homepage": "https://echootaku.cn",
   "repository": "https://github.com/Myriad-You/tapp-store",
   "permissions": [
-    "storage",
+    "storage:read",
+    "storage:write",
     "ui:notification",
     "ui:confirm",
     "widget:register"

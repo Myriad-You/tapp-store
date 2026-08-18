@@ -296,6 +296,10 @@ flowchart TB
 - 不要用 `games` / `tools` / `music` 等旧别名写新包（宿主会规范化，但新发布应直接用规范 ID）。
 - `Page` / `Widget` / headless 是运行形态，不是 `category`。
 - 索引 `category` ≠ Manifest `category` → 后端 **拒绝商店安装**。
+- `category` 为 `game` / `developer` 且声明了 `game` 或 `runtimeModules` 时，资源上限
+  放宽到单文件 12 MiB / 合计 48 MiB / 128 项。3D 请用宿主 `runtimeModules: ["three"]`，
+  不要把 Three 打进商店包。联机新包用 `Tapp.game`；旧的自定义 `message_type`
+  （如 `gomoku.v1`）在未声明 `game` 时仍可走普通房间消息。
 
 ### 最小合法示例
 
@@ -312,7 +316,7 @@ flowchart TB
       "description": "A note-taking Tapp",
       "author": { "name": "Example" },
       "category": "productivity",
-      "permissions": ["storage", "widget:register"],
+      "permissions": ["storage:read", "storage:write", "widget:register"],
       "download": {
         "manifest": "apps/com.example.notes/manifest.json",
         "code": "apps/com.example.notes/main.js",
@@ -381,7 +385,7 @@ Cookie: …  X-CSRF-Token: …
   "source": "store",
   "storeSource": "1",
   "tappId": "com.example.notes",
-  "permissions": ["storage", "widget:register"]
+  "permissions": ["storage:read", "storage:write", "widget:register"]
 }
 ```
 
@@ -453,7 +457,7 @@ REST 商店安装仍是 body `source: "store"` + `storeSource: catalogRef`（源
 
 ### 开发者流程（官方源）
 
-1. 用 `@myriad/tapp-cli` 初始化、`check`、可选 `pack`（见 [QUICKSTART](QUICKSTART.md)）。
+1. 用 `@myriad-you/tapp-cli` 初始化、`check`、可选 `pack`（见 [QUICKSTART](QUICKSTART.md)）。
 2. 确认 `manifest.json`：`category`（稳定 ID）、`permissions`、`main`、模板/CSS/assets；**semver `version`**。
 3. 在商店仓库 **只改一个** `apps/{id}/`；**不要手改** 根 `index.json`。
 4. 可选：`apps/{id}/catalog.json` 写商店展示字段（`long_description` / `tags` / `preview` / `featured` / `locales`…）。`locales` 里的长介绍与预览由索引同步合并进 `index.json`；不要手改根索引。

@@ -48,9 +48,27 @@ Manifest 是 Tapp 的核心配置文件，定义了应用的元数据、权限�
 目录内的文件名，不能再次包含目录前缀。`main` 必须是 `.js`，样式路径必须是 `.css`，
 Page/Widget 模板必须是 `.html`；代码与模板类声明资源必须是安装目录内的普通 UTF-8 文本
 文件。`assets` 允许二进制（贴图、音频、wasm、JSON 关卡等），路径必须位于 `assets/`
-下，且不得使用 `.js` / `.html` 扩展名；单文件 ≤ 5 MiB，合计 ≤ 20 MiB，最多 64 项。
-资源读取不会跟随安装后插入的符号链接。运行时通过 `Tapp.assets` 读取，详见
-[图形与轻量游戏](GRAPHICS.md)。
+下，且不得使用 `.js` / `.html` 扩展名；默认单文件 ≤ 5 MiB，合计 ≤ 20 MiB，最多 64 项。
+`category` 为 `game` 或 `developer`，并且声明了 `game` 或 `runtimeModules` 时，放宽到
+单文件 12 MiB / 合计 48 MiB / 128 项。资源读取不会跟随安装后插入的符号链接。运行时通过
+`Tapp.assets` 读取，详见 [图形与轻量游戏](GRAPHICS.md)。
+
+### 游戏会话与宿主 Three（`game` / `runtimeModules`）
+
+```json
+{
+  "category": "game",
+  "permissions": ["game:session", "federation:read", "federation:write", "federation:message"],
+  "game": { "protocol": "gomoku", "maxPlayers": 2 },
+  "runtimeModules": ["three"]
+}
+```
+
+- `game.protocol`：小写 `[a-z0-9._-]`，会组成房间消息类型 `game:<tappId>:<protocol>`。
+- 声明 `game` 时必须同时申请 `game:session` 与 `federation:read` / `federation:write` / `federation:message`。
+- `runtimeModules` 目前只允许 `three`，且仅 game / developer 分类。宿主注入钉死版本，不走 CDN。
+- `Tapp.game.create()` 默认不公开。同一实例可用 `room_id@home_server` 加入；跨实例私房必须邀请（邀请会带上 `game` 配置），跨实例自助加入要 `{ isPublic: true }`。
+- 发送/入站只接受该房间绑定的 `game:<tappId>:<protocol>`；`seq` / `nonce` 由对局自己去重。
 
 ### 外链 allowlist（openUrls）
 
@@ -186,7 +204,7 @@ Page、Widget 和 headless core 是运行形态，由 `hasPage`、`widgets` 和
 - **Storage 与 Settings 不同命名空间**：
   - `Tapp.storage` 的持久主体是 Runtime Grant **subject**（`user_id + tapp_id`）。打开
     公开安装时，每个 subject（持久用户或**签名游客 session**）读写自己的私有 storage，
-    不会读取站点 owner 的数据。`storage` 为 guest-safe basic：签名游客可获 Grant 与负 id
+    不会读取站点 owner 的数据。`storage:read` 为 guest-safe basic：签名游客可获 Grant 与负 id
     命名空间下的持久 storage；无签名 session 则无 storage。
   - Manifest 声明的安装级设置（宿主 `Tapp.settings` / REST `GET|POST …/settings`）挂在
     **installation owner** 命名空间：owner 或管理员可**写**；凡能解析到该安装的运行者
@@ -213,7 +231,7 @@ Page、Widget 和 headless core 是运行形态，由 `hasPage`、`widgets` 和
   "icon": "🚀",
   "themeColor": "#6366f1",
   "permissions": [
-    "storage",
+    "storage:read",
     "ui:notification",
     "platform:read",
     "network:fetch"
@@ -794,7 +812,7 @@ const summary = await Tapp.api("summarize", { prompt: "总结这些数据" });
 | 字段 | 必填 | 说明 |
 | --- | --- | --- |
 | `path` | 是 | `/` + 1–64 位字母数字/`_`/`-`，Manifest 内唯一 |
-| `methods` | 否 | 仅 `GET` / `POST`，默认 `["GET"]`。`HEAD` 按 GET 验签 |
+| `methods` | 否 | 仅 `GET` / `POST`，默认 `["GET"]`。`HEAD` 不按 GET 验签，宿主直接拒绝 |
 | `verify.key` | 是 | 顶层 `credentials[].key`，可只绑入站 |
 | `verify.alg` | 是 | 仅 `hmac-sha256-raw` |
 | `verify.header` | 是 | `X-` 头；禁止会话头和代理头（`X-CSRF-Token`、`X-Tapp-Runtime-Grant`、`X-Forwarded-*`、`X-Real-IP`、`X-Request-Id` 等） |
@@ -933,7 +951,7 @@ Tapp 私有 storage、报告和内部状态不会因为知道另一个 `tappId` 
 
 | 权限                 | 说明             |
 | -------------------- | ---------------- |
-| `storage`            | 本地数据存储     |
+| `storage:read`       | 读取本地数据存储 |
 | `ui:notification`    | 显示通知         |
 | `ui:theme`           | 读取主题信息     |
 | `ui:confirm`         | 显示确认对话框   |
@@ -954,6 +972,7 @@ Tapp 私有 storage、报告和内部状态不会因为知道另一个 `tappId` 
 | `federation:write`   | 联邦个人操作     |
 | `federation:message` | 联邦消息         |
 | `federation:files`   | 联邦文件传输     |
+| `game:session`       | 游戏房间会话（`Tapp.game`；仍需对应联邦权限） |
 
 ### 提升权限（管理员可配置下放）
 
@@ -970,12 +989,13 @@ Tapp 私有 storage、报告和内部状态不会因为知道另一个 `tappId` 
 | `scheduler:register` | 注册定时任务      |
 | `speech:tts`         | 文本转语音        |
 | `speech:asr`         | 语音转文本        |
+| `storage:write`      | 写入本地数据存储  |
 
 `brew:write` 与 `brew:comment` 描述的是 Tapp 能力，不按宿主用户角色下放。Tapp 仍必须在
 Manifest 中声明并在安装时获授；实际读写始终落在当前会话可访问的 Brew 数据范围内。
 
 “基础”表示不需要管理员额外下放 elevated 权限，不等于匿名访客一定可用。访客没有持久
-用户主体时，部分能力仍可通过签名游客 session 使用（如 `storage`、`platform:read`、
+用户主体时，部分能力仍可通过签名游客 session 使用（如 `storage:read`、`platform:read`、
 `analytics:read`）。下列能力的真实后端路由仍要求登录：`brew:write`、
 `brew:comment`、`report:read`、`ui:notification` 等。
 

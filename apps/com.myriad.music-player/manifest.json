@@ -1,7 +1,7 @@
 {
   "id": "com.myriad.music-player",
   "name": "音乐播放器",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "minSystemVersion": "0.2.1",
   "description": "控制系统音乐播放，查看歌词与播放列表",
   "locales": {
@@ -21,7 +21,8 @@
     "url": "https://github.com/Myriad-You"
   },
   "permissions": [
-    "storage",
+    "storage:read",
+    "storage:write",
     "ui:theme",
     "media:control",
     "media:read",

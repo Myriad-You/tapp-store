@@ -1,13 +1,13 @@
 {
   "id":"cn.wyyzxzyg.minecraft-hub",
   "name":"Minecraft 服务器与 Wiki",
-  "version":"1.0.6",
+  "version":"1.0.7",
   "minSystemVersion":"0.3.27",
   "description":"面向玩家的 Java/基岩版服务器查询、收藏与 Minecraft Wiki 搜索工具",
   "category":"game",
   "main":"main.js",
   "author":{"name":"我願一直向著陽光.℡","url":"https://github.com/zgzyh"},
-  "permissions":["storage","ui:notification","ui:theme","ui:openUrl","network:fetch","widget:register"],
+  "permissions":["storage:read","storage:write","ui:notification","ui:theme","ui:openUrl","network:fetch","widget:register"],
   "settings":[
     {"key":"homeServers","label":"首页服务器列表","type":"input","description":"由 Tapp 管理页面维护的共享服务器配置，请勿手动修改。","defaultValue":"[]"},
     {"key":"homeSwitchSeconds","label":"服务器轮播间隔（秒）","type":"number","defaultValue":8,"min":3,"max":300,"step":1},

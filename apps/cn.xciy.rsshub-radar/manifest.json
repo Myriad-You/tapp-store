@@ -1,7 +1,7 @@
 {
   "id": "cn.xciy.rsshub-radar",
   "name": "RSSHub 雷达",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "minSystemVersion": "0.2.1",
   "description": "发现 RSSHub 路由，管理订阅并预览 Feed",
   "locales": {
@@ -21,7 +21,8 @@
     "url": "https://github.com/Pstarchen"
   },
   "permissions": [
-    "storage",
+    "storage:read",
+    "storage:write",
     "network:fetch",
     "ui:notification",
     "ui:theme"

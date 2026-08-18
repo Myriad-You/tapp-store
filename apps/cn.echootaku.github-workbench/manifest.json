@@ -1,7 +1,7 @@
 {
   "id": "cn.echootaku.github-workbench",
   "name": "GitHub 工作台",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "minSystemVersion": "0.3.23",
   "description": "集中查看待审 PR、分配给我的 Issue、失败 Actions 与仓库发布动态。",
   "locales": {
@@ -24,7 +24,8 @@
   "repository": "https://github.com/Myriad-You/tapp-store",
   "permissions": [
     "network:fetch",
-    "storage",
+    "storage:read",
+    "storage:write",
     "ui:notification",
     "ui:openUrl",
     "ui:theme",

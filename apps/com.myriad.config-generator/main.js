@@ -1,12 +1,62 @@
 // Myriad Config Generator — 生产 compose / .env / Nginx
 //
-// 面板差异（用户可选）：
-// - 1Panel：编排粘贴 YAML + 环境变量框粘贴 .env；站点路径 /www/sites/<domain>/...
-// - 宝塔：可「创建编排」粘贴 YAML，也可目录内 compose+env；站点 /www/wwwroot、日志 /www/wwwlogs
-//   （官方教程 thread-140412；.env 端口变量见 thread-141215）
+// 部署方式（用户可选）：
+// - 1Panel / 宝塔 / aaPanel：面板编排 + 上传现有 Nginx
+// - Portainer / Dockge：Stacks/项目粘贴 YAML，外层仍要 Nginx/Caddy/NPM
+// - Coolify / Dokploy / NPM：平台或 NPM 自带反代，不生成 Nginx
+// - Caddy：生成 Caddyfile（自动 HTTPS）
 // - 通用/CLI：标准 Linux 路径，docker compose 命令行部署
 
-/** @typedef {'1panel'|'baota'|'generic'} PanelId */
+/** @typedef {'1panel'|'baota'|'aapanel'|'generic'|'portainer'|'dockge'|'coolify'|'dokploy'|'npm'|'caddy'} PanelId */
+
+/** Host port published by proxy. High to avoid 80/8080 collisions on panel hosts. */
+var DEFAULT_HTTP_PORT = 18080;
+
+function readHttpPort(input) {
+  var raw = input && input.value != null ? String(input.value).trim() : '';
+  var port = parseInt(raw, 10);
+  if (!isFinite(port)) return DEFAULT_HTTP_PORT;
+  return port;
+}
+
+function isValidHttpPort(port) {
+  return typeof port === 'number' && isFinite(port) && port >= 1 && port <= 65535 && port === Math.floor(port);
+}
+
+var PANEL_ID_SET = {
+  '1panel': 1,
+  baota: 1,
+  aapanel: 1,
+  generic: 1,
+  portainer: 1,
+  dockge: 1,
+  coolify: 1,
+  dokploy: 1,
+  npm: 1,
+  caddy: 1
+};
+
+function linuxNginxPaths() {
+  return {
+    siteRoot: function (d) { return '/var/www/' + d + '/html'; },
+    accessLog: function (d) { return '/var/log/nginx/' + d + '.access.log'; },
+    errorLog: function (d) { return '/var/log/nginx/' + d + '.error.log'; },
+    acmeRoot: function (d) { return '/var/www/' + d + '/html'; },
+    acmeComment: 'ACME (certbot webroot): local root BEFORE catch-all. Other /.well-known/* via proxy.',
+    proxyIncludeRe: /^[ \t]*include\s+[^;\n]*\/proxy\/\*\.conf\s*;[ \t]*$/gm
+  };
+}
+
+function baotaLikePaths() {
+  return {
+    siteRoot: function (d) { return '/www/wwwroot/' + d; },
+    accessLog: function (d) { return '/www/wwwlogs/' + d + '.log'; },
+    errorLog: function (d) { return '/www/wwwlogs/' + d + '.error.log'; },
+    acmeRoot: function (d) { return '/www/wwwroot/' + d; },
+    acmeComment: 'ACME (宝塔 / aaPanel SSL / certbot): webroot 在站点根 BEFORE catch-all. Other /.well-known/* via proxy.',
+    proxyIncludeRe: /^[ \t]*include\s+[^;\n]*(?:\/proxy\/|\/extension\/)[^;\n]*\*\.conf\s*;[ \t]*$/gm
+  };
+}
 
 /**
  * 各面板的路径与部署文案。Nginx 默认模板与 DEPLOY 说明由此生成。
@@ -21,49 +71,861 @@ var PANEL_PROFILES = {
     errorLog: function (d) { return '/www/sites/' + d + '/log/error.log'; },
     acmeRoot: function (d) { return '/www/sites/' + d + '/index'; },
     acmeComment: 'ACME (1Panel/certbot): local root BEFORE catch-all. Other /.well-known/* via proxy.',
-    envBadge: '1Panel 环境变量框 · 勿公开',
-    envCopyLabel: '复制到 1Panel',
-    composeBadge: '1Panel 编排 · 粘贴 YAML',
-    resultsIntro: '1Panel：docker-compose.yml →「容器 / 编排」；.env →「环境变量」。站点整站反代到 HTTP_BIND:HTTP_PORT。',
-    successNotify: '生成成功：1Panel 将 YAML 粘到「编排」，.env 粘到「环境变量」',
+    envBadge: 'panel.1panel.envBadge',
+    envCopyLabel: 'panel.1panel.envCopy',
+    composeBadge: 'panel.1panel.composeBadge',
+    wizardHint: 'panel.1panel.wizardHint',
+    siteSteps: [
+      'panel.1panel.siteStep1',
+      'panel.1panel.siteStep2',
+      'panel.1panel.siteStep3'
+    ],
+    siteConfPath: 'panel.1panel.siteConfPath',
+    resultsIntro: 'panel.1panel.resultsIntro',
+    siteMode: 'nginx-upload',
+    proxyFiles: 'nginx',
+    siteTitle: 'site.title',
+    siteLead: 'site.lead',
+    siteHint: 'site.noFile',
+    guideOverview: ['guide.overview.secret', 'guide.overview.paste', 'guide.overview.overwrite', 'guide.overview.open'],
+    guideSteps: [
+      { titleKey: 'guide.1panel.pasteTitle', bodyKey: 'guide.1panel.pasteBody', files: ['compose', 'env'] },
+      { titleKey: 'guide.1panel.overwriteTitle', bodyKey: 'guide.1panel.overwriteBody', files: ['nginx'], extraFiles: ['nginx-extra'] }
+    ],
     // Baota-specific include patterns not used; 1Panel proxy includes stripped in transform
     proxyIncludeRe: /^[ \t]*include\s+[^;\n]*\/proxy\/\*\.conf\s*;[ \t]*$/gm
   },
   baota: {
     id: 'baota',
-    label: '宝塔面板',
+    label: 'panel.baota.label',
     siteRoot: function (d) { return '/www/wwwroot/' + d; },
     accessLog: function (d) { return '/www/wwwlogs/' + d + '.log'; },
     errorLog: function (d) { return '/www/wwwlogs/' + d + '.error.log'; },
     acmeRoot: function (d) { return '/www/wwwroot/' + d; },
     acmeComment: 'ACME (宝塔 SSL / certbot): webroot 在站点根 BEFORE catch-all. Other /.well-known/* via proxy.',
-    envBadge: '与 compose 同目录 · .env 文件',
-    envCopyLabel: '复制 .env',
-    composeBadge: '粘贴 YAML 或目录部署',
-    resultsIntro: '宝塔：可「创建编排」粘贴 YAML，或目录内放 compose+.env；内置库务必 chown 70:70 pgdata（见部署说明）。',
-    successNotify: '生成成功：宝塔可粘贴编排或目录部署；内置 Postgres 请先 chown 70:70 pgdata',
+    envBadge: 'panel.baota.envBadge',
+    envCopyLabel: 'panel.baota.envCopy',
+    composeBadge: 'panel.baota.composeBadge',
+    wizardHint: 'panel.baota.wizardHint',
+    siteSteps: [
+      'panel.baota.siteStep1',
+      'panel.baota.siteStep2',
+      'panel.baota.siteStep3'
+    ],
+    siteConfPath: 'panel.baota.siteConfPath',
+    resultsIntro: 'panel.baota.resultsIntro',
+    siteMode: 'nginx-upload',
+    proxyFiles: 'nginx',
+    siteTitle: 'site.title',
+    siteLead: 'site.lead',
+    siteHint: 'site.noFile',
+    guideOverview: ['guide.overview.secret', 'guide.overview.paste', 'guide.overview.overwrite', 'guide.overview.open'],
+    guideSteps: [
+      { titleKey: 'guide.baota.pasteTitle', bodyKey: 'guide.baota.pasteBody', files: ['compose', 'env'] },
+      { titleKey: 'guide.baota.overwriteTitle', bodyKey: 'guide.baota.overwriteBody', files: ['nginx'], extraFiles: ['nginx-extra'] }
+    ],
     // 宝塔反向代理 / 扩展 include
     proxyIncludeRe: /^[ \t]*include\s+[^;\n]*(?:\/proxy\/|\/extension\/)[^;\n]*\*\.conf\s*;[ \t]*$/gm
   },
   generic: {
     id: 'generic',
-    label: '通用 / CLI',
+    label: 'panel.generic.label',
     siteRoot: function (d) { return '/var/www/' + d + '/html'; },
     accessLog: function (d) { return '/var/log/nginx/' + d + '.access.log'; },
     errorLog: function (d) { return '/var/log/nginx/' + d + '.error.log'; },
     acmeRoot: function (d) { return '/var/www/' + d + '/html'; },
     acmeComment: 'ACME (certbot webroot): local root BEFORE catch-all. Other /.well-known/* via proxy.',
-    envBadge: 'compose 同目录 · .env 文件',
-    envCopyLabel: '复制 .env',
-    composeBadge: 'docker compose · CLI',
-    resultsIntro: '通用部署：同目录放置 docker-compose.yml 与 .env，执行 docker compose up -d；外层 Nginx/Caddy 整站反代。',
-    successNotify: '生成成功：请将文件放到同一目录后执行 docker compose up -d',
+    envBadge: 'panel.generic.envBadge',
+    envCopyLabel: 'panel.generic.envCopy',
+    composeBadge: 'panel.generic.composeBadge',
+    wizardHint: 'panel.generic.wizardHint',
+    siteSteps: [
+      'panel.generic.siteStep1',
+      'panel.generic.siteStep2',
+      'panel.generic.siteStep3'
+    ],
+    siteConfPath: 'panel.generic.siteConfPath',
+    resultsIntro: 'panel.generic.resultsIntro',
+    siteMode: 'nginx-upload',
+    proxyFiles: 'nginx',
+    siteTitle: 'site.title',
+    siteLead: 'site.lead',
+    siteHint: 'site.noFile',
+    guideOverview: ['guide.overview.secret', 'guide.overview.placeStart', 'guide.overview.proxy', 'guide.overview.open'],
+    guideSteps: [
+      { titleKey: 'guide.generic.placeTitle', bodyKey: 'guide.generic.placeBody', files: ['compose', 'env'], command: 'cli' },
+      { titleKey: 'guide.generic.proxyTitle', bodyKey: 'guide.generic.proxyBody', files: ['nginx'], extraFiles: ['nginx-extra'] }
+    ],
     proxyIncludeRe: /^[ \t]*include\s+[^;\n]*\/proxy\/\*\.conf\s*;[ \t]*$/gm
-  }
+  },
+  aapanel: Object.assign(baotaLikePaths(), {
+    id: 'aapanel',
+    label: 'panel.aapanel.label',
+    envBadge: 'panel.aapanel.envBadge',
+    envCopyLabel: 'panel.aapanel.envCopy',
+    composeBadge: 'panel.aapanel.composeBadge',
+    wizardHint: 'panel.aapanel.wizardHint',
+    siteSteps: ['panel.aapanel.siteStep1', 'panel.aapanel.siteStep2', 'panel.aapanel.siteStep3'],
+    siteConfPath: 'panel.aapanel.siteConfPath',
+    resultsIntro: 'panel.aapanel.resultsIntro',
+    siteMode: 'nginx-upload',
+    proxyFiles: 'nginx',
+    siteTitle: 'site.title',
+    siteLead: 'site.lead',
+    siteHint: 'site.noFile',
+    guideOverview: ['guide.overview.secret', 'guide.overview.paste', 'guide.overview.overwrite', 'guide.overview.open'],
+    guideSteps: [
+      { titleKey: 'guide.aapanel.pasteTitle', bodyKey: 'guide.aapanel.pasteBody', files: ['compose', 'env'] },
+      { titleKey: 'guide.aapanel.overwriteTitle', bodyKey: 'guide.aapanel.overwriteBody', files: ['nginx'], extraFiles: ['nginx-extra'] }
+    ]
+  }),
+  portainer: Object.assign(linuxNginxPaths(), {
+    id: 'portainer',
+    label: 'panel.portainer.label',
+    envBadge: 'panel.portainer.envBadge',
+    envCopyLabel: 'panel.portainer.envCopy',
+    composeBadge: 'panel.portainer.composeBadge',
+    wizardHint: 'panel.portainer.wizardHint',
+    siteSteps: ['panel.portainer.siteStep1', 'panel.portainer.siteStep2', 'panel.portainer.siteStep3'],
+    siteConfPath: 'panel.portainer.siteConfPath',
+    resultsIntro: 'panel.portainer.resultsIntro',
+    siteMode: 'nginx-upload',
+    proxyFiles: 'nginx',
+    siteTitle: 'site.title',
+    siteLead: 'site.lead',
+    siteHint: 'site.noFile',
+    guideOverview: ['guide.overview.secret', 'guide.overview.paste', 'guide.overview.proxy', 'guide.overview.open'],
+    guideSteps: [
+      { titleKey: 'guide.portainer.pasteTitle', bodyKey: 'guide.portainer.pasteBody', files: ['compose', 'env'] },
+      { titleKey: 'guide.portainer.proxyTitle', bodyKey: 'guide.portainer.proxyBody', files: ['nginx'], extraFiles: ['nginx-extra'] }
+    ]
+  }),
+  dockge: Object.assign(linuxNginxPaths(), {
+    id: 'dockge',
+    label: 'panel.dockge.label',
+    envBadge: 'panel.dockge.envBadge',
+    envCopyLabel: 'panel.dockge.envCopy',
+    composeBadge: 'panel.dockge.composeBadge',
+    wizardHint: 'panel.dockge.wizardHint',
+    siteSteps: ['panel.dockge.siteStep1', 'panel.dockge.siteStep2', 'panel.dockge.siteStep3'],
+    siteConfPath: 'panel.dockge.siteConfPath',
+    resultsIntro: 'panel.dockge.resultsIntro',
+    siteMode: 'nginx-upload',
+    proxyFiles: 'nginx',
+    siteTitle: 'site.title',
+    siteLead: 'site.lead',
+    siteHint: 'site.noFile',
+    guideOverview: ['guide.overview.secret', 'guide.overview.paste', 'guide.overview.proxy', 'guide.overview.open'],
+    guideSteps: [
+      { titleKey: 'guide.dockge.pasteTitle', bodyKey: 'guide.dockge.pasteBody', files: ['compose', 'env'] },
+      { titleKey: 'guide.dockge.proxyTitle', bodyKey: 'guide.dockge.proxyBody', files: ['nginx'], extraFiles: ['nginx-extra'] }
+    ]
+  }),
+  coolify: Object.assign(linuxNginxPaths(), {
+    id: 'coolify',
+    label: 'panel.coolify.label',
+    envBadge: 'panel.coolify.envBadge',
+    envCopyLabel: 'panel.coolify.envCopy',
+    composeBadge: 'panel.coolify.composeBadge',
+    wizardHint: 'panel.coolify.wizardHint',
+    siteSteps: ['panel.coolify.siteStep1', 'panel.coolify.siteStep2', 'panel.coolify.siteStep3'],
+    siteConfPath: '',
+    resultsIntro: 'panel.coolify.resultsIntro',
+    siteMode: 'none',
+    proxyFiles: 'none',
+    siteTitle: 'site.titlePlatform',
+    siteLead: 'site.leadPlatform',
+    siteHint: 'site.hintPlatform',
+    guideOverview: ['guide.overview.secret', 'guide.overview.paste', 'guide.overview.domain', 'guide.overview.open'],
+    guideSteps: [
+      { titleKey: 'guide.coolify.pasteTitle', bodyKey: 'guide.coolify.pasteBody', files: ['compose', 'env'] },
+      { titleKey: 'guide.coolify.domainTitle', bodyKey: 'guide.coolify.domainBody' }
+    ]
+  }),
+  dokploy: Object.assign(linuxNginxPaths(), {
+    id: 'dokploy',
+    label: 'panel.dokploy.label',
+    envBadge: 'panel.dokploy.envBadge',
+    envCopyLabel: 'panel.dokploy.envCopy',
+    composeBadge: 'panel.dokploy.composeBadge',
+    wizardHint: 'panel.dokploy.wizardHint',
+    siteSteps: ['panel.dokploy.siteStep1', 'panel.dokploy.siteStep2', 'panel.dokploy.siteStep3'],
+    siteConfPath: '',
+    resultsIntro: 'panel.dokploy.resultsIntro',
+    siteMode: 'none',
+    proxyFiles: 'none',
+    siteTitle: 'site.titlePlatform',
+    siteLead: 'site.leadPlatform',
+    siteHint: 'site.hintPlatform',
+    guideOverview: ['guide.overview.secret', 'guide.overview.paste', 'guide.overview.domain', 'guide.overview.open'],
+    guideSteps: [
+      { titleKey: 'guide.dokploy.pasteTitle', bodyKey: 'guide.dokploy.pasteBody', files: ['compose', 'env'] },
+      { titleKey: 'guide.dokploy.domainTitle', bodyKey: 'guide.dokploy.domainBody' }
+    ]
+  }),
+  npm: Object.assign(linuxNginxPaths(), {
+    id: 'npm',
+    label: 'panel.npm.label',
+    envBadge: 'panel.npm.envBadge',
+    envCopyLabel: 'panel.npm.envCopy',
+    composeBadge: 'panel.npm.composeBadge',
+    wizardHint: 'panel.npm.wizardHint',
+    siteSteps: ['panel.npm.siteStep1', 'panel.npm.siteStep2', 'panel.npm.siteStep3'],
+    siteConfPath: '',
+    resultsIntro: 'panel.npm.resultsIntro',
+    siteMode: 'none',
+    proxyFiles: 'none',
+    siteTitle: 'site.titleNpm',
+    siteLead: 'site.leadNpm',
+    siteHint: 'site.hintNpm',
+    guideOverview: ['guide.overview.secret', 'guide.overview.placeStart', 'guide.overview.proxy', 'guide.overview.open'],
+    guideSteps: [
+      { titleKey: 'guide.npm.placeTitle', bodyKey: 'guide.npm.placeBody', files: ['compose', 'env'], command: 'cli' },
+      { titleKey: 'guide.npm.proxyTitle', bodyKey: 'guide.npm.proxyBody' }
+    ]
+  }),
+  caddy: Object.assign(linuxNginxPaths(), {
+    id: 'caddy',
+    label: 'panel.caddy.label',
+    envBadge: 'panel.caddy.envBadge',
+    envCopyLabel: 'panel.caddy.envCopy',
+    composeBadge: 'panel.caddy.composeBadge',
+    wizardHint: 'panel.caddy.wizardHint',
+    siteSteps: ['panel.caddy.siteStep1', 'panel.caddy.siteStep2', 'panel.caddy.siteStep3'],
+    siteConfPath: 'panel.caddy.siteConfPath',
+    resultsIntro: 'panel.caddy.resultsIntro',
+    siteMode: 'none',
+    proxyFiles: 'caddy',
+    siteTitle: 'site.titleCaddy',
+    siteLead: 'site.leadCaddy',
+    siteHint: 'site.hintCaddy',
+    guideOverview: ['guide.overview.secret', 'guide.overview.placeStart', 'guide.overview.proxy', 'guide.overview.open'],
+    guideSteps: [
+      { titleKey: 'guide.caddy.placeTitle', bodyKey: 'guide.caddy.placeBody', files: ['compose', 'env'], command: 'cli' },
+      { titleKey: 'guide.caddy.proxyTitle', bodyKey: 'guide.caddy.proxyBody', files: ['caddy'] }
+    ]
+  })
 };
 
 function getPanelProfile(panelId) {
   return PANEL_PROFILES[panelId] || PANEL_PROFILES['1panel'];
+}
+
+
+var I18N_FALLBACK = {
+  "common.optional": "可选",
+  "common.copy": "复制",
+  "common.download": "下载",
+  "common.copied": "已复制",
+  "common.next": "下一步",
+  "common.start": "开始",
+  "common.generate": "生成配置",
+  "common.remove": "移除",
+  "common.selectPlaceholder": "请选择",
+  "common.backAria": "返回{label}",
+  "app.aria": "Myriad 安装配置",
+  "app.brand": "配置生成",
+  "wizard.welcome": "欢迎",
+  "wizard.panel": "部署",
+  "wizard.domain": "域名",
+  "wizard.site": "站点",
+  "wizard.database": "数据库",
+  "wizard.limits": "限额",
+  "wizard.advanced": "高级",
+  "wizard.progress": "{done} / {total}",
+  "welcome.title": "准备安装配置",
+  "welcome.lead": "选择部署方式并填写站点域名。部分方式须先创建站点并完成证书配置。密钥与镜像版本将自动填入。",
+  "welcome.feature.panel": "选择方式",
+  "welcome.feature.domain": "填写域名",
+  "welcome.feature.site": "准备站点",
+  "welcome.feature.files": "导出文件",
+  "welcome.note": "本工具仅生成配置文件，不会修改服务器。",
+  "panel.title": "选择部署方式",
+  "panel.lead": "请选择当前使用的面板、编排界面或外层反代。若直接使用 Docker，请选择「命令行」。",
+  "panel.group": "部署方式",
+  "panel.1panel.desc": "在编排中粘贴 YAML，在环境变量中粘贴 .env",
+  "panel.baota.desc": "可粘贴编排，或将文件置于网站目录",
+  "panel.generic.desc": "使用 docker compose 在命令行启动",
+  "panel.1panel.wizardHint": "生成后，请将 YAML 粘贴至编排，将 .env 粘贴至环境变量。",
+  "panel.baota.wizardHint": "生成后，可粘贴编排，或将两个文件置于同一目录。",
+  "panel.generic.wizardHint": "生成后，请将两个文件置于同一目录，并执行 docker compose up -d。",
+  "panel.1panel.envBadge": "1Panel 环境变量 · 请勿公开",
+  "panel.baota.envBadge": "与 compose 同目录 · .env 文件",
+  "panel.generic.envBadge": "与 compose 同目录 · .env 文件",
+  "panel.1panel.envCopy": "复制到 1Panel",
+  "panel.baota.envCopy": "复制 .env",
+  "panel.generic.envCopy": "复制 .env",
+  "panel.1panel.composeBadge": "1Panel 编排 · 粘贴 YAML",
+  "panel.baota.composeBadge": "粘贴 YAML 或目录部署",
+  "panel.generic.composeBadge": "docker compose · CLI",
+  "panel.baota.label": "宝塔面板",
+  "panel.baota.short": "宝塔",
+  "panel.generic.label": "通用 / CLI",
+  "panel.generic.short": "命令行",
+  "panel.1panel.siteStep1": "打开 1Panel → 网站，创建 {domain}",
+  "panel.1panel.siteStep2": "申请并启用 SSL",
+  "panel.1panel.siteStep3": "将站点配置文件拖放到下方",
+  "panel.1panel.siteConfPath": "亦可在服务器网站目录或 OpenResty conf.d 中查找 {domain}.conf",
+  "panel.1panel.resultsIntro": "请将 docker-compose.yml 粘贴至「容器 / 编排」，将 .env 粘贴至「环境变量」。网站须整站反代至本机端口。",
+  "panel.baota.siteStep1": "打开宝塔 → 网站，添加 {domain}",
+  "panel.baota.siteStep2": "在站点设置中申请 SSL",
+  "panel.baota.siteStep3": "将站点配置文件拖放到下方",
+  "panel.baota.siteConfPath": "常见路径：/www/server/panel/vhost/nginx/{domain}.conf",
+  "panel.baota.resultsIntro": "可通过「创建编排」粘贴 YAML，或将 compose 与 .env 置于同一目录。使用内置数据库时，请先阅读部署说明中的目录权限要求。",
+  "panel.generic.siteStep1": "先为 {domain} 签发证书",
+  "panel.generic.siteStep2": "确认 HTTPS 可正常访问",
+  "panel.generic.siteStep3": "将现有 Nginx 配置拖放到下方",
+  "panel.generic.siteConfPath": "常见路径：/etc/nginx/sites-available/{domain} 或 /etc/nginx/conf.d/{domain}.conf",
+  "panel.generic.resultsIntro": "请将 docker-compose.yml 与 .env 置于同一目录，执行 docker compose up -d，再由外层 Nginx 整站反代。",
+  "domain.title": "站点域名",
+  "domain.lead": "站点将通过此地址访问 Myriad。无需填写 https://。",
+  "domain.main": "主域名",
+  "domain.mainHint": "例如 myriad.example.com",
+  "domain.extra": "额外域名",
+  "domain.extraHint": "如无额外域名，请留空",
+  "domain.httpPort": "本机 HTTP 端口",
+  "domain.httpPortHint": "外层反代转发到这个端口。默认 18080，避免和常见的 8080 应用抢口。",
+  "site.title": "准备站点与证书",
+  "site.lead": "请先创建站点并完成 SSL，再上传现有 .conf。将尽量保留证书配置，仅改为整站反代。",
+  "site.noDomain": "请先返回上一步填写域名。",
+  "site.currentDomain": "当前域名",
+  "site.fallbackDomain": "此域名",
+  "site.confNamed": "{name} .conf",
+  "site.dropMain": "将已配置 SSL 的 .conf 拖放到此处",
+  "site.dropExtra": "将额外域名的 .conf 拖放到此处",
+  "site.noFile": "未上传文件时将生成默认配置，证书需随后自行补全。",
+  "db.title": "选择数据库部署方式",
+  "db.lead": "首次安装建议使用内置 PostgreSQL。若已有可用实例，请选择外置。",
+  "db.modeLabel": "数据库部署方式",
+  "db.bundled": "内置",
+  "db.bundledDesc": "随编排一并部署，无需另行建库",
+  "db.external": "外置",
+  "db.externalDesc": "填写现有数据库的连接信息",
+  "db.bundledHint": "数据库名、用户与密码将自动写入，无需另行记录。",
+  "db.host": "主机",
+  "db.port": "端口",
+  "db.name": "数据库名",
+  "db.user": "用户名",
+  "db.sslmode": "sslmode",
+  "db.sslUnset": "不设置",
+  "db.extraNetwork": "附加 Docker 子网",
+  "db.extraNetworkHint": "仅当数据库与 Myriad 不在同一 Docker 网络时需要。1Panel 常见值为 1panel-network。",
+  "db.password": "数据库密码",
+  "db.passwordPlaceholder": "请填写外置数据库的实际密码",
+  "db.genPassword": "生成随机密码",
+  "db.hostPlaceholder": "host.docker.internal 或 IP",
+  "limits.title": "资源配置",
+  "limits.lead": "请按服务器可用资源选择限额。不确定时请使用推荐档。",
+  "limits.group": "资源档",
+  "limits.small": "小型",
+  "limits.smallDesc": "约 1–2 GB",
+  "limits.standard": "推荐",
+  "limits.standardDesc": "约 2–4 GB",
+  "limits.large": "宽裕",
+  "limits.largeDesc": "4 GB 以上",
+  "limits.custom": "自定义限额",
+  "limits.hintSmall": "小型档：数据库 0.5 核 / 512M，后端 1 核 / 1G，前端 0.5 核 / 256M。已自动启用内存节约。",
+  "limits.hintStandard": "推荐档：数据库 1 核 / 1G，后端 2 核 / 2G，前端 1 核 / 512M。",
+  "limits.hintLarge": "宽裕档：数据库 2 核 / 2G，后端 2 核 / 2G，前端 1 核 / 1G。",
+  "limits.hintCustom": "请分别填写各服务的 CPU 与内存。内存格式如 512M、2G。",
+  "limits.db": "数据库",
+  "limits.dbDesc": "供内置 PostgreSQL 使用。选择外置时不会生成该容器。",
+  "limits.backend": "后端",
+  "limits.backendDesc": "API 与后台任务。",
+  "limits.frontend": "前端",
+  "limits.frontendDesc": "站点页面。",
+  "limits.cpu": "CPU（核）",
+  "limits.memory": "内存",
+  "limits.advanced": "高级选项",
+  "advanced.title": "高级选项",
+  "advanced.lead": "默认配置已可用于生产。无特殊需求时可直接生成。",
+  "advanced.memorySaver": "内存节约",
+  "advanced.memorySaverDesc": "收紧缓存、连接池与联邦并发。选择「小型」时将自动启用。",
+  "advanced.images": "镜像版本",
+  "advanced.refresh": "刷新",
+  "advanced.refreshTitle": "从 Docker Hub 刷新",
+  "advanced.app": "应用",
+  "advanced.proxy": "反代",
+  "advanced.updater": "更新器",
+  "advanced.channel": "通道",
+  "advanced.cosign": "签名校验",
+  "advanced.cosignOff": "off（需双钥匙）",
+  "advanced.autoPlaceholder": "自动获取…",
+  "advanced.entry": "入口",
+  "advanced.bind": "监听地址",
+  "advanced.httpPort": "HTTP 端口",
+  "advanced.networks": "Docker 网络",
+  "advanced.netBusiness": "业务网",
+  "advanced.netAdmin": "管理网",
+  "advanced.netGuard": "守卫网",
+  "advanced.pgVersion": "PostgreSQL 版本",
+  "done.title": "按下列顺序完成部署",
+  "done.lead": "请先保存安装暗号，再按面板说明放置文件。",
+  "done.secretTitle": "保存安装暗号",
+  "done.secretBody": "首次打开站点并创建所有者时须填写。亦可复制安装链接，打开后向导将自动填入。",
+  "done.copySecret": "复制暗号",
+  "done.copyLink": "复制链接",
+  "done.filesKicker": "全部文件",
+  "done.badgeCompose": "编排",
+  "done.badgeEnv": "密钥 · 请勿公开",
+  "done.badgeNginx": "反代",
+  "done.badgeExtra": "额外域名",
+  "done.badgeDeploy": "步骤",
+  "done.badgeCheck": "自检",
+  "done.validationName": "生成校验",
+  "guide.fallbackDomain": "站点域名",
+  "guide.copyFile": "复制 {label}",
+  "guide.file.nginx": "站点 .conf",
+  "guide.file.nginxExtra": "额外域名 .conf",
+  "guide.copyCommand": "复制命令",
+  "guide.overview.secret": "保存暗号",
+  "guide.overview.placeStart": "放置文件并启动",
+  "guide.overview.proxy": "接入反代",
+  "guide.overview.open": "打开站点",
+  "guide.overview.paste": "粘贴编排",
+  "guide.overview.overwrite": "覆盖配置",
+  "guide.generic.placeTitle": "将文件置于同一目录并启动",
+  "guide.generic.placeBody": "在服务器创建目录，放入 docker-compose.yml 与 .env，然后执行命令。",
+  "guide.generic.proxyTitle": "接入外层反代",
+  "guide.generic.proxyBody": "将生成的 {domain}.conf 放入 Nginx，整站反代至 {bind}。请勿仅反代 /api。",
+  "guide.baota.pasteTitle": "将编排粘贴至宝塔",
+  "guide.baota.pasteBody": "打开宝塔 → Docker → 容器编排 → 创建编排，粘贴 docker-compose.yml，并将 .env 置于同一目录。",
+  "guide.baota.overwriteTitle": "覆盖站点配置",
+  "guide.baota.overwriteBody": "打开宝塔网站 → 设置 → 配置文件，用生成的 {domain}.conf 覆盖。反代目标为 {bind}，且必须为整站 /。",
+  "guide.1panel.pasteTitle": "将编排粘贴至 1Panel",
+  "guide.1panel.pasteBody": "打开 1Panel → 容器 → 编排 → 创建。YAML 粘贴 docker-compose.yml，环境变量粘贴 .env 全文。",
+  "guide.1panel.overwriteTitle": "覆盖站点配置",
+  "guide.1panel.overwriteBody": "打开 1Panel 网站 → 配置文件，用生成的 {domain}.conf 覆盖。目标为 http://{bind}，且必须整站反代。",
+  "guide.openTitle": "打开站点并创建所有者",
+  "guide.openBody": "容器启动后打开安装链接。向导将自动填入暗号。",
+  "notify.success": "成功",
+  "notify.error": "错误",
+  "notify.info": "提示",
+  "notify.noSecret": "尚未生成安装暗号",
+  "notify.noLink": "尚未生成安装链接",
+  "notify.copied": "已复制到剪贴板",
+  "notify.copyFailed": "复制失败，请手动选择并复制",
+  "notify.downloadOk": "文件已下载：{filename}",
+  "notify.downloadStarted": "已开始下载：{filename}",
+  "notify.generated": "配置已生成。请先复制安装暗号，创建所有者时须填写。",
+  "notify.tagsAligned": "已更新为 Docker Hub 共同 versioned tag",
+  "notify.tagsMixed": "已更新 tag（proxy / updater 可能与应用版本不同）",
+  "notify.tagsFailed": "获取最新版本失败：{message}",
+  "error.needMainDomain": "请填写主域名",
+  "error.badMainDomain": "主域名格式无效",
+  "error.badExtraDomain": "额外域名格式无效",
+  "error.badDbName": "数据库名只能使用小写字母、数字和下划线，并以字母开头",
+  "error.badDbUser": "数据库用户名只能使用小写字母、数字和下划线，并以字母开头",
+  "error.badDbHost": "请填写有效的数据库主机（IP / 主机名 / host.docker.internal）",
+  "error.badDbPort": "数据库端口无效",
+  "error.badSslmode": "sslmode 无效",
+  "error.badExtraNetwork": "附加子网不是合法的 Docker 网络名",
+  "error.needDbPassword": "请填写外置数据库密码",
+  "error.badHttpBind": "HTTP 监听地址无效",
+  "error.badHttpPort": "HTTP 端口无效",
+  "error.badPgVersion": "PostgreSQL 主版本须为 {min}–{max} 的整数（当前镜像线）",
+  "error.emptyTags": "镜像 tag 为空且无法自动获取，请点击「刷新」或手动填写",
+  "error.badCpu": "CPU 数量必须是大于 0 的数字",
+  "error.badMemory": "内存须为 16M–256G（如 512M、2G）；禁止 0M 与超大值",
+  "error.needTags": "请填写完整的镜像 tag",
+  "error.badTag": "tag 须为 versioned（vX.Y.Z / vX.Y.Z-rc.N），可选 @sha256:<64hex>；禁止 latest",
+  "error.netEmpty": "{key} 不能为空",
+  "error.netInvalid": "{key} 不是合法的 Docker 网络名",
+  "error.netDuplicate": "{prev} 与 {key} 使用了相同的 Docker 网络名「{value}」，请改为互不相同",
+  "error.netExtraClash": "{key} 与附加 Docker 子网使用了相同的网络名「{value}」，两者必须不同",
+  "error.generateFailed": "生成失败",
+  "error.needUpdaterDigest": "Guard 必须钉死 updater 镜像 digest。请填写 vX.Y.Z@sha256:<64hex>，或等 Docker Hub 解析完成后再生成。",
+  "done.badgeGuard": "由 Guard 自动写入",
+  "guide.1panel.guardTitle": "安装宿主 Guard 策略",
+  "guide.1panel.guardBody": "无需手工安装。Guard 首次启动会写入 ./guard-policy/docker-guard.env。",
+  "error.uploadTooLarge": "Nginx 配置不能超过 {max}KB（当前 {current}KB）",
+  "error.uploadType": "请上传 .conf 文本文件",
+  "error.uploadNotText": "无法以文本读取该文件",
+  "error.uploadNul": "已拒绝含 NUL 的二进制文件",
+  "error.uploadTooLong": "文件内容超过大小上限",
+  "error.uploadRead": "读取文件失败",
+  "error.domainNote": "请先填写主域名",
+  "error.domainFormat": "主域名格式无效，请写成 myriad.example.com 这样的主机名",
+  "error.extraFormat": "额外域名格式无效；如无额外域名，请留空",
+  "error.dbHostStep": "请填写外置数据库的主机地址",
+  "error.dbPasswordStep": "请填写外置数据库密码",
+  "tags.loading": "正在获取最新版本…",
+  "tags.loadingHub": "正在从 Docker Hub 获取最新 versioned tag…",
+  "tags.aligned": "四组件同版本",
+  "tags.mismatch": "组件 tag 可能不一致，请确认兼容",
+  "tags.partialFail": "部分仓库失败：{detail}",
+  "tags.resolved": "已解析：MYRIAD={myriad} · PROXY={proxy} · UPDATER={updater} · {align}{fail}（禁止 :latest；生产可加 @sha256:…）",
+  "tags.failStatus": "获取失败：{message}。请手动填写 versioned tag。",
+  "tags.hubEmpty": "Docker Hub 上未找到可用的 versioned tag（vX.Y.Z）{detail}",
+  "tags.hubUnavailable": "当前环境无法请求 Docker Hub",
+  "tags.hubHttp": "Docker Hub HTTP {status}",
+  "nginx.summary.defaultTemplate": "使用默认 Nginx 模板（未上传）",
+  "nginx.summary.rewroteDomain": "基于上传配置改写域名 → {domain}",
+  "nginx.summary.rewroteLocation": "已将 location / 指向 Myriad proxy（整站反代）",
+  "nginx.summary.injectedAcme": "已注入 ACME challenge 本地 root",
+  "nginx.summary.bytes": "原文 {before} 字节 → 结果 {after} 字节",
+  "nginx.summary.unchanged": "内容未变化（请人工核对 server_name / proxy_pass）",
+  "nginx.summary.nginxTRequired": "手写解析器不能替代 nginx -t；上线前请在目标机执行校验命令",
+  "validation.envOk": "✓ .env 密钥白名单与再解析通过",
+  "validation.proxyOk": "✓ PROXY_ALLOW_DIRECT_UPDATER=false（单次）",
+  "validation.digestPinned": "✓ 已 pin 部分镜像 digest",
+  "validation.mutableTag": "· 镜像为可变 tag（可选 vX.Y.Z@sha256:…）",
+  "validation.nginxPrefix": "Nginx：",
+  "panel.aapanel.desc": "宝塔国际版。可粘贴编排，或将文件置于网站目录",
+  "panel.aapanel.wizardHint": "生成后，可粘贴编排，或将两个文件置于同一目录。",
+  "panel.aapanel.envBadge": "与 compose 同目录 · .env 文件",
+  "panel.aapanel.envCopy": "复制 .env",
+  "panel.aapanel.composeBadge": "aaPanel 编排 · 粘贴 YAML",
+  "panel.aapanel.label": "aaPanel",
+  "panel.aapanel.siteStep1": "打开 aaPanel → Website，添加 {domain}",
+  "panel.aapanel.siteStep2": "在站点设置中申请 SSL",
+  "panel.aapanel.siteStep3": "将站点配置文件拖放到下方",
+  "panel.aapanel.siteConfPath": "常见路径：/www/server/panel/vhost/nginx/{domain}.conf",
+  "panel.aapanel.resultsIntro": "可通过 Compose 粘贴 YAML，或将 compose 与 .env 置于同一目录。使用内置数据库时，请先阅读部署说明中的目录权限要求。",
+  "panel.portainer.desc": "在 Stacks 中粘贴编排，.env 与项目同目录",
+  "panel.portainer.wizardHint": "生成后，在 Portainer 创建 Stack，并将 .env 放入同一目录。",
+  "panel.portainer.envBadge": "与 Stack 同目录 · .env 文件",
+  "panel.portainer.envCopy": "复制 .env",
+  "panel.portainer.composeBadge": "Portainer Stack · 粘贴 YAML",
+  "panel.portainer.label": "Portainer",
+  "panel.portainer.siteStep1": "先启动 Stack，再为 {domain} 准备外层反代",
+  "panel.portainer.siteStep2": "申请并启用 SSL",
+  "panel.portainer.siteStep3": "若使用 Nginx，将现有 .conf 拖放到下方",
+  "panel.portainer.siteConfPath": "常见路径：/etc/nginx/sites-available/{domain} 或 /etc/nginx/conf.d/{domain}.conf",
+  "panel.portainer.resultsIntro": "请在 Portainer → Stacks 中粘贴 docker-compose.yml，并将 .env 置于同一目录。外层须整站反代至本机端口。",
+  "panel.dockge.desc": "在 Dockge 中创建 compose 项目，与 .env 同目录",
+  "panel.dockge.wizardHint": "生成后，在 Dockge 创建项目，并将两个文件置于同一目录。",
+  "panel.dockge.envBadge": "与 compose 同目录 · .env 文件",
+  "panel.dockge.envCopy": "复制 .env",
+  "panel.dockge.composeBadge": "Dockge · 粘贴 YAML",
+  "panel.dockge.label": "Dockge",
+  "panel.dockge.siteStep1": "先启动 compose 项目，再为 {domain} 准备外层反代",
+  "panel.dockge.siteStep2": "申请并启用 SSL",
+  "panel.dockge.siteStep3": "若使用 Nginx，将现有 .conf 拖放到下方",
+  "panel.dockge.siteConfPath": "常见路径：/etc/nginx/sites-available/{domain} 或 /etc/nginx/conf.d/{domain}.conf",
+  "panel.dockge.resultsIntro": "请在 Dockge 中创建 compose 项目，将 docker-compose.yml 与 .env 置于同一目录。外层须整站反代。",
+  "panel.coolify.desc": "以 Docker Compose 部署，域名与证书在 Coolify 中配置",
+  "panel.coolify.wizardHint": "生成后，在 Coolify 创建 Compose 服务，并在其中绑定域名。",
+  "panel.coolify.envBadge": "Coolify 环境变量 · 请勿公开",
+  "panel.coolify.envCopy": "复制 .env",
+  "panel.coolify.composeBadge": "Coolify Compose · 粘贴 YAML",
+  "panel.coolify.label": "Coolify",
+  "panel.coolify.siteStep1": "在 Coolify 创建 Docker Compose 服务",
+  "panel.coolify.siteStep2": "为 {domain} 添加域名并启用 HTTPS",
+  "panel.coolify.siteStep3": "确认整站转发与 WebSocket 已开启",
+  "panel.coolify.resultsIntro": "请在 Coolify 中粘贴 docker-compose.yml 并配置环境变量。域名、证书与反代由 Coolify 处理，必须整站转发。",
+  "panel.dokploy.desc": "以 Compose 部署，在 Domains 中绑定站点并签发证书",
+  "panel.dokploy.wizardHint": "生成后，在 Dokploy 创建 Compose 应用，并在 Domains 中绑定站点。",
+  "panel.dokploy.envBadge": "Dokploy 环境变量 · 请勿公开",
+  "panel.dokploy.envCopy": "复制 .env",
+  "panel.dokploy.composeBadge": "Dokploy Compose · 粘贴 YAML",
+  "panel.dokploy.label": "Dokploy",
+  "panel.dokploy.siteStep1": "在 Dokploy 创建 Compose 应用",
+  "panel.dokploy.siteStep2": "为 {domain} 添加域名并启用证书",
+  "panel.dokploy.siteStep3": "确认整站转发与 WebSocket 已开启",
+  "panel.dokploy.resultsIntro": "请在 Dokploy 中粘贴 docker-compose.yml 并配置环境变量。请在 Domains 中绑定站点，且必须整站转发。",
+  "panel.npm.desc": "用 compose 启动后，在 Nginx Proxy Manager 中新建 Proxy Host",
+  "panel.npm.wizardHint": "生成后，先启动编排，再在 NPM 中将域名整站转发到本机端口。",
+  "panel.npm.envBadge": "与 compose 同目录 · .env 文件",
+  "panel.npm.envCopy": "复制 .env",
+  "panel.npm.composeBadge": "docker compose · NPM 反代",
+  "panel.npm.label": "Nginx Proxy Manager",
+  "panel.npm.siteStep1": "先启动 docker compose",
+  "panel.npm.siteStep2": "在 NPM 中为 {domain} 新建 Proxy Host，指向本机端口",
+  "panel.npm.siteStep3": "启用 SSL、Force SSL 与 WebSocket，且必须整站转发",
+  "panel.npm.resultsIntro": "请先启动 docker-compose.yml 与 .env，再在 Nginx Proxy Manager 中新建 Proxy Host，整站转发至本机端口并开启 WebSocket。",
+  "panel.caddy.desc": "用 compose 启动，外层使用 Caddy 自动 HTTPS",
+  "panel.caddy.wizardHint": "生成后，将两个文件置于同一目录启动，再使用生成的 Caddyfile。",
+  "panel.caddy.envBadge": "与 compose 同目录 · .env 文件",
+  "panel.caddy.envCopy": "复制 .env",
+  "panel.caddy.composeBadge": "docker compose · Caddy",
+  "panel.caddy.label": "Caddy",
+  "panel.caddy.siteStep1": "先启动 docker compose",
+  "panel.caddy.siteStep2": "将生成的 Caddyfile 交给 Caddy",
+  "panel.caddy.siteStep3": "确认 80/443 由 Caddy 监听",
+  "panel.caddy.siteConfPath": "常见路径：/etc/caddy/Caddyfile",
+  "panel.caddy.resultsIntro": "请将 docker-compose.yml 与 .env 置于同一目录并启动，再使用生成的 Caddyfile 做整站反代与自动 HTTPS。",
+  "site.titlePlatform": "在平台中绑定域名",
+  "site.leadPlatform": "此类平台自带反代与证书。请在平台中添加域名，并确保整站转发到 Myriad，而不是仅转发 /api。",
+  "site.hintPlatform": "无需上传 Nginx 配置。域名、证书与反代在所选平台中完成。",
+  "site.titleNpm": "在 NPM 中接入站点",
+  "site.leadNpm": "请先启动编排，再新建 Proxy Host。须整站转发、开启 WebSocket，并启用 SSL。",
+  "site.hintNpm": "无需上传 Nginx 配置。完成页将说明 Proxy Host 的填写方式。",
+  "site.titleCaddy": "准备 Caddy",
+  "site.leadCaddy": "请先启动编排。将生成 Caddyfile，由 Caddy 负责自动 HTTPS 与整站反代。",
+  "site.hintCaddy": "无需上传 Nginx 配置。生成结果中将包含 Caddyfile。",
+  "guide.overview.domain": "绑定域名",
+  "guide.aapanel.pasteTitle": "将编排粘贴至 aaPanel",
+  "guide.aapanel.pasteBody": "打开 aaPanel → Docker → Compose，创建编排并粘贴 docker-compose.yml，将 .env 置于同一目录。",
+  "guide.aapanel.overwriteTitle": "覆盖站点配置",
+  "guide.aapanel.overwriteBody": "打开 Website → 配置文件，用生成的 {domain}.conf 覆盖。反代目标为 {bind}，且必须为整站 /。",
+  "guide.portainer.pasteTitle": "在 Portainer 中创建 Stack",
+  "guide.portainer.pasteBody": "打开 Portainer → Stacks → Add stack，粘贴 docker-compose.yml，并将 .env 放到该 Stack 工作目录。",
+  "guide.portainer.proxyTitle": "接入外层反代",
+  "guide.portainer.proxyBody": "将生成的 {domain}.conf 放入 Nginx，或使用 Caddy / NPM，整站反代至 {bind}。请勿仅反代 /api。",
+  "guide.dockge.pasteTitle": "在 Dockge 中创建项目",
+  "guide.dockge.pasteBody": "打开 Dockge，新建 compose 项目，粘贴 docker-compose.yml，并将 .env 置于同一目录。",
+  "guide.dockge.proxyTitle": "接入外层反代",
+  "guide.dockge.proxyBody": "将生成的 {domain}.conf 放入 Nginx，或使用 Caddy / NPM，整站反代至 {bind}。请勿仅反代 /api。",
+  "guide.coolify.pasteTitle": "在 Coolify 中创建 Compose 服务",
+  "guide.coolify.pasteBody": "新建 Docker Compose 服务，粘贴 docker-compose.yml，并写入 .env 中的环境变量。",
+  "guide.coolify.domainTitle": "绑定域名与证书",
+  "guide.coolify.domainBody": "为 {domain} 添加域名并启用 HTTPS。必须整站转发到 {bind}，并开启 WebSocket。请勿仅转发 /api。",
+  "guide.dokploy.pasteTitle": "在 Dokploy 中创建 Compose 应用",
+  "guide.dokploy.pasteBody": "新建 Compose 应用，粘贴 docker-compose.yml，并配置环境变量。",
+  "guide.dokploy.domainTitle": "绑定域名与证书",
+  "guide.dokploy.domainBody": "在 Domains 中添加 {domain} 并启用证书。必须整站转发到 {bind}，并开启 WebSocket。",
+  "guide.npm.placeTitle": "将文件置于同一目录并启动",
+  "guide.npm.placeBody": "在服务器创建目录，放入 docker-compose.yml 与 .env，然后执行命令。",
+  "guide.npm.proxyTitle": "在 NPM 中新建 Proxy Host",
+  "guide.npm.proxyBody": "Domain Names 填写站点域名。Forward 到 {bind}，Scheme 为 http，开启 Websockets 与 SSL。必须整站转发，请勿仅转发 /api。若 NPM 与 Myriad 不在同一网络，请改用可达的转发主机。",
+  "guide.caddy.placeTitle": "将文件置于同一目录并启动",
+  "guide.caddy.placeBody": "在服务器创建目录，放入 docker-compose.yml 与 .env，然后执行命令。",
+  "guide.caddy.proxyTitle": "接入 Caddy",
+  "guide.caddy.proxyBody": "将生成的 Caddyfile 交给 Caddy。reverse_proxy 指向 {bind}，并覆盖 {domain} 整站。请执行 caddy validate。",
+  "done.badgeCaddy": "Caddy",
+  "nginx.summary.caddy": "已生成 Caddyfile（自动 HTTPS，整站 reverse_proxy）",
+  "nginx.summary.platformProxy": "反代与证书由所选平台处理，未生成 Nginx 配置",
+  "validation.caddyPrefix": "Caddy：",
+  "validation.proxyPrefix": "反代："
+};
+
+function interpolateI18n(raw, params) {
+  if (!params || String(raw).indexOf('{') === -1) return raw;
+  Object.keys(params).forEach(function (name) {
+    raw = String(raw).split('{' + name + '}').join(String(params[name]));
+  });
+  return raw;
+}
+
+function t(key, params) {
+  var raw = null;
+  try {
+    if (typeof Tapp !== 'undefined' && Tapp.i18n && typeof Tapp.i18n.t === 'function') {
+      raw = Tapp.i18n.t(key, params || {});
+    }
+  } catch (_) { /* local harness */ }
+  if (!raw || raw === key) raw = I18N_FALLBACK[key] || key;
+  return interpolateI18n(String(raw), params);
+}
+
+function applyStaticI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(function (node) {
+    node.textContent = t(node.getAttribute('data-i18n'));
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(function (node) {
+    node.setAttribute('placeholder', t(node.getAttribute('data-i18n-placeholder')));
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(function (node) {
+    node.setAttribute('title', t(node.getAttribute('data-i18n-title')));
+  });
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(function (node) {
+    node.setAttribute('aria-label', t(node.getAttribute('data-i18n-aria-label')));
+  });
+}
+
+function refreshCustomSelects() {
+  document.querySelectorAll('.cg-select').forEach(function (root) {
+    if (typeof root.cgRebuildOptions === 'function') root.cgRebuildOptions();
+  });
+}
+
+function applyDoneResultChrome() {
+  var panel = getPanelProfile(state.panelId || selectedPanelIdFromUi());
+  var resultsIntro = document.getElementById('results-intro');
+  if (resultsIntro) resultsIntro.textContent = t(panel.resultsIntro);
+  var envBadge = document.getElementById('badge-env');
+  if (envBadge) envBadge.textContent = t(panel.envBadge);
+  var composeBadge = document.getElementById('badge-compose');
+  if (composeBadge) composeBadge.textContent = t(panel.composeBadge);
+  var envCopyBtn = document.querySelector('.btn-copy[data-target="env"]');
+  if (envCopyBtn) {
+    envCopyBtn.textContent = t(panel.envCopyLabel || 'common.copy');
+  }
+}
+
+function applyResolvedTagStatus(resolved) {
+  if (!resolved) return;
+  var alignNote = resolved.versionAligned ? t('tags.aligned') : t('tags.mismatch');
+  var failNote = (resolved.failures && resolved.failures.length)
+    ? ' · ' + t('tags.partialFail', { detail: resolved.failures.join('; ') })
+    : '';
+  setTagStatus(
+    t('tags.resolved', {
+      myriad: resolved.myriadTag,
+      proxy: resolved.proxyTag,
+      updater: resolved.updaterTag,
+      align: alignNote,
+      fail: failNote
+    }),
+    resolved.failures && resolved.failures.length ? 'error' : 'ok'
+  );
+}
+
+function refreshTagStatusI18n() {
+  if (typeof tagFetchState === 'undefined') return;
+  if (tagFetchState.loading) {
+    setTagStatus(t('tags.loadingHub'), 'loading');
+    return;
+  }
+  if (tagFetchState.lastResolved) {
+    applyResolvedTagStatus(tagFetchState.lastResolved);
+    return;
+  }
+  if (tagFetchState.lastError) {
+    setTagStatus(t('tags.failStatus', { message: tagFetchState.lastError }), 'error');
+  }
+}
+
+function refreshDynamicI18n() {
+  applyStaticI18n();
+  renderWizardChrome(wizardStep, 'fade');
+  syncSiteStepUi();
+  var info = document.getElementById('panel-mode-hint');
+  if (info) info.textContent = t(getPanelProfile(selectedPanelIdFromUi()).wizardHint);
+  var hint = document.getElementById('limit-preset-hint');
+  var customBtn = document.getElementById('limit-preset-custom');
+  var isCustom = customBtn && customBtn.getAttribute('aria-pressed') === 'true';
+  if (hint) {
+    if (isCustom) hint.textContent = t('limits.hintCustom');
+    else {
+      var selected = document.querySelector('input[name="limit-preset"]:checked');
+      var mode = (selected && selected.value) || 'standard';
+      if (LIMIT_PRESETS[mode]) hint.textContent = t(LIMIT_PRESETS[mode].hintKey);
+    }
+  }
+  refreshCustomSelects();
+  if (wizardStep === 'done' && state.mainDomain) {
+    applyDoneResultChrome();
+    renderDoneGuide(state.panelId || selectedPanelIdFromUi(), {
+      domain: state.mainDomain,
+      extraDomain: state.extraDomain,
+      httpPort: state.httpPort,
+      httpBind: state.httpBindAddress,
+      external: state.dbMode === 'external'
+    });
+  }
+  refreshTagStatusI18n();
+}
+
+
+function buildDoneGuide(panelId, ctx) {
+  var profile = getPanelProfile(panelId);
+  var external = !!ctx.external;
+  var domain = ctx.domain || t('guide.fallbackDomain');
+  var port = ctx.httpPort || DEFAULT_HTTP_PORT;
+  var bind = (ctx.httpBind || '127.0.0.1') + ':' + port;
+  var extra = ctx.extraDomain || '';
+  var pgCmd = 'mkdir -p pgdata state backups && chown -R 70:70 pgdata && chmod 700 pgdata && chmod 600 .env';
+  var cliCmd = external
+    ? 'mkdir -p state backups && chmod 600 .env && docker compose pull && docker compose up -d'
+    : pgCmd + ' && docker compose pull && docker compose up -d';
+
+  var overview = (profile.guideOverview || []).map(function (key) { return t(key); });
+  var steps = (profile.guideSteps || []).map(function (spec) {
+    var files = (spec.files || []).slice();
+    if (spec.extraFiles && extra) files = files.concat(spec.extraFiles);
+    var step = {
+      title: t(spec.titleKey),
+      body: t(spec.bodyKey, { domain: domain, bind: bind })
+    };
+    if (files.length) step.files = files;
+    if (spec.command === 'cli') step.command = cliCmd;
+    return step;
+  });
+
+  steps.push({
+    title: t('guide.openTitle'),
+    body: t('guide.openBody')
+  });
+
+  return { overview: overview, steps: steps };
+}
+
+var GUIDE_FILE_ACTIONS = {
+  compose: { target: 'docker-compose', filename: 'docker-compose.yml', label: 'docker-compose.yml' },
+  env: { target: 'env', filename: '.env', label: '.env' },
+  nginx: { target: 'main-nginx', filename: '', labelKey: 'guide.file.nginx' },
+  'nginx-extra': { target: 'extra-nginx', filename: '', labelKey: 'guide.file.nginxExtra' },
+  caddy: { target: 'caddyfile', filename: 'Caddyfile', label: 'Caddyfile' }
+};
+
+function renderDoneGuide(panelId, ctx) {
+  var guide = buildDoneGuide(panelId, ctx);
+  var overviewEl = document.getElementById('cg-guide-overview');
+  var listEl = document.getElementById('cg-guide-list');
+  if (overviewEl) {
+    overviewEl.style.setProperty('--cg-guide-cols', String(guide.overview.length || 5));
+    overviewEl.innerHTML = '';
+    guide.overview.forEach(function (label, index) {
+      var item = document.createElement('li');
+      var num = document.createElement('b');
+      num.textContent = String(index + 1);
+      var span = document.createElement('span');
+      span.textContent = label;
+      item.appendChild(num);
+      item.appendChild(span);
+      overviewEl.appendChild(item);
+    });
+  }
+  if (!listEl) return;
+  listEl.innerHTML = '';
+  guide.steps.forEach(function (step, index) {
+    var card = document.createElement('article');
+    card.className = 'cg-guide-card';
+    var header = document.createElement('header');
+    var num = document.createElement('b');
+    num.textContent = String(index + 2);
+    var title = document.createElement('h2');
+    title.textContent = step.title;
+    header.appendChild(num);
+    header.appendChild(title);
+    card.appendChild(header);
+    var body = document.createElement('p');
+    body.textContent = step.body;
+    card.appendChild(body);
+    if (step.files && step.files.length) {
+      var actions = document.createElement('div');
+      actions.className = 'cg-guide-actions';
+      step.files.forEach(function (key) {
+        var spec = GUIDE_FILE_ACTIONS[key];
+        if (!spec) return;
+        var copyBtn = document.createElement('button');
+        copyBtn.type = 'button';
+        copyBtn.className = 'btn-copy';
+        copyBtn.setAttribute('data-target', spec.target);
+        var fileLabel = spec.labelKey ? t(spec.labelKey) : spec.label;
+        copyBtn.textContent = t('guide.copyFile', { label: fileLabel });
+        var downBtn = document.createElement('button');
+        downBtn.type = 'button';
+        downBtn.className = 'btn-download';
+        downBtn.setAttribute('data-target', spec.target);
+        downBtn.setAttribute(
+          'data-filename',
+          spec.filename || ((key === 'nginx' ? ctx.domain : ctx.extraDomain) || fileLabel) + '.conf'
+        );
+        downBtn.textContent = t('common.download');
+        actions.appendChild(copyBtn);
+        actions.appendChild(downBtn);
+      });
+      card.appendChild(actions);
+    }
+    if (step.command) {
+      var cmd = document.createElement('div');
+      cmd.className = 'cg-guide-cmd';
+      var code = document.createElement('code');
+      code.textContent = step.command;
+      var cmdBtn = document.createElement('button');
+      cmdBtn.type = 'button';
+      cmdBtn.className = 'btn-copy-field';
+      cmdBtn.setAttribute('data-copy-text', step.command);
+      cmdBtn.textContent = t('guide.copyCommand');
+      cmd.appendChild(code);
+      cmd.appendChild(cmdBtn);
+      card.appendChild(cmd);
+    }
+    listEl.appendChild(card);
+  });
 }
 
 /**
@@ -151,6 +1013,103 @@ function buildPanelDeploySection(panelId, mainDomain, httpBind, httpPort, isExte
       '4. 或覆盖站点 conf 为生成的 Nginx（路径默认 `/www/wwwroot` + `/www/wwwlogs`）',
       '',
       'Myriad proxy 监听：`' + bind + '`（反代到本机时 `HTTP_BIND_ADDRESS=127.0.0.1` 即可）',
+      '',
+      pgSection
+    ].join('\n');
+  }
+  if (panelId === 'aapanel') {
+    return [
+      '## aaPanel',
+      '',
+      'aaPanel 为宝塔国际版，站点路径与宝塔相近（`/www/wwwroot`、`/www/wwwlogs`）。',
+      '',
+      '1. Docker → Compose → Add / Create，粘贴 `docker-compose.yml`',
+      '2. 将 `.env` 放到同一工作目录；`chmod 600 .env`',
+      '3. 内置库：先按下方「数据库目录权限」准备 `pgdata`，再启动',
+      '4. Website 添加 `' + mainDomain + '`，反向代理到 `http://' + bind + '`，必须整站 `/`',
+      '5. 或用生成的 Nginx 覆盖站点配置',
+      '',
+      pgSection
+    ].join('\n');
+  }
+  if (panelId === 'portainer') {
+    return [
+      '## Portainer',
+      '',
+      '1. Stacks → Add stack，粘贴 `docker-compose.yml`',
+      '2. 将 `.env` 放到该 stack 工作目录（或在 UI 中填写同等环境变量）',
+      '3. 内置库须先在该目录准备 `pgdata` 权限（见下方）',
+      '4. 外层 Nginx / Caddy / NPM 整站反代到 `' + bind + '`，请勿仅反代 `/api`',
+      '',
+      pgSection
+    ].join('\n');
+  }
+  if (panelId === 'dockge') {
+    return [
+      '## Dockge',
+      '',
+      '1. 新建 compose 项目，粘贴 `docker-compose.yml`',
+      '2. 将 `.env` 与 compose 放在同一目录',
+      '3. 内置库须先准备 `pgdata` 权限（见下方）',
+      '4. 外层反代整站指向 `' + bind + '`',
+      '',
+      pgSection
+    ].join('\n');
+  }
+  if (panelId === 'coolify') {
+    return [
+      '## Coolify',
+      '',
+      '1. 新建 Docker Compose 服务，粘贴 `docker-compose.yml`，并配置 `.env`',
+      '2. 在 Coolify 中为 `' + mainDomain + '` 添加域名并启用 HTTPS',
+      '3. 必须整站转发（含 `/.well-known/webfinger`、`/inbox`、`/users/`、`/api/*` 与 WebSocket）',
+      '4. 目标为 Myriad proxy：`' + bind + '`（若 Coolify 与 compose 同机，常用 `http://127.0.0.1:' + httpPort + '`）',
+      '',
+      pgSection
+    ].join('\n');
+  }
+  if (panelId === 'dokploy') {
+    return [
+      '## Dokploy',
+      '',
+      '1. 新建 Compose 应用，粘贴 `docker-compose.yml`，并配置 `.env`',
+      '2. 在 Domains 中添加 `' + mainDomain + '` 并启用证书',
+      '3. 必须整站转发，并开启 WebSocket',
+      '4. 目标为 `' + bind + '`',
+      '',
+      pgSection
+    ].join('\n');
+  }
+  if (panelId === 'npm') {
+    return [
+      '## Nginx Proxy Manager',
+      '',
+      '1. 先用命令行或编排界面启动 Myriad（`docker-compose.yml` + `.env`）',
+      '2. NPM → Hosts → Proxy Hosts → Add：',
+      '   - Domain Names：`' + mainDomain + '`',
+      '   - Scheme：`http`',
+      '   - Forward Hostname / IP：`' + httpBind + '`',
+      '   - Forward Port：`' + httpPort + '`',
+      '   - Websockets Support：开启',
+      '   - SSL：申请证书并 Force SSL',
+      '3. **不要**只转发 `/api`。联邦路径必须到达 Myriad proxy。',
+      '4. 若 NPM 与 Myriad 不在同一 Docker 网络，转发主机请改用可达地址，而不是盲目使用 `127.0.0.1`',
+      '',
+      pgSection
+    ].join('\n');
+  }
+  if (panelId === 'caddy') {
+    return [
+      '## Caddy',
+      '',
+      '1. 将 `docker-compose.yml` 与 `.env` 放到同一目录并启动',
+      '2. 使用生成的 `Caddyfile`（自动 HTTPS）',
+      '3. 确认 80/443 由 Caddy 监听；Myriad proxy 仅本机 `' + bind + '`',
+      '4. `reverse_proxy` 已覆盖整站与 WebSocket，请勿只反代 `/api`',
+      '',
+      '```bash',
+      'caddy validate --config Caddyfile',
+      '```',
       '',
       pgSection
     ].join('\n');
@@ -281,8 +1240,9 @@ services:
       DATA_DIR: /app/data
       CACHE_DIR: /app/cache
       JWT_SECRET: \${JWT_SECRET}
-      MYRIAD_SETUP_SECRET: \${MYRIAD_SETUP_SECRET}
+      MYRIAD_SETUP_SECRET: \${MYRIAD_SETUP_SECRET:?Set MYRIAD_SETUP_SECRET in .env}
       TRUST_PROXY_HEADERS: "true"
+      TRUST_PROXY_PEERS: \${TRUST_PROXY_PEERS:-127.0.0.0/8,::1,172.17.0.0/16,172.28.0.0/16}
       CORS_ORIGINS: \${CORS_ORIGINS:-http://localhost}
       CSP_CONNECT_SRC: \${CSP_CONNECT_SRC:-'self' https:}
       ENVIRONMENT: \${ENVIRONMENT:-production}
@@ -291,6 +1251,7 @@ services:
       RUST_LOG: \${RUST_LOG:-info}
       TZ: Asia/Shanghai
       MYRIAD_VERSION: \${MYRIAD_TAG}
+      MYRIAD_MEMORY_PROFILE: \${MYRIAD_MEMORY_PROFILE:-default}
       MYRIAD_UPDATER_URL: http://updater-gateway:1104
       UPDATER_GATEWAY_SECRET: \${UPDATER_GATEWAY_SECRET}
     depends_on:
@@ -355,7 +1316,7 @@ services:
     image: \${PROXY_IMAGE:-docker.io/somekawahitomi/myriad-proxy}:\${PROXY_TAG}
     container_name: myriad-proxy
     ports:
-      - "\${HTTP_BIND_ADDRESS:-127.0.0.1}:\${HTTP_PORT:-8080}:80"
+      - "\${HTTP_BIND_ADDRESS:-127.0.0.1}:\${HTTP_PORT:-18080}:80"
     environment:
       PROXY_STATE_FILE: /state/maintenance.json
       PROXY_BACKEND_UPSTREAM: http://backend:1103
@@ -377,24 +1338,39 @@ services:
       options: { max-size: "10m", max-file: "3" }
 
   docker-guard:
-    # 仅此处挂 docker.sock
-    image: \${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG}
+    # Writes ./guard-policy/docker-guard.env on first start.
+    image: \${DOCKER_GUARD_IMAGE:?Set DOCKER_GUARD_IMAGE in .env to an exact repo@sha256 digest}
     container_name: myriad-docker-guard
-    entrypoint: ["/usr/bin/tini", "--", "/usr/local/bin/myriad-docker-guard"]
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        if [ ! -f /guard-policy/docker-guard.env ]; then umask 077; fi
+        exec /usr/bin/tini -- /usr/local/bin/myriad-docker-guard
     environment:
-      UPDATE_TOKEN: \${UPDATE_TOKEN}
-      COMPOSE_PROJECT_NAME: \${COMPOSE_PROJECT_NAME:-myriad}
-      MYRIAD_DOCKER_NETWORK: \${MYRIAD_DOCKER_NETWORK:-myriad-net}
-      MYRIAD_ADMIN_NETWORK: \${MYRIAD_ADMIN_NETWORK:-myriad-admin-net}
-      MYRIAD_DOCKER_GUARD_NETWORK: \${MYRIAD_DOCKER_GUARD_NETWORK:-myriad-docker-guard-net}
+      COMPOSE_PROJECT_NAME: \${GUARD_COMPOSE_PROJECT_NAME:-myriad}
+      MYRIAD_DOCKER_NETWORK: \${GUARD_MYRIAD_DOCKER_NETWORK:-myriad-net}
+      MYRIAD_ADMIN_NETWORK: \${GUARD_MYRIAD_ADMIN_NETWORK:-myriad-admin-net}
+      MYRIAD_DOCKER_GUARD_NETWORK: \${GUARD_MYRIAD_DOCKER_GUARD_NETWORK:-myriad-docker-guard-net}
       DOCKER_GUARD_COMPOSE_DIR: /host/compose
-      DOCKER_GUARD_ENV_FILE: /host/compose/.env
-      DOCKER_GUARD_ALLOWED_IMAGES: \${BACKEND_IMAGE:-docker.io/somekawahitomi/myriad-backend},\${FRONTEND_IMAGE:-docker.io/somekawahitomi/myriad-frontend},\${PROXY_IMAGE:-docker.io/somekawahitomi/myriad-proxy},\${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}{{DOCKER_GUARD_EXTRA_IMAGES}}
+      DOCKER_GUARD_STATE_DIR: /host/state
+      DOCKER_GUARD_EXPECTED_IMAGE: \${DOCKER_GUARD_IMAGE}
+      DOCKER_GUARD_HOST_POLICY_PATH: /guard-policy/docker-guard.env
+      DOCKER_GUARD_SELF_UPDATE_TOKEN: \${GUARD_SELF_UPDATE_TOKEN:?Host Guard self-update token is required}
       RUST_LOG: \${DOCKER_GUARD_LOG:-info}
       TZ: Asia/Shanghai
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./:/host/compose:ro
+      - type: bind
+        source: \${MYRIAD_COMPOSE_HOST_ROOT:-.}
+        target: /host/compose
+        read_only: true
+      - type: bind
+        source: \${MYRIAD_COMPOSE_HOST_ROOT:-.}/state
+        target: /host/state
+      - type: bind
+        source: \${MYRIAD_COMPOSE_HOST_ROOT:-.}/guard-policy
+        target: /guard-policy
     networks: [myriad-docker-guard-net]
     restart: unless-stopped
     security_opt: [no-new-privileges:true]
@@ -410,7 +1386,7 @@ services:
       options: { max-size: "10m", max-file: "3" }
 
   updater:
-    image: \${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG}
+    image: \${UPDATER_IMAGE_REF:-\${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG}}
     container_name: myriad-updater
     environment:
       UPDATE_TOKEN: \${UPDATE_TOKEN}
@@ -423,7 +1399,8 @@ services:
       UPDATER_ENV_FILE: /host/compose/.env
 {{UPDATER_PGDATA_LINE}}      UPDATER_COMPOSE_DIR: /host/compose
       DOCKER_HOST: tcp://docker-guard:2375
-      DOCKER_GUARD_SELF_UPDATE_URL: http://docker-guard:2375/_myriad/self-update
+      DOCKER_GUARD_SELF_UPDATE_TOKEN: \${GUARD_SELF_UPDATE_TOKEN:?Host Guard self-update token is required}
+      UPDATER_GUARD_ENV_FILE: /run/secrets/docker-guard.env
       COSIGN_VERIFY: \${COSIGN_VERIFY:-strict}
       UPDATER_ALLOW_INSECURE_COSIGN: \${UPDATER_ALLOW_INSECURE_COSIGN:-}
       COSIGN_INSECURE_OK: \${COSIGN_INSECURE_OK:-}
@@ -432,18 +1409,37 @@ services:
       MYRIAD_VERSION: \${UPDATER_TAG}
       TZ: Asia/Shanghai
     volumes:
-      - ./:/host/compose
+      - type: bind
+        source: \${MYRIAD_COMPOSE_HOST_ROOT:-.}
+        target: /host/compose
+        read_only: true
+      - type: bind
+        source: \${MYRIAD_COMPOSE_HOST_ROOT:-.}/.env
+        target: /host/compose/.env
+      - type: bind
+        source: \${MYRIAD_COMPOSE_HOST_ROOT:-.}/state
+        target: /host/compose/state
+{{UPDATER_PGDATA_VOLUME}}      - type: bind
+        source: \${MYRIAD_COMPOSE_HOST_ROOT:-.}/guard-policy
+        target: /run/secrets
+        read_only: true
     networks: [myriad-admin-net, myriad-docker-guard-net]
     depends_on:
       docker-guard: { condition: service_healthy }
     restart: unless-stopped
     security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:1101/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
     logging:
       driver: "json-file"
       options: { max-size: "10m", max-file: "3" }
 
   updater-gateway:
-    image: \${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG}
+    image: \${UPDATER_IMAGE_REF:-\${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG}}
     container_name: myriad-updater-gateway
     entrypoint: ["/usr/bin/tini", "--", "/usr/local/bin/myriad-updater-gateway"]
     environment:
@@ -459,6 +1455,12 @@ services:
     security_opt: [no-new-privileges:true]
     read_only: true
     tmpfs: [/tmp, /run]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:1104/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
     logging:
       driver: "json-file"
       options: { max-size: "10m", max-file: "3" }
@@ -499,6 +1501,15 @@ MYRIAD_DOCKER_NETWORK={{MYRIAD_DOCKER_NETWORK}}
 MYRIAD_ADMIN_NETWORK={{MYRIAD_ADMIN_NETWORK}}
 MYRIAD_DOCKER_GUARD_NETWORK={{MYRIAD_DOCKER_GUARD_NETWORK}}
 {{BACKEND_EXTRA_NETWORK_LINE}}
+MYRIAD_COMPOSE_HOST_ROOT={{MYRIAD_COMPOSE_HOST_ROOT}}
+MYRIAD_GUARD_ENV_FILE={{MYRIAD_GUARD_ENV_FILE}}
+DOCKER_GUARD_IMAGE={{DOCKER_GUARD_IMAGE}}
+UPDATER_IMAGE_REF={{UPDATER_IMAGE_REF}}
+GUARD_SELF_UPDATE_TOKEN={{GUARD_SELF_UPDATE_TOKEN}}
+GUARD_COMPOSE_PROJECT_NAME=myriad
+GUARD_MYRIAD_DOCKER_NETWORK={{MYRIAD_DOCKER_NETWORK}}
+GUARD_MYRIAD_ADMIN_NETWORK={{MYRIAD_ADMIN_NETWORK}}
+GUARD_MYRIAD_DOCKER_GUARD_NETWORK={{MYRIAD_DOCKER_GUARD_NETWORK}}
 
 UPDATE_TOKEN={{UPDATE_TOKEN}}
 UPDATER_GATEWAY_SECRET={{UPDATER_GATEWAY_SECRET}}
@@ -519,6 +1530,8 @@ PROXY_ALLOW_DIRECT_UPDATER=false
 
 COSIGN_VERIFY={{COSIGN_VERIFY}}
 {{COSIGN_INSECURE_HINT}}
+# saver = 小主机内存节约（收紧缓存/连接池）；default = 均衡
+MYRIAD_MEMORY_PROFILE={{MYRIAD_MEMORY_PROFILE}}
 
 # MYRIAD_DB_MODE=bundled|external — external: no compose postgres; updater skips pgdata snapshots
 MYRIAD_DB_MODE={{MYRIAD_DB_MODE}}
@@ -533,6 +1546,16 @@ BASE_URL=https://{{MAIN_DOMAIN}}
 FRONTEND_URL=https://{{MAIN_DOMAIN}}
 PUBLIC_API_URL=
 # RUST_LOG=info
+`;
+
+	var GUARD_ENV_TEMPLATE = `# Preview. Guard writes ./guard-policy/docker-guard.env on first start.
+DOCKER_GUARD_IMAGE={{DOCKER_GUARD_IMAGE}}
+GUARD_SELF_UPDATE_TOKEN={{GUARD_SELF_UPDATE_TOKEN}}
+GUARD_COMPOSE_PROJECT_NAME=myriad
+GUARD_MYRIAD_DOCKER_NETWORK={{MYRIAD_DOCKER_NETWORK}}
+GUARD_MYRIAD_ADMIN_NETWORK={{MYRIAD_ADMIN_NETWORK}}
+GUARD_MYRIAD_DOCKER_GUARD_NETWORK={{MYRIAD_DOCKER_GUARD_NETWORK}}
+MYRIAD_GUARD_ENV_FILE={{MYRIAD_GUARD_ENV_FILE}}
 `;
 
 // Whole-site reverse proxy to Myriad proxy (NOT /api-only). Federation paths that
@@ -635,10 +1658,17 @@ var DEFAULT_EXTRA_NGINX_TEMPLATE = `server {
 }
 `;
 
+var CADDYFILE_TEMPLATE = `{{MAIN_DOMAIN}} {
+	encode gzip zstd
+	reverse_proxy {{HTTP_BIND_ADDRESS}}:{{HTTP_PORT}}
+}
+{{EXTRA_CADDY_BLOCK}}`;
+
 // 部署说明（生成结果中的文本卡片）；{{PANEL_DEPLOY_SECTION}} 按面板填充
 var DEPLOY_NOTES_TEMPLATE = `# Myriad 部署
 
 同目录：\`docker-compose.yml\` + \`.env\`（\`chmod 600\`，勿提交）。
+宿主策略由 Guard 在首次启动时写入 \`./guard-policy/docker-guard.env\`，无需手工安装。
 
 面板适配：\`{{PANEL_LABEL}}\` · 数据库模式：\`MYRIAD_DB_MODE={{MYRIAD_DB_MODE}}\`（bundled=内置 Postgres；external=外置）。
 
@@ -655,7 +1685,7 @@ var DEPLOY_NOTES_TEMPLATE = `# Myriad 部署
 ## 联邦 / Federation
 
 - \`BASE_URL\` / \`FRONTEND_URL\` = 公网 HTTPS 源站（如 \`https://{{MAIN_DOMAIN}}\`），用于 Actor URL；联邦必填。
-- 外层 Nginx/Caddy 必须 **整站** 反代到 Myriad proxy（\`HTTP_BIND_ADDRESS:HTTP_PORT\`），**不要只反代 /api**。
+- 外层 Nginx/Caddy 必须 **整站** 反代到 Myriad proxy（\`HTTP_BIND_ADDRESS:HTTP_PORT\`），**请勿仅反代 /api**。
 - 以下路径必须到达 proxy（再由 proxy 转 backend）：
   - \`/.well-known/webfinger\`
   - \`/.well-known/nodeinfo\`
@@ -678,12 +1708,13 @@ curl -sS "https://{{MAIN_DOMAIN}}/.well-known/nodeinfo" | head -c 200
 \`\`\`bash
 {{DEPLOY_MKDIR}}
 chmod 600 .env
-docker compose pull && docker compose up -d
+docker compose --env-file .env pull
+docker compose --env-file .env up -d
 \`\`\`
 
 \`backend-volume-init\` 会在 backend 启动前修复持久卷权限；无需手工 chown。
 
-首次打开站点会进入安装向导。创建所有者时必须填写 **安装暗号**（\`.env\` 里的 \`MYRIAD_SETUP_SECRET\`）。能读到这份配置的人才能当站长。
+首次打开站点会进入安装向导。创建所有者时必须填写 **安装暗号**（\`.env\` 里的 \`MYRIAD_SETUP_SECRET\`）。也可以打开 \`https://{{MAIN_DOMAIN}}/#setup_secret=…\`，向导会自动填入。能读到这份配置或链接的人才能当站长。
 
 可选：\`scripts/docker/deploy.sh up\`（含环境初始化与部署检查）。
 
@@ -697,7 +1728,7 @@ https://{{MAIN_DOMAIN}} → \`{{HTTP_BIND_ADDRESS}}:{{HTTP_PORT}}\`（整站反�
 
 proxy 有 AP 路由变更时需单独 bump \`PROXY_TAG\`（与 \`MYRIAD_TAG\` 独立）。
 
-\`DOCKER_GUARD_ALLOWED_IMAGES\` 必须包含 proxy（默认 \`myriad-proxy\`）；否则 product/proxy 更新会 403。已部署栈若曾漏掉 proxy：编辑 compose 补上后执行 \`docker compose up -d --force-recreate docker-guard\`，再重试更新。
+v0.3.29+ 的 Guard 不再读取 \`DOCKER_GUARD_ALLOWED_IMAGES\`。生成的 \`.env\` 已含 digest 钉死的 \`DOCKER_GUARD_IMAGE\` 与 \`GUARD_SELF_UPDATE_TOKEN\`；Guard 首次启动会自己写入 \`./guard-policy/docker-guard.env\`。
 
 {{DEPLOY_DATA_SECTION}}
 
@@ -789,9 +1820,15 @@ var EXPECTED_ENV_KEYS_BASE = [
   'COMPOSE_PROJECT_NAME', 'UPDATE_TOKEN', 'UPDATER_GATEWAY_SECRET', 'CHANNEL',
   'UPDATE_MODE', 'MYRIAD_GITHUB_REPO', 'CHECK_INTERVAL_SECS',
   'HTTP_BIND_ADDRESS', 'HTTP_PORT', 'PROXY_ALLOW_DIRECT_UPDATER',
-  'COSIGN_VERIFY', 'MYRIAD_DB_MODE', 'DATABASE_URL', 'JWT_SECRET',
-  'MYRIAD_SETUP_SECRET', 'CORS_ORIGINS', 'BASE_URL', 'FRONTEND_URL'
+  'COSIGN_VERIFY', 'MYRIAD_MEMORY_PROFILE', 'MYRIAD_DB_MODE', 'DATABASE_URL', 'JWT_SECRET',
+  'MYRIAD_SETUP_SECRET', 'CORS_ORIGINS', 'BASE_URL', 'FRONTEND_URL',
+  'MYRIAD_COMPOSE_HOST_ROOT', 'MYRIAD_GUARD_ENV_FILE', 'DOCKER_GUARD_IMAGE',
+  'UPDATER_IMAGE_REF', 'GUARD_SELF_UPDATE_TOKEN', 'GUARD_COMPOSE_PROJECT_NAME',
+  'GUARD_MYRIAD_DOCKER_NETWORK', 'GUARD_MYRIAD_ADMIN_NETWORK',
+  'GUARD_MYRIAD_DOCKER_GUARD_NETWORK'
 ];
+
+var GUARD_IMAGE_RE = /^docker\.io\/somekawahitomi\/myriad-updater@sha256:[0-9a-f]{64}$/;
 
 function isSafeDotenvToken(value) {
   if (typeof value !== 'string') return false;
@@ -861,6 +1898,22 @@ function validateGeneratedEnv(envText, secrets, opts) {
   if (parsed.map.PROXY_ALLOW_DIRECT_UPDATER !== 'false') {
     throw new Error('PROXY_ALLOW_DIRECT_UPDATER 必须为 false（生成器固定值）');
   }
+  if (parsed.map.MYRIAD_MEMORY_PROFILE !== 'saver' && parsed.map.MYRIAD_MEMORY_PROFILE !== 'default') {
+    throw new Error('MYRIAD_MEMORY_PROFILE 必须是 saver 或 default');
+  }
+  if (!GUARD_IMAGE_RE.test(parsed.map.DOCKER_GUARD_IMAGE || '')) {
+    throw new Error('DOCKER_GUARD_IMAGE 必须是 docker.io/somekawahitomi/myriad-updater@sha256:<64hex>');
+  }
+  if (parsed.map.UPDATER_IMAGE_REF !== parsed.map.DOCKER_GUARD_IMAGE) {
+    throw new Error('UPDATER_IMAGE_REF 必须与 DOCKER_GUARD_IMAGE 相同');
+  }
+  if (parsed.map.MYRIAD_GUARD_ENV_FILE !== 'guard-policy/docker-guard.env') {
+    throw new Error('MYRIAD_GUARD_ENV_FILE 必须是 guard-policy/docker-guard.env');
+  }
+  if (secrets.GUARD_SELF_UPDATE_TOKEN && parsed.map.GUARD_SELF_UPDATE_TOKEN !== secrets.GUARD_SELF_UPDATE_TOKEN) {
+    throw new Error('GUARD_SELF_UPDATE_TOKEN 写入 .env 后与输入不一致');
+  }
+  requireSafeDotenvToken(parsed.map.GUARD_SELF_UPDATE_TOKEN, 'GUARD_SELF_UPDATE_TOKEN');
   var allowCount = (String(envText).match(/^PROXY_ALLOW_DIRECT_UPDATER=/gm) || []).length;
   if (allowCount !== 1) {
     throw new Error('PROXY_ALLOW_DIRECT_UPDATER 出现 ' + allowCount + ' 次，拒绝生成');
@@ -930,25 +1983,31 @@ function buildImageRef(repoDefault, tag, digest) {
 }
 
 function summarizeNginxDiff(before, after, domain) {
-  var lines = [];
+  var items = [];
   if (!before) {
-    lines.push('使用默认 Nginx 模板（未上传）');
+    items.push({ key: 'nginx.summary.defaultTemplate' });
   } else {
-    lines.push('基于上传配置改写域名 → ' + domain);
+    items.push({ key: 'nginx.summary.rewroteDomain', params: { domain: domain } });
     if (before !== after) {
       if (/location\s+\/\s*\{/.test(after) && /proxy_pass\s+http:\/\/127\.0\.0\.1:/.test(after)) {
-        lines.push('已将 location / 指向 Myriad proxy（整站反代）');
+        items.push({ key: 'nginx.summary.rewroteLocation' });
       }
       if (/acme-challenge/.test(after) && !/acme-challenge/.test(before)) {
-        lines.push('已注入 ACME challenge 本地 root');
+        items.push({ key: 'nginx.summary.injectedAcme' });
       }
-      lines.push('原文 ' + before.length + ' 字节 → 结果 ' + after.length + ' 字节');
+      items.push({ key: 'nginx.summary.bytes', params: { before: before.length, after: after.length } });
     } else {
-      lines.push('内容未变化（请人工核对 server_name / proxy_pass）');
+      items.push({ key: 'nginx.summary.unchanged' });
     }
   }
-  lines.push('手写解析器不能替代 nginx -t；上线前请在目标机执行下方校验命令');
-  return lines;
+  items.push({ key: 'nginx.summary.nginxTRequired' });
+  return items;
+}
+
+function formatNginxSummary(items) {
+  return (items || []).map(function (item) {
+    return t(item.key, item.params);
+  });
 }
 
 // 替换 Nginx 配置中的域名（含宝塔路径与常见 Let's Encrypt 路径）
@@ -1111,6 +2170,50 @@ function extractTagNamesFromHubPayload(data) {
   return names;
 }
 
+
+function extractDigestFromHubTag(data) {
+  var payload = data;
+  if (payload && payload.data && (payload.data.digest || payload.data.images)) {
+    payload = payload.data;
+  }
+  function fromDigestField(value) {
+    var m = String(value || '').match(/sha256:([a-fA-F0-9]{64})/i);
+    return m ? m[1].toLowerCase() : null;
+  }
+  var top = fromDigestField(payload && payload.digest);
+  if (top) return top;
+  var images = payload && payload.images;
+  if (!Array.isArray(images)) return null;
+  var i;
+  for (i = 0; i < images.length; i++) {
+    if (images[i] && images[i].architecture === 'amd64') {
+      var amd = fromDigestField(images[i].digest);
+      if (amd) return amd;
+    }
+  }
+  for (i = 0; i < images.length; i++) {
+    var any = fromDigestField(images[i] && images[i].digest);
+    if (any) return any;
+  }
+  return null;
+}
+
+async function resolveUpdaterDigest(tag) {
+  var repo = DOCKER_REPOS.updater;
+  if (typeof Tapp !== 'undefined' && typeof Tapp.api === 'function') {
+    var data = await Tapp.api('dockerHubTag', { repo: repo, tag: tag });
+    return extractDigestFromHubTag(data);
+  }
+  if (typeof fetch === 'function') {
+    var url = 'https://hub.docker.com/v2/repositories/somekawahitomi/' +
+      encodeURIComponent(repo) + '/tags/' + encodeURIComponent(tag);
+    var resp = await fetch(url);
+    if (!resp.ok) throw new Error(t('tags.hubHttp', { status: resp.status }));
+    return extractDigestFromHubTag(await resp.json());
+  }
+  return null;
+}
+
 async function fetchDockerHubTags(repo) {
   // 优先走声明式 Tapp.api（沙箱内禁止裸 fetch）
   if (typeof Tapp !== 'undefined' && typeof Tapp.api === 'function') {
@@ -1123,11 +2226,11 @@ async function fetchDockerHubTags(repo) {
       encodeURIComponent(repo) +
       '/tags?page_size=100&ordering=-last_updated';
     var resp = await fetch(url);
-    if (!resp.ok) throw new Error('Docker Hub HTTP ' + resp.status);
+    if (!resp.ok) throw new Error(t('tags.hubHttp', { status: resp.status }));
     var json = await resp.json();
     return extractTagNamesFromHubPayload(json);
   }
-  throw new Error('当前环境无法请求 Docker Hub');
+  throw new Error(t('tags.hubUnavailable'));
 }
 
 function setTagStatus(message, kind) {
@@ -1213,7 +2316,7 @@ async function resolveLatestImageTags() {
 
   if (!myriadTag && !proxyTag && !updaterTag) {
     var detail = failures.length ? '（' + failures.join('; ') + '）' : '';
-    throw new Error('Docker Hub 上未找到可用的 versioned tag（vX.Y.Z）' + detail);
+    throw new Error(t('tags.hubEmpty', { detail: detail }));
   }
 
   var aligned = !!(allCommon && proxyTag === myriadTag && updaterTag === myriadTag);
@@ -1244,7 +2347,7 @@ async function refreshLatestTags(inputs, channelSelect, opts) {
 
   var btn = document.getElementById('btn-refresh-tags');
   if (btn) btn.disabled = true;
-  setTagStatus('正在从 Docker Hub 获取最新 versioned tag…', 'loading');
+  setTagStatus(t('tags.loadingHub'), 'loading');
 
   tagFetchState.inflight = (async function() {
     try {
@@ -1252,24 +2355,10 @@ async function refreshLatestTags(inputs, channelSelect, opts) {
       tagFetchState.lastResolved = resolved;
       // 手动点「刷新」时强制覆盖；自动拉取只填空/自动字段
       applyResolvedTags(resolved, inputs, channelSelect, { force: !!opts.force });
-      var alignNote = resolved.versionAligned
-        ? ' · 四组件同版本'
-        : ' · 组件 tag 可能不一致，请确认兼容';
-      var failNote = (resolved.failures && resolved.failures.length)
-        ? ' · 部分仓库失败: ' + resolved.failures.join('; ')
-        : '';
-      setTagStatus(
-        '已解析：MYRIAD=' + resolved.myriadTag +
-        ' · PROXY=' + resolved.proxyTag +
-        ' · UPDATER=' + resolved.updaterTag +
-        alignNote + failNote + '（禁止 :latest；生产可加 @sha256:…）',
-        resolved.failures && resolved.failures.length ? 'error' : 'ok'
-      );
+      applyResolvedTagStatus(resolved);
       if (opts.notify) {
         showNotification(
-          resolved.versionAligned
-            ? '已更新为 Docker Hub 共同 versioned tag'
-            : '已更新 tag（proxy/updater 可能与 MYRIAD 不同版本）',
+          resolved.versionAligned ? t('notify.tagsAligned') : t('notify.tagsMixed'),
           'success'
         );
       }
@@ -1277,9 +2366,9 @@ async function refreshLatestTags(inputs, channelSelect, opts) {
     } catch (err) {
       var msg = (err && err.message) ? err.message : String(err);
       tagFetchState.lastError = msg;
-      setTagStatus('获取失败：' + msg + '。请手动填写 versioned tag。', 'error');
+      setTagStatus(t('tags.failStatus', { message: msg }), 'error');
       if (opts.notify) {
-        showNotification('获取最新版本失败：' + msg, 'error');
+        showNotification(t('notify.tagsFailed', { message: msg }), 'error');
       }
       return null;
     } finally {
@@ -1610,7 +2699,7 @@ var state = {
   extraNginxConfig: null,
   extraNginxFileName: '',
   httpBindAddress: '127.0.0.1',
-  httpPort: 8080,
+  httpPort: DEFAULT_HTTP_PORT,
   // 1panel | baota | generic — paths + deploy instructions
   panelId: '1panel',
   // bundled = compose postgres; external = user-managed PG
@@ -1621,8 +2710,9 @@ var state = {
   dbHost: '',
   dbPort: 5432,
   dbSslmode: '',
-  dbCpuLimit: '2.0',
-  dbMemLimit: '2G',
+  dbCpuLimit: '1.0',
+  dbMemLimit: '1G',
+  memoryProfile: 'default',
   // 运行时由 Docker Hub 解析填充，不在源码中写死版本
   myriadTag: '',
   proxyTag: '',
@@ -1634,9 +2724,9 @@ var state = {
   cosignVerify: 'strict',
   // PostgreSQL / backend / frontend 可按宿主机条件限制
   backendCpuLimit: '2.0',
-  backendMemLimit: '4G',
-  frontendCpuLimit: '2.0',
-  frontendMemLimit: '2G',
+  backendMemLimit: '2G',
+  frontendCpuLimit: '1.0',
+  frontendMemLimit: '512M',
   netMyriad: 'myriad-net',
   netAdmin: 'myriad-admin-net',
   netGuard: 'myriad-docker-guard-net',
@@ -1653,7 +2743,302 @@ var pageLifecycle = {
   unsubs: []
 };
 
+/**
+ * 向导：欢迎 → 面板 → 域名 → 站点 → 数据库 → 限额 → 完成；高级为限额页可选。
+ * 主路径每次只问一件事。
+ */
+var WIZARD_FLOW = ['welcome', 'panel', 'domain', 'site', 'database', 'limits', 'advanced', 'done'];
+var WIZARD_META = {
+  welcome: { index: 0, nameKey: 'wizard.welcome', back: '', backLabelKey: '' },
+  panel: { index: 1, nameKey: 'wizard.panel', back: 'welcome', backLabelKey: 'wizard.welcome' },
+  domain: { index: 2, nameKey: 'wizard.domain', back: 'panel', backLabelKey: 'wizard.panel' },
+  site: { index: 3, nameKey: 'wizard.site', back: 'domain', backLabelKey: 'wizard.domain' },
+  database: { index: 4, nameKey: 'wizard.database', back: 'site', backLabelKey: 'wizard.site' },
+  limits: { index: 5, nameKey: 'wizard.limits', back: 'database', backLabelKey: 'wizard.database' },
+  advanced: { index: 0, nameKey: 'wizard.advanced', back: 'limits', backLabelKey: 'wizard.limits' },
+  done: { index: 0, nameKey: '', back: 'limits', backLabelKey: 'wizard.limits' }
+};
+var WIZARD_TOTAL = 5;
+var wizardStep = 'welcome';
+var wizardDoneFrom = 'limits';
+
+var LIMIT_PRESETS = {
+  small: {
+    hintKey: 'limits.hintSmall',
+    dbCpu: '0.5', dbMem: '512M',
+    backendCpu: '1.0', backendMem: '1G',
+    frontendCpu: '0.5', frontendMem: '256M',
+    memorySaver: true
+  },
+  standard: {
+    hintKey: 'limits.hintStandard',
+    dbCpu: '1.0', dbMem: '1G',
+    backendCpu: '2.0', backendMem: '2G',
+    frontendCpu: '1.0', frontendMem: '512M',
+    memorySaver: false
+  },
+  large: {
+    hintKey: 'limits.hintLarge',
+    dbCpu: '2.0', dbMem: '2G',
+    backendCpu: '2.0', backendMem: '2G',
+    frontendCpu: '1.0', frontendMem: '1G',
+    memorySaver: false
+  }
+};
+
+function wizardPane(step) {
+  return document.querySelector('.cg-ob__pane[data-step="' + step + '"]');
+}
+
+function setWizardNote(step, message, tone) {
+  var host = document.getElementById('cg-note-' + step);
+  if (!host) return;
+  host.innerHTML = '';
+  if (!message) return;
+  var note = document.createElement('p');
+  note.className = 'cg-ob-note' + (tone === 'error' ? ' is-error' : '');
+  note.textContent = message;
+  host.appendChild(note);
+}
+
+function renderWizardChrome(step, dir) {
+  var meta = WIZARD_META[step] || WIZARD_META.welcome;
+  if (step === 'done') {
+    meta = {
+      index: 0,
+      nameKey: '',
+      back: wizardDoneFrom,
+      backLabelKey: wizardDoneFrom === 'advanced' ? 'wizard.advanced' : 'wizard.limits'
+    };
+  }
+  var side = document.getElementById('cg-top-side');
+  var stepEl = document.getElementById('cg-top-step');
+  var nameEl = document.getElementById('cg-top-name');
+  var progressEl = document.getElementById('cg-top-progress');
+
+  var backLabel = meta.backLabelKey ? t(meta.backLabelKey) : '';
+  if (side) {
+    if (meta.back) {
+      side.innerHTML =
+        '<div class="cg-ob-back">' +
+        '<button type="button" class="cg-ob-back__hit" data-wizard-back aria-label="' +
+        t('common.backAria', { label: backLabel }) + '">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' +
+        '</button>' +
+        '<span class="cg-ob-back__label">' + backLabel + '</span>' +
+        '</div>';
+    } else {
+      side.innerHTML = '<span class="cg-ob-brand">' + t('app.brand') + '</span>';
+    }
+  }
+
+  if (stepEl && nameEl && progressEl) {
+    if (meta.index) {
+      stepEl.hidden = false;
+      nameEl.textContent = meta.nameKey ? t(meta.nameKey) : '';
+      progressEl.textContent = t('wizard.progress', { done: meta.index, total: WIZARD_TOTAL });
+    } else {
+      stepEl.hidden = true;
+    }
+  }
+
+  WIZARD_FLOW.forEach(function (id) {
+    var pane = wizardPane(id);
+    if (!pane) return;
+    var active = id === step;
+    pane.hidden = !active;
+    if (active) {
+      pane.setAttribute('data-dir', dir || 'fade');
+    }
+  });
+}
+
+var topBarScroll = { el: null, fn: null };
+
+function unbindTopBarDense() {
+  if (topBarScroll.el && topBarScroll.fn) {
+    topBarScroll.el.removeEventListener('scroll', topBarScroll.fn);
+  }
+  topBarScroll.el = null;
+  topBarScroll.fn = null;
+}
+
+function wizardScroller(pane) {
+  if (!pane) return null;
+  if (pane.classList.contains('is-welcome')) {
+    return pane.querySelector('.cg-ob-welcome') || pane;
+  }
+  return pane.querySelector(':scope > .cg-ob-body') || pane;
+}
+
+function bindTopBarDense(scroller) {
+  var card = document.getElementById('cg-card');
+  unbindTopBarDense();
+  if (!card) return;
+  function sync() {
+    var top = scroller ? scroller.scrollTop : 0;
+    var t = Math.min(1, Math.max(0, top / 128));
+    card.style.setProperty('--sob-top-dense', (t * t * (3 - 2 * t)).toFixed(3));
+  }
+  sync();
+  if (!scroller) return;
+  topBarScroll.el = scroller;
+  topBarScroll.fn = sync;
+  scroller.addEventListener('scroll', sync, { passive: true });
+}
+
+function goWizard(next, dir) {
+  if (WIZARD_FLOW.indexOf(next) < 0) return;
+  wizardStep = next;
+  renderWizardChrome(next, dir || 'fade');
+  var pane = wizardPane(next);
+  var scroller = wizardScroller(pane);
+  if (scroller) scroller.scrollTop = 0;
+  bindTopBarDense(scroller);
+  if (next === 'site') syncSiteStepUi();
+}
+
+function selectedPanelIdFromUi() {
+  var selected = document.querySelector('input[name="panel-mode"]:checked');
+  var v = selected && selected.value;
+  if (v && PANEL_ID_SET[v]) return v;
+  return '1panel';
+}
+
+function syncSiteStepUi() {
+  var profile = getPanelProfile(selectedPanelIdFromUi());
+  var mainInput = document.getElementById('main-domain');
+  var extraInput = document.getElementById('extra-domain');
+  var mainDomain = normalizeDomain(mainInput ? mainInput.value : '');
+  var extraDomain = normalizeDomain(extraInput ? extraInput.value : '');
+  var domainNote = document.getElementById('cg-site-domain-note');
+  var stepsEl = document.getElementById('cg-site-steps');
+  var pathEl = document.getElementById('cg-site-path');
+  var extraItem = document.getElementById('site-extra-upload');
+  var group = document.getElementById('site-upload-group');
+  var mainLabel = document.getElementById('site-main-upload-label');
+  var extraLabel = document.getElementById('site-extra-upload-label');
+  var siteTitle = document.getElementById('site-hero-title');
+  var siteLead = document.getElementById('site-hero-lead');
+  var noFileHint = document.getElementById('site-nofile-hint');
+  var shown = mainDomain || t('site.fallbackDomain');
+  var hideUpload = profile.siteMode === 'none';
+
+  if (siteTitle) siteTitle.textContent = t(profile.siteTitle || 'site.title');
+  if (siteLead) siteLead.textContent = t(profile.siteLead || 'site.lead');
+  if (noFileHint) {
+    if (profile.siteHint) {
+      noFileHint.hidden = false;
+      noFileHint.textContent = t(profile.siteHint);
+    } else {
+      noFileHint.hidden = true;
+    }
+  }
+  if (group) group.hidden = hideUpload;
+
+  if (domainNote) {
+    domainNote.textContent = '';
+    if (!mainDomain) {
+      domainNote.textContent = t('site.noDomain');
+    } else {
+      domainNote.appendChild(document.createTextNode(t('site.currentDomain') + '  '));
+      var strong = document.createElement('strong');
+      strong.textContent = extraDomain ? mainDomain + '  ·  ' + extraDomain : mainDomain;
+      domainNote.appendChild(strong);
+    }
+  }
+  if (stepsEl) {
+    stepsEl.innerHTML = '';
+    (profile.siteSteps || []).forEach(function (text, index) {
+      var item = document.createElement('li');
+      var num = document.createElement('b');
+      num.textContent = String(index + 1);
+      var span = document.createElement('span');
+      span.textContent = t(text, { domain: shown });
+      item.appendChild(num);
+      item.appendChild(span);
+      stepsEl.appendChild(item);
+    });
+  }
+  if (pathEl) {
+    var pathText = profile.siteConfPath
+      ? t(profile.siteConfPath, { domain: mainDomain || '<domain>' })
+      : '';
+    pathEl.hidden = !pathText;
+    pathEl.textContent = pathText;
+  }
+  if (mainLabel) mainLabel.textContent = t('site.confNamed', { name: mainDomain || t('domain.main') });
+  if (extraLabel) extraLabel.textContent = t('site.confNamed', { name: extraDomain || t('domain.extra') });
+  if (extraItem) extraItem.hidden = hideUpload || !extraDomain;
+  if (group) group.classList.toggle('is-single', !extraDomain);
+}
+
+function validateWizardStep(step) {
+  if (step === 'domain') {
+    var mainInput = document.getElementById('main-domain');
+    var extraInput = document.getElementById('extra-domain');
+    var mainDomain = normalizeDomain(mainInput ? mainInput.value : '');
+    var extraDomain = normalizeDomain(extraInput ? extraInput.value : '');
+    if (!mainDomain) {
+      setWizardNote('domain', t('error.domainNote'), 'error');
+      if (mainInput) mainInput.focus();
+      return false;
+    }
+    if (!isValidDomain(mainDomain)) {
+      setWizardNote('domain', t('error.domainFormat'), 'error');
+      if (mainInput) mainInput.focus();
+      return false;
+    }
+    if (extraDomain && !isValidDomain(extraDomain)) {
+      setWizardNote('domain', t('error.extraFormat'), 'error');
+      if (extraInput) extraInput.focus();
+      return false;
+    }
+    var portInput = document.getElementById('http-port');
+    if (!isValidHttpPort(readHttpPort(portInput))) {
+      setWizardNote('domain', t('error.badHttpPort'), 'error');
+      if (portInput) portInput.focus();
+      return false;
+    }
+    setWizardNote('domain', '');
+    return true;
+  }
+  if (step === 'database') {
+    var mode = document.querySelector('input[name="db-mode"]:checked');
+    var isExternal = mode && mode.value === 'external';
+    if (!isExternal) {
+      setWizardNote('database', '');
+      return true;
+    }
+    var hostInput = document.getElementById('db-host');
+    var passInput = document.getElementById('db-password');
+    if (!isValidDbHost(hostInput ? hostInput.value.trim() : '')) {
+      setWizardNote('database', t('error.dbHostStep'), 'error');
+      if (hostInput) hostInput.focus();
+      return false;
+    }
+    if (!passInput || !passInput.value.trim()) {
+      setWizardNote('database', t('error.dbPasswordStep'), 'error');
+      if (passInput) passInput.focus();
+      return false;
+    }
+    setWizardNote('database', '');
+    return true;
+  }
+  return true;
+}
+
+function wizardNextFrom(step) {
+  if (step === 'welcome') return 'panel';
+  if (step === 'panel') return 'domain';
+  if (step === 'domain') return 'site';
+  if (step === 'site') return 'database';
+  if (step === 'database') return 'limits';
+  return '';
+}
+
 function disposePage() {
+  unbindTopBarDense();
   var list = pageLifecycle.unsubs.slice();
   pageLifecycle.unsubs = [];
   pageLifecycle.ready = false;
@@ -1668,6 +3053,87 @@ function initPage() {
   }
   pageLifecycle.ready = true;
 
+  var card = document.getElementById('cg-card');
+  function onWizardClick(event) {
+    var backBtn = event.target.closest('[data-wizard-back]');
+    if (backBtn) {
+      event.preventDefault();
+      var backTo = (WIZARD_META[wizardStep] || {}).back;
+      if (backTo) goWizard(backTo, 'back');
+      return;
+    }
+    var nextBtn = event.target.closest('[data-wizard-next]');
+    if (!nextBtn) return;
+    event.preventDefault();
+    if (!validateWizardStep(wizardStep)) return;
+    var next = wizardNextFrom(wizardStep);
+    if (next) goWizard(next, 'forward');
+  }
+  if (card) pageListen(card, 'click', onWizardClick);
+
+  var domainForm = wizardPane('domain');
+  if (domainForm) {
+    pageListen(domainForm, 'submit', function (event) {
+      event.preventDefault();
+    });
+    pageListen(domainForm, 'keydown', function (event) {
+      if (event.key !== 'Enter' || event.target.tagName === 'TEXTAREA') return;
+      event.preventDefault();
+      if (!validateWizardStep('domain')) return;
+      goWizard('site', 'forward');
+    });
+  }
+
+  var databaseForm = wizardPane('database');
+  if (databaseForm) {
+    pageListen(databaseForm, 'submit', function (event) {
+      event.preventDefault();
+    });
+    pageListen(databaseForm, 'keydown', function (event) {
+      if (event.key !== 'Enter' || event.target.tagName === 'TEXTAREA') return;
+      event.preventDefault();
+      if (!validateWizardStep('database')) return;
+      goWizard('limits', 'forward');
+    });
+  }
+
+  var limitsPane = wizardPane('limits');
+  if (limitsPane) {
+    pageListen(limitsPane, 'keydown', function (event) {
+      if (event.key !== 'Enter' || event.target.tagName === 'TEXTAREA') return;
+      event.preventDefault();
+      var generateBtn = document.getElementById('btn-generate-all');
+      if (generateBtn && !generateBtn.disabled) generateBtn.click();
+    });
+  }
+
+  var gotoAdvancedBtn = document.getElementById('btn-goto-advanced');
+  if (gotoAdvancedBtn) {
+    pageListen(gotoAdvancedBtn, 'click', function () {
+      goWizard('advanced', 'forward');
+    });
+  }
+
+  var advancedPane = wizardPane('advanced');
+  if (advancedPane) {
+    pageListen(advancedPane, 'keydown', function (event) {
+      if (event.key !== 'Enter' || event.target.tagName === 'TEXTAREA') return;
+      event.preventDefault();
+      var generateBtn = document.getElementById('btn-generate-advanced');
+      if (generateBtn && !generateBtn.disabled) generateBtn.click();
+    });
+  }
+
+  applyStaticI18n();
+  if (typeof Tapp !== 'undefined' && Tapp.ui && typeof Tapp.ui.onLocaleChange === 'function') {
+    var offLocale = Tapp.ui.onLocaleChange(function () {
+      refreshDynamicI18n();
+    });
+    if (typeof offLocale === 'function') pageLifecycle.unsubs.push(offLocale);
+  }
+
+  goWizard('welcome', 'fade');
+
   var mainDomainInput = document.getElementById('main-domain');
   var extraDomainInput = document.getElementById('extra-domain');
   var dbPasswordInput = document.getElementById('db-password');
@@ -1680,17 +3146,13 @@ function initPage() {
   var dbHostInput = document.getElementById('db-host');
   var dbPortInput = document.getElementById('db-port');
   var dbSslmodeSelect = document.getElementById('db-sslmode');
-  var dbModeBundledFields = document.getElementById('db-mode-bundled-fields');
   var dbModeExternalFields = document.getElementById('db-mode-external-fields');
   var dbResourceGroup = document.getElementById('db-resource-group');
   var dbModeRadios = document.querySelectorAll('input[name="db-mode"]');
 
   var genDbPasswordBtn = document.getElementById('gen-db-password');
-  var genJwtSecretBtn = document.getElementById('gen-jwt-secret');
-  var genUpdateTokenBtn = document.getElementById('gen-update-token');
-  var genGatewaySecretBtn = document.getElementById('gen-updater-gateway-secret');
-  var genSetupSecretBtn = document.getElementById('gen-setup-secret');
   var generateAllBtn = document.getElementById('btn-generate-all');
+  var generateAdvancedBtn = document.getElementById('btn-generate-advanced');
 
   var uploadNginx = document.getElementById('upload-nginx-conf');
   var fileNginx = document.getElementById('file-nginx-conf');
@@ -1729,15 +3191,8 @@ function initPage() {
     return (selected && selected.value === 'external') ? 'external' : 'bundled';
   }
 
-  function getSelectedPanelId() {
-    var selected = document.querySelector('input[name="panel-mode"]:checked');
-    var v = selected && selected.value;
-    if (v === 'baota' || v === 'generic' || v === '1panel') return v;
-    return '1panel';
-  }
-
   function syncPanelModeUi() {
-    state.panelId = getSelectedPanelId();
+    state.panelId = selectedPanelIdFromUi();
     document.querySelectorAll('.panel-mode-option').forEach(function (label) {
       var input = label.querySelector('input[name="panel-mode"]');
       if (!input) return;
@@ -1745,16 +3200,21 @@ function initPage() {
     });
     var profile = getPanelProfile(state.panelId);
     var info = document.getElementById('panel-mode-hint');
-    if (info) info.textContent = profile.resultsIntro;
+    if (info) info.textContent = t(profile.wizardHint || profile.resultsIntro);
   }
 
   function syncDbModeUi() {
     var mode = getSelectedDbMode();
     state.dbMode = mode;
     var isExternal = mode === 'external';
-    if (dbModeBundledFields) dbModeBundledFields.hidden = isExternal;
     if (dbModeExternalFields) dbModeExternalFields.hidden = !isExternal;
     if (dbResourceGroup) dbResourceGroup.hidden = isExternal;
+    var dbVersionField = document.getElementById('db-version-field');
+    if (dbVersionField) dbVersionField.hidden = isExternal;
+    var bundledHint = document.getElementById('db-bundled-hint');
+    if (bundledHint) bundledHint.hidden = isExternal;
+    var passwordField = document.getElementById('db-password-field');
+    if (passwordField) passwordField.hidden = !isExternal;
     // Segmented control active styles
     document.querySelectorAll('.db-mode-option').forEach(function(label) {
       var input = label.querySelector('input[name="db-mode"]');
@@ -1778,6 +3238,82 @@ function initPage() {
     syncDbModeUi();
   }
 
+  function applyLimitPreset(preset) {
+    var spec = LIMIT_PRESETS[preset];
+    if (!spec) return;
+    function setVal(id, value) {
+      var el = document.getElementById(id);
+      if (el) el.value = value;
+    }
+    setVal('db-cpu-limit', spec.dbCpu);
+    setVal('db-mem-limit', spec.dbMem);
+    setVal('backend-cpu-limit', spec.backendCpu);
+    setVal('backend-mem-limit', spec.backendMem);
+    setVal('frontend-cpu-limit', spec.frontendCpu);
+    setVal('frontend-mem-limit', spec.frontendMem);
+    var saver = document.getElementById('memory-saver');
+    if (saver) saver.checked = !!spec.memorySaver;
+  }
+
+  function syncLimitPresetUi(mode) {
+    var customFields = document.getElementById('limit-custom-fields');
+    var hint = document.getElementById('limit-preset-hint');
+    var customBtn = document.getElementById('limit-preset-custom');
+    var isCustom = mode === 'custom';
+    if (customFields) customFields.hidden = !isCustom;
+    if (customBtn) customBtn.setAttribute('aria-pressed', isCustom ? 'true' : 'false');
+    document.querySelectorAll('.limit-preset-toggle .cg-choice__card').forEach(function (label) {
+      var input = label.querySelector('input[name="limit-preset"]');
+      if (!input) return;
+      if (isCustom) {
+        input.checked = false;
+        label.classList.remove('is-active');
+      } else {
+        label.classList.toggle('is-active', input.checked);
+      }
+    });
+    if (!isCustom) {
+      if (customBtn) customBtn.dataset.lastPreset = mode;
+      applyLimitPreset(mode);
+      if (hint && LIMIT_PRESETS[mode]) hint.textContent = t(LIMIT_PRESETS[mode].hintKey);
+    } else if (hint) {
+      hint.textContent = t('limits.hintCustom');
+    }
+    syncDbModeUi();
+  }
+
+  function getSelectedLimitPreset() {
+    if (document.getElementById('limit-preset-custom') &&
+        document.getElementById('limit-preset-custom').getAttribute('aria-pressed') === 'true') {
+      return 'custom';
+    }
+    var selected = document.querySelector('input[name="limit-preset"]:checked');
+    return (selected && selected.value) || 'standard';
+  }
+
+  var limitPresetRadios = document.querySelectorAll('input[name="limit-preset"]');
+  if (limitPresetRadios && limitPresetRadios.length) {
+    limitPresetRadios.forEach(function (radio) {
+      pageListen(radio, 'change', function () {
+        syncLimitPresetUi(radio.value);
+      });
+    });
+  }
+  var customLimitBtn = document.getElementById('limit-preset-custom');
+  if (customLimitBtn) {
+    pageListen(customLimitBtn, 'click', function () {
+      if (customLimitBtn.getAttribute('aria-pressed') === 'true') {
+        var last = customLimitBtn.dataset.lastPreset || 'standard';
+        var radio = document.querySelector('input[name="limit-preset"][value="' + last + '"]');
+        if (radio) radio.checked = true;
+        syncLimitPresetUi(last);
+        return;
+      }
+      syncLimitPresetUi('custom');
+    });
+  }
+  syncLimitPresetUi(getSelectedLimitPreset());
+
   function markTagManual(input) {
     if (!input) return;
     input.dataset.autoFilled = 'false';
@@ -1796,44 +3332,10 @@ function initPage() {
     });
   }
 
-  pageListen(genDbPasswordBtn, 'click', function() {
-    dbPasswordInput.value = generatePassword();
-    animateButton(genDbPasswordBtn);
-  });
-
-  pageListen(genJwtSecretBtn, 'click', function() {
-    jwtSecretInput.value = generateJwtSecret();
-    animateButton(genJwtSecretBtn);
-  });
-
-  pageListen(genUpdateTokenBtn, 'click', function() {
-    updateTokenInput.value = generateUpdateToken();
-    animateButton(genUpdateTokenBtn);
-  });
-
-  if (genGatewaySecretBtn && gatewaySecretInput) {
-    pageListen(genGatewaySecretBtn, 'click', function() {
-      gatewaySecretInput.value = generateUpdaterGatewaySecret();
-      animateButton(genGatewaySecretBtn);
-    });
-  }
-
-  if (genSetupSecretBtn && setupSecretInput) {
-    pageListen(genSetupSecretBtn, 'click', function() {
-      setupSecretInput.value = generateSetupSecret();
-      animateButton(genSetupSecretBtn);
-    });
-  }
-
-  var copySetupSecretBtn = document.getElementById('copy-setup-secret');
-  if (copySetupSecretBtn && setupSecretInput) {
-    pageListen(copySetupSecretBtn, 'click', function() {
-      var value = setupSecretInput.value.trim();
-      if (!value) {
-        showNotification('还没有安装暗号，先点生成', 'error');
-        return;
-      }
-      copyToClipboard(value, copySetupSecretBtn);
+  if (genDbPasswordBtn && dbPasswordInput) {
+    pageListen(genDbPasswordBtn, 'click', function() {
+      dbPasswordInput.value = generatePassword();
+      animateButton(genDbPasswordBtn);
     });
   }
 
@@ -1843,10 +3345,23 @@ function initPage() {
       var node = document.getElementById('setup-secret-reminder-value');
       var value = ((node && node.textContent) || state.setupSecret || '').trim();
       if (!value) {
-        showNotification('还没有安装暗号', 'error');
+        showNotification(t('notify.noSecret'), 'error');
         return;
       }
       copyToClipboard(value, copySetupSecretResultBtn);
+    });
+  }
+
+  var copySetupSecretLinkBtn = document.getElementById('copy-setup-secret-link');
+  if (copySetupSecretLinkBtn) {
+    pageListen(copySetupSecretLinkBtn, 'click', function() {
+      var node = document.getElementById('setup-secret-link-value');
+      var value = ((node && node.textContent) || '').trim();
+      if (!value) {
+        showNotification(t('notify.noLink'), 'error');
+        return;
+      }
+      copyToClipboard(value, copySetupSecretLinkBtn);
     });
   }
 
@@ -1877,9 +3392,10 @@ function initPage() {
     });
   }
 
-  pageListen(generateAllBtn, 'click', async function() {
-    if (generateAllBtn.disabled) return;
+  async function runGenerateAll() {
+    if (!generateAllBtn || generateAllBtn.disabled) return;
     generateAllBtn.disabled = true;
+    if (generateAdvancedBtn) generateAdvancedBtn.disabled = true;
 
     try {
       var mainDomain = normalizeDomain(mainDomainInput.value);
@@ -1893,34 +3409,34 @@ function initPage() {
       var dbUser = dbUserInput.value.trim();
       var dbMode = getSelectedDbMode();
       var isExternal = dbMode === 'external';
-      state.panelId = getSelectedPanelId();
+      state.panelId = selectedPanelIdFromUi();
 
       if (!mainDomain) {
-        showNotification('请输入主域名', 'error');
+        showNotification(t('error.needMainDomain'), 'error');
         mainDomainInput.focus();
         return;
       }
 
       if (!isValidDomain(mainDomain)) {
-        showNotification('主域名格式无效', 'error');
+        showNotification(t('error.badMainDomain'), 'error');
         mainDomainInput.focus();
         return;
       }
 
       if (extraDomain && !isValidDomain(extraDomain)) {
-        showNotification('额外域名格式无效', 'error');
+        showNotification(t('error.badExtraDomain'), 'error');
         extraDomainInput.focus();
         return;
       }
 
       var postgresIdentifierPattern = /^[a-z][a-z0-9_]{0,62}$/;
       if (!postgresIdentifierPattern.test(dbName)) {
-        showNotification('数据库名只能使用小写字母、数字和下划线，并以字母开头', 'error');
+        showNotification(t('error.badDbName'), 'error');
         dbNameInput.focus();
         return;
       }
       if (!postgresIdentifierPattern.test(dbUser)) {
-        showNotification('数据库用户名只能使用小写字母、数字和下划线，并以字母开头', 'error');
+        showNotification(t('error.badDbUser'), 'error');
         dbUserInput.focus();
         return;
       }
@@ -1931,33 +3447,33 @@ function initPage() {
       if (isExternal) {
         dbHost = dbHostInput ? dbHostInput.value.trim() : '';
         if (!isValidDbHost(dbHost)) {
-          showNotification('请填写有效的数据库主机（IP / 主机名 / host.docker.internal）', 'error');
+          showNotification(t('error.badDbHost'), 'error');
           if (dbHostInput) dbHostInput.focus();
           return;
         }
         dbPort = parseInt(dbPortInput && dbPortInput.value, 10);
         if (!dbPort || dbPort < 1 || dbPort > 65535) {
-          showNotification('数据库端口无效', 'error');
+          showNotification(t('error.badDbPort'), 'error');
           if (dbPortInput) dbPortInput.focus();
           return;
         }
         dbSslmode = dbSslmodeSelect ? (dbSslmodeSelect.value || '').trim() : '';
         if (!SSLMODE_ALLOWED[dbSslmode]) {
-          showNotification('sslmode 无效', 'error');
+          showNotification(t('error.badSslmode'), 'error');
           if (dbSslmodeSelect) dbSslmodeSelect.focus();
           return;
         }
         // 附加外部子网可选：非空时须为合法 Docker 网络名
         var dbExtraNetwork = (dbExtraNetworkInput && dbExtraNetworkInput.value.trim()) || '';
         if (dbExtraNetwork && !/^[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(dbExtraNetwork)) {
-          showNotification('附加子网不是合法 Docker 网络名', 'error');
+          showNotification(t('error.badExtraNetwork'), 'error');
           if (dbExtraNetworkInput) dbExtraNetworkInput.focus();
           return;
         }
         state.dbExtraNetwork = dbExtraNetwork;
         // External: keep user password as-is (URL-encoded when building DATABASE_URL)
         if (!dbPassword) {
-          showNotification('请填写外置数据库密码', 'error');
+          showNotification(t('error.needDbPassword'), 'error');
           dbPasswordInput.focus();
           return;
         }
@@ -2020,15 +3536,15 @@ function initPage() {
 
       state.httpBindAddress = httpBindAddressSelect.value || '127.0.0.1';
       if (state.httpBindAddress !== '127.0.0.1' && state.httpBindAddress !== '0.0.0.0') {
-        showNotification('HTTP 监听地址无效', 'error');
+        showNotification(t('error.badHttpBind'), 'error');
         httpBindAddressSelect.focus();
         return;
       }
 
-      state.httpPort = parseInt(httpPortInput.value, 10) || 8080;
-      if (state.httpPort < 1 || state.httpPort > 65535) {
-        showNotification('HTTP 端口无效', 'error');
-        httpPortInput.focus();
+      state.httpPort = readHttpPort(httpPortInput);
+      if (!isValidHttpPort(state.httpPort)) {
+        showNotification(t('error.badHttpPort'), 'error');
+        if (httpPortInput) httpPortInput.focus();
         return;
       }
 
@@ -2036,7 +3552,7 @@ function initPage() {
       if (!isExternal) {
         if (!isValidPgMajor(state.dbVersion)) {
           showNotification(
-            'PostgreSQL 主版本须为 ' + PG_VERSION_MIN + '–' + PG_VERSION_MAX + ' 的整数（当前镜像线）',
+            t('error.badPgVersion', { min: PG_VERSION_MIN, max: PG_VERSION_MAX }),
             'error'
           );
           if (dbVersionSelect) dbVersionSelect.focus();
@@ -2051,7 +3567,7 @@ function initPage() {
       if (!myriadTag || !proxyTag || !updaterTag) {
         var resolved = await refreshLatestTags(tagInputs, channelSelect, { notify: false, force: false });
         if (!resolved && (!myriadTag || !proxyTag || !updaterTag)) {
-          showNotification('镜像 tag 为空且无法自动获取，请点击「刷新最新版本」或手动填写', 'error');
+          showNotification(t('error.emptyTags'), 'error');
           myriadTagInput.focus();
           return;
         }
@@ -2066,33 +3582,32 @@ function initPage() {
       state.channel = channelSelect.value || 'stable';
       state.cosignVerify = cosignSelect.value || 'strict';
 
-      state.dbCpuLimit = (dbCpuLimitInput && dbCpuLimitInput.value.trim()) || '2.0';
-      state.dbMemLimit = (dbMemLimitInput && dbMemLimitInput.value.trim()) || '2G';
+      state.dbCpuLimit = (dbCpuLimitInput && dbCpuLimitInput.value.trim()) || '1.0';
+      state.dbMemLimit = (dbMemLimitInput && dbMemLimitInput.value.trim()) || '1G';
       state.backendCpuLimit = backendCpuLimitInput.value.trim() || '2.0';
-      state.backendMemLimit = backendMemLimitInput.value.trim() || '4G';
-      state.frontendCpuLimit = frontendCpuLimitInput.value.trim() || '2.0';
-      state.frontendMemLimit = frontendMemLimitInput.value.trim() || '2G';
+      state.backendMemLimit = backendMemLimitInput.value.trim() || '2G';
+      state.frontendCpuLimit = frontendCpuLimitInput.value.trim() || '1.0';
+      state.frontendMemLimit = frontendMemLimitInput.value.trim() || '512M';
+      var memorySaverEl = document.getElementById('memory-saver');
+      state.memoryProfile = (memorySaverEl && memorySaverEl.checked) ? 'saver' : 'default';
 
       var cpuValues = isExternal
         ? [state.backendCpuLimit, state.frontendCpuLimit]
         : [state.dbCpuLimit, state.backendCpuLimit, state.frontendCpuLimit];
       if (cpuValues.some(function(value) { return !/^\d+(?:\.\d+)?$/.test(value) || Number(value) <= 0; })) {
-        showNotification('CPU 数量必须是大于 0 的数字', 'error');
+        showNotification(t('error.badCpu'), 'error');
         return;
       }
       var memoryValues = isExternal
         ? [state.backendMemLimit, state.frontendMemLimit]
         : [state.dbMemLimit, state.backendMemLimit, state.frontendMemLimit];
       if (memoryValues.some(function(value) { return !isValidMemoryLimit(value); })) {
-        showNotification(
-          '内存须为 16M–256G（如 512M、2G）；禁止 0M 与超大值',
-          'error'
-        );
+        showNotification(t('error.badMemory'), 'error');
         return;
       }
 
       if (!state.myriadTag || !state.proxyTag || !state.updaterTag) {
-        showNotification('请填写完整的镜像 tag', 'error');
+        showNotification(t('error.needTags'), 'error');
         return;
       }
 
@@ -2100,10 +3615,7 @@ function initPage() {
       var proxyRef = parseImageRef(state.proxyTag);
       var updaterRef = parseImageRef(state.updaterTag);
       if (!myriadRef || !proxyRef || !updaterRef) {
-        showNotification(
-          'tag 须为 versioned（vX.Y.Z / vX.Y.Z-rc.N），可选 @sha256:<64hex>；禁止 latest',
-          'error'
-        );
+        showNotification(t('error.badTag'), 'error');
         return;
       }
       // 存纯 tag（compose 默认 :tag）；digest 单独进 state 供 pin
@@ -2113,6 +3625,18 @@ function initPage() {
       state.myriadDigest = myriadRef.digest;
       state.proxyDigest = proxyRef.digest;
       state.updaterDigest = updaterRef.digest;
+      if (!state.updaterDigest) {
+        try {
+          state.updaterDigest = await resolveUpdaterDigest(state.updaterTag);
+        } catch (digestErr) {
+          showNotification((digestErr && digestErr.message) ? digestErr.message : t('error.needUpdaterDigest'), 'error');
+          return;
+        }
+        if (!state.updaterDigest) {
+          showNotification(t('error.needUpdaterDigest'), 'error');
+          return;
+        }
+      }
       // 输入框保留用户原文（可含 digest）
       if (myriadTagInput) myriadTagInput.value = myriadRef.raw;
       if (proxyTagInput) proxyTagInput.value = proxyRef.raw;
@@ -2130,14 +3654,11 @@ function initPage() {
       for (var netIdx = 0; netIdx < netEntries.length; netIdx++) {
         var netEntry = netEntries[netIdx];
         if (!netEntry.value) {
-          showNotification(netEntry.key + ' 不能为空', 'error');
+          showNotification(t('error.netEmpty', { key: netEntry.key }), 'error');
           return;
         }
         if (!netNameRe.test(netEntry.value)) {
-          showNotification(
-            netEntry.key + ' 不是合法 Docker 网络名',
-            'error'
-          );
+          showNotification(t('error.netInvalid', { key: netEntry.key }), 'error');
           return;
         }
       }
@@ -2149,8 +3670,7 @@ function initPage() {
         var prevKey = seen[entry.value];
         if (prevKey) {
           showNotification(
-            prevKey + ' 与 ' + entry.key + ' 使用了相同的 Docker 网络名「' + entry.value + '」' +
-            '，请改为互不相同',
+            t('error.netDuplicate', { prev: prevKey, key: entry.key, value: entry.value }),
             'error'
           );
           return;
@@ -2158,8 +3678,7 @@ function initPage() {
         seen[entry.value] = entry.key;
         if (extraNetName && extraNetName === entry.value) {
           showNotification(
-            entry.key + ' 与「为 backend 附加 docker 子网」使用了相同的网络名「' + extraNetName + '」' +
-            '，两者必须不同',
+            t('error.netExtraClash', { key: entry.key, value: extraNetName }),
             'error'
           );
           return;
@@ -2172,45 +3691,59 @@ function initPage() {
       try {
         generateConfigs();
       } catch (err) {
-        showNotification((err && err.message) ? err.message : '生成失败', 'error');
+        showNotification((err && err.message) ? err.message : t('error.generateFailed'), 'error');
       }
     } finally {
       generateAllBtn.disabled = false;
+      if (generateAdvancedBtn) generateAdvancedBtn.disabled = false;
     }
-  });
+  }
 
-  document.querySelectorAll('.btn-copy').forEach(function(btn) {
-    pageListen(btn, 'click', function() {
-      var target = btn.getAttribute('data-target');
-      var content = document.getElementById('result-' + target).textContent;
-      copyToClipboard(content, btn);
-    });
-  });
+  pageListen(generateAllBtn, 'click', function () { void runGenerateAll(); });
+  if (generateAdvancedBtn) {
+    pageListen(generateAdvancedBtn, 'click', function () { void runGenerateAll(); });
+  }
 
-  document.querySelectorAll('.btn-download').forEach(function(btn) {
-    pageListen(btn, 'click', function() {
-      var target = btn.getAttribute('data-target');
-      var content = document.getElementById('result-' + target).textContent;
-      var filename = btn.getAttribute('data-filename');
-
-      if (target === 'main-nginx') {
-        filename = state.mainDomain + '.conf';
-      } else if (target === 'extra-nginx') {
-        filename = (state.extraDomain || 'extra') + '.conf';
+  var resultsHost = document.getElementById('results-section') || card;
+  if (resultsHost) {
+    pageListen(resultsHost, 'click', function (event) {
+      var header = event.target.closest('.result-header');
+      if (header && !event.target.closest('button')) {
+        var resultCard = header.closest('.result-card');
+        if (resultCard) resultCard.classList.toggle('is-open');
+        return;
       }
-
-      downloadFile(content, filename);
+      var copyTextBtn = event.target.closest('[data-copy-text]');
+      if (copyTextBtn) {
+        copyToClipboard(copyTextBtn.getAttribute('data-copy-text') || '', copyTextBtn);
+        return;
+      }
+      var copyBtn = event.target.closest('.btn-copy');
+      if (copyBtn) {
+        var copyTarget = copyBtn.getAttribute('data-target');
+        var copyNode = document.getElementById('result-' + copyTarget);
+        if (copyNode) copyToClipboard(copyNode.textContent, copyBtn);
+        return;
+      }
+      var downBtn = event.target.closest('.btn-download');
+      if (downBtn) {
+        var downTarget = downBtn.getAttribute('data-target');
+        var downNode = document.getElementById('result-' + downTarget);
+        if (!downNode) return;
+        var filename = downBtn.getAttribute('data-filename');
+        if (downTarget === 'main-nginx') filename = state.mainDomain + '.conf';
+        else if (downTarget === 'extra-nginx') filename = (state.extraDomain || 'extra') + '.conf';
+        downloadFile(downNode.textContent, filename);
+      }
     });
-  });
+  }
 
   // 自定义下拉（系统 option 列表无法按主题着色）
   enhanceAllSelects();
 
-  // 自动生成密钥
-  genDbPasswordBtn.click();
-  genJwtSecretBtn.click();
-  genUpdateTokenBtn.click();
-  if (genGatewaySecretBtn) genGatewaySecretBtn.click();
+  if (jwtSecretInput) jwtSecretInput.value = generateJwtSecret();
+  if (updateTokenInput) updateTokenInput.value = generateUpdateToken();
+  if (gatewaySecretInput) gatewaySecretInput.value = generateUpdaterGatewaySecret();
 
   // 启动时解析 Docker Hub 最新 versioned tag（不写死版本号）
   refreshLatestTags(tagInputs, channelSelect, { notify: false });
@@ -2283,35 +3816,37 @@ function readNginxUpload(file, callback) {
   if (!file) return;
   if (file.size > NGINX_UPLOAD_MAX_BYTES) {
     showNotification(
-      'Nginx 配置不能超过 ' + Math.floor(NGINX_UPLOAD_MAX_BYTES / 1024) + 'KB（当前 ' +
-      Math.ceil(file.size / 1024) + 'KB）',
+      t('error.uploadTooLarge', {
+        max: Math.floor(NGINX_UPLOAD_MAX_BYTES / 1024),
+        current: Math.ceil(file.size / 1024)
+      }),
       'error'
     );
     return;
   }
   if (!isAllowedNginxFile(file)) {
-    showNotification('请上传 .conf 文本文件', 'error');
+    showNotification(t('error.uploadType'), 'error');
     return;
   }
   var reader = new FileReader();
   reader.onload = function(e) {
     var text = e.target.result;
     if (typeof text !== 'string') {
-      showNotification('无法以文本读取文件', 'error');
+      showNotification(t('error.uploadNotText'), 'error');
       return;
     }
     if (text.indexOf('\0') !== -1) {
-      showNotification('拒绝含 NUL 的二进制文件', 'error');
+      showNotification(t('error.uploadNul'), 'error');
       return;
     }
     if (text.length > NGINX_UPLOAD_MAX_BYTES) {
-      showNotification('文件内容超过大小上限', 'error');
+      showNotification(t('error.uploadTooLong'), 'error');
       return;
     }
     callback(text, file.name);
   };
   reader.onerror = function() {
-    showNotification('读取文件失败', 'error');
+    showNotification(t('error.uploadRead'), 'error');
   };
   reader.readAsText(file);
 }
@@ -2335,10 +3870,15 @@ function hideUploadSuccess(uploadBox) {
 }
 
 function animateButton(btn) {
-  btn.style.transform = 'rotate(180deg)';
-  setTimeout(function() {
-    btn.style.transform = '';
-  }, 300);
+  if (!btn) return;
+  btn.classList.remove('is-spinning');
+  void btn.offsetWidth;
+  btn.classList.add('is-spinning');
+  var svg = btn.querySelector('svg');
+  if (!svg) return;
+  svg.addEventListener('animationend', function () {
+    btn.classList.remove('is-spinning');
+  }, { once: true });
 }
 
 // ========================================
@@ -2390,16 +3930,16 @@ function generateConfigs() {
 
   var postgresService = '';
   var backendDependsOn = '      backend-volume-init: { condition: service_completed_successfully }\n';
-  var dockerGuardExtra = '';
   var updaterPgdataLine = '';
-  var composeStartHint = 'mkdir -p state backups && docker compose up -d';
+  var updaterPgdataVolume = '';
+  var composeStartHint = 'mkdir -p state backups && docker compose --env-file .env up -d';
   var postgresEnvBlock = '';
   var deployNetMembers = 'proxy, frontend, backend';
-  var deployMkdir = 'mkdir -p state backups';
+  var deployMkdir = 'mkdir -p state backups guard-policy';
   var deployDataSection =
     '## 数据\n\n' +
     '`MYRIAD_DB_MODE=external`：不使用 `./pgdata`，Myriad updater **不会** 快照外置数据库。\n' +
-    '备份与恢复由你自行负责（面板备份、托管 PG 快照、`pg_dump` 等）。\n' +
+    '备份与恢复须由运维自行负责（面板备份、托管 PG 快照、`pg_dump` 等）。\n' +
     '容器访问宿主机/外置库时，主机可能需填 IP、`host.docker.internal` 或 docker bridge 网关。\n';
 
   if (!isExternal) {
@@ -2411,10 +3951,10 @@ function generateConfigs() {
     backendDependsOn =
       '      postgres: { condition: service_healthy }\n' +
       '      backend-volume-init: { condition: service_completed_successfully }\n';
-    dockerGuardExtra = ',postgres';
     updaterPgdataLine = '      UPDATER_PGDATA: /host/compose/pgdata\n';
+    updaterPgdataVolume = '      - type: bind\n        source: ${MYRIAD_COMPOSE_HOST_ROOT:-.}/pgdata\n        target: /host/compose/pgdata\n';
     composeStartHint =
-      'mkdir -p pgdata state backups && chown -R 70:70 pgdata && chmod 700 pgdata && docker compose up -d';
+      'mkdir -p pgdata state backups && chown -R 70:70 pgdata && chmod 700 pgdata && docker compose --env-file .env up -d';
     postgresEnvBlock =
       'POSTGRES_DB=' + state.dbName + '\n' +
       'POSTGRES_USER=' + state.dbUser + '\n' +
@@ -2422,7 +3962,7 @@ function generateConfigs() {
     deployNetMembers = 'proxy, frontend, backend, postgres';
     // alpine postgres 镜像系统用户 uid 70；面板文件管理创建目录常为 root → 必须 chown
     deployMkdir =
-      'mkdir -p pgdata state backups\n' +
+      'mkdir -p pgdata state backups guard-policy\n' +
       'chown -R 70:70 pgdata\n' +
       'chmod 700 pgdata';
     deployDataSection =
@@ -2447,13 +3987,22 @@ function generateConfigs() {
     ? 'MYRIAD_BACKEND_EXTRA_NETWORK=' + extraNetworkName + '\n'
     : '';
 
+  if (!state.updaterDigest) {
+    throw new Error(t('error.needUpdaterDigest'));
+  }
+  var guardImage = 'docker.io/somekawahitomi/myriad-updater@sha256:' + state.updaterDigest;
+  if (!state.guardSelfUpdateToken) {
+    state.guardSelfUpdateToken = generateUpdateToken();
+  }
+  var guardToken = state.guardSelfUpdateToken;
+
   var map = {
     MYRIAD_DB_MODE: isExternal ? 'external' : 'bundled',
     COMPOSE_START_HINT: composeStartHint,
     POSTGRES_SERVICE: postgresService,
     BACKEND_DEPENDS_ON: backendDependsOn,
-    DOCKER_GUARD_EXTRA_IMAGES: dockerGuardExtra,
     UPDATER_PGDATA_LINE: updaterPgdataLine,
+    UPDATER_PGDATA_VOLUME: updaterPgdataVolume,
     POSTGRES_ENV_BLOCK: postgresEnvBlock,
     DEPLOY_NET_MEMBERS: deployNetMembers,
     DEPLOY_MKDIR: deployMkdir,
@@ -2481,6 +4030,11 @@ function generateConfigs() {
     MYRIAD_DOCKER_NETWORK: state.netMyriad || 'myriad-net',
     MYRIAD_ADMIN_NETWORK: state.netAdmin || 'myriad-admin-net',
     MYRIAD_DOCKER_GUARD_NETWORK: state.netGuard || 'myriad-docker-guard-net',
+    MYRIAD_COMPOSE_HOST_ROOT: '.',
+    MYRIAD_GUARD_ENV_FILE: 'guard-policy/docker-guard.env',
+    DOCKER_GUARD_IMAGE: guardImage,
+    UPDATER_IMAGE_REF: guardImage,
+    GUARD_SELF_UPDATE_TOKEN: guardToken,
     BACKEND_EXTRA_NETWORK_REF: backendExtraNetworkRef,
     EXTRA_NETWORK_DECL: extraNetworkDecl,
     BACKEND_EXTRA_NETWORK_LINE: backendExtraNetworkLine,
@@ -2489,8 +4043,9 @@ function generateConfigs() {
     UPDATER_TAG: state.updaterTag,
     CHANNEL: state.channel,
     COSIGN_VERIFY: state.cosignVerify,
+    MYRIAD_MEMORY_PROFILE: state.memoryProfile === 'saver' ? 'saver' : 'default',
     COSIGN_INSECURE_HINT: cosignInsecureHint,
-    PANEL_LABEL: panel.label,
+    PANEL_LABEL: t(panel.label),
     PANEL_DEPLOY_SECTION: buildPanelDeploySection(
       panelId,
       state.mainDomain,
@@ -2506,11 +4061,16 @@ function generateConfigs() {
     EXTRA_SITE_ROOT: state.extraDomain ? panel.siteRoot(state.extraDomain) : '',
     EXTRA_ACCESS_LOG: state.extraDomain ? panel.accessLog(state.extraDomain) : '',
     EXTRA_ERROR_LOG: state.extraDomain ? panel.errorLog(state.extraDomain) : '',
-    EXTRA_ACME_ROOT: state.extraDomain ? panel.acmeRoot(state.extraDomain) : ''
+    EXTRA_ACME_ROOT: state.extraDomain ? panel.acmeRoot(state.extraDomain) : '',
+    EXTRA_CADDY_BLOCK: state.extraDomain
+      ? (state.extraDomain + ' {\n\tencode gzip zstd\n\treverse_proxy ' +
+        state.httpBindAddress + ':' + state.httpPort + '\n}\n')
+      : ''
   };
 
   var dockerCompose = applyPlaceholders(DOCKER_COMPOSE_TEMPLATE, map);
   var envFile = applyPlaceholders(ENV_TEMPLATE, map);
+  var guardEnv = applyPlaceholders(GUARD_ENV_TEMPLATE, map);
   var deployNotes = applyPlaceholders(DEPLOY_NOTES_TEMPLATE, map);
 
   // 可选 digest pin：将 image: ${X_IMAGE:-repo}:tag 换成完整 @sha256 引用
@@ -2550,90 +4110,103 @@ function generateConfigs() {
     UPDATE_TOKEN: state.updateToken,
     UPDATER_GATEWAY_SECRET: state.updaterGatewaySecret,
     MYRIAD_SETUP_SECRET: state.setupSecret,
+    GUARD_SELF_UPDATE_TOKEN: guardToken,
     POSTGRES_PASSWORD: isExternal ? undefined : state.dbPassword
   }, { bundled: !isExternal });
 
-  // 主域名 Nginx
-  var mainNginxBefore = state.nginxConfig || '';
-  var mainNginx;
-  if (state.nginxConfig) {
-    mainNginx = replaceNginxDomain(state.nginxConfig, state.mainDomain);
-    mainNginx = replaceNginxUpstreamToProxy(mainNginx, state.httpPort, state.mainDomain, panelId);
-  } else {
-    mainNginx = applyPlaceholders(DEFAULT_NGINX_TEMPLATE, map);
-  }
-
-  // 额外域名 Nginx（可选）
+  var proxyFiles = panel.proxyFiles || 'nginx';
   var hasExtra = !!state.extraDomain;
+  var mainNginx = '';
   var extraNginx = '';
-  var extraNginxBefore = state.extraNginxConfig || '';
+  var caddyFile = '';
+  var nginxSummary = [];
+  var verifyProxyLine = '';
+  var verifyCommand = 'docker compose -f docker-compose.yml --env-file .env config';
+  var cardMain = document.getElementById('card-main-nginx');
   var cardExtra = document.getElementById('card-extra-nginx');
-  if (hasExtra) {
-    if (state.extraNginxConfig) {
-      extraNginx = replaceNginxDomain(state.extraNginxConfig, state.extraDomain);
-      extraNginx = replaceNginxUpstreamToProxy(extraNginx, state.httpPort, state.extraDomain, panelId);
+  var cardCaddy = document.getElementById('card-caddy');
+
+  if (proxyFiles === 'caddy') {
+    caddyFile = applyPlaceholders(CADDYFILE_TEMPLATE, map).replace(/\n+$/, '\n');
+    nginxSummary = [t('nginx.summary.caddy')];
+    verifyProxyLine = '- Caddy：' + nginxSummary.join('；');
+    verifyCommand = 'caddy validate --config Caddyfile';
+    if (cardMain) cardMain.hidden = true;
+    if (cardExtra) cardExtra.hidden = true;
+    if (cardCaddy) cardCaddy.hidden = false;
+  } else if (proxyFiles === 'none') {
+    nginxSummary = [t('nginx.summary.platformProxy')];
+    verifyProxyLine = '- ' + t('validation.proxyPrefix') + nginxSummary.join('；');
+    if (cardMain) cardMain.hidden = true;
+    if (cardExtra) cardExtra.hidden = true;
+    if (cardCaddy) cardCaddy.hidden = true;
+  } else {
+    var mainNginxBefore = state.nginxConfig || '';
+    if (state.nginxConfig) {
+      mainNginx = replaceNginxDomain(state.nginxConfig, state.mainDomain);
+      mainNginx = replaceNginxUpstreamToProxy(mainNginx, state.httpPort, state.mainDomain, panelId);
     } else {
-      extraNginx = applyPlaceholders(DEFAULT_EXTRA_NGINX_TEMPLATE, map);
+      mainNginx = applyPlaceholders(DEFAULT_NGINX_TEMPLATE, map);
     }
-    if (cardExtra) cardExtra.hidden = false;
-  } else if (cardExtra) {
-    cardExtra.hidden = true;
+    var extraNginxBefore = state.extraNginxConfig || '';
+    if (hasExtra) {
+      if (state.extraNginxConfig) {
+        extraNginx = replaceNginxDomain(state.extraNginxConfig, state.extraDomain);
+        extraNginx = replaceNginxUpstreamToProxy(extraNginx, state.httpPort, state.extraDomain, panelId);
+      } else {
+        extraNginx = applyPlaceholders(DEFAULT_EXTRA_NGINX_TEMPLATE, map);
+      }
+    }
+    nginxSummary = formatNginxSummary(summarizeNginxDiff(mainNginxBefore || null, mainNginx, state.mainDomain));
+    if (hasExtra) {
+      nginxSummary = nginxSummary.concat(
+        formatNginxSummary(summarizeNginxDiff(extraNginxBefore || null, extraNginx, state.extraDomain))
+      );
+    }
+    verifyProxyLine = '- Nginx：' + nginxSummary.join('；');
+    verifyCommand = 'nginx -t';
+    if (cardMain) cardMain.hidden = false;
+    if (cardExtra) cardExtra.hidden = !hasExtra;
+    if (cardCaddy) cardCaddy.hidden = true;
   }
 
-  // 结构化 diff / 校验摘要
-  var nginxSummary = summarizeNginxDiff(mainNginxBefore || null, mainNginx, state.mainDomain);
-  if (hasExtra) {
-    nginxSummary = nginxSummary.concat(
-      summarizeNginxDiff(extraNginxBefore || null, extraNginx, state.extraDomain)
-    );
-  }
   var verifyBlock = [
     '',
     '## 生成校验摘要',
     '',
     '- .env：密钥已通过 `[A-Za-z0-9_-]{32,512}` 白名单；再解析后键集合完整',
     '- Compose：请执行 `docker compose --env-file .env config`',
-    '- Nginx：' + nginxSummary.join('；'),
-    '- 命令：`nginx -t`（或容器内同命令）——手写解析器不能替代'
+    verifyProxyLine,
+    '- 命令：`' + verifyCommand + '`——手写解析器不能替代'
   ].join('\n');
   deployNotes = deployNotes + verifyBlock;
 
   document.getElementById('result-docker-compose').textContent = dockerCompose;
   document.getElementById('result-env').textContent = envFile;
+  var guardResult = document.getElementById('result-guard-env');
+  if (guardResult) guardResult.textContent = guardEnv;
   document.getElementById('result-main-nginx').textContent = mainNginx;
   document.getElementById('result-deploy-notes').textContent = deployNotes;
+  var caddyResult = document.getElementById('result-caddyfile');
+  if (caddyResult) caddyResult.textContent = caddyFile;
 
   var validationEl = document.getElementById('result-validation');
   if (validationEl) {
     validationEl.textContent = [
-      '✓ .env 密钥白名单 + 再解析通过',
-      '✓ PROXY_ALLOW_DIRECT_UPDATER=false（单次）',
+      t('validation.envOk'),
+      t('validation.proxyOk'),
       state.myriadDigest || state.proxyDigest || state.updaterDigest
-        ? '✓ 已 pin 部分镜像 digest'
-        : '· 镜像为可变 tag（可选 vX.Y.Z@sha256:…）',
-      'Nginx: ' + nginxSummary.join('\n  '),
+        ? t('validation.digestPinned')
+        : t('validation.mutableTag'),
+      (proxyFiles === 'caddy' ? t('validation.caddyPrefix') : proxyFiles === 'none' ? t('validation.proxyPrefix') : t('validation.nginxPrefix')) +
+        nginxSummary.join('\n  '),
       '',
       'docker compose -f docker-compose.yml --env-file .env config',
-      'nginx -t'
+      verifyCommand
     ].join('\n');
   }
 
-  // Panel-specific result chrome
-  var resultsIntro = document.getElementById('results-intro');
-  if (resultsIntro) resultsIntro.textContent = panel.resultsIntro;
-  var envBadge = document.getElementById('badge-env');
-  if (envBadge) envBadge.textContent = panel.envBadge;
-  var composeBadge = document.getElementById('badge-compose');
-  if (composeBadge) composeBadge.textContent = panel.composeBadge;
-  var envCopyBtn = document.querySelector('.btn-copy[data-target="env"]');
-  if (envCopyBtn) {
-    var label = panel.envCopyLabel || '复制';
-    envCopyBtn.innerHTML =
-      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-      '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>' +
-      '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>' +
-      '</svg> ' + label;
-  }
+  applyDoneResultChrome();
 
   var extraResult = document.getElementById('result-extra-nginx');
   if (extraResult) {
@@ -2651,13 +4224,25 @@ function generateConfigs() {
   if (reminder && reminderValue && state.setupSecret) {
     reminderValue.textContent = state.setupSecret;
     reminder.hidden = false;
+    var linkValue = document.getElementById('setup-secret-link-value');
+    if (linkValue && state.mainDomain) {
+      linkValue.textContent =
+        'https://' + state.mainDomain + '/#setup_secret=' + encodeURIComponent(state.setupSecret);
+    }
   }
 
-  var resultsSection = document.getElementById('results-section');
-  resultsSection.hidden = false;
-  resultsSection.scrollIntoView({ behavior: 'smooth' });
+  renderDoneGuide(panelId, {
+    domain: state.mainDomain,
+    extraDomain: state.extraDomain,
+    httpPort: state.httpPort,
+    httpBind: state.httpBindAddress,
+    external: isExternal
+  });
 
-  showNotification('已生成。请先复制安装暗号，创建所有者时要填。', 'success');
+  wizardDoneFrom = wizardStep === 'advanced' ? 'advanced' : 'limits';
+  goWizard('done', 'forward');
+
+  showNotification(t('notify.generated'), 'success');
 }
 
 // ========================================
@@ -2669,19 +4254,19 @@ function copyToClipboard(text, btn) {
 
   function onSuccess() {
     btn.classList.add('copied');
-    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> 已复制';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>' + t('common.copied') + '</span>';
 
     setTimeout(function() {
       btn.classList.remove('copied');
       btn.innerHTML = originalHTML;
     }, 2000);
 
-    showNotification('已复制到剪贴板', 'success');
+    showNotification(t('notify.copied'), 'success');
   }
 
   function onError(err) {
     console.error('复制失败:', err);
-    showNotification('复制失败，请手动选择复制', 'error');
+    showNotification(t('notify.copyFailed'), 'error');
   }
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -2730,7 +4315,7 @@ function downloadFile(content, filename) {
   if (typeof Tapp !== 'undefined' && Tapp.file && Tapp.file.download) {
     Tapp.file.download(content, filename, 'text/plain;charset=utf-8')
       .then(function() {
-        showNotification('文件下载成功: ' + filename, 'success');
+        showNotification(t('notify.downloadOk', { filename: filename }), 'success');
       })
       .catch(function(err) {
         console.error('Tapp.file.download 失败:', err);
@@ -2758,13 +4343,13 @@ function fallbackDownload(content, filename) {
     }
   }, 100);
 
-  showNotification('文件下载已开始: ' + filename, 'success');
+  showNotification(t('notify.downloadStarted', { filename: filename }), 'success');
 }
 
 async function showNotification(message, type) {
   try {
     await Tapp.ui.showNotification({
-      title: type === 'success' ? '成功' : type === 'error' ? '错误' : '提示',
+      title: type === 'success' ? t('notify.success') : type === 'error' ? t('notify.error') : t('notify.info'),
       message: message,
       type: type || 'info'
     });
@@ -2779,13 +4364,11 @@ async function showNotification(message, type) {
 
 var CHEVRON_SVG =
   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
-var CHECK_SVG =
-  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
 
 function closeAllCustomSelects(exceptRoot) {
   document.querySelectorAll('.cg-select.is-open').forEach(function (root) {
     if (exceptRoot && root === exceptRoot) return;
-    root.classList.remove('is-open');
+    root.classList.remove('is-open', 'is-up');
     var menu = root.querySelector('.cg-select-menu');
     var trigger = root.querySelector('.cg-select-trigger');
     if (menu) menu.hidden = true;
@@ -2799,7 +4382,7 @@ function syncCustomSelectLabel(root, select) {
   var opt = select.options[select.selectedIndex];
   var text = opt ? String(opt.textContent || '').trim() : '';
   if (!text && select.value === '') {
-    label.textContent = '请选择';
+    label.textContent = t('common.selectPlaceholder');
     label.classList.add('is-placeholder');
   } else {
     label.textContent = text || select.value;
@@ -2837,7 +4420,13 @@ function enhanceNativeSelect(select) {
     trigger.setAttribute('aria-labelledby', select.getAttribute('aria-labelledby'));
   } else if (select.id) {
     var lab = document.querySelector('label[for="' + select.id + '"]');
-    if (lab && lab.id) trigger.setAttribute('aria-labelledby', lab.id);
+    var title = !lab && select.closest('.cg-ob-field');
+    if (title) title = title.querySelector('.cg-ob-field__label');
+    var named = (lab && lab.id) ? lab : title;
+    if (named) {
+      if (!named.id) named.id = select.id + '-label';
+      trigger.setAttribute('aria-labelledby', named.id);
+    }
   }
 
   var labelSpan = document.createElement('span');
@@ -2869,13 +4458,7 @@ function enhanceNativeSelect(select) {
           btn.disabled = true;
           btn.setAttribute('aria-disabled', 'true');
         }
-        var text = document.createElement('span');
-        text.textContent = opt.textContent;
-        var check = document.createElement('span');
-        check.className = 'cg-select-option-check';
-        check.innerHTML = CHECK_SVG;
-        btn.appendChild(text);
-        btn.appendChild(check);
+        btn.textContent = opt.textContent;
         pageListen(btn, 'click', function (e) {
           e.preventDefault();
           e.stopPropagation();
@@ -2912,10 +4495,21 @@ function enhanceNativeSelect(select) {
     root.classList.add('is-open');
     menu.hidden = false;
     trigger.setAttribute('aria-expanded', 'true');
+    var triggerRect = trigger.getBoundingClientRect();
+    var spaceBelow = window.innerHeight - triggerRect.bottom;
+    var spaceAbove = triggerRect.top;
+    var need = Math.min(240, menu.scrollHeight + 12);
+    root.classList.toggle('is-up', spaceBelow < need && spaceAbove > spaceBelow);
     var selected = menu.querySelector('.cg-select-option.is-selected');
     if (selected) {
       selected.classList.add('is-active');
-      try { selected.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ }
+      var menuRect = menu.getBoundingClientRect();
+      var selRect = selected.getBoundingClientRect();
+      if (selRect.top < menuRect.top) {
+        menu.scrollTop -= menuRect.top - selRect.top;
+      } else if (selRect.bottom > menuRect.bottom) {
+        menu.scrollTop += selRect.bottom - menuRect.bottom;
+      }
     }
   }
 
@@ -2948,6 +4542,7 @@ function enhanceNativeSelect(select) {
 
   root.appendChild(trigger);
   root.appendChild(menu);
+  root.cgRebuildOptions = rebuildOptions;
   rebuildOptions();
 }
 

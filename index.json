@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.25",
+  "version": "1.0.31",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-08-16T03:13:47.881Z",
+  "updated_at": "2026-08-17T21:24:30.956Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -14,7 +14,7 @@
     {
       "id": "com.myriad.music-player",
       "name": "音乐播放器",
-      "version": "1.0.1",
+      "version": "1.0.0",
       "description": "控制系统音乐播放，查看歌词与播放列表",
       "long_description": "对接系统播放器，显示封面、进度与播放控制；支持同步歌词、列表搜索，以及顺序、循环、单曲和随机模式。",
       "locales": {
@@ -83,7 +83,8 @@
         "多语言"
       ],
       "permissions": [
-        "storage",
+        "storage:read",
+        "storage:write",
         "ui:theme",
         "media:control",
         "media:read",
@@ -118,18 +119,18 @@
         "page_styles": "apps/com.myriad.music-player/page.css",
         "page_template": "apps/com.myriad.music-player/page.html"
       },
-      "size": 350836,
+      "size": 350862,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-10T00:00:00Z",
-      "updated_at": "2026-08-14T09:55:45.221Z"
+      "updated_at": "2026-08-17T01:20:03.780Z"
     },
     {
       "id": "com.myriad.quick-notes",
       "name": "便携便签",
-      "version": "1.0.1",
+      "version": "1.0.0",
       "description": "快速记录想法，支持搜索与主页小组件",
       "long_description": "在页面中编写、搜索和整理便签，并通过 4×2 / 4×4 小组件在主页速览或速记。支持置顶、颜色、排序、导出导入与可选时间戳；便签保存在当前用户的私有存储中。跟随宿主明暗主题，内置中英日三语。",
       "locales": {
@@ -198,7 +199,8 @@
         "多语言"
       ],
       "permissions": [
-        "storage",
+        "storage:read",
+        "storage:write",
         "ui:notification",
         "ui:theme",
         "ui:confirm",
@@ -240,25 +242,25 @@
           }
         }
       },
-      "size": 126376,
+      "size": 126402,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-04T00:00:00Z",
-      "updated_at": "2026-08-14T09:55:45.223Z"
+      "updated_at": "2026-08-17T01:20:03.782Z"
     },
     {
       "id": "com.myriad.config-generator",
       "name": "Myriad 安装配置生成",
-      "version": "1.0.4",
-      "description": "生成 Compose、.env 与 Nginx 部署配置（1Panel / 宝塔 / CLI · 整站反代 + 联邦）",
-      "long_description": "填写域名与数据库参数，按所选面板（1Panel / 宝塔 / 通用 CLI）生成官方生产拓扑的 docker-compose、.env、Nginx 与部署说明。密钥白名单与 .env 再解析防注入；原生表单/通知全自定义；宝塔可粘贴编排或目录部署。",
+      "version": "1.0.1",
+      "description": "分步生成 Compose、.env 与反代配置，覆盖常见面板、编排界面与外层反代",
+      "long_description": "按欢迎、部署方式、域名、站点、数据库、限额的步骤，生成官方生产拓扑所需的 docker-compose、.env、反代配置与部署说明。可选 1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy 或命令行。Nginx 类方式请先创建站点并完成 SSL，再上传现有 conf；平台反代与 Caddy 不要求上传。密钥与镜像版本将自动填入，高级选项默认收起。密钥经白名单校验，并对 .env 再解析以防止注入。",
       "locales": {
         "en-US": {
           "name": "Myriad Install Config Generator",
-          "description": "Generate Compose, .env, and Nginx configs for 1Panel, Baota, or CLI (site-wide reverse proxy + federation)",
-          "long_description": "Enter domain and database settings, then generate official production docker-compose, .env, Nginx, and deploy notes for the selected panel (1Panel / Baota / generic CLI). Secrets are allowlisted and the .env is parsed again to block injection; native forms and notifications are fully custom-drawn. On Baota you can paste compose or deploy from a directory.",
+          "description": "Generate Compose, .env, and reverse-proxy files for common panels, compose UIs, and outer proxies",
+          "long_description": "A step wizard (welcome, method, domain, site, database, limits) generates official production docker-compose, .env, reverse-proxy files, and deploy notes. Choose 1Panel, Baota, aaPanel, Portainer, Dockge, Coolify, Dokploy, Nginx Proxy Manager, Caddy, or the CLI. Nginx-based methods still expect an existing site and SSL upload; platform proxies and Caddy do not. Secrets and image tags are filled in automatically; advanced options stay collapsed. Secrets are allowlisted and the .env is parsed again to block injection.",
           "preview": {
             "version": 1,
             "type": "snapshot",
@@ -281,8 +283,8 @@
         },
         "ja-JP": {
           "name": "Myriad インストール設定ジェネレーター",
-          "description": "1Panel / 宝塔 / CLI 向け Compose・.env・Nginx 設定を生成（サイト全体リバプロ + フェデレーション）",
-          "long_description": "ドメインとデータベースのパラメータを入力し、選択したパネル（1Panel / 宝塔 / 汎用 CLI）向けに公式本番トポロジの docker-compose、.env、Nginx、デプロイ手順を生成します。シークレットはホワイトリスト検証し、.env を再パースしてインジェクションを防ぎます。ネイティブのフォームと通知はすべてカスタム描画です。宝塔では編成の貼り付けまたはディレクトリ配置が可能です。",
+          "description": "一般的なパネル、編成 UI、外側リバースプロキシ向けに Compose・.env・リバースプロキシ設定を手順に沿って生成",
+          "long_description": "ようこそ、デプロイ方法、ドメイン、サイト、データベース、上限の手順で、公式本番トポロジの docker-compose、.env、リバースプロキシ設定、デプロイ手順を生成します。1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy、または CLI を選べます。Nginx 系は先にサイト作成と SSL、既存 conf のアップロードが必要です。プラットフォーム側のリバースプロキシと Caddy では不要です。シークレットとイメージタグは自動入力され、詳細設定は折りたたまれます。シークレットはホワイトリストで検証し、.env を再パースしてインジェクションを防ぎます。",
           "preview": {
             "version": 1,
             "type": "snapshot",
@@ -317,6 +319,7 @@
         "部署",
         "Docker",
         "Nginx",
+        "Caddy",
         "Updater",
         "1Panel",
         "宝塔",
@@ -324,7 +327,7 @@
         "开发者"
       ],
       "permissions": [
-        "storage",
+        "storage:read",
         "ui:notification",
         "ui:theme",
         "ui:confirm",
@@ -357,20 +360,25 @@
         "code": "apps/com.myriad.config-generator/main.js",
         "readme": "apps/com.myriad.config-generator/README.md",
         "page_styles": "apps/com.myriad.config-generator/page.css",
-        "page_template": "apps/com.myriad.config-generator/page.html"
+        "page_template": "apps/com.myriad.config-generator/page.html",
+        "i18n": {
+          "en-US": "apps/com.myriad.config-generator/i18n/en-US.json",
+          "ja-JP": "apps/com.myriad.config-generator/i18n/ja-JP.json",
+          "zh-CN": "apps/com.myriad.config-generator/i18n/zh-CN.json"
+        }
       },
-      "size": 191057,
+      "size": 385542,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-14T00:00:00Z",
-      "updated_at": "2026-08-16T03:13:47.873Z"
+      "updated_at": "2026-08-17T16:31:23.667Z"
     },
     {
       "id": "com.myriad.doudizhu",
       "name": "斗地主",
-      "version": "2.4.4",
+      "version": "1.0.0",
       "description": "三人单机斗地主：经典牌桌与若泉绮羽㥹銯麏主题、完整规则、智能提示与本地 AI",
       "long_description": "从零重写的三人单机斗地主。使用标准 54 张扑克牌，支持随机发牌、叫地主与抢地主、完整牌型校验、连续两家不出后重新领出、默认 20 秒回合倒计时、自动托管、三档本地 AI、提示、倍率、春天与反春天、断局续玩和本地战绩。默认使用经典绿色牌桌，并可在 Tapp 内切换若泉绮羽㥹銯麏主题；主题覆盖人物卡面、卡背、大厅、牌桌、按钮与回合提示，同时保留高对比点数和花色。提供 1×1、2×2 与 4×2 今日战绩小组件，并优先显示当前 Myriad 用户名与头像。个人游戏偏好和玩家数据均按主体隔离；支持中英日三语和宿主明暗主题，无联网权限，不读取其他玩家隐藏手牌。",
       "locales": {
@@ -441,7 +449,8 @@
         "离线"
       ],
       "permissions": [
-        "storage",
+        "storage:read",
+        "storage:write",
         "ui:fullscreen",
         "widget:register"
       ],
@@ -499,13 +508,13 @@
           "index.js": "apps/com.myriad.doudizhu/page/index.js"
         }
       },
-      "size": 2359650,
+      "size": 2359672,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2026-07-20T00:00:00Z",
-      "updated_at": "2026-08-14T09:55:45.226Z"
+      "updated_at": "2026-08-17T01:20:03.783Z"
     },
     {
       "id": "com.myriad.aro",
@@ -578,7 +587,8 @@
         "官方"
       ],
       "permissions": [
-        "storage",
+        "storage:read",
+        "storage:write",
         "ui:notification",
         "ui:theme",
         "federation:read",
@@ -653,18 +663,18 @@
           "index.js": "apps/com.myriad.aro/page/index.js"
         }
       },
-      "size": 1412405,
+      "size": 1412431,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-01T00:00:00Z",
-      "updated_at": "2026-08-14T09:58:26.551Z"
+      "updated_at": "2026-08-17T01:20:03.784Z"
     },
     {
       "id": "cn.wyyzxzyg.cdn-cache",
       "name": "CDN 缓存刷新",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "description": "仅管理员可操作的 Cloudflare、EdgeOne、阿里云 CDN 与 AWS CloudFront 缓存刷新工具",
       "long_description": "面向站点管理员的 CDN 缓存刷新工具：支持 Cloudflare、腾讯云 EdgeOne、阿里云 CDN 与 AWS CloudFront。CloudFront 使用 raw XML 与 SigV4；所有出站 API 仅允许管理员调用。可按 URL 精确刷新或清理全站缓存，并保留本地操作日志。",
       "locales": {
@@ -697,7 +707,8 @@
         "开发者"
       ],
       "permissions": [
-        "storage",
+        "storage:read",
+        "storage:write",
         "ui:notification",
         "ui:confirm",
         "ui:theme",
@@ -732,18 +743,18 @@
         "page_styles": "apps/cn.wyyzxzyg.cdn-cache/page.css",
         "page_template": "apps/cn.wyyzxzyg.cdn-cache/page.html"
       },
-      "size": 41806,
+      "size": 41852,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2026-08-01T00:00:00Z",
-      "updated_at": "2026-08-02T17:40:21Z"
+      "updated_at": "2026-08-17T01:18:49.434Z"
     },
     {
       "id": "cn.wyyzxzyg.minecraft-hub",
       "name": "Minecraft 服务器与 Wiki",
-      "version": "1.0.6",
+      "version": "1.0.7",
       "description": "面向玩家的 Java/基岩版服务器查询、收藏与 Minecraft Wiki 搜索工具",
       "long_description": "面向玩家的 Java/基岩版服务器查询、收藏与 Minecraft Wiki 搜索工具。支持主页小组件轮询展示多台服务器状态。",
       "author": {
@@ -761,7 +772,8 @@
         "小组件"
       ],
       "permissions": [
-        "storage",
+        "storage:read",
+        "storage:write",
         "ui:notification",
         "ui:theme",
         "ui:openUrl",
@@ -803,18 +815,18 @@
           }
         }
       },
-      "size": 52797,
+      "size": 52818,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-04T16:25:05Z",
-      "updated_at": "2026-08-12T03:33:17.425Z"
+      "updated_at": "2026-08-17T01:18:49.435Z"
     },
     {
       "id": "site.abloom.meliora",
       "name": "Meliora 播放器",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "description": "沉浸式歌词与节拍可视化:逐行/逐字歌词跟随、节拍网格驱动的呼吸背景、八段频谱。播放内核由 Myriad 宿主提供。",
       "long_description": "Meliora 的 Myriad Tapp 版本:原样复刻 Meliora 播放页(歌词 FLIP 滚动、逐行/逐字高亮、节拍呼吸背景、五段频谱),播放内核、歌词(网易云 yrc / 酷狗 KRC 逐字)、节拍网格与频谱均由 Myriad 宿主提供。",
       "locales": {
@@ -841,7 +853,7 @@
       "permissions": [
         "media:read",
         "media:control",
-        "storage",
+        "storage:read",
         "network:fetch"
       ],
       "icon_svg": "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><defs><linearGradient id='a' x1='58' y1='34' x2='454' y2='478' gradientUnits='userSpaceOnUse'><stop stop-color='#baf2ed'/><stop offset='.5' stop-color='#81d8d0'/><stop offset='1' stop-color='#287f7b'/></linearGradient><radialGradient id='b' cx='0' cy='0' r='1' gradientTransform='translate(160 95) rotate(48) scale(360)'><stop stop-color='#fff' stop-opacity='.28'/><stop offset='1' stop-color='#fff' stop-opacity='0'/></radialGradient></defs><rect width='512' height='512' rx='128' fill='#121719'/><rect width='512' height='512' rx='128' fill='url(#b)'/><path d='M82 340V164c0-32 40-46 60-21.6L256 286l114-143.6c20-24.4 60-10.4 60 21.6v176' fill='none' stroke='url(#a)' stroke-width='64' stroke-linecap='round' stroke-linejoin='round'/><circle cx='82' cy='372' r='54' fill='url(#a)'/><circle cx='430' cy='372' r='54' fill='url(#a)'/></svg>",
@@ -854,18 +866,18 @@
         "page_styles": "apps/site.abloom.meliora/page.css",
         "page_template": "apps/site.abloom.meliora/page.html"
       },
-      "size": 255409,
+      "size": 255414,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-01T16:58:00Z",
-      "updated_at": "2026-08-02T23:47:05Z"
+      "updated_at": "2026-08-17T01:18:49.435Z"
     },
     {
       "id": "cn.xciy.rocom.merchant",
       "name": "洛克王国情报台",
-      "version": "1.4.1",
+      "version": "1.4.2",
       "description": "查看远行商人、活动日历、最新公告与精灵图鉴。",
       "long_description": "洛克王国情报台用于快速查看远行商人当前轮次、换货倒计时、在售商品、关注清单命中、活动行程、官方公告与精灵图鉴搜索。提供页面视图与 2x2 / 4x2 / 4x4 小组件，适合放在桌面持续关注商人刷新。",
       "locales": {
@@ -891,7 +903,8 @@
       ],
       "permissions": [
         "network:fetch",
-        "storage",
+        "storage:read",
+        "storage:write",
         "widget:register"
       ],
       "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M12 2l2.7 5.7L21 8.6l-4.6 4.4 1.1 6.2L12 16.2 6.5 19.2 7.6 13 3 8.6l6.3-.9L12 2z' stroke='currentColor' stroke-width='1.8' stroke-linejoin='round'/><path d='M12 7v5l3 2' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/></svg>",
@@ -931,13 +944,13 @@
           }
         }
       },
-      "size": 142335,
+      "size": 142357,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-02T05:39:55Z",
-      "updated_at": "2026-08-02T10:08:06Z"
+      "updated_at": "2026-08-17T01:18:49.435Z"
     },
     {
       "id": "cn.xciy.xingchen.widgets",
@@ -1024,7 +1037,7 @@
     {
       "id": "cn.echootaku.days",
       "name": "朝夕",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "description": "记录值得期待与纪念的日子，在主页随时查看最近倒数。",
       "long_description": "用朝夕记录生日、纪念日、旅行、考试和其他重要时刻。支持置顶、快捷日期、临近标识、每年重复、自定义分类与颜色、搜索筛选，以及 2x2、4x2、4x4 三种主页小组件。主题工作室默认跟随 Myriad 主色，提供实时预览、三种 Glass 布局、精细分区、圆角和主题码；小组件可选择 Glass/纯色材质、日子范围和显示密度。所有数据仅保存在当前用户的私有存储中。",
       "locales": {
@@ -1056,7 +1069,8 @@
         "效率"
       ],
       "permissions": [
-        "storage",
+        "storage:read",
+        "storage:write",
         "ui:notification",
         "ui:confirm",
         "widget:register"
@@ -1102,18 +1116,18 @@
           "zh-CN": "apps/cn.echootaku.days/i18n/zh-CN.json"
         }
       },
-      "size": 143830,
+      "size": 143856,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-04T05:52:10Z",
-      "updated_at": "2026-08-08T05:52:52.228Z"
+      "updated_at": "2026-08-17T01:18:49.436Z"
     },
     {
       "id": "org.smcresearchhk.math",
       "name": "函数图形计算器",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "类似 GeoGebra 的函数绘图与交互式计算器，支持多函数叠加、坐标系缩放平移、常用函数库与表达式求值",
       "long_description": "交互式函数绘图计算器，风格接近 GeoGebra：多函数叠加、安全表达式解析（无 eval）、坐标系缩放/平移、网格与坐标轴、悬停轨迹、侧栏求值与常用函数预设。支持中英日界面与明暗主题，函数列表与视图范围持久化到本地 storage。",
       "locales": {
@@ -1143,7 +1157,8 @@
         "绘图"
       ],
       "permissions": [
-        "storage",
+        "storage:read",
+        "storage:write",
         "ui:theme"
       ],
       "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M3 12h18M12 3v18' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'/><path d='M4 16c2-4 4-6 6-6s4 4 6 6 4 2 6 0' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/><circle cx='12' cy='10' r='1.5' fill='currentColor'/></svg>",
@@ -1156,18 +1171,18 @@
         "page_styles": "apps/org.smcresearchhk.math/page.css",
         "page_template": "apps/org.smcresearchhk.math/page.html"
       },
-      "size": 58057,
+      "size": 58091,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-04T00:00:00Z",
-      "updated_at": "2026-08-04T07:12:00Z"
+      "updated_at": "2026-08-17T01:18:49.436Z"
     },
     {
       "id": "cn.xciy.rsshub-radar",
       "name": "RSSHub 雷达",
-      "version": "1.1.4",
+      "version": "1.1.5",
       "description": "发现 RSSHub 路由，管理订阅并预览 Feed",
       "long_description": "面向 Myriad TApp 沙箱的 RSSHub Radar 移植版。输入公开网页地址后，从内置规则中匹配 RSSHub 路由，生成官方或自建实例订阅地址，并支持 Feed 实时与缓存预览、收藏、OPML 导出、最近扫描记录和常用阅读器跳转。",
       "locales": {
@@ -1196,7 +1211,8 @@
         "阅读器"
       ],
       "permissions": [
-        "storage",
+        "storage:read",
+        "storage:write",
         "network:fetch",
         "ui:notification",
         "ui:theme"
@@ -1230,18 +1246,18 @@
         "page_styles": "apps/cn.xciy.rsshub-radar/page.css",
         "page_template": "apps/cn.xciy.rsshub-radar/page.html"
       },
-      "size": 958998,
+      "size": 959024,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-05T02:21:21.976Z",
-      "updated_at": "2026-08-05T02:21:21.976Z"
+      "updated_at": "2026-08-17T01:18:49.437Z"
     },
     {
       "id": "cn.echootaku.github-workbench",
       "name": "GitHub 工作台",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "description": "集中查看待审 PR、分配给我的 Issue、失败 Actions 与仓库发布动态。",
       "long_description": "面向程序员的只读 GitHub 工作台：集中查看请求你审阅的 Pull Request、分配给你的 Issue，以及所选仓库最近失败的 GitHub Actions 和 Releases。支持 2x2、4x2、4x4 桌面小组件。GitHub Token 使用 Myriad 安装级只写凭据保存，沙箱无法读取；所有 GitHub API 均限制为安装 owner / 管理员调用。首版不提供合并、评论、关闭 Issue 或重跑工作流等写操作。",
       "locales": {
@@ -1273,7 +1289,8 @@
       ],
       "permissions": [
         "network:fetch",
-        "storage",
+        "storage:read",
+        "storage:write",
         "ui:notification",
         "ui:openUrl",
         "ui:theme",
@@ -1320,18 +1337,18 @@
           "zh-CN": "apps/cn.echootaku.github-workbench/i18n/zh-CN.json"
         }
       },
-      "size": 55397,
+      "size": 55423,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-10T22:16:30.796Z",
-      "updated_at": "2026-08-10T22:16:30.796Z"
+      "updated_at": "2026-08-17T01:18:49.437Z"
     },
     {
       "id": "cn.echootaku.gomoku",
       "name": "联邦五子棋",
-      "version": "0.1.9",
+      "version": "0.1.10",
       "description": "15×15 五子棋，支持本地双人和跨实例联邦房间对战",
       "long_description": "一款遵循自由五子棋规则的 15×15 棋盘游戏。可在同一设备上双人对弈，也可创建 Myriad 联邦房间，通过房间 ID 跨实例加入或邀请联邦 Actor。房主负责验证落子并广播完整棋局快照，支持准备、认输、再来一局、历史恢复和本地战绩。",
       "locales": {
@@ -1362,7 +1379,8 @@
         "多语言"
       ],
       "permissions": [
-        "storage",
+        "storage:read",
+        "storage:write",
         "ui:theme",
         "ui:confirm",
         "federation:read",
@@ -1403,18 +1421,18 @@
           "zh-CN": "apps/cn.echootaku.gomoku/i18n/zh-CN.json"
         }
       },
-      "size": 88052,
+      "size": 88079,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-10T22:16:30.796Z",
-      "updated_at": "2026-08-10T22:16:30.796Z"
+      "updated_at": "2026-08-17T01:18:49.437Z"
     },
     {
       "id": "cn.wyyzxzyg.search-submit",
       "name": "搜索引擎收录提交",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "仅管理员可用的百度主动推送与 IndexNow URL 提交工具",
       "long_description": "面向 Myriad 站点管理员的搜索引擎 URL 主动提交工具，支持百度搜索资源平台和 IndexNow，并提供 URL 清洗、提交确认与本地日志。",
       "author": {
@@ -1432,7 +1450,7 @@
         "站长工具"
       ],
       "permissions": [
-        "storage",
+        "storage:read",
         "ui:notification",
         "ui:confirm",
         "ui:theme",
@@ -1468,18 +1486,18 @@
         "page_styles": "apps/cn.wyyzxzyg.search-submit/page.css",
         "page_template": "apps/cn.wyyzxzyg.search-submit/page.html"
       },
-      "size": 17571,
+      "size": 17576,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-11T06:51:21.040Z",
-      "updated_at": "2026-08-11T06:51:21.040Z"
+      "updated_at": "2026-08-17T01:18:49.438Z"
     },
     {
       "id": "com.myriad.three-lab",
       "name": "Three 实验室",
-      "version": "1.0.2",
+      "version": "1.0.0",
       "description": "官方 Three.js 示例：包内贴图与 GLB、pause 停帧、销毁时释放 WebGL",
       "long_description": "演示如何在 Tapp Page 里使用 Three.js：库打成 pageModules IIFE，先 getUrlMap 再用 rewriteUrl 接到 LoadingManager。棋盘贴图和立方体 GLB 都走包内路径。离开页面会暂停 rAF，销毁时释放渲染器。不是宿主内置引擎，也不走 CDN。",
       "locales": {
@@ -1594,7 +1612,7 @@
       "featured": false,
       "verified": true,
       "created_at": "2026-08-14T09:55:45.239Z",
-      "updated_at": "2026-08-15T13:42:28.282Z"
+      "updated_at": "2026-08-17T01:14:15.538Z"
     }
   ],
   "last_updated": "2026-08-04T09:47:35Z"

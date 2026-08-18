@@ -1,17 +1,17 @@
 {
   "id": "com.myriad.config-generator",
   "name": "Myriad 安装配置生成",
-  "version": "1.0.4",
+  "version": "1.0.1",
   "minSystemVersion": "0.2.1",
-  "description": "生成 Compose、.env 与 Nginx 部署配置（1Panel / 宝塔 / CLI · 整站反代 + 联邦）",
+  "description": "分步生成 Compose、.env 与反代配置，覆盖常见面板、编排界面与外层反代",
   "locales": {
     "en-US": {
       "name": "Myriad Install Config Generator",
-      "description": "Generate Compose, .env, and Nginx configs for 1Panel, Baota, or CLI (site-wide reverse proxy + federation)"
+      "description": "Generate Compose, .env, and reverse-proxy files for common panels, compose UIs, and outer proxies"
     },
     "ja-JP": {
       "name": "Myriad インストール設定ジェネレーター",
-      "description": "1Panel / 宝塔 / CLI 向け Compose・.env・Nginx 設定を生成（サイト全体リバプロ + フェデレーション）"
+      "description": "一般的なパネル、編成 UI、外側リバースプロキシ向けに Compose・.env・リバースプロキシ設定を手順に沿って生成"
     }
   },
   "category": "developer",
@@ -20,7 +20,7 @@
     "name": "Myriad Team",
     "url": "https://github.com/Myriad-You"
   },
-  "permissions": ["storage", "ui:notification", "ui:theme", "ui:confirm", "network:fetch"],
+  "permissions": ["storage:read", "ui:notification", "ui:theme", "ui:confirm", "network:fetch"],
   "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><polyline points='14,2 14,8 20,8' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><path d='M12 18v-6M9 15l3 3 3-3' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>",
   "themeColor": "#6366F1",
   "hasPage": true,
@@ -33,6 +33,13 @@
       "type": "http",
       "method": "GET",
       "endpoint": "https://hub.docker.com/v2/repositories/somekawahitomi/{{params.repo}}/tags?page_size=100&ordering=-last_updated",
+      "cacheTtl": 300
+    },
+    "dockerHubTag": {
+      "access": "public",
+      "type": "http",
+      "method": "GET",
+      "endpoint": "https://hub.docker.com/v2/repositories/somekawahitomi/{{params.repo}}/tags/{{params.tag}}",
       "cacheTtl": 300
     }
   }

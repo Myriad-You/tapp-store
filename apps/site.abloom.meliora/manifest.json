@@ -1,7 +1,7 @@
 {
   "id": "site.abloom.meliora",
   "name": "Meliora 播放器",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "minSystemVersion": "0.2.1",
   "description": "沉浸式歌词与节拍可视化:逐行/逐字歌词跟随、节拍网格驱动的呼吸背景、八段频谱。播放内核由 Myriad 宿主提供。",
   "locales": {
@@ -26,7 +26,7 @@
   "permissions": [
     "media:read",
     "media:control",
-    "storage",
+    "storage:read",
     "network:fetch"
   ],
   "homepage": "https://music.abloom.site",

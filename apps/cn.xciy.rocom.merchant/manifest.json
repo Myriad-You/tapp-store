@@ -1,11 +1,11 @@
 {
   "id": "cn.xciy.rocom.merchant",
   "name": "\u6d1b\u514b\u738b\u56fd\u60c5\u62a5\u53f0",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "\u67e5\u770b\u8fdc\u884c\u5546\u4eba\u3001\u6d3b\u52a8\u65e5\u5386\u3001\u6700\u65b0\u516c\u544a\u4e0e\u7cbe\u7075\u56fe\u9274\u3002",
   "locales": { "en-US": { "name": "RocoM Merchant Intel", "description": "Track travelling merchant stock, activities, announcements, and the creature atlas" } },
   "category": "utility", "main": "main.js", "hasPage": true, "pageTemplate": "page.html", "styles": "styles.css", "cssMode": "unified", "themeColor": "#745aa8",
-  "author": { "name": "StarChen" }, "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M12 2l2.7 5.7L21 8.6l-4.6 4.4 1.1 6.2L12 16.2 6.5 19.2 7.6 13 3 8.6l6.3-.9L12 2z' stroke='currentColor' stroke-width='1.8' stroke-linejoin='round'/><path d='M12 7v5l3 2' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/></svg>", "minSystemVersion": "0.3.23", "permissions": ["network:fetch", "storage", "widget:register"], "backgroundRequirements": ["sync"],
+  "author": { "name": "StarChen" }, "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M12 2l2.7 5.7L21 8.6l-4.6 4.4 1.1 6.2L12 16.2 6.5 19.2 7.6 13 3 8.6l6.3-.9L12 2z' stroke='currentColor' stroke-width='1.8' stroke-linejoin='round'/><path d='M12 7v5l3 2' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/></svg>", "minSystemVersion": "0.3.23", "permissions": ["network:fetch", "storage:read", "storage:write", "widget:register"], "backgroundRequirements": ["sync"],
   "settings": [
     { "key": "watchlist", "type": "input", "label": "\u8fdc\u884c\u5546\u4eba\u5173\u6ce8\u6e05\u5355", "description": "\u4ee5\u4e2d\u6587\u9017\u53f7\u3001\u82f1\u6587\u9017\u53f7\u6216\u6362\u884c\u5206\u9694\u5546\u54c1\u540d\u79f0\u3002", "defaultValue": "", "placeholder": "\u4f8b\u5982\uff1a\u56fd\u738b\u7403\uff0c\u68f1\u955c\u7403" }
   ],

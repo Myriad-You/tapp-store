@@ -1,7 +1,7 @@
 {
     "id":  "cn.wyyzxzyg.cdn-cache",
     "name":  "CDN 缓存刷新",
-    "version":  "1.1.0",
+    "version":  "1.1.1",
     "minSystemVersion":  "0.3.23",
     "description":  "仅管理员可操作的 Cloudflare、EdgeOne、阿里云 CDN 与 AWS CloudFront 缓存刷新工具",
     "locales":  {
@@ -21,7 +21,8 @@
                    "url":  "https://github.com/zgzyh"
                },
     "permissions":  [
-                        "storage",
+                        "storage:read",
+                        "storage:write",
                         "ui:notification",
                         "ui:confirm",
                         "ui:theme",

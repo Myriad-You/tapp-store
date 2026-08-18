@@ -1,6 +1,6 @@
 {
-  "long_description": "填写域名与数据库参数，按所选面板（1Panel / 宝塔 / 通用 CLI）生成官方生产拓扑的 docker-compose、.env、Nginx 与部署说明。密钥白名单与 .env 再解析防注入；原生表单/通知全自定义；宝塔可粘贴编排或目录部署。",
-  "tags": ["配置", "部署", "Docker", "Nginx", "Updater", "1Panel", "宝塔", "工具", "开发者"],
+  "long_description": "按欢迎、部署方式、域名、站点、数据库、限额的步骤，生成官方生产拓扑所需的 docker-compose、.env、反代配置与部署说明。可选 1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy 或命令行。Nginx 类方式请先创建站点并完成 SSL，再上传现有 conf；平台反代与 Caddy 不要求上传。密钥与镜像版本将自动填入，高级选项默认收起。密钥经白名单校验，并对 .env 再解析以防止注入。",
+  "tags": ["配置", "部署", "Docker", "Nginx", "Caddy", "Updater", "1Panel", "宝塔", "工具", "开发者"],
   "featured": true,
   "verified": true,
   "license": "MIT",
@@ -18,7 +18,7 @@
   },
   "locales": {
     "en-US": {
-      "long_description": "Enter domain and database settings, then generate official production docker-compose, .env, Nginx, and deploy notes for the selected panel (1Panel / Baota / generic CLI). Secrets are allowlisted and the .env is parsed again to block injection; native forms and notifications are fully custom-drawn. On Baota you can paste compose or deploy from a directory.",
+      "long_description": "A step wizard (welcome, method, domain, site, database, limits) generates official production docker-compose, .env, reverse-proxy files, and deploy notes. Choose 1Panel, Baota, aaPanel, Portainer, Dockge, Coolify, Dokploy, Nginx Proxy Manager, Caddy, or the CLI. Nginx-based methods still expect an existing site and SSL upload; platform proxies and Caddy do not. Secrets and image tags are filled in automatically; advanced options stay collapsed. Secrets are allowlisted and the .env is parsed again to block injection.",
       "preview": {
         "version": 1,
         "type": "snapshot",
@@ -31,7 +31,7 @@
       }
     },
     "ja-JP": {
-      "long_description": "ドメインとデータベースのパラメータを入力し、選択したパネル（1Panel / 宝塔 / 汎用 CLI）向けに公式本番トポロジの docker-compose、.env、Nginx、デプロイ手順を生成します。シークレットはホワイトリスト検証し、.env を再パースしてインジェクションを防ぎます。ネイティブのフォームと通知はすべてカスタム描画です。宝塔では編成の貼り付けまたはディレクトリ配置が可能です。",
+      "long_description": "ようこそ、デプロイ方法、ドメイン、サイト、データベース、上限の手順で、公式本番トポロジの docker-compose、.env、リバースプロキシ設定、デプロイ手順を生成します。1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy、または CLI を選べます。Nginx 系は先にサイト作成と SSL、既存 conf のアップロードが必要です。プラットフォーム側のリバースプロキシと Caddy では不要です。シークレットとイメージタグは自動入力され、詳細設定は折りたたまれます。シークレットはホワイトリストで検証し、.env を再パースしてインジェクションを防ぎます。",
       "preview": {
         "version": 1,
         "type": "snapshot",
