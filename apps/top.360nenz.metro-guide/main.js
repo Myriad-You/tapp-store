@@ -226,6 +226,7 @@ async function updateOnline(silent, requestedCity, requestToken) {
       metroState.mapUrls[cityId] = pageImage; metroState.mapVersion = new Date().toISOString(); mapChecked = true;
       if (isCurrent() && metroState.city === cityId) document.querySelector('[data-map-status]').textContent = 'MetroMan 网页线路图已检查 · ' + new Date().toLocaleDateString('zh-CN');
       var mapMeta = await storageGet(METRO_MAP_CACHE_KEY, {});
+      if (!mapMeta || typeof mapMeta !== 'object' || Array.isArray(mapMeta)) mapMeta = {};
       mapMeta.cities = mapMeta.cities || {}; mapMeta.cities[cityId] = { url:pageImage, checkedAt:metroState.mapVersion, source:'MetroMan' };
       await storageSet(METRO_MAP_CACHE_KEY, mapMeta);
       if (metroState.city === cityId && (!requestToken || requestToken === metroState.cityRequest)) document.querySelector('[data-map-image]').src = pageImage;
@@ -552,7 +553,9 @@ function favoriteCityOptions() {
   if (!select) return;
   var selected = select.value;
   var cities = {};
-  metroState.favorites.map(favoriteValue).filter(Boolean).forEach(function(item) { cities[item.city] = true; });
+  var favorites = Array.isArray(metroState.favorites) ? metroState.favorites : [];
+  metroState.favorites = favorites;
+  favorites.map(favoriteValue).filter(Boolean).forEach(function(item) { cities[item.city] = true; });
   select.replaceChildren();
   var all = document.createElement('option'); all.value = ''; all.textContent = '全部城市'; select.appendChild(all);
   sortedCities().filter(function(city) { return cities[city.id]; }).forEach(function(city) { var option = document.createElement('option'); option.value = city.id; option.textContent = city.name; select.appendChild(option); });
@@ -564,7 +567,9 @@ function renderFavorites() {
   favoriteCityOptions();
   var citySelect = document.querySelector('[data-favorite-city]');
   var filter = citySelect ? citySelect.value : '';
-  var items = metroState.favorites.map(favoriteValue).filter(function(item) { return item && (!filter || item.city === filter); });
+  var favorites = Array.isArray(metroState.favorites) ? metroState.favorites : [];
+  metroState.favorites = favorites;
+  var items = favorites.map(favoriteValue).filter(function(item) { return item && (!filter || item.city === filter); });
   list.replaceChildren();
   items.forEach(function(item) {
     var city = cityMeta(item.city);
