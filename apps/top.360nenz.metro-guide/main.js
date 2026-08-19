@@ -24,6 +24,30 @@ function data() { return METRO_DATA[metroState.city] || { name:cityMeta(metroSta
 function cityMeta(id) { return METRO_CITIES.find(function(city) { return city.id === id; }) || { id:id, name:id }; }
 function apiData(value) { return value && value.success === true && Object.prototype.hasOwnProperty.call(value, 'data') ? value.data : value; }
 function notify(message, type) { try { Tapp.ui.showNotification({ title:type === 'error' ? '操作失败' : '地铁通', message:message, type:type || 'success', duration:2800 }); } catch (_) {} }
+function readableError(error) {
+  var message = error && error.message ? error.message : String(error || '未知错误');
+  if (/network:fetch|permission|grant|forbidden|403/i.test(message)) return '宿主未授予联网权限，请在 Tapp 权限中启用 network:fetch';
+  if (/undeclared|not declared|not found|unknown api|definition/i.test(message)) return '宿主未注册地铁通的 MetroMan API，请重新安装新版 Tapp';
+  return message.replace(/^Error:\s*/i, '').slice(0, 140);
+}
+function setNetworkStatus(kind, message, detail) {
+  var status = document.querySelector('[data-network-status]');
+  if (!status) return;
+  status.className = 'network-status' + (kind ? ' is-' + kind : '');
+  var label = status.querySelector('span');
+  if (label) label.textContent = message;
+  status.title = detail || message;
+}
+async function verifyNetworkApis() {
+  if (!Tapp || typeof Tapp.api !== 'function') throw new Error('当前宿主不支持声明式网络 API');
+  if (Array.isArray(Tapp.permissions) && Tapp.permissions.indexOf('network:fetch') < 0) throw new Error('network:fetch permission is not granted');
+  if (typeof Tapp.api.list !== 'function') return;
+  var declared = await Tapp.api.list();
+  var names = Array.isArray(declared) ? declared.map(function(item) { return typeof item === 'string' ? item : item && (item.name || item.id); }) : Object.keys(declared || {});
+  var required = ['metroVersionManifest','metroPlannerPage','metroPlannerResult','metroPlannerV2Page','metroPlannerV2Result','metroMapPage'];
+  var missing = required.filter(function(name) { return names.indexOf(name) < 0; });
+  if (missing.length) throw new Error('undeclared APIs: ' + missing.join(', '));
+}
 function validCity(value) { return value && typeof value.name === 'string' && Array.isArray(value.lines) && value.lines.length > 0 && value.lines.some(function(line) { return Array.isArray(line.stations) && line.stations.length > 1; }) && value.lines.every(function(line) { return typeof line.id === 'string' && /^#[0-9a-f]{6}$/i.test(line.color) && Array.isArray(line.stations) && line.stations.every(function(station) { return typeof station === 'string' && station.length > 0; }); }); }
 function allStations() { var seen = {}; return data().lines.flatMap(function(line) { return line.stations; }).filter(function(name) { if (seen[name]) return false; seen[name] = true; return true; }); }
 function lineAt(line, station) { return line.stations.indexOf(station); }
@@ -99,10 +123,14 @@ async function updateOnline(silent, requestedCity, requestToken) {
   var isCurrent = function() { return !requestToken || requestToken === metroState.cityRequest; };
   var button = document.querySelector('[data-action="update"]'); if (button) button.disabled = true;
   var mapChecked = false, versionChecked = false, dataUpdated = false, remoteVersion = '';
+  if (isCurrent()) setNetworkStatus('checking', '正在连接 MetroMan', cityMeta(cityId).name + '资源检查中');
   try {
+    await verifyNetworkApis();
     var tasks = [Tapp.api('metroVersionManifest', {}), Tapp.api('metroPlannerPage', { city:cityId }), Tapp.api('metroMapPage', { city:cityId })];
     if (METRO_V2_CITIES.indexOf(cityId) >= 0) tasks.push(Tapp.api('metroPlannerV2Page', { city:cityId }));
     var responses = await Promise.allSettled(tasks);
+    var fulfilled = responses.filter(function(response) { return response.status === 'fulfilled'; }).length;
+    if (!fulfilled) throw responses[1] && responses[1].reason || responses[0] && responses[0].reason || new Error('MetroMan 请求全部失败');
     if (responses[0].status === 'fulfilled') {
       var versionResponse = apiData(responses[0].value);
       var versionText = typeof versionResponse === 'string' ? versionResponse : versionResponse && (versionResponse.body || versionResponse.text || versionResponse.data);
@@ -132,6 +160,8 @@ async function updateOnline(silent, requestedCity, requestToken) {
       await Tapp.storage.set(METRO_MAP_CACHE_KEY, mapMeta);
       if (metroState.city === cityId && (!requestToken || requestToken === metroState.cityRequest)) document.querySelector('[data-map-image]').src = pageImage;
     }
+    var plannerAvailable = responses[1].status === 'fulfilled';
+    if (isCurrent()) setNetworkStatus(plannerAvailable ? '' : 'error', plannerAvailable ? 'MetroMan 已连接' : 'MetroMan 部分连接', plannerAvailable ? cityMeta(cityId).name + '线路数据已响应' : readableError(responses[1].reason));
     if (dataUpdated && !versionChecked) {
       if (isCurrent() && metroState.city === cityId) document.querySelector('[data-status]').textContent = cityMeta(cityId).name + ' · MetroMan 已下载';
       if (!silent) notify('已从 MetroMan 下载' + cityMeta(cityId).name + '线路与站点数据。', 'success');
@@ -141,7 +171,13 @@ async function updateOnline(silent, requestedCity, requestToken) {
       if (isCurrent() && metroState.city === cityId) document.querySelector('[data-status]').textContent = cityMeta(cityId).name + ' ' + currentVersion + (current ? ' · MetroMan 最新' : ' · 发现 ' + remoteVersion);
       if (!silent) notify(dataUpdated ? '已从 MetroMan 下载' + cityMeta(cityId).name + '线路与站点数据（' + remoteVersion + '）。' : current ? cityMeta(cityId).name + '当前数据已是最新。' : 'MetroMan 已发布新版，本次网页数据尚未通过校验，继续使用本地数据。', dataUpdated || current ? 'success' : 'warning');
     } else if (!silent) notify(mapChecked ? '已检查 MetroMan 网页线路图；城市包版本暂时无法读取。' : '无法读取 MetroMan 在线资源，继续使用离线数据。', mapChecked ? 'warning' : 'error');
-  } catch (_) { if (!silent) notify('无法连接 MetroMan，已继续使用离线数据。', 'error'); }
+  } catch (error) {
+    var detail = readableError(error);
+    if (isCurrent()) setNetworkStatus('error', 'MetroMan 连接失败', detail);
+    if (isCurrent()) document.querySelector('[data-status]').textContent = cityMeta(cityId).name + ' · 使用离线或缓存数据';
+    if (!silent) notify(detail + '；已继续使用离线数据。', 'error');
+    console.error('[metro-guide] MetroMan update failed', error);
+  }
   finally { if (button) button.disabled = false; metroState.loadingCity = ''; }
 }
 async function openPdf() { try { if (!metroState.assetUrls.pdf) metroState.assetUrls.pdf = (await Tapp.assets.getUrl('assets/routemap-shanghai.pdf')).url; var link = document.createElement('a'); link.href = metroState.assetUrls.pdf; link.download = '上海地铁线路图.pdf'; document.body.appendChild(link); link.click(); link.remove(); notify('PDF 原件已交给浏览器打开。', 'success'); } catch (_) { notify('PDF 暂时无法打开，请使用高清 PNG。', 'error'); } }
@@ -159,6 +195,7 @@ function bind() { var root = document.querySelector('[data-app]'); root.addEvent
 async function init() { bind(); try { await loadOfflineAssets(); } catch (error) { console.error('[metro-guide] offline data failed', error); notify('离线线路资源损坏，请重新安装 Tapp。', 'error'); return; } renderCityOptions(); document.querySelector('[data-map-image]').addEventListener('load', resetMap); resetMap(); try { metroState.favorites = await Tapp.storage.get('metro-guide.favorites.v1') || []; } catch (_) {} var recent = await loadRecentSelection(); var initialCity = recent && METRO_CITIES.some(function(city) { return city.id === recent.city; }) ? recent.city : 'beijing'; await selectCity(initialCity, true); if (Tapp.lifecycle.onDestroy) Tapp.lifecycle.onDestroy(function() { if (Tapp.assets.revokeAll) Tapp.assets.revokeAll(); }); }
 function shortLineName(line) {
   var id = String(line.id || '').trim();
+  if (/[\/／]/.test(id)) return id.split(/[\/／]/).map(function(part) { return shortLineName({ id:part }); }).filter(Boolean).join(' / ');
   var numbered = id.match(/^(?:Line\s*)?(\d+)(?:\s*Line|号线)?$/i);
   if (numbered) return numbered[1];
   var aliases = {
@@ -433,7 +470,75 @@ async function toggleFavorite() {
   if (index >= 0) metroState.favorites.splice(index, 1); else metroState.favorites.push(key);
   await Tapp.storage.set('metro-guide.favorites.v1', metroState.favorites);
   syncFavoriteButton(from, to);
+  renderFavorites();
   notify(index >= 0 ? '已取消收藏' : '路线已收藏', 'success');
+}
+function favoriteValue(key) {
+  var parts = String(key || '').split('|');
+  return parts.length === 3 ? { key:key, city:parts[0], from:parts[1], to:parts[2] } : null;
+}
+function favoriteCityOptions() {
+  var select = document.querySelector('[data-favorite-city]');
+  if (!select) return;
+  var selected = select.value;
+  var cities = {};
+  metroState.favorites.map(favoriteValue).filter(Boolean).forEach(function(item) { cities[item.city] = true; });
+  select.replaceChildren();
+  var all = document.createElement('option'); all.value = ''; all.textContent = '全部城市'; select.appendChild(all);
+  sortedCities().filter(function(city) { return cities[city.id]; }).forEach(function(city) { var option = document.createElement('option'); option.value = city.id; option.textContent = city.name; select.appendChild(option); });
+  select.value = cities[selected] ? selected : '';
+}
+function renderFavorites() {
+  var list = document.querySelector('[data-favorite-list]');
+  if (!list) return;
+  favoriteCityOptions();
+  var filter = document.querySelector('[data-favorite-city]').value;
+  var items = metroState.favorites.map(favoriteValue).filter(function(item) { return item && (!filter || item.city === filter); });
+  list.replaceChildren();
+  items.forEach(function(item) {
+    var city = cityMeta(item.city);
+    var card = document.createElement('article'); card.className = 'favorite-card'; card.dataset.favoriteKey = item.key;
+    var main = document.createElement('div'); main.className = 'favorite-main';
+    var mark = document.createElement('span'); mark.className = 'favorite-city-mark'; mark.textContent = city.name.slice(0, 1);
+    var route = document.createElement('div'); route.className = 'favorite-route';
+    var title = document.createElement('strong'); title.textContent = item.from + ' → ' + item.to;
+    var meta = document.createElement('span'); meta.textContent = city.name + ' · ' + (cityHasResource(item.city) ? '已有数据' : '选择时自动下载');
+    route.append(title, meta); main.append(mark, route);
+    var actions = document.createElement('div'); actions.className = 'favorite-actions';
+    var use = document.createElement('button'); use.type = 'button'; use.dataset.action = 'use-favorite'; use.textContent = '查询';
+    var reverse = document.createElement('button'); reverse.type = 'button'; reverse.dataset.action = 'reverse-favorite'; reverse.textContent = '反向';
+    var remove = document.createElement('button'); remove.type = 'button'; remove.dataset.action = 'remove-favorite'; remove.textContent = '×'; remove.title = '删除收藏'; remove.setAttribute('aria-label', '删除 ' + item.from + ' 到 ' + item.to);
+    actions.append(use, reverse, remove); card.append(main, actions); list.appendChild(card);
+  });
+  var total = metroState.favorites.map(favoriteValue).filter(Boolean).length;
+  document.querySelector('[data-favorite-tab-count]').textContent = total;
+  document.querySelector('[data-favorite-count]').textContent = filter ? items.length + ' 条当前城市收藏' : total + ' 条收藏';
+  document.querySelector('[data-favorite-empty]').hidden = total > 0 || Boolean(filter);
+  list.hidden = items.length === 0;
+  if (!items.length && total > 0 && filter) {
+    var empty = document.createElement('p'); empty.className = 'station-list-empty'; empty.textContent = '这个城市暂无收藏路线'; list.appendChild(empty); list.hidden = false;
+  }
+}
+async function openFavorite(key, reverse) {
+  var item = favoriteValue(key);
+  if (!item) return;
+  await selectCity(item.city, true);
+  var root = document.querySelector('[data-app]');
+  root.querySelector('[data-from]').value = reverse ? item.to : item.from;
+  root.querySelector('[data-to]').value = reverse ? item.from : item.to;
+  await saveRecentSelection();
+  setView('planner');
+  await search();
+}
+async function removeFavorite(key) {
+  var index = metroState.favorites.indexOf(key);
+  if (index < 0) return;
+  metroState.favorites.splice(index, 1);
+  await Tapp.storage.set('metro-guide.favorites.v1', metroState.favorites);
+  renderFavorites();
+  var root = document.querySelector('[data-app]');
+  syncFavoriteButton(root.querySelector('[data-from]').value.trim(), root.querySelector('[data-to]').value.trim());
+  notify('已删除收藏路线', 'success');
 }
 
 var bindWithFavorite = bind;
@@ -446,6 +551,168 @@ bind = function() {
     event.stopImmediatePropagation();
     toggleFavorite().catch(function() { notify('收藏状态保存失败。', 'error'); });
   }, true);
+};
+
+var FULL_STOPS_KEY = 'metro-guide.full-stops.v1';
+metroState.showFullStops = false;
+metroState.lastRouteView = null;
+
+function stopCountLabel(value, fallback) {
+  var match = String(value || '').match(/\d+/);
+  return (match ? Number(match[0]) : Number(fallback) || 0) + '站';
+}
+
+var parseOfficialPlanBaseWithStops = parseOfficialPlan;
+parseOfficialPlan = function(html) {
+  var plan = parseOfficialPlanBaseWithStops(html);
+  if (!plan || typeof DOMParser === 'undefined') return plan;
+  var doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
+  var card = doc.querySelector('.planner-v2-result-card');
+  var rides = card ? Array.from(card.querySelectorAll('.planner-v2-result-card__ride')) : [];
+  plan.rides.forEach(function(ride, index) {
+    var node = rides[index];
+    if (!node) return;
+    ride.intermediateStops = Array.from(node.querySelectorAll('.planner-v2-result-card__stop-list li')).map(function(stop) {
+      var name = stop.querySelector('.planner-v2-result-card__stop-name');
+      var time = stop.querySelector('.planner-v2-result-card__stop-time');
+      return { name:name ? name.textContent.trim() : '', time:time ? time.textContent.trim() : '' };
+    }).filter(function(stop) { return stop.name; });
+  });
+  return plan;
+};
+
+var parseLegacyPlanBaseWithStops = parseLegacyPlan;
+parseLegacyPlan = function(html) {
+  var plan = parseLegacyPlanBaseWithStops(html);
+  if (!plan || typeof DOMParser === 'undefined') return plan;
+  var doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
+  var selector = metroState.preference === 'time' ? '[data-rank-time="1"]' : metroState.preference === 'transfer' ? '[data-rank-transfers="1"]' : '[data-rank-recommended="1"]';
+  var card = doc.querySelector('.result-card' + selector) || doc.querySelector('.result-card');
+  var lines = card ? Array.from(card.querySelectorAll('.result-card__line')) : [];
+  plan.rides.forEach(function(ride, index) {
+    var line = lines[index];
+    var container = line && line.nextElementSibling && line.nextElementSibling.matches('.result-card__stops-container') ? line.nextElementSibling : null;
+    ride.intermediateStops = container ? Array.from(container.querySelectorAll('.result-card__stop')).map(function(stop) {
+      var name = stop.querySelector('.result-card__stop-info span');
+      var time = stop.querySelector('.result-card__stop-time span');
+      return { name:name ? name.textContent.trim() : '', time:time ? time.textContent.trim() : '' };
+    }).filter(function(stop) { return stop.name; }) : [];
+  });
+  return plan;
+};
+
+function appendStopCount(target, count, color) {
+  var row = document.createElement('div');
+  row.className = 'route-stop-count';
+  row.style.setProperty('--step-color', color || '#0f766e');
+  var label = document.createElement('strong');
+  label.textContent = count;
+  row.appendChild(label);
+  target.appendChild(row);
+}
+
+function appendIntermediateStop(target, stop, line, color) {
+  appendRouteStep(target, stop.name, stop.time ? stop.time + ' · 沿线经过' : '沿线经过', line, color);
+  if (target.lastElementChild) target.lastElementChild.classList.add('is-intermediate');
+}
+
+function renderPlanStopDetails(plan) {
+  var target = document.querySelector('[data-steps]');
+  target.replaceChildren();
+  plan.rides.forEach(function(ride, index) {
+    var lineName = lineTagName({ id:ride.line });
+    appendRouteStep(target, ride.from, (ride.start ? ride.start + ' · ' : '') + '乘坐 ' + ride.line + (ride.direction ? ' · ' + ride.direction : ''), lineName, ride.color);
+    if (metroState.showFullStops) {
+      (ride.intermediateStops || []).forEach(function(stop) { appendIntermediateStop(target, stop, null, ride.color); });
+    } else {
+      appendStopCount(target, stopCountLabel(ride.stops, (ride.intermediateStops || []).length + 1), ride.color);
+    }
+    appendRouteStep(target, ride.to, (ride.end ? ride.end + ' · ' : '') + (index === plan.rides.length - 1 ? '到达目的地' : '站内换乘') + (ride.detail ? ' · ' + ride.detail : ''), null, ride.color);
+  });
+}
+
+function renderLocalStopDetails(route) {
+  var target = document.querySelector('[data-steps]');
+  target.replaceChildren();
+  var offset = 0;
+  route.segments.forEach(function(segment, index) {
+    var color = segment.line && segment.line.color;
+    appendRouteStep(target, segment.from, index ? '站内换乘 ' + segment.line.id : '从这里出发 · 乘坐 ' + segment.line.id, lineTagName(segment.line), color);
+    var intermediate = route.stations.slice(offset + 1, offset + segment.stops).map(function(name) { return { name:name, time:'' }; });
+    if (metroState.showFullStops) intermediate.forEach(function(stop) { appendIntermediateStop(target, stop, null, color); });
+    else appendStopCount(target, stopCountLabel(segment.stops), color);
+    appendRouteStep(target, segment.to, index === route.segments.length - 1 ? '到达目的地' : '准备换乘', null, color);
+    offset += segment.stops;
+  });
+}
+
+var renderOfficialPlanWithStopModeBase = renderOfficialPlan;
+renderOfficialPlan = function(plan, from, to) {
+  renderOfficialPlanWithStopModeBase(plan, from, to);
+  renderPlanStopDetails(plan);
+  metroState.lastRouteView = { type:'plan', value:plan, from:from, to:to };
+};
+
+var renderRouteWithStopModeBase = renderRoute;
+renderRoute = function(route, from, to) {
+  renderRouteWithStopModeBase(route, from, to);
+  renderLocalStopDetails(route);
+  metroState.lastRouteView = { type:'local', value:route, from:from, to:to };
+};
+
+function rerenderStopDetails() {
+  var view = metroState.lastRouteView;
+  if (!view) return;
+  if (view.type === 'plan') renderPlanStopDetails(view.value);
+  else renderLocalStopDetails(view.value);
+}
+
+var bindWithStopModeBase = bind;
+bind = function() {
+  bindWithStopModeBase();
+  var toggle = document.querySelector('[data-full-stops]');
+  toggle.checked = metroState.showFullStops;
+  toggle.addEventListener('change', async function() {
+    metroState.showFullStops = toggle.checked;
+    await Tapp.storage.set(FULL_STOPS_KEY, metroState.showFullStops);
+    rerenderStopDetails();
+  });
+};
+
+var initWithStopModeBase = init;
+init = async function() {
+  try { metroState.showFullStops = await Tapp.storage.get(FULL_STOPS_KEY) === true; } catch (_) {}
+  await initWithStopModeBase();
+  var toggle = document.querySelector('[data-full-stops]');
+  if (toggle) toggle.checked = metroState.showFullStops;
+};
+
+var setViewWithFavoritesBase = setView;
+setView = function(view) {
+  setViewWithFavoritesBase(view);
+  if (view === 'favorites') renderFavorites();
+};
+
+var bindWithFavoritesPageBase = bind;
+bind = function() {
+  bindWithFavoritesPageBase();
+  var root = document.querySelector('[data-app]');
+  document.querySelector('[data-favorite-city]').addEventListener('change', renderFavorites);
+  root.addEventListener('click', function(event) {
+    var action = event.target.closest('[data-action]');
+    if (!action) return;
+    var card = action.closest('[data-favorite-key]');
+    if (!card) return;
+    if (action.dataset.action === 'use-favorite') openFavorite(card.dataset.favoriteKey, false).catch(function(error) { notify(readableError(error), 'error'); });
+    if (action.dataset.action === 'reverse-favorite') openFavorite(card.dataset.favoriteKey, true).catch(function(error) { notify(readableError(error), 'error'); });
+    if (action.dataset.action === 'remove-favorite') removeFavorite(card.dataset.favoriteKey).catch(function() { notify('收藏路线删除失败。', 'error'); });
+  });
+};
+
+var initWithFavoritesPageBase = init;
+init = async function() {
+  await initWithFavoritesPageBase();
+  renderFavorites();
 };
 
 if (typeof Tapp !== 'undefined' && Tapp.lifecycle) Tapp.lifecycle.onReady(init); else if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
