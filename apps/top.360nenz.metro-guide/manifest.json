@@ -1,8 +1,8 @@
 {
   "id": "top.360nenz.metro-guide",
   "name": "地铁通",
-  "version": "1.3.0",
-  "minSystemVersion": "0.3.35",
+  "version": "1.3.1",
+  "minSystemVersion": "0.3.23",
   "description": "按城市查询地铁线路、站点与少换乘出行方案。",
   "category": "utility",
   "author": { "name": "360NENZ", "url": "https://github.com/360NENZ" },
@@ -11,13 +11,11 @@
   "permissions": ["storage:read", "storage:write", "ui:notification", "ui:openUrl", "network:fetch"],
   "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M5 4h14v11a7 7 0 0 1-14 0V4Z' stroke='currentColor' stroke-width='1.8'/><path d='M8 8h8M8 12h8M8 20l-2 2M16 20l2 2' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/><circle cx='9' cy='16' r='1' fill='currentColor'/><circle cx='15' cy='16' r='1' fill='currentColor'/></svg>",
   "themeColor": "#0F766E",
-  "core": {
-    "entry": "main.js"
-  },
-  "page": {
-    "template": "page.html",
-    "styles": "page.css"
-  },
+  "main": "main.js",
+  "hasPage": true,
+  "cssMode": "separated",
+  "pageStyles": "page.css",
+  "pageTemplate": "page.html",
   "assets": [
     "assets/shanghai.json",
     "assets/routemap-shanghai.png",

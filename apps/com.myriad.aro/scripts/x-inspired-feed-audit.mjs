@@ -24,8 +24,8 @@ function must(name, cond, detail) {
   else failures.push(name + (detail ? ': ' + detail : ''))
 }
 
-const views = read('page/views.js') + '\n' + read('page/feedUi.js')
-const events = read('page/events.js') + '\n' + views
+const views = read('page/views.js')
+const events = read('page/events.js')
 const html = read('page.html')
 const css = read('page.css')
 const readme = read('README.md')
@@ -65,12 +65,7 @@ must('domain-chip', views.includes('feed-actor-domain') || views.includes('feed-
 must('css-share', css.includes('feed-share-actions') && css.includes('feed-actor-meta'))
 
 // Version + host dependency docs
-const versionParts = String(man.version).split('.').map(Number)
-const isSupportedVersion = versionParts.length === 3
-  && versionParts.every(Number.isInteger)
-  && (versionParts[0] > 1
-    || (versionParts[0] === 1 && (versionParts[1] > 0 || versionParts[2] >= 9)))
-must('version', isSupportedVersion, man.version)
+must('version', man.version === '1.0.9', man.version)
 must('host-dep-docs', readme.includes('composeExternalShare') && readme.includes('PR #225'))
 
 // No server-side X post language

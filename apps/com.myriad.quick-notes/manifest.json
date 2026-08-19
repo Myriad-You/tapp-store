@@ -1,7 +1,7 @@
 {
   "id": "com.myriad.quick-notes",
   "name": "便携便签",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "minSystemVersion": "0.2.1",
   "description": "快速记录想法，支持搜索与主页小组件",
   "locales": {
@@ -15,6 +15,7 @@
     }
   },
   "category": "productivity",
+  "main": "main.js",
   "author": {
     "name": "Myriad Team",
     "url": "https://github.com/Myriad-You"
@@ -29,6 +30,11 @@
   ],
   "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M8 2v3M16 2v3M3 9h18M21 8.5V17c0 3-1.5 5-5 5H8c-3.5 0-5-2-5-5V8.5c0-3 1.5-5 5-5h8c3.5 0 5 2 5 5z' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><path d='M8 14h4M8 18h8' stroke='currentColor' stroke-width='2' stroke-linecap='round'/></svg>",
   "themeColor": "#FFA726",
+  "hasPage": true,
+  "cssMode": "separated",
+  "widgetStyles": "widget.css",
+  "pageStyles": "page.css",
+  "pageTemplate": "page.html",
   "widgets": [
     {
       "id": "notes",
@@ -36,10 +42,7 @@
       "description": "主页速览便签，并支持直接速记",
       "icon": "note",
       "defaultSize": "4x2",
-      "sizes": [
-        "4x2",
-        "4x4"
-      ],
+      "sizes": ["4x2", "4x4"],
       "refreshPolicy": {
         "mode": "event",
         "refreshOnVisible": true
@@ -48,8 +51,7 @@
       "templates": {
         "4x2": "widget-4x2.html",
         "4x4": "widget-4x4.html"
-      },
-      "styles": "widget.css"
+      }
     }
   ],
   "settings": [
@@ -83,26 +85,10 @@
       "description": "笔记列表排序（置顶始终优先）",
       "defaultValue": "newest",
       "options": [
-        {
-          "value": "newest",
-          "label": "最新创建"
-        },
-        {
-          "value": "oldest",
-          "label": "最早创建"
-        },
-        {
-          "value": "updated",
-          "label": "最近更新"
-        }
+        { "value": "newest", "label": "最新创建" },
+        { "value": "oldest", "label": "最早创建" },
+        { "value": "updated", "label": "最近更新" }
       ]
     }
-  ],
-  "core": {
-    "entry": "main.js"
-  },
-  "page": {
-    "template": "page.html",
-    "styles": "page.css"
-  }
+  ]
 }

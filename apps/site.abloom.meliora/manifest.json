@@ -1,7 +1,7 @@
 {
   "id": "site.abloom.meliora",
   "name": "Meliora 播放器",
-  "version": "0.1.2",
+  "version": "0.1.1",
   "minSystemVersion": "0.2.1",
   "description": "沉浸式歌词与节拍可视化:逐行/逐字歌词跟随、节拍网格驱动的呼吸背景、八段频谱。播放内核由 Myriad 宿主提供。",
   "locales": {
@@ -10,6 +10,11 @@
       "description": "Immersive lyrics & beat visuals: synced lyrics, beat-grid breathing background and an 8-band spectrum. Playback is powered by the Myriad host."
     }
   },
+  "main": "main.js",
+  "hasPage": true,
+  "cssMode": "separated",
+  "pageStyles": "page.css",
+  "pageTemplate": "page.html",
   "author": {
     "name": "abloom25",
     "url": "https://github.com/abloom25"
@@ -25,12 +30,5 @@
     "network:fetch"
   ],
   "homepage": "https://music.abloom.site",
-  "repository": "https://github.com/abloom25/MelioraTapp",
-  "core": {
-    "entry": "main.js"
-  },
-  "page": {
-    "template": "page.html",
-    "styles": "page.css"
-  }
+  "repository": "https://github.com/abloom25/MelioraTapp"
 }

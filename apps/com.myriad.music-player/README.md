@@ -81,7 +81,7 @@ Tapp.media.onProgress((progress) => {
 
 | 权限              | 用途           |
 | ----------------- | -------------- |
-| `storage:read` / `storage:write` | 保存用户设置 |
+| `storage`         | 保存用户设置   |
 | `ui:notification` | 显示通知提示   |
 | `ui:theme`        | 获取主题和颜色 |
 | `media:control`   | 控制音乐播放   |

@@ -1,7 +1,7 @@
 {
   "id": "com.myriad.aro",
   "name": "Aro",
-  "version": "1.0.59",
+  "version": "1.0.57",
   "description": "社交中心，统一管理消息、时间线、环网与个人资料",
   "locales": {
     "en-US": {
@@ -15,6 +15,11 @@
     "name": "Myriad Team",
     "url": "https://github.com/Myriad-You"
   },
+  "main": "index.js",
+  "styles": "styles.css",
+  "pageStyles": "page.css",
+  "pageTemplate": "page.html",
+  "cssMode": "separated",
   "permissions": [
     "storage:read",
     "storage:write",
@@ -36,6 +41,7 @@
   "iconSvg": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M2 12h20\"/><path d=\"M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z\"/></svg>",
   "themeColor": "#6366f1",
   "minSystemVersion": "0.2.1",
+  "hasPage": true,
   "backgroundRequirements": [
     "notification"
   ],
@@ -57,13 +63,28 @@
     }
   ],
   "category": "social",
-  "core": {
-    "entry": "index.js",
-    "styles": "styles.css"
-  },
-  "page": {
-    "template": "page.html",
-    "styles": "page.css",
-    "entry": "page/entry.js"
-  }
+  "pageModules": [
+    "i18n.js",
+    "state.js",
+    "helpers.js",
+    "shareUi.js",
+    "mentionUi.js",
+    "attachments.js",
+    "msgUi.js",
+    "chat.js",
+    "members.js",
+    "history.js",
+    "files.js",
+    "msgSync.js",
+    "e2eUi.js",
+    "roomUi.js",
+    "createUi.js",
+    "api.js",
+    "feedUi.js",
+    "feedCompose.js",
+    "ringsUi.js",
+    "views.js",
+    "events.js",
+    "index.js"
+  ]
 }

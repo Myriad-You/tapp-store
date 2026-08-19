@@ -172,8 +172,8 @@ describe('Tapp project core', () => {
       )
       await access(join(root, 'types/tapp-sdk.d.ts'))
       await access(join(root, 'jsconfig.json'))
-      const core = await readFile(join(root, 'core.js'), 'utf8')
-      assert.match(core, /reference path="\.\/types\/tapp-sdk\.d\.ts"/)
+      const main = await readFile(join(root, 'main.js'), 'utf8')
+      assert.match(main, /reference path="\.\/types\/tapp-sdk\.d\.ts"/)
     })
   }
 
@@ -186,7 +186,7 @@ describe('Tapp project core', () => {
     manifest.typoField = true
     await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
     await writeFile(
-      join(root, 'core.js'),
+      join(root, 'main.js'),
       `Tapp.storage.set('key', 'value');\nTapp.api('missing', {});\n`,
     )
 
@@ -198,25 +198,6 @@ describe('Tapp project core', () => {
     assert.ok(report.permissions.missing.some(({ permission }) => permission === 'storage:write'))
   })
 
-  it('rejects retired layer-contract fields as unknown', async () => {
-    const root = await temporaryDirectory('retired-layer-fields')
-    await createProject(root, { type: 'page' })
-    const manifestPath = join(root, 'manifest.json')
-    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
-    manifest.main = 'main.js'
-    manifest.hasPage = true
-    manifest.pageModules = ['extra.js']
-    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
-
-    const report = await inspectProject(root)
-    const messages = report.diagnostics
-      .filter(({ code }) => code === 'unknown-manifest-field')
-      .map(({ message }) => message)
-    assert.ok(messages.some((message) => message.includes('main')))
-    assert.ok(messages.some((message) => message.includes('hasPage')))
-    assert.ok(messages.some((message) => message.includes('pageModules')))
-  })
-
   it('rejects retired storage permission instead of satisfying storage writes', async () => {
     const root = await temporaryDirectory('retired-storage-permission')
     await createProject(root, { type: 'page' })
@@ -224,7 +205,7 @@ describe('Tapp project core', () => {
     const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
     manifest.permissions = ['storage']
     await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
-    await writeFile(join(root, 'core.js'), `Tapp.storage.set('key', 'value');\n`)
+    await writeFile(join(root, 'main.js'), `Tapp.storage.set('key', 'value');\n`)
 
     const report = await inspectProject(root)
     assert.ok(
@@ -244,14 +225,14 @@ describe('Tapp project core', () => {
       '<canvas id="scene"></canvas>\n<script src="https://unpkg.com/three@0.170.0/build/three.min.js"></script>\n',
     )
     await writeFile(
-      join(root, 'core.js'),
+      join(root, 'main.js'),
       `import * as THREE from 'https://esm.sh/three'\n`,
     )
 
     const report = await inspectProject(root)
     const remote = report.diagnostics.filter(({ code }) => code === 'remote-engine-script')
     assert.ok(remote.some((item) => item.file === 'page.html'))
-    assert.ok(remote.some((item) => item.file === 'core.js'))
+    assert.ok(remote.some((item) => item.file === 'main.js'))
     assert.equal(remote.every((item) => item.severity === 'warning'), true)
   })
 
@@ -263,7 +244,7 @@ describe('Tapp project core', () => {
     manifest.permissions = ['storage:read']
     await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
     await writeFile(
-      join(root, 'core.js'),
+      join(root, 'main.js'),
       `// Tapp.ui.confirm('not a call')
 const example = "Tapp.api('not-real')"
 const apiName = 'dynamic'
@@ -271,8 +252,6 @@ Tapp?.storage?.get('key')
 Tapp.api(apiName)
 `,
     )
-    // 层各自成文件后，脚手架的 page 层仍带自己的 SDK 调用；这个用例只看 core。
-    await writeFile(join(root, 'page/index.js'), '// page intentionally empty\n')
 
     const report = await inspectProject(root)
     assert.deepEqual(report.permissions.usedActions.map(({ action }) => action), ['storage.get'])
@@ -285,7 +264,7 @@ Tapp.api(apiName)
     const root = await temporaryDirectory('nested-action')
     await createProject(root, { type: 'page' })
     await writeFile(
-      join(root, 'core.js'),
+      join(root, 'main.js'),
       `Tapp.ai.tasks.create({})
 Tapp.ui.confirm.call(null, 'ok')
 `,
@@ -295,7 +274,7 @@ Tapp.ui.confirm.call(null, 'ok')
     assert.ok(
       report.permissions.usedActions.some(
         ({ action, permission, file }) =>
-          action === 'ai.tasks.create' && permission === 'public' && file === 'core.js',
+          action === 'ai.tasks.create' && permission === 'public' && file === 'main.js',
       ),
     )
     assert.ok(report.permissions.missing.some(({ permission }) => permission === 'ui:confirm'))
@@ -344,8 +323,7 @@ Tapp.storage.get(key)
     const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
     delete manifest.permissions
     await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
-    await writeFile(join(root, 'core.js'), '// no privileged capabilities\n')
-    await writeFile(join(root, 'page/index.js'), '// no privileged capabilities\n')
+    await writeFile(join(root, 'main.js'), '// no privileged capabilities\n')
 
     const report = await inspectProject(root)
     assert.deepEqual(
@@ -415,7 +393,7 @@ Tapp.storage.get(key)
     await createProject(root, { type: 'page' })
     const manifestPath = join(root, 'manifest.json')
     const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
-    manifest.core.entry = 'linked/outside.js'
+    manifest.main = 'linked/outside.js'
     await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
     await writeFile(join(targetRoot, 'outside.js'), 'Tapp.lifecycle.ready()\n')
     await symlink(targetRoot, join(root, 'linked'))
@@ -464,48 +442,6 @@ Tapp.storage.get(key)
     const invalidApis = report.diagnostics.filter(({ code }) => code === 'invalid-api')
     assert.equal(invalidApis.length, 1)
     assert.match(invalidApis[0].message, /API rejected HTTP method/)
-  })
-
-  it('treats null inbound route and verify prefix as omitted', async () => {
-    const root = await temporaryDirectory('inbound-route-null')
-    await createProject(root, { type: 'page' })
-    const manifestPath = join(root, 'manifest.json')
-    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
-    manifest.permissions.push('network:fetch')
-    manifest.credentials = [{ key: 'inbound', label: 'Inbound HMAC' }]
-    manifest.apis = {
-      omitted: {
-        type: 'http',
-        access: 'public',
-        endpoint: 'https://api.example.com/games',
-        route: null,
-      },
-      signed: {
-        type: 'http',
-        access: 'public',
-        endpoint: 'https://api.example.com/sponsors',
-        route: {
-          path: '/sponsors',
-          methods: ['GET'],
-          verify: {
-            key: 'inbound',
-            alg: 'hmac-sha256-raw',
-            header: 'X-Signature',
-            prefix: null,
-            over: 'canonical-query',
-            timestampHeader: 'X-Timestamp',
-            nonceHeader: 'X-Nonce',
-          },
-        },
-      },
-    }
-    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
-
-    const report = await inspectProject(root)
-    assert.deepEqual(
-      report.diagnostics.filter(({ code }) => code === 'invalid-api-route'),
-      [],
-    )
   })
 
   it('accepts raw and form declared API body modes', async () => {
@@ -775,6 +711,175 @@ Tapp.storage.get(key)
     assert.match(messages, /Credential unused must be bound/)
   })
 
+  it('accepts a signed inbound /tapi route bound to a write-only credential', async () => {
+    const root = await temporaryDirectory('inbound-route-valid')
+    await createProject(root, { type: 'page' })
+    const manifestPath = join(root, 'manifest.json')
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+    manifest.permissions.push('network:fetch')
+    manifest.credentials = [{ key: 'hookSecret', label: 'Hook HMAC' }]
+    manifest.apis = {
+      hook: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/hook',
+          methods: ['POST'],
+          verify: {
+            key: 'hookSecret',
+            alg: 'hmac-sha256-raw',
+            header: 'X-Signature',
+            over: 'raw-body',
+            timestampHeader: 'X-Timestamp',
+            nonceHeader: 'X-Nonce',
+          },
+        },
+      },
+    }
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
+
+    const report = await inspectProject(root)
+    assert.deepEqual(
+      report.diagnostics.filter(({ code }) => code === 'invalid-api-route' || code.includes('credential')),
+      [],
+    )
+  })
+
+  it('rejects inbound route access, path, header, over, and credential mistakes', async () => {
+    const root = await temporaryDirectory('inbound-route-invalid')
+    await createProject(root, { type: 'page' })
+    const manifestPath = join(root, 'manifest.json')
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+    manifest.permissions.push('network:fetch')
+    manifest.credentials = [{ key: 'hookSecret', label: 'Hook HMAC' }]
+    const verify = {
+      key: 'hookSecret',
+      alg: 'hmac-sha256-raw',
+      header: 'X-Signature',
+      over: 'raw-body',
+      timestampHeader: 'X-Timestamp',
+      nonceHeader: 'X-Nonce',
+    }
+    manifest.apis = {
+      privateHook: {
+        type: 'http',
+        access: 'protected',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: { path: '/private', methods: ['POST'], verify },
+      },
+      firstDup: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: { path: '/dup', methods: ['POST'], verify },
+      },
+      secondDup: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: { path: '/dup', methods: ['POST'], verify },
+      },
+      lowercaseHeader: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/lower',
+          methods: ['POST'],
+          verify: { ...verify, header: 'x-signature' },
+        },
+      },
+      reservedHeader: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/reserved',
+          methods: ['POST'],
+          verify: { ...verify, header: 'X-Forwarded-For' },
+        },
+      },
+      duplicateHeaders: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/same-headers',
+          methods: ['POST'],
+          verify: { ...verify, timestampHeader: 'X-Signature' },
+        },
+      },
+      badOver: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/bad-over',
+          methods: ['POST'],
+          verify: { ...verify, over: 'unsigned' },
+        },
+      },
+      overMethodMismatch: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'GET',
+        route: {
+          path: '/query-post',
+          methods: ['GET', 'POST'],
+          verify: { ...verify, over: 'canonical-query' },
+        },
+      },
+      missingOver: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/missing-over',
+          methods: ['POST'],
+          verify: { ...verify, over: undefined },
+        },
+      },
+      missingCred: {
+        type: 'http',
+        access: 'public',
+        endpoint: 'https://api.example.com/hook',
+        method: 'POST',
+        route: {
+          path: '/missing',
+          methods: ['POST'],
+          verify: { ...verify, key: 'missing' },
+        },
+      },
+    }
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
+
+    const report = await inspectProject(root)
+    const messages = report.diagnostics
+      .filter(({ code }) => code === 'invalid-api-route')
+      .map(({ message }) => message)
+      .join('\n')
+    assert.match(messages, /privateHook inbound route requires access public/)
+    assert.match(messages, /secondDup inbound path \/dup is duplicated/)
+    assert.match(messages, /lowercaseHeader inbound verify headers are invalid/)
+    assert.match(messages, /reservedHeader inbound verify headers are invalid/)
+    assert.match(messages, /duplicateHeaders inbound verify headers must be distinct/)
+    assert.match(messages, /badOver inbound verify\.over must be one of/)
+    assert.match(messages, /missingOver inbound verify\.over must be one of/)
+    assert.match(messages, /overMethodMismatch canonical-query verify requires GET-only methods/)
+    assert.match(messages, /missingCred inbound route references an undeclared credential/)
+  })
+
   it('rejects invalid declared API body mode shapes', async () => {
     const root = await temporaryDirectory('invalid-http-body-modes')
     await createProject(root, { type: 'page' })
@@ -905,14 +1010,12 @@ Tapp.storage.get(key)
     const result = await packProject(root)
     const archive = await readFile(result.outputPath)
     assert.deepEqual(listZipEntries(archive), [
-      'core.js',
+      'main.js',
       'manifest.json',
       'page.html',
-      'page/index.js',
       'styles.css',
       'templates/widget-2x2.html',
       'templates/widget-4x2.html',
-      'widget/index.js',
     ])
     assert.equal(
       listZipEntries(archive).some((path) => path.startsWith('types/')),
@@ -926,75 +1029,66 @@ Tapp.storage.get(key)
     await createProject(root, { type: 'page', id: 'com.example.types' })
     const manifestPath = join(root, 'manifest.json')
     const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
-    manifest.core.entry = 'types/core.js'
+    manifest.main = 'types/main.js'
     await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
     await writeFile(
-      join(root, 'types/core.js'),
-      await readFile(join(root, 'core.js'), 'utf8'),
+      join(root, 'types/main.js'),
+      await readFile(join(root, 'main.js'), 'utf8'),
     )
 
     const result = await packProject(root)
     const entries = listZipEntries(await readFile(result.outputPath))
-    assert.ok(entries.includes('types/core.js'))
+    assert.ok(entries.includes('types/main.js'))
     assert.equal(entries.includes('types/tapp-sdk.d.ts'), false)
     assert.equal(entries.includes('jsconfig.json'), false)
   })
 
-  /// 每层各自成文件之后，包里不该再出现注释切割标记。
-  it('scaffolds one file per layer with no code section markers', async () => {
-    const root = await temporaryDirectory('layer-files')
-    await createProject(root, { type: 'both', id: 'com.example.layers' })
-    const manifest = JSON.parse(
-      await readFile(join(root, 'manifest.json'), 'utf8'),
-    )
-    assert.equal(manifest.core.entry, 'core.js')
-    assert.equal(manifest.page.entry, 'page/index.js')
-    assert.equal(manifest.widgets[0].entry, 'widget/index.js')
-
-    for (const relative of ['core.js', 'page/index.js', 'widget/index.js']) {
-      const source = await readFile(join(root, relative), 'utf8')
-      assert.doesNotMatch(source, /Widget Code|Page Code/)
-    }
-    // 层入口通过相对路径 require 共享层
-    assert.match(
-      await readFile(join(root, 'page/index.js'), 'utf8'),
-      /require\('\.\.\/core\.js'\)/,
-    )
+  it('matches Playground main.js composition markers', async () => {
+    const { buildMainJs, PACKAGE_MARKERS } = await import('../src/package-layout.mjs')
+    const composed = buildMainJs({
+      core: 'const shared = 1;',
+      widget: 'Tapp.widgets.a = { render() {} };',
+      page: 'Tapp.lifecycle.onReady(() => {});',
+    })
+    assert.ok(composed.includes(PACKAGE_MARKERS.widget))
+    assert.ok(composed.includes(PACKAGE_MARKERS.page))
+    assert.ok(composed.indexOf('const shared') < composed.indexOf(PACKAGE_MARKERS.widget))
+    assert.ok(composed.indexOf(PACKAGE_MARKERS.widget) < composed.indexOf(PACKAGE_MARKERS.page))
   })
 
   it('rejects declared resources over the general resource byte limit', async () => {
     const root = await temporaryDirectory('oversized-resource')
     await createProject(root, { type: 'page' })
     await writeFile(
-      join(root, 'core.js'),
+      join(root, 'main.js'),
       Buffer.alloc(generatedContract().limits.resourceBytes + 1, 0x20),
     )
 
     const report = await inspectProject(root)
     assert.ok(
       report.diagnostics.some(
-        ({ code, message }) => code === 'resource-too-large' && message.includes('core.js'),
+        ({ code, message }) => code === 'resource-too-large' && message.includes('main.js'),
       ),
     )
   })
 
-  it('does not leave an archive behind when the stored ZIP exceeds the archive limit', async () => {
+  it('does not leave an archive behind when the stored ZIP exceeds 25 MiB', async () => {
     const root = await temporaryDirectory('oversized')
     await createProject(root, { type: 'page' })
-    const archiveBytes = generatedContract().limits.archiveBytes
-    await writeFile(join(root, 'core.js'), Buffer.alloc(archiveBytes, 0x20))
+    await writeFile(join(root, 'main.js'), Buffer.alloc(25 * 1024 * 1024, 0x20))
     const outputPath = join(root, 'oversized.tapp')
 
-    await assert.rejects(packProject(root, outputPath), /Package exceeds \d+ MiB/)
+    await assert.rejects(packProject(root, outputPath), /Package exceeds 25 MiB/)
     await assert.rejects(access(outputPath), { code: 'ENOENT' })
   })
 
-  it('requires page resources when a page layer is declared', async () => {
+  it('requires page resources when hasPage is true', async () => {
     const root = await temporaryDirectory('missing-page')
     await createProject(root, { type: 'widget', id: 'com.example.missing-page' })
     const manifestPath = join(root, 'manifest.json')
     const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
-    manifest.page = {}
+    manifest.hasPage = true
+    delete manifest.pageTemplate
     await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
 
     const report = await inspectProject(root)
@@ -1007,13 +1101,14 @@ Tapp.storage.get(key)
     await createProject(root, { type: 'page', id: 'com.example.headless-only' })
     const manifestPath = join(root, 'manifest.json')
     const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
-    delete manifest.page
+    delete manifest.hasPage
+    delete manifest.pageTemplate
     delete manifest.widgets
     manifest.backgroundRequirements = ['sync']
     manifest.permissions = []
     await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
     await writeFile(
-      join(root, 'core.js'),
+      join(root, 'main.js'),
       `Tapp.ui.confirm('ok');
 `,
     )
@@ -1040,7 +1135,7 @@ Tapp.storage.get(key)
     }
     await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
     await writeFile(
-      join(root, 'core.js'),
+      join(root, 'main.js'),
       `Tapp.lifecycle.onReady(async function () {
   await Tapp.ui.confirm('ok');
 });

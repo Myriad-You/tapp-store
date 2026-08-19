@@ -1,7 +1,7 @@
 {
   "id": "cn.xciy.rsshub-radar",
   "name": "RSSHub 雷达",
-  "version": "1.1.6",
+  "version": "1.1.5",
   "minSystemVersion": "0.2.1",
   "description": "发现 RSSHub 路由，管理订阅并预览 Feed",
   "locales": {
@@ -15,6 +15,7 @@
     }
   },
   "category": "productivity",
+  "main": "main.js",
   "author": {
     "name": "StarChen",
     "url": "https://github.com/Pstarchen"
@@ -28,6 +29,10 @@
   ],
   "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='12' cy='12' r='8.5' stroke='currentColor' stroke-width='1.7'/><circle cx='12' cy='12' r='4.5' stroke='currentColor' stroke-width='1.4' stroke-dasharray='2 2'/><path d='M12 12L18.8 7.4' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/><circle cx='16.5' cy='9' r='1.4' fill='currentColor'/><path d='M12 2v2M22 12h-2M12 22v-2M2 12h2' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'/></svg>",
   "themeColor": "#58F2D0",
+  "hasPage": true,
+  "cssMode": "separated",
+  "pageStyles": "page.css",
+  "pageTemplate": "page.html",
   "assets": [
     "assets/RSSHub-Radar-LICENSE.txt",
     "assets/rules/index.json",
@@ -80,12 +85,5 @@
       "cacheTtl": 60,
       "description": "通过固定声明的 rsshub.app 服务读取已匹配路由的 Feed 预览"
     }
-  },
-  "core": {
-    "entry": "main.js"
-  },
-  "page": {
-    "template": "page.html",
-    "styles": "page.css"
   }
 }

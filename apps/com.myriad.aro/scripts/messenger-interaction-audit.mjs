@@ -328,9 +328,9 @@ function checkHelpers() {
 
   // onDocPointer registered with capture false, not true
   const bubble =
-    /(?:addEventListener|pageListen)\s*\(\s*(?:document\s*,\s*)?['"]click['"]\s*,\s*onDocPointer\s*,\s*false\s*\)/.test(h);
+    /addEventListener\s*\(\s*['"]click['"]\s*,\s*onDocPointer\s*,\s*false\s*\)/.test(h);
   const capture =
-    /(?:addEventListener|pageListen)\s*\(\s*(?:document\s*,\s*)?['"]click['"]\s*,\s*onDocPointer\s*,\s*true\s*\)/.test(h);
+    /addEventListener\s*\(\s*['"]click['"]\s*,\s*onDocPointer\s*,\s*true\s*\)/.test(h);
   if (bubble && !capture) {
     pass('5-onDocPointer-bubble', 'registered with capture false (not true)');
   } else {
@@ -430,8 +430,8 @@ function checkShowAroOverlay() {
     }
   }
 
-  // openComposer / openFollowDialog in their dedicated Page module.
-  const views = read('page/feedCompose.js');
+  // openComposer / openFollowDialog in views.js
+  const views = read('page/views.js');
   if (views) {
     const viewsClean = stripComments(views);
     for (const [name, re] of [
@@ -440,7 +440,7 @@ function checkShowAroOverlay() {
     ]) {
       const fnBody = extractFunctionBody(viewsClean, re);
       if (!fnBody) {
-        fail(`7-${name}`, `function ${name} not found in page/feedCompose.js`);
+        fail(`7-${name}`, `function ${name} not found in page/views.js`);
       } else if (usesShowAroOverlayOrTriad(fnBody)) {
         pass(`7-${name}`, 'uses showAroOverlay or full open triad');
       } else {
@@ -452,21 +452,20 @@ function checkShowAroOverlay() {
     }
 
     // quote-repost open path (openQuoteRepostModal)
-    const quoteSource = stripComments(read('page/views.js') || '');
     const quoteFn =
-      extractFunctionBody(quoteSource, /function\s+openQuoteRepost\w*\s*\([^)]*\)\s*/) ||
-      extractFunctionBody(quoteSource, /function\s+showQuoteRepost\w*\s*\([^)]*\)\s*/) ||
-      extractFunctionBody(quoteSource, /function\s+\w*[Qq]uote[Rr]epost\w*\s*\([^)]*\)\s*/);
+      extractFunctionBody(viewsClean, /function\s+openQuoteRepost\w*\s*\([^)]*\)\s*/) ||
+      extractFunctionBody(viewsClean, /function\s+showQuoteRepost\w*\s*\([^)]*\)\s*/) ||
+      extractFunctionBody(viewsClean, /function\s+\w*[Qq]uote[Rr]epost\w*\s*\([^)]*\)\s*/);
     let quoteOk = false;
     if (quoteFn && usesShowAroOverlayOrTriad(quoteFn)) {
       quoteOk = true;
     } else {
       // Fallback: scan windows around quote-repost-dialog for open triad / showAroOverlay
       let from = 0;
-      while (from < quoteSource.length) {
-        const i = quoteSource.indexOf('quote-repost-dialog', from);
+      while (from < viewsClean.length) {
+        const i = viewsClean.indexOf('quote-repost-dialog', from);
         if (i === -1) break;
-        const window = quoteSource.slice(Math.max(0, i - 80), Math.min(quoteSource.length, i + 400));
+        const window = viewsClean.slice(Math.max(0, i - 80), Math.min(viewsClean.length, i + 400));
         if (/\bshowAroOverlay\s*\(/.test(window) || hasOverlayOpenTriad(window)) {
           quoteOk = true;
           break;
@@ -484,8 +483,8 @@ function checkShowAroOverlay() {
     }
   }
 
-  // Ring-create bindings live in views.js.
-  const events = read('page/views.js');
+  // ring-create open path in events.js (bindEvents split across views/events)
+  const events = read('page/events.js');
   if (events) {
     const cleanEv = stripComments(events);
     let ringOk = false;
@@ -511,13 +510,13 @@ function checkShowAroOverlay() {
     }
   }
 
-  // showCreateDialog lives in its dedicated Page module.
-  const api = read('page/createUi.js');
+  // showCreateDialog in api.js
+  const api = read('page/api.js');
   if (api) {
     const apiClean = stripComments(api);
     const createBody = extractFunctionBody(apiClean, /function\s+showCreateDialog\s*\([^)]*\)\s*/);
     if (!createBody) {
-      fail('7-showCreateDialog', 'function showCreateDialog not found in page/createUi.js');
+      fail('7-showCreateDialog', 'function showCreateDialog not found in page/api.js');
     } else if (usesShowAroOverlayOrTriad(createBody)) {
       pass('7-showCreateDialog', 'uses showAroOverlay or full open triad');
     } else {
@@ -685,7 +684,7 @@ function checkPortalOverlayCss() {
 // .history-overlay is position:fixed and will block the list if left open.
 // ---------------------------------------------------------------------------
 function checkBackBtnDismissesLayers() {
-  const events = read('page/views.js');
+  const events = read('page/events.js');
   if (!events) return;
   const clean = stripComments(events);
   // Locate back-btn wiring — either $('back-btn') or getElementById('back-btn')
@@ -694,7 +693,7 @@ function checkBackBtnDismissesLayers() {
       ? clean.search(/\$\(\s*['"]back-btn['"]\s*\)/)
       : clean.search(/getElementById\s*\(\s*['"]back-btn['"]\s*\)/);
   if (backIdx === -1) {
-    fail('9-back-btn', "could not find back-btn reference in page/views.js");
+    fail('9-back-btn', "could not find back-btn reference in page/events.js");
     return;
   }
   // Scan a generous window after the first back-btn hit for the click handler body

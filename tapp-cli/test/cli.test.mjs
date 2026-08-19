@@ -120,9 +120,7 @@ describe('CLI adapter', () => {
     const packed = run(['pack', project, '--json'])
     assert.equal(packed.status, 0, packed.stderr || packed.stdout)
     const archive = JSON.parse(packed.stdout)
-    // manifest + core.js + page/index.js + widget/index.js + styles.css + page.html
-    // + 两个 widget 模板
-    assert.equal(archive.entries, 8)
+    assert.equal(archive.entries, 6)
     assert.match(archive.outputPath, /com\.example\.cli\.tapp$/)
   })
 })

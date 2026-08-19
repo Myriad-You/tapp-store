@@ -1117,8 +1117,8 @@ function renderAttachPreview() {
   if (removeBtn) removeBtn.addEventListener('click', clearPendingAttach);
 }
 
-// ==================== Stickers (inlined; keep before chat.js in the Page entry graph) ====================
-// Was page/stickers.js — store install only downloads files listed by `download.modules`;
+// ==================== Stickers (inlined; keep before chat.js in pageModules) ====================
+// Was page/stickers.js — store install only downloads download.page_modules from index;
 // a separate stickers.js entry breaks install when index lags behind manifest.
 // ==================== Stickers (personal + room shared pack) ====================
 // Entry: #sticker-btn next to attach. Room pack uses federation.addRoomSticker /

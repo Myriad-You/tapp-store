@@ -59,7 +59,7 @@
 | 权限 | 用途 |
 | ---- | ---- |
 | `network:fetch` | 通过 Myriad 声明式 API 请求 CDN 官方接口 |
-| `storage:read` / `storage:write` | 保存当前用户的配置、日志与防重复状态 |
+| `storage` | 保存当前用户的配置、日志与防重复状态 |
 | `ui:confirm` | 全站清理、清空日志和清除密钥前二次确认 |
 | `ui:notification` | 显示成功、警告与错误消息 |
 | `ui:theme` | 适配 Myriad 明暗主题 |

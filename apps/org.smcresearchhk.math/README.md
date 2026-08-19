@@ -32,7 +32,7 @@ org.smcresearchhk.math/
 
 | 权限 | 用途 |
 |------|------|
-| `storage:read` / `storage:write` | 保存函数列表与视图 |
+| `storage` | 保存函数列表与视图 |
 | `ui:theme` | 适配明暗主题 |
 
 无需网络权限。
@@ -40,8 +40,8 @@ org.smcresearchhk.math/
 ## 本地校验与打包
 
 ```bash
-npx --yes --package=@myriad-you/tapp-cli@0.1.0 myriad-tapp check ./org.smcresearchhk.math --json
-npx --yes --package=@myriad-you/tapp-cli@0.1.0 myriad-tapp pack ./org.smcresearchhk.math --json
+npx --yes --package=@myriad/tapp-cli@0.1.0 myriad-tapp check ./org.smcresearchhk.math --json
+npx --yes --package=@myriad/tapp-cli@0.1.0 myriad-tapp pack ./org.smcresearchhk.math --json
 ```
 
 ## 表达式说明

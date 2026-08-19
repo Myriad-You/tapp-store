@@ -1503,8 +1503,7 @@ function openTappDetail(tappId, card) {
 function renderTappDetailView(body, tappId, name, desc, remoteVer, installed, localVer, needsUpdate, installPackage, installOmitted, storeSource) {
   var statusText = installed ? (needsUpdate ? lang.tappUpdateAvail : lang.tappInstalled) : lang.tappNotInstalled;
   var statusClass = installed ? (needsUpdate ? 'sheet-status-warn' : 'sheet-status-ok') : 'sheet-status-off';
-  var hasDirectPkg = !!(installPackage && installPackage.manifest
-    && installPackage.modules && Object.keys(installPackage.modules).length);
+  var hasDirectPkg = !!(installPackage && installPackage.manifest && installPackage.code);
   var hasStoreSource = isValidStoreSourceRef(storeSource);
 
   var html = '<div class="sheet-pad">';
@@ -1569,15 +1568,14 @@ function renderTappDetailView(body, tappId, name, desc, remoteVer, installed, lo
         installReq = {
           source: 'direct',
           manifest: installPackage.manifest,
-          modules: installPackage.modules,
-          coreStyles: installPackage.coreStyles,
-          pageStyles: installPackage.pageStyles,
-          widgetStyles: installPackage.widgetStyles,
+          code: installPackage.code,
+          styles: installPackage.styles,
           pageTemplate: installPackage.pageTemplate,
           widgetTemplates: installPackage.widgetTemplates,
           widgetCss: installPackage.widgetCss,
           pageCss: installPackage.pageCss,
           i18n: installPackage.i18n,
+          pageModules: installPackage.pageModules,
           assets: installPackage.assets,
           permissions: installPackage.permissions
         };

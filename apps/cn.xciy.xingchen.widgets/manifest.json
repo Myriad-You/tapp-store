@@ -1,7 +1,7 @@
 {
   "id": "cn.xciy.xingchen.widgets",
   "name": "星辰小组件",
-  "version": "0.9.2",
+  "version": "0.9.1",
   "minSystemVersion": "0.3.23",
   "description": "GitHub 数据卡片、照片墙、纪念日、世界时钟、系统访客统计与个人信息小组件合集。",
   "locales": {
@@ -11,6 +11,7 @@
     }
   },
   "category": "utility",
+  "main": "main.js",
   "author": {
     "name": "StarChen",
     "url": "https://github.com/Pstarchen"
@@ -24,6 +25,8 @@
   ],
   "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M12 2.5l2.2 5.1 5.5.5-4.2 3.7 1.3 5.4L12 14.4 7.2 17.2l1.3-5.4-4.2-3.7 5.5-.5L12 2.5z' stroke='currentColor' stroke-width='1.7' stroke-linejoin='round'/><path d='M18.5 16.5l.7 1.6 1.8.2-1.4 1.2.4 1.7-1.5-.9-1.5.9.4-1.7-1.4-1.2 1.8-.2.7-1.6z' fill='currentColor'/></svg>",
   "themeColor": "#7C3AED",
+  "styles": "styles.css",
+  "cssMode": "unified",
   "widgets": [
     {
       "id": "github-stats-card",
@@ -62,26 +65,11 @@
           "type": "select",
           "defaultValue": "stats",
           "options": [
-            {
-              "value": "stats",
-              "label": "GitHub 统计"
-            },
-            {
-              "value": "top-langs",
-              "label": "热门语言"
-            },
-            {
-              "value": "pin",
-              "label": "仓库卡片"
-            },
-            {
-              "value": "gist",
-              "label": "Gist 卡片"
-            },
-            {
-              "value": "wakatime",
-              "label": "WakaTime"
-            }
+            { "value": "stats", "label": "GitHub 统计" },
+            { "value": "top-langs", "label": "热门语言" },
+            { "value": "pin", "label": "仓库卡片" },
+            { "value": "gist", "label": "Gist 卡片" },
+            { "value": "wakatime", "label": "WakaTime" }
           ]
         },
         {
@@ -115,46 +103,16 @@
           "description": "自动模式会结合容器背景：透明时跟随宿主深浅色，实色时使用对应的亮色或深色卡片。",
           "defaultValue": "auto",
           "options": [
-            {
-              "value": "auto",
-              "label": "跟随容器背景（自动）"
-            },
-            {
-              "value": "transparent",
-              "label": "透明"
-            },
-            {
-              "value": "default",
-              "label": "默认亮色"
-            },
-            {
-              "value": "dark",
-              "label": "深色"
-            },
-            {
-              "value": "radical",
-              "label": "Radical"
-            },
-            {
-              "value": "tokyonight",
-              "label": "Tokyo Night"
-            },
-            {
-              "value": "gruvbox",
-              "label": "Gruvbox"
-            },
-            {
-              "value": "dracula",
-              "label": "Dracula"
-            },
-            {
-              "value": "onedark",
-              "label": "One Dark"
-            },
-            {
-              "value": "synthwave",
-              "label": "Synthwave"
-            }
+            { "value": "auto", "label": "跟随容器背景（自动）" },
+            { "value": "transparent", "label": "透明" },
+            { "value": "default", "label": "默认亮色" },
+            { "value": "dark", "label": "深色" },
+            { "value": "radical", "label": "Radical" },
+            { "value": "tokyonight", "label": "Tokyo Night" },
+            { "value": "gruvbox", "label": "Gruvbox" },
+            { "value": "dracula", "label": "Dracula" },
+            { "value": "onedark", "label": "One Dark" },
+            { "value": "synthwave", "label": "Synthwave" }
           ]
         },
         {
@@ -163,26 +121,11 @@
           "type": "select",
           "defaultValue": "cn",
           "options": [
-            {
-              "value": "cn",
-              "label": "简体中文"
-            },
-            {
-              "value": "zh-tw",
-              "label": "繁体中文"
-            },
-            {
-              "value": "en",
-              "label": "English"
-            },
-            {
-              "value": "ja",
-              "label": "日本語"
-            },
-            {
-              "value": "kr",
-              "label": "한국어"
-            }
+            { "value": "cn", "label": "简体中文" },
+            { "value": "zh-tw", "label": "繁体中文" },
+            { "value": "en", "label": "English" },
+            { "value": "ja", "label": "日本語" },
+            { "value": "kr", "label": "한국어" }
           ]
         },
         {
@@ -219,22 +162,10 @@
           "description": "透明模式不绘制整卡底色；也可以跟随深浅色或固定为白色、黑色。",
           "defaultValue": "transparent",
           "options": [
-            {
-              "value": "transparent",
-              "label": "透明（默认）"
-            },
-            {
-              "value": "auto",
-              "label": "跟随深浅色"
-            },
-            {
-              "value": "light",
-              "label": "白色"
-            },
-            {
-              "value": "dark",
-              "label": "黑色"
-            }
+            { "value": "transparent", "label": "透明（默认）" },
+            { "value": "auto", "label": "跟随深浅色" },
+            { "value": "light", "label": "白色" },
+            { "value": "dark", "label": "黑色" }
           ]
         },
         {
@@ -251,22 +182,10 @@
           "description": "仅 GitHub 统计卡片使用。",
           "defaultValue": "github",
           "options": [
-            {
-              "value": "default",
-              "label": "默认圆环"
-            },
-            {
-              "value": "github",
-              "label": "GitHub 图标"
-            },
-            {
-              "value": "percentile",
-              "label": "百分位"
-            },
-            {
-              "value": "hidden",
-              "label": "隐藏排名"
-            }
+            { "value": "default", "label": "默认圆环" },
+            { "value": "github", "label": "GitHub 图标" },
+            { "value": "percentile", "label": "百分位" },
+            { "value": "hidden", "label": "隐藏排名" }
           ]
         },
         {
@@ -282,14 +201,8 @@
           "type": "select",
           "defaultValue": "short",
           "options": [
-            {
-              "value": "short",
-              "label": "简写（6.6k）"
-            },
-            {
-              "value": "long",
-              "label": "完整（6626）"
-            }
+            { "value": "short", "label": "简写（6.6k）" },
+            { "value": "long", "label": "完整（6626）" }
           ]
         },
         {
@@ -299,26 +212,11 @@
           "description": "仅热门语言卡片使用。",
           "defaultValue": "compact",
           "options": [
-            {
-              "value": "normal",
-              "label": "标准"
-            },
-            {
-              "value": "compact",
-              "label": "紧凑"
-            },
-            {
-              "value": "donut",
-              "label": "圆环"
-            },
-            {
-              "value": "donut-vertical",
-              "label": "竖向圆环"
-            },
-            {
-              "value": "pie",
-              "label": "饼图"
-            }
+            { "value": "normal", "label": "标准" },
+            { "value": "compact", "label": "紧凑" },
+            { "value": "donut", "label": "圆环" },
+            { "value": "donut-vertical", "label": "竖向圆环" },
+            { "value": "pie", "label": "饼图" }
           ]
         },
         {
@@ -426,14 +324,8 @@
           "description": "访问量为累计 PV；独立访客为累计 UV，但受系统访客保留期限制。",
           "defaultValue": "views",
           "options": [
-            {
-              "value": "views",
-              "label": "累计访问量（PV）"
-            },
-            {
-              "value": "unique_visitors",
-              "label": "累计独立访客（UV）"
-            }
+            { "value": "views", "label": "累计访问量（PV）" },
+            { "value": "unique_visitors", "label": "累计独立访客（UV）" }
           ]
         },
         {
@@ -449,18 +341,9 @@
           "type": "select",
           "defaultValue": "en-US",
           "options": [
-            {
-              "value": "en-US",
-              "label": "95,283"
-            },
-            {
-              "value": "zh-CN",
-              "label": "95,283（中文）"
-            },
-            {
-              "value": "de-DE",
-              "label": "95.283"
-            }
+            { "value": "en-US", "label": "95,283" },
+            { "value": "zh-CN", "label": "95,283（中文）" },
+            { "value": "de-DE", "label": "95.283" }
           ]
         },
         {
@@ -536,18 +419,9 @@
           "description": "自动拼贴会突出首张照片；图片不足时自动切换为均衡排列。",
           "defaultValue": "auto",
           "options": [
-            {
-              "value": "auto",
-              "label": "自动拼贴"
-            },
-            {
-              "value": "mosaic",
-              "label": "主图拼贴"
-            },
-            {
-              "value": "grid",
-              "label": "均衡排列"
-            }
+            { "value": "auto", "label": "自动拼贴" },
+            { "value": "mosaic", "label": "主图拼贴" },
+            { "value": "grid", "label": "均衡排列" }
           ]
         },
         {
@@ -556,26 +430,11 @@
           "type": "select",
           "defaultValue": "center",
           "options": [
-            {
-              "value": "center",
-              "label": "居中"
-            },
-            {
-              "value": "top",
-              "label": "偏上"
-            },
-            {
-              "value": "bottom",
-              "label": "偏下"
-            },
-            {
-              "value": "left",
-              "label": "偏左"
-            },
-            {
-              "value": "right",
-              "label": "偏右"
-            }
+            { "value": "center", "label": "居中" },
+            { "value": "top", "label": "偏上" },
+            { "value": "bottom", "label": "偏下" },
+            { "value": "left", "label": "偏左" },
+            { "value": "right", "label": "偏右" }
           ]
         },
         {
@@ -662,18 +521,9 @@
           "type": "select",
           "defaultValue": "auto",
           "options": [
-            {
-              "value": "auto",
-              "label": "自动判断"
-            },
-            {
-              "value": "countdown",
-              "label": "倒数目标日"
-            },
-            {
-              "value": "countup",
-              "label": "累计经过天数"
-            }
+            { "value": "auto", "label": "自动判断" },
+            { "value": "countdown", "label": "倒数目标日" },
+            { "value": "countup", "label": "累计经过天数" }
           ]
         },
         {
@@ -689,22 +539,10 @@
           "type": "select",
           "defaultValue": "starlight",
           "options": [
-            {
-              "value": "starlight",
-              "label": "星轨"
-            },
-            {
-              "value": "letter",
-              "label": "信笺"
-            },
-            {
-              "value": "glass",
-              "label": "玻璃相册"
-            },
-            {
-              "value": "minimal",
-              "label": "极简色块"
-            }
+            { "value": "starlight", "label": "星轨" },
+            { "value": "letter", "label": "信笺" },
+            { "value": "glass", "label": "玻璃相册" },
+            { "value": "minimal", "label": "极简色块" }
           ]
         },
         {
@@ -713,18 +551,9 @@
           "type": "select",
           "defaultValue": "left",
           "options": [
-            {
-              "value": "left",
-              "label": "左对齐"
-            },
-            {
-              "value": "center",
-              "label": "居中"
-            },
-            {
-              "value": "right",
-              "label": "右对齐"
-            }
+            { "value": "left", "label": "左对齐" },
+            { "value": "center", "label": "居中" },
+            { "value": "right", "label": "右对齐" }
           ]
         },
         {
@@ -762,18 +591,9 @@
           "type": "select",
           "defaultValue": "dot",
           "options": [
-            {
-              "value": "dot",
-              "label": "2026.12.31"
-            },
-            {
-              "value": "cn",
-              "label": "2026年12月31日"
-            },
-            {
-              "value": "slash",
-              "label": "2026/12/31"
-            }
+            { "value": "dot", "label": "2026.12.31" },
+            { "value": "cn", "label": "2026年12月31日" },
+            { "value": "slash", "label": "2026/12/31" }
           ]
         },
         {
@@ -898,14 +718,8 @@
           "type": "select",
           "defaultValue": "24",
           "options": [
-            {
-              "value": "24",
-              "label": "24 小时制"
-            },
-            {
-              "value": "12",
-              "label": "12 小时制"
-            }
+            { "value": "24", "label": "24 小时制" },
+            { "value": "12", "label": "12 小时制" }
           ]
         },
         {
@@ -969,38 +783,14 @@
           "description": "自动使用对应平台的默认标题、图标和品牌色。",
           "defaultValue": "email",
           "options": [
-            {
-              "value": "email",
-              "label": "邮箱"
-            },
-            {
-              "value": "qq",
-              "label": "QQ"
-            },
-            {
-              "value": "wechat",
-              "label": "微信"
-            },
-            {
-              "value": "telegram",
-              "label": "Telegram"
-            },
-            {
-              "value": "github",
-              "label": "GitHub"
-            },
-            {
-              "value": "gitee",
-              "label": "Gitee"
-            },
-            {
-              "value": "bilibili",
-              "label": "哔哩哔哩"
-            },
-            {
-              "value": "custom",
-              "label": "自定义"
-            }
+            { "value": "email", "label": "邮箱" },
+            { "value": "qq", "label": "QQ" },
+            { "value": "wechat", "label": "微信" },
+            { "value": "telegram", "label": "Telegram" },
+            { "value": "github", "label": "GitHub" },
+            { "value": "gitee", "label": "Gitee" },
+            { "value": "bilibili", "label": "哔哩哔哩" },
+            { "value": "custom", "label": "自定义" }
           ]
         },
         {
@@ -1097,9 +887,5 @@
         }
       ]
     }
-  ],
-  "core": {
-    "entry": "main.js",
-    "styles": "styles.css"
-  }
+  ]
 }

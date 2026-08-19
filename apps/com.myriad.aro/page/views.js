@@ -2048,7 +2048,7 @@ function renderFeedContent() {
   bindFeedContentActions(content);
 }
 
-// Feed card HTML lives in page/feedUi.js (Page entry graph).
+// feed card HTML lives in page/feedUi.js (pageModules)
 
 function switchFeedSubTab(sub) {
   // Reset window when changing tabs so we don't inherit a huge visible count

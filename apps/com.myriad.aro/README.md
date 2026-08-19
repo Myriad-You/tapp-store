@@ -2,7 +2,7 @@
 
 社交中心：消息（Channel/Room）、时间线、环网与个人资料。
 
-> 官方社交 Tapp（version 1.0.59）。设置页含出站投递队列与联邦签名密钥轮换（需宿主 `federation.rotateKeys`）。
+> 官方社交 Tapp（version 1.0.39）。设置页含出站投递队列与联邦签名密钥轮换（需宿主 `federation.rotateKeys`）。
 
 ## 功能
 
@@ -15,7 +15,7 @@
 
 ## 权限
 
-`storage:read|write`, `ui:notification`, `ui:theme`,
+`storage`, `ui:notification`, `ui:theme`,
 `federation:read|write|message|files`,
 `platform:read`, `report:read`, `tappList:read|manage`, `brew:read`,
 `media:control|read`, `network:fetch`
@@ -27,7 +27,7 @@
 
 社交中心：消息（Channel/Room）、时间线、环网与个人资料。
 
-> 官方社交 Tapp（version 1.0.59）。设置页含出站投递队列与联邦签名密钥轮换（需宿主 `federation.rotateKeys`）。
+> 官方社交 Tapp（version 1.0.39）。设置页含出站投递队列与联邦签名密钥轮换（需宿主 `federation.rotateKeys`）。
 
 ## 功能
 
@@ -40,7 +40,7 @@
 
 ## 权限
 
-`storage:read|write`, `ui:notification`, `ui:theme`,
+`storage`, `ui:notification`, `ui:theme`,
 `federation:read|write|message|files`,
 `platform:read`, `report:read`, `tappList:read|manage`, `brew:read`,
 `media:control|read`, `network:fetch`
@@ -88,7 +88,7 @@
 
 ### 1.0.31
 
-- Fix store install 400 missing `page/stickers.js`: sticker UI lives in `attachments.js` (always in `download.modules`); drop the separate Page module.
+- Fix store install 400 missing `page/stickers.js`: sticker UI lives in `attachments.js` (always in download.page_modules); drop separate pageModule.
 
 ### 1.0.30
 
@@ -118,7 +118,7 @@
 ### 1.0.11
 
 - Security/architecture follow-up: thin `index.js` (headless notifications only); `page/*` is sole UI source
-- Page files parse independently (`bindEvents` in views, `init` in page/index)
+- pageModules files parse independently (`bindEvents` in views, `init` in page/index)
 - History/files async guards; import size/schema caps; disposable listener bag; local-only DM privacy wording
 
 
@@ -160,9 +160,9 @@ If `composeExternalShare` is missing, Aro falls back to a local `https://x.com/i
 ```
 index.js          # core（background + 内嵌 i18n 回退）
 page.html / page.css / styles.css
-page/*.js         # Page entry 依赖图（UI 真源）
+page/*.js         # pageModules（UI 真源）
 i18n/{zh,en,ja}.json
-manifest.json     # version 1.0.59
+manifest.json     # version 1.0.39
 ```
 ### 1.0.38
 
@@ -198,7 +198,7 @@ manifest.json     # version 1.0.59
 
 ### 1.0.31
 
-- Fix store install 400 missing `page/stickers.js`: sticker UI lives in `attachments.js` (always in `download.modules`); drop the separate Page module.
+- Fix store install 400 missing `page/stickers.js`: sticker UI lives in `attachments.js` (always in download.page_modules); drop separate pageModule.
 
 ### 1.0.30
 
@@ -228,7 +228,7 @@ manifest.json     # version 1.0.59
 ### 1.0.11
 
 - Security/architecture follow-up: thin `index.js` (headless notifications only); `page/*` is sole UI source
-- Page files parse independently (`bindEvents` in views, `init` in page/index)
+- pageModules files parse independently (`bindEvents` in views, `init` in page/index)
 - History/files async guards; import size/schema caps; disposable listener bag; local-only DM privacy wording
 
 
@@ -270,7 +270,7 @@ If `composeExternalShare` is missing, Aro falls back to a local `https://x.com/i
 ```
 index.js          # core（background + 内嵌 i18n 回退）
 page.html / page.css / styles.css
-page/*.js         # Page entry 依赖图（UI 真源）
+page/*.js         # pageModules（UI 真源）
 i18n/{zh,en,ja}.json
-manifest.json     # version 1.0.59
+manifest.json     # version 1.0.39
 ```
