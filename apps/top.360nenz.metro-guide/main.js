@@ -23,6 +23,43 @@ var METRO_V2_CITIES = ['beijing','shanghai','hongkong','taipei'];
 function data() { return METRO_DATA[metroState.city] || { name:cityMeta(metroState.city).name, source:'等待从 MetroMan 下载', version:'', lines:[] }; }
 function cityMeta(id) { return METRO_CITIES.find(function(city) { return city.id === id; }) || { id:id, name:id }; }
 function apiData(value) { return value && value.success === true && Object.prototype.hasOwnProperty.call(value, 'data') ? value.data : value; }
+var METRO_API_TIMEOUT = 12000;
+function withTimeout(task, label, timeout) {
+  return new Promise(function(resolve, reject) {
+    var settled = false;
+    var timer = setTimeout(function() {
+      if (settled) return;
+      settled = true;
+      reject(new Error(label + ' 请求超时'));
+    }, timeout || METRO_API_TIMEOUT);
+    Promise.resolve().then(task).then(function(value) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(value);
+    }, function(error) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      reject(error);
+    });
+  });
+}
+function metroApi(name, params) {
+  return withTimeout(function() {
+    if (typeof Tapp === 'undefined' || typeof Tapp.api !== 'function') throw new Error('当前宿主不支持声明式网络 API');
+    var value = params || {};
+    switch (name) {
+      case 'metroVersionManifest': return Tapp.api('metroVersionManifest', value);
+      case 'metroPlannerPage': return Tapp.api('metroPlannerPage', value);
+      case 'metroPlannerV2Page': return Tapp.api('metroPlannerV2Page', value);
+      case 'metroPlannerV2Result': return Tapp.api('metroPlannerV2Result', value);
+      case 'metroPlannerResult': return Tapp.api('metroPlannerResult', value);
+      case 'metroMapPage': return Tapp.api('metroMapPage', value);
+      default: throw new Error('未声明的 MetroMan API: ' + name);
+    }
+  }, 'MetroMan ' + name);
+}
 function notify(message, type) { try { Tapp.ui.showNotification({ title:type === 'error' ? '操作失败' : '地铁通', message:message, type:type || 'success', duration:2800 }); } catch (_) {} }
 function readableError(error) {
   var message = error && error.message ? error.message : String(error || '未知错误');
@@ -39,17 +76,10 @@ function setNetworkStatus(kind, message, detail) {
   status.title = detail || message;
 }
 async function verifyNetworkApis() {
-  if (!Tapp || typeof Tapp.api !== 'function') throw new Error('当前宿主不支持声明式网络 API');
+  if (typeof Tapp === 'undefined' || typeof Tapp.api !== 'function') throw new Error('当前宿主不支持声明式网络 API');
   if (Array.isArray(Tapp.permissions) && Tapp.permissions.indexOf('network:fetch') < 0) throw new Error('network:fetch permission is not granted');
-  if (typeof Tapp.api.list !== 'function') return;
-  var declared = apiData(await Tapp.api.list());
-  var collection = declared && declared.apis !== undefined ? declared.apis : declared;
-  var names = Array.isArray(collection)
-    ? collection.map(function(item) { return typeof item === 'string' ? item : item && (item.name || item.id); })
-    : Object.keys(collection || {});
-  var required = ['metroVersionManifest','metroPlannerPage','metroPlannerResult','metroPlannerV2Page','metroPlannerV2Result','metroMapPage'];
-  var missing = required.filter(function(name) { return names.indexOf(name) < 0; });
-  if (missing.length) throw new Error('undeclared APIs: ' + missing.join(', '));
+  // Manifest 已声明完整的 MetroMan API。部分 0.3.x 宿主虽暴露 api.list，
+  // 但列表桥接不会返回；不能把它作为实际请求的前置条件。
 }
 function validCity(value) { return value && typeof value.name === 'string' && Array.isArray(value.lines) && value.lines.length > 0 && value.lines.some(function(line) { return Array.isArray(line.stations) && line.stations.length > 1; }) && value.lines.every(function(line) { return typeof line.id === 'string' && /^#[0-9a-f]{6}$/i.test(line.color) && Array.isArray(line.stations) && line.stations.every(function(station) { return typeof station === 'string' && station.length > 0; }); }); }
 function allStations() { var seen = {}; return data().lines.flatMap(function(line) { return line.stations; }).filter(function(name) { if (seen[name]) return false; seen[name] = true; return true; }); }
@@ -91,7 +121,7 @@ function plannerContext() { var modes = { depart:'出发', arrive:'到达', firs
 function parseOfficialPlan(html) { if (typeof DOMParser === 'undefined') return null; var doc = new DOMParser().parseFromString(String(html || ''), 'text/html'); var card = doc.querySelector('.planner-v2-result-card'); if (!card) return null; var text = function(selector, root) { var node = (root || card).querySelector(selector); return node ? node.textContent.trim().replace(/\s+/g, ' ') : ''; }; var meta = Array.from(card.querySelectorAll('.planner-v2-result-card__summary-meta span')).map(function(node) { return node.textContent.trim(); }).filter(function(value) { return value && value !== '·'; }); var rides = Array.from(card.querySelectorAll('.planner-v2-result-card__ride')).map(function(ride) { var style = ride.getAttribute('style') || ''; var color = (style.match(/#[0-9a-f]{6}/i) || ['#0F766E'])[0]; var stations = Array.from(ride.querySelectorAll('.planner-v2-result-card__station-name')).map(function(node) { return node.textContent.trim(); }); return { from:stations[0] || '', to:stations[stations.length - 1] || '', line:text('.planner-v2-result-card__line-name', ride), stops:text('.planner-v2-result-card__line-stops', ride), direction:text('.planner-v2-result-card__line-direction', ride), detail:text('.planner-v2-result-card__line-meta', ride), start:text('.planner-v2-result-card__station--board .planner-v2-result-card__time', ride), end:text('.planner-v2-result-card__station--alight .planner-v2-result-card__time', ride), color:color }; }).filter(function(ride) { return ride.from && ride.to && ride.line; }); return rides.length ? { time:text('.planner-v2-result-card__summary-time-main'), duration:text('.planner-v2-result-card__summary-duration'), meta:meta, rides:rides } : null; }
 function renderOfficialPlan(plan, from, to) { showRouteSurface(); clearRouteMeta(); document.querySelector('[data-result-source]').textContent = 'MetroMan 新版方案'; document.querySelector('[data-route-title]').textContent = from + ' → ' + to; document.querySelector('[data-result-context]').textContent = plannerContext(); document.querySelector('[data-time]').textContent = plan.time; document.querySelector('[data-duration]').textContent = plan.duration; document.querySelector('[data-stops]').textContent = plan.rides.reduce(function(total, ride) { return total + (Number((ride.stops.match(/\d+/) || [0])[0]) || 0); }, 0) + ' 站'; document.querySelector('[data-route] [data-fare]').textContent = plan.meta.find(function(item) { return item.indexOf('票价') === 0; }) || ''; document.querySelector('[data-distance]').textContent = plan.meta.find(function(item) { return /公里/.test(item); }) || ''; var transfer = plan.meta.find(function(item) { return item.indexOf('换乘') === 0; }) || (plan.rides.length > 1 ? '换乘 ' + (plan.rides.length - 1) + ' 次' : '无需换乘'); document.querySelector('[data-transfers]').textContent = transfer; var steps = document.querySelector('[data-steps]'); steps.replaceChildren(); plan.rides.forEach(function(ride, index) { appendRouteStep(steps, ride.from, (ride.start ? ride.start + ' · ' : '') + '乘坐 ' + ride.line + (ride.direction ? ' · ' + ride.direction : ''), lineTagName({ id:ride.line }), ride.color); appendRouteStep(steps, ride.to, (ride.end ? ride.end + ' · ' : '') + (index === plan.rides.length - 1 ? '到达目的地' : '站内换乘') + (ride.detail ? ' · ' + ride.detail : ''), null, ride.color); }); }
 function showRouteError(message) { document.querySelector('[data-route]').hidden = true; document.querySelector('[data-empty]').hidden = true; document.querySelector('[data-error]').hidden = false; document.querySelector('[data-error-text]').textContent = message; }
-async function search() { var from = document.querySelector('[data-from]').value.trim(); var to = document.querySelector('[data-to]').value.trim(); var route = findRoute(from, to); if (!route) { showRouteError('请从当前城市的站点列表中选择有效站点。'); return; } var button = document.querySelector('[data-action="search"]'); button.disabled = true; button.textContent = '正在查询…'; try { var slugs = data().stationSlugs || {}; if (METRO_V2_CITIES.indexOf(metroState.city) >= 0 && slugs[from] && slugs[to]) { var result = await Tapp.api('metroPlannerV2Result', { city:metroState.city, route:slugs[from] + '-to-' + slugs[to], mode:metroState.mode, datetime:formatPlannerDatetime(), preference:metroState.preference, fare:metroState.fare }); var value = apiData(result); var html = typeof value === 'string' ? value : value && (value.body || value.text || value.data); var plan = parseOfficialPlan(html); if (plan) { renderOfficialPlan(plan, from, to); return; } } renderRoute(route, from, to); } catch (_) { renderRoute(route, from, to); notify('MetroMan 新版结果暂不可用，已显示本地少换乘方案。', 'warning'); } finally { button.disabled = false; button.innerHTML = '<span aria-hidden="true">⌕</span>查询路线'; } }
+async function search() { var from = document.querySelector('[data-from]').value.trim(); var to = document.querySelector('[data-to]').value.trim(); var route = findRoute(from, to); if (!route) { showRouteError('请从当前城市的站点列表中选择有效站点。'); return; } var button = document.querySelector('[data-action="search"]'); button.disabled = true; button.textContent = '正在查询…'; try { var slugs = data().stationSlugs || {}; if (METRO_V2_CITIES.indexOf(metroState.city) >= 0 && slugs[from] && slugs[to]) { var result = await metroApi('metroPlannerV2Result', { city:metroState.city, route:slugs[from] + '-to-' + slugs[to], mode:metroState.mode, datetime:formatPlannerDatetime(), preference:metroState.preference, fare:metroState.fare }); var value = apiData(result); var html = typeof value === 'string' ? value : value && (value.body || value.text || value.data); var plan = parseOfficialPlan(html); if (plan) { renderOfficialPlan(plan, from, to); return; } } renderRoute(route, from, to); } catch (_) { renderRoute(route, from, to); notify('MetroMan 新版结果暂不可用，已显示本地少换乘方案。', 'warning'); } finally { button.disabled = false; button.innerHTML = '<span aria-hidden="true">⌕</span>查询路线'; } }
 
 function setView(view) { document.querySelectorAll('[data-view-panel]').forEach(function(panel) { panel.hidden = panel.dataset.viewPanel !== view; }); document.querySelectorAll('[data-view]').forEach(function(button) { var active = button.dataset.view === view; button.classList.toggle('is-active', active); button.setAttribute('aria-selected', String(active)); }); }
 function clampPan() { var viewport = document.querySelector('[data-map-viewport]'); var image = document.querySelector('[data-map-image]'); if (!viewport || !image) return; var scale = metroState.zoom / 100; var boundX = Math.max(0, (image.clientWidth * scale - viewport.clientWidth) / 2); var boundY = Math.max(0, (image.clientHeight * scale - viewport.clientHeight) / 2); metroState.panX = Math.min(boundX, Math.max(-boundX, metroState.panX)); metroState.panY = Math.min(boundY, Math.max(-boundY, metroState.panY)); }
@@ -129,8 +159,8 @@ async function updateOnline(silent, requestedCity, requestToken) {
   if (isCurrent()) setNetworkStatus('checking', '正在连接 MetroMan', cityMeta(cityId).name + '资源检查中');
   try {
     await verifyNetworkApis();
-    var tasks = [Tapp.api('metroVersionManifest', {}), Tapp.api('metroPlannerPage', { city:cityId }), Tapp.api('metroMapPage', { city:cityId })];
-    if (METRO_V2_CITIES.indexOf(cityId) >= 0) tasks.push(Tapp.api('metroPlannerV2Page', { city:cityId }));
+    var tasks = [metroApi('metroVersionManifest'), metroApi('metroPlannerPage', { city:cityId }), metroApi('metroMapPage', { city:cityId })];
+    if (METRO_V2_CITIES.indexOf(cityId) >= 0) tasks.push(metroApi('metroPlannerV2Page', { city:cityId }));
     var responses = await Promise.allSettled(tasks);
     var fulfilled = responses.filter(function(response) { return response.status === 'fulfilled'; }).length;
     if (!fulfilled) throw responses[1] && responses[1].reason || responses[0] && responses[0].reason || new Error('MetroMan 请求全部失败');
@@ -352,7 +382,7 @@ async function search() {
     if (fromSlug && toSlug) {
       var isV2 = METRO_V2_CITIES.indexOf(metroState.city) >= 0;
       var params = { city:metroState.city, route:fromSlug + '-to-' + toSlug, mode:metroState.mode, datetime:formatPlannerDatetime(), preference:metroState.preference, fare:metroState.fare };
-      var result = isV2 ? await Tapp.api('metroPlannerV2Result', params) : await Tapp.api('metroPlannerResult', params);
+      var result = isV2 ? await metroApi('metroPlannerV2Result', params) : await metroApi('metroPlannerResult', params);
       var html = responseHtml(result);
       var plan = isV2 ? parseOfficialPlan(html) : parseLegacyPlan(html);
       if (plan) { plan.isV2 = isV2; renderOfficialPlan(plan, from, to); return; }

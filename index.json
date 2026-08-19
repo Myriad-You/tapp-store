@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.35",
+  "version": "1.0.37",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-08-19T14:16:40.101Z",
+  "updated_at": "2026-08-19T14:32:20.368Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -1617,7 +1617,7 @@
     {
       "id": "top.360nenz.metro-guide",
       "name": "地铁通",
-      "version": "1.3.1",
+      "version": "1.3.2",
       "description": "按城市查询地铁线路、站点与少换乘出行方案。",
       "long_description": "地铁通提供中文路线规划、站点线路筛选与高清线路图。应用覆盖 MetroMan 55 城市目录，优先使用缓存和离线资源；新版及旧版规划均可展示车辆起止时间、用时、票价、方向与里程，行程轴支持精简站数与完整站点切换。收藏路线页可按城市筛选、一键查询、反向和删除。线路图支持滚轮缩放和拖动，上海另含 APP PDF。联网时直接从 MetroMan 检查更新，并明确显示连接或权限错误。",
       "author": {
@@ -1673,13 +1673,13 @@
         "page_styles": "apps/top.360nenz.metro-guide/page.css",
         "page_template": "apps/top.360nenz.metro-guide/page.html"
       },
-      "size": 1254047,
+      "size": 1255182,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-19T11:29:17.000Z",
-      "updated_at": "2026-08-19T14:16:40.099Z"
+      "updated_at": "2026-08-19T14:31:00.652Z"
     }
   ],
   "last_updated": "2026-08-04T09:47:35Z"
