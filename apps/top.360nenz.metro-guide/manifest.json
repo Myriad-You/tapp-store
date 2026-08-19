@@ -1,0 +1,74 @@
+{
+  "id": "top.360nenz.metro-guide",
+  "name": "地铁通",
+  "version": "1.2.0",
+  "minSystemVersion": "0.3.23",
+  "description": "按城市查询地铁线路、站点与少换乘出行方案。",
+  "category": "utility",
+  "author": { "name": "360NENZ", "url": "https://github.com/360NENZ" },
+  "homepage": "https://myriad.360nenz.top/",
+  "repository": "https://github.com/360NENZ/tapp-store",
+  "permissions": ["storage:read", "storage:write", "ui:notification", "ui:openUrl", "network:fetch"],
+  "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M5 4h14v11a7 7 0 0 1-14 0V4Z' stroke='currentColor' stroke-width='1.8'/><path d='M8 8h8M8 12h8M8 20l-2 2M16 20l2 2' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/><circle cx='9' cy='16' r='1' fill='currentColor'/><circle cx='15' cy='16' r='1' fill='currentColor'/></svg>",
+  "themeColor": "#0F766E",
+  "main": "main.js",
+  "hasPage": true,
+  "cssMode": "separated",
+  "pageStyles": "page.css",
+  "pageTemplate": "page.html",
+  "assets": [
+    "assets/shanghai.json",
+    "assets/routemap-shanghai.png",
+    "assets/routemap-shanghai.pdf"
+  ],
+  "apis": {
+    "metroVersionManifest": {
+      "type": "http",
+      "access": "public",
+      "endpoint": "https://metroman.oss-cn-hangzhou.aliyuncs.com/app/metroman/v26/version.txt",
+      "method": "GET",
+      "cacheTtl": 1800,
+      "description": "读取 MetroMan APP 官方城市包版本清单"
+    },
+    "metroPlannerPage": {
+      "type": "http",
+      "access": "public",
+      "endpoint": "https://www.metroman.cn/planner/{{params.city}}",
+      "method": "GET",
+      "cacheTtl": 1800,
+      "description": "读取 MetroMan 官方换乘页中的有序线路与站点数据"
+    },
+    "metroPlannerV2Page": {
+      "type": "http",
+      "access": "public",
+      "endpoint": "https://www.metroman.cn/planner-v2/{{params.city}}",
+      "method": "GET",
+      "cacheTtl": 1800,
+      "description": "读取 MetroMan 新版换乘页，支持新版城市站点与付款方式"
+    },
+    "metroPlannerV2Result": {
+      "type": "http",
+      "access": "public",
+      "endpoint": "https://www.metroman.cn/planner-v2/{{params.city}}/{{params.route}}?mode={{params.mode}}&datetime={{params.datetime}}&preference={{params.preference}}&fare={{params.fare}}",
+      "method": "GET",
+      "cacheTtl": 60,
+      "description": "读取 MetroMan 新版换乘结果中的时刻、票价与路线详情"
+    },
+    "metroPlannerResult": {
+      "type": "http",
+      "access": "public",
+      "endpoint": "https://www.metroman.cn/planner/{{params.city}}/{{params.route}}?mode={{params.mode}}&datetime={{params.datetime}}",
+      "method": "GET",
+      "cacheTtl": 60,
+      "description": "读取 MetroMan 旧版换乘结果中的票价、时刻与路线详情"
+    },
+    "metroMapPage": {
+      "type": "http",
+      "access": "public",
+      "endpoint": "https://www.metroman.cn/maps/{{params.city}}",
+      "method": "GET",
+      "description": "读取 MetroMan 城市线路图页面，用于检查线上线路图资源"
+    }
+  },
+  "openUrls": [{ "id": "metroman-maps", "url": "https://www.metroman.cn/maps/", "match": "prefix" }]
+}
