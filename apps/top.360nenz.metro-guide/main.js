@@ -31,23 +31,27 @@ function queuedBridge(task, label, timeout) {
   var resolveCaller;
   var rejectCaller;
   var caller = new Promise(function(resolve, reject) { resolveCaller = resolve; rejectCaller = reject; });
+  var settled = false;
+  var expired = false;
+  var timer = setTimeout(function() {
+    if (settled) return;
+    expired = true;
+    settled = true;
+    rejectCaller(new Error(label + ' 请求超时'));
+  }, timeout || METRO_API_TIMEOUT);
   var run = metroBridgeQueue.catch(function() {}).then(function() {
+    // 排队等待期间已经超时的调用不再触碰 Bridge，避免旧请求释放后又制造并发洪峰。
+    if (expired) return;
     var actual = Promise.resolve().then(task);
-    var settled = false;
-    var timer = setTimeout(function() {
-      if (settled) return;
-      settled = true;
-      rejectCaller(new Error(label + ' 请求超时'));
-    }, timeout || METRO_API_TIMEOUT);
     actual.then(function(value) {
-      clearTimeout(timer);
       if (settled) return;
       settled = true;
+      clearTimeout(timer);
       resolveCaller(value);
     }, function(error) {
-      clearTimeout(timer);
       if (settled) return;
       settled = true;
+      clearTimeout(timer);
       rejectCaller(error);
     });
     return actual.catch(function() {});
