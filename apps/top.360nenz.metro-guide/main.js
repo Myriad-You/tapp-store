@@ -42,8 +42,11 @@ async function verifyNetworkApis() {
   if (!Tapp || typeof Tapp.api !== 'function') throw new Error('当前宿主不支持声明式网络 API');
   if (Array.isArray(Tapp.permissions) && Tapp.permissions.indexOf('network:fetch') < 0) throw new Error('network:fetch permission is not granted');
   if (typeof Tapp.api.list !== 'function') return;
-  var declared = await Tapp.api.list();
-  var names = Array.isArray(declared) ? declared.map(function(item) { return typeof item === 'string' ? item : item && (item.name || item.id); }) : Object.keys(declared || {});
+  var declared = apiData(await Tapp.api.list());
+  var collection = declared && declared.apis !== undefined ? declared.apis : declared;
+  var names = Array.isArray(collection)
+    ? collection.map(function(item) { return typeof item === 'string' ? item : item && (item.name || item.id); })
+    : Object.keys(collection || {});
   var required = ['metroVersionManifest','metroPlannerPage','metroPlannerResult','metroPlannerV2Page','metroPlannerV2Result','metroMapPage'];
   var missing = required.filter(function(name) { return names.indexOf(name) < 0; });
   if (missing.length) throw new Error('undeclared APIs: ' + missing.join(', '));
