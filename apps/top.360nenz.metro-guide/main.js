@@ -26,29 +26,37 @@ function apiData(value) { return value && value.success === true && Object.proto
 var METRO_API_TIMEOUT = 12000;
 var METRO_STORAGE_TIMEOUT = 4000;
 var metroBridgeQueue = Promise.resolve();
-function withTimeout(task, label, timeout) {
-  return new Promise(function(resolve, reject) {
+// Bridge 超时只结束调用方等待，不提前释放宿主请求槽；底层请求完成后才允许下一项进入队列。
+function queuedBridge(task, label, timeout) {
+  var resolveCaller;
+  var rejectCaller;
+  var caller = new Promise(function(resolve, reject) { resolveCaller = resolve; rejectCaller = reject; });
+  var run = metroBridgeQueue.catch(function() {}).then(function() {
+    var actual = Promise.resolve().then(task);
     var settled = false;
     var timer = setTimeout(function() {
       if (settled) return;
       settled = true;
-      reject(new Error(label + ' 请求超时'));
+      rejectCaller(new Error(label + ' 请求超时'));
     }, timeout || METRO_API_TIMEOUT);
-    Promise.resolve().then(task).then(function(value) {
+    actual.then(function(value) {
+      clearTimeout(timer);
       if (settled) return;
       settled = true;
-      clearTimeout(timer);
-      resolve(value);
+      resolveCaller(value);
     }, function(error) {
+      clearTimeout(timer);
       if (settled) return;
       settled = true;
-      clearTimeout(timer);
-      reject(error);
+      rejectCaller(error);
     });
+    return actual.catch(function() {});
   });
+  metroBridgeQueue = run.catch(function() {});
+  return caller;
 }
 function metroApi(name, params) {
-  return metroBridgeQueue = metroBridgeQueue.catch(function() {}).then(function() { return withTimeout(function() {
+  return queuedBridge(function() {
     if (typeof Tapp === 'undefined' || typeof Tapp.api !== 'function') throw new Error('当前宿主不支持声明式网络 API');
     var value = params || {};
     switch (name) {
@@ -60,19 +68,19 @@ function metroApi(name, params) {
       case 'metroMapPage': return Tapp.api('metroMapPage', value);
       default: throw new Error('未声明的 MetroMan API: ' + name);
     }
-  }, 'MetroMan ' + name); });
+  }, 'MetroMan ' + name, METRO_API_TIMEOUT);
 }
 function storageGet(key, fallback) {
-  return metroBridgeQueue = metroBridgeQueue.catch(function() {}).then(function() { return withTimeout(function() {
+  return queuedBridge(function() {
     if (typeof Tapp === 'undefined' || !Tapp.storage || typeof Tapp.storage.get !== 'function') return fallback;
     return Tapp.storage.get(key);
-  }, '本地缓存读取', METRO_STORAGE_TIMEOUT).then(function(value) { return value === undefined ? fallback : value; }, function() { return fallback; }); });
+  }, '本地缓存读取', METRO_STORAGE_TIMEOUT).then(function(value) { return value === undefined ? fallback : value; }, function() { return fallback; });
 }
 function storageSet(key, value) {
-  return metroBridgeQueue = metroBridgeQueue.catch(function() {}).then(function() { return withTimeout(function() {
+  return queuedBridge(function() {
     if (typeof Tapp === 'undefined' || !Tapp.storage || typeof Tapp.storage.set !== 'function') return;
     return Tapp.storage.set(key, value);
-  }, '本地缓存写入', METRO_STORAGE_TIMEOUT).catch(function() {}); });
+  }, '本地缓存写入', METRO_STORAGE_TIMEOUT).catch(function() {});
 }
 function notify(message, type) { try { Tapp.ui.showNotification({ title:type === 'error' ? '操作失败' : '地铁通', message:message, type:type || 'success', duration:2800 }); } catch (_) {} }
 function readableError(error) {
