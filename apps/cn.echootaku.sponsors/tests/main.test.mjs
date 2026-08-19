@@ -38,6 +38,11 @@ test('爱发电赞助者转换为统一数据模型', () => {
   assert.equal(recurring.lifetimeMinor, 2500);
   assert.equal(recurring.recurring, true);
   assert.equal(recurring.oneTime, false);
+
+  const unnamed = app.normalizeAfdianSponsor({ user: { user_id: 'supporter-2' } }, 1);
+  assert.equal(unnamed.name, '');
+  app.Tapp.i18n.t = (key) => key === 'unknownSponsor' ? '动态匿名名' : key;
+  assert.equal(app.sponsorDisplayName(unnamed), '动态匿名名');
 });
 
 test('爱发电同步按官方分页结构读取全部页面', async () => {
@@ -225,12 +230,99 @@ test('星图动态内容始终保留可访问标题与说明引用', () => {
   assert.equal(page.includes('data-i18n-aria-label="cosmosCanvasLabel"'), true);
 });
 
-test('发行页面不包含运行时示例入口或数据生成器', () => {
+test('测试星明确隔离且在真实同步前从持久存储清除', async () => {
   const page = fs.readFileSync(path.join(appRoot, 'page.html'), 'utf8');
+  const app = loadApp(async () => ({}));
+  const snapshot = app.createSponsorDemoSnapshot();
+  assert.equal(page.includes('data-action="sample"'), true);
+  assert.equal(snapshot.demo, true);
+  assert.equal(snapshot.supporters.length, 1);
+  assert.equal(snapshot.supporters[0].id.startsWith('demo:'), true);
+  assert.equal(snapshot.supporters[0].source, 'afdian');
+  assert.equal(snapshot.supporters[0].demo, true);
+  assert.equal(snapshot.supporters[0].name, '');
+  assert.equal(snapshot.supporters[0].amountMinor, 500);
+  app.Tapp.i18n.t = (key) => key === 'demoSupporterName' ? 'Locale A' : key;
+  assert.equal(app.sponsorDisplayName(snapshot.supporters[0]), 'Locale A');
+  app.Tapp.i18n.t = (key) => key === 'demoSupporterName' ? 'Locale B' : key;
+  assert.equal(app.sponsorDisplayName(snapshot.supporters[0]), 'Locale B');
+  assert.equal(snapshot.sources.afdian.count, 1);
+
+  const operations = [];
+  app.Tapp.settings = { getAll: async () => ({ showGithub: false, showPatreon: false, showAfdian: false }) };
+  app.Tapp.storage = {
+    remove: async (key) => operations.push(['remove', key]),
+    set: async (key) => operations.push(['set', key]),
+  };
+  app.sponsorsState.snapshot = snapshot;
+  await app.syncSponsors();
+  assert.deepEqual(operations, [
+    ['remove', 'sponsors.snapshot.v1'],
+    ['set', 'sponsors.snapshot.v1'],
+  ]);
+});
+
+test('赞助星图声明三种尺寸并仅以事件驱动刷新', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(appRoot, 'manifest.json'), 'utf8'));
+  const widget = manifest.widgets.find((item) => item.id === 'sponsor-glance');
+  assert.equal(manifest.permissions.includes('widget:register'), true);
+  assert.equal(manifest.widgetStyles, 'widget.css');
+  assert.deepEqual(widget.sizes, ['2x2', '4x2', '4x4']);
+  assert.equal(widget.defaultSize, '4x2');
+  assert.equal(widget.refreshPolicy.mode, 'event');
+  assert.equal(widget.refreshPolicy.refreshOnVisible, true);
+  assert.equal(manifest.assets.includes('assets/observatory-paper.png'), true);
+  for (const template of Object.values(widget.templates)) {
+    assert.equal(fs.existsSync(path.join(appRoot, template)), true);
+    const html = fs.readFileSync(path.join(appRoot, template), 'utf8');
+    assert.equal(html.includes('canvas data-starfield'), true);
+    assert.equal(html.includes('widget-nebula'), false);
+  }
+  const medium = fs.readFileSync(path.join(appRoot, widget.templates['4x2']), 'utf8');
+  const large = fs.readFileSync(path.join(appRoot, widget.templates['4x4']), 'utf8');
+  assert.equal(medium.includes('data-platforms'), false);
+  assert.equal(large.includes('widgetLegend'), false);
+  assert.equal(large.includes('widgetPlatformMix'), false);
+  assert.equal(large.includes('data-platforms'), false);
+});
+
+test('观测日志小组件三份语言保持同键并包含新增文案', () => {
+  const locales = ['zh-CN', 'en-US', 'ja-JP'].map((locale) => JSON.parse(fs.readFileSync(path.join(appRoot, 'i18n', `${locale}.json`), 'utf8')));
+  const expected = Object.keys(locales[0]).sort();
+  for (const table of locales) {
+    assert.deepEqual(Object.keys(table).sort(), expected);
+    for (const key of ['loadSample', 'clearSample', 'demoNotice', 'widgetObservation', 'widgetRepresentative', 'widgetLifetime', 'widgetLegend', 'widgetSupporterTotal', 'widgetPlatformMix', 'widgetEmpty']) {
+      assert.equal(typeof table[key], 'string');
+      assert.equal(table[key].length > 0, true);
+    }
+  }
+});
+
+test('小组件只读快照、服从平台可见性并分币种统计月度支持', () => {
+  const app = loadApp(async () => ({}));
+  const snapshot = {
+    supporters: [
+      { id: 'github:a', source: 'github', name: 'A', recurring: true, amountMinor: 1200, lifetimeMinor: 5000, currency: 'USD' },
+      { id: 'patreon:b', source: 'patreon', name: 'B', recurring: true, amountMinor: 800, lifetimeMinor: 2000, currency: 'USD' },
+      { id: 'afdian:c', source: 'afdian', name: 'C', recurring: true, amountMinor: 500, lifetimeMinor: 2500, currency: 'CNY' },
+    ],
+  };
+  const sources = app.sponsorWidgetVisibleSources({ showGithub: false, showPatreon: true, showAfdian: true });
+  const items = app.sponsorWidgetItems(snapshot, sources);
+  const amount = app.sponsorWidgetMonthlyAmount(items);
+  assert.deepEqual(Array.from(sources), ['patreon', 'afdian']);
+  assert.deepEqual(Array.from(items, (item) => item.source), ['patreon', 'afdian']);
+  assert.equal(amount.split(' · ').length, 2);
+  assert.equal(String(app.renderSponsorWidget).includes('Tapp.api'), false);
+});
+
+test('Page 与 Widget 跟随宿主主题并响应运行时语言切换', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(appRoot, 'manifest.json'), 'utf8'));
   const main = fs.readFileSync(path.join(appRoot, 'main.js'), 'utf8');
-  const catalog = fs.readFileSync(path.join(appRoot, 'catalog.json'), 'utf8');
-  assert.equal(page.includes('data-action="sample"'), false);
-  assert.equal(main.includes('createSponsorDemoSnapshot'), false);
-  assert.equal(main.includes("id: 'demo:"), false);
-  assert.equal(catalog.includes('虚拟示例模式'), false);
+  assert.equal(manifest.permissions.includes('ui:theme'), true);
+  assert.equal(main.includes('Tapp.ui.getTheme()'), true);
+  assert.equal(main.includes('Tapp.ui.onThemeChange'), true);
+  assert.equal(main.includes('Tapp.ui.onLocaleChange'), true);
+  assert.equal(main.includes("document.documentElement.classList.toggle('dark'"), true);
+  assert.equal(main.includes('sponsorWidgetInstances.forEach'), true);
 });

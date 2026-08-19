@@ -1,7 +1,7 @@
 {
   "id": "cn.echootaku.sponsors",
   "name": "赞助者名单",
-  "version": "0.1.13",
+  "version": "0.1.17",
   "minSystemVersion": "0.3.29",
   "description": "聚合多个赞助平台的支持者，在一个私密仪表盘中查看。",
   "locales": {
@@ -26,7 +26,9 @@
     "storage:read",
     "storage:write",
     "network:fetch",
-    "ui:openUrl"
+    "ui:openUrl",
+    "ui:theme",
+    "widget:register"
   ],
   "openUrls": [
     {
@@ -48,8 +50,29 @@
   "cssMode": "separated",
   "pageStyles": "page.css",
   "pageTemplate": "page.html",
+  "widgetStyles": "widget.css",
+  "widgets": [
+    {
+      "id": "sponsor-glance",
+      "name": "赞助观测日志",
+      "description": "以天文观测日志查看赞助者数量、月度支持与代表星体。",
+      "defaultSize": "4x2",
+      "sizes": ["2x2", "4x2", "4x4"],
+      "category": "visualization",
+      "refreshPolicy": {
+        "mode": "event",
+        "refreshOnVisible": true
+      },
+      "templates": {
+        "2x2": "widget-2x2.html",
+        "4x2": "widget-4x2.html",
+        "4x4": "widget-4x4.html"
+      }
+    }
+  ],
   "assets": [
-    "assets/deep-field-observatory.png"
+    "assets/deep-field-observatory.png",
+    "assets/observatory-paper.png"
   ],
   "settings": [
     {

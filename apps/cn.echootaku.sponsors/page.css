@@ -35,6 +35,10 @@ button { color: inherit; }
 .hero h1 { margin: 0; max-width: 760px; font-size: clamp(38px, 7vw, 78px); line-height: .96; letter-spacing: -.055em; }
 .hero-copy { margin: 18px 0 0; max-width: 620px; color: var(--sponsors-muted); font-size: clamp(15px, 2vw, 18px); line-height: 1.65; }
 .hero-actions { display: flex; align-items: center; justify-content: flex-end; gap: 9px; flex-wrap: wrap; }
+.secondary-action { min-height: 46px; padding: 0 16px; border: 1px solid var(--sponsors-border); border-radius: 14px; background: var(--sponsors-surface-strong); color: var(--sponsors-text); font-weight: 750; cursor: pointer; box-shadow: 0 8px 22px rgba(45,31,25,.08); }
+.secondary-action:hover { border-color: rgba(var(--tapp-primary-rgb),.35); color: var(--tapp-primary); }
+.secondary-action:disabled { cursor: wait; opacity: .6; }
+.secondary-action:focus-visible { outline: 2px solid var(--tapp-primary); outline-offset: 3px; }
 .primary-action { min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 0 18px; border: 0; border-radius: 14px; background: var(--tapp-primary); color: white; font-weight: 750; cursor: pointer; box-shadow: 0 12px 28px rgba(var(--tapp-primary-rgb), .26); transition: transform .2s ease, filter .2s ease; }
 .primary-action:hover { transform: translateY(-1px); filter: brightness(1.05); }
 .primary-action:disabled { cursor: wait; opacity: .7; transform: none; }

@@ -15,7 +15,19 @@ function sponsorBoundedText(value, limit) { return Array.from(sponsorText(value)
 function sponsorMinor(value) { var amount = Number(value); return Number.isFinite(amount) ? Math.max(0, Math.min(Number.MAX_SAFE_INTEGER, Math.round(amount))) : 0; }
 function sponsorEscape(value) { return sponsorText(value).replace(/[&<>'"]/g, function (character) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]; }); }
 function sponsorTranslate(key, params) { try { return Tapp.i18n.t(key, params || {}); } catch (error) { return key; } }
-function sponsorDisplayName(item) { return item && item.private ? sponsorTranslate('privateSponsor') : sponsorText(item && item.name || sponsorTranslate('unknownSponsor')); }
+function sponsorLocale() { try { return Tapp.i18n.getLocale() || undefined; } catch (error) { return undefined; } }
+function sponsorDisplayName(item) {
+  if (item && item.demo === true) { return sponsorTranslate('demoSupporterName'); }
+  return item && item.private ? sponsorTranslate('privateSponsor') : sponsorText(item && item.name || sponsorTranslate('unknownSponsor'));
+}
+function sponsorApplyTheme(root, theme) {
+  var normalized = theme === 'dark' ? 'dark' : 'light';
+  if (root) { root.dataset.theme = normalized; }
+  if (typeof document !== 'undefined' && document.documentElement) {
+    document.documentElement.dataset.tappTheme = normalized;
+    document.documentElement.classList.toggle('dark', normalized === 'dark');
+  }
+}
 function sponsorInitials(name) {
   var parts = sponsorText(name).trim().split(/\s+/).filter(Boolean);
   if (!parts.length) { return '?'; }
@@ -44,7 +56,7 @@ function sponsorIsReachabilityError(error) {
 }
 function sponsorMoney(minor, currency) {
   if (!Number.isFinite(Number(minor))) { return '—'; }
-  try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: currency, maximumFractionDigits: currency === 'JPY' ? 0 : 2 }).format(Number(minor) / (currency === 'JPY' ? 1 : 100)); }
+  try { return new Intl.NumberFormat(sponsorLocale(), { style: 'currency', currency: currency, maximumFractionDigits: currency === 'JPY' ? 0 : 2 }).format(Number(minor) / (currency === 'JPY' ? 1 : 100)); }
   catch (error) { return currency + ' ' + (Number(minor) / 100).toFixed(2); }
 }
 
@@ -54,7 +66,7 @@ function normalizeGithubNode(node, index) {
   var isActive = node && node.isActive !== false;
   var isOneTime = Boolean(node && node.isOneTimePayment);
   var tierAmount = sponsorMinor(node && node.tier && node.tier.monthlyPriceInCents);
-  var name = isPrivate ? '' : sponsorBoundedText(entity.name || entity.login || sponsorTranslate('unknownSponsor'), 120);
+  var name = isPrivate ? '' : sponsorBoundedText(entity.name || entity.login, 120);
   return {
     id: 'github:' + sponsorBoundedText(entity && entity.login ? entity.login : 'private-' + index + '-' + (node.createdAt || ''), 180),
     source: 'github', name: name, handle: isPrivate ? '' : sponsorBoundedText(entity.login, 80), private: isPrivate,
@@ -172,7 +184,7 @@ function normalizeAfdianSponsor(item, index) {
   var userId = sponsorText(user.user_id).trim();
   return {
     id: 'afdian:' + sponsorBoundedText(userId || 'unknown-' + index, 180), source: 'afdian',
-    name: sponsorBoundedText(user.name || sponsorTranslate('unknownSponsor'), 120), handle: sponsorBoundedText(userId, 128), private: false,
+    name: sponsorBoundedText(user.name, 120), handle: sponsorBoundedText(userId, 128), private: false,
     recurring: hasPlan && !oneTime, oneTime: oneTime,
     amountMinor: sponsorMinor(Number.isFinite(amount) ? amount * 100 : 0), currency: 'CNY',
     tier: sponsorBoundedText(plan.name, 160), since: sponsorUnixDate(item.create_time || item.first_pay_time), lastSupportedAt: sponsorUnixDate(item.last_pay_time),
@@ -217,19 +229,23 @@ async function syncSponsorSource(source, config, options) {
   options = options || {};
   var previousSource = previousSourceFor(source);
   if (source === 'patreon' && previousSource && previousSource.manualOnly && !options.manualPatreon) {
-    return { source: source, status: 'paused', items: previousItemsFor(source), message: sponsorTranslate('patreonManualOnly'), manualOnly: true };
+    return { source: source, status: 'paused', items: previousItemsFor(source), messageKey: 'patreonManualOnly', manualOnly: true };
   }
   try {
     var items = source === 'github' ? await syncGithub(config) : source === 'patreon' ? await syncPatreon(config) : await syncAfdian(config);
-    return { source: source, status: 'ready', items: items, message: sponsorTranslate('syncedCount', { count: items.length }), manualOnly: false };
+    return { source: source, status: 'ready', items: items, messageKey: 'syncedCount', messageParams: { count: items.length }, manualOnly: false };
   } catch (error) {
     var manualOnly = source === 'patreon' && sponsorIsReachabilityError(error);
-    return { source: source, status: manualOnly ? 'paused' : 'error', items: previousItemsFor(source), message: manualOnly ? sponsorTranslate('patreonManualOnly') : sponsorError(error), manualOnly: manualOnly };
+    return { source: source, status: manualOnly ? 'paused' : 'error', items: previousItemsFor(source), message: manualOnly ? '' : sponsorError(error), messageKey: manualOnly ? 'patreonManualOnly' : '', manualOnly: manualOnly };
   }
 }
 async function syncSponsors(options) {
   options = options || {};
   var generation = ++sponsorsGeneration;
+  if (sponsorsState.snapshot && sponsorsState.snapshot.demo === true) {
+    sponsorsState.snapshot = null;
+    await Tapp.storage.remove(SPONSORS_SNAPSHOT_KEY);
+  }
   var config = await sponsorSettings();
   applySponsorSettings(config);
   var results = await Promise.all(sponsorsState.visibleSources.map(function (source) { return syncSponsorSource(source, config, options); }));
@@ -241,8 +257,8 @@ async function syncSponsors(options) {
   Object.keys(SPONSOR_SOURCES).forEach(function (source) {
     var result = resultBySource[source];
     sourceStates[source] = result
-      ? { status: result.status, message: result.message, count: result.items.length, manualOnly: Boolean(result.manualOnly) }
-      : previousSourceFor(source) || { status: 'setup', message: sponsorTranslate('configureSource'), count: previousItemsFor(source).length };
+      ? { status: result.status, message: result.message || '', messageKey: result.messageKey || '', messageParams: result.messageParams || null, count: result.items.length, manualOnly: Boolean(result.manualOnly) }
+      : previousSourceFor(source) || { status: 'setup', messageKey: 'configureSource', count: previousItemsFor(source).length };
   });
   var candidate = {
     version: 1, updatedAt: Date.now(), supporters: supporters,
@@ -253,17 +269,48 @@ async function syncSponsors(options) {
   return candidate;
 }
 
+function createSponsorDemoSnapshot() {
+  var now = Date.now();
+  return {
+    version: 1,
+    demo: true,
+    updatedAt: now,
+    supporters: [{
+      id: 'demo:afdian:test-star',
+      source: 'afdian',
+      name: '',
+      demo: true,
+      handle: '',
+      private: false,
+      recurring: true,
+      oneTime: false,
+      status: 'active',
+      amountMinor: 500,
+      lifetimeMinor: 500,
+      currency: 'CNY',
+      tier: '',
+      since: new Date(now).toISOString()
+    }],
+    sources: {
+      github: { status: 'setup', messageKey: 'configureSource', count: 0, manualOnly: false },
+      patreon: { status: 'setup', messageKey: 'configureSource', count: 0, manualOnly: false },
+      afdian: { status: 'ready', messageKey: 'demoSourceMessage', count: 1, manualOnly: false }
+    }
+  };
+}
+
 function sourceCardHtml(source) {
   var state = sponsorsState.snapshot && sponsorsState.snapshot.sources && sponsorsState.snapshot.sources[source.id];
   var status = state && state.status || (source.mode === 'bridge' ? 'bridge' : 'setup');
   var statusLabel = status === 'ready' ? sponsorTranslate('connected') : status === 'bridge' ? sponsorTranslate('bridgeNeeded') : status === 'paused' ? sponsorTranslate('manualOnly') : status === 'error' ? sponsorTranslate('attention') : sponsorTranslate('setupNeeded');
-  var message = state && state.message || (source.mode === 'bridge' ? sponsorTranslate(source.id + 'Bridge') : sponsorTranslate('configureSource'));
+  var message = state && state.messageKey ? sponsorTranslate(state.messageKey, state.messageParams || {}) : state && state.message || (source.mode === 'bridge' ? sponsorTranslate(source.id + 'Bridge') : sponsorTranslate('configureSource'));
   var action = source.setupUrlId ? '<button class="source-credential-link" type="button" data-open-credential-url="' + sponsorEscape(source.setupUrlId) + '">' + sponsorEscape(sponsorTranslate('openCredentialPage')) + '<span aria-hidden="true">↗</span></button>' : '';
   return '<article class="source-card"><div class="source-card-head"><div class="source-name"><span class="source-mark" aria-hidden="true">' + source.mark + '</span><span>' + sponsorEscape(source.name) + '</span></div><span class="source-status ' + sponsorEscape(status) + '">' + sponsorEscape(statusLabel) + '</span></div><p>' + sponsorEscape(message) + '</p>' + action + '</article>';
 }
 function supporterCardHtml(item) {
   var displayName = sponsorDisplayName(item);
-  var meta = SPONSOR_SOURCES[item.source].name + (item.tier ? ' · ' + item.tier : '') + (item.private ? ' · ' + sponsorTranslate('private') : '');
+  var tier = item.demo === true ? sponsorTranslate('demoTier') : item.tier;
+  var meta = SPONSOR_SOURCES[item.source].name + (tier ? ' · ' + tier : '') + (item.private ? ' · ' + sponsorTranslate('private') : '');
   var amount = item.recurring && item.amountMinor > 0 ? sponsorMoney(item.amountMinor, item.currency) : sponsorTranslate(item.recurring ? 'active' : item.oneTime ? 'oneTime' : 'inactive');
   return '<article class="supporter-card"><div class="supporter-avatar" aria-hidden="true">' + sponsorEscape(sponsorInitials(displayName)) + '</div><div class="supporter-main"><strong>' + sponsorEscape(displayName) + '</strong><span>' + sponsorEscape(meta) + '</span></div><div class="supporter-amount"><strong>' + sponsorEscape(amount) + '</strong><span>' + sponsorEscape(item.recurring ? sponsorTranslate('perMonth') : sponsorTranslate('support')) + '</span></div></article>';
 }
@@ -335,10 +382,189 @@ function sponsorStarDetailHtml(item) {
   var lightAmount = sponsorMoney(lifetime > 0 ? lifetime : item.amountMinor, item.currency);
   var currentAmount = Number(item.amountMinor) > 0 ? sponsorMoney(item.amountMinor, item.currency) : '—';
   var coordinates = sponsorCelestialCoordinates(item);
-  var since = item.since ? new Date(item.since).toLocaleDateString() : '—';
+  var since = item.since ? new Date(item.since).toLocaleDateString(sponsorLocale()) : '—';
   var lightPosition = Math.round(12 + 76 * Math.min(1, Math.log1p(sponsorStarValue(item)) / 12));
   var platformColor = 'rgb(' + (SPONSOR_STAR_COLORS[item.source] || [255,255,255]).join(',') + ')';
   return '<p class="section-kicker" id="cosmos-title">' + sponsorEscape(sponsorTranslate('supporterObservation')) + '</p><strong>' + sponsorEscape(sponsorDisplayName(item)) + '</strong><div class="star-detail-platform" style="--platform-color:' + platformColor + '"><i></i>' + sponsorEscape(SPONSOR_SOURCES[item.source].name) + '</div><p id="cosmos-instructions">' + sponsorEscape(sponsorTranslate('starBrightnessHint')) + '</p><div class="star-detail-grid"><div class="star-detail-row"><span>' + sponsorEscape(sponsorTranslate('currentSupport')) + '</span><strong>' + sponsorEscape(currentAmount) + '</strong></div><div class="star-detail-row"><span>' + sponsorEscape(lightLabel) + '</span><strong>' + sponsorEscape(lightAmount) + '</strong></div><div class="star-detail-row"><span>' + sponsorEscape(sponsorTranslate('supportType')) + '</span><strong>' + sponsorEscape(sponsorTranslate(item.recurring ? 'active' : item.oneTime ? 'oneTime' : 'inactive')) + '</strong></div><div class="star-detail-row"><span>' + sponsorEscape(sponsorTranslate('firstLight')) + '</span><strong>' + sponsorEscape(since) + '</strong></div></div><div class="luminosity-scale"><span>' + sponsorEscape(sponsorTranslate('relativeLuminosity')) + '</span><div class="luminosity-track" style="--light-position:' + lightPosition + '%"><i></i></div></div><div class="coordinate-block"><div class="star-detail-row"><span>' + sponsorEscape(sponsorTranslate('rightAscension')) + '</span><strong>' + sponsorEscape(coordinates.rightAscension) + '</strong></div><div class="star-detail-row"><span>' + sponsorEscape(sponsorTranslate('declination')) + '</span><strong>' + sponsorEscape(coordinates.declination) + '</strong></div><div class="star-detail-row"><span>' + sponsorEscape(sponsorTranslate('visualMagnitude')) + '</span><strong>' + sponsorEscape(coordinates.magnitude) + '</strong></div></div>';
+}
+
+var sponsorWidgetGenerations = new Map();
+var sponsorWidgetInstances = new Map();
+var sponsorWidgetPaperUrl = '';
+var sponsorWidgetPaperPromise = null;
+function sponsorWidgetSetText(scope, selector, value) {
+  scope.querySelectorAll(selector).forEach(function (node) { node.textContent = sponsorText(value); });
+}
+function sponsorWidgetLoadPaperTexture() {
+  if (sponsorWidgetPaperUrl) { return Promise.resolve(sponsorWidgetPaperUrl); }
+  if (sponsorWidgetPaperPromise) { return sponsorWidgetPaperPromise; }
+  if (!Tapp.assets || typeof Tapp.assets.getUrl !== 'function') { return Promise.resolve(''); }
+  sponsorWidgetPaperPromise = Tapp.assets.getUrl('assets/observatory-paper.png').then(function (asset) {
+    sponsorWidgetPaperUrl = asset && asset.url || '';
+    return sponsorWidgetPaperUrl;
+  }).catch(function () { return ''; }).finally(function () { sponsorWidgetPaperPromise = null; });
+  return sponsorWidgetPaperPromise;
+}
+function sponsorWidgetVisibleSources(config) {
+  return Object.keys(SPONSOR_SOURCES).filter(function (source) { return config[SPONSOR_SOURCE_SETTINGS[source]] !== false; });
+}
+function sponsorWidgetItems(snapshot, sources) {
+  var items = snapshot && Array.isArray(snapshot.supporters) ? snapshot.supporters : [];
+  return items.filter(function (item) { return item && SPONSOR_SOURCES[item.source] && sources.indexOf(item.source) !== -1; });
+}
+function sponsorWidgetMonthlyAmount(items) {
+  var totals = {};
+  items.forEach(function (item) {
+    if (!item.recurring || !(Number(item.amountMinor) > 0)) { return; }
+    var currency = /^[A-Z]{3}$/.test(sponsorText(item.currency)) ? item.currency : 'XXX';
+    totals[currency] = sponsorMinor((totals[currency] || 0) + Number(item.amountMinor));
+  });
+  var currencies = Object.keys(totals).sort();
+  return currencies.length ? currencies.map(function (currency) { return sponsorMoney(totals[currency], currency); }).join(' · ') : '—';
+}
+function sponsorWidgetFocus(items) {
+  return items.slice().sort(function (left, right) {
+    var activeDifference = Number(Boolean(right.recurring)) - Number(Boolean(left.recurring));
+    if (activeDifference) { return activeDifference; }
+    return sponsorHash(left.id || left.name) - sponsorHash(right.id || right.name);
+  })[0] || null;
+}
+function sponsorWidgetRenderPlatforms(scope, items, sources) {
+  var target = scope.querySelector('[data-platforms]');
+  if (!target) { return; }
+  target.replaceChildren();
+  sources.forEach(function (source) {
+    var row = document.createElement('span');
+    var marker = document.createElement('i');
+    var color = SPONSOR_STAR_COLORS[source] || [255, 255, 255];
+    marker.style.setProperty('--platform-color', 'rgb(' + color.join(',') + ')');
+    row.appendChild(marker);
+    row.appendChild(document.createTextNode(SPONSOR_SOURCES[source].mark + ' ' + items.filter(function (item) { return item.source === source; }).length));
+    target.appendChild(row);
+  });
+}
+function sponsorWidgetRenderStars(scope, items, size) {
+  var canvas = scope.querySelector('canvas[data-starfield]');
+  if (!canvas || typeof canvas.getContext !== 'function') { return; }
+  var bounds = canvas.getBoundingClientRect();
+  var width = Math.max(1, Math.round(bounds.width || (size === '2x2' ? 176 : size === '4x2' ? 272 : 270)));
+  var height = Math.max(1, Math.round(bounds.height || (size === '2x2' ? 68 : size === '4x2' ? 142 : 330)));
+  var density = Math.max(1, Math.min(2, typeof devicePixelRatio === 'number' ? devicePixelRatio : 1));
+  canvas.width = Math.round(width * density); canvas.height = Math.round(height * density);
+  var context = canvas.getContext('2d');
+  if (!context) { return; }
+  context.setTransform(density, 0, 0, density, 0, 0);
+  context.clearRect(0, 0, width, height);
+  var marginX = size === '2x2' ? 10 : size === '4x4' ? 22 : 16; var marginY = size === '2x2' ? 8 : 16;
+  var plotWidth = Math.max(1, width - marginX * 2); var plotHeight = Math.max(1, height - marginY * 2);
+  var columns = size === '4x4' ? 8 : 6; var rows = 4;
+  context.lineWidth = 0.8;
+  context.strokeStyle = 'rgba(232,221,200,.25)';
+  for (var column = 0; column <= columns; column += 1) {
+    var gridX = marginX + plotWidth * column / columns;
+    context.beginPath(); context.moveTo(gridX, marginY); context.lineTo(gridX, marginY + plotHeight); context.stroke();
+  }
+  for (var rowIndex = 0; rowIndex <= rows; rowIndex += 1) {
+    var gridY = marginY + plotHeight * rowIndex / rows;
+    context.beginPath(); context.moveTo(marginX, gridY); context.lineTo(marginX + plotWidth, gridY); context.stroke();
+  }
+  if (size !== '2x2') {
+    context.fillStyle = 'rgba(245,235,216,.8)';
+    context.font = Math.max(8, 9 * Number(scope.style.getPropertyValue('--sponsor-widget-font-scale') || 1)) + 'px Consolas, monospace';
+    context.textAlign = 'center'; context.textBaseline = 'top';
+    for (var hour = 0; hour <= columns; hour += 1) { context.fillText(String(hour + 1).padStart(2, '0') + 'h', marginX + plotWidth * hour / columns, 2); }
+    if (size === '4x4') {
+      context.textAlign = 'left'; context.textBaseline = 'middle';
+      for (var degree = 0; degree <= rows; degree += 1) { context.fillText('+' + String((rows - degree) * 10) + '°', 2, marginY + plotHeight * degree / rows); }
+    }
+  }
+  var limit = size === '4x4' ? 20 : size === '4x2' ? 9 : 1;
+  var maxByCurrency = {};
+  items.forEach(function (item) {
+    var currency = item.currency || 'XXX';
+    maxByCurrency[currency] = Math.max(maxByCurrency[currency] || 0, sponsorStarValue(item));
+  });
+  var plotted = items.slice().sort(function (left, right) {
+    var leftCurrency = left.currency || 'XXX'; var rightCurrency = right.currency || 'XXX';
+    var leftRatio = Math.log1p(sponsorStarValue(left)) / Math.max(1, Math.log1p(maxByCurrency[leftCurrency] || 1));
+    var rightRatio = Math.log1p(sponsorStarValue(right)) / Math.max(1, Math.log1p(maxByCurrency[rightCurrency] || 1));
+    return rightRatio - leftRatio || sponsorHash(left.id || left.name) - sponsorHash(right.id || right.name);
+  }).slice(0, limit).map(function (item, index) {
+    var seed = sponsorHash(item.id || item.name || index);
+    var currency = item.currency || 'XXX';
+    var ratio = Math.log1p(sponsorStarValue(item)) / Math.max(1, Math.log1p(maxByCurrency[currency] || 1));
+    return {
+      item: item,
+      x: marginX + plotWidth * (0.08 + (seed % 8400) / 10000),
+      y: marginY + plotHeight * (0.09 + ((seed >>> 11) % 8200) / 10000),
+      radius: 1.8 + ratio * (size === '4x4' ? 4.6 : size === '4x2' ? 3.6 : 2.8),
+      brightness: 0.38 + ratio * 0.62
+    };
+  });
+  if (plotted.length > 1) {
+    context.strokeStyle = 'rgba(232,218,193,.28)'; context.lineWidth = 0.9;
+    context.beginPath();
+    plotted.slice().sort(function (left, right) { return left.x - right.x; }).forEach(function (star, index) { if (index) { context.lineTo(star.x, star.y); } else { context.moveTo(star.x, star.y); } });
+    context.stroke();
+  }
+  if (!plotted.length) {
+    context.fillStyle = 'rgba(242,231,211,.68)';
+    context.font = Math.max(9, 11 * Number(scope.style.getPropertyValue('--sponsor-widget-font-scale') || 1)) + 'px "Microsoft YaHei", sans-serif';
+    context.textAlign = 'center'; context.textBaseline = 'middle';
+    context.fillText(sponsorTranslate('widgetEmpty'), width / 2, height / 2);
+  }
+  var focus = sponsorWidgetFocus(items);
+  plotted.forEach(function (star, index) {
+    context.save();
+    context.globalAlpha = star.brightness;
+    context.fillStyle = '#f4ead7'; context.shadowColor = '#fff4dc'; context.shadowBlur = star.radius * 3.4;
+    context.beginPath(); context.arc(star.x, star.y, star.radius, 0, Math.PI * 2); context.fill();
+    context.shadowBlur = 0; context.strokeStyle = 'rgba(246,235,215,.72)'; context.lineWidth = 0.55;
+    context.beginPath(); context.moveTo(star.x - star.radius * 3.1, star.y); context.lineTo(star.x + star.radius * 3.1, star.y); context.moveTo(star.x, star.y - star.radius * 2.4); context.lineTo(star.x, star.y + star.radius * 2.4); context.stroke();
+    context.restore();
+    if (focus && star.item === focus) {
+      context.strokeStyle = getComputedStyle(scope).getPropertyValue('--registration').trim() || '#a94f3f'; context.lineWidth = 1;
+      context.beginPath(); context.arc(star.x, star.y, star.radius + 5, 0, Math.PI * 2); context.stroke();
+    }
+    if (size === '4x4') {
+      context.fillStyle = 'rgba(247,235,213,.9)'; context.font = '10px Consolas, monospace'; context.textAlign = 'left'; context.textBaseline = 'middle';
+      context.fillText('S' + String(index + 1), star.x + star.radius + 5, star.y);
+    }
+  });
+}
+async function renderSponsorWidget(container, props) {
+  var generation = (sponsorWidgetGenerations.get(container) || 0) + 1;
+  sponsorWidgetGenerations.set(container, generation);
+  sponsorWidgetInstances.set(container, Object.assign({}, props || {}));
+  var results = await Promise.all([
+    Tapp.storage.get(SPONSORS_SNAPSHOT_KEY).catch(function () { return null; }),
+    sponsorSettings().catch(function () { return { showGithub: true, showPatreon: true, showAfdian: true }; }),
+    sponsorWidgetLoadPaperTexture()
+  ]);
+  if (generation !== sponsorWidgetGenerations.get(container)) { return; }
+  var scope = container.querySelector('[data-widget-root]') || container;
+  var snapshot = results[0]; var sources = sponsorWidgetVisibleSources(results[1]); var items = sponsorWidgetItems(snapshot, sources);
+  var size = props && props.size || '4x2'; var theme = props && props.theme || 'light';
+  var locale = sponsorLocale() || props && props.locale || 'zh-CN';
+  var amount = sponsorWidgetMonthlyAmount(items); var focus = sponsorWidgetFocus(items);
+  scope.dataset.size = size; scope.dataset.theme = theme;
+  scope.setAttribute('lang', locale);
+  scope.style.setProperty('--sponsor-widget-scale', String(props && props.scale || 1));
+  scope.style.setProperty('--sponsor-widget-font-scale', String(props && props.fontScale || 1));
+  if (results[2]) { scope.style.setProperty('--observatory-paper', 'url("' + results[2] + '")'); }
+  scope.querySelectorAll('[data-i18n]').forEach(function (node) { node.textContent = sponsorTranslate(node.dataset.i18n); });
+  sponsorWidgetSetText(scope, '[data-supporter-count]', items.length);
+  sponsorWidgetSetText(scope, '[data-monthly-amount]', amount);
+  sponsorWidgetSetText(scope, '[data-brightest-name]', focus ? sponsorDisplayName(focus) : '—');
+  sponsorWidgetSetText(scope, '[data-brightest-amount]', focus ? sponsorMoney(sponsorStarValue(focus), focus.currency) : '—');
+  var coordinates = focus ? sponsorCelestialCoordinates(focus) : null;
+  sponsorWidgetSetText(scope, '[data-coordinate]', coordinates ? 'RA ' + coordinates.rightAscension + ' · DEC ' + coordinates.declination : 'RA — · DEC —');
+  var updatedAt = snapshot && Number(snapshot.updatedAt);
+  var updatedText = updatedAt ? sponsorTranslate('updatedAt', { time: size === '2x2' ? new Date(updatedAt).toLocaleDateString(locale) : new Date(updatedAt).toLocaleString(locale) }) : sponsorTranslate('neverSynced');
+  sponsorWidgetSetText(scope, '[data-updated-at]', updatedText);
+  sponsorWidgetRenderPlatforms(scope, items, sources);
+  sponsorWidgetRenderStars(scope, items, size);
+  scope.setAttribute('aria-label', sponsorTranslate('widgetSummary', { count: items.length, amount: amount, name: focus ? sponsorDisplayName(focus) : '—' }));
 }
 function drawSponsorBackground(context, width, height) {
   context.fillStyle = '#05070d'; context.fillRect(0, 0, width, height);
@@ -434,8 +660,10 @@ function renderSponsorsPage(root) {
   root.querySelectorAll('[data-i18n-placeholder]').forEach(function (element) { element.placeholder = sponsorTranslate(element.getAttribute('data-i18n-placeholder')); });
   root.querySelectorAll('[data-i18n-aria-label]').forEach(function (element) { element.setAttribute('aria-label', sponsorTranslate(element.getAttribute('data-i18n-aria-label'))); });
   var snapshot = sponsorsState.snapshot; var supporters = visibleSupporters();
+  var sampleButton = root.querySelector('[data-action="sample"]');
+  if (sampleButton) { sampleButton.textContent = sponsorTranslate(snapshot && snapshot.demo === true ? 'clearSample' : 'loadSample'); }
   root.querySelector('[data-field="supporter-count"]').textContent = String(supporters.length);
-  root.querySelector('[data-field="updated-at"]').textContent = snapshot ? sponsorTranslate('updatedAt', { time: new Date(snapshot.updatedAt).toLocaleString() }) : sponsorTranslate('neverSynced');
+  root.querySelector('[data-field="updated-at"]').textContent = snapshot ? sponsorTranslate('updatedAt', { time: new Date(snapshot.updatedAt).toLocaleString(sponsorLocale()) }) : sponsorTranslate('neverSynced');
   root.querySelector('[data-field="source-grid"]').innerHTML = sponsorsState.visibleSources.map(function (key) { return sourceCardHtml(SPONSOR_SOURCES[key]); }).join('');
   var totals = {};
   supporters.filter(function (item) { return item.recurring && item.amountMinor > 0; }).forEach(function (item) { totals[item.currency] = (totals[item.currency] || 0) + item.amountMinor; });
@@ -450,6 +678,7 @@ function renderSponsorsPage(root) {
   root.querySelector('[data-field="supporter-list"]').innerHTML = visible.length ? visible.map(supporterCardHtml).join('') : '<div class="empty-state"><div><strong>' + sponsorEscape(noSources ? sponsorTranslate('noVisibleSources') : supporters.length ? sponsorTranslate('noMatches') : sponsorTranslate('emptyTitle')) + '</strong><p>' + sponsorEscape(noSources ? sponsorTranslate('enableSourceHint') : supporters.length ? sponsorTranslate('noMatchesHint') : sponsorTranslate('emptyHint')) + '</p></div></div>';
   var failures = snapshot && sponsorsState.visibleSources.filter(function (key) { return snapshot.sources && snapshot.sources[key] && snapshot.sources[key].status === 'error'; }).map(function (key) { return SPONSOR_SOURCES[key].name + ': ' + snapshot.sources[key].message; });
   var notices = failures || [];
+  if (snapshot && snapshot.demo === true) { notices.unshift(sponsorTranslate('demoNotice')); }
   var notice = root.querySelector('[data-field="notice"]'); notice.hidden = !notices.length; notice.textContent = notices.join(' · ');
   root.querySelectorAll('[data-view]').forEach(function (button) { button.setAttribute('aria-pressed', sponsorsState.view === button.getAttribute('data-view') ? 'true' : 'false'); });
   root.querySelector('[data-field="cosmos-view"]').hidden = sponsorsState.view !== 'cosmos';
@@ -463,8 +692,10 @@ async function initSponsorsPage(root) {
   root.setAttribute('data-page-ready', 'true');
   var controller = new AbortController(); var signal = controller.signal;
   var syncButton = root.querySelector('[data-action="sync"]');
+  var sampleButton = root.querySelector('[data-action="sample"]');
   function setActionsBusy(busy) {
     syncButton.disabled = busy; syncButton.setAttribute('aria-busy', busy ? 'true' : 'false');
+    if (sampleButton) { sampleButton.disabled = busy; sampleButton.setAttribute('aria-busy', busy ? 'true' : 'false'); }
   }
   syncButton.addEventListener('click', async function () {
     setActionsBusy(true);
@@ -472,6 +703,24 @@ async function initSponsorsPage(root) {
     catch (error) { var notice = root.querySelector('[data-field="notice"]'); notice.hidden = false; notice.textContent = sponsorError(error); }
     finally { if (!signal.aborted) { setActionsBusy(false); } }
   }, { signal: signal });
+  if (sampleButton) {
+    sampleButton.addEventListener('click', async function () {
+      setActionsBusy(true);
+      try {
+        if (sponsorsState.snapshot && sponsorsState.snapshot.demo === true) {
+          await Tapp.storage.remove(SPONSORS_SNAPSHOT_KEY);
+          sponsorsState.snapshot = null;
+        } else {
+          var demoSnapshot = createSponsorDemoSnapshot();
+          await Tapp.storage.set(SPONSORS_SNAPSHOT_KEY, demoSnapshot);
+          sponsorsState.snapshot = demoSnapshot;
+        }
+        renderSponsorsPage(root);
+      } catch (error) {
+        var notice = root.querySelector('[data-field="notice"]'); notice.hidden = false; notice.textContent = sponsorError(error);
+      } finally { if (!signal.aborted) { setActionsBusy(false); } }
+    }, { signal: signal });
+  }
   root.querySelector('[data-field="filters"]').addEventListener('click', function (event) { var button = event.target.closest('[data-filter]'); if (!button) { return; } sponsorsState.filter = button.getAttribute('data-filter'); renderSponsorsPage(root); }, { signal: signal });
   root.querySelector('.view-switch').addEventListener('click', function (event) { var button = event.target.closest('[data-view]'); if (!button) { return; } sponsorsState.view = button.getAttribute('data-view'); renderSponsorsPage(root); }, { signal: signal });
   root.querySelector('[data-field="source-grid"]').addEventListener('click', async function (event) {
@@ -511,25 +760,42 @@ async function initSponsorsPage(root) {
   }, { signal: signal });
   if (typeof window !== 'undefined') { window.addEventListener('resize', function () { if (sponsorsState.view === 'cosmos') { renderSponsorCosmos(root); } }, { signal: signal }); }
   var offStorage = Tapp.storage.onChanged(function (event) { if (event && event.key === SPONSORS_SNAPSHOT_KEY) { Tapp.storage.get(SPONSORS_SNAPSHOT_KEY).then(function (snapshot) { if (!signal.aborted && root.isConnected) { sponsorsState.snapshot = snapshot || null; renderSponsorsPage(root); } }).catch(function () {}); } });
-  var offLocale = Tapp.ui && typeof Tapp.ui.onLocaleChange === 'function' ? Tapp.ui.onLocaleChange(function () { renderSponsorsPage(root); }) : null;
+  var offLocale = Tapp.ui && typeof Tapp.ui.onLocaleChange === 'function' ? Tapp.ui.onLocaleChange(function () { if (root.isConnected) { renderSponsorsPage(root); } }) : null;
+  var offTheme = Tapp.ui && typeof Tapp.ui.onThemeChange === 'function' ? Tapp.ui.onThemeChange(function (theme) { if (root.isConnected) { sponsorApplyTheme(root, theme); } }) : null;
   var offAnimation = Tapp.animation && typeof Tapp.animation.onLevelChange === 'function' ? Tapp.animation.onLevelChange(function (level) { sponsorsState.animationEnabled = level !== 'none'; if (root.isConnected) { renderSponsorsPage(root); } }) : null;
   Tapp.lifecycle.onPause(function () { sponsorsState.paused = true; if (sponsorsCosmosFrame && typeof cancelAnimationFrame === 'function') { cancelAnimationFrame(sponsorsCosmosFrame); sponsorsCosmosFrame = 0; } });
   Tapp.lifecycle.onResume(function () { sponsorsState.paused = false; if (root.isConnected && sponsorsState.view === 'cosmos') { renderSponsorCosmos(root); } });
-  Tapp.lifecycle.onDestroy(function () { sponsorsGeneration += 1; controller.abort(); if (sponsorsCosmosFrame && typeof cancelAnimationFrame === 'function') { cancelAnimationFrame(sponsorsCosmosFrame); sponsorsCosmosFrame = 0; } if (offStorage) { offStorage(); } if (offLocale) { offLocale(); } if (typeof offAnimation === 'function') { offAnimation(); } if (sponsorsState.cosmosImageUrl && Tapp.assets && typeof Tapp.assets.revoke === 'function') { try { Tapp.assets.revoke(sponsorsState.cosmosImageUrl); } catch (error) {} } sponsorsState.cosmosImage = null; sponsorsState.cosmosImageUrl = ''; });
+  Tapp.lifecycle.onDestroy(function () { sponsorsGeneration += 1; controller.abort(); if (sponsorsCosmosFrame && typeof cancelAnimationFrame === 'function') { cancelAnimationFrame(sponsorsCosmosFrame); sponsorsCosmosFrame = 0; } if (offStorage) { offStorage(); } if (offLocale) { offLocale(); } if (offTheme) { offTheme(); } if (typeof offAnimation === 'function') { offAnimation(); } if (sponsorsState.cosmosImageUrl && Tapp.assets && typeof Tapp.assets.revoke === 'function') { try { Tapp.assets.revoke(sponsorsState.cosmosImageUrl); } catch (error) {} } sponsorsState.cosmosImage = null; sponsorsState.cosmosImageUrl = ''; });
   var animationPromise = Tapp.animation && typeof Tapp.animation.shouldAnimate === 'function' ? Tapp.animation.shouldAnimate().catch(function () { return true; }) : Promise.resolve(true);
+  var themePromise = Tapp.ui && typeof Tapp.ui.getTheme === 'function' ? Tapp.ui.getTheme().catch(function () { return 'light'; }) : Promise.resolve('light');
   var cosmosImagePromise = loadSponsorCosmosImage().catch(function () { return null; });
-  var initialState = await Promise.all([Tapp.storage.get(SPONSORS_SNAPSHOT_KEY), sponsorSettings(), animationPromise, cosmosImagePromise]);
+  var initialState = await Promise.all([Tapp.storage.get(SPONSORS_SNAPSHOT_KEY), sponsorSettings(), animationPromise, themePromise, cosmosImagePromise]);
   if (signal.aborted || !root.isConnected) { return; }
   var storedSnapshot = initialState[0];
-  if (storedSnapshot && storedSnapshot.demo === true) {
-    await Tapp.storage.remove(SPONSORS_SNAPSHOT_KEY);
-    storedSnapshot = null;
-  }
-  if (signal.aborted || !root.isConnected) { return; }
   sponsorsState.snapshot = storedSnapshot;
   applySponsorSettings(initialState[1]);
   sponsorsState.animationEnabled = initialState[2] !== false;
+  sponsorApplyTheme(root, initialState[3]);
   renderSponsorsPage(root);
+}
+
+if (Tapp.widgets) {
+  Tapp.widgets['sponsor-glance'] = { render: renderSponsorWidget };
+  var offSponsorWidgetLocale = Tapp.ui && typeof Tapp.ui.onLocaleChange === 'function' ? Tapp.ui.onLocaleChange(function (locale) {
+    sponsorWidgetInstances.forEach(function (props, container) { if (container && container.isConnected) { renderSponsorWidget(container, Object.assign({}, props, { locale: locale })); } });
+  }) : null;
+  var offSponsorWidgetTheme = Tapp.ui && typeof Tapp.ui.onThemeChange === 'function' ? Tapp.ui.onThemeChange(function (theme) {
+    sponsorWidgetInstances.forEach(function (props, container) {
+      if (container && container.isConnected) { renderSponsorWidget(container, Object.assign({}, props, { theme: theme === 'dark' ? 'dark' : 'light' })); }
+    });
+  }) : null;
+  Tapp.lifecycle.onDestroy(function () {
+    sponsorWidgetInstances.clear(); sponsorWidgetGenerations.clear();
+    if (typeof offSponsorWidgetLocale === 'function') { offSponsorWidgetLocale(); }
+    if (typeof offSponsorWidgetTheme === 'function') { offSponsorWidgetTheme(); }
+    if (sponsorWidgetPaperUrl && Tapp.assets && typeof Tapp.assets.revoke === 'function') { try { Tapp.assets.revoke(sponsorWidgetPaperUrl); } catch (error) {} }
+    sponsorWidgetPaperUrl = ''; sponsorWidgetPaperPromise = null;
+  });
 }
 
 if (Tapp.pages) {
