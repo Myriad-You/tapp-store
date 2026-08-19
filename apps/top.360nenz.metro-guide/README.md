@@ -31,7 +31,7 @@ MetroMan 上海完整城市 ZIP 当前为 3.36 MiB，超过 Tapp 声明式 HTTP 
 ## 在己方服务测试
 
 1. 打开 https://myriad.360nenz.top/，登录后进入 Tapp 管理页。
-2. 选择上传本地打包得到的 1.3.6 `.tapp` 文件，确认私有存储、通知、打开声明链接和 `network:fetch` 权限均已授予。当前包继续使用 Myriad 0.3.x 的 `main/hasPage/pageTemplate/pageStyles` Manifest 字段；在 Myriad 0.4.0 正式发布前，不使用尚不兼容的 `core/page` 声明层。联网检查直接调用已声明的 MetroMan API，单次请求最多等待 12 秒；启动先加载包内离线资源，城市缓存随后后台读取，不会阻塞网络请求。
+2. 选择上传本地打包得到的 1.3.7 `.tapp` 文件，确认私有存储、通知、打开声明链接和 `network:fetch` 权限均已授予。当前包继续使用 Myriad 0.3.x 的 `main/hasPage/pageTemplate/pageStyles` Manifest 字段；在 Myriad 0.4.0 正式发布前，不使用尚不兼容的 `core/page` 声明层。联网检查直接调用已声明的 MetroMan API，单次请求最多等待 12 秒；启动先加载包内离线资源，城市缓存随后后台读取，不会阻塞网络请求。
 3. 打开“地铁通”页面，确认已有资源城市排在选择器前面，组内顺序与 MetroMan 城市页一致；选择北京，使用快捷示例查询“西直门”到“国贸”。
 4. 打开站点选择面板，确认站点显示所属线路完整名称和颜色；切换到上海，搜索“徐家汇”应显示 1、9、11 号线，点击线路索引中的“11号线”应只显示该线路站点。
 5. 在北京切换出发、到达、首班、末班时刻，选择 IC 卡或现金和路线偏好；查询后检查 MetroMan 新版结果中的时刻、票价、距离、线路方向与换乘步骤。
@@ -46,7 +46,7 @@ MetroMan 上海完整城市 ZIP 当前为 3.36 MiB，超过 Tapp 声明式 HTTP 
 
 ## 提交约定
 
-本分支从提交 d133f6fd59c2e46c9c3cc08725d6dc7933578b4c 创建；当前包版本为 1.3.6。建议使用中文 Conventional Commit，并启用 GPG 签名：
+本分支从提交 d133f6fd59c2e46c9c3cc08725d6dc7933578b4c 创建；当前包版本为 1.3.7。建议使用中文 Conventional Commit，并启用 GPG 签名：
 
     git add apps/top.360nenz.metro-guide index.json
     git commit -S -m "feat(tapp): 新增地铁通线路查询"
