@@ -4,7 +4,7 @@
 
 ## 版本
 
-`1.0.0`
+`1.0.1`
 
 ## 安全
 
@@ -54,7 +54,7 @@ DEPLOY：`chown -R 70:70 pgdata && chmod 700 pgdata`。
 |------|------|
 | `docker-compose.yml` | proxy / frontend / backend / backend-volume-init / [postgres] / docker-guard / updater / updater-gateway |
 | `.env` | 密钥、tag、`MYRIAD_DB_MODE`、Guard 插值项（勿提交） |
-| `docker-guard.env` | 宿主策略：digest 钉死的 `DOCKER_GUARD_IMAGE` + `GUARD_SELF_UPDATE_TOKEN`，放到 `/etc/myriad/` |
+| `docker-guard.env` | 策略预览：digest 钉死的 `DOCKER_GUARD_IMAGE` + `GUARD_SELF_UPDATE_TOKEN`。Guard 首次启动会写入 `./guard-policy/`，无需手工安装 |
 | `<domain>.conf` | Nginx 类方式：外层整站反代到 proxy（含 ACME 本地挑战） |
 | `Caddyfile` | 仅 Caddy：自动 HTTPS + 整站 `reverse_proxy` |
 | `DEPLOY.md` | 启动、联邦与救援（含所选方式专章） |
@@ -82,7 +82,7 @@ DEPLOY：`chown -R 70:70 pgdata && chmod 700 pgdata`。
 
 - backend-volume-init 使用 `network_mode: none`
 - 仅 docker-guard 挂 sock；仅 proxy 映射宿主端口
-- Guard 镜像必须是 `docker.io/somekawahitomi/myriad-updater@sha256:<64hex>`；策略文件在 `/etc/myriad/docker-guard.env`，不进编排目录
+- Guard 镜像必须是 `docker.io/somekawahitomi/myriad-updater@sha256:<64hex>`；策略由 Guard 写入 `./guard-policy/docker-guard.env`，updater 只读挂载该目录
 - backend 只持 `UPDATER_GATEWAY_SECRET`，经 gateway 更新
 - backend-volume-init 会在 backend 启动前修复持久卷权限
 - 禁止 `:latest`
@@ -128,7 +128,7 @@ curl -sS "https://YOUR_DOMAIN/.well-known/nodeinfo" | head -c 200
 **Coolify / Dokploy：** 在平台中粘贴 Compose 并绑定域名，必须整站转发。  
 **NPM：** 先启动编排，再新建 Proxy Host，整站转发并开启 WebSocket。  
 **Caddy：** 同目录启动后，使用生成的 `Caddyfile`。  
-站点反代均到 `HTTP_BIND_ADDRESS:HTTP_PORT`。
+站点反代均到 `HTTP_BIND_ADDRESS:HTTP_PORT`（默认 `18080`，域名步可改）。
 
 **内置：**
 
@@ -151,7 +151,7 @@ docker compose up -d
 ## 注意
 
 - 勿公开 `.env`
-- 仅 proxy 映射宿主端口（`HTTP_BIND_ADDRESS` 默认本机绑定，适配面板 Nginx 反代）
+- 仅 proxy 映射宿主端口（`HTTP_BIND_ADDRESS` 默认本机绑定，适配面板 Nginx 反代；`HTTP_PORT` 默认 18080）
 - cosign=`off` 时需双钥匙（见生成的 `.env`）
 - `PROXY_TRUSTED_UPSTREAMS` 空=信任私网/回环上游；切勿 `0.0.0.0/0`
 - 外置模式下数据库备份不由 Myriad updater 负责

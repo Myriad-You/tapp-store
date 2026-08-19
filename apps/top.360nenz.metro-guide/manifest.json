@@ -11,8 +11,10 @@
   "permissions": ["storage:read", "storage:write", "ui:notification", "ui:openUrl", "network:fetch"],
   "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M5 4h14v11a7 7 0 0 1-14 0V4Z' stroke='currentColor' stroke-width='1.8'/><path d='M8 8h8M8 12h8M8 20l-2 2M16 20l2 2' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/><circle cx='9' cy='16' r='1' fill='currentColor'/><circle cx='15' cy='16' r='1' fill='currentColor'/></svg>",
   "themeColor": "#0F766E",
+  "core": {
+    "entry": "main.js"
+  },
   "page": {
-    "entry": "main.js",
     "template": "page.html",
     "styles": "page.css"
   },

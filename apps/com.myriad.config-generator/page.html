@@ -183,6 +183,11 @@
               <input type="text" id="extra-domain" class="form-input cg-ob-input" placeholder="www.example.com" autocomplete="off" spellcheck="false">
               <span class="cg-ob-field__hint" data-i18n="domain.extraHint">如无额外域名，请留空</span>
             </label>
+            <label class="cg-ob-field">
+              <span class="cg-ob-field__label" data-i18n="domain.httpPort">本机 HTTP 端口</span>
+              <input type="number" id="http-port" class="form-input cg-ob-input" value="18080" min="1" max="65535">
+              <span class="cg-ob-field__hint" data-i18n="domain.httpPortHint">外层反代转发到这个端口。默认 18080，避免和常见的 8080 应用抢口。</span>
+            </label>
           </div>
           <div class="cg-ob-bar">
             <button type="button" class="cg-ob-cta" data-wizard-next title="下一步" aria-label="下一步" data-i18n-title="common.next" data-i18n-aria-label="common.next">
@@ -457,10 +462,6 @@
                     <option value="0.0.0.0">0.0.0.0</option>
                   </select>
                 </label>
-                <label class="cg-ob-field">
-                  <span class="cg-ob-field__label" data-i18n="advanced.httpPort">HTTP 端口</span>
-                  <input type="number" id="http-port" class="form-input cg-ob-input" value="8080" min="1" max="65535">
-                </label>
               </div>
             </div>
 
@@ -547,7 +548,7 @@
               <div class="result-card cg-file" data-file="guard-env">
                 <div class="result-header">
                   <span class="result-name">docker-guard.env</span>
-                  <span class="result-badge" data-i18n="done.badgeGuard">宿主策略 · /etc/myriad</span>
+                  <span class="result-badge" data-i18n="done.badgeGuard">由 Guard 自动写入</span>
                   <button type="button" class="btn-copy" data-target="guard-env" data-i18n="common.copy">复制</button>
                   <button type="button" class="btn-download" data-filename="docker-guard.env" data-target="guard-env" data-i18n="common.download">下载</button>
                 </div>

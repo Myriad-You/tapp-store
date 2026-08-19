@@ -47,7 +47,7 @@ cn.echootaku.days/
 
 | 权限 | 用途 |
 | --- | --- |
-| `storage` | 保存日期事件 |
+| `storage:read` / `storage:write` | 保存日期事件 |
 | `ui:notification` | 显示保存和删除结果 |
 | `ui:confirm` | 删除前确认 |
 | `widget:register` | 声明主页 Widget |

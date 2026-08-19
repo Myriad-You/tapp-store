@@ -17,7 +17,7 @@
 ## 权限说明
 
 - `network:fetch`：请求 WeGame 数据接口。
-- `storage`：缓存最近一次成功同步的数据，便于离线或接口异常时展示。
+- `storage:read` / `storage:write`：缓存最近一次成功同步的数据，便于离线或接口异常时展示。
 - `widget:register`：注册桌面小组件。
 
 ## 文件
