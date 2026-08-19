@@ -3,12 +3,6 @@
   "title": "赞助者名单",
   "subtitle": "把来自不同平台的支持，安静地整理在一起。",
   "sync": "同步",
-  "loadSample": "载入测试星",
-  "clearSample": "清除测试星",
-  "demoNotice": "当前为测试示例：这 1 条记录不会参与真实同步，点击“清除测试星”即可移除。",
-  "demoSupporterName": "测试观测者",
-  "demoTier": "测试数据",
-  "demoSourceMessage": "已载入 1 条爱发电测试记录。",
   "supporters": "支持者",
   "neverSynced": "尚未同步",
   "updatedAt": "更新于 {{time}}",
@@ -97,6 +91,6 @@
   "widgetSupporterTotal": "赞助者总数",
   "widgetPlatformMix": "平台构成",
   "widgetMonthly": "本月支持",
-  "widgetEmpty": "载入测试星或同步后开始观测",
+  "widgetEmpty": "同步后开始观测",
   "widgetSummary": "赞助者名单：{{count}} 位支持者，本月支持 {{amount}}，代表星体 {{name}}。"
 }

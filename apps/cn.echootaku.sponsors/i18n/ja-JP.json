@@ -3,12 +3,6 @@
   "title": "スポンサー名簿",
   "subtitle": "複数のプラットフォームからの支援を、静かな非公開ビューにまとめます。",
   "sync": "同期",
-  "loadSample": "テスト星を表示",
-  "clearSample": "テスト星を削除",
-  "demoNotice": "テストサンプルを表示中です。この1件は実データの同期には引き継がれません。削除ボタンで消去できます。",
-  "demoSupporterName": "テスト観測者",
-  "demoTier": "テストデータ",
-  "demoSourceMessage": "愛発電のテストレコードを1件読み込みました。",
   "supporters": "サポーター",
   "neverSynced": "未同期",
   "updatedAt": "{{time}} 更新",
@@ -97,6 +91,6 @@
   "widgetSupporterTotal": "サポーター総数",
   "widgetPlatformMix": "プラットフォーム構成",
   "widgetMonthly": "今月の支援",
-  "widgetEmpty": "テスト星を表示するか同期してください",
+  "widgetEmpty": "同期すると観測を開始します",
   "widgetSummary": "スポンサー名簿：{{count}} 人、今月の支援 {{amount}}、代表星 {{name}}。"
 }

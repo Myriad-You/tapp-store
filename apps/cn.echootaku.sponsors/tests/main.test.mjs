@@ -230,36 +230,15 @@ test('星图动态内容始终保留可访问标题与说明引用', () => {
   assert.equal(page.includes('data-i18n-aria-label="cosmosCanvasLabel"'), true);
 });
 
-test('测试星明确隔离且在真实同步前从持久存储清除', async () => {
+test('发行页面不包含示例数据模块并保留旧测试快照清理', () => {
   const page = fs.readFileSync(path.join(appRoot, 'page.html'), 'utf8');
-  const app = loadApp(async () => ({}));
-  const snapshot = app.createSponsorDemoSnapshot();
-  assert.equal(page.includes('data-action="sample"'), true);
-  assert.equal(snapshot.demo, true);
-  assert.equal(snapshot.supporters.length, 1);
-  assert.equal(snapshot.supporters[0].id.startsWith('demo:'), true);
-  assert.equal(snapshot.supporters[0].source, 'afdian');
-  assert.equal(snapshot.supporters[0].demo, true);
-  assert.equal(snapshot.supporters[0].name, '');
-  assert.equal(snapshot.supporters[0].amountMinor, 500);
-  app.Tapp.i18n.t = (key) => key === 'demoSupporterName' ? 'Locale A' : key;
-  assert.equal(app.sponsorDisplayName(snapshot.supporters[0]), 'Locale A');
-  app.Tapp.i18n.t = (key) => key === 'demoSupporterName' ? 'Locale B' : key;
-  assert.equal(app.sponsorDisplayName(snapshot.supporters[0]), 'Locale B');
-  assert.equal(snapshot.sources.afdian.count, 1);
-
-  const operations = [];
-  app.Tapp.settings = { getAll: async () => ({ showGithub: false, showPatreon: false, showAfdian: false }) };
-  app.Tapp.storage = {
-    remove: async (key) => operations.push(['remove', key]),
-    set: async (key) => operations.push(['set', key]),
-  };
-  app.sponsorsState.snapshot = snapshot;
-  await app.syncSponsors();
-  assert.deepEqual(operations, [
-    ['remove', 'sponsors.snapshot.v1'],
-    ['set', 'sponsors.snapshot.v1'],
-  ]);
+  const main = fs.readFileSync(path.join(appRoot, 'main.js'), 'utf8');
+  const catalog = fs.readFileSync(path.join(appRoot, 'catalog.json'), 'utf8');
+  assert.equal(page.includes('data-action="sample"'), false);
+  assert.equal(main.includes('createSponsorDemoSnapshot'), false);
+  assert.equal(main.includes("id: 'demo:"), false);
+  assert.equal(main.includes('storedSnapshot.demo === true'), true);
+  assert.equal(catalog.includes('测试星'), false);
 });
 
 test('赞助星图声明三种尺寸并仅以事件驱动刷新', () => {
@@ -291,7 +270,7 @@ test('观测日志小组件三份语言保持同键并包含新增文案', () =>
   const expected = Object.keys(locales[0]).sort();
   for (const table of locales) {
     assert.deepEqual(Object.keys(table).sort(), expected);
-    for (const key of ['loadSample', 'clearSample', 'demoNotice', 'widgetObservation', 'widgetRepresentative', 'widgetLifetime', 'widgetLegend', 'widgetSupporterTotal', 'widgetPlatformMix', 'widgetEmpty']) {
+    for (const key of ['widgetObservation', 'widgetRepresentative', 'widgetLifetime', 'widgetLegend', 'widgetSupporterTotal', 'widgetPlatformMix', 'widgetEmpty']) {
       assert.equal(typeof table[key], 'string');
       assert.equal(table[key].length > 0, true);
     }

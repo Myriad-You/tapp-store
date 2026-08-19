@@ -17,7 +17,6 @@ function sponsorEscape(value) { return sponsorText(value).replace(/[&<>'"]/g, fu
 function sponsorTranslate(key, params) { try { return Tapp.i18n.t(key, params || {}); } catch (error) { return key; } }
 function sponsorLocale() { try { return Tapp.i18n.getLocale() || undefined; } catch (error) { return undefined; } }
 function sponsorDisplayName(item) {
-  if (item && item.demo === true) { return sponsorTranslate('demoSupporterName'); }
   return item && item.private ? sponsorTranslate('privateSponsor') : sponsorText(item && item.name || sponsorTranslate('unknownSponsor'));
 }
 function sponsorApplyTheme(root, theme) {
@@ -269,36 +268,6 @@ async function syncSponsors(options) {
   return candidate;
 }
 
-function createSponsorDemoSnapshot() {
-  var now = Date.now();
-  return {
-    version: 1,
-    demo: true,
-    updatedAt: now,
-    supporters: [{
-      id: 'demo:afdian:test-star',
-      source: 'afdian',
-      name: '',
-      demo: true,
-      handle: '',
-      private: false,
-      recurring: true,
-      oneTime: false,
-      status: 'active',
-      amountMinor: 500,
-      lifetimeMinor: 500,
-      currency: 'CNY',
-      tier: '',
-      since: new Date(now).toISOString()
-    }],
-    sources: {
-      github: { status: 'setup', messageKey: 'configureSource', count: 0, manualOnly: false },
-      patreon: { status: 'setup', messageKey: 'configureSource', count: 0, manualOnly: false },
-      afdian: { status: 'ready', messageKey: 'demoSourceMessage', count: 1, manualOnly: false }
-    }
-  };
-}
-
 function sourceCardHtml(source) {
   var state = sponsorsState.snapshot && sponsorsState.snapshot.sources && sponsorsState.snapshot.sources[source.id];
   var status = state && state.status || (source.mode === 'bridge' ? 'bridge' : 'setup');
@@ -309,8 +278,7 @@ function sourceCardHtml(source) {
 }
 function supporterCardHtml(item) {
   var displayName = sponsorDisplayName(item);
-  var tier = item.demo === true ? sponsorTranslate('demoTier') : item.tier;
-  var meta = SPONSOR_SOURCES[item.source].name + (tier ? ' · ' + tier : '') + (item.private ? ' · ' + sponsorTranslate('private') : '');
+  var meta = SPONSOR_SOURCES[item.source].name + (item.tier ? ' · ' + item.tier : '') + (item.private ? ' · ' + sponsorTranslate('private') : '');
   var amount = item.recurring && item.amountMinor > 0 ? sponsorMoney(item.amountMinor, item.currency) : sponsorTranslate(item.recurring ? 'active' : item.oneTime ? 'oneTime' : 'inactive');
   return '<article class="supporter-card"><div class="supporter-avatar" aria-hidden="true">' + sponsorEscape(sponsorInitials(displayName)) + '</div><div class="supporter-main"><strong>' + sponsorEscape(displayName) + '</strong><span>' + sponsorEscape(meta) + '</span></div><div class="supporter-amount"><strong>' + sponsorEscape(amount) + '</strong><span>' + sponsorEscape(item.recurring ? sponsorTranslate('perMonth') : sponsorTranslate('support')) + '</span></div></article>';
 }
@@ -660,8 +628,6 @@ function renderSponsorsPage(root) {
   root.querySelectorAll('[data-i18n-placeholder]').forEach(function (element) { element.placeholder = sponsorTranslate(element.getAttribute('data-i18n-placeholder')); });
   root.querySelectorAll('[data-i18n-aria-label]').forEach(function (element) { element.setAttribute('aria-label', sponsorTranslate(element.getAttribute('data-i18n-aria-label'))); });
   var snapshot = sponsorsState.snapshot; var supporters = visibleSupporters();
-  var sampleButton = root.querySelector('[data-action="sample"]');
-  if (sampleButton) { sampleButton.textContent = sponsorTranslate(snapshot && snapshot.demo === true ? 'clearSample' : 'loadSample'); }
   root.querySelector('[data-field="supporter-count"]').textContent = String(supporters.length);
   root.querySelector('[data-field="updated-at"]').textContent = snapshot ? sponsorTranslate('updatedAt', { time: new Date(snapshot.updatedAt).toLocaleString(sponsorLocale()) }) : sponsorTranslate('neverSynced');
   root.querySelector('[data-field="source-grid"]').innerHTML = sponsorsState.visibleSources.map(function (key) { return sourceCardHtml(SPONSOR_SOURCES[key]); }).join('');
@@ -678,7 +644,6 @@ function renderSponsorsPage(root) {
   root.querySelector('[data-field="supporter-list"]').innerHTML = visible.length ? visible.map(supporterCardHtml).join('') : '<div class="empty-state"><div><strong>' + sponsorEscape(noSources ? sponsorTranslate('noVisibleSources') : supporters.length ? sponsorTranslate('noMatches') : sponsorTranslate('emptyTitle')) + '</strong><p>' + sponsorEscape(noSources ? sponsorTranslate('enableSourceHint') : supporters.length ? sponsorTranslate('noMatchesHint') : sponsorTranslate('emptyHint')) + '</p></div></div>';
   var failures = snapshot && sponsorsState.visibleSources.filter(function (key) { return snapshot.sources && snapshot.sources[key] && snapshot.sources[key].status === 'error'; }).map(function (key) { return SPONSOR_SOURCES[key].name + ': ' + snapshot.sources[key].message; });
   var notices = failures || [];
-  if (snapshot && snapshot.demo === true) { notices.unshift(sponsorTranslate('demoNotice')); }
   var notice = root.querySelector('[data-field="notice"]'); notice.hidden = !notices.length; notice.textContent = notices.join(' · ');
   root.querySelectorAll('[data-view]').forEach(function (button) { button.setAttribute('aria-pressed', sponsorsState.view === button.getAttribute('data-view') ? 'true' : 'false'); });
   root.querySelector('[data-field="cosmos-view"]').hidden = sponsorsState.view !== 'cosmos';
@@ -692,10 +657,8 @@ async function initSponsorsPage(root) {
   root.setAttribute('data-page-ready', 'true');
   var controller = new AbortController(); var signal = controller.signal;
   var syncButton = root.querySelector('[data-action="sync"]');
-  var sampleButton = root.querySelector('[data-action="sample"]');
   function setActionsBusy(busy) {
     syncButton.disabled = busy; syncButton.setAttribute('aria-busy', busy ? 'true' : 'false');
-    if (sampleButton) { sampleButton.disabled = busy; sampleButton.setAttribute('aria-busy', busy ? 'true' : 'false'); }
   }
   syncButton.addEventListener('click', async function () {
     setActionsBusy(true);
@@ -703,24 +666,6 @@ async function initSponsorsPage(root) {
     catch (error) { var notice = root.querySelector('[data-field="notice"]'); notice.hidden = false; notice.textContent = sponsorError(error); }
     finally { if (!signal.aborted) { setActionsBusy(false); } }
   }, { signal: signal });
-  if (sampleButton) {
-    sampleButton.addEventListener('click', async function () {
-      setActionsBusy(true);
-      try {
-        if (sponsorsState.snapshot && sponsorsState.snapshot.demo === true) {
-          await Tapp.storage.remove(SPONSORS_SNAPSHOT_KEY);
-          sponsorsState.snapshot = null;
-        } else {
-          var demoSnapshot = createSponsorDemoSnapshot();
-          await Tapp.storage.set(SPONSORS_SNAPSHOT_KEY, demoSnapshot);
-          sponsorsState.snapshot = demoSnapshot;
-        }
-        renderSponsorsPage(root);
-      } catch (error) {
-        var notice = root.querySelector('[data-field="notice"]'); notice.hidden = false; notice.textContent = sponsorError(error);
-      } finally { if (!signal.aborted) { setActionsBusy(false); } }
-    }, { signal: signal });
-  }
   root.querySelector('[data-field="filters"]').addEventListener('click', function (event) { var button = event.target.closest('[data-filter]'); if (!button) { return; } sponsorsState.filter = button.getAttribute('data-filter'); renderSponsorsPage(root); }, { signal: signal });
   root.querySelector('.view-switch').addEventListener('click', function (event) { var button = event.target.closest('[data-view]'); if (!button) { return; } sponsorsState.view = button.getAttribute('data-view'); renderSponsorsPage(root); }, { signal: signal });
   root.querySelector('[data-field="source-grid"]').addEventListener('click', async function (event) {
@@ -772,6 +717,11 @@ async function initSponsorsPage(root) {
   var initialState = await Promise.all([Tapp.storage.get(SPONSORS_SNAPSHOT_KEY), sponsorSettings(), animationPromise, themePromise, cosmosImagePromise]);
   if (signal.aborted || !root.isConnected) { return; }
   var storedSnapshot = initialState[0];
+  if (storedSnapshot && storedSnapshot.demo === true) {
+    await Tapp.storage.remove(SPONSORS_SNAPSHOT_KEY);
+    storedSnapshot = null;
+  }
+  if (signal.aborted || !root.isConnected) { return; }
   sponsorsState.snapshot = storedSnapshot;
   applySponsorSettings(initialState[1]);
   sponsorsState.animationEnabled = initialState[2] !== false;

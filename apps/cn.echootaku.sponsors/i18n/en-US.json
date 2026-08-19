@@ -3,12 +3,6 @@
   "title": "Sponsor Roster",
   "subtitle": "Bring support from different platforms into one calm, private view.",
   "sync": "Sync",
-  "loadSample": "Load test star",
-  "clearSample": "Clear test star",
-  "demoNotice": "Test sample active: this one record is never merged into a real sync. Use Clear test star to remove it.",
-  "demoSupporterName": "Test Observer",
-  "demoTier": "Test data",
-  "demoSourceMessage": "Loaded one Afdian test record.",
   "supporters": "Supporters",
   "neverSynced": "Not synced yet",
   "updatedAt": "Updated {{time}}",
@@ -97,6 +91,6 @@
   "widgetSupporterTotal": "Supporter total",
   "widgetPlatformMix": "Platform mix",
   "widgetMonthly": "Monthly support",
-  "widgetEmpty": "Load a test star or sync to begin",
+  "widgetEmpty": "Sync to begin",
   "widgetSummary": "Sponsor Roster: {{count}} supporters, {{amount}} in monthly support, representative star {{name}}."
 }
