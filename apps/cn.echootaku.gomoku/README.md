@@ -25,7 +25,7 @@
 
 ## 权限
 
-- `storage`：本地战绩与最近房间恢复信息。
+- `storage:read` / `storage:write`：本地战绩与最近房间恢复信息。
 - `ui:theme`、`ui:confirm`：跟随宿主主题，以及离开/认输确认。
 - `federation:read`、`federation:write`、`federation:message`：身份、房间管理与结构化棋局消息。
 

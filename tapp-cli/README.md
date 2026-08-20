@@ -61,12 +61,16 @@ myriad-tapp pack .
 management page, choose the install action, and upload that file. The CLI does not
 currently log in to a Myriad server or upload packages itself.
 
-WebGL libraries such as Three.js are ordinary guest code. Bundle them with esbuild
-or Rollup into an IIFE under `page/` and list that file in `manifest.pageModules`.
-Put textures and `.glb` models in `manifest.assets` and load them through
-`Tapp.assets`. The sandbox cannot fetch a CDN copy of the engine; `check` warns
-when page HTML or JS points at `unpkg` / `jsdelivr` / `cdnjs` / `esm.sh`. See
-[GRAPHICS.md](../../development/tapp/GRAPHICS.md).
+For Page 3D, prefer `runtimeModules: ["three"]` (category `game` or `developer`)
+so the host injects pinned Three r170 + `GLTFLoader`. You can still bundle a guest
+IIFE under `page/` and `require` it from the page entry. Put textures and `.glb`
+in `manifest.assets` and load them through `Tapp.assets`. The sandbox cannot fetch
+a CDN copy of the engine; `check` warns when page HTML or JS points at `unpkg` /
+`jsdelivr` / `cdnjs` / `esm.sh`. See
+[GRAPHICS.md](../../docs/development/tapp/GRAPHICS.md).
+
+Online games use `Tapp.game` plus `game:session` and federation permissions.
+`create()` is private by default; preview cannot exercise these APIs.
 
 ## Commands
 
@@ -126,7 +130,7 @@ in automation to keep the selected binary explicit.
 - write-only `credentials` declarations and bindings: limits, declared/bound keys,
   fixed absolute HTTPS origins, fixed non-routing headers, and duplicate headers;
 - literal `Tapp.assets.*("path")` references;
-- runtime surface consistency (`hasPage` resources, widgets ↔ `widget:register`);
+- runtime surface consistency (`page` layer resources, widgets ↔ `widget:register`);
 - headless capability profile: actions denied in background core;
 - `manifest.json` size, per-resource byte limits, and `.tapp` entry count and
   package size limits.

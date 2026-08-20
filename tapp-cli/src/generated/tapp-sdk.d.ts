@@ -349,7 +349,7 @@ export interface TappSdk {
     uploadMedia(...args: unknown[]): Promise<unknown> // permission: federation:write
   }
   file: {
-    download(...args: unknown[]): Promise<unknown> // permission: storage
+    download(...args: unknown[]): Promise<unknown> // permission: storage:read
   }
   game: {
     create(...args: unknown[]): Promise<unknown> // permission: game:session
@@ -377,6 +377,15 @@ export interface TappSdk {
     list(...args: unknown[]): Promise<unknown> // permission: report:read
     listReports(...args: unknown[]): Promise<unknown> // permission: report:read
     update(...args: unknown[]): Promise<unknown> // permission: report:write
+  }
+  shared: {
+    clear(...args: unknown[]): Promise<unknown> // permission: storage:write
+    get(...args: unknown[]): Promise<unknown> // permission: storage:read
+    getAll(...args: unknown[]): Promise<unknown> // permission: storage:read
+    keys(...args: unknown[]): Promise<unknown> // permission: storage:read
+    remove(...args: unknown[]): Promise<unknown> // permission: storage:write
+    set(...args: unknown[]): Promise<unknown> // permission: storage:write
+    usage(...args: unknown[]): Promise<unknown> // permission: storage:read
   }
   shortcut: {
     list(...args: unknown[]): Promise<unknown>

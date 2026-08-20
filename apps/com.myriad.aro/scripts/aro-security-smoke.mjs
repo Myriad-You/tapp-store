@@ -75,9 +75,15 @@ assert.match(msgUi, /data-quote-id="'\s*\+ esc\(qId\)/)
 
 // ARO-13 thin main
 assert.ok(main.length < 12000, 'main index.js should stay thin, got ' + main.length)
-assert.match(main, /pageModules|headless|background/i)
+assert.match(main, /page layer|headless|background/i)
 assert.doesNotMatch(main, /function renderMessages\s*\(/)
 assert.doesNotMatch(main, /function openConversation\s*\(/)
+
+// Direct Tapp shares must round-trip the declared-layer package shape.
+assert.match(chat, /installPackage\.modules/)
+assert.match(chat, /modules:\s*installPackage\.modules/)
+assert.doesNotMatch(chat, /installPackage\.code/)
+assert.doesNotMatch(chat, /installPackage\.pageModules/)
 
 // ARO-12 parseable boundaries
 assert.match(views, /function bindEvents\s*\(/)
