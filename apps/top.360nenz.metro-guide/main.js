@@ -23,9 +23,11 @@ var METRO_V2_CITIES = ['beijing','shanghai','hongkong','taipei'];
 function data() { return METRO_DATA[metroState.city] || { name:cityMeta(metroState.city).name, source:'等待从 MetroMan 下载', version:'', lines:[] }; }
 function cityMeta(id) { return METRO_CITIES.find(function(city) { return city.id === id; }) || { id:id, name:id }; }
 function apiData(value) { return value && value.success === true && Object.prototype.hasOwnProperty.call(value, 'data') ? value.data : value; }
-var METRO_API_TIMEOUT = 12000;
+var METRO_API_TIMEOUT = 8000;
 var METRO_STORAGE_TIMEOUT = 4000;
 var metroBridgeQueue = Promise.resolve();
+var metroClockTimer = null;
+var metroStartupUpdateStarted = false;
 // Bridge 超时只结束调用方等待，不提前释放宿主请求槽；底层请求完成后才允许下一项进入队列。
 function queuedBridge(task, label, timeout) {
   var resolveCaller;
@@ -186,9 +188,14 @@ function parsePlannerCity(html, version, cityId) {
   var city = { name:cityMeta(cityId).name, source:'MetroMan 网页数据', version:String(version || new Date().toISOString().slice(0, 10).replace(/-/g, '')), lines:lines, stationSlugs:stationSlugs };
   return lines.length > 0 && validCity(city) ? city : null;
 }
-async function updateOnline(silent, requestedCity, requestToken) {
+async function updateOnline(silent, requestedCity, requestToken, backgroundRun) {
   var cityId = requestedCity || metroState.city;
   var isCurrent = function() { return !requestToken || requestToken === metroState.cityRequest; };
+  if (silent && !backgroundRun && !metroStartupUpdateStarted) {
+    metroStartupUpdateStarted = true;
+    setTimeout(function() { updateOnline(true, cityId, requestToken, true); }, 0);
+    return;
+  }
   var button = document.querySelector('[data-action="update"]'); if (button) button.disabled = true;
   var mapChecked = false, versionChecked = false, dataUpdated = false, remoteVersion = '';
   if (isCurrent()) setNetworkStatus('checking', '正在连接 MetroMan', cityMeta(cityId).name + '资源检查中');
@@ -258,7 +265,20 @@ async function saveRecentSelection(cityId) { var root = document.querySelector('
 function openStationDialog(target) { metroState.stationTarget = target; metroState.stationLineFilter = ''; var dialog = document.querySelector('[data-station-dialog]'); document.querySelector('[data-station-dialog-title]').textContent = target === 'from' ? '选择出发站' : '选择到达站'; var searchInput = document.querySelector('[data-station-search]'); searchInput.value = ''; renderStations(); if (dialog.showModal) dialog.showModal(); else dialog.setAttribute('open', ''); requestAnimationFrame(function() { searchInput.focus(); }); }
 function closeStationDialog() { var dialog = document.querySelector('[data-station-dialog]'); if (dialog.close) dialog.close(); else dialog.removeAttribute('open'); }
 function setSegment(group, attribute, value) { document.querySelectorAll(group + ' [' + attribute + ']').forEach(function(button) { button.classList.toggle('is-active', button.getAttribute(attribute) === value); }); }
-function setDefaultDateTime() { var input = document.querySelector('[data-datetime]'); if (!input || input.value) return; var now = new Date(Date.now() - new Date().getTimezoneOffset() * 60000); input.value = now.toISOString().slice(0, 16); }
+function localDateTimeValue() { var now = new Date(Date.now() - new Date().getTimezoneOffset() * 60000); return now.toISOString().slice(0, 16); }
+function setDefaultDateTime() {
+  var input = document.querySelector('[data-datetime]');
+  if (!input) return;
+  var generated = input.dataset.autoDateTime || '';
+  if (!input.value || input.value === generated) { input.value = localDateTimeValue(); input.dataset.autoDateTime = input.value; }
+  if (metroClockTimer) clearInterval(metroClockTimer);
+  metroClockTimer = setInterval(function() {
+    var current = document.querySelector('[data-datetime]');
+    if (!current || document.activeElement === current) return;
+    var autoValue = current.dataset.autoDateTime || '';
+    if (!current.value || current.value === autoValue) { current.value = localDateTimeValue(); current.dataset.autoDateTime = current.value; }
+  }, 30000);
+}
 async function selectCity(cityId, silent) { var requestToken = ++metroState.cityRequest; metroState.city = cityId; metroState.loadingCity = cityId; var root = document.querySelector('[data-app]'); root.querySelectorAll('[data-city]').forEach(function(select) { select.value = cityId; }); root.querySelector('[data-from]').value = ''; root.querySelector('[data-to]').value = ''; root.querySelector('[data-route]').hidden = true; root.querySelector('[data-error]').hidden = true; root.querySelector('[data-empty]').hidden = false; root.querySelector('[data-map-city]').textContent = cityMeta(cityId).name + '地铁'; root.querySelector('[data-shanghai-only]').hidden = cityId !== 'shanghai'; root.querySelector('.quick-picks').hidden = cityId !== 'beijing'; root.querySelector('[data-map-status]').textContent = metroState.mapUrls[cityId] ? '已加载线路图' : '正在从 MetroMan 加载线路图…'; var image = root.querySelector('[data-map-image]'); if (metroState.mapUrls[cityId]) image.src = metroState.mapUrls[cityId]; else image.removeAttribute('src'); root.querySelector('[data-status]').textContent = validCity(METRO_DATA[cityId]) ? cityMeta(cityId).name + '本地数据 · 正在检查更新' : cityMeta(cityId).name + ' · 正在从 MetroMan 下载'; renderCityOptions(); renderStations(); renderLines(); await updateOnline(Boolean(silent), cityId, requestToken); var recent = await loadRecentSelection(); if (recent.city === cityId && metroState.city === cityId) { if (recent.from && allStations().indexOf(recent.from) >= 0) root.querySelector('[data-from]').value = recent.from; if (recent.to && allStations().indexOf(recent.to) >= 0) root.querySelector('[data-to]').value = recent.to; } await saveRecentSelection(cityId); if (metroState.city === cityId && requestToken === metroState.cityRequest && !validCity(METRO_DATA[cityId])) { root.querySelector('[data-status]').textContent = cityMeta(cityId).name + ' · 暂无可用资源'; root.querySelector('[data-map-status]').textContent = metroState.mapUrls[cityId] ? 'MetroMan 高清线路图' : 'MetroMan 暂未提供线路图'; if (!silent) notify(cityMeta(cityId).name + '资源暂时无法下载，请稍后重试。', 'error'); } }
 
 function bindMapGestures() { var viewport = document.querySelector('[data-map-viewport]'); viewport.addEventListener('wheel', function(event) { event.preventDefault(); setZoom(metroState.zoom + (event.deltaY < 0 ? 15 : -15), event); }, { passive:false }); viewport.addEventListener('pointerdown', function(event) { if (event.button !== 0 && event.pointerType === 'mouse') return; metroState.dragging = true; metroState.dragStart = { x:event.clientX, y:event.clientY, panX:metroState.panX, panY:metroState.panY }; viewport.classList.add('is-dragging'); viewport.setPointerCapture(event.pointerId); }); viewport.addEventListener('pointermove', function(event) { if (!metroState.dragging || !metroState.dragStart) return; metroState.panX = metroState.dragStart.panX + event.clientX - metroState.dragStart.x; metroState.panY = metroState.dragStart.panY + event.clientY - metroState.dragStart.y; applyMapTransform(); }); function stopDrag(event) { metroState.dragging = false; metroState.dragStart = null; viewport.classList.remove('is-dragging'); if (viewport.hasPointerCapture(event.pointerId)) viewport.releasePointerCapture(event.pointerId); } viewport.addEventListener('pointerup', stopDrag); viewport.addEventListener('pointercancel', stopDrag); viewport.addEventListener('dblclick', resetMap); window.addEventListener('resize', applyMapTransform); }
