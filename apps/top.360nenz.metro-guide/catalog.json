@@ -1,9 +1,9 @@
 {
-  "long_description": "地铁通提供中文路线规划、站点线路筛选与高清线路图。应用覆盖 MetroMan 55 城市目录，优先使用缓存和离线资源；新版及旧版规划均可展示车辆起止时间、用时、票价、方向与里程，行程轴支持精简站数与完整站点切换。收藏路线页可按城市筛选、一键查询、反向和删除。线路图支持滚轮缩放和拖动，上海另含 APP PDF。联网时直接从 MetroMan 检查更新，并明确显示连接或权限错误。",
+  "long_description": "地铁通提供中文路线规划、站点线路筛选与高清线路图。应用覆盖 MetroMan 55 城市目录，优先使用缓存和离线资源；新版及旧版规划均可展示车辆起止时间、用时、票价、方向与里程，行程轴支持精简站数与完整站点切换。收藏路线页可按城市筛选、一键查询、反向和删除。线路图支持滚轮缩放和拖动，上海另含参考 APK 中的 PDF。联网时直接从 MetroMan 检查更新，并明确显示连接或权限错误。MetroMan 的线路图、线路数据和参考 PDF 属于外部资源，不包含在本项目 MIT 代码许可内。",
   "tags": ["地铁", "线路查询", "线路图", "换乘", "出行", "离线", "中文"],
   "featured": false,
   "verified": false,
-  "license": "MIT",
+  "license": "MIT（代码；MetroMan 外部资源除外）",
   "homepage": "https://myriad.360nenz.top/",
   "repository": "https://github.com/360NENZ/tapp-store",
   "preview": { "version": 1, "type": "snapshot", "html": "preview.html", "styles": ["page.css", "preview.css"], "viewport": { "width": 1440, "height": 900 }, "fit": "cover", "focus": { "x": 0.5, "y": 0.45 }, "theme": "light" }

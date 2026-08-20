@@ -3,8 +3,8 @@ const vm = require('vm');
 const path = require('path');
 const source = fs.readFileSync(path.join(__dirname, '..', 'main.js'), 'utf8');
 const sandbox = { document: {}, Tapp: { lifecycle: { onReady() {} } }, console, URL };
-vm.runInNewContext(source + '\nthis.__test = { data: METRO_DATA, metroState, findRoute, validCity, extractOnlineMap, extractCityVersion, extractOfficialFare };', sandbox);
-const { data, metroState, findRoute, validCity, extractOnlineMap, extractCityVersion } = sandbox.__test;
+vm.runInNewContext(source + '\nthis.__test = { data: METRO_DATA, metroState, findRoute, validCity, extractOnlineMap, extractCityVersion, extractOfficialFare, isKnownCityId, safeCityId, safeStationSlug, safePlannerRoute, safeMetroMapUrl };', sandbox);
+const { data, metroState, findRoute, validCity, extractOnlineMap, extractCityVersion, safeCityId, safeStationSlug, safePlannerRoute, safeMetroMapUrl } = sandbox.__test;
 const sortedCities = sandbox.sortedCities;
 const lineTagName = sandbox.lineTagName;
 const lineIndexName = sandbox.lineIndexName;
@@ -39,4 +39,13 @@ if (!shanghaiRoute || shanghaiRoute.transfers !== 1 || shanghaiRoute.stations.in
 const cityVersion = extractCityVersion('beijing,20260710,2636291\nshanghai,20260806,3359636', 'shanghai');
 if (!cityVersion || cityVersion.version !== '20260806' || cityVersion.zipBytes !== 3359636) throw new Error('MetroMan 版本清单解析错误');
 if (extractOnlineMap("url: '/assets/img/metro/map/routemap_sh_cn.png'") !== 'https://www.metroman.cn/assets/img/metro/map/routemap_sh_cn.png') throw new Error('在线线路图地址解析错误');
+if (safeMetroMapUrl('http://www.metroman.cn/assets/img/metro/map/routemap_sh_cn.png', false) !== '') throw new Error('线路图必须使用 HTTPS');
+if (safeMetroMapUrl('https://evil.example/routemap_sh_cn.png', false) !== '') throw new Error('线路图非官方域名应被拒绝');
+if (safeMetroMapUrl('https://www.metroman.cn/assets/img/metro/map/other.png', false) !== '') throw new Error('非线路图 PNG 应被拒绝');
+if (extractOnlineMap("src='https://evil.example/routemap_sh_cn.png'", 'shanghai') !== null) throw new Error('恶意线路图地址不应被解析');
+if (safeStationSlug('xujiahui') !== 'xujiahui' || safeStationSlug('../secret') !== '' || safeStationSlug('徐家汇') !== '') throw new Error('站点 slug 白名单校验错误');
+if (safePlannerRoute('xujiahui-to-lujiazui') !== 'xujiahui-to-lujiazui' || safePlannerRoute('../secret-to-lujiazui') !== '' || safePlannerRoute('xujiahui-to-lujiazui-to-secret') !== '') throw new Error('规划路径白名单校验错误');
+let invalidCityRejected = false;
+try { safeCityId('../evil'); } catch (_) { invalidCityRejected = true; }
+if (!invalidCityRejected) throw new Error('非法城市 ID 应被拒绝');
 console.log('metro route tests passed');
