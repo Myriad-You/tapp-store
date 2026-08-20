@@ -13,7 +13,7 @@ var METRO_DATA = {
 var METRO_CITIES = [
   ['beijing','北京'],['shanghai','上海'],['guangzhou','广州'],['shenzhen','深圳'],['hongkong','香港'],['taipei','台北'],['chengdu','成都'],['chongqing','重庆'],['hangzhou','杭州'],['wuhan','武汉'],['nanjing','南京'],['zhengzhou','郑州'],['xian','西安'],['suzhou','苏州'],['qingdao','青岛'],['tianjin','天津'],['dalian','大连'],['changsha','长沙'],['hefei','合肥'],['ningbo','宁波'],['shenyang','沈阳'],['kunming','昆明'],['guiyang','贵阳'],['wuxi','无锡'],['fuzhou','福州'],['changchun','长春'],['nanchang','南昌'],['nanning','南宁'],['wenzhou','温州'],['jinhua','金华'],['xiamen','厦门'],['jinan','济南'],['harbin','哈尔滨'],['shijiazhuang','石家庄'],['xuzhou','徐州'],['nantong','南通'],['changzhou','常州'],['taiyuan','太原'],['taizhou','台州'],['hohhot','呼和浩特'],['wuhu','芜湖'],['luoyang','洛阳'],['kaohsiung','高雄'],['dongguan','东莞'],['lanzhou','兰州'],['urumqi','乌鲁木齐'],['taichung','台中'],['macau','澳门'],['foshan','佛山'],['shaoxing','绍兴'],['chuzhou','滁州'],['haining','海宁'],['taoyuan','桃园'],['xuchang','许昌'],['maanshan','马鞍山']
 ].map(function(city, order) { return { id:city[0], name:city[1], order:order }; });
-var metroState = { city:'beijing', favorites:[], zoom:100, panX:0, panY:0, dragging:false, dragStart:null, assetUrls:{}, mapUrls:{}, versions:{}, cityCache:{}, loadingCity:'', mapVersion:'', cityRequest:0, stationTarget:'from', stationLineFilter:'', mode:'depart', fare:'ic', preference:'time' };
+var metroState = { city:'beijing', favorites:[], zoom:100, panX:0, panY:0, dragging:false, dragStart:null, assetUrls:{}, mapUrls:{}, versions:{}, cityCache:{}, loadingCity:'', mapVersion:'', cityRequest:0, routeRequest:0, stationTarget:'from', stationLineFilter:'', mode:'depart', fare:'ic', preference:'time' };
 var METRO_CACHE_KEY = 'metro-guide.city-cache.v1';
 var METRO_RECENT_KEY = 'metro-guide.recent-selection.v1';
 var METRO_MAP_CACHE_KEY = 'metro-guide.map-meta.v1';
@@ -28,6 +28,9 @@ var METRO_STORAGE_TIMEOUT = 4000;
 var metroBridgeQueue = Promise.resolve();
 var metroClockTimer = null;
 var metroStartupUpdateStarted = false;
+var metroPlanCache = Object.create(null);
+var metroPlanInflight = Object.create(null);
+var METRO_PLAN_CACHE_TTL = 60000;
 // Bridge 超时只结束调用方等待，不提前释放宿主请求槽；底层请求完成后才允许下一项进入队列。
 function queuedBridge(task, label, timeout) {
   var resolveCaller;
@@ -75,6 +78,21 @@ function metroApi(name, params) {
       default: throw new Error('未声明的 MetroMan API: ' + name);
     }
   }, 'MetroMan ' + name, METRO_API_TIMEOUT);
+}
+function metroPlanApi(name, params) {
+  var key = name + '|' + JSON.stringify(params || {});
+  var cached = metroPlanCache[key];
+  if (cached && Date.now() - cached.savedAt < METRO_PLAN_CACHE_TTL) return Promise.resolve(cached.value);
+  if (metroPlanInflight[key]) return metroPlanInflight[key];
+  metroPlanInflight[key] = metroApi(name, params).then(function(value) {
+    delete metroPlanInflight[key];
+    metroPlanCache[key] = { savedAt:Date.now(), value:value };
+    return value;
+  }, function(error) {
+    delete metroPlanInflight[key];
+    throw error;
+  });
+  return metroPlanInflight[key];
 }
 function storageGet(key, fallback) {
   return queuedBridge(function() {
@@ -193,7 +211,8 @@ async function updateOnline(silent, requestedCity, requestToken, backgroundRun) 
   var isCurrent = function() { return !requestToken || requestToken === metroState.cityRequest; };
   if (silent && !backgroundRun && !metroStartupUpdateStarted) {
     metroStartupUpdateStarted = true;
-    setTimeout(function() { updateOnline(true, cityId, requestToken, true); }, 0);
+    setNetworkStatus('offline', '离线数据已就绪', '稍后在后台检查 MetroMan 更新');
+    setTimeout(function() { updateOnline(true, cityId, requestToken, true); }, 3000);
     return;
   }
   var button = document.querySelector('[data-action="update"]'); if (button) button.disabled = true;
@@ -261,7 +280,7 @@ async function updateOnline(silent, requestedCity, requestToken, backgroundRun) 
 async function openPdf() { try { if (!metroState.assetUrls.pdf) metroState.assetUrls.pdf = (await Tapp.assets.getUrl('assets/routemap-shanghai.pdf')).url; var link = document.createElement('a'); link.href = metroState.assetUrls.pdf; link.download = '上海地铁线路图.pdf'; document.body.appendChild(link); link.click(); link.remove(); notify('PDF 原件已交给浏览器打开。', 'success'); } catch (_) { notify('PDF 暂时无法打开，请使用高清 PNG。', 'error'); } }
 function recentSelection() { return {}; }
 async function loadRecentSelection() { var value = await storageGet(METRO_RECENT_KEY, null); return value && typeof value === 'object' ? value : recentSelection(); }
-async function saveRecentSelection(cityId) { var root = document.querySelector('[data-app]'); var value = { city:cityId || metroState.city, from:root.querySelector('[data-from]').value.trim(), to:root.querySelector('[data-to]').value.trim() }; await storageSet(METRO_RECENT_KEY, value); }
+function saveRecentSelection(cityId) { var root = document.querySelector('[data-app]'); var value = { city:cityId || metroState.city, from:root.querySelector('[data-from]').value.trim(), to:root.querySelector('[data-to]').value.trim() }; setTimeout(function() { storageSet(METRO_RECENT_KEY, value); }, 0); return Promise.resolve(); }
 function openStationDialog(target) { metroState.stationTarget = target; metroState.stationLineFilter = ''; var dialog = document.querySelector('[data-station-dialog]'); document.querySelector('[data-station-dialog-title]').textContent = target === 'from' ? '选择出发站' : '选择到达站'; var searchInput = document.querySelector('[data-station-search]'); searchInput.value = ''; renderStations(); if (dialog.showModal) dialog.showModal(); else dialog.setAttribute('open', ''); requestAnimationFrame(function() { searchInput.focus(); }); }
 function closeStationDialog() { var dialog = document.querySelector('[data-station-dialog]'); if (dialog.close) dialog.close(); else dialog.removeAttribute('open'); }
 function setSegment(group, attribute, value) { document.querySelectorAll(group + ' [' + attribute + ']').forEach(function(button) { button.classList.toggle('is-active', button.getAttribute(attribute) === value); }); }
@@ -279,7 +298,7 @@ function setDefaultDateTime() {
     if (!current.value || current.value === autoValue) { current.value = localDateTimeValue(); current.dataset.autoDateTime = current.value; }
   }, 30000);
 }
-async function selectCity(cityId, silent) { var requestToken = ++metroState.cityRequest; metroState.city = cityId; metroState.loadingCity = cityId; var root = document.querySelector('[data-app]'); root.querySelectorAll('[data-city]').forEach(function(select) { select.value = cityId; }); root.querySelector('[data-from]').value = ''; root.querySelector('[data-to]').value = ''; root.querySelector('[data-route]').hidden = true; root.querySelector('[data-error]').hidden = true; root.querySelector('[data-empty]').hidden = false; root.querySelector('[data-map-city]').textContent = cityMeta(cityId).name + '地铁'; root.querySelector('[data-shanghai-only]').hidden = cityId !== 'shanghai'; root.querySelector('.quick-picks').hidden = cityId !== 'beijing'; root.querySelector('[data-map-status]').textContent = metroState.mapUrls[cityId] ? '已加载线路图' : '正在从 MetroMan 加载线路图…'; var image = root.querySelector('[data-map-image]'); if (metroState.mapUrls[cityId]) image.src = metroState.mapUrls[cityId]; else image.removeAttribute('src'); root.querySelector('[data-status]').textContent = validCity(METRO_DATA[cityId]) ? cityMeta(cityId).name + '本地数据 · 正在检查更新' : cityMeta(cityId).name + ' · 正在从 MetroMan 下载'; renderCityOptions(); renderStations(); renderLines(); await updateOnline(Boolean(silent), cityId, requestToken); var recent = await loadRecentSelection(); if (recent.city === cityId && metroState.city === cityId) { if (recent.from && allStations().indexOf(recent.from) >= 0) root.querySelector('[data-from]').value = recent.from; if (recent.to && allStations().indexOf(recent.to) >= 0) root.querySelector('[data-to]').value = recent.to; } await saveRecentSelection(cityId); if (metroState.city === cityId && requestToken === metroState.cityRequest && !validCity(METRO_DATA[cityId])) { root.querySelector('[data-status]').textContent = cityMeta(cityId).name + ' · 暂无可用资源'; root.querySelector('[data-map-status]').textContent = metroState.mapUrls[cityId] ? 'MetroMan 高清线路图' : 'MetroMan 暂未提供线路图'; if (!silent) notify(cityMeta(cityId).name + '资源暂时无法下载，请稍后重试。', 'error'); } }
+async function selectCity(cityId, silent) { var requestToken = ++metroState.cityRequest; ++metroState.routeRequest; metroState.city = cityId; metroState.loadingCity = cityId; var root = document.querySelector('[data-app]'); root.querySelectorAll('[data-city]').forEach(function(select) { select.value = cityId; }); root.querySelector('[data-from]').value = ''; root.querySelector('[data-to]').value = ''; root.querySelector('[data-route]').hidden = true; root.querySelector('[data-error]').hidden = true; root.querySelector('[data-empty]').hidden = false; root.querySelector('[data-map-city]').textContent = cityMeta(cityId).name + '地铁'; root.querySelector('[data-shanghai-only]').hidden = cityId !== 'shanghai'; root.querySelector('.quick-picks').hidden = cityId !== 'beijing'; root.querySelector('[data-map-status]').textContent = metroState.mapUrls[cityId] ? '已加载线路图' : '正在从 MetroMan 加载线路图…'; var image = root.querySelector('[data-map-image]'); if (metroState.mapUrls[cityId]) image.src = metroState.mapUrls[cityId]; else image.removeAttribute('src'); root.querySelector('[data-status]').textContent = validCity(METRO_DATA[cityId]) ? cityMeta(cityId).name + '本地数据 · 正在检查更新' : cityMeta(cityId).name + ' · 正在从 MetroMan 下载'; renderCityOptions(); renderStations(); renderLines(); await updateOnline(Boolean(silent), cityId, requestToken); var recent = await loadRecentSelection(); if (recent.city === cityId && metroState.city === cityId) { if (recent.from && allStations().indexOf(recent.from) >= 0) root.querySelector('[data-from]').value = recent.from; if (recent.to && allStations().indexOf(recent.to) >= 0) root.querySelector('[data-to]').value = recent.to; } await saveRecentSelection(cityId); if (metroState.city === cityId && requestToken === metroState.cityRequest && !validCity(METRO_DATA[cityId])) { root.querySelector('[data-status]').textContent = cityMeta(cityId).name + ' · 暂无可用资源'; root.querySelector('[data-map-status]').textContent = metroState.mapUrls[cityId] ? 'MetroMan 高清线路图' : 'MetroMan 暂未提供线路图'; if (!silent) notify(cityMeta(cityId).name + '资源暂时无法下载，请稍后重试。', 'error'); } }
 
 function bindMapGestures() { var viewport = document.querySelector('[data-map-viewport]'); viewport.addEventListener('wheel', function(event) { event.preventDefault(); setZoom(metroState.zoom + (event.deltaY < 0 ? 15 : -15), event); }, { passive:false }); viewport.addEventListener('pointerdown', function(event) { if (event.button !== 0 && event.pointerType === 'mouse') return; metroState.dragging = true; metroState.dragStart = { x:event.clientX, y:event.clientY, panX:metroState.panX, panY:metroState.panY }; viewport.classList.add('is-dragging'); viewport.setPointerCapture(event.pointerId); }); viewport.addEventListener('pointermove', function(event) { if (!metroState.dragging || !metroState.dragStart) return; metroState.panX = metroState.dragStart.panX + event.clientX - metroState.dragStart.x; metroState.panY = metroState.dragStart.panY + event.clientY - metroState.dragStart.y; applyMapTransform(); }); function stopDrag(event) { metroState.dragging = false; metroState.dragStart = null; viewport.classList.remove('is-dragging'); if (viewport.hasPointerCapture(event.pointerId)) viewport.releasePointerCapture(event.pointerId); } viewport.addEventListener('pointerup', stopDrag); viewport.addEventListener('pointercancel', stopDrag); viewport.addEventListener('dblclick', resetMap); window.addEventListener('resize', applyMapTransform); }
  function bind() { var root = document.querySelector('[data-app]'); root.addEventListener('click', async function(event) { var view = event.target.closest('[data-view]'); if (view) { setView(view.dataset.view); if (view.dataset.view === 'map') requestAnimationFrame(applyMapTransform); } var mode = event.target.closest('[data-mode]'); if (mode) { metroState.mode = mode.dataset.mode; setSegment('[data-time-modes]', 'data-mode', metroState.mode); document.querySelector('[data-datetime]').disabled = metroState.mode === 'first' || metroState.mode === 'last'; } var fare = event.target.closest('[data-fare]'); if (fare) { metroState.fare = fare.dataset.fare; setSegment('[data-fare-modes]', 'data-fare', metroState.fare); } var preference = event.target.closest('[data-preference]'); if (preference) { metroState.preference = preference.dataset.preference; setSegment('[data-preferences]', 'data-preference', metroState.preference); } var station = event.target.closest('[data-station-value]'); if (station) { root.querySelector(metroState.stationTarget === 'from' ? '[data-from]' : '[data-to]').value = station.dataset.stationValue; await saveRecentSelection(); closeStationDialog(); } var lineFilter = event.target.closest('[data-line-filter]'); if (lineFilter) { metroState.stationLineFilter = lineFilter.dataset.lineFilter; renderStations(root.querySelector('[data-station-search]').value); return; } var button = event.target.closest('[data-action]'); var action = button && button.dataset.action; if (action === 'pick-from') openStationDialog('from'); if (action === 'pick-to') openStationDialog('to'); if (action === 'close-stations') closeStationDialog(); if (action === 'search') { await saveRecentSelection(); search(); } if (action === 'swap') { var a = root.querySelector('[data-from]'), b = root.querySelector('[data-to]'), value = a.value; a.value = b.value; b.value = value; await saveRecentSelection(); } if (action === 'zoom-in') setZoom(metroState.zoom + 25); if (action === 'zoom-out') setZoom(metroState.zoom - 25); if (action === 'zoom-reset') resetMap(); if (action === 'open-pdf') openPdf(); if (action === 'update') updateOnline(false, metroState.city); if (action === 'about') notify('新版城市优先使用 MetroMan 时刻、票价与付款方式；其他城市保留本地少换乘规划。', 'success'); if (action === 'source') { try { await Tapp.ui.openUrl({ id:'metroman-maps', path:metroState.city }); } catch (_) { notify('暂时无法打开 MetroMan 数据来源。', 'error'); } } if (action === 'favorite') { var from = root.querySelector('[data-from]').value, to = root.querySelector('[data-to]').value, favorite = metroState.city + '|' + from + '|' + to; if (from && to && metroState.favorites.indexOf(favorite) < 0) metroState.favorites.push(favorite); await storageSet('metro-guide.favorites.v1', metroState.favorites); button.textContent = '★'; notify('路线已收藏', 'success'); } var pick = event.target.closest('[data-pick]'); if (pick) { var values = pick.dataset.pick.split('|'); root.querySelector('[data-from]').value = values[0]; root.querySelector('[data-to]').value = values[1]; await saveRecentSelection(); search(); } }); root.querySelectorAll('[data-city]').forEach(function(select) { select.addEventListener('change', async function(event) { await saveRecentSelection(); selectCity(event.target.value, false); }); }); root.querySelector('[data-station-search]').addEventListener('input', function(event) { renderStations(event.target.value); }); root.querySelector('[data-station-dialog]').addEventListener('click', function(event) { if (event.target === event.currentTarget) closeStationDialog(); }); setDefaultDateTime(); bindMapGestures(); }
@@ -429,31 +448,37 @@ function plannerStationSlug(name) { return (data().stationSlugs && data().statio
 async function search() {
   var from = document.querySelector('[data-from]').value.trim();
   var to = document.querySelector('[data-to]').value.trim();
+  var requestId = ++metroState.routeRequest;
   var route = findRoute(from, to);
   if (!route) { showRouteError('请从当前城市的站点列表中选择有效站点。'); return; }
   var button = document.querySelector('[data-action="search"]');
   button.disabled = true;
   button.textContent = '正在查询…';
+  // 先绘制离线路线，官方结果只负责补充票价、时刻和更完整的行程。
+  renderFallbackRoute(route, from, to);
+  button.disabled = false;
+  button.innerHTML = '<span aria-hidden="true">⌕</span>查询路线';
+
+  var fromSlug = plannerStationSlug(from);
+  var toSlug = plannerStationSlug(to);
+  if (!fromSlug || !toSlug) return;
+
+  var isV2 = METRO_V2_CITIES.indexOf(metroState.city) >= 0;
+  var params = { city:metroState.city, route:fromSlug + '-to-' + toSlug, mode:metroState.mode, datetime:formatPlannerDatetime(), preference:metroState.preference, fare:metroState.fare };
   try {
-    var fromSlug = plannerStationSlug(from);
-    var toSlug = plannerStationSlug(to);
-    if (fromSlug && toSlug) {
-      var isV2 = METRO_V2_CITIES.indexOf(metroState.city) >= 0;
-      var params = { city:metroState.city, route:fromSlug + '-to-' + toSlug, mode:metroState.mode, datetime:formatPlannerDatetime(), preference:metroState.preference, fare:metroState.fare };
-      var result = isV2 ? await metroApi('metroPlannerV2Result', params) : await metroApi('metroPlannerResult', params);
-      var html = responseHtml(result);
-      var plan = isV2 ? parseOfficialPlan(html) : parseLegacyPlan(html);
-      if (plan) { plan.isV2 = isV2; renderOfficialPlan(plan, from, to); return; }
-      renderFallbackRoute(route, from, to, extractOfficialFare(html));
-      return;
+    var result = isV2 ? await metroPlanApi('metroPlannerV2Result', params) : await metroPlanApi('metroPlannerResult', params);
+    if (requestId !== metroState.routeRequest) return;
+    var html = responseHtml(result);
+    var plan = isV2 ? parseOfficialPlan(html) : parseLegacyPlan(html);
+    if (plan) {
+      plan.isV2 = isV2;
+      renderOfficialPlan(plan, from, to);
+    } else {
+      var officialFare = extractOfficialFare(html);
+      if (officialFare) document.querySelector('[data-result-fare]').textContent = officialFare;
     }
-    renderFallbackRoute(route, from, to);
   } catch (_) {
-    renderFallbackRoute(route, from, to);
-    notify('MetroMan 官方结果暂不可用，已显示本地少换乘方案。', 'warning');
-  } finally {
-    button.disabled = false;
-    button.innerHTML = '<span aria-hidden="true">⌕</span>查询路线';
+    if (requestId === metroState.routeRequest) notify('MetroMan 官方详情暂不可用，已保留本地少换乘方案。', 'warning');
   }
 }
 
