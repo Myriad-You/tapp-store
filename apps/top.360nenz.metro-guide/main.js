@@ -200,7 +200,7 @@ function loadCityCache(cityId) {
   metroCityCacheInflight[cityId] = loadCachedCities(cityId).catch(function(error) { console.warn('[metro-guide] cache hydration failed', cityId, error); }).then(function() { delete metroCityCacheInflight[cityId]; });
   return metroCityCacheInflight[cityId];
 }
-async function loadOfflineAssets() { var bundled = await loadAssetJson('assets/shanghai.json'); if (!validCity(bundled)) throw new Error('invalid bundled city'); METRO_DATA.shanghai = bundled; var image = await Tapp.assets.getUrl('assets/routemap-shanghai.png'); metroState.assetUrls.image = image.url; metroState.mapUrls.shanghai = image.url; document.querySelector('[data-map-image]').src = image.url; document.querySelector('[data-status]').textContent = data().source + ' ' + (data().version || '') + ' · 本地可用'; }
+async function loadOfflineAssets() { var bundled = await loadAssetJson('assets/shanghai.json'); if (!validCity(bundled)) throw new Error('invalid bundled city'); METRO_DATA.shanghai = bundled; var image = await Tapp.assets.getUrl('assets/routemap-shanghai.png'); metroState.assetUrls.image = image.url; metroState.mapUrls.shanghai = image.url; document.querySelector('[data-map-image]').src = image.url; document.querySelector('[data-status]').textContent = data().source + ' ' + (data().version || '') + ' · 本地可用'; setNetworkStatus('offline', '离线数据已就绪', 'MetroMan 将在后台检查更新'); }
 function extractOnlineMap(html, cityId) { var match = String(html || '').match(/(?:url:\s*['"]|src=['"])([^'"]*routemap_[a-z0-9_]+\.png[^'"]*)['"]/i); if (!match) match = String(html || '').match(/([^'"\s]*routemap_[a-z0-9_]+\.png)/i); if (!match) return null; return new URL(match[1], METRO_MAP_PAGE + (cityId || metroState.city)).href; }
 function extractCityVersion(text, city) { var match = String(text || '').split(/\r?\n/).map(function(line) { return line.trim().split(','); }).find(function(row) { return row[0] === city && /^\d{8}$/.test(row[1] || ''); }); return match ? { version:match[1], zipBytes:Number(match[2]) || 0 } : null; }
 function colorForLine(doc, id) { var label = id.replace(/(?:号线|线|铁路|轨道交通)$/g, ''); var badge = Array.from(doc.querySelectorAll('.badge[style*="background"]')).find(function(node) { return node.textContent.trim() === label; }); var match = badge && String(badge.getAttribute('style')).match(/background:\s*(#[0-9a-f]{6})/i); if (match) return match[1].toUpperCase(); var hash = Array.from(id).reduce(function(value, char) { return (value * 31 + char.charCodeAt(0)) >>> 0; }, 7); var palette = ['#0F766E','#C43830','#1077B5','#7C3699','#C47323','#00979E','#B25B1D','#5D5DAF']; return palette[hash % palette.length]; }
@@ -473,7 +473,11 @@ function responseHtml(result) {
   if (value.data && typeof value.data.body === 'string') return value.data.body;
   return '';
 }
-var COMMON_STATION_SLUGS = { '环城南路':'south-ring-road', '斗南':'dounan', '龙头街':'longtou-street', '东风广场':'dongfeng-square', '昆明火车站':'kunming-railway-station' };
+var COMMON_STATION_SLUGS = {
+  '环城南路':'south-ring-road', '斗南':'dounan', '龙头街':'longtou-street', '东风广场':'dongfeng-square', '昆明火车站':'kunming-railway-station',
+  '西直门':'xizhimen', '国贸':'guomao', '北京南站':'beijingnan-zhan-beijing-south-railway-station', '北京站':'beijing-zhan-beijing-railway-station',
+  '海淀黄庄':'haidian-huangzhuang', '宋家庄':'songjiazhuang'
+};
 function plannerStationSlug(name) { return (data().stationSlugs && data().stationSlugs[name]) || COMMON_STATION_SLUGS[name] || ''; }
 
 async function search() {
