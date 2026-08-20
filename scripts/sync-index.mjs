@@ -167,12 +167,74 @@ function packageRel(appId, fileRel) {
   return `apps/${appId}/${cleaned}`
 }
 
+function collectPackageJs(appId) {
+  const base = join(appsDir, appId)
+  const out = new Set()
+  const walk = (dir) => {
+    for (const name of readdirSync(dir).sort()) {
+      const absolute = join(dir, name)
+      const stat = statSync(absolute)
+      if (stat.isDirectory()) walk(absolute)
+      else if (stat.isFile() && name.endsWith('.js')) {
+        out.add(relative(base, absolute).replaceAll('\\', '/'))
+      }
+    }
+  }
+  walk(base)
+  return out
+}
+
+function resolveModuleRequest(fromModule, request, packageJs) {
+  const base = request.startsWith('/') ? '' : dirname(fromModule).replaceAll('\\', '/')
+  const source = request.startsWith('/')
+    ? request.slice(1)
+    : `${base === '.' ? '' : `${base}/`}${request}`
+  const resolved = []
+  for (const segment of source.split('/')) {
+    if (!segment || segment === '.') continue
+    if (segment === '..') {
+      if (!resolved.length) return null
+      resolved.pop()
+    } else {
+      resolved.push(segment)
+    }
+  }
+  const candidate = resolved.join('/')
+  if (packageJs.has(candidate)) return candidate
+  if (packageJs.has(`${candidate}.js`)) return `${candidate}.js`
+  return null
+}
+
+function collectModuleGraph(appId, entries) {
+  const packageJs = collectPackageJs(appId)
+  const included = new Set()
+  const queue = [...new Set(entries.filter(Boolean))]
+  const requirePattern = /\brequire\s*\(\s*(['"])([^'"]+)\1\s*\)/g
+  while (queue.length) {
+    const modulePath = queue.shift()
+    if (included.has(modulePath)) continue
+    if (!packageJs.has(modulePath)) throw new Error(`${appId}: missing module ${modulePath}`)
+    included.add(modulePath)
+    const source = readFileSync(join(appsDir, appId, modulePath), 'utf8')
+    requirePattern.lastIndex = 0
+    for (const match of source.matchAll(requirePattern)) {
+      const target = resolveModuleRequest(modulePath, match[2], packageJs)
+      if (!target) {
+        throw new Error(`${appId}: ${modulePath} requires missing module ${match[2]}`)
+      }
+      if (!included.has(target)) queue.push(target)
+    }
+  }
+  return [...included].sort()
+}
+
 function buildDownload(appId, manifest) {
-  const main = (manifest.main && String(manifest.main).trim()) || 'main.js'
+  const coreEntry = manifest.core?.entry && String(manifest.core.entry).trim()
+  if (!coreEntry) throw new Error(`${appId}: manifest.core.entry is required`)
   // Build in a stable key order matching historical catalog entries.
   const staged = {
     manifest: packageRel(appId, 'manifest.json'),
-    code: packageRel(appId, main),
+    code: packageRel(appId, coreEntry),
     readme: null,
     styles: null,
     widget_styles: null,
@@ -180,26 +242,20 @@ function buildDownload(appId, manifest) {
     page_template: null,
     widget_templates: null,
     i18n: null,
-    page_modules: null,
+    modules: null,
   }
 
   if (fileExists(packageRel(appId, 'README.md'))) {
     staged.readme = packageRel(appId, 'README.md')
   }
 
-  if (manifest.styles) staged.styles = packageRel(appId, manifest.styles)
-  if (manifest.widgetStyles) staged.widget_styles = packageRel(appId, manifest.widgetStyles)
+  if (manifest.core?.styles) staged.styles = packageRel(appId, manifest.core.styles)
+  const widgetStyles = [...new Set((manifest.widgets || []).map((widget) => widget?.styles).filter(Boolean))]
+  if (widgetStyles.length > 1) throw new Error(`${appId}: store supports one shared widget styles download`)
+  if (widgetStyles[0]) staged.widget_styles = packageRel(appId, widgetStyles[0])
 
-  if (manifest.pageStyles) {
-    staged.page_styles = packageRel(appId, manifest.pageStyles)
-  } else if (manifest.pageTemplate && manifest.styles) {
-    // unified cssMode: page still needs a stylesheet path for installers that read page_styles
-    staged.page_styles = packageRel(appId, manifest.styles)
-  }
-
-  if (manifest.pageTemplate) {
-    staged.page_template = packageRel(appId, manifest.pageTemplate)
-  }
+  if (manifest.page?.styles) staged.page_styles = packageRel(appId, manifest.page.styles)
+  if (manifest.page?.template) staged.page_template = packageRel(appId, manifest.page.template)
 
   if (Array.isArray(manifest.widgets) && manifest.widgets.length) {
     const widgetTemplates = {}
@@ -231,15 +287,16 @@ function buildDownload(appId, manifest) {
     if (Object.keys(i18n).length) staged.i18n = i18n
   }
 
-  if (Array.isArray(manifest.pageModules) && manifest.pageModules.length) {
-    const pageModules = {}
-    for (const mod of manifest.pageModules) {
-      const file = String(mod).replace(/^\/+/, '')
-      const base = file.split('/').pop()
-      pageModules[base] = packageRel(appId, file.includes('/') ? file : `page/${file}`)
-    }
-    staged.page_modules = pageModules
+  const entries = [
+    coreEntry,
+    manifest.page?.entry,
+    ...(manifest.widgets || []).map((widget) => widget?.entry),
+  ]
+  const modules = {}
+  for (const entry of collectModuleGraph(appId, entries)) {
+    if (entry !== coreEntry) modules[entry] = packageRel(appId, entry)
   }
+  if (Object.keys(modules).length) staged.modules = modules
 
   const download = {}
   for (const [key, value] of Object.entries(staged)) {
@@ -298,10 +355,10 @@ function bootstrapPreview(appId, manifest) {
   const html = packageRel(appId, 'preview.html')
   if (!fileExists(html)) return undefined
   const styles = []
-  if (manifest.pageStyles && fileExists(packageRel(appId, manifest.pageStyles))) {
-    styles.push(packageRel(appId, manifest.pageStyles))
-  } else if (manifest.styles && fileExists(packageRel(appId, manifest.styles))) {
-    styles.push(packageRel(appId, manifest.styles))
+  if (manifest.page?.styles && fileExists(packageRel(appId, manifest.page.styles))) {
+    styles.push(packageRel(appId, manifest.page.styles))
+  } else if (manifest.core?.styles && fileExists(packageRel(appId, manifest.core.styles))) {
+    styles.push(packageRel(appId, manifest.core.styles))
   }
   if (fileExists(packageRel(appId, 'preview.css'))) {
     styles.push(packageRel(appId, 'preview.css'))

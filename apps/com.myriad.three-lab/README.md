@@ -4,7 +4,7 @@
 
 ## 做什么
 
-- 把 `three` 打成 `page/scene.js` IIFE，经 `manifest.pageModules` 加载
+- 把 `three` 打成 `page/scene.js` IIFE，由 `page.entry` 的依赖图加载
 - 先 `Tapp.assets.getUrlMap()`，再用 `rewriteUrl` 接 Three `LoadingManager`
 - 棋盘贴图与立方体都走包内路径，不走 CDN
 - `onPause` 停 rAF；`onDestroy` 里 `dispose` 并 `revokeAll`

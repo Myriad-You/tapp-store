@@ -2,7 +2,7 @@
 // Extracted from views.js for load order clarity + smaller views surface.
 // Depends on: helpers (esc, lang, avatar…), state, SVG_ICONS / platform helpers.
 // Interaction helpers (resolveObjectId, isOwnTimelineItem, …) live in views.js
-// and are resolved at call time after full pageModules load.
+// and are resolved at call time after the full Page entry graph loads.
 
 /** Max characters shown on list cards (detail modal shows full body). */
 var FEED_CARD_TEXT_MAX = 280;
