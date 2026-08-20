@@ -212,7 +212,7 @@ async function updateOnline(silent, requestedCity, requestToken, backgroundRun) 
   if (silent && !backgroundRun && !metroStartupUpdateStarted) {
     metroStartupUpdateStarted = true;
     setNetworkStatus('offline', '离线数据已就绪', '稍后在后台检查 MetroMan 更新');
-    setTimeout(function() { updateOnline(true, cityId, requestToken, true); }, 3000);
+    setTimeout(function() { updateOnline(true, cityId, requestToken, true); }, 10000);
     return;
   }
   var button = document.querySelector('[data-action="update"]'); if (button) button.disabled = true;
@@ -220,24 +220,30 @@ async function updateOnline(silent, requestedCity, requestToken, backgroundRun) 
   if (isCurrent()) setNetworkStatus('checking', '正在连接 MetroMan', cityMeta(cityId).name + '资源检查中');
   try {
     await verifyNetworkApis();
-    var responses = [];
-    responses.push(await metroApi('metroVersionManifest').then(function(value) { return { status:'fulfilled', value:value }; }, function(reason) { return { status:'rejected', reason:reason }; }));
-    responses.push(await metroApi('metroPlannerPage', { city:cityId }).then(function(value) { return { status:'fulfilled', value:value }; }, function(reason) { return { status:'rejected', reason:reason }; }));
-    responses.push(await metroApi('metroMapPage', { city:cityId }).then(function(value) { return { status:'fulfilled', value:value }; }, function(reason) { return { status:'rejected', reason:reason }; }));
-    if (METRO_V2_CITIES.indexOf(cityId) >= 0) responses.push(await metroApi('metroPlannerV2Page', { city:cityId }).then(function(value) { return { status:'fulfilled', value:value }; }, function(reason) { return { status:'rejected', reason:reason }; }));
-    var fulfilled = responses.filter(function(response) { return response.status === 'fulfilled'; }).length;
-    if (!fulfilled) throw responses[1] && responses[1].reason || responses[0] && responses[0].reason || new Error('MetroMan 请求全部失败');
-    if (responses[0].status === 'fulfilled') {
-      var versionResponse = apiData(responses[0].value);
+    // 版本清单是轻量入口；只有本地没有数据或确有新版本时才下载规划页，
+    // 避免后台更新占满 Bridge 队列，拖慢用户刚发起的路线查询。
+    var responses = { version:{ status:'rejected', reason:null }, planner:null, map:null, v2:null };
+    responses.version = await metroApi('metroVersionManifest').then(function(value) { return { status:'fulfilled', value:value }; }, function(reason) { return { status:'rejected', reason:reason }; });
+    if (responses.version.status === 'fulfilled') {
+      var versionResponse = apiData(responses.version.value);
       var versionText = typeof versionResponse === 'string' ? versionResponse : versionResponse && (versionResponse.body || versionResponse.text || versionResponse.data);
       var cityVersion = extractCityVersion(versionText, cityId);
       if (cityVersion) { remoteVersion = cityVersion.version; versionChecked = true; }
     }
-    if (responses[1].status === 'fulfilled') {
-      var plannerResponse = apiData(responses[1].value);
+    var localVersion = String(METRO_DATA[cityId] && METRO_DATA[cityId].version || '');
+    var needsPlanner = !validCity(METRO_DATA[cityId]) || !silent || (versionChecked && remoteVersion > localVersion);
+    if (needsPlanner) responses.planner = await metroApi('metroPlannerPage', { city:cityId }).then(function(value) { return { status:'fulfilled', value:value }; }, function(reason) { return { status:'rejected', reason:reason }; });
+    var shouldCheckMap = !metroState.mapUrls[cityId] || !silent;
+    if (shouldCheckMap) responses.map = await metroApi('metroMapPage', { city:cityId }).then(function(value) { return { status:'fulfilled', value:value }; }, function(reason) { return { status:'rejected', reason:reason }; });
+    if (needsPlanner && METRO_V2_CITIES.indexOf(cityId) >= 0) responses.v2 = await metroApi('metroPlannerV2Page', { city:cityId }).then(function(value) { return { status:'fulfilled', value:value }; }, function(reason) { return { status:'rejected', reason:reason }; });
+    var fulfilled = [responses.version, responses.planner, responses.map, responses.v2].filter(function(response) { return response && response.status === 'fulfilled'; }).length;
+    // 已有离线数据且线路图也已缓存时，版本清单暂时不可达不应阻塞本地规划。
+    if (!fulfilled && (needsPlanner || shouldCheckMap)) throw responses.planner && responses.planner.reason || responses.version && responses.version.reason || new Error('MetroMan 请求全部失败');
+    if (responses.planner && responses.planner.status === 'fulfilled') {
+      var plannerResponse = apiData(responses.planner.value);
       var plannerHtml = typeof plannerResponse === 'string' ? plannerResponse : plannerResponse && (plannerResponse.body || plannerResponse.text || plannerResponse.data);
       var preferredHtml = plannerHtml;
-      if (responses[3] && responses[3].status === 'fulfilled') { var v2Response = apiData(responses[3].value); var v2Html = typeof v2Response === 'string' ? v2Response : v2Response && (v2Response.body || v2Response.text || v2Response.data); if (v2Html) preferredHtml = v2Html; }
+      if (responses.v2 && responses.v2.status === 'fulfilled') { var v2Response = apiData(responses.v2.value); var v2Html = typeof v2Response === 'string' ? v2Response : v2Response && (v2Response.body || v2Response.text || v2Response.data); if (v2Html) preferredHtml = v2Html; }
       var onlineCity = parsePlannerCity(preferredHtml, remoteVersion || (METRO_DATA[cityId] && METRO_DATA[cityId].version), cityId) || parsePlannerCity(plannerHtml, remoteVersion || (METRO_DATA[cityId] && METRO_DATA[cityId].version), cityId);
       if (onlineCity) {
         METRO_DATA[cityId] = onlineCity; dataUpdated = true;
@@ -245,7 +251,7 @@ async function updateOnline(silent, requestedCity, requestToken, backgroundRun) 
         if (metroState.city === cityId && (!requestToken || requestToken === metroState.cityRequest)) { renderCityOptions(); renderStations(); renderLines(); }
       }
     }
-    var pageResponse = responses[2].status === 'fulfilled' ? apiData(responses[2].value) : null;
+    var pageResponse = responses.map && responses.map.status === 'fulfilled' ? apiData(responses.map.value) : null;
     var pageHtml = typeof pageResponse === 'string' ? pageResponse : pageResponse && (pageResponse.body || pageResponse.text || pageResponse.data);
     var pageImage = extractOnlineMap(pageHtml, cityId);
     if (pageImage) {
@@ -257,8 +263,8 @@ async function updateOnline(silent, requestedCity, requestToken, backgroundRun) 
       await storageSet(METRO_MAP_CACHE_KEY, mapMeta);
       if (metroState.city === cityId && (!requestToken || requestToken === metroState.cityRequest)) document.querySelector('[data-map-image]').src = pageImage;
     }
-    var plannerAvailable = responses[1].status === 'fulfilled';
-    if (isCurrent()) setNetworkStatus(plannerAvailable ? '' : 'error', plannerAvailable ? 'MetroMan 已连接' : 'MetroMan 部分连接', plannerAvailable ? cityMeta(cityId).name + '线路数据已响应' : readableError(responses[1].reason));
+    var plannerAvailable = !needsPlanner || (responses.planner && responses.planner.status === 'fulfilled');
+    if (isCurrent()) setNetworkStatus(plannerAvailable ? '' : 'error', plannerAvailable ? 'MetroMan 已连接' : 'MetroMan 部分连接', plannerAvailable ? cityMeta(cityId).name + '线路数据已响应' : readableError((responses.planner && responses.planner.reason) || responses.version.reason));
     if (dataUpdated && !versionChecked) {
       if (isCurrent() && metroState.city === cityId) document.querySelector('[data-status]').textContent = cityMeta(cityId).name + ' · MetroMan 已下载';
       if (!silent) notify('已从 MetroMan 下载' + cityMeta(cityId).name + '线路与站点数据。', 'success');
