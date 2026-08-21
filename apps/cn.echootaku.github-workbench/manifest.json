@@ -1,7 +1,7 @@
 {
   "id": "cn.echootaku.github-workbench",
   "name": "GitHub 工作台",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "minSystemVersion": "0.3.23",
   "description": "集中查看待审 PR、分配给我的 Issue、失败 Actions 与仓库发布动态。",
   "locales": {
@@ -15,7 +15,6 @@
     }
   },
   "category": "developer",
-  "main": "main.js",
   "author": {
     "name": "EchoOtaku",
     "url": "https://echootaku.cn"
@@ -33,11 +32,6 @@
   ],
   "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M9 19c-4.2 1.3-4.2-2.2-6-2.7M15 21v-3.4c0-1 .1-1.4-.5-2 2.8-.3 5.7-1.4 5.7-6.2A4.8 4.8 0 0 0 19 6.1a4.5 4.5 0 0 0-.1-3.3s-1-.3-3.4 1.3a11.7 11.7 0 0 0-6.2 0C6.9 2.5 5.9 2.8 5.9 2.8a4.5 4.5 0 0 0-.1 3.3 4.8 4.8 0 0 0-1.2 3.3c0 4.8 2.9 5.9 5.7 6.2-.5.5-.6 1-.6 2V21' stroke='currentColor' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/></svg>",
   "themeColor": "#6E5EA8",
-  "hasPage": true,
-  "cssMode": "separated",
-  "pageTemplate": "page.html",
-  "pageStyles": "page.css",
-  "widgetStyles": "widget.css",
   "credentials": [
     {
       "key": "githubToken",
@@ -66,7 +60,11 @@
       "icon": "github",
       "category": "stats",
       "defaultSize": "4x2",
-      "sizes": ["2x2", "4x2", "4x4"],
+      "sizes": [
+        "2x2",
+        "4x2",
+        "4x4"
+      ],
       "templates": {
         "2x2": "templates/widget-2x2.html",
         "4x2": "templates/widget-4x2.html",
@@ -75,7 +73,8 @@
       "refreshPolicy": {
         "mode": "event",
         "refreshOnVisible": true
-      }
+      },
+      "styles": "widget.css"
     }
   ],
   "apis": {
@@ -154,5 +153,12 @@
         "prefix": "Bearer "
       }
     }
+  },
+  "core": {
+    "entry": "main.js"
+  },
+  "page": {
+    "template": "page.html",
+    "styles": "page.css"
   }
 }

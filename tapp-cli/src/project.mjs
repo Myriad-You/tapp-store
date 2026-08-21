@@ -15,13 +15,11 @@ import {
 } from 'node:path'
 import {
   expectedPackagePaths,
-  normalizeManifestPaths,
-  PACKAGE_MARKERS,
 } from './package-layout.mjs'
 import { writeZip, zipSize } from './zip.mjs'
 import { createStarterTemplate } from './starter-template.mjs'
 import { analyzeProjectCode } from './source-analyzer.mjs'
-import { validateProjectResources } from './resource-validator.mjs'
+import { packageLimitsForManifest, validateProjectResources } from './resource-validator.mjs'
 
 const contract = JSON.parse(
   await readFile(new URL('./generated/contract.json', import.meta.url), 'utf8'),
@@ -53,7 +51,6 @@ const HTTP_BODY_MODES = new Set(schemaEnum('TappHttpBodyMode'))
 const API_PUBLIC_ACCESS = schemaEnum('TappApiAccess').find((value) => value === 'public')
 const API_BUILTINS = new Set(contract.rules.apiBuiltins)
 const API_TYPES = new Set(contract.rules.apiTypes)
-const CSS_MODES = new Set(contract.rules.cssModes)
 const AGENT_INTENTS = new Set(contract.rules.agentIntents)
 const SETTING_FIELD_TYPES = contract.rules.settingFieldTypes
 const SETTING_DEFAULT_KINDS = contract.rules.settingDefaultKinds
@@ -77,6 +74,12 @@ const SEMVER = new RegExp(contract.patterns.semver)
 const NAMED_VALUE = new RegExp(contract.patterns.namedValue)
 const STORAGE_KEY = new RegExp(contract.patterns.storageKey)
 const THEME_COLOR = new RegExp(contract.patterns.themeColor)
+// Removed coarse permission names → replacement suggestion in rejection
+// diagnostics. Advisory only: the permission is still rejected (fail-closed),
+// never mapped to the new names.
+const REMOVED_PERMISSION_REPLACEMENTS = {
+  'brew:comment': "use 'brew:read' (read) or 'brew:commentWrite' (write)",
+}
 // Fixed allow-list enforced identically by the backend installer.
 const HTTP_METHODS = new Set(contract.rules.httpMethods)
 const HTTP_BODY_METHODS = new Set(contract.rules.httpBodyMethods)
@@ -86,10 +89,6 @@ const REQUIRED_MANIFEST_FIELDS = new Set([
   ...contract.schema.required,
   ...contract.rules.requiredManifestFields,
 ])
-const MAX_ARCHIVE_FILES = contract.limits.archiveFiles
-const MAX_ARCHIVE_BYTES = contract.limits.archiveBytes
-const MAX_UNCOMPRESSED_BYTES = contract.limits.archiveUncompressedBytes
-
 function diagnostic(severity, code, message, file = 'manifest.json', line, column) {
   return { severity, code, message, file, line, column }
 }
@@ -303,10 +302,9 @@ function validateInboundRoute(definition, name, credentialKeys, boundCredentialK
     inboundRoutePaths.add(route.path)
   }
   const methods = route.methods || ['GET']
-  const allowedMethods = contract.rules.routeMethods || ['GET', 'POST']
-  const allowed = new Set(allowedMethods)
+  const allowed = new Set(contract.rules.routeMethods || ['GET', 'POST'])
   if (!Array.isArray(methods) || methods.length === 0 || new Set(methods).size !== methods.length || methods.some((method) => !allowed.has(method))) {
-    diagnostics.push(diagnostic('error', 'invalid-api-route', `API ${name} inbound route methods must be one of: ${allowedMethods.join(', ')}`))
+    diagnostics.push(diagnostic('error', 'invalid-api-route', `API ${name} inbound route methods must be GET and/or POST`))
   }
   const verifyPath = `${path}.verify`
   if (!validateFields(route.verify, schemaFields('TappRouteVerify'), verifyPath, diagnostics)) {
@@ -327,21 +325,16 @@ function validateInboundRoute(definition, name, credentialKeys, boundCredentialK
   } else if (new Set([verify.header, verify.timestampHeader, verify.nonceHeader].map((header) => header.toLowerCase())).size !== 3) {
     diagnostics.push(diagnostic('error', 'invalid-api-route', `API ${name} inbound verify headers must be distinct`))
   }
-  const allowedOver = new Set(contract.rules.routeVerifyOver || ['raw-body', 'canonical-query'])
-  if (!allowedOver.has(verify.over)) {
-    diagnostics.push(diagnostic('error', 'invalid-api-route', `API ${name} inbound verify.over must be one of: ${[...allowedOver].join(', ')}`))
-  } else {
-    const allowsGet = methods.includes('GET')
-    const allowsPost = methods.includes('POST')
-    if (verify.over === 'canonical-query' && (!allowsGet || allowsPost)) {
-      diagnostics.push(diagnostic('error', 'invalid-api-route', `API ${name} canonical-query verify requires GET-only methods`))
-    }
-    if (verify.over === 'raw-body' && (!allowsPost || allowsGet)) {
-      diagnostics.push(diagnostic('error', 'invalid-api-route', `API ${name} raw-body verify requires POST-only methods`))
-    }
+  const allowsGet = methods.includes('GET')
+  const allowsPost = methods.includes('POST')
+  if (verify.over === 'canonical-query' && (!allowsGet || allowsPost)) {
+    diagnostics.push(diagnostic('error', 'invalid-api-route', `API ${name} canonical-query verify requires GET-only methods`))
+  }
+  if (verify.over === 'raw-body' && (!allowsPost || allowsGet)) {
+    diagnostics.push(diagnostic('error', 'invalid-api-route', `API ${name} raw-body verify requires POST-only methods`))
   }
   const maxPrefix = contract.limits.routeVerifyPrefixLength || 256
-  if (verify.prefix !== undefined && (typeof verify.prefix !== 'string' || verify.prefix.length > maxPrefix)) {
+  if (verify.prefix != null && (typeof verify.prefix !== 'string' || verify.prefix.length > maxPrefix)) {
     diagnostics.push(diagnostic('error', 'invalid-api-route', `API ${name} inbound verify prefix is too long`))
   }
   const encodings = new Set(contract.rules.routeVerifyEncodings || ['hex', 'base64'])
@@ -512,12 +505,9 @@ function validateStringField(manifest, field, diagnostics, { required = false } 
 
 function inferredSurfaces(manifest) {
   const widgets = arrayValue(manifest.widgets)
-  const pageModules = arrayValue(manifest.pageModules)
   const backgroundRequirements = arrayValue(manifest.backgroundRequirements)
-  const page =
-    manifest.hasPage === true ||
-    typeof manifest.pageTemplate === 'string' ||
-    pageModules.length > 0
+  // 页面存在与否由是否声明 page 层决定，没有独立开关可以和内容对不上。
+  const page = !!manifest.page
   const widget = widgets.length > 0
   const headless = backgroundRequirements.length > 0
   return { page, widget, headless, headlessOnly: headless && !page && !widget }
@@ -535,19 +525,30 @@ function validateModeConsistency(manifest, diagnostics, requiredPermissions) {
     )
   }
 
-  if (manifest.hasPage === true) {
+  if (manifest.page && typeof manifest.page === 'object') {
     const hasPageResource =
-      typeof manifest.pageTemplate === 'string' ||
-      arrayValue(manifest.pageModules).length > 0
+      typeof manifest.page.entry === 'string' ||
+      typeof manifest.page.template === 'string'
     if (!hasPageResource) {
       diagnostics.push(
         diagnostic(
           'error',
           'missing-page-resource',
-          'hasPage requires pageTemplate or pageModules',
+          'page layer requires entry and/or template',
         ),
       )
     }
+  }
+
+  // 后台常驻只运行 core，没有 core 层就没有可常驻的代码。
+  if (surfaces.headless && !manifest.core) {
+    diagnostics.push(
+      diagnostic(
+        'error',
+        'missing-core-layer',
+        'backgroundRequirements requires a core layer',
+      ),
+    )
   }
 
   if (!surfaces.page && !surfaces.widget && !surfaces.headless) {
@@ -765,8 +766,22 @@ function validateManifest(manifest, diagnostics, requiredPermissions) {
   }
   for (const [field, extensionKey] of Object.entries(MANIFEST_RESOURCE_FIELDS)) {
     const extension = contract.rules.resourceExtensions[extensionKey]
-    if (manifest[field] !== undefined && (!validateResourcePath(manifest[field]) || extname(manifest[field]) !== extension)) {
-      diagnostics.push(diagnostic('error', field === 'main' ? 'invalid-main' : 'invalid-resource-path', `${field} must be a safe relative ${extension} path`))
+    // 层字段是嵌套路径（core.entry / page.template …）
+    const value = field
+      .split('.')
+      .reduce((node, key) => (node && typeof node === 'object' ? node[key] : undefined), manifest)
+    if (value !== undefined && (!validateResourcePath(value) || extname(value) !== extension)) {
+      diagnostics.push(diagnostic('error', field === 'core.entry' ? 'invalid-core-entry' : 'invalid-resource-path', `${field} must be a safe relative ${extension} path`))
+    }
+  }
+  for (const [index, widget] of arrayValue(manifest.widgets).entries()) {
+    if (!widget || typeof widget !== 'object') continue
+    for (const [key, extensionKey] of [['entry', 'widgetEntry'], ['styles', 'widgetStyles']]) {
+      const extension = contract.rules.resourceExtensions[extensionKey]
+      const value = widget[key]
+      if (value !== undefined && (!validateResourcePath(value) || extname(value) !== extension)) {
+        diagnostics.push(diagnostic('error', 'invalid-resource-path', `widgets[${index}].${key} must be a safe relative ${extension} path`))
+      }
     }
   }
   const normalizedSystemVersion = typeof manifest.minSystemVersion === 'string'
@@ -798,8 +813,11 @@ function validateManifest(manifest, diagnostics, requiredPermissions) {
     const seen = new Set()
     for (const permission of manifest.permissions) {
       if (typeof permission !== 'string' || !(permission in catalog.permissionLevels)) {
+        const hint = REMOVED_PERMISSION_REPLACEMENTS[permission]
         diagnostics.push(
-          diagnostic('error', 'unknown-permission', `Unknown permission: ${String(permission)}`),
+          diagnostic('error', 'unknown-permission', hint
+            ? `Unknown permission: ${String(permission)} — ${hint}`
+            : `Unknown permission: ${String(permission)}`),
         )
       } else if (seen.has(permission)) {
         diagnostics.push(
@@ -886,14 +904,6 @@ function validateManifest(manifest, diagnostics, requiredPermissions) {
     }
   }
 
-  if (manifest.cssMode !== undefined && !CSS_MODES.has(manifest.cssMode)) {
-    diagnostics.push(
-      diagnostic('error', 'invalid-css-mode', 'cssMode must be unified or separated'),
-    )
-  }
-  if (manifest.hasPage !== undefined && typeof manifest.hasPage !== 'boolean') {
-    diagnostics.push(diagnostic('error', 'invalid-has-page', 'hasPage must be boolean'))
-  }
   if (manifest.backgroundRequirements !== undefined && (
     !Array.isArray(manifest.backgroundRequirements) ||
     manifest.backgroundRequirements.length > contract.limits.backgroundRequirements ||
@@ -956,17 +966,6 @@ function validateManifest(manifest, diagnostics, requiredPermissions) {
           diagnostics.push(diagnostic('error', 'invalid-credential', `${path}.placeholder is invalid`))
         }
       }
-    }
-  }
-
-  if (manifest.pageModules !== undefined) {
-    if (
-      !Array.isArray(manifest.pageModules) ||
-      manifest.pageModules.length > contract.limits.pageModules ||
-      manifest.pageModules.some((module) => typeof module !== 'string' || module.length > contract.limits.tappIdLength || !SAFE_COMPONENT.test(module) || !module.endsWith(contract.rules.resourceExtensions.pageModule)) ||
-      hasDuplicates(manifest.pageModules)
-    ) {
-      diagnostics.push(diagnostic('error', 'invalid-page-modules', `pageModules must contain at most ${contract.limits.pageModules} unique ${contract.rules.resourceExtensions.pageModule} filenames`))
     }
   }
 
@@ -1090,7 +1089,7 @@ function validateManifest(manifest, diagnostics, requiredPermissions) {
       if (JSON.stringify(definition).includes('{{secrets.')) {
         diagnostics.push(diagnostic('error', 'invalid-api', `API ${name} cannot reference host secret templates`))
       }
-      if (definition.route !== undefined) {
+      if (definition.route != null) {
         validateInboundRoute(definition, name, credentialKeys, boundCredentialKeys, inboundRoutePaths, diagnostics)
       }
       const type = definition.type || DEFAULT_API_TYPE
@@ -1308,10 +1307,22 @@ export async function createProject(directory, options = {}) {
   }
   await mkdir(root, { recursive: true })
 
-  const { type, hasPage, hasWidget, manifest, source } = createStarterTemplate(root, options)
+  const { type, hasPage, hasWidget, manifest, modules } = createStarterTemplate(
+    root,
+    options,
+  )
   await writeFile(join(root, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
-  const typedSource = `/// <reference path="./types/tapp-sdk.d.ts" />\n${source}`
-  await writeFile(join(root, 'main.js'), typedSource)
+  // 每层各自成文件；层内还想拆更多文件，用相对路径 require 即可。
+  for (const [relative, source] of Object.entries(modules)) {
+    const reference = relative.includes('/')
+      ? '../types/tapp-sdk.d.ts'
+      : './types/tapp-sdk.d.ts'
+    await mkdir(dirname(join(root, relative)), { recursive: true })
+    await writeFile(
+      join(root, relative),
+      `/// <reference path="${reference}" />\n${source}`,
+    )
+  }
   await mkdir(join(root, 'types'), { recursive: true })
   const sdkDts = await readFile(
     new URL('./generated/tapp-sdk.d.ts', import.meta.url),
@@ -1356,8 +1367,8 @@ button { width: fit-content; padding: 8px 12px; }
   if (hasWidget) {
     await mkdir(join(root, 'templates'), { recursive: true })
     const template = `<div data-widget-root="true" class="widget"></div>\n`
-    await writeFile(join(root, 'templates/widget-2x2.html'), template)
-    await writeFile(join(root, 'templates/widget-4x2.html'), template)
+    await writeFile(join(root, 'templates/starter-2x2.html'), template)
+    await writeFile(join(root, 'templates/starter-4x2.html'), template)
   }
   return { root, type, manifest }
 }
@@ -1384,7 +1395,8 @@ export async function packProject(projectRoot = '.', outputPath) {
   packagePaths.delete('jsconfig.json')
   packagePaths.delete('types/tapp-sdk.d.ts')
 
-  const normalizedManifest = normalizeManifestPaths(report.manifest)
+  const normalizedManifest = report.manifest
+  const limits = packageLimitsForManifest(normalizedManifest)
   for (const path of [...packagePaths].sort()) {
     let data
     if (path === 'manifest.json') {
@@ -1402,23 +1414,23 @@ export async function packProject(projectRoot = '.', outputPath) {
         }
         throw error
       }
-      if (data.length > contract.limits.resourceBytes) {
-        throw new Error(`Package entry exceeds ${formatBytes(contract.limits.resourceBytes)}: ${path}`)
+      if (data.length > limits.resourceBytes) {
+        throw new Error(`Package entry exceeds ${formatBytes(limits.resourceBytes)}: ${path}`)
       }
     }
     uncompressedBytes += data.length
     entries.push({ path, data })
   }
-  if (entries.length > MAX_ARCHIVE_FILES) throw new Error(`Package exceeds ${MAX_ARCHIVE_FILES} entries`)
-  if (uncompressedBytes > MAX_UNCOMPRESSED_BYTES) {
-    throw new Error(`Package exceeds ${formatBytes(MAX_UNCOMPRESSED_BYTES)} uncompressed`)
+  if (entries.length > limits.archiveFiles) throw new Error(`Package exceeds ${limits.archiveFiles} entries`)
+  if (uncompressedBytes > limits.archiveUncompressedBytes) {
+    throw new Error(`Package exceeds ${formatBytes(limits.archiveUncompressedBytes)} uncompressed`)
   }
 
   const target = resolve(
     outputPath || join(report.root, 'dist', `${report.manifest.id}.tapp`),
   )
-  if (zipSize(entries) > MAX_ARCHIVE_BYTES) {
-    throw new Error(`Package exceeds ${formatBytes(MAX_ARCHIVE_BYTES)}`)
+  if (zipSize(entries) > limits.archiveBytes) {
+    throw new Error(`Package exceeds ${formatBytes(limits.archiveBytes)}`)
   }
   const result = await writeZip(target, entries)
   return { ...result, report }
@@ -1432,4 +1444,4 @@ export function generatedContract() {
   return contract
 }
 
-export { expectedPackagePaths, normalizeManifestPaths, PACKAGE_MARKERS }
+export { expectedPackagePaths }

@@ -1,7 +1,7 @@
 {
   "id": "com.myriad.config-generator",
   "name": "Myriad 安装配置生成",
-  "version": "1.0.1",
+  "version": "1.0.4",
   "minSystemVersion": "0.2.1",
   "description": "分步生成 Compose、.env 与反代配置，覆盖常见面板、编排界面与外层反代",
   "locales": {
@@ -15,18 +15,19 @@
     }
   },
   "category": "developer",
-  "main": "main.js",
   "author": {
     "name": "Myriad Team",
     "url": "https://github.com/Myriad-You"
   },
-  "permissions": ["storage:read", "ui:notification", "ui:theme", "ui:confirm", "network:fetch"],
+  "permissions": [
+    "storage:read",
+    "ui:notification",
+    "ui:theme",
+    "ui:confirm",
+    "network:fetch"
+  ],
   "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><polyline points='14,2 14,8 20,8' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><path d='M12 18v-6M9 15l3 3 3-3' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>",
   "themeColor": "#6366F1",
-  "hasPage": true,
-  "cssMode": "separated",
-  "pageStyles": "page.css",
-  "pageTemplate": "page.html",
   "apis": {
     "dockerHubTags": {
       "access": "public",
@@ -42,5 +43,12 @@
       "endpoint": "https://hub.docker.com/v2/repositories/somekawahitomi/{{params.repo}}/tags/{{params.tag}}",
       "cacheTtl": 300
     }
+  },
+  "core": {
+    "entry": "main.js"
+  },
+  "page": {
+    "template": "page.html",
+    "styles": "page.css"
   }
 }

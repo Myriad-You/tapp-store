@@ -1,3 +1,5 @@
+var share = require('./scope.js');
+
 // ==================== State ====================
 var state = {
   channels: [],
@@ -243,3 +245,14 @@ var SVG_ICONS = {
   expand: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>',
   close: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>',
 };
+
+// ==================== Shared scope ====================
+// Republish the names this file's siblings read. See page/scope.js.
+share.value({
+  $: $,
+  SVG_ICONS: SVG_ICONS,
+  platformAccent: platformAccent,
+  platformKey: platformKey,
+  platformLogoSvg: platformLogoSvg,
+  state: state,
+});

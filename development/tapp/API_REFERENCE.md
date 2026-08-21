@@ -10,6 +10,7 @@
 - [国际化 API](#国际化-api)
 - [跨 Tapp Data Exchange API](#跨-tapp-data-exchange-api)
 - [设置 API](#设置-api)
+- [共享数据 API](#共享数据-api)
 - [UI API](#ui-api)
 - [动画 API](#动画-api)
 - [平台 API](#平台-api)
@@ -90,7 +91,7 @@ await Tapp.storage.clear();
 
 // 获取存储使用情况
 const usage = await Tapp.storage.usage();
-// 返回: { used: 1024, quota: 5242880 } // 字节；quota 是服务端硬上限
+// 返回: { used: 1024, quota: 8388608 } // 字节；quota 是服务端硬上限
 
 // 同一 Tapp 的其他 Page、Widget 或 headless core 修改 storage 时触发
 const unsubscribe = Tapp.storage.onChanged(({ key, operation }) => {
@@ -98,10 +99,10 @@ const unsubscribe = Tapp.storage.onChanged(({ key, operation }) => {
 });
 ```
 
-存储 key 和单值由后端校验，单值最大 1 MiB，总量最大 5 MiB。替换投影与写入位于同一数据库
+存储 key 和单值由后端校验，单值最大 1 MiB，总量最大 8 MiB。替换投影与写入位于同一数据库
 事务并使用 subject/Tapp advisory lock，因此并发写入也不能越过配额。公开 Tapp 仍按当前
-**subject**（持久用户或签名游客）隔离存储；`_settings.`、`_component:`、`_shortcut:`、
-`_report:` 为宿主保留前缀。
+**subject**（持久用户或签名游客）隔离存储；`_settings.`、`_shared.`、`_component:`、
+`_shortcut:`、`_report:` 为宿主保留前缀。
 
 ---
 
@@ -182,6 +183,43 @@ const allSettings = await Tapp.settings.getAll();
   `apis.*.credential`。放置方式为 `header` / `query` / `form` / `sign`（互斥）；
   旧清单的 `{header, prefix}` 仍视为请求头绑定。凭据只有安装管理界面的写入/删除/状态接口，
   不进入 `Tapp.settings`、模板上下文或任何沙箱读取 API。
+
+---
+
+## 共享数据 API
+
+**权限**: 读取方法使用 `storage:read`；写入、删除与清空使用 `storage:write`；与私有
+`Tapp.storage` / `Tapp.settings` 共用权限位，但**数据命名空间不同**
+
+`Tapp.shared` 是安装级 KV，语义是**数据**而不是配置。公开部署里用它存放要展示给访客的
+站长数据：owner / 管理员写入 installation owner 命名空间，能打开该安装的运行者（含游客）
+读到同一份内容。不要把个人草稿放这里，也不要把密钥或配置塞进 `Tapp.settings`。
+
+```javascript
+const posts = await Tapp.shared.get("posts");
+await Tapp.shared.set("posts", [{ title: "hello", body: "…" }]);
+await Tapp.shared.remove("drafts");
+const keys = await Tapp.shared.keys();
+const all = await Tapp.shared.getAll();
+await Tapp.shared.clear();
+const usage = await Tapp.shared.usage();
+const unsubscribe = Tapp.shared.onChanged(({ key, operation }) => {
+  console.log(key, operation); // set | remove | clear
+});
+```
+
+| 操作 | 游客（公开安装） | 已登录运行者 | 安装 owner / 管理员 |
+| ---- | ---------------- | ------------ | ------------------- |
+| `get` / `getAll` / `keys` / `usage` | ✅ 读站主已写入的值 | ✅ 只读 | ✅ |
+| `set` / `remove` / `clear` | ❌ | ❌（非 owner） | ✅ |
+
+- 读走宿主 shared REST（**optional_auth**），不需要 Runtime Grant。
+- 写要求持久登录，且仅 owner / 当前管理员。
+- 键空间与 `Tapp.storage`、`Tapp.settings` 独立；不能用 `_shared.*` 经 storage API 读写。
+- 单值最大 1 MiB；写入计入安装 owner 命名空间的 8 MiB 配额（与 settings / credentials / owner 自己的 storage 合计）。
+- 不要在 shared 里存放密钥：凡能打开该公开安装的 visitor 均可读。
+
+`Tapp.data` 是数据处理 API（`transform`），不是这个仓库。
 
 ---
 
@@ -934,12 +972,17 @@ Runtime Grant 中。
 | 权限 | 用途 |
 | ---- | ---- |
 | `federation:read` | 身份、Feed/Timeline、关注列表、已发布列表、Channel/Room/Ring 读取 |
-| `federation:write` | 关注/取关、publish、createNote、uploadMedia、unpublish、创建/治理 Channel·Room·Ring |
+| `federation:post` | 发布/取消发布、createNote、uploadMedia、密钥轮换、对外投递管理（Elevated） |
+| `federation:interact` | 关注/取关、点赞/取消点赞、收藏/取消收藏、转发/取消转发（Basic） |
+| `federation:channel` | 创建/接受/关闭/删除频道及频道 E2E 密钥协商（Elevated） |
+| `federation:room` | 创建/更新/删除/加入/邀请/治理房间、E2E 密钥、贴纸、置顶（Elevated） |
+| `federation:ring` | Ring 成员管理与 peer/同步操作（Basic） |
 | `federation:message` | 发送 Channel/Room 消息与实时订阅（WS ticket） |
 | `federation:files` | Channel 文件分块传输 |
 | `federation:trust` | 实例信任策略（特权，仅管理员） |
 
-游客不会取得 `federation:write`、`federation:message` 或 `federation:files`。Tapp 应使用
+游客不会取得 `federation:post`、`federation:interact`、`federation:channel`、
+`federation:room`、`federation:ring`、`federation:message` 或 `federation:files`。Tapp 应使用
 `Tapp.user.getRole()` 调整界面，不要向游客展示关注、发布、私聊、Room 或文件传输操作。
 
 **Channel 列表与游客**：`GET /api/federation/channels` 需要登录。宿主对
@@ -974,7 +1017,7 @@ Timeline。需要同时展示公开内容时优先 `getFeed()`；`getTimeline()`
 
 ### 媒体上传与 freeform Note
 
-**权限**: `federation:write`
+**权限**: `federation:post`
 
 推荐流程：**先 `uploadMedia`，再把返回的 URL 放进 `createNote` / `publish` 的
 `attachments`**。不要把任意外链当作附件；bridge 与后端都会校验联邦媒体 URL 形态
@@ -1052,9 +1095,9 @@ SDK 已暴露完整方法面（`sdkGenerator` + `FederationBridge`）。调用�
 
 | 域 | 读 (`federation:read`) | 写 / 消息 |
 | -- | ---------------------- | --------- |
-| Channel | `getChannels`, `getChannel`, `getMessages` | `createChannel`, `acceptChannel`, `closeChannel`, `deleteChannel`；E2E：`initiateChannelE2e`（`federation:write`）；消息与订阅：`sendMessage`, `subscribeChannel`…（`federation:message`） |
-| Room | `getRooms`, `getRoom`, `getRoomMembers`, `getRoomMessages`, `listRoomFiles` | `createRoom`, `updateRoom`, `inviteMember`, `acceptRoomInvite`, `rejectRoomInvite`, `joinRoom`, `removeMember`, `leaveRoom`, `transferRoomOwnership`, `deleteRoom`, `pinRoomMessage`；E2E：`initiateRoomE2e`（`federation:write`）；消息：`sendRoomMessage`（`federation:message`） |
-| Ring | `getRings`, `getRing`, `getRingPeers` | `createRing`, `leaveRing`, `addPeer`, `removePeer`, `triggerSync` |
+| Channel | `getChannels`, `getChannel`, `getMessages` | `createChannel`, `acceptChannel`, `closeChannel`, `deleteChannel`；E2E：`initiateChannelE2e`（`federation:channel`）；消息与订阅：`sendMessage`, `subscribeChannel`…（`federation:message`） |
+| Room | `getRooms`, `getRoom`, `getRoomMembers`, `getRoomMessages`, `listRoomFiles` | `createRoom`, `updateRoom`, `inviteMember`, `acceptRoomInvite`, `rejectRoomInvite`, `joinRoom`, `removeMember`, `leaveRoom`, `transferRoomOwnership`, `deleteRoom`, `pinRoomMessage`；E2E：`initiateRoomE2e`（`federation:room`）；消息：`sendRoomMessage`（`federation:message`） |
+| Ring | `getRings`, `getRing`, `getRingPeers` | `createRing`, `leaveRing`, `addPeer`, `removePeer`, `triggerSync`（`federation:ring`） |
 | Trust | — | `getTrustPolicy`, `getInstances`, `updateInstanceTrust`, `toggleInstanceBlock`（`federation:trust`） |
 | Files | — | `initiateTransfer`, `initiateRoomTransfer`, `listTransfers`, `listRoomTransfers`, `getTransfer`, `uploadChunk`, `cancelTransfer`, `downloadTransfer`（`federation:files`） |
 
@@ -1087,6 +1130,7 @@ const detail = await Tapp.federation.getRoom(roomId);
 **公开群 REST（无 Tapp Grant、无需登录）**：`GET /api/federation/public/rooms/{room_id}`
 仅当 `is_public = true` 时返回卡片（name、owner、home_server、member_count 等）。跨实例
 `joinRoom` 会向该端点拉元数据并物化本地行；**不可**用任意 `home_server` 把本机私有群改成公开。
+活的消息/媒体上限见 `GET /api/federation/public/limits`（同样无认证、无 Grant）。
 
 **`getRoom` 字段**：除基础治理字段外，成员可读 `shared_data_config`（含
 `e2e.published_keys`，公钥 map，供 UI 判断 E2E 是否就绪）。私有密钥只在服务端成员
@@ -1100,9 +1144,10 @@ Tapp.federation.onChannelUpdate((ev) => { /* accepted | closed | disconnected */
 Tapp.federation.onRoomUpdate((ev) => { /* governance_changed | member_* | disconnected */ });
 ```
 
-Channel/Room **JSON 消息**（含内联 base64 图）后端载荷上限 **36 MiB**
-（`MESSAGE_PAYLOAD_LIMIT` / `MAX_ROOM_MESSAGE_PAYLOAD`）；联邦 inbox DefaultBodyLimit
-为 **64 MiB**（见 `federation::limits`；已认证内容路由约 **80 MiB** = inbox + 16 MiB）。更大附件请走分块传输
+Channel/Room **JSON 消息**（含内联 base64 图）后端载荷上限默认 **4 MiB**
+（活值 `message_payload_limit()`；内存节约档 **2 MiB**）。联邦 inbox 请求体默认 **8 MiB**
+（节约档 **4 MiB**）；已认证写路径默认 **24 MiB**（节约档 **8 MiB**）。活档见
+`GET /api/federation/public/limits`。更大附件请走分块传输
 （默认 chunk **4 MiB** raw；base64 JSON 体上限 16 MiB，见 `TRANSFER_CHUNK_*`）。
 加密时 `sendMessage` / `sendRoomMessage` 可设 `encrypt: true`：库内与联邦 fan-out 仍为密文，
 本机 WebSocket 在密钥可用时推送明文以免 UI 先闪 ciphertext。
@@ -1112,7 +1157,7 @@ Channel/Room **JSON 消息**（含内联 base64 图）后端载荷上限 **36 Mi
 
 ## Game API
 
-**权限**: `game:session`（另需 `federation:read` / `federation:write` / `federation:message`）
+**权限**: `game:session`（另需 `federation:read` / `federation:room` / `federation:message`）
 
 Page 上的 `Tapp.game` 把联邦房间收成对局会话。消息类型固定为
 `game:<tappId>:<protocol>`，载荷只能是
@@ -1185,11 +1230,11 @@ await Tapp.tappList.install({
 // await Tapp.tappList.install({
 //   source: "direct",
 //   manifest: { id: "com.example.app", name: "App", version: "1.0.0",
-//               category: "utility", main: "main.js", permissions: [] },
-//   code: "/* ... */",
+//               category: "utility", core: { entry: "core.js" }, permissions: [] },
+//   modules: { "core.js": "/* ... */" },
 //   permissions: ["storage:read"],
 // });
-// ❌ 无效：source:"direct" 且缺少 manifest 或 code
+// ❌ 无效：source:"direct" 且缺少 manifest 或 modules
 
 await Tapp.tappList.start("com.example.app");
 await Tapp.tappList.stop("com.example.app");
@@ -1204,8 +1249,9 @@ await Tapp.tappList.export("com.example.app");
   不要用裸 `source: "1"`。`storeSource` / catalog 不能是模式字面量 `"store"` / `"direct"`。
   宿主再发 REST `source:"store"` + `storeSource: catalogRef`。后端拉包失败（如 502）或大包
   （索引 `size` ≥ 1 MiB）时可回退浏览器下载 + REST `source:"direct"`。
-- **直接路径**：`source: "direct"` 时必须带 `manifest` + `code`（及可选资源）；走
-  `installDirect`，包体会经过 sandbox Bridge（与商店元数据-only 路径不同）。
+- **直接路径**：`source: "direct"` 时必须带 `manifest` + `modules`（及可选资源）；走
+  `installDirect`，包体会经过 sandbox Bridge（与商店元数据-only 路径不同）。`modules`
+  的键是包内相对路径（`core.js`、`page/index.js`、`widget/index.js`）。
 - **上传 `.tapp` 文件**仍走宿主 UI / `POST /api/tapps/install-file`，不经
   `tappList.install`（见 [REST API](REST_API.md)、[文件格式](../../features/TAPP_FILE_FORMAT.md)）。
 - 分享卡片安装必须带真实 catalog（`storeSource` 或 HTTP `source`），见 [STORE](STORE.md)。
@@ -1218,9 +1264,9 @@ await Tapp.tappList.export("com.example.app");
 
 | 权限 | 典型方法（与 `fixtures/action_permissions.json` / `PERMISSION_MAP` 对齐） |
 | ---- | -------- |
-| `brew:read` | `list`, `get`, `sources`, `categories`, `stats`, `exportOpml` |
-| `brew:write` | `markRead`, `markUnread`, `star`, `unstar`, `markAllRead` |
-| `brew:comment` | `getComments`, `createComment`, `updateComment`, `deleteComment`, `getReplies`, `createReply` |
+| `brew:read` | `list`, `get`, `sources`, `categories`, `stats`, `exportOpml`, `getComments`, `getReplies` |
+| `brew:write` | `markRead`, `markUnread`, `markAllRead`, `star`, `unstar` |
+| `brew:commentWrite` | `createComment`, `updateComment`, `deleteComment`, `createReply` |
 | `brew:manage` | `discover`, `addSource`, `updateSource`, `deleteSource`, `refreshSource`, `importOpml`, `createCategory`, `deleteCategory` |
 
 Playground **临时预览不注册** brew handlers。完整 SDK（`Tapp.brewList`）仅在安装后可用：
@@ -1577,7 +1623,7 @@ const text = await Tapp.speech.asr({ audio }); // speech:asr
 **权限**: public（仅可读本安装 `manifest.assets` 声明路径）
 
 用于游戏贴图、音频、wasm、glTF/GLB、关卡 JSON 等包内静态文件。不走 `Tapp.storage`。
-Three.js 等引擎库不能放在 `assets/`（禁止 `.js`），应打成 IIFE 放进 `pageModules`。
+Three.js 等引擎库不能放在 `assets/`（禁止 `.js`），应打成 IIFE 放进 `page/` 并 require。
 
 ```javascript
 const paths = await Tapp.assets.list();
@@ -1612,7 +1658,7 @@ Tapp.assets.revokeAll(); // 也会在 onDestroy 时自动调用
 
 | 命名空间                                   | 主要能力                                            | 权限族                             |
 | ------------------------------------------ | --------------------------------------------------- | ---------------------------------- |
-| `storage`, `settings`                      | Tapp 私有键值存储与设置（读权限含签名游客）         | `storage:read`, `storage:write`    |
+| `storage`, `settings`, `shared`            | 私有 KV、安装设置、安装级共享数据（读含签名游客）   | `storage:read`, `storage:write`    |
 | `dataExchange`                             | 逐次授权的跨 Tapp 具名数据交换                      | Manifest + one-shot consent        |
 | `ui`, `animation`, `dynamicContent`, `dom` | 宿主 UI、主题、动画和安全 DOM helper                | `ui:*` 或 public                   |
 | `platform`, `data`                         | 平台数据读取、写入、转换和注册                      | `platform:*`                       |

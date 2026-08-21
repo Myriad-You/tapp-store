@@ -1,9 +1,24 @@
+var share = require('./scope.js');
+
 // ==================== Attachment Menu ====================
 var _attachMenu = null;
 // Overall attach cap (large channel files use chunked transfer under federation:files).
 var MAX_ATTACH_SIZE = 100 * 1024 * 1024; // 100MB
-// Inline base64 only under this raw size so JSON payload stays under backend budget.
-var INLINE_ATTACH_MAX = 2 * 1024 * 1024; // 2 MiB raw
+/**
+ * JSON budget for one federation message payload.
+ *
+ * The host used to enforce a frozen 32/36 MiB cap; it now enforces the live
+ * value from GET /api/federation/public/limits — 4 MiB by default and 2 MiB on
+ * the memory-saver profile. A Tapp cannot read that endpoint, so size against
+ * the saver profile and leave room for the envelope: anything larger has to go
+ * through chunked transfer or be dropped in favour of the store catalog URL.
+ */
+var MSG_PAYLOAD_SOFT_MAX = 1536 * 1024; // 1.5 MiB JSON
+// Inline base64 only under this raw size (×4/3 encoded) so the payload fits above.
+var INLINE_ATTACH_MAX = 1024 * 1024; // 1 MiB raw
+// Best-effort offline install package rides inside a message payload, so it has
+// to fit the same budget alongside the rest of the share card.
+var TAPP_SHARE_PACKAGE_MAX = 1024 * 1024; // 1 MiB JSON
 // Must match backend federation file_transfer DEFAULT_CHUNK_SIZE (1 MiB).
 var TRANSFER_CHUNK_SIZE = 1024 * 1024;
 
@@ -441,11 +456,10 @@ function openTappPicker(icons, titles) {
           console.warn('[Aro] resolveStoreSource failed', e);
         })
       : Promise.resolve();
-    // Package snapshot for reliability (storeSource remains P0). Cap under
-    // channel/room 32 MiB payload + bridge envelope (bridge / backend).
-    // Keep package modest: room multi-recipient E2E + JSON envelope easily exceeds 32 MiB.
+    // Package snapshot for reliability (storeSource remains P0). Keep it inside
+    // the live message payload budget: room multi-recipient E2E wraps the
+    // envelope per recipient, so a package that only just fits alone will not.
     // Store catalog URL is the primary install path; package is best-effort offline fallback.
-    var TAPP_SHARE_PACKAGE_MAX = 8 * 1024 * 1024;
     var resolvePkg = (typeof Tapp.tappList !== 'undefined' && typeof Tapp.tappList.getInstallPackage === 'function')
       ? Tapp.tappList.getInstallPackage(selectedTapp.id, { maxBytes: TAPP_SHARE_PACKAGE_MAX })
           .then(function (pkgRes) {
@@ -1117,8 +1131,8 @@ function renderAttachPreview() {
   if (removeBtn) removeBtn.addEventListener('click', clearPendingAttach);
 }
 
-// ==================== Stickers (inlined; keep before chat.js in pageModules) ====================
-// Was page/stickers.js — store install only downloads download.page_modules from index;
+// ==================== Stickers (inlined; keep before chat.js in the Page entry graph) ====================
+// Was page/stickers.js — store install only downloads files listed by `download.modules`;
 // a separate stickers.js entry breaks install when index lags behind manifest.
 // ==================== Stickers (personal + room shared pack) ====================
 // Entry: #sticker-btn next to attach. Room pack uses federation.addRoomSticker /
@@ -2313,3 +2327,37 @@ function bindStickerUi() {
   }
 }
 
+
+// ==================== Shared scope ====================
+// Republish the names this file's siblings read. See page/scope.js.
+share.value({
+  INLINE_ATTACH_MAX: INLINE_ATTACH_MAX,
+  MSG_PAYLOAD_SOFT_MAX: MSG_PAYLOAD_SOFT_MAX,
+  addImageDataAsSticker: addImageDataAsSticker,
+  addStickerFromMessage: addStickerFromMessage,
+  applyStickerLabels: applyStickerLabels,
+  bindStickerUi: bindStickerUi,
+  clearPendingAttach: clearPendingAttach,
+  closeAttachMenu: closeAttachMenu,
+  closeStickerCtxMenu: closeStickerCtxMenu,
+  closeStickerPanel: closeStickerPanel,
+  ensureStickerState: ensureStickerState,
+  formatReportContentBody: formatReportContentBody,
+  getMessageImageDataUrl: getMessageImageDataUrl,
+  handleFileSelect: handleFileSelect,
+  handleStickersChangedEvent: handleStickersChangedEvent,
+  handleTransferWsEvent: handleTransferWsEvent,
+  openStickerPanel: openStickerPanel,
+  readFileAsDataURL: readFileAsDataURL,
+  renderAttachPreview: renderAttachPreview,
+  renderReportDetailBodyHtml: renderReportDetailBodyHtml,
+  resetStickersOnConversationChange: resetStickersOnConversationChange,
+  sendChunkedFileTransfer: sendChunkedFileTransfer,
+  setStickerTab: setStickerTab,
+  showPickerLoading: showPickerLoading,
+  toggleAttachMenu: toggleAttachMenu,
+});
+share.live({
+  _attachMenu: [function () { return _attachMenu; }, function (v) { _attachMenu = v; }],
+  _stickerTab: [function () { return _stickerTab; }, function (v) { _stickerTab = v; }],
+});

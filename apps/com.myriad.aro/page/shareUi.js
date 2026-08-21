@@ -1,3 +1,5 @@
+var share = require('./scope.js');
+
 // ==================== Share / library card presentation ====================
 // Extracted from helpers.js. Used by msgUi + feed cards.
 // Load after helpers.js, before msgUi.js.
@@ -253,3 +255,14 @@ function mediaKindLabel(itemType) {
  * 应用内确认对话框（沙箱 iframe 中原生 confirm() 会被浏览器拦截并静默返回 false）。
  * 返回 Promise<boolean>。
  */
+
+// ==================== Shared scope ====================
+// Republish the names this file's siblings read. See page/scope.js.
+share.value({
+  extractLibraryStats: extractLibraryStats,
+  extractMusicMeta: extractMusicMeta,
+  libraryMediaView: libraryMediaView,
+  mediaCoverOrient: mediaCoverOrient,
+  mediaKindLabel: mediaKindLabel,
+  resolveShareCardView: resolveShareCardView,
+});

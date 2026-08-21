@@ -32,7 +32,7 @@ org.smcresearchhk.math/
 
 | 权限 | 用途 |
 |------|------|
-| `storage` | 保存函数列表与视图 |
+| `storage:read` / `storage:write` | 保存函数列表与视图 |
 | `ui:theme` | 适配明暗主题 |
 
 无需网络权限。

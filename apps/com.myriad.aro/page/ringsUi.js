@@ -1,3 +1,5 @@
+var share = require('./scope.js');
+
 // ==================== Rings list + detail ====================
 // Extracted from views.js. Load before views.js.
 
@@ -409,3 +411,18 @@ async function doTriggerSync() {
   }
 }
 
+
+// ==================== Shared scope ====================
+// Republish the names this file's siblings read. See page/scope.js.
+share.value({
+  copyRingId: copyRingId,
+  doAddPeer: doAddPeer,
+  doCreateRing: doCreateRing,
+  doLeaveRing: doLeaveRing,
+  doTriggerSync: doTriggerSync,
+  hideRingDetail: hideRingDetail,
+  loadRings: loadRings,
+  renderRingDetail: renderRingDetail,
+  renderRingsSidebar: renderRingsSidebar,
+  updateRingCreateCategoryVisibility: updateRingCreateCategoryVisibility,
+});

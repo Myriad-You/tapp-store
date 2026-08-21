@@ -15,12 +15,12 @@
     "apiCacheTtlSeconds": 86400,
     "apiInjectAliases": 32,
     "apiInjectTemplateLength": 2048,
-    "archiveBytes": 26214400,
-    "archiveFiles": 512,
-    "archiveUncompressedBytes": 104857600,
-    "assetBytes": 5242880,
-    "assets": 64,
-    "assetsTotalBytes": 20971520,
+    "archiveBytes": 67108864,
+    "archiveFiles": 1024,
+    "archiveUncompressedBytes": 134217728,
+    "assetBytes": 16777216,
+    "assets": 128,
+    "assetsTotalBytes": 67108864,
     "authorEmailLength": 320,
     "backgroundRequirements": 16,
     "credentialFieldLength": 128,
@@ -35,9 +35,13 @@
     "dataExchangeResponseBytes": 524288,
     "dataExchangeSchemaBytes": 65536,
     "eventTopics": 100,
-    "gameAssetBytes": 12582912,
-    "gameAssets": 128,
-    "gameAssetsTotalBytes": 50331648,
+    "gameArchiveBytes": 134217728,
+    "gameArchiveFiles": 2048,
+    "gameArchiveUncompressedBytes": 268435456,
+    "gameAssetBytes": 33554432,
+    "gameAssets": 256,
+    "gameAssetsTotalBytes": 134217728,
+    "gameResourceBytes": 134217728,
     "httpUrlLength": 2048,
     "i18nFiles": 32,
     "i18nResourceBytes": 1048576,
@@ -48,8 +52,7 @@
     "openUrlQueryKeys": 16,
     "openUrlQueryValueLength": 512,
     "openUrls": 32,
-    "pageModules": 64,
-    "resourceBytes": 26214400,
+    "resourceBytes": 67108864,
     "resourcePathLength": 256,
     "routeMaxBodyBytes": 1048576,
     "routeMaxMaxSkewSecs": 3600,
@@ -70,6 +73,7 @@
     "tappNonJsonHttpRequestBytes": 1048576,
     "tappPermissions": 64,
     "tappSettings": 64,
+    "uploadBytes": 136314880,
     "widgetRefreshIntervalMaxSeconds": 86400,
     "widgetRefreshIntervalMinSeconds": 15,
     "widgetSizes": 10,
@@ -169,10 +173,6 @@
       "md5-sorted-kv",
       "hmac-sha256-raw"
     ],
-    "cssModes": [
-      "unified",
-      "separated"
-    ],
     "dataExchangeDirections": {
       "exports": "export",
       "imports": "import"
@@ -247,11 +247,11 @@
       "const"
     ],
     "manifestResourceFields": {
-      "main": "main",
-      "pageStyles": "pageStyles",
-      "pageTemplate": "pageTemplate",
-      "styles": "styles",
-      "widgetStyles": "widgetStyles"
+      "core.entry": "coreEntry",
+      "core.styles": "coreStyles",
+      "page.entry": "pageEntry",
+      "page.styles": "pageStyles",
+      "page.template": "pageTemplate"
     },
     "openUrlMatchModes": [
       "exact",
@@ -278,19 +278,20 @@
     "packageResourceFileLimits": {
       "i18n": "i18nFiles"
     },
-    "pageModuleDirectory": "page",
+    "pageLayerDirectory": "page",
     "protocolVersion": 2,
     "requiredManifestFields": [
       "category"
     ],
     "resourceExtensions": {
       "agentSchema": ".json",
+      "coreEntry": ".js",
+      "coreStyles": ".css",
       "i18n": ".json",
-      "main": ".js",
-      "pageModule": ".js",
+      "pageEntry": ".js",
       "pageStyles": ".css",
       "pageTemplate": ".html",
-      "styles": ".css",
+      "widgetEntry": ".js",
       "widgetStyles": ".css",
       "widgetTemplate": ".html"
     },
@@ -386,6 +387,7 @@
     "widgetCategoryAliases": [
       "tool"
     ],
+    "widgetLayerDirectory": "widget",
     "widgetManifestPermission": "widget:register",
     "widgetRefreshModes": {
       "event": "event",
@@ -776,6 +778,27 @@
         ],
         "type": "string"
       },
+      "TappCoreLayer": {
+        "additionalProperties": false,
+        "description": "共享层：所有沙箱模式执行的第一段代码，也是 headless 后台唯一执行的代码。",
+        "properties": {
+          "entry": {
+            "description": "包内相对路径的 `.js` 入口。层内其余文件由入口 require 进来。",
+            "type": "string"
+          },
+          "styles": {
+            "description": "各层共享的作者样式。宿主预编译产物不走这里。",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "entry"
+        ],
+        "type": "object"
+      },
       "TappCredentialDef": {
         "additionalProperties": false,
         "properties": {
@@ -1041,6 +1064,31 @@
         ],
         "type": "string"
       },
+      "TappPageLayer": {
+        "additionalProperties": false,
+        "description": "Page 层。`entry` 与 `template` 至少有一个，否则这一层没有任何内容。",
+        "properties": {
+          "entry": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "styles": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "template": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
       "TappRouteVerify": {
         "additionalProperties": false,
         "description": "Host-verified inbound HMAC for `/tapi/{tappId}{path}`.",
@@ -1224,6 +1272,13 @@
               "null"
             ]
           },
+          "entry": {
+            "description": "该 widget 的 `.js` 入口。多个 widget 想共用代码就各自 require 同一个文件。",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "icon": {
             "type": [
               "string",
@@ -1257,6 +1312,13 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "styles": {
+            "description": "该 widget 的作者样式。",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "templates": {
             "additionalProperties": {
@@ -1383,6 +1445,17 @@
           }
         ]
       },
+      "core": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/TappCoreLayer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "共享层。声明后台常驻能力的包必须有它；其余包可以只声明 page / widgets。"
+      },
       "credentials": {
         "description": "Installation-level write-only credentials. Values are stored by the host\nand may only be attached to explicitly bound declared HTTP APIs.",
         "items": {
@@ -1390,12 +1463,6 @@
         },
         "type": [
           "array",
-          "null"
-        ]
-      },
-      "cssMode": {
-        "type": [
-          "string",
           "null"
         ]
       },
@@ -1438,10 +1505,6 @@
         ],
         "description": "Optional turn-based game session declaration (federation rooms)."
       },
-      "hasPage": {
-        "default": false,
-        "type": "boolean"
-      },
       "homepage": {
         "type": [
           "string",
@@ -1473,9 +1536,6 @@
           "null"
         ]
       },
-      "main": {
-        "type": "string"
-      },
       "minSystemVersion": {
         "type": [
           "string",
@@ -1495,27 +1555,16 @@
           "null"
         ]
       },
-      "pageModules": {
-        "default": null,
-        "items": {
-          "type": "string"
-        },
-        "type": [
-          "array",
-          "null"
-        ]
-      },
-      "pageStyles": {
-        "type": [
-          "string",
-          "null"
-        ]
-      },
-      "pageTemplate": {
-        "type": [
-          "string",
-          "null"
-        ]
+      "page": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/TappPageLayer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Page 层。存在即表示该 Tapp 有可打开的页面。"
       },
       "permissions": {
         "default": [],
@@ -1549,12 +1598,6 @@
           "null"
         ]
       },
-      "styles": {
-        "type": [
-          "string",
-          "null"
-        ]
-      },
       "themeColor": {
         "type": [
           "string",
@@ -1563,12 +1606,6 @@
       },
       "version": {
         "type": "string"
-      },
-      "widgetStyles": {
-        "type": [
-          "string",
-          "null"
-        ]
       },
       "widgets": {
         "items": {
@@ -1583,8 +1620,7 @@
     "required": [
       "id",
       "name",
-      "version",
-      "main"
+      "version"
     ],
     "title": "TappManifest",
     "type": "object"
@@ -1625,10 +1661,14 @@
       "tappList:manage": "privileged",
       "brew:read": "basic",
       "brew:write": "basic",
-      "brew:comment": "basic",
+      "brew:commentWrite": "elevated",
       "brew:manage": "privileged",
       "federation:read": "basic",
-      "federation:write": "basic",
+      "federation:post": "elevated",
+      "federation:interact": "basic",
+      "federation:channel": "elevated",
+      "federation:room": "elevated",
+      "federation:ring": "basic",
       "federation:message": "basic",
       "federation:trust": "privileged",
       "federation:files": "basic",
@@ -1693,15 +1733,15 @@
       "brewList.exportOpml": "brew:read",
       "brewList.markRead": "brew:write",
       "brewList.markUnread": "brew:write",
+      "brewList.markAllRead": "brew:write",
       "brewList.star": "brew:write",
       "brewList.unstar": "brew:write",
-      "brewList.markAllRead": "brew:write",
-      "brewList.getComments": "brew:comment",
-      "brewList.createComment": "brew:comment",
-      "brewList.updateComment": "brew:comment",
-      "brewList.deleteComment": "brew:comment",
-      "brewList.getReplies": "brew:comment",
-      "brewList.createReply": "brew:comment",
+      "brewList.getComments": "brew:read",
+      "brewList.createComment": "brew:commentWrite",
+      "brewList.updateComment": "brew:commentWrite",
+      "brewList.deleteComment": "brew:commentWrite",
+      "brewList.getReplies": "brew:read",
+      "brewList.createReply": "brew:commentWrite",
       "brewList.addSource": "brew:manage",
       "brewList.updateSource": "brew:manage",
       "brewList.deleteSource": "brew:manage",
@@ -1743,6 +1783,13 @@
       "settings.get": "storage:read",
       "settings.set": "storage:write",
       "settings.getAll": "storage:read",
+      "shared.get": "storage:read",
+      "shared.set": "storage:write",
+      "shared.remove": "storage:write",
+      "shared.keys": "storage:read",
+      "shared.getAll": "storage:read",
+      "shared.clear": "storage:write",
+      "shared.usage": "storage:read",
       "ui.showNotification": "ui:notification",
       "ui.confirm": "ui:confirm",
       "ui.openUrl": "ui:openUrl",
@@ -1796,7 +1843,7 @@
       "speech.getStatus": "speech:tts",
       "speech.asr": "speech:asr",
       "federation.getIdentity": "federation:read",
-      "federation.rotateKeys": "federation:write",
+      "federation.rotateKeys": "federation:post",
       "federation.getFeed": "federation:read",
       "federation.getTimeline": "federation:read",
       "federation.getObject": "federation:read",
@@ -1813,45 +1860,45 @@
       "federation.getRings": "federation:read",
       "federation.getRing": "federation:read",
       "federation.getRingPeers": "federation:read",
-      "federation.follow": "federation:write",
-      "federation.unfollow": "federation:write",
-      "federation.publish": "federation:write",
-      "federation.createNote": "federation:write",
-      "federation.like": "federation:write",
-      "federation.unlike": "federation:write",
-      "federation.bookmark": "federation:write",
-      "federation.unbookmark": "federation:write",
+      "federation.follow": "federation:interact",
+      "federation.unfollow": "federation:interact",
+      "federation.publish": "federation:post",
+      "federation.createNote": "federation:post",
+      "federation.like": "federation:interact",
+      "federation.unlike": "federation:interact",
+      "federation.bookmark": "federation:interact",
+      "federation.unbookmark": "federation:interact",
       "federation.getBookmarks": "federation:read",
       "federation.getExternalShareStatus": "federation:read",
       "federation.composeExternalShare": "federation:read",
-      "federation.announce": "federation:write",
-      "federation.unannounce": "federation:write",
-      "federation.uploadMedia": "federation:write",
-      "federation.unpublish": "federation:write",
-      "federation.createChannel": "federation:write",
-      "federation.acceptChannel": "federation:write",
-      "federation.closeChannel": "federation:write",
-      "federation.deleteChannel": "federation:write",
-      "federation.createRoom": "federation:write",
-      "federation.updateRoom": "federation:write",
-      "federation.deleteRoom": "federation:write",
-      "federation.inviteMember": "federation:write",
-      "federation.acceptRoomInvite": "federation:write",
-      "federation.rejectRoomInvite": "federation:write",
-      "federation.removeMember": "federation:write",
-      "federation.setMemberRole": "federation:write",
-      "federation.leaveRoom": "federation:write",
-      "federation.transferRoomOwnership": "federation:write",
-      "federation.initiateChannelE2e": "federation:write",
-      "federation.initiateRoomE2e": "federation:write",
-      "federation.addRoomSticker": "federation:write",
-      "federation.removeRoomSticker": "federation:write",
-      "federation.pinRoomMessage": "federation:write",
-      "federation.createRing": "federation:write",
-      "federation.leaveRing": "federation:write",
-      "federation.addPeer": "federation:write",
-      "federation.removePeer": "federation:write",
-      "federation.triggerSync": "federation:write",
+      "federation.announce": "federation:interact",
+      "federation.unannounce": "federation:interact",
+      "federation.uploadMedia": "federation:post",
+      "federation.unpublish": "federation:post",
+      "federation.createChannel": "federation:channel",
+      "federation.acceptChannel": "federation:channel",
+      "federation.closeChannel": "federation:channel",
+      "federation.deleteChannel": "federation:channel",
+      "federation.createRoom": "federation:room",
+      "federation.updateRoom": "federation:room",
+      "federation.deleteRoom": "federation:room",
+      "federation.inviteMember": "federation:room",
+      "federation.acceptRoomInvite": "federation:room",
+      "federation.rejectRoomInvite": "federation:room",
+      "federation.removeMember": "federation:room",
+      "federation.setMemberRole": "federation:room",
+      "federation.leaveRoom": "federation:room",
+      "federation.transferRoomOwnership": "federation:room",
+      "federation.initiateChannelE2e": "federation:channel",
+      "federation.initiateRoomE2e": "federation:room",
+      "federation.addRoomSticker": "federation:room",
+      "federation.removeRoomSticker": "federation:room",
+      "federation.pinRoomMessage": "federation:room",
+      "federation.createRing": "federation:ring",
+      "federation.leaveRing": "federation:ring",
+      "federation.addPeer": "federation:ring",
+      "federation.removePeer": "federation:ring",
+      "federation.triggerSync": "federation:ring",
       "federation.sendMessage": "federation:message",
       "federation.sendRoomMessage": "federation:message",
       "federation.subscribeChannel": "federation:message",
@@ -1869,13 +1916,13 @@
       "federation.getInstances": "federation:trust",
       "federation.getDeliveryStats": "federation:read",
       "federation.listDelivery": "federation:read",
-      "federation.retryDelivery": "federation:write",
-      "federation.cancelDelivery": "federation:write",
-      "federation.retryAllDeadDelivery": "federation:write",
-      "federation.cancelAllPendingDelivery": "federation:write",
-      "federation.dismissDelivery": "federation:write",
-      "federation.purgeDeadDelivery": "federation:write",
-      "federation.joinRoom": "federation:write",
+      "federation.retryDelivery": "federation:post",
+      "federation.cancelDelivery": "federation:post",
+      "federation.retryAllDeadDelivery": "federation:post",
+      "federation.cancelAllPendingDelivery": "federation:post",
+      "federation.dismissDelivery": "federation:post",
+      "federation.purgeDeadDelivery": "federation:post",
+      "federation.joinRoom": "federation:room",
       "federation.updateInstanceTrust": "federation:trust",
       "federation.toggleInstanceBlock": "federation:trust",
       "federation.initiateTransfer": "federation:files",

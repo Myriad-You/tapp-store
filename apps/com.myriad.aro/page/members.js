@@ -1,3 +1,5 @@
+var share = require('./scope.js');
+
 // ==================== Render: Members ====================
 // Full function lives here (must not be split across history/files modules).
 
@@ -622,3 +624,14 @@ function closeMemberPanel() {
   }
   state.memberPanelOpen = false;
 }
+
+// ==================== Shared scope ====================
+// Republish the names this file's siblings read. See page/scope.js.
+share.value({
+  closeManageDropdown: closeManageDropdown,
+  closeMemberPanel: closeMemberPanel,
+  registerManageDropdownOutsideGuard: registerManageDropdownOutsideGuard,
+  renderChatHeader: renderChatHeader,
+  renderMembers: renderMembers,
+  renderPendingInviteBanner: renderPendingInviteBanner,
+});

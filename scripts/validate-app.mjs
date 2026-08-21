@@ -238,6 +238,14 @@ function validateOne(appId) {
     errors.push(`${appId}: manifest.id must equal folder name (got ${JSON.stringify(manifest.id)})`)
   }
 
+  const retiredFields = ['main', 'hasPage', 'cssMode', 'styles', 'widgetStyles', 'pageStyles', 'pageTemplate', 'pageModules']
+  for (const field of retiredFields) {
+    if (manifest[field] !== undefined) errors.push(`${appId}: retired manifest field ${field}`)
+  }
+  if (!manifest.core?.entry && !manifest.page && !(Array.isArray(manifest.widgets) && manifest.widgets.length)) {
+    errors.push(`${appId}: manifest must declare core, page, or widgets`)
+  }
+
   const category = manifest.category
   if (typeof category !== 'string' || !category.trim()) {
     errors.push(`${appId}: manifest.category is required`)

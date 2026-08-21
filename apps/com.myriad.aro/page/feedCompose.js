@@ -1,3 +1,5 @@
+var share = require('./scope.js');
+
 // ==================== Feed composer + draft ====================
 // Extracted from views.js. Depends on helpers, state, federation publish APIs.
 // Load before views.js.
@@ -714,3 +716,26 @@ async function doDeleteTimelinePost(target) {
   }
 }
 
+
+// ==================== Shared scope ====================
+// Republish the names this file's siblings read. See page/scope.js.
+share.value({
+  addComposeFiles: addComposeFiles,
+  closeComposer: closeComposer,
+  closeFeedPlusMenu: closeFeedPlusMenu,
+  closeFollowDialog: closeFollowDialog,
+  doDeleteTimelinePost: doDeleteTimelinePost,
+  doUnfollow: doUnfollow,
+  doUnpublish: doUnpublish,
+  handleFeedPlusAction: handleFeedPlusAction,
+  publishComposeNote: publishComposeNote,
+  setComposeDraftNotice: setComposeDraftNotice,
+  toggleFeedPlusMenu: toggleFeedPlusMenu,
+  unwrapPublishResult: unwrapPublishResult,
+  updateComposeButtonVisibility: updateComposeButtonVisibility,
+  updateFeedPlusVisibility: updateFeedPlusVisibility,
+});
+share.live({
+  composeAttachments: [function () { return composeAttachments; }, function (v) { composeAttachments = v; }],
+  composeDraftTextOnly: [function () { return composeDraftTextOnly; }, function (v) { composeDraftTextOnly = v; }],
+});

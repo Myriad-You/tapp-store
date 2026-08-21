@@ -31,11 +31,11 @@ tapp-store/
 │   └── {app_id}/
 │       ├── manifest.json   # 必需（安装与目录对齐的权威源）
 │       ├── catalog.json    # 可选（商店展示：简介 / tags / preview / securityReview）
-│       ├── main.js         # 入口（或 index.js 等，与 manifest.main 一致）
+│       ├── core.js         # 示例 core.entry；实际路径以 Manifest 为准
 │       ├── page.html / page.css / widget.css / …
 │       ├── assets/         # manifest.assets 二进制
 │       ├── i18n/
-│       ├── page/           # pageModules
+│       ├── page/           # Page 层入口与其 require 的模块
 │       └── README.md
 ├── scripts/
 │   ├── check-pr-scope.mjs  # 单 app / 禁 index / version bump
@@ -89,13 +89,13 @@ tapp-store/
 
 | 键 | 说明 |
 | -- | ---- |
-| `manifest` / `code` | 必需 |
+| `manifest` / `code` | 必需；`code` 指向 `core.entry` |
 | `readme` | 可选 |
 | `styles` / `widget_styles` / `page_styles` | CSS |
 | `page_template` | Page HTML |
 | `widget_templates` | `widgetId → { size → path }` |
 | `i18n` | `lang → path` |
-| `page_modules` | **安装后文件名** → 商店路径 |
+| `modules` | 非 core 层入口：包内相对路径 → 商店路径 |
 
 **二进制资源不要写入 `download`。** 声明在 `manifest.assets`，安装器拼：
 
@@ -104,7 +104,7 @@ tapp-store/
 # packageRoot = download.code 的父目录，例如 apps/com.myriad.doudizhu
 ```
 
-Manifest 若声明了 `pageStyles` / `pageTemplate`，索引必须提供对应 `page_styles` / `page_template` 且文件可下载，否则安装失败。
+Manifest 若声明了 `page.styles` / `page.template`，索引必须提供对应 `page_styles` / `page_template` 且文件可下载，否则安装失败。
 
 ### 分类（稳定 ID）
 
@@ -139,7 +139,8 @@ Manifest 若声明了 `pageStyles` / `pageTemplate`，索引必须提供对应 `
       "permissions": ["storage:read", "storage:write", "widget:register"],
       "download": {
         "manifest": "apps/com.example.notes/manifest.json",
-        "code": "apps/com.example.notes/main.js"
+        "code": "apps/com.example.notes/core.js",
+        "modules": { "page/index.js": "apps/com.example.notes/page/index.js" }
       }
     }
   ]
@@ -253,7 +254,7 @@ node scripts/validate-app.mjs --all
 - [ ] **未** 修改 `index.json`
 - [ ] 非文档改动已 **bump** `manifest.version`
 - [ ] `category` 为规范 ID
-- [ ] `manifest.main` 与入口文件名一致
+- [ ] `download.code` 与 `manifest.core.entry` 指向同一份文件
 - [ ] Manifest 声明的 page/widget 资源均在包内
 - [ ] 敏感权限已通过审阅（`catalog.securityReview` 或官方 id）
 - [ ] 下列命令通过：`check-pr-scope` / `validate-app` / `myriad-tapp check` / `validate-previews`

@@ -1,3 +1,28 @@
+// Page layer entry. The modules below share one scope through page/scope.js and
+// are required in dependency order: i18n and state first, helpers before the
+// views that call it, api before the surfaces that talk to the host.
+require('./i18n.js');
+require('./state.js');
+require('./helpers.js');
+require('./shareUi.js');
+require('./mentionUi.js');
+require('./attachments.js');
+require('./msgUi.js');
+require('./chat.js');
+require('./members.js');
+require('./history.js');
+require('./files.js');
+require('./msgSync.js');
+require('./e2eUi.js');
+require('./roomUi.js');
+require('./createUi.js');
+require('./api.js');
+require('./feedUi.js');
+require('./feedCompose.js');
+require('./ringsUi.js');
+require('./views.js');
+require('./events.js');
+
 // ==================== Init ====================
 async function init() {
   if (typeof disposePageSession === 'function') disposePageSession();

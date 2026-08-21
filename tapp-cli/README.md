@@ -8,7 +8,7 @@ authority; this CLI catches common contract problems before upload.
 - Node.js 20 or newer;
 - access to a Myriad instance when you are ready to install the generated package.
 
-The examples pin `@myriad-you/tapp-cli` to `0.1.0`. Keep the version explicit in
+The examples pin `@myriad/tapp-cli` to `0.1.0`. Keep the version explicit in
 automation and upgrade it deliberately when a newer release is available.
 
 ## For agents
@@ -18,9 +18,9 @@ accepts npm's temporary-install prompt; `--package` makes the selected package a
 binary unambiguous in CI.
 
 ```bash
-npx --yes --package=@myriad-you/tapp-cli@0.1.0 myriad-tapp init ./my-tapp --type page
-npx --yes --package=@myriad-you/tapp-cli@0.1.0 myriad-tapp check ./my-tapp --json
-npx --yes --package=@myriad-you/tapp-cli@0.1.0 myriad-tapp pack ./my-tapp --json
+npx --yes --package=@myriad/tapp-cli@0.1.0 myriad-tapp init ./my-tapp --type page
+npx --yes --package=@myriad/tapp-cli@0.1.0 myriad-tapp check ./my-tapp --json
+npx --yes --package=@myriad/tapp-cli@0.1.0 myriad-tapp pack ./my-tapp --json
 ```
 
 Treat a non-zero status as failure. When `check --json` returns status `1`, repair
@@ -31,7 +31,7 @@ For a checked-in dependency, pin the package in the lockfile and invoke its bina
 through `npm exec`:
 
 ```bash
-npm install --save-dev --save-exact @myriad-you/tapp-cli@0.1.0
+npm install --save-dev --save-exact @myriad/tapp-cli@0.1.0
 npm exec -- myriad-tapp check . --json
 ```
 
@@ -43,7 +43,7 @@ exit status described in [Automation contract](#automation-contract).
 Install the pinned CLI globally when you want a short interactive command:
 
 ```bash
-npm install --global @myriad-you/tapp-cli@0.1.0
+npm install --global @myriad/tapp-cli@0.1.0
 ```
 
 Create a starter, edit its `manifest.json` and source files, then validate and
@@ -61,12 +61,20 @@ myriad-tapp pack .
 management page, choose the install action, and upload that file. The CLI does not
 currently log in to a Myriad server or upload packages itself.
 
-WebGL libraries such as Three.js are ordinary guest code. Bundle them with esbuild
-or Rollup into an IIFE under `page/` and list that file in `manifest.pageModules`.
-Put textures and `.glb` models in `manifest.assets` and load them through
-`Tapp.assets`. The sandbox cannot fetch a CDN copy of the engine; `check` warns
-when page HTML or JS points at `unpkg` / `jsdelivr` / `cdnjs` / `esm.sh`. See
-[GRAPHICS.md](../../development/tapp/GRAPHICS.md).
+A Playground export uses the same default layer paths (`core.js`, `page/index.js`,
+`widget/index.js`, `templates/{widgetId}-{size}.html`). Unzip the `.tapp` and run
+`myriad-tapp check` before editing extra files.
+
+For Page 3D, prefer `runtimeModules: ["three"]` (category `game` or `developer`)
+so the host injects pinned Three r170 + `GLTFLoader`. You can still bundle a guest
+IIFE under `page/` and `require` it from the page entry. Put textures and `.glb`
+in `manifest.assets` and load them through `Tapp.assets`. The sandbox cannot fetch
+a CDN copy of the engine; `check` warns when page HTML or JS points at `unpkg` /
+`jsdelivr` / `cdnjs` / `esm.sh`. See
+[GRAPHICS.md](../../docs/development/tapp/GRAPHICS.md).
+
+Online games use `Tapp.game` plus `game:session` and federation permissions.
+`create()` is private by default; preview cannot exercise these APIs.
 
 ## Commands
 
@@ -126,7 +134,7 @@ in automation to keep the selected binary explicit.
 - write-only `credentials` declarations and bindings: limits, declared/bound keys,
   fixed absolute HTTPS origins, fixed non-routing headers, and duplicate headers;
 - literal `Tapp.assets.*("path")` references;
-- runtime surface consistency (`hasPage` resources, widgets ↔ `widget:register`);
+- runtime surface consistency (`page` layer resources, widgets ↔ `widget:register`);
 - headless capability profile: actions denied in background core;
 - `manifest.json` size, per-resource byte limits, and `.tapp` entry count and
   package size limits.
@@ -189,5 +197,5 @@ npm run pack:check
 npm publish
 ```
 
-Publishing requires an authenticated npm account with access to the `@myriad-you`
+Publishing requires an authenticated npm account with access to the `@myriad`
 scope. The package declares public scoped access in `publishConfig`.

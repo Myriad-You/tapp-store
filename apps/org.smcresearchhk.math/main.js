@@ -1144,8 +1144,8 @@
     if (!root) return;
 
     try {
-      if (typeof Tapp !== 'undefined' && Tapp.platform && Tapp.platform.getLocale) {
-        currentLocale = normalizeLocale(await Tapp.platform.getLocale());
+      if (typeof Tapp !== 'undefined' && Tapp.ui && Tapp.ui.getLocale) {
+        currentLocale = normalizeLocale(await Tapp.ui.getLocale());
       } else if (typeof navigator !== 'undefined') {
         currentLocale = normalizeLocale(navigator.language);
       }
