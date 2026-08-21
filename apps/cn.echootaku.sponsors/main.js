@@ -12,6 +12,27 @@ var SPONSOR_SOURCE_SETTINGS = { github: 'showGithub', patreon: 'showPatreon', af
 
 function sponsorText(value) { return String(value == null ? '' : value); }
 function sponsorBoundedText(value, limit) { return Array.from(sponsorText(value)).slice(0, limit || 256).join(''); }
+function sponsorOpaqueId(value) {
+  var hash = 2166136261;
+  var text = sponsorText(value);
+  for (var index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+function sanitizeSponsorSnapshot(snapshot) {
+  if (!snapshot || !Array.isArray(snapshot.supporters)) { return snapshot; }
+  var changed = false;
+  var supporters = snapshot.supporters.map(function (item, index) {
+    if (!item || item.source !== 'github' || item.private !== true) { return item; }
+    var safeId = 'github:private:' + sponsorOpaqueId(index + ':' + sponsorText(item.since));
+    if (item.id === safeId && !item.name && !item.handle) { return item; }
+    changed = true;
+    return Object.assign({}, item, { id: safeId, name: '', handle: '' });
+  });
+  return changed ? Object.assign({}, snapshot, { supporters: supporters }) : snapshot;
+}
 function sponsorMinor(value) { var amount = Number(value); return Number.isFinite(amount) ? Math.max(0, Math.min(Number.MAX_SAFE_INTEGER, Math.round(amount))) : 0; }
 function sponsorEscape(value) { return sponsorText(value).replace(/[&<>'"]/g, function (character) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]; }); }
 function sponsorTranslate(key, params) { try { return Tapp.i18n.t(key, params || {}); } catch (error) { return key; } }
@@ -66,8 +87,11 @@ function normalizeGithubNode(node, index) {
   var isOneTime = Boolean(node && node.isOneTimePayment);
   var tierAmount = sponsorMinor(node && node.tier && node.tier.monthlyPriceInCents);
   var name = isPrivate ? '' : sponsorBoundedText(entity.name || entity.login, 120);
+  var githubId = isPrivate
+    ? 'private:' + sponsorOpaqueId(index + ':' + sponsorText(node && node.createdAt))
+    : sponsorBoundedText(entity.login, 180);
   return {
-    id: 'github:' + sponsorBoundedText(entity && entity.login ? entity.login : 'private-' + index + '-' + (node.createdAt || ''), 180),
+    id: 'github:' + githubId,
     source: 'github', name: name, handle: isPrivate ? '' : sponsorBoundedText(entity.login, 80), private: isPrivate,
     recurring: isActive && !isOneTime, oneTime: isOneTime, amountMinor: isActive || isOneTime ? tierAmount : 0, currency: 'USD',
     tier: sponsorBoundedText(node.tier && node.tier.name, 160), since: sponsorBoundedText(node.createdAt, 40), status: isActive ? 'active' : 'inactive'
@@ -222,7 +246,11 @@ function applySponsorSettings(config) {
   sponsorsState.visibleSources = Object.keys(SPONSOR_SOURCES).filter(function (source) { return config[SPONSOR_SOURCE_SETTINGS[source]] !== false; });
   if (sponsorsState.filter !== 'all' && sponsorsState.visibleSources.indexOf(sponsorsState.filter) === -1) { sponsorsState.filter = 'all'; }
 }
-function previousItemsFor(source) { return ((sponsorsState.snapshot && sponsorsState.snapshot.supporters) || []).filter(function (item) { return item.source === source; }); }
+function previousItemsFor(source) {
+  var sanitized = sanitizeSponsorSnapshot(sponsorsState.snapshot);
+  if (sanitized !== sponsorsState.snapshot) { sponsorsState.snapshot = sanitized; }
+  return ((sanitized && sanitized.supporters) || []).filter(function (item) { return item.source === source; });
+}
 function previousSourceFor(source) { return sponsorsState.snapshot && sponsorsState.snapshot.sources && sponsorsState.snapshot.sources[source]; }
 async function syncSponsorSource(source, config, options) {
   options = options || {};
@@ -377,7 +405,8 @@ function sponsorWidgetVisibleSources(config) {
   return Object.keys(SPONSOR_SOURCES).filter(function (source) { return config[SPONSOR_SOURCE_SETTINGS[source]] !== false; });
 }
 function sponsorWidgetItems(snapshot, sources) {
-  var items = snapshot && Array.isArray(snapshot.supporters) ? snapshot.supporters : [];
+  var sanitized = sanitizeSponsorSnapshot(snapshot);
+  var items = sanitized && Array.isArray(sanitized.supporters) ? sanitized.supporters : [];
   return items.filter(function (item) { return item && SPONSOR_SOURCES[item.source] && sources.indexOf(item.source) !== -1; });
 }
 function sponsorWidgetMonthlyAmount(items) {
@@ -704,7 +733,7 @@ async function initSponsorsPage(root) {
     sponsorsState.selectedStarId = sponsorsState.starLayout[next].item.id; renderSponsorCosmos(root);
   }, { signal: signal });
   if (typeof window !== 'undefined') { window.addEventListener('resize', function () { if (sponsorsState.view === 'cosmos') { renderSponsorCosmos(root); } }, { signal: signal }); }
-  var offStorage = Tapp.storage.onChanged(function (event) { if (event && event.key === SPONSORS_SNAPSHOT_KEY) { Tapp.storage.get(SPONSORS_SNAPSHOT_KEY).then(function (snapshot) { if (!signal.aborted && root.isConnected) { sponsorsState.snapshot = snapshot || null; renderSponsorsPage(root); } }).catch(function () {}); } });
+  var offStorage = Tapp.storage.onChanged(function (event) { if (event && event.key === SPONSORS_SNAPSHOT_KEY) { Tapp.storage.get(SPONSORS_SNAPSHOT_KEY).then(function (snapshot) { if (!signal.aborted && root.isConnected) { sponsorsState.snapshot = sanitizeSponsorSnapshot(snapshot) || null; renderSponsorsPage(root); } }).catch(function () {}); } });
   var offLocale = Tapp.ui && typeof Tapp.ui.onLocaleChange === 'function' ? Tapp.ui.onLocaleChange(function () { if (root.isConnected) { renderSponsorsPage(root); } }) : null;
   var offTheme = Tapp.ui && typeof Tapp.ui.onThemeChange === 'function' ? Tapp.ui.onThemeChange(function (theme) { if (root.isConnected) { sponsorApplyTheme(root, theme); } }) : null;
   var offAnimation = Tapp.animation && typeof Tapp.animation.onLevelChange === 'function' ? Tapp.animation.onLevelChange(function (level) { sponsorsState.animationEnabled = level !== 'none'; if (root.isConnected) { renderSponsorsPage(root); } }) : null;
@@ -720,6 +749,11 @@ async function initSponsorsPage(root) {
   if (storedSnapshot && storedSnapshot.demo === true) {
     await Tapp.storage.remove(SPONSORS_SNAPSHOT_KEY);
     storedSnapshot = null;
+  }
+  var sanitizedSnapshot = sanitizeSponsorSnapshot(storedSnapshot);
+  if (sanitizedSnapshot !== storedSnapshot) {
+    await Tapp.storage.set(SPONSORS_SNAPSHOT_KEY, sanitizedSnapshot);
+    storedSnapshot = sanitizedSnapshot;
   }
   if (signal.aborted || !root.isConnected) { return; }
   sponsorsState.snapshot = storedSnapshot;

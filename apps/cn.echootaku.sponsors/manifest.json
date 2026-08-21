@@ -1,7 +1,7 @@
 {
   "id": "cn.echootaku.sponsors",
   "name": "赞助者名单",
-  "version": "0.1.17",
+  "version": "0.1.18",
   "minSystemVersion": "0.3.29",
   "description": "聚合多个赞助平台的支持者，在一个私密仪表盘中查看。",
   "locales": {
@@ -15,7 +15,6 @@
     }
   },
   "category": "social",
-  "main": "main.js",
   "author": {
     "name": "EchoOtaku",
     "url": "https://echootaku.cn"
@@ -46,11 +45,13 @@
   ],
   "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M12 20.5S4 16 4 9.5A4.5 4.5 0 0 1 12 6.7a4.5 4.5 0 0 1 8 2.8c0 6.5-8 11-8 11Z' stroke='currentColor' stroke-width='1.8' stroke-linejoin='round'/><path d='M8.5 11.5h7M12 8v7' stroke='currentColor' stroke-width='1.6' stroke-linecap='round'/></svg>",
   "themeColor": "#C06C58",
-  "hasPage": true,
-  "cssMode": "separated",
-  "pageStyles": "page.css",
-  "pageTemplate": "page.html",
-  "widgetStyles": "widget.css",
+  "core": {
+    "entry": "main.js"
+  },
+  "page": {
+    "template": "page.html",
+    "styles": "page.css"
+  },
   "widgets": [
     {
       "id": "sponsor-glance",
@@ -63,6 +64,7 @@
         "mode": "event",
         "refreshOnVisible": true
       },
+      "styles": "widget.css",
       "templates": {
         "2x2": "widget-2x2.html",
         "4x2": "widget-4x2.html",

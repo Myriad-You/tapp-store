@@ -142,6 +142,66 @@ test('GitHub 读取历史状态并优先合并官方累计赞助金额', async (
   assert.equal(manifest.apis.githubLifetimeFirst.body.query.includes('lifetimeReceivedSponsorshipValues'), true);
 });
 
+test('GitHub 私密赞助者的持久化模型不包含平台身份', () => {
+  const app = loadApp(async () => ({}));
+  const first = app.normalizeGithubNode({
+    createdAt: '2026-08-19T00:00:00Z',
+    isActive: true,
+    isOneTimePayment: false,
+    privacyLevel: 'PRIVATE',
+    sponsorEntity: { login: 'SecretSponsor', name: 'Secret Name' },
+    tier: { name: '$5', monthlyPriceInCents: 500 },
+  }, 3);
+  const changedLogin = app.normalizeGithubNode({
+    createdAt: '2026-08-19T00:00:00Z',
+    isActive: true,
+    isOneTimePayment: false,
+    privacyLevel: 'PRIVATE',
+    sponsorEntity: { login: 'AnotherSecret', name: 'Another Name' },
+    tier: { name: '$5', monthlyPriceInCents: 500 },
+  }, 3);
+
+  assert.equal(first.private, true);
+  assert.equal(first.name, '');
+  assert.equal(first.handle, '');
+  assert.match(first.id, /^github:private:[0-9a-f]{8}$/);
+  assert.equal(first.id, changedLogin.id);
+  assert.equal(JSON.stringify(first).includes('SecretSponsor'), false);
+  assert.equal(JSON.stringify(first).includes('Secret Name'), false);
+});
+
+test('旧快照中的私密 GitHub 身份会在复用前被净化', () => {
+  const app = loadApp(async () => ({}));
+  const legacy = {
+    version: 1,
+    updatedAt: 1,
+    supporters: [{
+      id: 'github:LegacySecret',
+      source: 'github',
+      name: 'Legacy Name',
+      handle: 'LegacySecret',
+      private: true,
+      since: '2026-08-19T00:00:00Z',
+      amountMinor: 500,
+      currency: 'USD',
+    }],
+    sources: { github: { status: 'ready', count: 1 } },
+  };
+
+  const sanitized = app.sanitizeSponsorSnapshot(legacy);
+  assert.notEqual(sanitized, legacy);
+  assert.match(sanitized.supporters[0].id, /^github:private:[0-9a-f]{8}$/);
+  assert.equal(sanitized.supporters[0].name, '');
+  assert.equal(sanitized.supporters[0].handle, '');
+  assert.equal(JSON.stringify(sanitized).includes('LegacySecret'), false);
+  assert.equal(JSON.stringify(sanitized).includes('Legacy Name'), false);
+  assert.equal(app.sanitizeSponsorSnapshot(sanitized), sanitized);
+
+  app.sponsorsState.snapshot = legacy;
+  const previous = app.previousItemsFor('github');
+  assert.equal(JSON.stringify(Array.from(previous)).includes('LegacySecret'), false);
+});
+
 test('GitHub 累计接口不可用时保留基础赞助名单', async () => {
   const app = loadApp(async (name) => {
     if (name === 'githubSponsorsFirst') {
@@ -156,6 +216,60 @@ test('GitHub 累计接口不可用时保留基础赞助名单', async () => {
   assert.equal(supporters.length, 1);
   assert.equal(supporters[0].amountMinor, 500);
   assert.equal(supporters[0].lifetimeMinor, undefined);
+});
+
+test('凭据失败保留该平台的旧快照', async () => {
+  const app = loadApp(async () => { throw new Error('401 Unauthorized'); });
+  const previous = { id: 'github:existing', source: 'github', name: 'Existing', amountMinor: 500, currency: 'USD' };
+  app.sponsorsState.snapshot = {
+    supporters: [previous],
+    sources: { github: { status: 'ready', count: 1, manualOnly: false } },
+  };
+
+  const result = await app.syncSponsorSource('github', { githubLogin: 'Creator' }, {});
+  assert.equal(result.status, 'error');
+  assert.deepEqual(Array.from(result.items), [previous]);
+  assert.equal(result.message, 'credentialMissing');
+  assert.equal(result.manualOnly, false);
+});
+
+test('Patreon 超时后暂停自动同步并允许手动恢复', async () => {
+  let mode = 'timeout';
+  const calls = [];
+  const app = loadApp(async (name) => {
+    calls.push(name);
+    if (mode === 'timeout') { throw new Error('Request timeout'); }
+    if (name === 'patreonCampaigns') {
+      return { data: [{ id: '123', attributes: { currency: 'USD' } }] };
+    }
+    if (name === 'patreonMembersFirst') {
+      return { data: [], included: [], meta: { pagination: { cursors: { next: null } } } };
+    }
+    throw new Error(`Unexpected API: ${name}`);
+  });
+  const previous = { id: 'patreon:existing', source: 'patreon', name: 'Existing', amountMinor: 500, currency: 'USD' };
+  app.sponsorsState.snapshot = {
+    supporters: [previous],
+    sources: { patreon: { status: 'ready', count: 1, manualOnly: false } },
+  };
+
+  const timedOut = await app.syncSponsorSource('patreon', {}, { manualPatreon: true });
+  assert.equal(timedOut.status, 'paused');
+  assert.equal(timedOut.manualOnly, true);
+  assert.deepEqual(Array.from(timedOut.items), [previous]);
+  assert.deepEqual(calls, ['patreonCampaigns']);
+
+  app.sponsorsState.snapshot.sources.patreon = timedOut;
+  const automatic = await app.syncSponsorSource('patreon', {}, {});
+  assert.equal(automatic.status, 'paused');
+  assert.equal(automatic.manualOnly, true);
+  assert.deepEqual(calls, ['patreonCampaigns']);
+
+  mode = 'ready';
+  const recovered = await app.syncSponsorSource('patreon', {}, { manualPatreon: true });
+  assert.equal(recovered.status, 'ready');
+  assert.equal(recovered.manualOnly, false);
+  assert.deepEqual(calls, ['patreonCampaigns', 'patreonCampaigns', 'patreonMembersFirst']);
 });
 
 test('第三方文本和金额在进入快照前被限制', () => {
@@ -244,8 +358,12 @@ test('发行页面不包含示例数据模块并保留旧测试快照清理', ()
 test('赞助星图声明三种尺寸并仅以事件驱动刷新', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(appRoot, 'manifest.json'), 'utf8'));
   const widget = manifest.widgets.find((item) => item.id === 'sponsor-glance');
+  const retiredFields = ['main', 'hasPage', 'cssMode', 'pageStyles', 'pageTemplate', 'widgetStyles'];
+  assert.deepEqual(retiredFields.filter((field) => Object.hasOwn(manifest, field)), []);
+  assert.deepEqual(manifest.core, { entry: 'main.js' });
+  assert.deepEqual(manifest.page, { template: 'page.html', styles: 'page.css' });
   assert.equal(manifest.permissions.includes('widget:register'), true);
-  assert.equal(manifest.widgetStyles, 'widget.css');
+  assert.equal(widget.styles, 'widget.css');
   assert.deepEqual(widget.sizes, ['2x2', '4x2', '4x4']);
   assert.equal(widget.defaultSize, '4x2');
   assert.equal(widget.refreshPolicy.mode, 'event');
