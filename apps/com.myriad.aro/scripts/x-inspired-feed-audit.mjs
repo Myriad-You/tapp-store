@@ -65,6 +65,8 @@ must('domain-chip', views.includes('feed-actor-domain') || views.includes('feed-
 must('css-share', css.includes('feed-share-actions') && css.includes('feed-actor-meta'))
 
 // Version + host dependency docs
+// Floor, not a pin: this audit was written against 1.0.9, so later releases
+// must continue to exercise the structural checks below.
 const versionParts = String(man.version).split('.').map(Number)
 const isSupportedVersion = versionParts.length === 3
   && versionParts.every(Number.isInteger)

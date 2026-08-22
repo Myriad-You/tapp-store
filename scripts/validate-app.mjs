@@ -44,7 +44,11 @@ const CATEGORY_ALIASES = {
 /** Permissions that need explicit security review for third-party apps. */
 const ELEVATED_PERMISSIONS = [
   'federation:read',
-  'federation:write',
+  'federation:post',
+  'federation:interact',
+  'federation:channel',
+  'federation:room',
+  'federation:ring',
   'federation:message',
   'federation:files',
   'tappList:manage',

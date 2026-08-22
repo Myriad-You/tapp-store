@@ -1,3 +1,5 @@
+var share = require('./scope.js');
+
 // ==================== Room UI (invite / avatar / edit) ====================
 // Extracted from api.js. Depends on helpers, state, federation SDK.
 // Load before api.js (call-time deps on openConversation ok).
@@ -472,3 +474,21 @@ async function doSaveRoom() {
   }
 }
 
+
+// ==================== Shared scope ====================
+// Republish the names this file's siblings read. See page/scope.js.
+share.value({
+  bindRoomAvatarUi: bindRoomAvatarUi,
+  closeInvitePopover: closeInvitePopover,
+  doSaveRoom: doSaveRoom,
+  hideEditRoomDialog: hideEditRoomDialog,
+  paintRoomAvatarPreview: paintRoomAvatarPreview,
+  registerInvitePopoverOutsideGuard: registerInvitePopoverOutsideGuard,
+  renderInvitePopoverContacts: renderInvitePopoverContacts,
+  showEditRoomDialog: showEditRoomDialog,
+  toggleInvitePopover: toggleInvitePopover,
+});
+share.live({
+  _createRoomAvatar: [function () { return _createRoomAvatar; }, function (v) { _createRoomAvatar = v; }],
+  _invitePopover: [function () { return _invitePopover; }, function (v) { _invitePopover = v; }],
+});

@@ -238,7 +238,7 @@ function checkConvListDelegation() {
 }
 
 // ---------------------------------------------------------------------------
-// 4) create-overlay in page.css AND styles.css: display:none + PE none
+// 4) create-overlay in page.css: display:none + PE none
 // ---------------------------------------------------------------------------
 function extractCreateOverlayRules(cssText) {
   const rules = [];
@@ -251,7 +251,7 @@ function extractCreateOverlayRules(cssText) {
 }
 
 function checkCreateOverlayCss() {
-  for (const rel of ['page.css', 'styles.css']) {
+  for (const rel of ['page.css']) {
     const css = read(rel);
     if (!css) continue;
     const rules = extractCreateOverlayRules(css);
@@ -272,14 +272,6 @@ function checkCreateOverlayCss() {
         `display:none=${hasDisplayNone}, pointer-events:none=${hasPeNone}; rule="${base.slice(0, 160)}"`,
       );
     }
-  }
-  // Sync check (not required by checklist but catches drift)
-  const a = read('page.css');
-  const b = read('styles.css');
-  if (a && b && a === b) {
-    pass('4-css-sync', 'page.css === styles.css');
-  } else if (a && b) {
-    fail('4-css-sync', 'page.css !== styles.css (must stay in sync)');
   }
 }
 
@@ -650,7 +642,7 @@ function checkPortalOverlayCss() {
     'picker-overlay',
     'img-viewer',
   ];
-  for (const rel of ['page.css', 'styles.css']) {
+  for (const rel of ['page.css']) {
     const css = read(rel);
     if (!css) continue;
     for (const cls of portals) {
@@ -748,7 +740,7 @@ function dumpLayerInventory() {
     { cls: 'msg-ctx-menu', note: 'message context menu' },
   ];
   console.log('--- LAYER INVENTORY (optional) ---');
-  for (const rel of ['page.css', 'styles.css']) {
+  for (const rel of ['page.css']) {
     const css = read(rel);
     if (!css) continue;
     console.log(`  [${rel}]`);

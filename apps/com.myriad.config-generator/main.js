@@ -1241,6 +1241,9 @@ services:
       CACHE_DIR: /app/cache
       JWT_SECRET: \${JWT_SECRET}
       MYRIAD_SETUP_SECRET: \${MYRIAD_SETUP_SECRET:?Set MYRIAD_SETUP_SECRET in .env}
+      ANALYTICS_SALT: \${ANALYTICS_SALT:-}
+      TAPP_STORE_STATS_URL: \${TAPP_STORE_STATS_URL:-https://stats.store.myriad.you}
+      TAPP_STORE_STATS_ENABLED: \${TAPP_STORE_STATS_ENABLED:-true}
       TRUST_PROXY_HEADERS: "true"
       TRUST_PROXY_PEERS: \${TRUST_PROXY_PEERS:-127.0.0.0/8,::1,172.17.0.0/16,172.28.0.0/16}
       CORS_ORIGINS: \${CORS_ORIGINS:-http://localhost}
@@ -1250,7 +1253,6 @@ services:
       BASE_URL: \${BASE_URL:-}
       RUST_LOG: \${RUST_LOG:-info}
       TZ: Asia/Shanghai
-      MYRIAD_VERSION: \${MYRIAD_TAG}
       MYRIAD_MEMORY_PROFILE: \${MYRIAD_MEMORY_PROFILE:-default}
       MYRIAD_UPDATER_URL: http://updater-gateway:1104
       UPDATER_GATEWAY_SECRET: \${UPDATER_GATEWAY_SECRET}
@@ -1287,10 +1289,8 @@ services:
           cpus: '0.25'
           memory: 256M
     environment:
-      PUBLIC_API_URL: \${PUBLIC_API_URL:-}
       NODE_ENV: production
       TZ: Asia/Shanghai
-      MYRIAD_VERSION: \${MYRIAD_TAG}
     depends_on:
       backend: { condition: service_healthy }
     healthcheck:
@@ -1324,7 +1324,6 @@ services:
       PROXY_UPDATER_UPSTREAM: http://updater:1101
       PROXY_TRUSTED_UPSTREAMS: \${PROXY_TRUSTED_UPSTREAMS:-}
       PROXY_ALLOW_DIRECT_UPDATER: \${PROXY_ALLOW_DIRECT_UPDATER:-false}
-      MYRIAD_VERSION: \${PROXY_TAG}
       TZ: Asia/Shanghai
     volumes:
       - ./state:/state:ro
@@ -1406,7 +1405,8 @@ services:
       COSIGN_INSECURE_OK: \${COSIGN_INSECURE_OK:-}
       COMPOSE_PROJECT_NAME: \${COMPOSE_PROJECT_NAME:-myriad}
       MYRIAD_DOCKER_NETWORK: \${MYRIAD_DOCKER_NETWORK:-myriad-net}
-      MYRIAD_VERSION: \${UPDATER_TAG}
+      # Identity is baked into the image (Dockerfile ENV). Do not overlay
+      # UPDATER_TAG here: the digest pin in UPDATER_IMAGE_REF is what runs.
       TZ: Asia/Shanghai
     volumes:
       - type: bind
@@ -1526,6 +1526,7 @@ HTTP_PORT={{HTTP_PORT}}
 # PROXY_TRUSTED_UPSTREAMS: empty trusts private/loopback peers only (outer panel/Nginx).
 # Never set 0.0.0.0/0 (would trust forged X-Forwarded-* from anyone).
 # PROXY_TRUSTED_UPSTREAMS=
+# TRUST_PROXY_PEERS=127.0.0.0/8,::1,172.17.0.0/16,172.28.0.0/16
 PROXY_ALLOW_DIRECT_UPDATER=false
 
 COSIGN_VERIFY={{COSIGN_VERIFY}}
@@ -1539,12 +1540,15 @@ MYRIAD_DB_MODE={{MYRIAD_DB_MODE}}
 JWT_SECRET={{JWT_SECRET}}
 # First-owner claim passphrase. The setup wizard asks for this when creating the site owner.
 MYRIAD_SETUP_SECRET={{MYRIAD_SETUP_SECRET}}
+# Visitor-hash salt (openssl rand -hex 32). Auto-filled; do not reuse JWT_SECRET.
+ANALYTICS_SALT={{ANALYTICS_SALT}}
+TAPP_STORE_STATS_URL=https://stats.store.myriad.you
+TAPP_STORE_STATS_ENABLED=true
 
 CORS_ORIGINS={{CORS_ORIGINS}}
 # BASE_URL / FRONTEND_URL = public HTTPS origin (required for federation Actor URLs)
 BASE_URL=https://{{MAIN_DOMAIN}}
 FRONTEND_URL=https://{{MAIN_DOMAIN}}
-PUBLIC_API_URL=
 # RUST_LOG=info
 `;
 
@@ -1744,7 +1748,7 @@ docker exec myriad-updater myriad-rescue exit-maintenance --force
 ## 版本
 
 MYRIAD_TAG={{MYRIAD_TAG}} · PROXY_TAG={{PROXY_TAG}} · UPDATER_TAG={{UPDATER_TAG}}  
-禁止 \`:latest\`。生产建议 pin digest：tag 填 \`vX.Y.Z@sha256:<64hex>\`，生成器会写入完整 image 引用。
+禁止 \`:latest\`。TCB 以 \`.env\` 的 \`UPDATER_IMAGE_REF\` digest 为准，不要把 \`UPDATER_TAG\` 当成正在运行的更新器。生成器会写入完整 image 引用。
 
 ## 生成后自检（务必）
 
@@ -1804,6 +1808,17 @@ function generateSetupSecret() {
   return generateSecret(48);
 }
 
+function generateHex(bytes) {
+  var array = new Uint8Array(bytes);
+  crypto.getRandomValues(array);
+  var out = '';
+  for (var i = 0; i < array.length; i++) {
+    var hex = array[i].toString(16);
+    out += hex.length === 1 ? '0' + hex : hex;
+  }
+  return out;
+}
+
 // ========================================
 // 安全：dotenv token / 内存 / PG / 上传限制
 // ========================================
@@ -1821,7 +1836,8 @@ var EXPECTED_ENV_KEYS_BASE = [
   'UPDATE_MODE', 'MYRIAD_GITHUB_REPO', 'CHECK_INTERVAL_SECS',
   'HTTP_BIND_ADDRESS', 'HTTP_PORT', 'PROXY_ALLOW_DIRECT_UPDATER',
   'COSIGN_VERIFY', 'MYRIAD_MEMORY_PROFILE', 'MYRIAD_DB_MODE', 'DATABASE_URL', 'JWT_SECRET',
-  'MYRIAD_SETUP_SECRET', 'CORS_ORIGINS', 'BASE_URL', 'FRONTEND_URL',
+  'MYRIAD_SETUP_SECRET', 'ANALYTICS_SALT', 'TAPP_STORE_STATS_URL',
+  'TAPP_STORE_STATS_ENABLED', 'CORS_ORIGINS', 'BASE_URL', 'FRONTEND_URL',
   'MYRIAD_COMPOSE_HOST_ROOT', 'MYRIAD_GUARD_ENV_FILE', 'DOCKER_GUARD_IMAGE',
   'UPDATER_IMAGE_REF', 'GUARD_SELF_UPDATE_TOKEN', 'GUARD_COMPOSE_PROJECT_NAME',
   'GUARD_MYRIAD_DOCKER_NETWORK', 'GUARD_MYRIAD_ADMIN_NETWORK',
@@ -1914,6 +1930,13 @@ function validateGeneratedEnv(envText, secrets, opts) {
     throw new Error('GUARD_SELF_UPDATE_TOKEN 写入 .env 后与输入不一致');
   }
   requireSafeDotenvToken(parsed.map.GUARD_SELF_UPDATE_TOKEN, 'GUARD_SELF_UPDATE_TOKEN');
+  if (secrets.ANALYTICS_SALT && parsed.map.ANALYTICS_SALT !== secrets.ANALYTICS_SALT) {
+    throw new Error('ANALYTICS_SALT 写入 .env 后与输入不一致');
+  }
+  requireSafeDotenvToken(parsed.map.ANALYTICS_SALT, 'ANALYTICS_SALT');
+  if (parsed.map.TAPP_STORE_STATS_ENABLED !== 'true' && parsed.map.TAPP_STORE_STATS_ENABLED !== 'false') {
+    throw new Error('TAPP_STORE_STATS_ENABLED 必须是 true 或 false');
+  }
   var allowCount = (String(envText).match(/^PROXY_ALLOW_DIRECT_UPDATER=/gm) || []).length;
   if (allowCount !== 1) {
     throw new Error('PROXY_ALLOW_DIRECT_UPDATER 出现 ' + allowCount + ' 次，拒绝生成');
@@ -2694,6 +2717,7 @@ var state = {
   updateToken: '',
   updaterGatewaySecret: '',
   setupSecret: '',
+  analyticsSalt: '',
   nginxConfig: null,
   nginxFileName: '',
   extraNginxConfig: null,
@@ -3971,6 +3995,7 @@ function generateConfigs() {
       '官方 `postgres:*-alpine` 数据目录须为 **uid 70** 可写；宝塔等用 root 建目录时务必 `chown -R 70:70 pgdata`。\n' +
       '换 PG 大版本前先 dump/restore。\n';
   } else {
+    updaterPgdataLine = '      MYRIAD_DB_MODE: ${MYRIAD_DB_MODE:-external}\n';
     // Still document credentials used to build DATABASE_URL (optional for operators)
     postgresEnvBlock =
       '# Credentials used to build DATABASE_URL (external DB; no compose postgres service)\n' +
@@ -3987,6 +4012,9 @@ function generateConfigs() {
     ? 'MYRIAD_BACKEND_EXTRA_NETWORK=' + extraNetworkName + '\n'
     : '';
 
+  if (!state.analyticsSalt) {
+    state.analyticsSalt = generateHex(32);
+  }
   if (!state.updaterDigest) {
     throw new Error(t('error.needUpdaterDigest'));
   }
@@ -4022,6 +4050,7 @@ function generateConfigs() {
     UPDATE_TOKEN: state.updateToken,
     UPDATER_GATEWAY_SECRET: state.updaterGatewaySecret,
     MYRIAD_SETUP_SECRET: state.setupSecret,
+    ANALYTICS_SALT: state.analyticsSalt,
     MAIN_DOMAIN: state.mainDomain,
     EXTRA_DOMAIN: state.extraDomain || '',
     CORS_ORIGINS: corsOrigins,
@@ -4110,6 +4139,7 @@ function generateConfigs() {
     UPDATE_TOKEN: state.updateToken,
     UPDATER_GATEWAY_SECRET: state.updaterGatewaySecret,
     MYRIAD_SETUP_SECRET: state.setupSecret,
+    ANALYTICS_SALT: state.analyticsSalt,
     GUARD_SELF_UPDATE_TOKEN: guardToken,
     POSTGRES_PASSWORD: isExternal ? undefined : state.dbPassword
   }, { bundled: !isExternal });

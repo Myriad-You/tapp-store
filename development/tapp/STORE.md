@@ -72,7 +72,7 @@ flowchart TB
 
 前端降级常量 `OFFICIAL_STORE`（`RemoteStoreService`）在 API 不可用时仍指向同一 URL。
 
-当前官方应用目录示例（以仓库 `index.json` 为准）：`com.myriad.music-player`、`com.myriad.quick-notes`、`com.myriad.config-generator`、`com.myriad.doudizhu`、`com.myriad.aro`。内置演示仅 `helloWorld`；完整应用经商店安装，不随 Myriad 前端打包。
+当前官方应用目录示例（以仓库 `index.json` 为准）：`com.myriad.music-player`、`com.myriad.quick-notes`、`com.myriad.config-generator`、`com.myriad.doudizhu`、`com.myriad.aro`、`com.myriad.three-lab`。内置演示仅 `helloWorld`；完整应用经商店安装，不随 Myriad 前端打包。
 
 ---
 
@@ -581,6 +581,7 @@ REST 商店安装仍是 body `source: "store"` + `storeSource: catalogRef`（源
 | `BASE_URL` / `FRONTEND_URL` | — | 生产必设公网 URL；dev.sh 写本地 URL |
 
 **本地默认不统计**（不污染线上数字）。要测统计再设 `TAPP_STORE_STATS_ENABLED=true`。  
+官方 `docker-compose.yml` 会注入 `TAPP_STORE_STATS_ENABLED=true` 与默认 URL；要关闭请设 `false`。  
 默认 **零密钥**。详见 `tapp-store/edge/README.md`。
 
 ---

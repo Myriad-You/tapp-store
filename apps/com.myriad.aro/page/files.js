@@ -1,3 +1,5 @@
+var share = require('./scope.js');
+
 // ==================== Room files (group attachment library) ====================
 // Phase 1: prefer GET rooms/{id}/files (server index over messages + transfers).
 // Fallback: client aggregate of state.messages + listRoomTransfers.
@@ -880,3 +882,14 @@ function bindRoomFilesUi() {
   var loadMore = $('room-files-load-more');
   if (loadMore) loadMore.addEventListener('click', function () { loadMoreRoomFiles(); });
 }
+
+// ==================== Shared scope ====================
+// Republish the names this file's siblings read. See page/scope.js.
+share.value({
+  applyRoomFilesLabels: applyRoomFilesLabels,
+  bindRoomFilesUi: bindRoomFilesUi,
+  closeRoomFiles: closeRoomFiles,
+  isRoomFilesOpen: isRoomFilesOpen,
+  openRoomFiles: openRoomFiles,
+  resetRoomFilesOnConversationChange: resetRoomFilesOnConversationChange,
+});

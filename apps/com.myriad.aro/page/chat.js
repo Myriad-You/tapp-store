@@ -1,3 +1,5 @@
+var share = require('./scope.js');
+
 // ==================== Render: Conversation List ====================
 function buildConversationItems() {
   var items = [];
@@ -588,8 +590,8 @@ function buildForwardPayload(msg) {
     };
   }
 
-  // Cap accidental giant payloads (safety)
-  if (payload.data && typeof payload.data === 'string' && payload.data.length > 6 * 1024 * 1024) {
+  // Cap accidental giant payloads (safety) — same budget the send path designs against.
+  if (payload.data && typeof payload.data === 'string' && payload.data.length > MSG_PAYLOAD_SOFT_MAX) {
     return {
       ok: false,
       error: lang.forwardTooLarge || lang.mediaTooLarge || 'Attachment too large to forward',
@@ -1503,8 +1505,15 @@ function openTappDetail(tappId, card) {
 function renderTappDetailView(body, tappId, name, desc, remoteVer, installed, localVer, needsUpdate, installPackage, installOmitted, storeSource) {
   var statusText = installed ? (needsUpdate ? lang.tappUpdateAvail : lang.tappInstalled) : lang.tappNotInstalled;
   var statusClass = installed ? (needsUpdate ? 'sheet-status-warn' : 'sheet-status-ok') : 'sheet-status-off';
-  var hasDirectPkg = !!(installPackage && installPackage.manifest
-    && installPackage.modules && Object.keys(installPackage.modules).length);
+  // A direct package now carries every layer file in `modules` keyed by
+  // package-relative path; the old single `code` entry no longer exists, and a
+  // share from a pre-layer Aro build has nothing the host can install.
+  var hasDirectPkg = !!(
+    installPackage
+    && installPackage.manifest
+    && installPackage.modules
+    && Object.keys(installPackage.modules).length
+  );
   var hasStoreSource = isValidStoreSourceRef(storeSource);
 
   var html = '<div class="sheet-pad">';
@@ -1726,3 +1735,29 @@ function wireRoomFilesHeaderButton() {
     if (typeof openRoomFiles === 'function') openRoomFiles();
   });
 }
+
+// ==================== Shared scope ====================
+// Republish the names this file's siblings read. See page/scope.js.
+share.value({
+  bindConvListClicks: bindConvListClicks,
+  buildConversationItems: buildConversationItems,
+  clearQuote: clearQuote,
+  closeMsgMenu: closeMsgMenu,
+  cssEscapeAttr: cssEscapeAttr,
+  downloadMessageFile: downloadMessageFile,
+  historyHeaderButtonHtml: historyHeaderButtonHtml,
+  isMessagesNearBottom: isMessagesNearBottom,
+  openImageViewer: openImageViewer,
+  openReportDetail: openReportDetail,
+  openTappDetail: openTappDetail,
+  registerMsgMenuOutsideGuards: registerMsgMenuOutsideGuards,
+  renderConvList: renderConvList,
+  renderMessages: renderMessages,
+  scheduleRenderMessages: scheduleRenderMessages,
+  setConvTab: setConvTab,
+  wireHistoryHeaderButton: wireHistoryHeaderButton,
+  wireRoomFilesHeaderButton: wireRoomFilesHeaderButton,
+});
+share.live({
+  _msgMenu: [function () { return _msgMenu; }, function (v) { _msgMenu = v; }],
+});

@@ -46,6 +46,16 @@ assert.doesNotMatch(main, /\/etc\/myriad/)
 assert.doesNotMatch(main, /MYRIAD_ALLOW_REMOTE_BOOTSTRAP/)
 assert.doesNotMatch(main, /DOCKER_GUARD_ALLOWED_IMAGES: \\\$\{BACKEND_IMAGE/)
 assert.doesNotMatch(main, /await Promise\.all\(\s*\[\s*fetchDockerHubTags/)
+// Image identity is baked into runtime ENV. Compose must not overlay
+// MYRIAD_TAG / PROXY_TAG / UPDATER_TAG as MYRIAD_VERSION.
+assert.doesNotMatch(main, /MYRIAD_VERSION:\s*\\\$\{(?:MYRIAD_TAG|PROXY_TAG|UPDATER_TAG)\}/)
+assert.match(main, /Identity is baked into the image/)
+assert.match(main, /ANALYTICS_SALT: \\\$\{ANALYTICS_SALT:-\}/)
+assert.match(main, /TAPP_STORE_STATS_URL: \\\$\{TAPP_STORE_STATS_URL:-https:\/\/stats\.store\.myriad\.you\}/)
+assert.match(main, /TAPP_STORE_STATS_ENABLED: \\\$\{TAPP_STORE_STATS_ENABLED:-true\}/)
+assert.doesNotMatch(main, /YOUTUBE_API_KEY:|OPENXBL_API_KEY:|PSN_NPSSO:/)
+assert.doesNotMatch(main, /PUBLIC_API_URL:/)
+assert.match(main, /MYRIAD_DB_MODE: \$\{MYRIAD_DB_MODE:-external\}/)
 
 // Extract pure helpers by executing a slice of main.js (no DOM / Tapp)
 function loadHelpers() {
@@ -149,6 +159,9 @@ function buildCleanEnv(secrets, bundled) {
     'DATABASE_URL=postgres://myriad:x@postgres:5432/myriad',
     'JWT_SECRET=' + secrets.JWT_SECRET,
     'MYRIAD_SETUP_SECRET=' + secrets.MYRIAD_SETUP_SECRET,
+    'ANALYTICS_SALT=' + secrets.ANALYTICS_SALT,
+    'TAPP_STORE_STATS_URL=https://stats.store.myriad.you',
+    'TAPP_STORE_STATS_ENABLED=true',
     'CORS_ORIGINS=https://example.com',
     'BASE_URL=https://example.com',
     'FRONTEND_URL=https://example.com',
@@ -171,7 +184,8 @@ const secrets = {
   UPDATER_GATEWAY_SECRET: 'G'.repeat(40),
   MYRIAD_SETUP_SECRET: 'S'.repeat(40),
   POSTGRES_PASSWORD: 'P'.repeat(40),
-  GUARD_SELF_UPDATE_TOKEN: 'H'.repeat(40)
+  GUARD_SELF_UPDATE_TOKEN: 'H'.repeat(40),
+  ANALYTICS_SALT: 'a'.repeat(64)
 }
 const clean = buildCleanEnv(secrets, true)
 const parsed = h.validateGeneratedEnv(clean, secrets, { bundled: true })

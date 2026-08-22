@@ -1,3 +1,5 @@
+var share = require('./scope.js');
+
 // ==================== Feed View (merged Timeline + Profile) ====================
 async function loadFeed() {
   renderFederationIdentity();
@@ -69,10 +71,53 @@ function updateFeedProfileHeader() {
     updateFeedCountBadges();
     updateFeedHeader();
     // If user is already on followers/following/published, re-render with fresh counts.
-    if (state.currentView === 'feed' && state.feedSubTab !== 'timeline') {
+    if (state.currentView === 'feed' && !isFeedPostTab(state.feedSubTab)) {
       renderFeedContent();
     }
   });
+}
+
+/**
+ * Home source: every public post from every instance represented in a group
+ * chat this instance has joined, local users included.
+ *
+ * `getRoomsFeed` needs Myriad ≥ v0.3.38. Older hosts have no room-peer feed at
+ * all, so fall back to the widest thing they do have (public + personal) rather
+ * than leaving Home blank on an instance that simply hasn't updated yet.
+ */
+async function loadHomeFeedResponse() {
+  if (Tapp.federation && typeof Tapp.federation.getRoomsFeed === 'function') {
+    try {
+      return await Tapp.federation.getRoomsFeed();
+    } catch (eRooms) {
+      console.warn('[Aro] getRoomsFeed failed, falling back to getFeed', eRooms);
+    }
+  }
+  return loadSubscribedFeedResponse();
+}
+
+/** Subscribed source: the personal timeline — posts from people you follow. */
+async function loadSubscribedFeedResponse() {
+  var res = null;
+  var feedErr = null;
+  if (Tapp.federation && typeof Tapp.federation.getFeed === 'function') {
+    try {
+      res = await Tapp.federation.getFeed();
+    } catch (eFeed) {
+      feedErr = eFeed;
+      console.warn('[Aro] getFeed failed, trying getTimeline', eFeed);
+    }
+  }
+  if (!res && Tapp.federation && typeof Tapp.federation.getTimeline === 'function') {
+    try {
+      res = await Tapp.federation.getTimeline();
+    } catch (eTl) {
+      if (!feedErr) feedErr = eTl;
+      else console.warn('[Aro] getTimeline also failed', eTl);
+    }
+  }
+  if (!res && feedErr) throw feedErr;
+  return res;
 }
 
 async function loadFeedSubTab() {
@@ -87,26 +132,9 @@ async function loadFeedSubTab() {
 
   try {
     if (sub === 'timeline') {
-      var res = null;
-      var feedErr = null;
-      if (Tapp.federation && typeof Tapp.federation.getFeed === 'function') {
-        try {
-          res = await Tapp.federation.getFeed();
-        } catch (eFeed) {
-          feedErr = eFeed;
-          console.warn('[Aro] getFeed failed, trying getTimeline', eFeed);
-        }
-      }
-      if (!res && Tapp.federation && typeof Tapp.federation.getTimeline === 'function') {
-        try {
-          res = await Tapp.federation.getTimeline();
-        } catch (eTl) {
-          if (!feedErr) feedErr = eTl;
-          else console.warn('[Aro] getTimeline also failed', eTl);
-        }
-      }
-      if (!res && feedErr) throw feedErr;
-      state.timeline = unwrapListResponse(res);
+      state.timeline = unwrapListResponse(await loadHomeFeedResponse());
+    } else if (sub === 'subscribed') {
+      state.subscribed = unwrapListResponse(await loadSubscribedFeedResponse());
     } else if (sub === 'following') {
       // Parallel followers fetch so mutual / "follows you" badges resolve.
       var resFollowPair = await Promise.all([
@@ -177,6 +205,7 @@ function updateFeedLoadingState() {
 
 function getFeedTitle(sub) {
   if (state.isGuest) return lang.publicFeed || lang.feedTimeline || 'Home';
+  if (sub === 'subscribed') return lang.feedSubscribed || 'Subscribed';
   if (sub === 'following') return lang.feedFollowing || 'Following';
   if (sub === 'followers') return lang.feedFollowers || 'Followers';
   if (sub === 'published') return lang.feedPublished || 'Published';
@@ -193,6 +222,9 @@ function getFeedHint(sub) {
   if (state.isGuest) {
     return lang.feedHintGuest || lang.feedMetaGuest || lang.publicFeed
       || 'Public posts from this site';
+  }
+  if (sub === 'subscribed') {
+    return lang.feedHintSubscribed || 'Posts from people you follow';
   }
   if (sub === 'following') {
     return lang.feedHintFollowing || lang.feedMetaFollowing || lang.feedSubFollowing
@@ -249,6 +281,7 @@ function updateFeedHeader() {
 }
 
 function getFeedItems(sub) {
+  if (sub === 'subscribed') return state.subscribed;
   if (sub === 'following') return state.following;
   if (sub === 'followers') return state.followers;
   if (sub === 'published') return state.published;
@@ -312,8 +345,9 @@ function publishedItemSearchParts(item) {
 function filterFeedItems(sub, items) {
   items = items || [];
   if (!items.length) return items;
-  // Home: optionally hide reposts (Announce activities)
-  if (sub === 'timeline' || !sub) {
+  // Post lists: optionally hide reposts (Announce activities). Applies to
+  // Subscribed too — that is where reposts from people you follow now land.
+  if (sub === 'timeline' || sub === 'subscribed' || !sub) {
     var s = state.aroSettings || (typeof loadAroSettings === 'function' ? loadAroSettings() : null);
     if (s && s.showRepostsInHome === false) {
       items = items.filter(function (item) {
@@ -336,6 +370,9 @@ function filterFeedItems(sub, items) {
 
 /** Empty-state title ≈ page title; dedicated emptyTitle* preferred when present. */
 function getFeedEmptyTitle(sub) {
+  if (sub === 'subscribed') {
+    return lang.emptyTitleSubscribed || lang.emptyTitleTimeline || getFeedTitle(sub) || 'No posts yet';
+  }
   if (sub === 'following') {
     return lang.emptyTitleFollowing || getFeedTitle(sub) || 'Not following anyone';
   }
@@ -352,6 +389,10 @@ function getFeedEmptyTitle(sub) {
 }
 
 function getFeedEmptyText(sub) {
+  if (sub === 'subscribed') {
+    return lang.emptySubscribed || lang.emptyTimeline
+      || 'Follow people or publish a post to fill this timeline.';
+  }
   if (sub === 'following') {
     return lang.emptyFollowing
       || 'Tap + then Follow to add someone by handle or profile link.';
@@ -455,7 +496,7 @@ function bindFeedContentActions(content) {
       : null;
     if (!item && oid && typeof findFeedItem === 'function') item = findFeedItem(oid);
     if (!item) {
-      var lists = [state.timeline, state.bookmarks, state.published, state.feedItems];
+      var lists = [state.timeline, state.subscribed, state.bookmarks, state.published, state.feedItems];
       for (var li = 0; li < lists.length && !item; li++) {
         var arr = lists[li];
         if (!Array.isArray(arr)) continue;
@@ -753,6 +794,9 @@ function applyInteractionToLists(objectId, patch) {
     Object.keys(patch).forEach(function (k) { it[k] = patch[k]; });
   }
   (state.timeline || []).forEach(patchItem);
+  // Home and Subscribed can hold the same post — patch both or the other tab
+  // still shows a stale like/bookmark state after switching.
+  (state.subscribed || []).forEach(patchItem);
   (state.bookmarks || []).forEach(patchItem);
 }
 
@@ -1098,6 +1142,7 @@ function findAnyFeedItemByObjectId(objectId) {
   if (!objectId) return null;
   var lists = [
     state.timeline,
+    state.subscribed,
     state.bookmarks,
     state.published,
     state.feedItems,
@@ -1792,7 +1837,8 @@ async function doSubmitQuoteRepost() {
     });
     closeQuoteRepostModal();
     state.feedLoaded.timeline = false;
-    if (state.feedSubTab === 'timeline') {
+    state.feedLoaded.subscribed = false;
+    if (isFeedPostTab(state.feedSubTab)) {
       try { await loadFeedSubTab(); } catch (e2) { renderFeedContent(); }
     } else {
       renderFeedContent();
@@ -1883,6 +1929,7 @@ async function doSubmitReply(objectId, text) {
       reply_count: ((findFeedItem(objectId) || {}).reply_count || 0) + 1
     });
     state.feedLoaded.timeline = false;
+    state.feedLoaded.subscribed = false;
     state.feedLoaded.published = false;
     try {
       Tapp.ui.showNotification({
@@ -1890,7 +1937,7 @@ async function doSubmitReply(objectId, text) {
         type: 'success'
       });
     } catch (e2) {}
-    if (state.feedSubTab === 'timeline') {
+    if (isFeedPostTab(state.feedSubTab)) {
       await loadFeedSubTab();
     } else {
       renderFeedContent();
@@ -1902,7 +1949,7 @@ async function doSubmitReply(objectId, text) {
 
 function findFeedItem(objectId) {
   // Include published so share compose from 已发布 can resolve preview text.
-  var lists = [state.timeline, state.bookmarks, state.published];
+  var lists = [state.timeline, state.subscribed, state.bookmarks, state.published];
   for (var i = 0; i < lists.length; i++) {
     var list = lists[i] || [];
     for (var j = 0; j < list.length; j++) {
@@ -2018,7 +2065,7 @@ function renderFeedContent() {
   }
   state._feedRenderFp = fp;
 
-  if (sub === 'timeline' || sub === 'bookmarks') {
+  if (sub === 'timeline' || sub === 'subscribed' || sub === 'bookmarks') {
     windowed.forEach(function (item) {
       html += renderTimelineItem(item);
     });
@@ -2087,8 +2134,8 @@ function switchFeedSubTab(sub) {
   }
   // Contextual + must recompute immediately on tab change (before async load).
   if (typeof updateFeedPlusVisibility === 'function') updateFeedPlusVisibility();
-  // Leaving Post tab: collapse composer so it doesn't linger under other tabs.
-  if (sub !== 'timeline' && typeof closeComposer === 'function') closeComposer();
+  // Leaving the post tabs: collapse composer so it doesn't linger elsewhere.
+  if (!isFeedPostTab(sub) && typeof closeComposer === 'function') closeComposer();
   if (sub !== 'following' && typeof closeFollowDialog === 'function') closeFollowDialog();
   loadFeedSubTab();
 }
@@ -2857,3 +2904,25 @@ function bindEvents() {
   if (typeof registerMsgMenuOutsideGuards === 'function') registerMsgMenuOutsideGuards();
 }
 
+
+// ==================== Shared scope ====================
+// Republish the names this file's siblings read. See page/scope.js.
+share.value({
+  applyQuoteRepostLabels: applyQuoteRepostLabels,
+  bindEvents: bindEvents,
+  extractPublishTarget: extractPublishTarget,
+  getFeedEmptyText: getFeedEmptyText,
+  getFeedEmptyTitle: getFeedEmptyTitle,
+  getFeedTitle: getFeedTitle,
+  isActorInFollowing: isActorInFollowing,
+  isOwnTimelineItem: isOwnTimelineItem,
+  loadFeed: loadFeed,
+  loadFeedSubTab: loadFeedSubTab,
+  looksLikeBareUrl: looksLikeBareUrl,
+  renderFeedContent: renderFeedContent,
+  renderQuotedObjectHtml: renderQuotedObjectHtml,
+  resolveObjectId: resolveObjectId,
+  switchFeedSubTab: switchFeedSubTab,
+  updateFeedHeader: updateFeedHeader,
+  updateFeedProfileHeader: updateFeedProfileHeader,
+});

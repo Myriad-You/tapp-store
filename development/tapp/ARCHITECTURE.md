@@ -440,8 +440,8 @@ sequenceDiagram
 - 每个 Tapp 缓存有独立代际。clear 后的新请求不会复用旧 in-flight promise，旧请求即使
   迟到也必须丢弃结果并按新代际重取；更新完成会发送 `tapp:updated`，标准 Page、多窗口、
   Widget 与 headless iframe 都按新版本重建。
-- Widget HTML 与生成 CSS 都按 `tappId + widgetId + size` 缓存，不能只按尺寸复用；分离模式
-  的原生 styles 与生成/预编译 CSS 分开注入，不能把原生 styles 合并后再重复注入一次。
+- Widget HTML 与生成 CSS 都按 `tappId + widgetId + size` 缓存，不能只按尺寸复用；层声明
+  的作者样式与生成/预编译 CSS 分开注入，不能把作者样式合并后再重复注入一次。
   后端只要返回了分离 CSS（包括合法空文件）就视为权威产物；仅字段缺失时才在浏览器分析
   源码生成 Tailwind CSS，不能用任意长度阈值否定已有产物。
 - 远程商店索引也按 URL 合并在途请求；商店源删除或刷新移除时同步清缓存并中止请求，

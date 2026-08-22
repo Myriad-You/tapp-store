@@ -403,6 +403,11 @@ Widget 注册 body 除 `id`、`name`、`default_size`、`sizes` 等元数据外�
 | GET    | `/api/tapp/ai/v2/tasks/{taskId}/events`                  | 可选认证 | SSE token/progress/state        |
 | GET    | `/api/tapp/ai/v2/usage`                                  | 可选认证 | 权威 calls/tokens/cooldown      |
 | GET    | `/api/tapp/ai/v2/ledger`                                 | 登录     | 宿主 UI 专用，无 SDK 暴露       |
+| GET    | `/api/tapp/3d/status`                                    | 可选认证 + Grant `3d:generate` | `Tapp.model3d.status`（不含 `base_url` / 密钥） |
+| POST   | `/api/tapp/3d/files`                                     | 可选认证 + Grant `3d:generate` | `Tapp.model3d.upload`（JSON base64，上限 16 MiB） |
+| POST   | `/api/tapp/3d/tasks`                                     | 可选认证 + Grant `3d:generate` | `Tapp.model3d.createTask`       |
+| GET    | `/api/tapp/3d/tasks/{task_id}`                           | 可选认证 + Grant `3d:generate` | `Tapp.model3d.getTask`（查询并 persist GLB） |
+| POST   | `/api/tapp/3d/tasks/{task_id}/await`                     | 可选认证 + Grant `3d:generate` | `Tapp.model3d.awaitTask`        |
 | POST   | `/api/tapp/data/transform`                               | 登录     | `Tapp.data.transform`           |
 | GET    | `/api/tapp/analytics/summary`                            | 可选认证 + Grant | `Tapp.analytics.getSummary`（`analytics:read`；见下双 scope） |
 | GET    | `/api/tapp/analytics/visitor`                            | 可选认证 + Grant | `Tapp.analytics.getVisitorCard`（`analytics:read`） |

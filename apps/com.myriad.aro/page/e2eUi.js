@@ -1,3 +1,5 @@
+var share = require('./scope.js');
+
 // ==================== E2E status / key exchange UI ====================
 // Extracted from api.js. Depends on helpers (isE2e*), federation SDK, state.
 // Load before api.js (call-time deps on poll/render ok).
@@ -254,3 +256,15 @@ async function doRoomE2eExchange() {
   }
 }
 
+
+// ==================== Shared scope ====================
+// Republish the names this file's siblings read. See page/scope.js.
+share.value({
+  doRoomE2eExchange: doRoomE2eExchange,
+  e2eStatusBadgeHtml: e2eStatusBadgeHtml,
+  getE2eStatusForActive: getE2eStatusForActive,
+  isE2eReadyForActive: isE2eReadyForActive,
+  maybeAnnounceE2eEstablished: maybeAnnounceE2eEstablished,
+  maybePublishE2eKeys: maybePublishE2eKeys,
+  renderE2eReadyBanner: renderE2eReadyBanner,
+});

@@ -57,7 +57,7 @@ Page 内可用 Canvas 2D / WebGL。Three.js 当作包内 guest 依赖放进 `pag
 
 ## 代码架构
 
-Tapp 使用**分离模式**，将代码分为三部分：
+Tapp 按**层**组织代码：
 
 ```
 manifest {
@@ -67,7 +67,7 @@ manifest {
 }
 ```
 
-### 为什么使用分离模式？
+### 为什么分三层？
 
 1. **避免代码冲突**：Widget 模式和 Page 模式加载不同的代码，互不干扰
 2. **更小的加载体积**：Widget 只加载 `core + widget`，Page 只加载 `core + page`
@@ -87,9 +87,9 @@ manifest {
 
 ### 代码结构示例
 
-```typescript
-// 核心代码 - 共享工具函数
-const CORE_CODE = `
+`core.js` 导出共享逻辑：
+
+```javascript
 function getThemeColors(isDark) {
   return {
     bg: isDark ? '#1a1a2e' : '#f8fafc',
@@ -97,33 +97,37 @@ function getThemeColors(isDark) {
     accent: '#6366f1',
   };
 }
-`;
 
-// Widget 代码 - 只定义 Widget 渲染
-const WIDGET_CODE = `
+module.exports = { getThemeColors };
+```
+
+`widget/index.js` 只注册 Widget：
+
+```javascript
+var core = require('../core.js');
+
 Tapp.widgets['my-widget'] = {
   render: async function(container, props) {
-    var colors = getThemeColors(props.theme === 'dark');
+    var colors = core.getThemeColors(props.theme === 'dark');
     container.style.background = colors.bg;
     container.innerHTML = '<div>Widget Content</div>';
   }
 };
-`;
+```
 
-// Page 代码 - 页面渲染（onReady 在所有模式都有；此处用它挂载 Page UI）
-const PAGE_CODE = `
-Tapp.pages['my-page'] = {
-  render: async function(container) {
-    var colors = getThemeColors(document.documentElement.classList.contains('dark'));
-    container.innerHTML = '<h1>Page Content</h1>';
-  }
-};
+`page/index.js` 只挂载 Page：
+
+```javascript
+var core = require('../core.js');
 
 Tapp.lifecycle.onReady(async function() {
   var container = document.getElementById('tapp-root');
-  await Tapp.pages['my-page'].render(container);
+  var colors = core.getThemeColors(
+    document.documentElement.classList.contains('dark')
+  );
+  container.style.color = colors.text;
+  container.innerHTML = '<h1>Page Content</h1>';
 });
-`;
 ```
 
 ---

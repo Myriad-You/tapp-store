@@ -61,6 +61,10 @@ myriad-tapp pack .
 management page, choose the install action, and upload that file. The CLI does not
 currently log in to a Myriad server or upload packages itself.
 
+A Playground export uses the same default layer paths (`core.js`, `page/index.js`,
+`widget/index.js`, `templates/{widgetId}-{size}.html`). Unzip the `.tapp` and run
+`myriad-tapp check` before editing extra files.
+
 For Page 3D, prefer `runtimeModules: ["three"]` (category `game` or `developer`)
 so the host injects pinned Three r170 + `GLTFLoader`. You can still bundle a guest
 IIFE under `page/` and `require` it from the page entry. Put textures and `.glb`

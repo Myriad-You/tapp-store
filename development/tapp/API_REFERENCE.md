@@ -14,6 +14,8 @@
 - [UI API](#ui-api)
 - [动画 API](#动画-api)
 - [平台 API](#平台-api)
+- [访问统计 API](#访问统计-api)
+- [3D API](#3d-api)
 - [AI API](#ai-api)
 - [Agent Interaction API](#agent-interaction-api)
 - [小组件 API](#小组件-api)
@@ -497,6 +499,39 @@ Manifest 示例：
 
 ---
 
+## 3D API
+
+**权限**: `3d:generate`（elevated，默认不下放）
+
+生成、绑定、重定向走宿主代调 Tripo；密钥不出沙箱。已持久化的 GLB 仍是公开
+content-addressed 资源，`Tapp.model3d.getUrl` / `getMetadata` 不需要本权限（沙箱
+CSP 不能直接 `fetch` `/api/digital-life/3d/assets/...`，由宿主读回后在 iframe 内
+做成 blob）。
+
+只在 **Page** 注册生成 handlers；Widget 上的 `Tapp.model3d` 是拒绝桩。
+
+```javascript
+const status = await Tapp.model3d.status(); // { enabled, configured, capabilities }
+const { file_token } = await Tapp.model3d.upload({
+  fileName: "front.png",
+  contentType: "image/png",
+  base64,
+});
+const { task_id } = await Tapp.model3d.createTask({
+  operation: "image_to_model",
+  payload: { input: file_token },
+});
+const done = await Tapp.model3d.awaitTask(task_id);
+const { url } = await Tapp.model3d.getUrl(done.assets[0].asset_id);
+const gltf = await new GLTFLoader().loadAsync(url);
+```
+
+`createTask` 的 `operation`：`image_to_model` | `multiview_to_model` | `rig_check` |
+`rig` | `retarget`。未写明的 Web 预算默认值与管理员 Digital Life 管线相同。
+单次上传上限 16 MiB。
+
+---
+
 ## AI API
 
 **权限**: `ai:generate`, `ai:analyze`, `ai:chat`, `ai:image`
@@ -972,12 +1007,17 @@ Runtime Grant 中。
 | 权限 | 用途 |
 | ---- | ---- |
 | `federation:read` | 身份、Feed/Timeline、关注列表、已发布列表、Channel/Room/Ring 读取 |
-| `federation:write` | 关注/取关、publish、createNote、uploadMedia、unpublish、创建/治理 Channel·Room·Ring |
+| `federation:post` | 发布/取消发布、createNote、uploadMedia、密钥轮换、对外投递管理（Elevated） |
+| `federation:interact` | 关注/取关、点赞/取消点赞、收藏/取消收藏、转发/取消转发（Basic） |
+| `federation:channel` | 创建/接受/关闭/删除频道及频道 E2E 密钥协商（Elevated） |
+| `federation:room` | 创建/更新/删除/加入/邀请/治理房间、E2E 密钥、贴纸、置顶（Elevated） |
+| `federation:ring` | Ring 成员管理与 peer/同步操作（Basic） |
 | `federation:message` | 发送 Channel/Room 消息与实时订阅（WS ticket） |
 | `federation:files` | Channel 文件分块传输 |
 | `federation:trust` | 实例信任策略（特权，仅管理员） |
 
-游客不会取得 `federation:write`、`federation:message` 或 `federation:files`。Tapp 应使用
+游客不会取得 `federation:post`、`federation:interact`、`federation:channel`、
+`federation:room`、`federation:ring`、`federation:message` 或 `federation:files`。Tapp 应使用
 `Tapp.user.getRole()` 调整界面，不要向游客展示关注、发布、私聊、Room 或文件传输操作。
 
 **Channel 列表与游客**：`GET /api/federation/channels` 需要登录。宿主对
@@ -1012,7 +1052,7 @@ Timeline。需要同时展示公开内容时优先 `getFeed()`；`getTimeline()`
 
 ### 媒体上传与 freeform Note
 
-**权限**: `federation:write`
+**权限**: `federation:post`
 
 推荐流程：**先 `uploadMedia`，再把返回的 URL 放进 `createNote` / `publish` 的
 `attachments`**。不要把任意外链当作附件；bridge 与后端都会校验联邦媒体 URL 形态
@@ -1090,9 +1130,9 @@ SDK 已暴露完整方法面（`sdkGenerator` + `FederationBridge`）。调用�
 
 | 域 | 读 (`federation:read`) | 写 / 消息 |
 | -- | ---------------------- | --------- |
-| Channel | `getChannels`, `getChannel`, `getMessages` | `createChannel`, `acceptChannel`, `closeChannel`, `deleteChannel`；E2E：`initiateChannelE2e`（`federation:write`）；消息与订阅：`sendMessage`, `subscribeChannel`…（`federation:message`） |
-| Room | `getRooms`, `getRoom`, `getRoomMembers`, `getRoomMessages`, `listRoomFiles` | `createRoom`, `updateRoom`, `inviteMember`, `acceptRoomInvite`, `rejectRoomInvite`, `joinRoom`, `removeMember`, `leaveRoom`, `transferRoomOwnership`, `deleteRoom`, `pinRoomMessage`；E2E：`initiateRoomE2e`（`federation:write`）；消息：`sendRoomMessage`（`federation:message`） |
-| Ring | `getRings`, `getRing`, `getRingPeers` | `createRing`, `leaveRing`, `addPeer`, `removePeer`, `triggerSync` |
+| Channel | `getChannels`, `getChannel`, `getMessages` | `createChannel`, `acceptChannel`, `closeChannel`, `deleteChannel`；E2E：`initiateChannelE2e`（`federation:channel`）；消息与订阅：`sendMessage`, `subscribeChannel`…（`federation:message`） |
+| Room | `getRooms`, `getRoom`, `getRoomMembers`, `getRoomMessages`, `listRoomFiles` | `createRoom`, `updateRoom`, `inviteMember`, `acceptRoomInvite`, `rejectRoomInvite`, `joinRoom`, `removeMember`, `leaveRoom`, `transferRoomOwnership`, `deleteRoom`, `pinRoomMessage`；E2E：`initiateRoomE2e`（`federation:room`）；消息：`sendRoomMessage`（`federation:message`） |
+| Ring | `getRings`, `getRing`, `getRingPeers` | `createRing`, `leaveRing`, `addPeer`, `removePeer`, `triggerSync`（`federation:ring`） |
 | Trust | — | `getTrustPolicy`, `getInstances`, `updateInstanceTrust`, `toggleInstanceBlock`（`federation:trust`） |
 | Files | — | `initiateTransfer`, `initiateRoomTransfer`, `listTransfers`, `listRoomTransfers`, `getTransfer`, `uploadChunk`, `cancelTransfer`, `downloadTransfer`（`federation:files`） |
 
@@ -1152,7 +1192,7 @@ Channel/Room **JSON 消息**（含内联 base64 图）后端载荷上限默认 *
 
 ## Game API
 
-**权限**: `game:session`（另需 `federation:read` / `federation:write` / `federation:message`）
+**权限**: `game:session`（另需 `federation:read` / `federation:room` / `federation:message`）
 
 Page 上的 `Tapp.game` 把联邦房间收成对局会话。消息类型固定为
 `game:<tappId>:<protocol>`，载荷只能是
@@ -1259,9 +1299,9 @@ await Tapp.tappList.export("com.example.app");
 
 | 权限 | 典型方法（与 `fixtures/action_permissions.json` / `PERMISSION_MAP` 对齐） |
 | ---- | -------- |
-| `brew:read` | `list`, `get`, `sources`, `categories`, `stats`, `exportOpml` |
-| `brew:write` | `markRead`, `markUnread`, `star`, `unstar`, `markAllRead` |
-| `brew:comment` | `getComments`, `createComment`, `updateComment`, `deleteComment`, `getReplies`, `createReply` |
+| `brew:read` | `list`, `get`, `sources`, `categories`, `stats`, `exportOpml`, `getComments`, `getReplies` |
+| `brew:write` | `markRead`, `markUnread`, `markAllRead`, `star`, `unstar` |
+| `brew:commentWrite` | `createComment`, `updateComment`, `deleteComment`, `createReply` |
 | `brew:manage` | `discover`, `addSource`, `updateSource`, `deleteSource`, `refreshSource`, `importOpml`, `createCategory`, `deleteCategory` |
 
 Playground **临时预览不注册** brew handlers。完整 SDK（`Tapp.brewList`）仅在安装后可用：
@@ -1659,6 +1699,7 @@ Tapp.assets.revokeAll(); // 也会在 onDestroy 时自动调用
 | `platform`, `data`                         | 平台数据读取、写入、转换和注册                      | `platform:*`                       |
 | `analytics`                                | 站点访问统计聚合（admin 完整 / 非 admin 访客卡片）  | `analytics:read`                   |
 | `ai`, `report`                             | 服务端治理的 AI Task 与报告读写                     | `ai:*`, `report:*`                 |
+| `model3d`                                  | Tripo 图生 3D / rig / retarget；`getUrl` 回沙箱 blob | `3d:generate`（资产读取 public） |
 | `widget`                                   | 管理员动态注册与配置 Widget                         | `widget:register`                  |
 | `media`                                    | 播放器读取和控制                                    | `media:*`                          |
 | `context`, `user`                          | 应用、用户、导航、系统和地理上下文                  | public                             |

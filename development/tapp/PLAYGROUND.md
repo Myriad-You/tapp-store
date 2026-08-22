@@ -58,11 +58,12 @@ Playground 是桌面管理员工具，不是访客或普通用户功能。
 左列整列给 Widget 预览，并展示「无页面 — 仅小组件」说明，**不挂载**
 `TappPageSandbox`。
 
-Playground 打包到固定三文件布局：`core.js`、`page/index.js`、`widget/index.js`。层内拆更多
-文件走 CLI 或手写包。完整项目仍可包含：`manifest.json`、三个层入口、`styles.css`、
-`i18n`、package assets、background / APIs / AI / events / agent / dataExchange 等
-Manifest 扩展（见
-[MANIFEST](./MANIFEST.md)、[WIDGET](./WIDGET.md)）。
+Playground 打包到固定三文件布局：`core.js`、`page/index.js`、`widget/index.js`。一层一个
+文件；再拆文件只在导出之后。交接：导出 `.tapp` → 解压 → `myriad-tapp check`。完整项目
+仍可包含：`manifest.json`、三个层入口、`styles.css`、`i18n`、package assets、
+background / APIs / AI / events / agent / dataExchange 等 Manifest 扩展（见
+[MANIFEST](./MANIFEST.md)、[WIDGET](./WIDGET.md)、[CLI](../../../tools/tapp-cli/README.md)）。
+没有 `backgroundRequirements` 时，安装契约不强制 core；声明后台常驻才必须有 core。
 
 ### 目录文案：`manifest.locales` ≠ 应用内 `code.i18n`
 

@@ -1,7 +1,7 @@
 {
   "id": "com.myriad.config-generator",
   "name": "Myriad 安装配置生成",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "minSystemVersion": "0.2.1",
   "description": "分步生成 Compose、.env 与反代配置，覆盖常见面板、编排界面与外层反代",
   "locales": {

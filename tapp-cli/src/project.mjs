@@ -74,6 +74,12 @@ const SEMVER = new RegExp(contract.patterns.semver)
 const NAMED_VALUE = new RegExp(contract.patterns.namedValue)
 const STORAGE_KEY = new RegExp(contract.patterns.storageKey)
 const THEME_COLOR = new RegExp(contract.patterns.themeColor)
+// Removed coarse permission names → replacement suggestion in rejection
+// diagnostics. Advisory only: the permission is still rejected (fail-closed),
+// never mapped to the new names.
+const REMOVED_PERMISSION_REPLACEMENTS = {
+  'brew:comment': "use 'brew:read' (read) or 'brew:commentWrite' (write)",
+}
 // Fixed allow-list enforced identically by the backend installer.
 const HTTP_METHODS = new Set(contract.rules.httpMethods)
 const HTTP_BODY_METHODS = new Set(contract.rules.httpBodyMethods)
@@ -807,8 +813,11 @@ function validateManifest(manifest, diagnostics, requiredPermissions) {
     const seen = new Set()
     for (const permission of manifest.permissions) {
       if (typeof permission !== 'string' || !(permission in catalog.permissionLevels)) {
+        const hint = REMOVED_PERMISSION_REPLACEMENTS[permission]
         diagnostics.push(
-          diagnostic('error', 'unknown-permission', `Unknown permission: ${String(permission)}`),
+          diagnostic('error', 'unknown-permission', hint
+            ? `Unknown permission: ${String(permission)} — ${hint}`
+            : `Unknown permission: ${String(permission)}`),
         )
       } else if (seen.has(permission)) {
         diagnostics.push(
@@ -1358,8 +1367,8 @@ button { width: fit-content; padding: 8px 12px; }
   if (hasWidget) {
     await mkdir(join(root, 'templates'), { recursive: true })
     const template = `<div data-widget-root="true" class="widget"></div>\n`
-    await writeFile(join(root, 'templates/widget-2x2.html'), template)
-    await writeFile(join(root, 'templates/widget-4x2.html'), template)
+    await writeFile(join(root, 'templates/starter-2x2.html'), template)
+    await writeFile(join(root, 'templates/starter-4x2.html'), template)
   }
   return { root, type, manifest }
 }

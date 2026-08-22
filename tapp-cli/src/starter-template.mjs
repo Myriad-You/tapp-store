@@ -39,7 +39,7 @@ export function createStarterTemplate(directory, options = {}) {
     ...(hasPage
       ? { page: { entry: 'page/index.js', template: 'page.html' } }
       : {}),
-    ...(hasWidget ? { widgets: [{ id: 'starter', name: 'Starter Widget', defaultSize: '2x2', sizes: ['2x2', '4x2'], entry: 'widget/index.js', templates: { '2x2': 'templates/widget-2x2.html', '4x2': 'templates/widget-4x2.html' } }] } : {}),
+    ...(hasWidget ? { widgets: [{ id: 'starter', name: 'Starter Widget', defaultSize: '2x2', sizes: ['2x2', '4x2'], entry: 'widget/index.js', templates: { '2x2': 'templates/starter-2x2.html', '4x2': 'templates/starter-4x2.html' } }] } : {}),
   }
   // core 是共享层：三种模式都先执行它，层入口 require 它拿导出。
   const core = `module.exports = {
