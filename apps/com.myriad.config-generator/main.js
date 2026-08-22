@@ -1221,6 +1221,9 @@ services:
     security_opt: [no-new-privileges:true]
     read_only: true
     tmpfs: [/tmp]
+    logging:
+      driver: "json-file"
+      options: { max-size: "10m", max-file: "3" }
 
   backend:
     image: \${BACKEND_IMAGE:-docker.io/somekawahitomi/myriad-backend}:\${MYRIAD_TAG}
@@ -1409,13 +1412,12 @@ services:
       # UPDATER_TAG here: the digest pin in UPDATER_IMAGE_REF is what runs.
       TZ: Asia/Shanghai
     volumes:
+      # v0.3.37 writes .env via sibling .bak/.tmp. A file bind over a read-only
+      # deploy root returns EROFS at SwapTag. Keep the root writable; Guard
+      # policy stays a separate read-only directory mount.
       - type: bind
         source: \${MYRIAD_COMPOSE_HOST_ROOT:-.}
         target: /host/compose
-        read_only: true
-      - type: bind
-        source: \${MYRIAD_COMPOSE_HOST_ROOT:-.}/.env
-        target: /host/compose/.env
       - type: bind
         source: \${MYRIAD_COMPOSE_HOST_ROOT:-.}/state
         target: /host/compose/state
