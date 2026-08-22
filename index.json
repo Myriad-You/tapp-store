@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.45",
+  "version": "1.0.46",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-08-21T08:49:45.663Z",
+  "updated_at": "2026-08-22T03:32:38.230Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -253,7 +253,7 @@
     {
       "id": "com.myriad.config-generator",
       "name": "Myriad 安装配置生成",
-      "version": "1.0.4",
+      "version": "1.0.5",
       "description": "分步生成 Compose、.env 与反代配置，覆盖常见面板、编排界面与外层反代",
       "long_description": "按欢迎、部署方式、域名、站点、数据库、限额的步骤，生成官方生产拓扑所需的 docker-compose、.env、反代配置与部署说明。可选 1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy 或命令行。Nginx 类方式请先创建站点并完成 SSL，再上传现有 conf；平台反代与 Caddy 不要求上传。密钥与镜像版本将自动填入，高级选项默认收起。密钥经白名单校验，并对 .env 再解析以防止注入。",
       "locales": {
@@ -367,13 +367,13 @@
           "zh-CN": "apps/com.myriad.config-generator/i18n/zh-CN.json"
         }
       },
-      "size": 387413,
+      "size": 387869,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-14T00:00:00Z",
-      "updated_at": "2026-08-21T05:13:41.124Z"
+      "updated_at": "2026-08-22T03:32:38.207Z"
     },
     {
       "id": "com.myriad.doudizhu",

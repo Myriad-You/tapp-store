@@ -84,6 +84,8 @@ DEPLOY：`chown -R 70:70 pgdata && chmod 700 pgdata`。
 - backend-volume-init 使用 `network_mode: none`
 - 仅 docker-guard 挂 sock；仅 proxy 映射宿主端口
 - Guard 镜像必须是 `docker.io/somekawahitomi/myriad-updater@sha256:<64hex>`；策略由 Guard 写入 `./guard-policy/docker-guard.env`，updater 只读挂载该目录
+- updater 的编排根目录可写：v0.3.37 换 tag 会在 `.env` 旁写 `.bak`/`.tmp`，只读根 + `.env` 文件绑定会 EROFS
+- `backend-volume-init` 必须声明 `logging: json-file`；缺省时 Compose v5 会送空 `LogConfig.Type`，Guard 会拒掉更新器的 `compose run`
 - backend 只持 `UPDATER_GATEWAY_SECRET`，经 gateway 更新
 - backend-volume-init 会在 backend 启动前修复持久卷权限
 - 禁止 `:latest`
