@@ -1,5 +1,5 @@
 {
-  "long_description": "面向玩家的 Java/基岩版服务器查询、收藏与 Minecraft Wiki 搜索工具。支持主页小组件轮询展示多台服务器状态。",
+  "long_description": "面向玩家的 Java/基岩版服务器查询、个人最近查询与 Minecraft Wiki 搜索工具。支持主页小组件轮询展示多台服务器状态。",
   "tags": ["Minecraft", "服务器", "Wiki", "小组件"],
   "featured": false,
   "verified": false,
