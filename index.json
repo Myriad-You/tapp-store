@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.46",
+  "version": "1.0.47",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-08-22T03:32:38.230Z",
+  "updated_at": "2026-08-23T11:36:28.310Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -757,9 +757,9 @@
     {
       "id": "cn.wyyzxzyg.minecraft-hub",
       "name": "Minecraft 服务器与 Wiki",
-      "version": "1.0.8",
-      "description": "面向玩家的 Java/基岩版服务器查询、收藏与 Minecraft Wiki 搜索工具",
-      "long_description": "面向玩家的 Java/基岩版服务器查询、收藏与 Minecraft Wiki 搜索工具。支持主页小组件轮询展示多台服务器状态。",
+      "version": "1.0.9",
+      "description": "面向玩家的 Java/基岩版服务器查询、最近记录与 Minecraft Wiki 搜索工具",
+      "long_description": "面向玩家的 Java/基岩版服务器查询、个人最近查询与 Minecraft Wiki 搜索工具。支持主页小组件轮询展示多台服务器状态。",
       "author": {
         "name": "我願一直向著陽光.℡",
         "url": "https://github.com/zgzyh"
@@ -807,7 +807,7 @@
       },
       "download": {
         "manifest": "apps/cn.wyyzxzyg.minecraft-hub/manifest.json",
-        "code": "apps/cn.wyyzxzyg.minecraft-hub/main.js",
+        "code": "apps/cn.wyyzxzyg.minecraft-hub/core.js",
         "readme": "apps/cn.wyyzxzyg.minecraft-hub/README.md",
         "widget_styles": "apps/cn.wyyzxzyg.minecraft-hub/widget.css",
         "page_styles": "apps/cn.wyyzxzyg.minecraft-hub/page.css",
@@ -816,15 +816,19 @@
           "server-status": {
             "4x2": "apps/cn.wyyzxzyg.minecraft-hub/widget-4x2.html"
           }
+        },
+        "modules": {
+          "page/index.js": "apps/cn.wyyzxzyg.minecraft-hub/page/index.js",
+          "widget/index.js": "apps/cn.wyyzxzyg.minecraft-hub/widget/index.js"
         }
       },
-      "size": 54465,
+      "size": 56950,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-04T16:25:05Z",
-      "updated_at": "2026-08-19T11:09:38.474Z"
+      "updated_at": "2026-08-23T11:36:28.298Z"
     },
     {
       "id": "site.abloom.meliora",
