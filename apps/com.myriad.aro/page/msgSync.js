@@ -1,3 +1,5 @@
+var share = require('./scope.js');
+
 // ==================== Message sync (fingerprint / merge / optimistic) ====================
 // Extracted from api.js. Depends on: helpers (isE2e*), state, chat (render/schedule).
 // Load after helpers + msgUi/chat symbols used only at call time.
@@ -330,3 +332,20 @@ function mergeIncomingMessage(msg) {
   return true;
 }
 
+
+// ==================== Shared scope ====================
+// Republish the names this file's siblings read. See page/scope.js.
+share.value({
+  MSG_WINDOW_LIMIT: MSG_WINDOW_LIMIT,
+  mergeIncomingMessage: mergeIncomingMessage,
+  mergeMessageLists: mergeMessageLists,
+  messagesFingerprint: messagesFingerprint,
+  noteOptimisticServerId: noteOptimisticServerId,
+  preferDisplayPayload: preferDisplayPayload,
+  pruneOptimisticMessages: pruneOptimisticMessages,
+  pushOptimisticMessage: pushOptimisticMessage,
+  scheduleDecryptRefresh: scheduleDecryptRefresh,
+});
+share.live({
+  _decryptRefreshAttempts: [function () { return _decryptRefreshAttempts; }, function (v) { _decryptRefreshAttempts = v; }],
+});

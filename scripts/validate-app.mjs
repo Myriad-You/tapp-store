@@ -44,7 +44,11 @@ const CATEGORY_ALIASES = {
 /** Permissions that need explicit security review for third-party apps. */
 const ELEVATED_PERMISSIONS = [
   'federation:read',
-  'federation:write',
+  'federation:post',
+  'federation:interact',
+  'federation:channel',
+  'federation:room',
+  'federation:ring',
   'federation:message',
   'federation:files',
   'tappList:manage',
@@ -236,6 +240,14 @@ function validateOne(appId) {
 
   if (manifest.id !== appId) {
     errors.push(`${appId}: manifest.id must equal folder name (got ${JSON.stringify(manifest.id)})`)
+  }
+
+  const retiredFields = ['main', 'hasPage', 'cssMode', 'styles', 'widgetStyles', 'pageStyles', 'pageTemplate', 'pageModules']
+  for (const field of retiredFields) {
+    if (manifest[field] !== undefined) errors.push(`${appId}: retired manifest field ${field}`)
+  }
+  if (!manifest.core?.entry && !manifest.page && !(Array.isArray(manifest.widgets) && manifest.widgets.length)) {
+    errors.push(`${appId}: manifest must declare core, page, or widgets`)
   }
 
   const category = manifest.category

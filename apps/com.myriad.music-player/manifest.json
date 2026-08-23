@@ -1,7 +1,7 @@
 {
   "id": "com.myriad.music-player",
   "name": "音乐播放器",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minSystemVersion": "0.2.1",
   "description": "控制系统音乐播放，查看歌词与播放列表",
   "locales": {
@@ -15,7 +15,6 @@
     }
   },
   "category": "media",
-  "main": "main.js",
   "author": {
     "name": "Myriad Team",
     "url": "https://github.com/Myriad-You"
@@ -30,8 +29,11 @@
   ],
   "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M9 18V5l12-2v13' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><circle cx='6' cy='18' r='3' stroke='currentColor' stroke-width='2'/><circle cx='18' cy='16' r='3' stroke='currentColor' stroke-width='2'/></svg>",
   "themeColor": "#E91E63",
-  "hasPage": true,
-  "cssMode": "separated",
-  "pageStyles": "page.css",
-  "pageTemplate": "page.html"
+  "core": {
+    "entry": "main.js"
+  },
+  "page": {
+    "template": "page.html",
+    "styles": "page.css"
+  }
 }

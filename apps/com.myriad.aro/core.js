@@ -1,10 +1,11 @@
 /**
- * Aro core / headless entry (manifest.main).
+ * Aro core layer (manifest.core.entry) — the only code a headless instance runs.
  *
- * Full messenger UI lives exclusively in pageModules (`page/*`).
- * This file intentionally stays thin for backgroundRequirements: notification —
- * poll federated channels/rooms and raise host notifications when the page
- * is not open. Do not paste page UI helpers back into this file (ARO-13).
+ * Full messenger UI lives exclusively in the page layer (`page/*`), which the
+ * background sandbox never loads. This file intentionally stays thin for
+ * backgroundRequirements: notification — poll federated channels/rooms and raise
+ * host notifications when the page is not open. Do not paste page UI helpers
+ * back into this file (ARO-13).
  */
 (function () {
   'use strict';
@@ -187,13 +188,13 @@
     }
   }
 
-  // Page mode uses pageModules — do not boot UI from main.
-  // Headless / background: poll only.
+  // Core runs first in every sandbox mode. In page mode the page layer owns the
+  // UI, so core stays idle; headless / background: poll only.
   Tapp.lifecycle.onReady(async function () {
     var mode = window._TAPP_MODE || '';
     var hasHtml = !!window._TAPP_HAS_HTML;
     if (mode === 'page' || hasHtml) {
-      // Page sandbox loads pageModules; main stays idle for UI.
+      // The page layer boots the UI; core adds nothing here.
       return;
     }
     // Signed-out check first: loadIdentity() calls getIdentity(), which is

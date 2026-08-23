@@ -39,7 +39,7 @@ RSSHub Radar TApp -> 固定声明的 RSSHub 服务 -> 目标网站
 
 | 权限 | 用途 |
 | --- | --- |
-| `storage` | 保存收藏、最近扫描、预览缓存和 RSSHub 实例设置，并导出 OPML |
+| `storage:read` / `storage:write` | 保存收藏、最近扫描、预览缓存和 RSSHub 实例设置，并导出 OPML |
 | `network:fetch` | 通过声明式 API 请求 `rsshub.app` Feed 预览 |
 | `ui:notification` | 显示复制、收藏和错误提示 |
 | `ui:theme` | 跟随 Myriad 明暗主题 |

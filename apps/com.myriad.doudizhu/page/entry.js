@@ -1,0 +1,10 @@
+require('./i18n.js');
+require('./cards.js');
+require('./rules.js');
+require('./ai.js');
+require('./engine.js');
+require('./storage.js');
+require('./audio.js');
+require('./theme.js');
+require('./render.js');
+require('./index.js');

@@ -67,8 +67,7 @@ Tapp 管理接口大多返回：
 | GET  | `/api/tapps/store/sources`      | 已启用的商店源                               |
 | GET  | `/api/tapps/list-card-sizes`    | 列表页卡片尺寸/顺序（见下「列表布局」）      |
 | GET  | `/api/tapps/{tappId}`           | Tapp 详情、Manifest、状态和最终授权          |
-| GET  | `/api/tapps/{tappId}/code`      | 主代码文本                                   |
-| GET  | `/api/tapps/{tappId}/resources` | 代码、CSS、HTML、i18n、Page 模块等资源对象   |
+| GET  | `/api/tapps/{tappId}/resources` | 层模块表、层入口、CSS、HTML、i18n 等资源对象 |
 | GET  | `/api/tapps/{tappId}/asset?path=` | Manifest 声明的包内资源（base64）          |
 | GET  | `/api/tapps/{tappId}/export`    | 导出 `.tapp` ZIP                             |
 
@@ -79,7 +78,8 @@ Storage 按当前 **subject**（持久用户或签名游客 session）命名空�
 每个 subject 读写自己的 `user_id + tapp_id` 数据，不会读取站点 owner 的 storage。
 `storage:read` / `platform:read` 可进入访客 Runtime Grant（见下「Widget 与存储」）。
 安装级 Manifest 设置仍由安装 owner 或管理员写入；能打开该安装的运行者（含游客）可读已
-保存的声明键。
+保存的声明键。安装级共享数据（`Tapp.shared`）同样落在 owner 命名空间，语义是数据而不是
+配置：owner / 管理员可写，访客可读同一份站长仓库。
 
 `/details` 是 `TappRuntime` 的启动同步接口。它固定执行管理员集合与当前用户集合查询，
 同 ID 时保留用户私有版本，并对每项应用与单项 `/api/tapps/{tappId}` 相同的动态角色权限过滤，
@@ -89,18 +89,21 @@ Storage 按当前 **subject**（持久用户或签名游客 session）命名空�
 
 ```typescript
 interface TappResources {
-  code: string;
-  styles?: string;
-  widgetStyles?: string;
+  /** 该 mode 相关层依赖图内的 `.js` 文件：相对路径 → 源码 */
+  modules: Record<string, string>;
+  coreEntry?: string;
+  pageEntry?: string;
+  widgetEntries?: Record<string, string>;
+  /** 作者层样式 */
+  coreStyles?: string;
   pageStyles?: string;
+  widgetStyles?: Record<string, string>;
+  /** 宿主预编译 Tailwind，与作者样式是两条通道 */
   widgetCSS?: string;
   pageCSS?: string;
   widgetTemplates?: Record<string, Record<string, string>>;
   pageTemplate?: string;
-  cssMode?: "unified" | "separated";
   i18n?: Record<string, unknown>;
-  pageModules?: Record<string, string>;
-  pageModuleOrder?: string[];
 }
 ```
 
@@ -113,6 +116,10 @@ interface TappResources {
 | GET  | `/api/tapps/recent?limit=10`         | 可选认证：按 **当前 subject**（`tapp_user_activities.user_id`）返回最近运行；`limit` 默认 10（1–50）。游客 subject 无 start 活动，结果为 `[]`。 |
 | GET  | `/api/tapps/{tappId}/settings`       | **读**安装级 Manifest 设置（见下节「Settings 读/写」） |
 | GET  | `/api/tapps/{tappId}/settings/{key}` | **读**单个声明键 |
+| GET  | `/api/tapps/{tappId}/shared`         | **读**安装级共享数据 key 列表 |
+| GET  | `/api/tapps/{tappId}/shared/entries` | **读**全部共享键值 |
+| GET  | `/api/tapps/{tappId}/shared/usage`   | **读** owner 命名空间用量 |
+| GET  | `/api/tapps/{tappId}/shared/{key}`   | **读**单个共享键 |
 
 ### 需要登录的变更路由
 
@@ -125,7 +132,10 @@ interface TappResources {
 | POST   | `/api/tapps/{tappId}/update`         | direct/store 更新，保留用户数据         |
 | POST   | `/api/tapps/{tappId}/start`          | 持久化 owner 自己的 running 状态        |
 | POST   | `/api/tapps/{tappId}/stop`           | 停止 owner 安装并撤销对应 Runtime Grant |
-| DELETE | `/api/tapps/{tappId}?keep_data=true` | 卸载；可选保留存储/设置                 |
+| DELETE | `/api/tapps/{tappId}?keep_data=true` | 卸载；可选保留存储/设置/共享数据        |
+| POST   | `/api/tapps/{tappId}/shared/{key}`   | 写入安装级共享数据（owner/管理员）      |
+| DELETE | `/api/tapps/{tappId}/shared/{key}`   | 删除单个共享键                          |
+| DELETE | `/api/tapps/{tappId}/shared`         | 清空安装级共享数据                      |
 
 ### 列表布局 `/api/tapps/list-card-sizes`
 
@@ -195,17 +205,16 @@ PUT body 只写调用者个人行：`{ "sizes": { "<tappId>": "1x1"|"2x1" }, "or
     "name": "App",
     "version": "1.0.0",
     "category": "utility",
-    "main": "main.js",
+    "core": { "entry": "core.js" },
     "permissions": []
   },
-  "code": "console.log('hello')",
-  "styles": "...",
+  "modules": { "core.js": "console.log('hello')" },
+  "coreStyles": "...",
   "pageTemplate": "...",
   "widgetTemplates": { "clock": { "2x2": "..." } },
   "widgetCss": "...",
   "pageCss": "...",
   "i18n": { "zh-CN": {} },
-  "pageModules": { "index.js": "..." },
   "permissions": []
 }
 ```
@@ -282,6 +291,27 @@ Settings 是 **installation owner** 命名空间上的 Manifest 声明配置，�
 不要把 secrets 放进 host settings：公开安装的 GET 对所有能打开该安装的 visitor（含游客）
 可读。
 
+### Shared 读/写（安装级数据）
+
+`Tapp.shared` 是 **installation owner** 命名空间上的自由 KV，语义是展示/仓库数据，不是
+Manifest 声明配置。公开部署用它存放站长要给访客看的内容。
+
+| 方法 | 路径 | 认证层 | 说明 |
+| ---- | ---- | ------ | ---- |
+| GET | `/api/tapps/{tappId}/shared` | **optional_auth** | 列出共享 key |
+| GET | `/api/tapps/{tappId}/shared/entries` | **optional_auth** | 一次读取全部键值 |
+| GET | `/api/tapps/{tappId}/shared/usage` | **optional_auth** | owner 命名空间用量 |
+| GET | `/api/tapps/{tappId}/shared/{key}` | **optional_auth** | 读取单个键；未写入返回 `null` |
+| POST | `/api/tapps/{tappId}/shared/{key}` | **auth（登录）** | 写入；仅 owner / 当前管理员 |
+| DELETE | `/api/tapps/{tappId}/shared/{key}` | **auth（登录）** | 删除单个键 |
+| DELETE | `/api/tapps/{tappId}/shared` | **auth（登录）** | 只清 `_shared.*`，不动 settings / credentials / 私有 storage |
+
+读路径与 Settings GET 相同：游客打开公开安装可读站主数据。写路径与 Settings POST 相同：
+游客和普通 viewer 403。底层行的 key 为 `_shared.{key}`；通用 storage REST 在 SQL 层排除
+该前缀。
+
+不要把 secrets 放进 shared：访客可读。
+
 ### API 凭据（安装级，只写）
 
 | 方法 | 路径 | 认证层 | 说明 |
@@ -317,7 +347,7 @@ storage 路由要求 optional_auth + Runtime Grant。读取需要 `storage:read`
 需要 `storage:write`。`storage:read` 与 `platform:read` 均为 **guest-safe basic**（见 [MANIFEST · 权限](MANIFEST.md) 与
 `permission_service::requires_authenticated_subject`）：签名游客 session 可作为 subject，
 私有 storage 落在负 id 命名空间下，平台 **读** 走 optional_auth 的公开站点缓存。
-通用 storage 使用当前 subject 命名空间，并拒绝访问 `_settings.`、`_component:`、
+通用 storage 使用当前 subject 命名空间，并拒绝访问 `_settings.`、`_shared.`、`_component:`、
 `_shortcut:`、`_report:` 等宿主保留键。
 
 下列能力的真实后端路由仍要求**持久登录**主体，不会被签入访客 Grant：`report:read`、
@@ -373,6 +403,11 @@ Widget 注册 body 除 `id`、`name`、`default_size`、`sizes` 等元数据外�
 | GET    | `/api/tapp/ai/v2/tasks/{taskId}/events`                  | 可选认证 | SSE token/progress/state        |
 | GET    | `/api/tapp/ai/v2/usage`                                  | 可选认证 | 权威 calls/tokens/cooldown      |
 | GET    | `/api/tapp/ai/v2/ledger`                                 | 登录     | 宿主 UI 专用，无 SDK 暴露       |
+| GET    | `/api/tapp/3d/status`                                    | 可选认证 + Grant `3d:generate` | `Tapp.model3d.status`（不含 `base_url` / 密钥） |
+| POST   | `/api/tapp/3d/files`                                     | 可选认证 + Grant `3d:generate` | `Tapp.model3d.upload`（JSON base64，上限 16 MiB） |
+| POST   | `/api/tapp/3d/tasks`                                     | 可选认证 + Grant `3d:generate` | `Tapp.model3d.createTask`       |
+| GET    | `/api/tapp/3d/tasks/{task_id}`                           | 可选认证 + Grant `3d:generate` | `Tapp.model3d.getTask`（查询并 persist GLB） |
+| POST   | `/api/tapp/3d/tasks/{task_id}/await`                     | 可选认证 + Grant `3d:generate` | `Tapp.model3d.awaitTask`        |
 | POST   | `/api/tapp/data/transform`                               | 登录     | `Tapp.data.transform`           |
 | GET    | `/api/tapp/analytics/summary`                            | 可选认证 + Grant | `Tapp.analytics.getSummary`（`analytics:read`；见下双 scope） |
 | GET    | `/api/tapp/analytics/visitor`                            | 可选认证 + Grant | `Tapp.analytics.getVisitorCard`（`analytics:read`） |
@@ -459,6 +494,7 @@ Interaction 的动作截止时间独立于终态保留时间；所有副本都�
 | ---- | ---------------------------- | ---- | ---- |
 | GET  | `/api/tapp/federation/feed`  | 可选认证 + Runtime Grant | 需 Grant 含 `federation:read`。游客只返回公开活动（`audience: "public"`）；已登录用户返回公开 Feed 与个人时间线的合并结果（`audience: "public+personal"`，同 `activity_id` 时个人条目优先，整体按时间新到旧，条数有上限）。响应形如 `{ items, total, audience }`。 |
 | GET  | `/api/federation/public/rooms/{room_id}` | **无认证** | 仅 `is_public` 群卡片（name、owner、home_server、member_count 等）。**不**走 Runtime Grant / `host_attribution`（与 WebFinger 同类公开发现）。跨实例 `joinRoom` 用此端点物化本地行。 |
+| GET  | `/api/federation/public/limits` | **无认证** | 活的消息/Note 媒体上限（`message_payload_bytes`、`note_image_bytes`、`note_video_bytes`、`profile`）。宿主桥用来对齐内存节约档；**不**走 Runtime Grant。 |
 
 联邦写操作、消息、私有 Room 与文件等仍走各自 SDK/宿主路径，且对游客不可用；见
 [ARCHITECTURE 所有权与可见性](ARCHITECTURE.md#所有权与可见性) 与
@@ -466,15 +502,15 @@ Interaction 的动作截止时间独立于终态保留时间；所有副本都�
 Brew / 语音 / 联邦 REST 宿主代理路径已统一按 Grant 归因：带 `X-Tapp-Runtime-Grant` 的请求在服务端按路由强制 Tapp
 权限并记录归因日志（共享 `host_attribution` 中间件；路由→权限表见
 `docs/development/tapp/fixtures/host_route_permissions.json`，**先改 fixture 再改映射**）。
-`GET /api/federation/public/rooms/*` **不**列入该表。联邦 E2E 密钥交换与 Channel/Room
+`GET /api/federation/public/rooms/*` 与 `GET /api/federation/public/limits` **不**列入该表。联邦 E2E 密钥交换与 Channel/Room
 WebSocket 升级不能携带 Grant 头，因此 Tapp Bridge 先调用
 `POST /api/federation/channels/{channelId}/ws-ticket` 或
 `POST /api/federation/rooms/{roomId}/ws-ticket`（要求 `federation:message`），再把一次性
 `tapp_ws_ticket` 放入对应升级 URL。票据过期、复用、subject 或目标不匹配都会失败关闭，宿主 UI
 不带票据的 Claims-only WebSocket 语义保持不变。独立 AI 费用账本见 `/api/tapp/ai/v2/ledger`。
 
-Room 消息 POST body 上限与 `MESSAGE_PAYLOAD_LIMIT` / `MAX_ROOM_MESSAGE_PAYLOAD`
-（**36 MiB**）及联邦 inbox DefaultBodyLimit（**64 MiB**）对齐；`join` 可接受 path 中的
+Room 消息 POST body 上限与活的 `message_payload_limit()` 对齐（默认 **4 MiB**，
+节约档 **2 MiB**；见 `GET /api/federation/public/limits`）；`join` 可接受 path 中的
 `rm_…@home[:port]`（URL 编码）或 body `{ "home_server": "…" }`。
 
 ### 上下文与媒体

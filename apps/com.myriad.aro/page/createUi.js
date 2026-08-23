@@ -1,3 +1,5 @@
+var share = require('./scope.js');
+
 // ==================== Create channel/room dialog ====================
 // Extracted from api.js. Load before api.js.
 
@@ -224,3 +226,14 @@ async function doJoinRoomById() {
   }
 }
 
+
+// ==================== Shared scope ====================
+// Republish the names this file's siblings read. See page/scope.js.
+share.value({
+  doCreateChannel: doCreateChannel,
+  doCreateRoom: doCreateRoom,
+  doJoinRoomById: doJoinRoomById,
+  hideCreateDialog: hideCreateDialog,
+  showCreateDialog: showCreateDialog,
+  switchCreateTab: switchCreateTab,
+});

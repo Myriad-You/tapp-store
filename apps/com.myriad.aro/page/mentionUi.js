@@ -1,3 +1,5 @@
+var share = require('./scope.js');
+
 // ==================== @ Mentions UI ====================
 // Extracted from helpers.js. Depends on: helpers (esc, avatar, normalize*, matchesSearch), state, lang.
 // Load after helpers.js, before chat/views.
@@ -485,3 +487,14 @@ function onMentionKeydown(e) {
   return false;
 }
 
+
+// ==================== Shared scope ====================
+// Republish the names this file's siblings read. See page/scope.js.
+share.value({
+  closeMentionPicker: closeMentionPicker,
+  extractMentionsFromText: extractMentionsFromText,
+  formatMessageTextHtml: formatMessageTextHtml,
+  getMentionCandidates: getMentionCandidates,
+  onMentionInput: onMentionInput,
+  onMentionKeydown: onMentionKeydown,
+});

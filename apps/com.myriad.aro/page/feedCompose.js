@@ -1,3 +1,5 @@
+var share = require('./scope.js');
+
 // ==================== Feed composer + draft ====================
 // Extracted from views.js. Depends on helpers, state, federation publish APIs.
 // Load before views.js.
@@ -10,14 +12,14 @@ var composeDraftTextOnly = false;
 
 /**
  * Contextual + menu (owner feed only):
- * - timeline  → Post only
- * - following → Follow only
+ * - timeline / subscribed → Post only
+ * - following             → Follow only
  * - followers / published / guest / non-feed → no +
  */
 function canComposePost() {
   return !state.isGuest
     && state.currentView === 'feed'
-    && state.feedSubTab === 'timeline';
+    && isFeedPostTab(state.feedSubTab);
 }
 
 function canFollowFromFeed() {
@@ -612,8 +614,11 @@ async function publishComposeNote() {
       });
     } catch (e2) {}
 
-    // Force reload author timeline + published so the new note is visible.
+    // Force reload both post lists + published so the new note is visible.
+    // Own posts land on Home (local instance is always a room peer) and on
+    // Subscribed (author timeline insert), so neither cache may survive.
     state.feedLoaded.timeline = false;
+    state.feedLoaded.subscribed = false;
     state.feedLoaded.published = false;
     if (state.feedSubTab !== 'timeline') {
       switchFeedSubTab('timeline');
@@ -645,21 +650,25 @@ async function doUnfollow(actorUrl) {
 async function doUnpublish(contentType, contentId) {
   try {
     await Tapp.federation.unpublish({ content_type: contentType, content_id: contentId });
-    // Keep published + timeline caches coherent after unpublish.
+    // Keep published + both post lists coherent after unpublish.
     if (contentType && contentId && state.published) {
       state.published = (state.published || []).filter(function (it) {
         return !(it.content_type === contentType && String(it.content_id) === String(contentId));
       });
     }
-    if (contentType && contentId && state.timeline) {
-      state.timeline = (state.timeline || []).filter(function (it) {
-        var t = typeof extractPublishTarget === 'function' ? extractPublishTarget(it) : null;
-        if (t && t.content_type === contentType && String(t.content_id) === String(contentId)) return false;
-        return true;
+    if (contentType && contentId) {
+      ['timeline', 'subscribed'].forEach(function (key) {
+        if (!state[key]) return;
+        state[key] = state[key].filter(function (it) {
+          var t = typeof extractPublishTarget === 'function' ? extractPublishTarget(it) : null;
+          if (t && t.content_type === contentType && String(t.content_id) === String(contentId)) return false;
+          return true;
+        });
       });
     }
     state.feedLoaded.published = false;
     state.feedLoaded.timeline = false;
+    state.feedLoaded.subscribed = false;
     loadFeedSubTab();
     updateFeedProfileHeader();
   } catch (e) {
@@ -667,7 +676,7 @@ async function doUnpublish(contentType, contentId) {
   }
 }
 
-/** Quick-delete own post from Home timeline (confirm + optimistic remove + unpublish). */
+/** Quick-delete own post from a post list (confirm + optimistic remove + unpublish). */
 async function doDeleteTimelinePost(target) {
   target = target || {};
   var contentType = target.content_type || '';
@@ -679,17 +688,22 @@ async function doDeleteTimelinePost(target) {
     var ok = await aroConfirm(lang.deletePostConfirm || 'Delete this post?', true);
     if (!ok) return;
   }
-  // Optimistic: drop from timeline (and published if present).
+  // Optimistic: drop from both post lists (and published if present). Own posts
+  // sit on Home and Subscribed at once — removing from one leaves the other lying.
   var prevTimeline = state.timeline ? state.timeline.slice() : null;
+  var prevSubscribed = state.subscribed ? state.subscribed.slice() : null;
   var prevPublished = state.published ? state.published.slice() : null;
-  state.timeline = (state.timeline || []).filter(function (it) {
-    if (activityId && it.activity_id && String(it.activity_id) === String(activityId)) return false;
-    if (objectId && resolveObjectId(it) === objectId) return false;
+  function isDeleted(it) {
+    if (activityId && it.activity_id && String(it.activity_id) === String(activityId)) return true;
+    if (objectId && resolveObjectId(it) === objectId) return true;
     if (contentType && contentId) {
       var t = typeof extractPublishTarget === 'function' ? extractPublishTarget(it) : null;
-      if (t && t.content_type === contentType && String(t.content_id) === String(contentId)) return false;
+      if (t && t.content_type === contentType && String(t.content_id) === String(contentId)) return true;
     }
-    return true;
+    return false;
+  }
+  ['timeline', 'subscribed'].forEach(function (key) {
+    state[key] = (state[key] || []).filter(function (it) { return !isDeleted(it); });
   });
   if (contentType && contentId && state.published) {
     state.published = (state.published || []).filter(function (it) {
@@ -707,10 +721,35 @@ async function doDeleteTimelinePost(target) {
     updateFeedProfileHeader();
   } catch (e) {
     if (prevTimeline) state.timeline = prevTimeline;
+    if (prevSubscribed) state.subscribed = prevSubscribed;
     if (prevPublished) state.published = prevPublished;
     state.feedLoaded.timeline = false;
+    state.feedLoaded.subscribed = false;
     renderFeedContent();
     notifyError(lang.deletePostFail || lang.unpublishFail, e);
   }
 }
 
+
+// ==================== Shared scope ====================
+// Republish the names this file's siblings read. See page/scope.js.
+share.value({
+  addComposeFiles: addComposeFiles,
+  closeComposer: closeComposer,
+  closeFeedPlusMenu: closeFeedPlusMenu,
+  closeFollowDialog: closeFollowDialog,
+  doDeleteTimelinePost: doDeleteTimelinePost,
+  doUnfollow: doUnfollow,
+  doUnpublish: doUnpublish,
+  handleFeedPlusAction: handleFeedPlusAction,
+  publishComposeNote: publishComposeNote,
+  setComposeDraftNotice: setComposeDraftNotice,
+  toggleFeedPlusMenu: toggleFeedPlusMenu,
+  unwrapPublishResult: unwrapPublishResult,
+  updateComposeButtonVisibility: updateComposeButtonVisibility,
+  updateFeedPlusVisibility: updateFeedPlusVisibility,
+});
+share.live({
+  composeAttachments: [function () { return composeAttachments; }, function (v) { composeAttachments = v; }],
+  composeDraftTextOnly: [function () { return composeDraftTextOnly; }, function (v) { composeDraftTextOnly = v; }],
+});

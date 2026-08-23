@@ -1,3 +1,5 @@
+var share = require('./scope.js');
+
 // ==================== Helpers ====================
 
 /**
@@ -2090,11 +2092,14 @@ function applyRoleControls() {
   setAdminElementVisible('#aro-nav', privateOnly);
   setAdminElementVisible('#nav-messages', privateOnly);
   setAdminElementVisible('#nav-rings', privateOnly);
+  // 订阅 = 关注关系的时间线，访客没有关注关系，这一栏对访客无意义
+  setAdminElementVisible('.feed-nav-item[data-sub="subscribed"]', privateOnly);
   setAdminElementVisible('.feed-nav-item[data-sub="following"]', privateOnly);
   setAdminElementVisible('.feed-nav-item[data-sub="followers"]', privateOnly);
   setAdminElementVisible('.feed-nav-item[data-sub="published"]', privateOnly);
   setAdminElementVisible('.feed-nav-item[data-sub="bookmarks"]', privateOnly);
   setAdminElementVisible('.feed-nav-item[data-sub="settings"]', privateOnly);
+  setAdminElementVisible('.feed-mobile-tab[data-sub="subscribed"]', privateOnly);
   setAdminElementVisible('.feed-mobile-tab[data-sub="following"]', privateOnly);
   setAdminElementVisible('.feed-mobile-tab[data-sub="followers"]', privateOnly);
   setAdminElementVisible('.feed-mobile-tab[data-sub="published"]', privateOnly);
@@ -2651,6 +2656,15 @@ function isLocalActor(actor) {
   return String(actor).indexOf('myriad.local') !== -1;
 }
 
+/**
+ * Feed sub-tabs that render post cards: Home (every instance sharing a joined
+ * group chat) and Subscribed (people you follow). Bookmarks renders the same
+ * cards but is not a place to compose into, so it is deliberately out.
+ */
+function isFeedPostTab(sub) {
+  return sub === 'timeline' || sub === 'subscribed';
+}
+
 function applyLabels() {
   var el;
   el = $('nav-messages-label'); if (el) el.textContent = lang.navMessages;
@@ -2695,12 +2709,14 @@ function applyLabels() {
   el = $('member-title'); if (el && state.activeKind !== 'room') el.textContent = lang.members;
   el = $('invite-toggle'); if (el) { el.setAttribute('title', lang.invite); el.setAttribute('aria-label', lang.invite); }
   el = $('feed-nav-timeline'); if (el) el.textContent = lang.feedTimeline;
+  el = $('feed-nav-subscribed'); if (el) el.textContent = lang.feedSubscribed || 'Subscribed';
   el = $('feed-nav-following'); if (el) el.textContent = lang.feedFollowing;
   el = $('feed-nav-followers'); if (el) el.textContent = lang.feedFollowers;
   el = $('feed-nav-published'); if (el) el.textContent = lang.feedPublished;
   el = $('feed-nav-bookmarks'); if (el) el.textContent = lang.feedBookmarks || 'Bookmarks';
   el = $('feed-nav-settings'); if (el) el.textContent = lang.feedSettings || lang.settingsTitle || 'Settings';
   el = $('feed-tab-timeline'); if (el) el.textContent = lang.feedTimeline;
+  el = $('feed-tab-subscribed'); if (el) el.textContent = lang.feedSubscribed || 'Subscribed';
   el = $('feed-tab-following'); if (el) el.textContent = lang.feedFollowing;
   el = $('feed-tab-followers'); if (el) el.textContent = lang.feedFollowers;
   el = $('feed-tab-published'); if (el) el.textContent = lang.feedPublished;
@@ -2825,3 +2841,109 @@ function applyDialogLabels() {
     el.options[2].text = lang.invitePolicyOpen || 'Open join';
   }
 }
+
+// ==================== Shared scope ====================
+// Republish the names this file's siblings read. See page/scope.js.
+share.value({
+  activateShareCard: activateShareCard,
+  activeMemberCountFromList: activeMemberCountFromList,
+  applyAdminControls: applyAdminControls,
+  applyDialogLabels: applyDialogLabels,
+  applyLabels: applyLabels,
+  applyRoleControls: applyRoleControls,
+  applyRoomMemberCount: applyRoomMemberCount,
+  applySearchInputLabel: applySearchInputLabel,
+  applySheetAccent: applySheetAccent,
+  aroConfirm: aroConfirm,
+  aroDebounce: aroDebounce,
+  aroDismiss: aroDismiss,
+  aroPickOption: aroPickOption,
+  aroPlayEnter: aroPlayEnter,
+  aroScheduleFrame: aroScheduleFrame,
+  autoResizeInput: autoResizeInput,
+  avatarContentHtml: avatarContentHtml,
+  bindFaviconFallbacks: bindFaviconFallbacks,
+  bindListSearch: bindListSearch,
+  channelComposerLockReason: channelComposerLockReason,
+  chatOpeningHtml: chatOpeningHtml,
+  closeFeedProfilePopovers: closeFeedProfilePopovers,
+  copyFederationIdentity: copyFederationIdentity,
+  copyTextToClipboard: copyTextToClipboard,
+  dayLabel: dayLabel,
+  dismissTransientUi: dismissTransientUi,
+  disposePageSession: disposePageSession,
+  e2eKeyExchangeLabel: e2eKeyExchangeLabel,
+  e2eUndecryptableLabel: e2eUndecryptableLabel,
+  errorSuffix: errorSuffix,
+  esc: esc,
+  fallbackCopyText: fallbackCopyText,
+  fileCardMeta: fileCardMeta,
+  findMemberByActor: findMemberByActor,
+  forceHideInteractive: forceHideInteractive,
+  formatFileSize: formatFileSize,
+  fullTimeStr: fullTimeStr,
+  getAroSelectValue: getAroSelectValue,
+  getErrorMessage: getErrorMessage,
+  getIdentityActorUrl: getIdentityActorUrl,
+  getIdentityHandle: getIdentityHandle,
+  getPageDisposables: getPageDisposables,
+  getPayloadText: getPayloadText,
+  initAroSelect: initAroSelect,
+  initRingCreateSelects: initRingCreateSelects,
+  isChannelComposerLocked: isChannelComposerLocked,
+  isE2eCiphertextEnvelope: isE2eCiphertextEnvelope,
+  isE2eKeyExchangeMessage: isE2eKeyExchangeMessage,
+  isFeedPostTab: isFeedPostTab,
+  isLocalActor: isLocalActor,
+  isPlayableLibraryShare: isPlayableLibraryShare,
+  isRoomComposerLocked: isRoomComposerLocked,
+  isRoomInvitePending: isRoomInvitePending,
+  isValidStoreSourceRef: isValidStoreSourceRef,
+  libraryExternalUrl: libraryExternalUrl,
+  loadFederationIdentity: loadFederationIdentity,
+  loadUserRole: loadUserRole,
+  matchesSearch: matchesSearch,
+  maybeNotifyIncomingMessage: maybeNotifyIncomingMessage,
+  membersFingerprint: membersFingerprint,
+  messagePreview: messagePreview,
+  normalizeFederationUrl: normalizeFederationUrl,
+  normalizeSearchQuery: normalizeSearchQuery,
+  notifyError: notifyError,
+  pageListen: pageListen,
+  parseJoinRoomInput: parseJoinRoomInput,
+  prefersReducedMotion: prefersReducedMotion,
+  quotePreviewText: quotePreviewText,
+  quoteSenderLabel: quoteSenderLabel,
+  relTimeStr: relTimeStr,
+  renderFederationIdentity: renderFederationIdentity,
+  renderFeedProfileUser: renderFeedProfileUser,
+  requireAdminAction: requireAdminAction,
+  ringTypeLabel: ringTypeLabel,
+  roleLabel: roleLabel,
+  safeExternalHref: safeExternalHref,
+  safeIconUrl: safeIconUrl,
+  safeInlineDownload: safeInlineDownload,
+  safeMessageImageUrl: safeMessageImageUrl,
+  sameActorUrl: sameActorUrl,
+  sanitizeRemoteSvg: sanitizeRemoteSvg,
+  sealAroInteractionSurfaces: sealAroInteractionSurfaces,
+  searchNoResultsHtml: searchNoResultsHtml,
+  setActionBusy: setActionBusy,
+  setAroSelectOptions: setAroSelectOptions,
+  setAroSelectValue: setAroSelectValue,
+  setSheetBtnState: setSheetBtnState,
+  shareCardPayload: shareCardPayload,
+  shareTypeLabel: shareTypeLabel,
+  shareableRoomId: shareableRoomId,
+  sheetMetaHtml: sheetMetaHtml,
+  sheetVisual: sheetVisual,
+  sheetVisualAttrs: sheetVisualAttrs,
+  showAroOverlay: showAroOverlay,
+  synthesizeFederationIdentityFromUser: synthesizeFederationIdentityFromUser,
+  tappAcceptStorageKey: tappAcceptStorageKey,
+  timeStr: timeStr,
+  toggleFeedProfileDetails: toggleFeedProfileDetails,
+  toggleFeedProfileSummary: toggleFeedProfileSummary,
+  unwrapRoomMembers: unwrapRoomMembers,
+  updateSendState: updateSendState,
+});

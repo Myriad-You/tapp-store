@@ -54,9 +54,36 @@ const ctx = {
   __paints: [],
 };
 ctx.globalThis = ctx;
+ctx.window = ctx;
 vm.createContext(ctx);
+
+/**
+ * Stand-in for page/scope.js. Each module runs in its own factory, exactly as
+ * the host's layer runtime compiles it, and republishes its cross-file names
+ * into `ctx` — which is the shared sandbox global for this run.
+ */
+const sharedScope = {
+  value: (bindings) => Object.assign(ctx, bindings),
+  live: (accessors) =>
+    Object.keys(accessors).forEach((key) =>
+      Object.defineProperty(ctx, key, {
+        configurable: true,
+        enumerable: true,
+        get: accessors[key][0],
+        set: accessors[key][1],
+      }),
+    ),
+};
+
 for (const file of ['msgSync.js', 'msgUi.js']) {
-  vm.runInContext(fs.readFileSync(path.join(PAGE, file), 'utf8'), ctx, { filename: file });
+  const source = fs.readFileSync(path.join(PAGE, file), 'utf8');
+  const factory = vm.runInContext(
+    `(function (module, exports, require, window) {\n${source}\n})`,
+    ctx,
+    { filename: file },
+  );
+  const module = { exports: {} };
+  factory(module, module.exports, () => sharedScope, ctx);
 }
 
 let failed = 0;

@@ -25,9 +25,9 @@
 
 ## 权限
 
-- `storage`：本地战绩与最近房间恢复信息。
+- `storage:read` / `storage:write`：本地战绩与最近房间恢复信息。
 - `ui:theme`、`ui:confirm`：跟随宿主主题，以及离开/认输确认。
-- `federation:read`、`federation:write`、`federation:message`：身份、房间管理与结构化棋局消息。
+- `federation:read`、`federation:room`、`federation:message`：身份、房间管理与结构化棋局消息。当前宿主已拒绝旧权限 `federation:write`。
 
 未获得联邦权限时，联机入口会停用，本地双人模式仍可使用。Widget 当前不承载联邦处理器，因此本应用只提供 Page。
 

@@ -1,8 +1,10 @@
+var share = require('./scope.js');
+
 // ==================== Feed UI cards (list item HTML) ====================
 // Extracted from views.js for load order clarity + smaller views surface.
 // Depends on: helpers (esc, lang, avatar…), state, SVG_ICONS / platform helpers.
 // Interaction helpers (resolveObjectId, isOwnTimelineItem, …) live in views.js
-// and are resolved at call time after full pageModules load.
+// and are resolved at call time, once the whole page layer has loaded.
 
 /** Max characters shown on list cards (detail modal shows full body). */
 var FEED_CARD_TEXT_MAX = 280;
@@ -557,3 +559,18 @@ function timeAgo(iso) {
   try { return d.toLocaleDateString(currentLocale, { month: 'short', day: 'numeric' }); } catch (e) { return day + 'd'; }
 }
 
+
+// ==================== Shared scope ====================
+// Republish the names this file's siblings read. See page/scope.js.
+share.value({
+  actorLabelFromUrl: actorLabelFromUrl,
+  extractNoteAttachments: extractNoteAttachments,
+  publishedTypeLabel: publishedTypeLabel,
+  renderActorItem: renderActorItem,
+  renderPublishedItem: renderPublishedItem,
+  renderTimelineItem: renderTimelineItem,
+  renderTimelineMedia: renderTimelineMedia,
+  stripHtmlPreview: stripHtmlPreview,
+  timeAgo: timeAgo,
+  truncateFeedCardText: truncateFeedCardText,
+});

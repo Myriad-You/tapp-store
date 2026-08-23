@@ -1,3 +1,5 @@
+var share = require('./scope.js');
+
 // ==================== API ====================
 /** Optimistically zero a room's unread badge (server marks last_read_at on getRoomMessages). */
 function clearRoomUnreadLocal(roomId) {
@@ -514,13 +516,12 @@ async function doSend() {
       // Direct package remains optional but receivers must not auto-install as store fallback
       if (attach.installPackage) msgPayload.install_package = attach.installPackage;
       if (attach.installPackageOmitted) msgPayload.install_package_omitted = attach.installPackageOmitted;
-      // Room/channel payload hard cap is 32 MiB JSON. Install packages + multi-recipient
-      // E2E wrap can blow past that → 413 and "tapp share broken". Prefer store_source;
-      // drop the package when the envelope would be too large.
+      // The host rejects an oversized message payload outright (live cap, 2 MiB
+      // on the saver profile), and multi-recipient E2E wrap makes the envelope
+      // bigger still. Prefer store_source; drop the package when it will not fit.
       try {
         var est = JSON.stringify(msgPayload).length;
-        var PAYLOAD_SOFT_MAX = 28 * 1024 * 1024;
-        if (est > PAYLOAD_SOFT_MAX && msgPayload.install_package) {
+        if (est > MSG_PAYLOAD_SOFT_MAX && msgPayload.install_package) {
           delete msgPayload.install_package;
           msgPayload.install_package_omitted = 'payload_too_large';
         }
@@ -633,7 +634,7 @@ async function doSend() {
     // Prefer E2E only when session looks established. ARO-02: never auto-downgrade to plaintext
     // on client after encrypt=true fails — but skip encrypt for large rich shares (tapp package /
     // library snapshots) so multi-recipient room wrap does not explode past payload limits.
-    // Room multi-recipient E2E wraps each recipient; packages explode past the 32 MiB cap.
+    // Room multi-recipient E2E wraps each recipient; packages explode past the payload cap.
     var forcePlain = !!(ctx.kind === 'room' && msgPayload && msgPayload.install_package);
     if (!forcePlain && state.e2ePreferEncrypt !== false && isE2eReadyForActive()) {
       sendReq.encrypt = true;
@@ -2031,3 +2032,34 @@ function switchView(view) {
     if (typeof loadRings === 'function') loadRings();
   }
 }
+
+// ==================== Shared scope ====================
+// Republish the names this file's siblings read. See page/scope.js.
+share.value({
+  bindRealtimeListeners: bindRealtimeListeners,
+  clearRosterConfirmTimers: clearRosterConfirmTimers,
+  confirmRoomMembers: confirmRoomMembers,
+  doAcceptChannel: doAcceptChannel,
+  doAcceptRoomInvite: doAcceptRoomInvite,
+  doCloseChannel: doCloseChannel,
+  doDeleteChannel: doDeleteChannel,
+  doDissolveRoom: doDissolveRoom,
+  doInviteMember: doInviteMember,
+  doJoinOpenRoom: doJoinOpenRoom,
+  doKickMember: doKickMember,
+  doLeaveRoom: doLeaveRoom,
+  doRejectChannel: doRejectChannel,
+  doRejectRoomInvite: doRejectRoomInvite,
+  doSend: doSend,
+  doSetMemberRole: doSetMemberRole,
+  doTransferOwnership: doTransferOwnership,
+  isConversationCurrent: isConversationCurrent,
+  isOpenGenCurrent: isOpenGenCurrent,
+  loadConversations: loadConversations,
+  noteDeliveryEnqueue: noteDeliveryEnqueue,
+  openConversation: openConversation,
+  pollMessages: pollMessages,
+  stopPolling: stopPolling,
+  switchView: switchView,
+  unsubscribeRealtime: unsubscribeRealtime,
+});

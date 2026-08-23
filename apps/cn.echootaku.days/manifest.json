@@ -1,7 +1,7 @@
 {
   "id": "cn.echootaku.days",
   "name": "朝夕",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "minSystemVersion": "0.3.23",
   "description": "记录值得期待与纪念的日子，在主页随时查看最近倒数。",
   "locales": {
@@ -15,7 +15,6 @@
     }
   },
   "category": "productivity",
-  "main": "main.js",
   "author": {
     "name": "EchoOtaku",
     "url": "https://echootaku.cn"
@@ -31,11 +30,6 @@
   ],
   "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><rect x='3' y='4.5' width='18' height='16' rx='3' stroke='currentColor' stroke-width='1.8'/><path d='M7.5 2.5v4M16.5 2.5v4M3 9h18' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/><path d='M8 13h3v3H8zM14 13h2' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>",
   "themeColor": "#D97757",
-  "hasPage": true,
-  "cssMode": "separated",
-  "widgetStyles": "widget.css",
-  "pageStyles": "page.css",
-  "pageTemplate": "page.html",
   "widgets": [
     {
       "id": "days-countdown",
@@ -44,7 +38,11 @@
       "icon": "calendar",
       "category": "utility",
       "defaultSize": "2x2",
-      "sizes": ["2x2", "4x2", "4x4"],
+      "sizes": [
+        "2x2",
+        "4x2",
+        "4x4"
+      ],
       "templates": {
         "2x2": "templates/widget-2x2.html",
         "4x2": "templates/widget-4x2.html",
@@ -58,8 +56,14 @@
           "description": "跟随朝夕主题工作室，或为当前小组件单独设置。",
           "defaultValue": "shared",
           "options": [
-            { "value": "shared", "label": "跟随共享主题" },
-            { "value": "instance", "label": "当前小组件独立设置" }
+            {
+              "value": "shared",
+              "label": "跟随共享主题"
+            },
+            {
+              "value": "instance",
+              "label": "当前小组件独立设置"
+            }
           ]
         },
         {
@@ -68,12 +72,30 @@
           "type": "select",
           "defaultValue": "system",
           "options": [
-            { "value": "system", "label": "跟随 Myriad" },
-            { "value": "sunset", "label": "朝霞" },
-            { "value": "violet", "label": "暮紫" },
-            { "value": "ocean", "label": "远海" },
-            { "value": "forest", "label": "森语" },
-            { "value": "mono", "label": "留白" }
+            {
+              "value": "system",
+              "label": "跟随 Myriad"
+            },
+            {
+              "value": "sunset",
+              "label": "朝霞"
+            },
+            {
+              "value": "violet",
+              "label": "暮紫"
+            },
+            {
+              "value": "ocean",
+              "label": "远海"
+            },
+            {
+              "value": "forest",
+              "label": "森语"
+            },
+            {
+              "value": "mono",
+              "label": "留白"
+            }
           ]
         },
         {
@@ -83,8 +105,14 @@
           "description": "Glass 使用透明磨砂表面，实际透景能力取决于 Myriad 宿主；纯色更强调可读性。",
           "defaultValue": "glass",
           "options": [
-            { "value": "glass", "label": "Glass" },
-            { "value": "solid", "label": "纯色" }
+            {
+              "value": "glass",
+              "label": "Glass"
+            },
+            {
+              "value": "solid",
+              "label": "纯色"
+            }
           ]
         },
         {
@@ -93,8 +121,14 @@
           "type": "select",
           "defaultValue": "comfortable",
           "options": [
-            { "value": "comfortable", "label": "舒适" },
-            { "value": "compact", "label": "紧凑" }
+            {
+              "value": "comfortable",
+              "label": "舒适"
+            },
+            {
+              "value": "compact",
+              "label": "紧凑"
+            }
           ]
         },
         {
@@ -116,9 +150,18 @@
           "description": "决定小组件优先展示哪些日子。",
           "defaultValue": "smart",
           "options": [
-            { "value": "smart", "label": "智能排序" },
-            { "value": "upcoming", "label": "只看将来" },
-            { "value": "pinned", "label": "只看置顶" }
+            {
+              "value": "smart",
+              "label": "智能排序"
+            },
+            {
+              "value": "upcoming",
+              "label": "只看将来"
+            },
+            {
+              "value": "pinned",
+              "label": "只看置顶"
+            }
           ]
         },
         {
@@ -135,7 +178,15 @@
       "refreshPolicy": {
         "mode": "event",
         "refreshOnVisible": true
-      }
+      },
+      "styles": "widget.css"
     }
-  ]
+  ],
+  "core": {
+    "entry": "main.js"
+  },
+  "page": {
+    "template": "page.html",
+    "styles": "page.css"
+  }
 }

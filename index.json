@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.31",
+  "version": "1.0.46",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-08-17T21:24:30.956Z",
+  "updated_at": "2026-08-22T03:32:38.230Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -14,7 +14,7 @@
     {
       "id": "com.myriad.music-player",
       "name": "音乐播放器",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "控制系统音乐播放，查看歌词与播放列表",
       "long_description": "对接系统播放器，显示封面、进度与播放控制；支持同步歌词、列表搜索，以及顺序、循环、单曲和随机模式。",
       "locales": {
@@ -119,18 +119,18 @@
         "page_styles": "apps/com.myriad.music-player/page.css",
         "page_template": "apps/com.myriad.music-player/page.html"
       },
-      "size": 350862,
+      "size": 350861,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-10T00:00:00Z",
-      "updated_at": "2026-08-17T01:20:03.780Z"
+      "updated_at": "2026-08-19T11:09:38.469Z"
     },
     {
       "id": "com.myriad.quick-notes",
       "name": "便携便签",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "快速记录想法，支持搜索与主页小组件",
       "long_description": "在页面中编写、搜索和整理便签，并通过 4×2 / 4×4 小组件在主页速览或速记。支持置顶、颜色、排序、导出导入与可选时间戳；便签保存在当前用户的私有存储中。跟随宿主明暗主题，内置中英日三语。",
       "locales": {
@@ -242,18 +242,18 @@
           }
         }
       },
-      "size": 126402,
+      "size": 126496,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-04T00:00:00Z",
-      "updated_at": "2026-08-17T01:20:03.782Z"
+      "updated_at": "2026-08-19T11:09:38.471Z"
     },
     {
       "id": "com.myriad.config-generator",
       "name": "Myriad 安装配置生成",
-      "version": "1.0.1",
+      "version": "1.0.5",
       "description": "分步生成 Compose、.env 与反代配置，覆盖常见面板、编排界面与外层反代",
       "long_description": "按欢迎、部署方式、域名、站点、数据库、限额的步骤，生成官方生产拓扑所需的 docker-compose、.env、反代配置与部署说明。可选 1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy 或命令行。Nginx 类方式请先创建站点并完成 SSL，再上传现有 conf；平台反代与 Caddy 不要求上传。密钥与镜像版本将自动填入，高级选项默认收起。密钥经白名单校验，并对 .env 再解析以防止注入。",
       "locales": {
@@ -367,18 +367,18 @@
           "zh-CN": "apps/com.myriad.config-generator/i18n/zh-CN.json"
         }
       },
-      "size": 385542,
+      "size": 387869,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-14T00:00:00Z",
-      "updated_at": "2026-08-17T16:31:23.667Z"
+      "updated_at": "2026-08-22T03:32:38.207Z"
     },
     {
       "id": "com.myriad.doudizhu",
       "name": "斗地主",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "三人单机斗地主：经典牌桌与若泉绮羽㥹銯麏主题、完整规则、智能提示与本地 AI",
       "long_description": "从零重写的三人单机斗地主。使用标准 54 张扑克牌，支持随机发牌、叫地主与抢地主、完整牌型校验、连续两家不出后重新领出、默认 20 秒回合倒计时、自动托管、三档本地 AI、提示、倍率、春天与反春天、断局续玩和本地战绩。默认使用经典绿色牌桌，并可在 Tapp 内切换若泉绮羽㥹銯麏主题；主题覆盖人物卡面、卡背、大厅、牌桌、按钮与回合提示，同时保留高对比点数和花色。提供 1×1、2×2 与 4×2 今日战绩小组件，并优先显示当前 Myriad 用户名与头像。个人游戏偏好和玩家数据均按主体隔离；支持中英日三语和宿主明暗主题，无联网权限，不读取其他玩家隐藏手牌。",
       "locales": {
@@ -495,31 +495,32 @@
           "ja-JP": "apps/com.myriad.doudizhu/i18n/ja-JP.json",
           "zh-CN": "apps/com.myriad.doudizhu/i18n/zh-CN.json"
         },
-        "page_modules": {
-          "i18n.js": "apps/com.myriad.doudizhu/page/i18n.js",
-          "cards.js": "apps/com.myriad.doudizhu/page/cards.js",
-          "rules.js": "apps/com.myriad.doudizhu/page/rules.js",
-          "ai.js": "apps/com.myriad.doudizhu/page/ai.js",
-          "engine.js": "apps/com.myriad.doudizhu/page/engine.js",
-          "storage.js": "apps/com.myriad.doudizhu/page/storage.js",
-          "audio.js": "apps/com.myriad.doudizhu/page/audio.js",
-          "theme.js": "apps/com.myriad.doudizhu/page/theme.js",
-          "render.js": "apps/com.myriad.doudizhu/page/render.js",
-          "index.js": "apps/com.myriad.doudizhu/page/index.js"
+        "modules": {
+          "page/ai.js": "apps/com.myriad.doudizhu/page/ai.js",
+          "page/audio.js": "apps/com.myriad.doudizhu/page/audio.js",
+          "page/cards.js": "apps/com.myriad.doudizhu/page/cards.js",
+          "page/engine.js": "apps/com.myriad.doudizhu/page/engine.js",
+          "page/entry.js": "apps/com.myriad.doudizhu/page/entry.js",
+          "page/i18n.js": "apps/com.myriad.doudizhu/page/i18n.js",
+          "page/index.js": "apps/com.myriad.doudizhu/page/index.js",
+          "page/render.js": "apps/com.myriad.doudizhu/page/render.js",
+          "page/rules.js": "apps/com.myriad.doudizhu/page/rules.js",
+          "page/storage.js": "apps/com.myriad.doudizhu/page/storage.js",
+          "page/theme.js": "apps/com.myriad.doudizhu/page/theme.js"
         }
       },
-      "size": 2359672,
+      "size": 2359893,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2026-07-20T00:00:00Z",
-      "updated_at": "2026-08-17T01:20:03.783Z"
+      "updated_at": "2026-08-19T11:09:38.472Z"
     },
     {
       "id": "com.myriad.aro",
       "name": "Aro",
-      "version": "1.0.57",
+      "version": "1.1.1",
       "description": "社交中心，统一管理消息、时间线、环网与个人资料",
       "long_description": "Aro 是 Myriad 官方社交中心，把联邦私信与群聊、时间线、环网和个人资料收在同一处。信使支持 Channel / Room、端到端加密、群共享与本机贴纸包、表情、附件（图片、文件、Tapp、Brew、资料库与报告）、@ 提及、置顶与转发，以及后台轮询新消息通知。时间线可发帖、引用转发、收藏与关注；环网用于实例目录、Brew 推荐、资料交换和 Tapp 商店等节点协作。设置页可查看出站投递队列（取消 / 重试）并轮换联邦签名密钥。聊天记录可在本机导出或导入 JSON 备份。界面支持中英日与宿主明暗主题。",
       "locales": {
@@ -590,9 +591,12 @@
         "storage:read",
         "storage:write",
         "ui:notification",
-        "ui:theme",
         "federation:read",
-        "federation:write",
+        "federation:interact",
+        "federation:post",
+        "federation:channel",
+        "federation:room",
+        "federation:ring",
         "federation:message",
         "federation:files",
         "platform:read",
@@ -601,7 +605,6 @@
         "tappList:manage",
         "brew:read",
         "media:control",
-        "media:read",
         "network:fetch"
       ],
       "icon_svg": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M2 12h20\"/><path d=\"M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z\"/></svg>",
@@ -628,9 +631,8 @@
       },
       "download": {
         "manifest": "apps/com.myriad.aro/manifest.json",
-        "code": "apps/com.myriad.aro/index.js",
+        "code": "apps/com.myriad.aro/core.js",
         "readme": "apps/com.myriad.aro/README.md",
-        "styles": "apps/com.myriad.aro/styles.css",
         "page_styles": "apps/com.myriad.aro/page.css",
         "page_template": "apps/com.myriad.aro/page.html",
         "i18n": {
@@ -638,43 +640,44 @@
           "en": "apps/com.myriad.aro/i18n/en.json",
           "ja": "apps/com.myriad.aro/i18n/ja.json"
         },
-        "page_modules": {
-          "i18n.js": "apps/com.myriad.aro/page/i18n.js",
-          "state.js": "apps/com.myriad.aro/page/state.js",
-          "helpers.js": "apps/com.myriad.aro/page/helpers.js",
-          "shareUi.js": "apps/com.myriad.aro/page/shareUi.js",
-          "mentionUi.js": "apps/com.myriad.aro/page/mentionUi.js",
-          "attachments.js": "apps/com.myriad.aro/page/attachments.js",
-          "msgUi.js": "apps/com.myriad.aro/page/msgUi.js",
-          "chat.js": "apps/com.myriad.aro/page/chat.js",
-          "members.js": "apps/com.myriad.aro/page/members.js",
-          "history.js": "apps/com.myriad.aro/page/history.js",
-          "files.js": "apps/com.myriad.aro/page/files.js",
-          "msgSync.js": "apps/com.myriad.aro/page/msgSync.js",
-          "e2eUi.js": "apps/com.myriad.aro/page/e2eUi.js",
-          "roomUi.js": "apps/com.myriad.aro/page/roomUi.js",
-          "createUi.js": "apps/com.myriad.aro/page/createUi.js",
-          "api.js": "apps/com.myriad.aro/page/api.js",
-          "feedUi.js": "apps/com.myriad.aro/page/feedUi.js",
-          "feedCompose.js": "apps/com.myriad.aro/page/feedCompose.js",
-          "ringsUi.js": "apps/com.myriad.aro/page/ringsUi.js",
-          "views.js": "apps/com.myriad.aro/page/views.js",
-          "events.js": "apps/com.myriad.aro/page/events.js",
-          "index.js": "apps/com.myriad.aro/page/index.js"
+        "modules": {
+          "page/api.js": "apps/com.myriad.aro/page/api.js",
+          "page/attachments.js": "apps/com.myriad.aro/page/attachments.js",
+          "page/chat.js": "apps/com.myriad.aro/page/chat.js",
+          "page/createUi.js": "apps/com.myriad.aro/page/createUi.js",
+          "page/e2eUi.js": "apps/com.myriad.aro/page/e2eUi.js",
+          "page/events.js": "apps/com.myriad.aro/page/events.js",
+          "page/feedCompose.js": "apps/com.myriad.aro/page/feedCompose.js",
+          "page/feedUi.js": "apps/com.myriad.aro/page/feedUi.js",
+          "page/files.js": "apps/com.myriad.aro/page/files.js",
+          "page/helpers.js": "apps/com.myriad.aro/page/helpers.js",
+          "page/history.js": "apps/com.myriad.aro/page/history.js",
+          "page/i18n.js": "apps/com.myriad.aro/page/i18n.js",
+          "page/index.js": "apps/com.myriad.aro/page/index.js",
+          "page/members.js": "apps/com.myriad.aro/page/members.js",
+          "page/mentionUi.js": "apps/com.myriad.aro/page/mentionUi.js",
+          "page/msgSync.js": "apps/com.myriad.aro/page/msgSync.js",
+          "page/msgUi.js": "apps/com.myriad.aro/page/msgUi.js",
+          "page/ringsUi.js": "apps/com.myriad.aro/page/ringsUi.js",
+          "page/roomUi.js": "apps/com.myriad.aro/page/roomUi.js",
+          "page/scope.js": "apps/com.myriad.aro/page/scope.js",
+          "page/shareUi.js": "apps/com.myriad.aro/page/shareUi.js",
+          "page/state.js": "apps/com.myriad.aro/page/state.js",
+          "page/views.js": "apps/com.myriad.aro/page/views.js"
         }
       },
-      "size": 1412431,
+      "size": 1229181,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-01T00:00:00Z",
-      "updated_at": "2026-08-17T01:20:03.784Z"
+      "updated_at": "2026-08-21T08:49:45.650Z"
     },
     {
       "id": "cn.wyyzxzyg.cdn-cache",
       "name": "CDN 缓存刷新",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "description": "仅管理员可操作的 Cloudflare、EdgeOne、阿里云 CDN 与 AWS CloudFront 缓存刷新工具",
       "long_description": "面向站点管理员的 CDN 缓存刷新工具：支持 Cloudflare、腾讯云 EdgeOne、阿里云 CDN 与 AWS CloudFront。CloudFront 使用 raw XML 与 SigV4；所有出站 API 仅允许管理员调用。可按 URL 精确刷新或清理全站缓存，并保留本地操作日志。",
       "locales": {
@@ -743,18 +746,18 @@
         "page_styles": "apps/cn.wyyzxzyg.cdn-cache/page.css",
         "page_template": "apps/cn.wyyzxzyg.cdn-cache/page.html"
       },
-      "size": 41852,
+      "size": 38302,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2026-08-01T00:00:00Z",
-      "updated_at": "2026-08-17T01:18:49.434Z"
+      "updated_at": "2026-08-19T11:09:38.474Z"
     },
     {
       "id": "cn.wyyzxzyg.minecraft-hub",
       "name": "Minecraft 服务器与 Wiki",
-      "version": "1.0.7",
+      "version": "1.0.8",
       "description": "面向玩家的 Java/基岩版服务器查询、收藏与 Minecraft Wiki 搜索工具",
       "long_description": "面向玩家的 Java/基岩版服务器查询、收藏与 Minecraft Wiki 搜索工具。支持主页小组件轮询展示多台服务器状态。",
       "author": {
@@ -815,18 +818,18 @@
           }
         }
       },
-      "size": 52818,
+      "size": 54465,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-04T16:25:05Z",
-      "updated_at": "2026-08-17T01:18:49.435Z"
+      "updated_at": "2026-08-19T11:09:38.474Z"
     },
     {
       "id": "site.abloom.meliora",
       "name": "Meliora 播放器",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "description": "沉浸式歌词与节拍可视化:逐行/逐字歌词跟随、节拍网格驱动的呼吸背景、八段频谱。播放内核由 Myriad 宿主提供。",
       "long_description": "Meliora 的 Myriad Tapp 版本:原样复刻 Meliora 播放页(歌词 FLIP 滚动、逐行/逐字高亮、节拍呼吸背景、五段频谱),播放内核、歌词(网易云 yrc / 酷狗 KRC 逐字)、节拍网格与频谱均由 Myriad 宿主提供。",
       "locales": {
@@ -866,18 +869,18 @@
         "page_styles": "apps/site.abloom.meliora/page.css",
         "page_template": "apps/site.abloom.meliora/page.html"
       },
-      "size": 255414,
+      "size": 255400,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-01T16:58:00Z",
-      "updated_at": "2026-08-17T01:18:49.435Z"
+      "updated_at": "2026-08-19T11:09:38.474Z"
     },
     {
       "id": "cn.xciy.rocom.merchant",
       "name": "洛克王国情报台",
-      "version": "1.4.2",
+      "version": "1.4.3",
       "description": "查看远行商人、活动日历、最新公告与精灵图鉴。",
       "long_description": "洛克王国情报台用于快速查看远行商人当前轮次、换货倒计时、在售商品、关注清单命中、活动行程、官方公告与精灵图鉴搜索。提供页面视图与 2x2 / 4x2 / 4x4 小组件，适合放在桌面持续关注商人刷新。",
       "locales": {
@@ -934,7 +937,6 @@
         "code": "apps/cn.xciy.rocom.merchant/main.js",
         "readme": "apps/cn.xciy.rocom.merchant/README.md",
         "styles": "apps/cn.xciy.rocom.merchant/styles.css",
-        "page_styles": "apps/cn.xciy.rocom.merchant/styles.css",
         "page_template": "apps/cn.xciy.rocom.merchant/page.html",
         "widget_templates": {
           "rocom-merchant-overview": {
@@ -944,18 +946,18 @@
           }
         }
       },
-      "size": 142357,
+      "size": 142541,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-02T05:39:55Z",
-      "updated_at": "2026-08-17T01:18:49.435Z"
+      "updated_at": "2026-08-19T11:09:38.475Z"
     },
     {
       "id": "cn.xciy.xingchen.widgets",
       "name": "星辰小组件",
-      "version": "0.9.1",
+      "version": "0.9.2",
       "description": "GitHub 数据卡片、照片墙、纪念日、世界时钟、系统访客统计与个人信息小组件合集。",
       "long_description": "提供 GitHub Stats Extended 卡片、全幅多尺寸照片墙、Myriad 内置站点分析累计访问量/独立访客，以及邮箱、QQ、微信、Telegram、GitHub、Gitee、哔哩哔哩和自定义个人信息展示。支持多种桌面尺寸与独立配色设置。",
       "locales": {
@@ -1026,18 +1028,18 @@
           }
         }
       },
-      "size": 201613,
+      "size": 204450,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-04T02:07:42Z",
-      "updated_at": "2026-08-05T02:20:41.031Z"
+      "updated_at": "2026-08-19T11:09:38.475Z"
     },
     {
       "id": "cn.echootaku.days",
       "name": "朝夕",
-      "version": "0.3.1",
+      "version": "0.3.2",
       "description": "记录值得期待与纪念的日子，在主页随时查看最近倒数。",
       "long_description": "用朝夕记录生日、纪念日、旅行、考试和其他重要时刻。支持置顶、快捷日期、临近标识、每年重复、自定义分类与颜色、搜索筛选，以及 2x2、4x2、4x4 三种主页小组件。主题工作室默认跟随 Myriad 主色，提供实时预览、三种 Glass 布局、精细分区、圆角和主题码；小组件可选择 Glass/纯色材质、日子范围和显示密度。所有数据仅保存在当前用户的私有存储中。",
       "locales": {
@@ -1116,18 +1118,18 @@
           "zh-CN": "apps/cn.echootaku.days/i18n/zh-CN.json"
         }
       },
-      "size": 143856,
+      "size": 144495,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-04T05:52:10Z",
-      "updated_at": "2026-08-17T01:18:49.436Z"
+      "updated_at": "2026-08-19T11:09:38.476Z"
     },
     {
       "id": "org.smcresearchhk.math",
       "name": "函数图形计算器",
-      "version": "1.0.1",
+      "version": "1.0.3",
       "description": "类似 GeoGebra 的函数绘图与交互式计算器，支持多函数叠加、坐标系缩放平移、常用函数库与表达式求值",
       "long_description": "交互式函数绘图计算器，风格接近 GeoGebra：多函数叠加、安全表达式解析（无 eval）、坐标系缩放/平移、网格与坐标轴、悬停轨迹、侧栏求值与常用函数预设。支持中英日界面与明暗主题，函数列表与视图范围持久化到本地 storage。",
       "locales": {
@@ -1171,18 +1173,18 @@
         "page_styles": "apps/org.smcresearchhk.math/page.css",
         "page_template": "apps/org.smcresearchhk.math/page.html"
       },
-      "size": 58091,
+      "size": 58082,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-04T00:00:00Z",
-      "updated_at": "2026-08-17T01:18:49.436Z"
+      "updated_at": "2026-08-19T11:38:29.424Z"
     },
     {
       "id": "cn.xciy.rsshub-radar",
       "name": "RSSHub 雷达",
-      "version": "1.1.5",
+      "version": "1.1.6",
       "description": "发现 RSSHub 路由，管理订阅并预览 Feed",
       "long_description": "面向 Myriad TApp 沙箱的 RSSHub Radar 移植版。输入公开网页地址后，从内置规则中匹配 RSSHub 路由，生成官方或自建实例订阅地址，并支持 Feed 实时与缓存预览、收藏、OPML 导出、最近扫描记录和常用阅读器跳转。",
       "locales": {
@@ -1246,18 +1248,18 @@
         "page_styles": "apps/cn.xciy.rsshub-radar/page.css",
         "page_template": "apps/cn.xciy.rsshub-radar/page.html"
       },
-      "size": 959024,
+      "size": 959033,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-05T02:21:21.976Z",
-      "updated_at": "2026-08-17T01:18:49.437Z"
+      "updated_at": "2026-08-19T11:09:38.477Z"
     },
     {
       "id": "cn.echootaku.github-workbench",
       "name": "GitHub 工作台",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "description": "集中查看待审 PR、分配给我的 Issue、失败 Actions 与仓库发布动态。",
       "long_description": "面向程序员的只读 GitHub 工作台：集中查看请求你审阅的 Pull Request、分配给你的 Issue，以及所选仓库最近失败的 GitHub Actions 和 Releases。支持 2x2、4x2、4x4 桌面小组件。GitHub Token 使用 Myriad 安装级只写凭据保存，沙箱无法读取；所有 GitHub API 均限制为安装 owner / 管理员调用。首版不提供合并、评论、关闭 Issue 或重跑工作流等写操作。",
       "locales": {
@@ -1337,18 +1339,18 @@
           "zh-CN": "apps/cn.echootaku.github-workbench/i18n/zh-CN.json"
         }
       },
-      "size": 55423,
+      "size": 55439,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-10T22:16:30.796Z",
-      "updated_at": "2026-08-17T01:18:49.437Z"
+      "updated_at": "2026-08-19T11:09:38.477Z"
     },
     {
       "id": "cn.echootaku.gomoku",
       "name": "联邦五子棋",
-      "version": "0.1.10",
+      "version": "0.1.12",
       "description": "15×15 五子棋，支持本地双人和跨实例联邦房间对战",
       "long_description": "一款遵循自由五子棋规则的 15×15 棋盘游戏。可在同一设备上双人对弈，也可创建 Myriad 联邦房间，通过房间 ID 跨实例加入或邀请联邦 Actor。房主负责验证落子并广播完整棋局快照，支持准备、认输、再来一局、历史恢复和本地战绩。",
       "locales": {
@@ -1384,7 +1386,7 @@
         "ui:theme",
         "ui:confirm",
         "federation:read",
-        "federation:write",
+        "federation:room",
         "federation:message"
       ],
       "icon_svg": "<svg viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" stroke=\"currentColor\" stroke-width=\"1.5\"/><path d=\"M7.5 3v18M12 3v18M16.5 3v18M3 7.5h18M3 12h18M3 16.5h18\" stroke=\"currentColor\" stroke-width=\".75\" opacity=\".55\"/><circle cx=\"9.75\" cy=\"9.75\" r=\"2.1\" fill=\"currentColor\"/><circle cx=\"14.25\" cy=\"14.25\" r=\"2.1\" stroke=\"currentColor\" stroke-width=\"1.2\"/></svg>",
@@ -1421,18 +1423,18 @@
           "zh-CN": "apps/cn.echootaku.gomoku/i18n/zh-CN.json"
         }
       },
-      "size": 88079,
+      "size": 88139,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-10T22:16:30.796Z",
-      "updated_at": "2026-08-17T01:18:49.437Z"
+      "updated_at": "2026-08-21T08:32:11.269Z"
     },
     {
       "id": "cn.wyyzxzyg.search-submit",
       "name": "搜索引擎收录提交",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "description": "仅管理员可用的百度主动推送与 IndexNow URL 提交工具",
       "long_description": "面向 Myriad 站点管理员的搜索引擎 URL 主动提交工具，支持百度搜索资源平台和 IndexNow，并提供 URL 清洗、提交确认与本地日志。",
       "author": {
@@ -1451,6 +1453,7 @@
       ],
       "permissions": [
         "storage:read",
+        "storage:write",
         "ui:notification",
         "ui:confirm",
         "ui:theme",
@@ -1486,25 +1489,25 @@
         "page_styles": "apps/cn.wyyzxzyg.search-submit/page.css",
         "page_template": "apps/cn.wyyzxzyg.search-submit/page.html"
       },
-      "size": 17576,
+      "size": 17641,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-11T06:51:21.040Z",
-      "updated_at": "2026-08-17T01:18:49.438Z"
+      "updated_at": "2026-08-19T11:09:38.477Z"
     },
     {
       "id": "com.myriad.three-lab",
       "name": "Three 实验室",
-      "version": "1.0.0",
+      "version": "1.0.2",
       "description": "官方 Three.js 示例：包内贴图与 GLB、pause 停帧、销毁时释放 WebGL",
-      "long_description": "演示如何在 Tapp Page 里使用 Three.js：库打成 pageModules IIFE，先 getUrlMap 再用 rewriteUrl 接到 LoadingManager。棋盘贴图和立方体 GLB 都走包内路径。离开页面会暂停 rAF，销毁时释放渲染器。不是宿主内置引擎，也不走 CDN。",
+      "long_description": "演示如何在 Tapp Page 里使用 Three.js：库打成由 page.entry 依赖图加载的 IIFE，先 getUrlMap 再用 rewriteUrl 接到 LoadingManager。棋盘贴图和立方体 GLB 都走包内路径。离开页面会暂停 rAF，销毁时释放渲染器。不是宿主内置引擎，也不走 CDN。",
       "locales": {
         "en-US": {
           "name": "Three Lab",
           "description": "Official Three.js sample: packaged textures and GLB, paused frames, WebGL dispose",
-          "long_description": "Shows Three.js inside a Tapp Page: the library is an IIFE page module. Call getUrlMap, then hand rewriteUrl to LoadingManager so the checker texture and cube GLB load from packaged paths. The loop pauses off-screen and the renderer is disposed on destroy. This is not a host engine and does not use a CDN.",
+          "long_description": "Shows Three.js inside a Tapp Page: the library is an IIFE loaded by the page.entry dependency graph. Call getUrlMap, then hand rewriteUrl to LoadingManager so the checker texture and cube GLB load from packaged paths. The loop pauses off-screen and the renderer is disposed on destroy. This is not a host engine and does not use a CDN.",
           "preview": {
             "version": 1,
             "type": "snapshot",
@@ -1528,7 +1531,7 @@
         "ja-JP": {
           "name": "Three ラボ",
           "description": "公式 Three.js サンプル。パッケージ内テクスチャと GLB、一時停止、破棄時の解放",
-          "long_description": "Tapp Page で Three.js を使う方法の公式サンプルです。ライブラリは pageModules の IIFE で、先に getUrlMap し、rewriteUrl を LoadingManager に渡してパッケージ内のテクスチャと GLB を読みます。非表示時は rAF を止め、破棄時にレンダラーを解放します。ホスト内蔵エンジンではなく、CDN も使いません。",
+          "long_description": "Tapp Page で Three.js を使う方法の公式サンプルです。ライブラリは page.entry の依存グラフから読み込む IIFE で、先に getUrlMap し、rewriteUrl を LoadingManager に渡してパッケージ内のテクスチャと GLB を読みます。非表示時は rAF を止め、破棄時にレンダラーを解放します。ホスト内蔵エンジンではなく、CDN も使いません。",
           "preview": {
             "version": 1,
             "type": "snapshot",
@@ -1602,17 +1605,173 @@
           "ja-JP": "apps/com.myriad.three-lab/i18n/ja-JP.json",
           "zh-CN": "apps/com.myriad.three-lab/i18n/zh-CN.json"
         },
-        "page_modules": {
-          "scene.js": "apps/com.myriad.three-lab/page/scene.js"
+        "modules": {
+          "page/entry.js": "apps/com.myriad.three-lab/page/entry.js",
+          "page/scene.js": "apps/com.myriad.three-lab/page/scene.js"
         }
       },
-      "size": 12408,
+      "size": 12460,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": true,
       "created_at": "2026-08-14T09:55:45.239Z",
-      "updated_at": "2026-08-17T01:14:15.538Z"
+      "updated_at": "2026-08-19T11:26:32.406Z"
+    },
+    {
+      "id": "top.360nenz.metro-guide",
+      "name": "地铁通",
+      "version": "1.3.16",
+      "description": "按城市查询地铁线路、站点与少换乘出行方案。",
+      "long_description": "地铁通提供中文路线规划、站点线路筛选与高清线路图。应用覆盖 MetroMan 55 城市目录，优先使用缓存和离线资源；新版及旧版规划均可展示车辆起止时间、用时、票价、方向与里程，行程轴支持精简站数与完整站点切换。收藏路线页可按城市筛选、一键查询、反向和删除。线路图支持滚轮缩放和拖动，上海另含参考 APK 中的 PDF。联网时直接从 MetroMan 检查更新，并明确显示连接或权限错误。MetroMan 的线路图、线路数据和参考 PDF 属于外部资源，不包含在本项目 MIT 代码许可内。",
+      "author": {
+        "name": "360NENZ",
+        "url": "https://github.com/360NENZ"
+      },
+      "license": "MIT（代码；MetroMan 外部资源除外）",
+      "homepage": "https://myriad.360nenz.top/",
+      "repository": "https://github.com/360NENZ/tapp-store",
+      "category": "utility",
+      "tags": [
+        "地铁",
+        "线路查询",
+        "线路图",
+        "换乘",
+        "出行",
+        "离线",
+        "中文"
+      ],
+      "permissions": [
+        "storage:read",
+        "storage:write",
+        "ui:notification",
+        "ui:openUrl",
+        "network:fetch"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M5 4h14v11a7 7 0 0 1-14 0V4Z' stroke='currentColor' stroke-width='1.8'/><path d='M8 8h8M8 12h8M8 20l-2 2M16 20l2 2' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/><circle cx='9' cy='16' r='1' fill='currentColor'/><circle cx='15' cy='16' r='1' fill='currentColor'/></svg>",
+      "theme_color": "#0F766E",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/top.360nenz.metro-guide/preview.html",
+        "styles": [
+          "apps/top.360nenz.metro-guide/page.css",
+          "apps/top.360nenz.metro-guide/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.45
+        },
+        "theme": "light"
+      },
+      "download": {
+        "manifest": "apps/top.360nenz.metro-guide/manifest.json",
+        "code": "apps/top.360nenz.metro-guide/main.js",
+        "readme": "apps/top.360nenz.metro-guide/README.md",
+        "page_styles": "apps/top.360nenz.metro-guide/page.css",
+        "page_template": "apps/top.360nenz.metro-guide/page.html"
+      },
+      "size": 1259970,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-08-20T15:19:12.995Z",
+      "updated_at": "2026-08-20T15:19:12.995Z"
+    },
+    {
+      "id": "cn.echootaku.sponsors",
+      "name": "赞助者名单",
+      "version": "0.1.18",
+      "description": "聚合多个赞助平台的支持者，在一个私密仪表盘中查看。",
+      "long_description": "面向创作者的私密赞助者聚合仪表盘。提供深空观测站与传统名册双视图：每位支持者是一颗具有自然色温的恒星，同币种内累计赞助越高越明亮，当前支持金额决定大小；可缩放星图、调整景深并查看支持者的观测档案。2×2、4×2 与 4×4 小组件采用天文台观测日志设计，只读已同步的私有快照，在主页展示赞助者数量、分币种月度支持、代表星体和静态星图。通过 Myriad 只写凭据与声明式网络 API 接入 GitHub Sponsors、Patreon 和爱发电；各平台可独立隐藏并停止同步，已有快照不会因此删除。",
+      "locales": {
+        "en-US": {
+          "name": "Sponsor Roster",
+          "description": "Review supporters from multiple funding platforms in one private dashboard."
+        },
+        "ja-JP": {
+          "name": "スポンサー名簿",
+          "description": "複数の支援プラットフォームのサポーターを非公開ダッシュボードで確認します。"
+        }
+      },
+      "author": {
+        "name": "EchoOtaku",
+        "url": "https://echootaku.cn"
+      },
+      "license": "MIT",
+      "homepage": "https://echootaku.cn",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "social",
+      "tags": [
+        "赞助",
+        "GitHub Sponsors",
+        "Patreon",
+        "爱发电",
+        "创作者"
+      ],
+      "permissions": [
+        "storage:read",
+        "storage:write",
+        "network:fetch",
+        "ui:openUrl",
+        "ui:theme",
+        "widget:register"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M12 20.5S4 16 4 9.5A4.5 4.5 0 0 1 12 6.7a4.5 4.5 0 0 1 8 2.8c0 6.5-8 11-8 11Z' stroke='currentColor' stroke-width='1.8' stroke-linejoin='round'/><path d='M8.5 11.5h7M12 8v7' stroke='currentColor' stroke-width='1.6' stroke-linecap='round'/></svg>",
+      "theme_color": "#C06C58",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.echootaku.sponsors/preview.html",
+        "styles": [
+          "apps/cn.echootaku.sponsors/page.css",
+          "apps/cn.echootaku.sponsors/preview.css"
+        ],
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.45
+        },
+        "theme": "dark"
+      },
+      "download": {
+        "manifest": "apps/cn.echootaku.sponsors/manifest.json",
+        "code": "apps/cn.echootaku.sponsors/main.js",
+        "widget_styles": "apps/cn.echootaku.sponsors/widget.css",
+        "page_styles": "apps/cn.echootaku.sponsors/page.css",
+        "page_template": "apps/cn.echootaku.sponsors/page.html",
+        "widget_templates": {
+          "sponsor-glance": {
+            "2x2": "apps/cn.echootaku.sponsors/widget-2x2.html",
+            "4x2": "apps/cn.echootaku.sponsors/widget-4x2.html",
+            "4x4": "apps/cn.echootaku.sponsors/widget-4x4.html"
+          }
+        },
+        "i18n": {
+          "en-US": "apps/cn.echootaku.sponsors/i18n/en-US.json",
+          "ja-JP": "apps/cn.echootaku.sponsors/i18n/ja-JP.json",
+          "zh-CN": "apps/cn.echootaku.sponsors/i18n/zh-CN.json"
+        }
+      },
+      "size": 3657504,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-08-21T07:37:43.563Z",
+      "updated_at": "2026-08-21T07:37:43.563Z"
     }
   ],
   "last_updated": "2026-08-04T09:47:35Z"

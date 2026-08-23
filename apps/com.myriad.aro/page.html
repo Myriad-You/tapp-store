@@ -227,6 +227,10 @@
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path d="M9 22V12h6v10"/></svg>
             <span id="feed-nav-timeline">动态</span>
           </button>
+          <button class="feed-nav-item" data-sub="subscribed">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 019 9"/><path d="M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1.5"/></svg>
+            <span id="feed-nav-subscribed">订阅</span>
+          </button>
           <button class="feed-nav-item" data-sub="following">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
             <span id="feed-nav-following">关注</span>
@@ -339,6 +343,7 @@
           </div>
           <div class="feed-mobile-tabs-scroller" id="feed-mobile-tabs-scroller" role="tablist" aria-label="Feed sections">
             <button type="button" class="feed-mobile-tab feed-mobile-tab-active" data-sub="timeline" role="tab" aria-selected="true"><span id="feed-tab-timeline">动态</span></button>
+            <button type="button" class="feed-mobile-tab" data-sub="subscribed" role="tab" aria-selected="false"><span id="feed-tab-subscribed">订阅</span></button>
             <button type="button" class="feed-mobile-tab" data-sub="following" role="tab" aria-selected="false"><span id="feed-tab-following">关注</span><span class="feed-nav-badge" id="feed-mobile-badge-following" hidden>0</span></button>
             <button type="button" class="feed-mobile-tab" data-sub="followers" role="tab" aria-selected="false"><span id="feed-tab-followers">粉丝</span><span class="feed-nav-badge" id="feed-mobile-badge-followers" hidden>0</span></button>
             <button type="button" class="feed-mobile-tab" data-sub="published" role="tab" aria-selected="false"><span id="feed-tab-published">已发布</span><span class="feed-nav-badge" id="feed-mobile-badge-published" hidden>0</span></button>

@@ -1,3 +1,5 @@
+var share = require('./scope.js');
+
 // ==================== Chat History Browser + Archive Export/Import ====================
 // Per-conversation history panel (search / filter / load older).
 // Profile sub-page `backup`: export all chats + import archives (local Tapp.storage).
@@ -1993,3 +1995,25 @@ function resetHistoryOnConversationChange() {
   state.history.kind = null;
   state.history.id = null;
 }
+
+// ==================== Shared scope ====================
+// Republish the names this file's siblings read. See page/scope.js.
+share.value({
+  applyHistoryLabels: applyHistoryLabels,
+  bindChatHistoryUi: bindChatHistoryUi,
+  closeChatHistory: closeChatHistory,
+  ensureHistoryState: ensureHistoryState,
+  getDefaultPostVisibility: getDefaultPostVisibility,
+  historyEmptyHtml: historyEmptyHtml,
+  isChatHistoryOpen: isChatHistoryOpen,
+  jumpToHistoryMessage: jumpToHistoryMessage,
+  loadAroSettings: loadAroSettings,
+  loadOlderMessagesIntoChat: loadOlderMessagesIntoChat,
+  mergeMessageListsAsc: mergeMessageListsAsc,
+  openChatHistory: openChatHistory,
+  renderBackupPage: renderBackupPage,
+  renderSettingsPage: renderSettingsPage,
+  resetHistoryOnConversationChange: resetHistoryOnConversationChange,
+  saveAroSettings: saveAroSettings,
+  unwrapMessagesResponse: unwrapMessagesResponse,
+});

@@ -1,3 +1,5 @@
+var share = require('./scope.js');
+
 // ==================== Message UI (render builders + delegates) ====================
 // Extracted from chat.js. Depends on helpers, state, attachments (download/openImage via call-time).
 // Load order: helpers → attachments → msgUi → chat.
@@ -755,3 +757,13 @@ function libraryMediaCardHtml(idx, payload, view) {
 
 /** Full-screen image viewer for image bubbles. */
 
+
+// ==================== Shared scope ====================
+// Republish the names this file's siblings read. See page/scope.js.
+share.value({
+  bindMessagesDelegates: bindMessagesDelegates,
+  buildMessageEntryHtml: buildMessageEntryHtml,
+  noteMessageMediaSize: noteMessageMediaSize,
+  resolveMessageType: resolveMessageType,
+  syncRunTailAvatar: syncRunTailAvatar,
+});

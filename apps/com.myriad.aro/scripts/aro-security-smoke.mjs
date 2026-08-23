@@ -9,7 +9,33 @@ import { spawnSync } from 'node:child_process'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const page = (n) => readFileSync(join(root, 'page', n), 'utf8')
-const main = readFileSync(join(root, 'index.js'), 'utf8')
+const core = readFileSync(join(root, 'core.js'), 'utf8')
+
+/**
+ * Run a page module the way the host's layer runtime does: its own scope, with
+ * `require('./scope.js')` stubbed so the module's shared-scope epilogue hands
+ * its exports back here instead of writing to a real sandbox global.
+ */
+function loadPageModule(name) {
+  const shared = {}
+  const scope = {
+    value: (bindings) => Object.assign(shared, bindings),
+    live: (accessors) =>
+      Object.keys(accessors).forEach((key) =>
+        Object.defineProperty(shared, key, {
+          configurable: true,
+          get: accessors[key][0],
+          set: accessors[key][1],
+        }),
+      ),
+  }
+  const factory = new Function('module', 'exports', 'require', 'window', page(name))
+  const module = { exports: {} }
+  factory(module, module.exports, () => scope, {})
+  return shared
+}
+
+const helperExports = loadPageModule('helpers.js')
 
 const helpers = page('helpers.js')
 const chat = page('chat.js')
@@ -45,7 +71,7 @@ assert.match(api, /var ctx = \{/)
 assert.match(attachments, /file\.slice\(/)
 
 // Chat image bubbles must not use the tiny icon data: cap (256 KiB) alone
-const safeMessageImageUrl = new Function(helpers + '; return safeMessageImageUrl;')()
+const safeMessageImageUrl = helperExports.safeMessageImageUrl
 const tiny = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
 assert.ok(safeMessageImageUrl(tiny), 'tiny data:image ok')
 // ~400 KiB base64 body would fail safeIconUrl (256 KiB) but must pass for chat
@@ -61,7 +87,7 @@ assert.equal(safeMessageImageUrl('/media/federation/1/../evil.jpg'), '')
 // peer-controlled data (member actor_url, message payload.filename/quote_id).
 // The old textContent→innerHTML round-trip left `"` unescaped, so a remote
 // could close the attribute and inject markup into the Aro page.
-const esc = new Function(helpers + '; return esc;')()
+const esc = helperExports.esc
 assert.equal(esc('<b>&'), '&lt;b&gt;&amp;', 'text context unchanged')
 assert.ok(!esc('x" onmouseover="alert(1)').includes('"'), 'double quotes must be encoded')
 assert.ok(!esc("y' onerror='alert(1)").includes("'"), 'single quotes must be encoded')
@@ -73,15 +99,31 @@ assert.equal(typeof globalThis.document, 'undefined', 'esc must be DOM-free')
 assert.match(members, /data-actor="'\s*\n?\s*\+ esc\(m\.actor_url/)
 assert.match(msgUi, /data-quote-id="'\s*\+ esc\(qId\)/)
 
-// ARO-13 thin main
-assert.ok(main.length < 12000, 'main index.js should stay thin, got ' + main.length)
-assert.match(main, /pageModules|headless|background/i)
-assert.doesNotMatch(main, /function renderMessages\s*\(/)
-assert.doesNotMatch(main, /function openConversation\s*\(/)
+// ARO-13 thin core
+assert.ok(core.length < 12000, 'core.js should stay thin, got ' + core.length)
+assert.match(core, /headless|background/i)
+assert.doesNotMatch(core, /function renderMessages\s*\(/)
+assert.doesNotMatch(core, /function openConversation\s*\(/)
+// Layer isolation: the headless core must not pull page code into its closure.
+assert.doesNotMatch(core, /require\s*\(\s*['"]\.\/page\//)
+
+// Direct Tapp shares must round-trip the declared-layer package shape.
+assert.match(chat, /installPackage\.modules/)
+assert.match(chat, /modules:\s*installPackage\.modules/)
+assert.doesNotMatch(chat, /installPackage\.code/)
+assert.doesNotMatch(chat, /installPackage\.pageModules/)
 
 // ARO-12 parseable boundaries
 assert.match(views, /function bindEvents\s*\(/)
 assert.match(index, /async function init\s*\(/)
+// The page entry owns load order for the layer — every sibling is required here.
+for (const mod of [
+  'i18n', 'state', 'helpers', 'shareUi', 'mentionUi', 'attachments', 'msgUi',
+  'chat', 'members', 'history', 'files', 'msgSync', 'e2eUi', 'roomUi',
+  'createUi', 'api', 'feedUi', 'feedCompose', 'ringsUi', 'views', 'events',
+]) {
+  assert.match(index, new RegExp(`require\\('\\./${mod}\\.js'\\)`), `page/index.js must require ${mod}.js`)
+}
 assert.doesNotMatch(events, /async function init\s*\(/)
 assert.doesNotMatch(events, /function bindEvents\s*\(/)
 assert.match(events, /Event binding lives in views\.js/)
@@ -105,7 +147,7 @@ const rv = spawnSync(process.execPath, ['--check', join(root, 'page', 'views.js'
 assert.equal(rv.status, 0, 'views.js syntax: ' + (rv.stderr || ''))
 
 // pure isValidStoreSourceRef
-const isValidStoreSourceRef = new Function(helpers + '; return isValidStoreSourceRef;')()
+const isValidStoreSourceRef = helperExports.isValidStoreSourceRef
 assert.equal(isValidStoreSourceRef('1'), true)
 assert.equal(isValidStoreSourceRef('store'), false)
 assert.equal(isValidStoreSourceRef('http://x/y'), false)

@@ -1,0 +1,95 @@
+<div id="sponsors-background" aria-hidden="true">
+  <div class="sponsors-glow sponsors-glow-one"></div>
+  <div class="sponsors-glow sponsors-glow-two"></div>
+</div>
+
+<main id="sponsors-page" data-page-root>
+  <header class="hero">
+    <div>
+      <p class="eyebrow" data-i18n="eyebrow">CREATOR SUPPORT</p>
+      <h1 data-i18n="title">赞助者名单</h1>
+      <p class="hero-copy" data-i18n="subtitle">把来自不同平台的支持，安静地整理在一起。</p>
+    </div>
+    <div class="hero-actions">
+      <button class="primary-action" type="button" data-action="sync" aria-busy="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 0 1-14.9 4M4 12A8 8 0 0 1 18.9 8M5 18v-4h4M19 6v4h-4"/></svg>
+        <span data-i18n="sync">同步</span>
+      </button>
+    </div>
+  </header>
+
+  <section class="summary-grid" data-i18n-aria-label="summaryLabel" aria-label="摘要">
+    <article class="summary-card summary-primary">
+      <span data-i18n="supporters">支持者</span>
+      <strong data-field="supporter-count">0</strong>
+      <small data-field="updated-at" data-i18n="neverSynced">尚未同步</small>
+    </article>
+    <article class="summary-card">
+      <span data-i18n="activeSources">已接入平台</span>
+      <strong data-field="active-source-count">3</strong>
+      <small data-field="active-source-hint" data-i18n="activeSourcesHint">GitHub Sponsors · Patreon · 爱发电</small>
+    </article>
+    <article class="summary-card summary-wide">
+      <span data-i18n="recurring">当前月度支持</span>
+      <div class="amount-list" data-field="amounts"><strong>—</strong></div>
+      <small data-i18n="currencyHint">金额按币种分别统计</small>
+    </article>
+  </section>
+
+  <section class="source-panel" aria-labelledby="sources-title">
+    <div class="section-heading">
+      <div><p class="section-kicker" data-i18n="connections">CONNECTIONS</p><h2 id="sources-title" data-i18n="platforms">平台状态</h2></div>
+      <p data-i18n="credentialsHint">令牌只写入 Myriad 凭据库，Tapp 无法读取。</p>
+    </div>
+    <div class="source-grid" data-field="source-grid"></div>
+  </section>
+
+  <section class="roster-panel" aria-labelledby="roster-title">
+    <div class="section-heading roster-heading">
+      <div><p class="section-kicker" data-i18n="roster">ROSTER</p><h2 id="roster-title" data-i18n="allSupporters">全部支持者</h2></div>
+      <div class="roster-tools">
+        <div class="view-switch" role="group" data-i18n-aria-label="viewModeLabel" aria-label="展示方式">
+          <button type="button" data-view="cosmos" aria-pressed="true" data-i18n="cosmosView">星云</button>
+          <button type="button" data-view="list" aria-pressed="false" data-i18n="listView">名册</button>
+        </div>
+        <label class="search-box">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <span class="sr-only" data-i18n="search">搜索支持者</span>
+          <input type="search" data-field="search" data-i18n-placeholder="searchPlaceholder" placeholder="搜索名称或平台" autocomplete="off" />
+        </label>
+      </div>
+    </div>
+    <div class="filter-row" role="group" data-i18n-aria-label="sourceFiltersLabel" aria-label="平台筛选" data-field="filters"></div>
+    <div class="notice" data-field="notice" role="status" aria-live="polite" hidden></div>
+    <section class="cosmos-view" data-field="cosmos-view" aria-labelledby="cosmos-title">
+      <div class="cosmos-stage" data-field="cosmos-stage">
+        <canvas data-field="cosmos-canvas" tabindex="0" role="application" data-i18n-aria-label="cosmosCanvasLabel" aria-label="可交互的赞助者星图" aria-describedby="cosmos-instructions"></canvas>
+        <div class="cosmos-empty" data-field="cosmos-empty" hidden></div>
+        <div class="cosmos-coordinate cosmos-coordinate-top" aria-hidden="true">+60°</div>
+        <div class="cosmos-coordinate cosmos-coordinate-bottom" aria-hidden="true">12h</div>
+        <div class="star-floating-label" data-field="star-floating-label" hidden></div>
+        <div class="cosmos-legend" aria-hidden="true">
+          <span><i class="legend-star legend-github"></i>GitHub</span>
+          <span><i class="legend-star legend-patreon"></i>Patreon</span>
+          <span><i class="legend-star legend-afdian"></i>爱发电</span>
+        </div>
+        <div class="observatory-controls" aria-label="星图缩放">
+          <button type="button" data-zoom="out" data-i18n-aria-label="zoomOut" aria-label="缩小">−</button>
+          <output data-field="zoom-level" aria-live="polite">100%</output>
+          <button type="button" data-zoom="in" data-i18n-aria-label="zoomIn" aria-label="放大">＋</button>
+        </div>
+        <label class="depth-control">
+          <span data-i18n="depth">深度</span>
+          <input type="range" min="1" max="7" step="1" value="3" data-field="depth" data-i18n-aria-label="depthLabel" aria-label="星图景深" />
+          <output data-field="depth-level">3 / 7</output>
+        </label>
+      </div>
+      <div class="star-detail" data-field="star-detail" aria-live="polite">
+        <p class="section-kicker" id="cosmos-title" data-i18n="deepFieldObservatory">DEEP FIELD OBSERVATORY</p>
+        <strong data-i18n="selectStar">选择一颗星</strong>
+        <p id="cosmos-instructions" data-i18n="cosmosInstructions">点击星体查看赞助者；聚焦星图后可使用方向键切换。</p>
+      </div>
+    </section>
+    <div class="supporter-list" data-field="supporter-list" hidden></div>
+  </section>
+</main>
