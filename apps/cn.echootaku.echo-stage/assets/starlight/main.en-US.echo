@@ -1,0 +1,50 @@
+@background observatory
+@narrate The seaside observatory will close forever after sunrise. On its last night, Cheng finds a seven-year-old letter inside a star atlas.
+@speaker Cheng
+@say It is addressed to me, in your handwriting. Why did a finished letter grow old in a drawer?
+@speaker Lu
+@say Because the person who wrote it believed that, if it never arrived, the decision had not happened yet.
+@speaker Cheng
+@say But an unseen star has already burned. Must meaning wait for a witness before it begins?
+@speaker Lu
+@say I stopped fearing your refusal. I feared that once you read it, we would be left with only one possible future.
+@narrate The dome turns slowly. The telescope follows light that left seven years ago, from a star that may no longer exist.
+@speaker Cheng
+@say We never see a star's present. Still, we use its late light to find our direction.
+@speaker Lu
+@say Then what should happen to the letter: arrive, remain in the past, or be rewritten by who we are now?
+@choice Give Cheng the old letter => deliver | Leave it in the observatory => archive | Write a new letter together => rewrite
+
+@label deliver
+@set letter = delivered
+@background dawn
+@narrate Before sunrise, Lu places the letter beside Cheng's hand. She does not open it yet.
+@speaker Cheng
+@say Arrival does not revive the past. It only admits that the past once moved toward me.
+@speaker Lu
+@say When will you read it?
+@speaker Cheng
+@say When I no longer need it to decide today for me.
+@end Arrival | The letter finally has a recipient, but no longer asks her to obey the future it once imagined.
+
+@label archive
+@set letter = archived
+@background dawn
+@narrate They leave the letter on the last page of the atlas, asking the observatory to preserve evidence of a road never taken.
+@speaker Lu
+@say If a feeling was never delivered, does that mean it never existed?
+@speaker Cheng
+@say No. Existence is proven not only by outcomes, but also by why we stopped.
+@end Dark Star | Some light never reaches an eye, yet still helps shape the night sky.
+
+@label rewrite
+@set letter = rewritten
+@background dawn
+@narrate They tear out a blank observation sheet and stop answering for who they were seven years ago.
+@speaker Cheng
+@say Let us write to ourselves one year from now. No promise of forever—only where we are willing to go today.
+@speaker Lu
+@say And if we have parted by then?
+@speaker Cheng
+@say Then the letter can be a coordinate, not a chain.
+@end New Star Map | They do not repair the past. They leave their future selves a direction that is still allowed to change.

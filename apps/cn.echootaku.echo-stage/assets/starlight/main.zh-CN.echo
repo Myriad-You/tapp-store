@@ -1,0 +1,50 @@
+@background observatory
+@narrate 海边天文台将在日出后永久关闭。最后一夜，澄在旧星图里发现了一封七年前的信。
+@speaker 澄
+@say 收件人是我，字迹是你的。为什么一封写完的信会在抽屉里老去？
+@speaker 陆
+@say 因为写下它的人以为，只要没有送达，那个决定就还没有发生。
+@speaker 澄
+@say 可是没被看见的星也已经燃烧。意义难道要等一个见证者才开始吗？
+@speaker 陆
+@say 我后来害怕的不是你拒绝，而是你读完之后，我们只剩下那一种未来。
+@narrate 穹顶缓慢转动。望远镜追着七年前发出的光，而那颗星也许早已不存在。
+@speaker 澄
+@say 我们看到的从来不是星星的现在。可我们仍然用那束迟到的光辨认方向。
+@speaker 陆
+@say 那这封信呢？它应该抵达、留在过去，还是由现在的我们重写？
+@choice 把旧信交给澄 => deliver | 让它留在天文台 => archive | 一起重写一封 => rewrite
+
+@label deliver
+@set letter = delivered
+@background dawn
+@narrate 日出前，陆把信放到澄的手边。她没有立刻拆开。
+@speaker 澄
+@say 抵达不是让过去复活，只是承认它也曾经走向我。
+@speaker 陆
+@say 那么你什么时候读？
+@speaker 澄
+@say 等我不再需要它替今天做决定的时候。
+@end 抵达 | 信终于拥有了收件人，却不再要求收件人服从它写下的未来。
+
+@label archive
+@set letter = archived
+@background dawn
+@narrate 他们把信留在星图的最后一页，让天文台替一条未发生的道路保存证据。
+@speaker 陆
+@say 没有送出的心意，会不会等于从未存在？
+@speaker 澄
+@say 不会。存在不只由结果证明，也由我们为何停下证明。
+@end 暗星 | 有些光没有抵达眼睛，却仍参与了夜空的形状。
+
+@label rewrite
+@set letter = rewritten
+@background dawn
+@narrate 两人撕下一张空白观测纸，不再替七年前的自己回答。
+@speaker 澄
+@say 写给一年后的我们吧。不要承诺永远，只记录今天愿意走向哪里。
+@speaker 陆
+@say 如果一年后我们已经分开？
+@speaker 澄
+@say 那就让信成为坐标，而不是锁链。
+@end 新星图 | 他们没有修复过去，只为尚未抵达的自己留下了一种可以改变的方向。

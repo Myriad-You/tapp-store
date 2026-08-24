@@ -1,0 +1,48 @@
+# Echo Script v1 — 『岸を離れる前に』
+@label start
+@background empty_station
+@narrate 海辺の最終列車まで、あと七分。放送より先に潮騒がホームへ届いた。
+@speaker 私
+@say 本当に、行くと決めたの？
+@background yao_at_station
+@speaker 遥
+@say 決意は一瞬で生まれるものではないわ。潮のようなもの。気づいた時には、足元の砂がもう変わっている。
+@speaker 私
+@say 去った人をいつか忘れるなら、出会ったことに意味はあるのかな。
+@speaker 遥
+@say 意味を、永遠に保存されるべきものだと思っているのね。
+@say 歌が終わったあと、沈黙はその歌が存在しなかった証明にはならない。
+@choice 記憶が別れに意味を与える => memory | 忘れるからこそ別れが必要だ => forgetting | 言わない言葉も存在する => unsaid
+@label memory
+@set answer = memory
+@speaker 私
+@say それでも覚えていたい。覚えている限り、本当に失うことはないから。
+@speaker 遥
+@say なら、今日の私ではなく、変わっていくことを覚えて。変化を許さない記憶も、別の忘却だから。
+@jump ending
+@label forgetting
+@set answer = forgetting
+@speaker 私
+@say 忘れると知っているから、私たちは丁寧にさよならを言うのかもしれない。
+@speaker 遥
+@say そうね。別れは忘却を止めるためではなく、この瞬間が確かに私たちのものだったと認めるためにある。
+@jump ending
+@label unsaid
+@set answer = unsaid
+@speaker 私
+@say たくさん言葉を用意していた。でも、言わなくてもいい気がする。
+@speaker 遥
+@say 沈黙は空白ではないわ。説明を未来の私たちに残すだけ。
+@jump ending
+@label ending
+@background empty_station
+@narrate 遠い灯りが海岸沿いを進む。彼女は振り返らず、振り返らないふりもせず、扉へ向かった。
+@if answer == memory -> memory_end
+@if answer == forgetting -> forgetting_end
+@jump unsaid_end
+@label memory_end
+@end 余響 | 後に覚えていたのは、彼女の後ろ姿ではなく、あの日から海の色が毎年少しずつ違って見えたことだった。
+@label forgetting_end
+@end 潮汐 | 何年後かに会話の言葉を忘れても、列車の扉が閉じるたび、私は誰もいない場所へ小さくうなずいた。
+@label unsaid_end
+@end 余白 | 私たちは別れを完成させなかった。だからそれは終わらず、答えを求めない形へ変わって残った。
