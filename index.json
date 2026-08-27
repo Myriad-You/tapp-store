@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.49",
+  "version": "1.0.50",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-08-26T00:55:42.920Z",
+  "updated_at": "2026-08-27T11:32:51.810Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -1869,6 +1869,144 @@
       "verified": false,
       "created_at": "2026-08-26T00:55:42.920Z",
       "updated_at": "2026-08-26T00:55:42.920Z"
+    },
+    {
+      "id": "cn.echootaku.railway-studio",
+      "name": "轨路工坊",
+      "version": "0.1.0",
+      "description": "在地图上设计铁路线路，并用同一工程生成可解释路线与票价的车票",
+      "long_description": "轨路工坊是一套离线铁路线路图编辑器与车票生成器。用户可导入自己的 PNG、JPEG 或 WebP 地图，在分层制图台中绘制直线与贝塞尔曲线、编辑节点和控制柄、布置站点与文字、配置网格吸附和动画时序。车票可直接输入新站名；尚未绘制的起终点进入横向路线栏，可一键开始放置并自动建立站点、线路与交通连接。车票模块读取同一份工程中的显式拓扑，展示经过线路、预计时间、距离、换乘与逐项票价说明。工程支持版本化 JSON 与静态 SVG 导出；受当前宿主字符串下载契约限制，不虚假声明二进制 PNG 文件导出。",
+      "locales": {
+        "en-US": {
+          "name": "Railway Studio",
+          "description": "Design railway maps and generate tickets with explainable routes and fares from the same project",
+          "long_description": "Railway Studio is an offline railway-map editor and ticket generator. Import your own PNG, JPEG, or WebP map, draw straight and Bezier routes, edit anchors and handles, place stations and labels, and configure snapping and animation timing. New station names entered for tickets become pending route cards in a horizontal tray; placing a card atomically creates station positions, line geometry, and transport links. Tickets read the same project's explicit graph and explain route, time, distance, transfers, and fare. Versioned JSON and static SVG exports are supported; binary PNG download is not misrepresented under the host's current text-only file contract.",
+          "preview": {
+            "version": 1,
+            "type": "snapshot",
+            "html": "apps/cn.echootaku.railway-studio/preview.en-US.html",
+            "styles": [
+              "apps/cn.echootaku.railway-studio/page.css",
+              "apps/cn.echootaku.railway-studio/preview.css"
+            ],
+            "viewport": {
+              "width": 1440,
+              "height": 900
+            },
+            "fit": "cover",
+            "focus": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "theme": "dark"
+          }
+        },
+        "ja-JP": {
+          "name": "レールウェイスタジオ",
+          "description": "同じプロジェクトから路線図を設計し、経路と運賃を説明できる切符を生成します",
+          "long_description": "レールウェイスタジオは、オフラインの路線図エディター兼切符ジェネレーターです。PNG、JPEG、WebP の地図を読み込み、直線やベジェ曲線、駅、文字、スナップ、アニメーションを編集できます。切符で新しい駅名を入力すると未描画経路カードが横スクロール式トレイに追加され、配置操作で駅位置、路線形状、交通接続を一括作成します。切符は同じプロジェクトの明示的なグラフを読み、経路、時間、距離、乗換、運賃内訳を説明します。バージョン付き JSON と静的 SVG に対応し、ホストの文字列専用ダウンロード契約下で PNG バイナリ出力を装いません。",
+          "preview": {
+            "version": 1,
+            "type": "snapshot",
+            "html": "apps/cn.echootaku.railway-studio/preview.ja-JP.html",
+            "styles": [
+              "apps/cn.echootaku.railway-studio/page.css",
+              "apps/cn.echootaku.railway-studio/preview.css"
+            ],
+            "viewport": {
+              "width": 1440,
+              "height": 900
+            },
+            "fit": "cover",
+            "focus": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "theme": "dark"
+          }
+        }
+      },
+      "author": {
+        "name": "EchoOtaku",
+        "url": "https://github.com/EchoOtaku"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.echootaku.railway-studio",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "productivity",
+      "tags": [
+        "铁路",
+        "线路图",
+        "地图编辑",
+        "车票",
+        "SVG",
+        "离线工具"
+      ],
+      "permissions": [
+        "storage:read",
+        "storage:write",
+        "ui:theme",
+        "ui:confirm"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M5 4v16M19 4v16M5 8h14M5 16h14' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/><circle cx='5' cy='8' r='2.2' fill='currentColor'/><circle cx='19' cy='16' r='2.2' fill='currentColor'/><path d='M8 12h8' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/></svg>",
+      "theme_color": "#1f8ca8",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.echootaku.railway-studio/preview.html",
+        "styles": [
+          "apps/cn.echootaku.railway-studio/page.css",
+          "apps/cn.echootaku.railway-studio/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "theme": "dark"
+      },
+      "download": {
+        "manifest": "apps/cn.echootaku.railway-studio/manifest.json",
+        "code": "apps/cn.echootaku.railway-studio/main.js",
+        "readme": "apps/cn.echootaku.railway-studio/README.md",
+        "page_styles": "apps/cn.echootaku.railway-studio/page.css",
+        "page_template": "apps/cn.echootaku.railway-studio/page.html",
+        "i18n": {
+          "en-US": "apps/cn.echootaku.railway-studio/i18n/en-US.json",
+          "ja-JP": "apps/cn.echootaku.railway-studio/i18n/ja-JP.json",
+          "zh-CN": "apps/cn.echootaku.railway-studio/i18n/zh-CN.json"
+        },
+        "modules": {
+          "page/animation.js": "apps/cn.echootaku.railway-studio/page/animation.js",
+          "page/app.js": "apps/cn.echootaku.railway-studio/page/app.js",
+          "page/editor.js": "apps/cn.echootaku.railway-studio/page/editor.js",
+          "page/fares.js": "apps/cn.echootaku.railway-studio/page/fares.js",
+          "page/files.js": "apps/cn.echootaku.railway-studio/page/files.js",
+          "page/geometry.js": "apps/cn.echootaku.railway-studio/page/geometry.js",
+          "page/history.js": "apps/cn.echootaku.railway-studio/page/history.js",
+          "page/index.js": "apps/cn.echootaku.railway-studio/page/index.js",
+          "page/migrations.js": "apps/cn.echootaku.railway-studio/page/migrations.js",
+          "page/network.js": "apps/cn.echootaku.railway-studio/page/network.js",
+          "page/project.js": "apps/cn.echootaku.railway-studio/page/project.js",
+          "page/route-animation.js": "apps/cn.echootaku.railway-studio/page/route-animation.js",
+          "page/route-planner.js": "apps/cn.echootaku.railway-studio/page/route-planner.js",
+          "page/serialization.js": "apps/cn.echootaku.railway-studio/page/serialization.js",
+          "page/storage.js": "apps/cn.echootaku.railway-studio/page/storage.js",
+          "page/ticket.js": "apps/cn.echootaku.railway-studio/page/ticket.js"
+        }
+      },
+      "size": 297979,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-08-27T11:32:51.809Z",
+      "updated_at": "2026-08-27T11:32:51.809Z"
     }
   ],
   "last_updated": "2026-08-04T09:47:35Z"
