@@ -1,0 +1,39 @@
+{
+  "id": "cn.echootaku.railway-studio",
+  "name": "轨路工坊",
+  "version": "0.1.0",
+  "minSystemVersion": "0.3.29",
+  "description": "在地图上设计铁路线路，并用同一工程生成可解释路线与票价的车票",
+  "locales": {
+    "en-US": {
+      "name": "Railway Studio",
+      "description": "Design railway maps and generate tickets with explainable routes and fares from the same project"
+    },
+    "ja-JP": {
+      "name": "レールウェイスタジオ",
+      "description": "同じプロジェクトから路線図を設計し、経路と運賃を説明できる切符を生成します"
+    }
+  },
+  "category": "productivity",
+  "core": {
+    "entry": "main.js"
+  },
+  "page": {
+    "entry": "page/index.js",
+    "template": "page.html",
+    "styles": "page.css"
+  },
+  "author": {
+    "name": "EchoOtaku",
+    "url": "https://github.com/EchoOtaku"
+  },
+  "permissions": [
+    "storage:read",
+    "storage:write",
+    "ui:theme",
+    "ui:confirm"
+  ],
+  "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M5 4v16M19 4v16M5 8h14M5 16h14' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/><circle cx='5' cy='8' r='2.2' fill='currentColor'/><circle cx='19' cy='16' r='2.2' fill='currentColor'/><path d='M8 12h8' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/></svg>",
+  "themeColor": "#1f8ca8",
+  "assets": []
+}
