@@ -191,6 +191,12 @@
     });
   }
 
+  function isEmbeddedImageDataUrl(value, mimeType) {
+    if (typeof value !== 'string' || typeof mimeType !== 'string') return false;
+    var match = /^data:(image\/(?:png|jpeg|webp));base64,([a-z0-9+/]+={0,2})$/i.exec(value);
+    return Boolean(match && match[1].toLowerCase() === mimeType.toLowerCase() && match[2].length % 4 === 0);
+  }
+
   function validateProject(candidate) {
     var errors = [];
     if (!isPlainObject(candidate)) {
@@ -270,7 +276,7 @@
       if (!isFiniteInRange(asset.width, 1, 32768) || !isFiniteInRange(asset.height, 1, 32768)) diagnostic(errors, 'range', path, 'Image dimensions are invalid');
       if (!Number.isInteger(asset.byteLength) || asset.byteLength < 1) diagnostic(errors, 'range', path + '.byteLength', 'Image byte length is invalid');
       if (typeof asset.sha256 !== 'string' || !/^[a-f0-9]{64}$/i.test(asset.sha256)) diagnostic(errors, 'hash', path + '.sha256', 'Image digest is invalid');
-      if (asset.mode === 'embedded' && (typeof asset.dataUrl !== 'string' || !/^data:image\/(?:png|jpeg|webp);base64,/i.test(asset.dataUrl))) {
+      if (asset.mode === 'embedded' && !isEmbeddedImageDataUrl(asset.dataUrl, asset.mimeType)) {
         diagnostic(errors, 'data-url', path + '.dataUrl', 'Embedded image data is invalid');
       }
     });

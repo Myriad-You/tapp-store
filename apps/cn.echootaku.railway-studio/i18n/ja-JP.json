@@ -157,6 +157,7 @@
   "status.snapOff": "スナップを無効にしました",
   "status.projectRenamed": "プロジェクト名を更新しました",
   "status.projectNameRequired": "プロジェクト名を入力してください",
+  "status.confirmUnavailable": "ホストの確認機能を利用できないため、プロジェクトを置き換えませんでした",
   "project.newConfirm": "新しいプロジェクトを作成しますか？現在のプロジェクトは自動保存後に置き換えられます。",
   "tool.defaultText": "テキスト",
   "export.pngUnavailable": "現在 PNG ファイルを書き出せません",

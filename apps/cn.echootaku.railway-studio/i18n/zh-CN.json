@@ -157,6 +157,7 @@
   "status.snapOff": "吸附已关闭",
   "status.projectRenamed": "工程名称已更新",
   "status.projectNameRequired": "工程名称不能为空",
+  "status.confirmUnavailable": "宿主确认功能不可用，工程未替换",
   "project.newConfirm": "创建新工程？当前工程会被自动保存并替换。",
   "tool.defaultText": "文字",
   "export.pngUnavailable": "当前无法导出 PNG 文件",

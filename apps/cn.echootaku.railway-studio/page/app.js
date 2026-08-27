@@ -66,6 +66,21 @@
     };
   }
 
+  async function confirmProjectReplacement(tapp, message, onUnavailable) {
+    function unavailable() {
+      if (typeof onUnavailable === 'function') onUnavailable();
+      return false;
+    }
+    if (!tapp || !tapp.ui || typeof tapp.ui.confirm !== 'function') {
+      return unavailable();
+    }
+    try {
+      return Boolean(await tapp.ui.confirm(message));
+    } catch (_) {
+      return unavailable();
+    }
+  }
+
   function mount(root, tapp) {
     if (!root || typeof root.querySelector !== 'function') throw new Error('Page root is required');
     if (!tapp) throw new Error('Tapp SDK is required');
@@ -1059,10 +1074,11 @@
     listen(global, 'resize', function () { renderAll(); });
 
     async function confirmNewProject() {
-      if (tapp.ui && typeof tapp.ui.confirm === 'function') {
-        return Boolean(await tapp.ui.confirm(translate('project.newConfirm', '创建新工程？当前工程会被自动保存并替换。')));
-      }
-      return true;
+      return confirmProjectReplacement(
+        tapp,
+        translate('project.newConfirm', '创建新工程？当前工程会被自动保存并替换。'),
+        function () { setStatus('status.confirmUnavailable', '宿主确认功能不可用，工程未替换'); }
+      );
     }
 
     function safeFilename(extension) {
@@ -1597,6 +1613,7 @@
     bindHost: bindHost,
     createProjectController: createProjectController,
     createTappStorageAdapter: createTappStorageAdapter,
+    confirmProjectReplacement: confirmProjectReplacement,
     mount: mount
   };
   global.RailwayApp = api;

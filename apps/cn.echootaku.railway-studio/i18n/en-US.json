@@ -157,6 +157,7 @@
   "status.snapOff": "Snapping disabled",
   "status.projectRenamed": "Project name updated",
   "status.projectNameRequired": "Project name cannot be empty",
+  "status.confirmUnavailable": "Host confirmation is unavailable; the project was not replaced",
   "project.newConfirm": "Create a new project? The current project will be autosaved and replaced.",
   "tool.defaultText": "Text",
   "export.pngUnavailable": "PNG file export is currently unavailable",
