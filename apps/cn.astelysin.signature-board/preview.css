@@ -1,0 +1,4 @@
+.preview-art { display: block; width: 100%; height: 100%; }
+.preview-app button, .preview-app input { pointer-events: none; }
+.preview-minimap svg { display: block; width: 176px; height: 112px; }
+@media (max-width: 760px) { .preview-minimap svg { width: 118px; height: 76px; } }

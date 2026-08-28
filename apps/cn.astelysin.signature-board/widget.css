@@ -1,0 +1,59 @@
+:root { color-scheme: light dark; }
+* { box-sizing: border-box; }
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: transparent; }
+body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+
+.signature-widget {
+  --widget-text: #302a38;
+  --widget-muted: #81778a;
+  --widget-line: rgba(75, 61, 88, .12);
+  --widget-accent: #8168b4;
+  --widget-accent-soft: #eee8f8;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .74);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(255,255,255,.94), rgba(249,246,251,.82));
+  color: var(--widget-text);
+  box-shadow: inset 0 1px rgba(255,255,255,.9), 0 12px 28px rgba(69,52,81,.1);
+  font-size: calc(12px * var(--signature-widget-font-scale, 1));
+}
+.signature-widget::after { content: ""; position: absolute; right: -42px; top: -54px; width: 150px; height: 150px; border-radius: 50%; background: rgba(129,104,180,.14); filter: blur(32px); pointer-events: none; }
+.signature-widget[data-theme="dark"] { --widget-text: #f5f1f8; --widget-muted: #bdb3c7; --widget-line: rgba(255,255,255,.12); --widget-accent-soft: rgba(129,104,180,.2); border-color: rgba(255,255,255,.1); background: linear-gradient(145deg, rgba(39,34,45,.96), rgba(25,22,30,.94)); box-shadow: inset 0 1px rgba(255,255,255,.07), 0 12px 28px rgba(0,0,0,.24); }
+.signature-widget * { position: relative; z-index: 1; }
+.signature-widget__header { display: flex; align-items: center; min-width: 0; gap: 8px; }
+.signature-widget__mark { display: grid; place-items: center; flex: 0 0 auto; width: 30px; height: 30px; border-radius: 10px; background: linear-gradient(135deg, #967bd0, #7458a9); color: #fff; box-shadow: 0 6px 14px rgba(116,88,169,.24); font-size: 14px; font-weight: 800; }
+.signature-widget__title { display: grid; min-width: 0; gap: 2px; }
+.signature-widget__title strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.signature-widget__title small { overflow: hidden; color: var(--widget-muted); text-overflow: ellipsis; white-space: nowrap; font-size: 9px; }
+.signature-widget__live { display: inline-flex; align-items: center; gap: 5px; color: var(--widget-muted); white-space: nowrap; font-size: 9px; }
+.signature-widget__live i { width: 6px; height: 6px; border-radius: 50%; background: #38b98d; box-shadow: 0 0 0 3px rgba(56,185,141,.12); }
+.signature-widget__canvas { position: relative; min-width: 0; min-height: 0; overflow: hidden; margin: 0; border: 1px solid var(--widget-line); border-radius: 12px; background-color: #fffefe; background-image: linear-gradient(rgba(129,104,180,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(129,104,180,.045) 1px, transparent 1px); background-size: 18px 18px; }
+.signature-widget__canvas img { width: 100%; height: 100%; object-fit: contain; background: #fffefe; }
+.signature-widget__empty { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 5px; color: #988fa0; font-size: 9px; }
+.signature-widget__empty[hidden] { display: none; }
+.signature-widget__empty b { color: #8b70bd; font-size: 20px; }
+.signature-widget__canvas-label { position: absolute; right: 7px; bottom: 6px; padding: 3px 6px; border-radius: 999px; background: rgba(48,42,56,.72); color: #fff; font-size: 7px; backdrop-filter: blur(5px); }
+
+.signature-widget--wide { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(145px, .95fr); gap: 12px; padding: 12px; }
+.signature-widget--wide .signature-widget__summary { display: flex; flex-direction: column; min-width: 0; padding: 2px 2px 1px 0; }
+.signature-widget__intro { margin: 12px 0 0; color: var(--widget-muted); font-size: 9px; line-height: 1.5; }
+.signature-widget__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: auto; }
+.signature-widget__stats span { display: grid; gap: 2px; padding: 7px 5px; border: 1px solid var(--widget-line); border-radius: 9px; background: rgba(255,255,255,.45); text-align: center; }
+.signature-widget[data-theme="dark"] .signature-widget__stats span { background: rgba(255,255,255,.035); }
+.signature-widget__stats small { color: var(--widget-muted); font-size: 7px; }
+.signature-widget__stats strong { font-size: 12px; }
+.signature-widget--wide footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 9px; color: var(--widget-muted); font-size: 8px; }
+
+.signature-widget--square { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 9px; padding: 11px; }
+.signature-widget--square .signature-widget__header > .signature-widget__live { margin-left: auto; }
+.signature-widget--square .signature-widget__footer { display: flex; align-items: end; gap: 12px; min-width: 0; }
+.signature-widget--square .signature-widget__footer > span:not(.signature-widget__updated) { display: grid; gap: 1px; }
+.signature-widget--square .signature-widget__footer small { color: var(--widget-muted); font-size: 7px; }
+.signature-widget--square .signature-widget__footer strong { font-size: 11px; }
+.signature-widget__updated { margin-left: auto; overflow: hidden; color: var(--widget-muted); text-overflow: ellipsis; white-space: nowrap; font-size: 7px; }
+
+@media (prefers-reduced-motion: reduce) { .signature-widget, .signature-widget * { transition: none !important; animation: none !important; } }

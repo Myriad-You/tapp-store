@@ -1,0 +1,176 @@
+<main class="signature-app" data-app-state="booting">
+  <header class="topbar glass-panel">
+    <div class="brand-block">
+      <span class="brand-mark" aria-hidden="true">✦</span>
+      <div>
+        <h1>共享签名板</h1>
+        <p>一起在这块画布上留下痕迹</p>
+      </div>
+    </div>
+    <div class="board-meta">
+      <span class="status-pill" data-status-pill><i></i><span>正在连接</span></span>
+      <span class="occupancy" title="画布粗网格占用率"><b data-occupancy>0%</b> 已使用</span>
+      <button class="ghost-button admin-only" type="button" data-action="open-admin" hidden>管理</button>
+    </div>
+  </header>
+
+  <section class="workspace" aria-label="共享画布工作区">
+    <div class="canvas-shell">
+      <canvas class="board-canvas" data-board-canvas aria-label="共享签名画布"></canvas>
+      <div class="canvas-grain" aria-hidden="true"></div>
+
+      <aside class="toolbox glass-panel" aria-label="绘画工具">
+        <button class="tool-button is-active" type="button" data-tool="draw" aria-label="画笔" title="画笔 (B)">✎</button>
+        <button class="tool-button" type="button" data-tool="erase" aria-label="擦除当前草稿" title="擦除当前草稿 (E)">⌫</button>
+        <button class="tool-button" type="button" data-tool="pan" aria-label="平移" title="平移 (H)">✥</button>
+        <span class="tool-divider"></span>
+        <label class="color-control" title="画笔颜色">
+          <span>颜色</span>
+          <input type="color" value="#2f2938" data-color aria-label="画笔颜色">
+        </label>
+        <label class="width-control" title="画笔宽度">
+          <span data-width-label>6</span>
+          <input type="range" min="1" max="48" value="6" data-width aria-label="画笔宽度">
+        </label>
+        <span class="tool-divider"></span>
+        <button class="tool-button" type="button" data-action="undo" aria-label="撤销" title="撤销">↶</button>
+        <button class="tool-button" type="button" data-action="redo" aria-label="重做" title="重做">↷</button>
+      </aside>
+
+      <div class="view-actions glass-panel" aria-label="画布视图工具">
+        <button type="button" data-action="find-blank">寻找空白</button>
+        <button type="button" data-action="fit-view">全局视图</button>
+        <button type="button" data-action="open-history">历史</button>
+      </div>
+
+      <aside class="activity-panel glass-panel" data-activity-panel>
+        <div class="panel-heading">
+          <div><span class="eyebrow">最近留下</span><strong data-drawing-count>0 幅作品</strong></div>
+          <button class="icon-button" type="button" data-action="close-activity" aria-label="关闭动态">×</button>
+        </div>
+        <ol class="activity-list" data-activity-list>
+          <li class="empty-row">这里还没有签名，来当第一个吧。</li>
+        </ol>
+      </aside>
+
+      <div class="minimap glass-panel" aria-label="画布缩略图">
+        <canvas data-minimap width="176" height="112"></canvas>
+        <span data-canvas-size>4096 × 2304</span>
+      </div>
+
+      <div class="zoom-control glass-panel">
+        <button type="button" data-action="zoom-out" aria-label="缩小">−</button>
+        <output data-zoom>100%</output>
+        <button type="button" data-action="zoom-in" aria-label="放大">＋</button>
+      </div>
+
+      <section class="access-card glass-panel" data-access-card hidden>
+        <span class="access-icon" aria-hidden="true">✦</span>
+        <h2 data-access-title>准备共享画板</h2>
+        <p data-access-copy>正在读取 Myriad 状态。</p>
+        <code data-room-id hidden></code>
+        <button class="primary-button" type="button" data-access-action hidden>创建共享画板</button>
+      </section>
+
+      <div class="offline-banner" data-offline hidden>连接中断。你的草稿仍在此页面中，恢复后可以重试提交。</div>
+    </div>
+  </section>
+
+  <footer class="composer glass-panel">
+    <label class="signature-field">
+      <span>展示署名</span>
+      <input type="text" maxlength="48" placeholder="你的昵称" data-signature>
+    </label>
+    <div class="draft-stat"><span data-draft-stat>0 笔 · 0 点</span><small>提交后不可修改或删除</small></div>
+    <button class="primary-button submit-button" type="button" data-action="submit" disabled>
+      <span>提交作品</span><small data-submit-hint>完成绘制后手动提交</small>
+    </button>
+  </footer>
+
+  <section class="app-dialog" data-history-dialog role="dialog" aria-modal="true" aria-label="公开历史" hidden>
+    <div class="dialog-card glass-panel">
+      <header><div><span class="eyebrow">公开历史</span><h2>查看画布形成过程</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="关闭">×</button></header>
+      <label class="history-slider"><span>最早</span><input type="range" min="0" max="100" value="100" data-history-range><span>现在</span></label>
+      <p data-history-copy>当前显示全部公开作品。</p>
+      <section class="archive-browser">
+        <header><div><span class="eyebrow">Archive</span><h3>已归档画布</h3></div><span data-archive-count>0 块</span></header>
+        <div class="archive-list" data-archive-list><p class="empty-row">还没有已归档画布。</p></div>
+        <figure class="archive-preview" data-archive-preview hidden>
+          <img data-archive-image alt="已归档画布快照">
+          <figcaption data-archive-caption></figcaption>
+        </figure>
+      </section>
+    </div>
+  </section>
+
+  <section class="app-dialog" data-report-dialog role="dialog" aria-modal="true" aria-label="作品详情" hidden>
+    <div class="dialog-card glass-panel">
+      <header><div><span class="eyebrow">作品详情</span><h2 data-selected-signature>匿名作品</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="关闭">×</button></header>
+      <p data-selected-time></p>
+      <label>举报原因<select data-report-reason><option value="spam">垃圾内容</option><option value="abuse">冒犯或骚扰</option><option value="privacy">隐私信息</option><option value="other">其他</option></select></label>
+      <div class="dialog-actions"><button class="danger-button" type="button" data-action="report-selected">提交举报</button><button class="danger-button admin-only" type="button" data-action="hide-selected" hidden>管理员隐藏</button></div>
+    </div>
+  </section>
+
+  <section class="app-dialog admin-dialog" data-admin-dialog role="dialog" aria-modal="true" aria-label="管理员控制台" hidden>
+    <div class="admin-workspace glass-panel">
+      <header class="admin-topbar">
+        <div><span class="eyebrow">Administration</span><h2>签名板管理中心</h2><p data-admin-board-label>正在读取活动画板</p></div>
+        <div class="admin-top-actions"><span class="status-pill" data-admin-health><i></i><span>检查中</span></span><button class="icon-button" type="button" data-close-dialog aria-label="关闭">×</button></div>
+      </header>
+      <div class="admin-layout">
+        <nav class="admin-sidebar" aria-label="管理模块">
+          <button class="is-active" type="button" data-admin-tab="overview"><span>总览</span><small>运行摘要</small></button>
+          <button type="button" data-admin-tab="moderation"><span>内容审核</span><small><b data-admin-pending-badge>0</b> 待处理</small></button>
+          <button type="button" data-admin-tab="members"><span>成员治理</span><small><b data-admin-member-badge>0</b> 位成员</small></button>
+          <button type="button" data-admin-tab="boards"><span>画板与归档</span><small><b data-admin-archive-badge>0</b> 块归档</small></button>
+          <button type="button" data-admin-tab="system"><span>系统状态</span><small>权限与诊断</small></button>
+        </nav>
+
+        <div class="admin-content">
+          <section class="admin-panel is-active" data-admin-panel="overview">
+            <header class="admin-section-heading"><div><span class="eyebrow">Overview</span><h3>运行总览</h3></div><button class="ghost-button" type="button" data-action="admin-refresh">刷新数据</button></header>
+            <div class="metric-grid">
+              <article><span>公开作品</span><strong data-admin-metric="drawings">0</strong><small>当前可见</small></article>
+              <article><span>待审举报</span><strong data-admin-metric="reports">0</strong><small>需要管理员处理</small></article>
+              <article><span>成员</span><strong data-admin-metric="members">0</strong><small>当前 Room</small></article>
+              <article><span>画布占用</span><strong data-admin-metric="occupancy">0%</strong><small>80% 时建议归档</small></article>
+              <article><span>隐藏作品</span><strong data-admin-metric="hidden">0</strong><small>仅管理员审计可见</small></article>
+              <article><span>应用封禁</span><strong data-admin-metric="blocked">0</strong><small>客户端公开过滤</small></article>
+            </div>
+            <div class="admin-overview-grid">
+              <article class="admin-card-block"><header><h4>快捷操作</h4></header><div class="admin-action-stack"><button type="button" data-action="publish-snapshot"><strong>发布访客快照</strong><span>刷新游客看到的只读画面</span></button><button type="button" data-action="archive-board"><strong>归档并创建新画板</strong><span>保存快照后切换 Room</span></button></div></article>
+              <article class="admin-card-block"><header><h4>当前状态</h4></header><dl class="admin-detail-list"><div><dt>画板</dt><dd data-admin-detail="board">—</dd></div><div><dt>Room</dt><dd data-admin-detail="room">—</dd></div><div><dt>最近快照</dt><dd data-admin-detail="snapshot">尚未读取</dd></div><div><dt>共享存储</dt><dd data-admin-detail="storage">尚未读取</dd></div></dl></article>
+            </div>
+          </section>
+
+          <section class="admin-panel" data-admin-panel="moderation" hidden>
+            <header class="admin-section-heading"><div><span class="eyebrow">Moderation</span><h3>内容审核</h3></div><div class="admin-filters"><input type="search" placeholder="搜索署名、actor 或作品 ID" data-admin-search><select data-admin-filter><option value="pending">待审举报</option><option value="all">全部作品</option><option value="hidden">已隐藏</option><option value="reported">全部举报</option></select></div></header>
+            <div class="admin-list" data-admin-moderation-list><p class="empty-row">暂无需要处理的内容。</p></div>
+          </section>
+
+          <section class="admin-panel" data-admin-panel="members" hidden>
+            <header class="admin-section-heading"><div><span class="eyebrow">Members</span><h3>成员治理</h3></div><button class="ghost-button" type="button" data-action="refresh-members">刷新成员</button></header>
+            <p class="admin-note">应用封禁会让合规客户端忽略该 actor 的新旧作品；“移出 Room”是否阻止其重新加入，取决于 Myriad 宿主策略。</p>
+            <div class="admin-list" data-admin-member-list><p class="empty-row">尚未读取成员。</p></div>
+          </section>
+
+          <section class="admin-panel" data-admin-panel="boards" hidden>
+            <header class="admin-section-heading"><div><span class="eyebrow">Boards</span><h3>画板与归档</h3></div><span data-admin-canvas-size>—</span></header>
+            <div class="admin-overview-grid">
+              <article class="admin-card-block"><header><h4>活动画板</h4></header><dl class="admin-detail-list"><div><dt>Board ID</dt><dd data-admin-detail="board-id">—</dd></div><div><dt>创建时间</dt><dd data-admin-detail="created">—</dd></div><div><dt>占用率</dt><dd data-admin-detail="occupancy">—</dd></div></dl><div class="admin-action-stack"><button type="button" data-action="publish-snapshot"><strong>发布快照</strong><span>覆盖当前访客预览</span></button><button class="danger-button" type="button" data-action="archive-board"><strong>归档并换板</strong><span>不可撤销 Room 切换</span></button></div></article>
+              <article class="admin-card-block"><header><h4>归档记录</h4><span>最多保留 6 块快照</span></header><div class="admin-archive-list" data-admin-archive-list><p class="empty-row">暂无归档。</p></div></article>
+            </div>
+          </section>
+
+          <section class="admin-panel" data-admin-panel="system" hidden>
+            <header class="admin-section-heading"><div><span class="eyebrow">Diagnostics</span><h3>系统状态</h3></div><button class="ghost-button" type="button" data-action="reload-history">重新读取历史</button></header>
+            <div class="system-grid"><article class="admin-card-block"><header><h4>身份与权限</h4></header><dl class="admin-detail-list"><div><dt>角色</dt><dd data-system-detail="role">—</dd></div><div><dt>Actor</dt><dd data-system-detail="actor">—</dd></div><div><dt>Room owner</dt><dd data-system-detail="owner">—</dd></div></dl><div class="permission-list" data-admin-permissions></div></article><article class="admin-card-block"><header><h4>事件诊断</h4></header><dl class="admin-detail-list"><div><dt>读取事件</dt><dd data-system-detail="events">0</dd></div><div><dt>接受事件</dt><dd data-system-detail="accepted">0</dd></div><div><dt>忽略事件</dt><dd data-system-detail="ignored">0</dd></div><div><dt>连接状态</dt><dd data-system-detail="connection">未知</dd></div></dl></article></div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="toast-region" aria-live="polite" data-toast-region></div>
+</main>
