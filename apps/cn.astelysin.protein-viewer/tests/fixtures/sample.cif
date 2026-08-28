@@ -1,0 +1,41 @@
+data_sample
+#
+_entry.id   sample
+#
+_struct.title  'A TINY TEST PROTEIN'
+#
+loop_
+_atom_site.group_PDB
+_atom_site.id
+_atom_site.type_symbol
+_atom_site.label_atom_id
+_atom_site.label_alt_id
+_atom_site.label_comp_id
+_atom_site.label_asym_id
+_atom_site.label_entity_id
+_atom_site.label_seq_id
+_atom_site.pdbx_PDB_ins_code
+_atom_site.Cartn_x
+_atom_site.Cartn_y
+_atom_site.Cartn_z
+_atom_site.occupancy
+_atom_site.B_iso_or_equiv
+_atom_site.pdbx_formal_charge
+_atom_site.auth_seq_id
+_atom_site.auth_comp_id
+_atom_site.auth_asym_id
+_atom_site.auth_atom_id
+ATOM 1 N N . VAL A 1 1 ? 10.0 8.0 10.0 1.00 20.0 ? 1 VAL A N
+ATOM 2 C CA . VAL A 1 1 ? 10.0 9.0 10.0 1.00 20.0 ? 1 VAL A CA
+ATOM 3 C C . VAL A 1 1 ? 10.0 10.0 10.0 1.00 20.0 ? 1 VAL A C
+ATOM 4 O O . VAL A 1 1 ? 9.0 10.0 10.0 1.00 20.0 ? 1 VAL A O
+ATOM 5 N N . GLY A 2 2 ? 10.0 10.8 10.0 1.00 20.0 ? 2 GLY A N
+ATOM 6 C CA . GLY A 2 2 ? 10.0 11.8 10.0 1.00 20.0 ? 2 GLY A CA
+ATOM 7 C C . GLY A 2 2 ? 10.0 12.8 10.0 1.00 20.0 ? 2 GLY A C
+ATOM 8 O O . GLY A 2 2 ? 11.0 12.8 10.0 1.00 20.0 ? 2 GLY A O
+ATOM 9 N N . ALA B 1 1 ? 20.0 20.0 20.0 1.00 20.0 ? 1 ALA B N
+ATOM 10 C CA . ALA B 1 1 ? 20.0 21.0 20.0 1.00 20.0 ? 1 ALA B CA
+HETATM 11 FE FE . HEM A 1 1 ? 30.0 30.0 30.0 1.00 20.0 ? 1 HEM A FE
+HETATM 12 O HOH . HOH A 1 1 ? 40.0 40.0 40.0 1.00 20.0 ? 1 HOH A O
+ATOM 13 N N B VAL A 1 1 ? 50.0 50.0 50.0 1.00 20.0 ? 1 VAL A N
+#
