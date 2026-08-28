@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.50",
+  "version": "1.0.51",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-08-27T11:32:51.810Z",
+  "updated_at": "2026-08-28T05:48:02.704Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -2007,6 +2007,103 @@
       "verified": false,
       "created_at": "2026-08-27T11:32:51.809Z",
       "updated_at": "2026-08-27T11:32:51.809Z"
+    },
+    {
+      "id": "cn.astelysin.signature-board",
+      "name": "共享签名板",
+      "version": "0.4.0",
+      "description": "让 Myriad 访客在共享画布上签名、涂鸦并浏览公开历史。",
+      "long_description": "一块由所有访客共同留下痕迹的横向共享签名板。已加入专用 Myriad Federation Room 的成员可以绘制并手动提交签名或画作；访客可查看管理员发布的公开快照。应用提供不可改写的追加式作品历史、举报与隐藏审核、成员封禁、手动画板归档，以及 2x2 / 4x2 主页预览小组件。",
+      "locales": {
+        "en-US": {
+          "name": "Shared Signature Board",
+          "description": "Leave a signature or drawing on a shared canvas",
+          "long_description": "A landscape community signature board where Room members can draw and submit signatures or artwork, while visitors view an administrator-published snapshot. It includes append-only history, moderation, member blocking, manual board archives, and 2x2 / 4x2 dashboard widgets."
+        },
+        "ja-JP": {
+          "name": "共有サインボード",
+          "description": "共有キャンバスにサインや絵を残す",
+          "long_description": "Room メンバーがサインや絵を描いて投稿し、訪問者が管理者公開のスナップショットを閲覧できる横長の共有サインボードです。追記型履歴、モデレーション、メンバーのブロック、手動アーカイブ、2x2 / 4x2 ホームウィジェットに対応します。"
+        }
+      },
+      "author": {
+        "name": "Astelysin"
+      },
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.astelysin.signature-board",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "social",
+      "tags": [
+        "签名板",
+        "绘画",
+        "涂鸦",
+        "社交",
+        "联邦",
+        "Room",
+        "小组件",
+        "多语言"
+      ],
+      "permissions": [
+        "storage:read",
+        "storage:write",
+        "ui:confirm",
+        "widget:register",
+        "federation:read",
+        "federation:room",
+        "federation:message"
+      ],
+      "theme_color": "#8b5cf6",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.astelysin.signature-board/preview.html",
+        "styles": [
+          "apps/cn.astelysin.signature-board/page.css",
+          "apps/cn.astelysin.signature-board/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "theme": "light"
+      },
+      "download": {
+        "manifest": "apps/cn.astelysin.signature-board/manifest.json",
+        "code": "apps/cn.astelysin.signature-board/main.js",
+        "readme": "apps/cn.astelysin.signature-board/README.md",
+        "widget_styles": "apps/cn.astelysin.signature-board/widget.css",
+        "page_styles": "apps/cn.astelysin.signature-board/page.css",
+        "page_template": "apps/cn.astelysin.signature-board/page.html",
+        "widget_templates": {
+          "board-preview": {
+            "2x2": "apps/cn.astelysin.signature-board/templates/widget-2x2.html",
+            "4x2": "apps/cn.astelysin.signature-board/templates/widget-4x2.html"
+          }
+        },
+        "i18n": {
+          "en-US": "apps/cn.astelysin.signature-board/i18n/en-US.json",
+          "ja-JP": "apps/cn.astelysin.signature-board/i18n/ja-JP.json",
+          "zh-CN": "apps/cn.astelysin.signature-board/i18n/zh-CN.json"
+        },
+        "modules": {
+          "page/editor.js": "apps/cn.astelysin.signature-board/page/editor.js",
+          "page/entry.js": "apps/cn.astelysin.signature-board/page/entry.js",
+          "page/runtime.js": "apps/cn.astelysin.signature-board/page/runtime.js",
+          "widget/entry.js": "apps/cn.astelysin.signature-board/widget/entry.js"
+        }
+      },
+      "size": 142828,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-08-28T05:48:02.704Z",
+      "updated_at": "2026-08-28T05:48:02.704Z"
     }
   ],
   "last_updated": "2026-08-04T09:47:35Z"
