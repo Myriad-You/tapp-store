@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.51",
+  "version": "1.0.52",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-08-28T05:48:02.704Z",
+  "updated_at": "2026-08-28T11:45:43.365Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -2104,6 +2104,100 @@
       "verified": false,
       "created_at": "2026-08-28T05:48:02.704Z",
       "updated_at": "2026-08-28T05:48:02.704Z"
+    },
+    {
+      "id": "cn.astelysin.protein-viewer",
+      "name": "蛋白质 3D 结构查看器",
+      "version": "0.4.3",
+      "description": "简洁的 3D 线框分子查看器：从 RCSB PDB 拉取结构，浏览历史记录，支持残基序列定位、链筛选、测量、结构内搜索、元素配色与链配色。",
+      "long_description": "在 Myriad 里直接浏览蛋白质与分子三维结构。输入 PDB ID（如 1A3N）或按名称搜索 RCSB PDB 库拉取结构，并通过历史记录快速返回最近查看的条目。采用清晰的 Wireframe 线框显示，支持可点击残基序列、链筛选、结构内搜索、两点测距、元素配色与链配色、拖拽旋转、滚轮缩放、自动旋转与全屏查看，并可导出 SVG 截图和 mmCIF 文件。",
+      "locales": {
+        "en-US": {
+          "name": "Protein 3D Viewer",
+          "description": "Interactive Wireframe viewer: load structures from RCSB PDB by ID or search, inspect with orbit controls, residue selection, and measurement."
+        },
+        "ja-JP": {
+          "name": "タンパク質 3D ビューア",
+          "description": "インタラクティブな Wireframe ビューア。RCSB PDB から ID・検索で構造を取得し、回転・ズーム、残基選択、測定に対応します。"
+        }
+      },
+      "author": {
+        "name": "Astelysin"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.astelysin.protein-viewer",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "developer",
+      "tags": [
+        "3D",
+        "分子",
+        "蛋白质",
+        "结构生物学",
+        "PDB",
+        "RCSB",
+        "WebGL",
+        "Three.js",
+        "科学",
+        "查看器",
+        "测量",
+        "历史记录"
+      ],
+      "permissions": [
+        "network:fetch",
+        "storage:read",
+        "ui:theme",
+        "ui:fullscreen",
+        "ui:notification"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='7' cy='8' r='2.4' fill='#ff6b6b'/><circle cx='16' cy='6' r='2.8' fill='#4f8cff'/><circle cx='17' cy='15' r='2.1' fill='#51cf66'/><circle cx='6' cy='17' r='1.7' fill='#ffd43b'/><path d='M9 7.5 13.6 6M8.6 10l5.4 2M16 9l-.4 4M9.2 16.6l4-1.8' stroke='currentColor' stroke-width='1.2' stroke-linecap='round'/></svg>",
+      "theme_color": "#0ea5e9",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.astelysin.protein-viewer/preview.html",
+        "styles": [
+          "apps/cn.astelysin.protein-viewer/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "theme": "light"
+      },
+      "download": {
+        "manifest": "apps/cn.astelysin.protein-viewer/manifest.json",
+        "code": "apps/cn.astelysin.protein-viewer/main.js",
+        "readme": "apps/cn.astelysin.protein-viewer/README.md",
+        "page_styles": "apps/cn.astelysin.protein-viewer/page.css",
+        "page_template": "apps/cn.astelysin.protein-viewer/page.html",
+        "i18n": {
+          "en-US": "apps/cn.astelysin.protein-viewer/i18n/en-US.json",
+          "ja-JP": "apps/cn.astelysin.protein-viewer/i18n/ja-JP.json",
+          "zh-CN": "apps/cn.astelysin.protein-viewer/i18n/zh-CN.json"
+        },
+        "modules": {
+          "page/bonds.js": "apps/cn.astelysin.protein-viewer/page/bonds.js",
+          "page/build.js": "apps/cn.astelysin.protein-viewer/page/build.js",
+          "page/colors.js": "apps/cn.astelysin.protein-viewer/page/colors.js",
+          "page/entry.js": "apps/cn.astelysin.protein-viewer/page/entry.js",
+          "page/parser.js": "apps/cn.astelysin.protein-viewer/page/parser.js",
+          "page/structure-loader.js": "apps/cn.astelysin.protein-viewer/page/structure-loader.js",
+          "page/viewer.js": "apps/cn.astelysin.protein-viewer/page/viewer.js"
+        }
+      },
+      "size": 105246,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-08-28T11:45:43.365Z",
+      "updated_at": "2026-08-28T11:45:43.365Z"
     }
   ],
   "last_updated": "2026-08-04T09:47:35Z"
