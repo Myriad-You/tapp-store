@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+<body>
+  <div id="tapp-background" aria-hidden="true">
+    <div class="wiki-bg wiki-bg-base"></div>
+    <div class="wiki-bg wiki-bg-grid"></div>
+    <div class="wiki-bg wiki-bg-accent"></div>
+  </div>
+
+  <div id="tapp-content">
+    <main id="wiki-app" class="wiki-app" aria-busy="true">
+      <header class="wiki-header">
+        <div class="wiki-brand">
+          <div class="wiki-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H11c1.3 0 2.4.7 3 1.7A3.5 3.5 0 0 1 17 2h.5A2.5 2.5 0 0 1 20 4.5V19a2 2 0 0 1-2 2h-1c-1.7 0-2.7.3-3 1-.3-.7-1.3-1-3-1H6a2 2 0 0 1-2-2V4.5z" stroke="currentColor" stroke-width="1.7"/><path d="M14 4v18M7.5 7H11M7.5 11H11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <span class="wiki-eyebrow" data-i18n="eyebrow">Shared knowledge</span>
+            <h1 data-i18n="title">Wiki</h1>
+          </div>
+        </div>
+        <div class="wiki-header-actions">
+          <span id="role-status" class="role-status" data-state="pending" data-i18n="roleChecking">正在确认访问身份…</span>
+          <button class="icon-button" type="button" data-action="refresh" data-i18n-aria="refresh" aria-label="刷新">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 8.2A7 7 0 0 1 18.7 7M5.3 17A7 7 0 0 0 17.9 15.8"/></svg>
+          </button>
+          <button id="manage-button" class="primary-button" type="button" data-action="open-manage" hidden>
+            <span data-i18n="manage">管理 Wiki</span>
+          </button>
+        </div>
+      </header>
+
+      <section id="status-banner" class="status-banner" hidden role="status"></section>
+
+      <div class="wiki-layout">
+        <aside class="wiki-sidebar" aria-label="文章导航" data-i18n-aria="articleNavigation">
+          <label class="search-field">
+            <span class="sr-only" data-i18n="search">搜索</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16.2 16.2 4 4"/></svg>
+            <input id="search-input" type="search" autocomplete="off" data-i18n-placeholder="searchPlaceholder" placeholder="搜索标题、标签或正文…">
+          </label>
+          <div class="sidebar-heading">
+            <span data-i18n="contents">目录</span>
+            <span id="article-count" class="count-badge">0</span>
+          </div>
+          <nav id="article-navigation" class="article-navigation"></nav>
+          <div class="sidebar-footnote">
+            <span class="presence-dot" aria-hidden="true"></span>
+            <span data-i18n="readerFootnote">内容对所有访客只读开放</span>
+          </div>
+        </aside>
+
+        <section id="reader-pane" class="reader-pane" aria-live="polite">
+          <div id="reader-state" class="reader-state">
+            <div class="state-orbit" aria-hidden="true"></div>
+            <h2 data-i18n="loading">正在载入知识库</h2>
+            <p data-i18n="loadingHint">正在读取共享发布记录…</p>
+          </div>
+          <article id="article-view" class="article-view" hidden>
+            <header class="article-header">
+              <div class="article-heading-copy">
+                <div id="article-breadcrumb" class="article-breadcrumb"></div>
+                <h2 id="article-title"></h2>
+                <p id="article-summary" class="article-summary"></p>
+                <div id="article-tags" class="article-tags"></div>
+              </div>
+              <div class="article-actions">
+                <button class="secondary-button" type="button" data-action="export-markdown" data-i18n="exportMarkdown">导出 Markdown</button>
+                <button id="edit-article-button" class="secondary-button" type="button" data-action="edit-current" hidden data-i18n="edit">编辑</button>
+              </div>
+            </header>
+            <div id="article-content" class="article-content"></div>
+            <footer class="article-footer">
+              <span data-i18n="lastUpdated">最后更新</span>
+              <time id="article-updated"></time>
+            </footer>
+          </article>
+        </section>
+      </div>
+
+      <section id="manage-panel" class="manage-panel" hidden role="region" aria-labelledby="manage-title">
+        <div class="manage-panel-header">
+          <div>
+            <span class="wiki-eyebrow" data-i18n="adminTools">Admin tools</span>
+            <h2 id="manage-title" data-i18n="manage">管理 Wiki</h2>
+          </div>
+          <button id="manage-close-button" class="icon-button" type="button" data-action="close-manage" data-i18n-aria="close" aria-label="关闭">×</button>
+        </div>
+        <div class="manage-grid">
+          <button class="manage-card" type="button" data-action="create-article">
+            <strong data-i18n="newArticle">新建文章</strong><span data-i18n="newArticleHint">从空白 Markdown 草稿开始</span>
+          </button>
+          <button class="manage-card" type="button" data-action="import-markdown">
+            <strong data-i18n="importMarkdown">导入 Markdown</strong><span data-i18n="importMarkdownHint">载入编辑器，确认后再发布</span>
+          </button>
+          <button class="manage-card" type="button" data-action="import-json">
+            <strong data-i18n="importJson">恢复 JSON 备份</strong><span data-i18n="importJsonHint">替换当前已发布内容</span>
+          </button>
+          <button class="manage-card" type="button" data-action="export-json">
+            <strong data-i18n="exportJson">导出 JSON 备份</strong><span data-i18n="exportJsonHint">这是手动备份，不是每日自动备份</span>
+          </button>
+          <button class="manage-card" type="button" data-action="cleanup-orphans">
+            <strong data-i18n="cleanup">清理过期版本</strong><span data-i18n="cleanupHint">移除过期记录，并终止未完成的恢复批次</span>
+          </button>
+        </div>
+        <div class="quota-panel">
+          <div class="quota-copy"><strong data-i18n="storageUsage">共享容量</strong><span id="quota-detail">—</span></div>
+          <div class="quota-track"><span id="quota-bar"></span></div>
+          <p id="quota-message" data-i18n="quotaHint">6 MiB 产品软预算；保留空间用于后续发布与其他安装级数据。</p>
+        </div>
+        <input id="markdown-file" type="file" accept=".md,.markdown,text/markdown,text/plain" hidden>
+        <input id="json-file" type="file" accept=".json,application/json" hidden>
+      </section>
+
+      <section id="editor-panel" class="editor-panel" hidden role="dialog" aria-modal="true" aria-labelledby="editor-title">
+        <div class="editor-shell">
+          <header class="editor-header">
+            <div><span class="wiki-eyebrow" data-i18n="privateDraft">Private draft</span><h2 id="editor-title" data-i18n="editorTitle">编辑文章</h2></div>
+            <span id="draft-status" class="draft-status" data-i18n="draftIdle">草稿仅对当前管理员可见</span>
+          </header>
+          <div class="editor-metadata">
+            <label><span data-i18n="fieldTitle">标题</span><input id="editor-field-title" data-editor-field="title" maxlength="160" autocomplete="off"></label>
+            <label><span data-i18n="fieldSlug">Slug</span><input id="editor-field-slug" data-editor-field="slug" maxlength="80" inputmode="url" autocomplete="off"><small data-i18n="slugHint">仅作显示与导出文件名提示，可重复</small></label>
+            <label class="editor-summary"><span data-i18n="fieldSummary">摘要</span><input id="editor-field-summary" data-editor-field="summary" maxlength="500" autocomplete="off"></label>
+            <label><span data-i18n="fieldTags">标签</span><input id="editor-field-tags" data-editor-field="tags" maxlength="260" data-i18n-placeholder="tagsPlaceholder" placeholder="用逗号分隔"></label>
+            <label><span data-i18n="fieldParent">父级文章</span><select id="editor-field-parent" data-editor-field="parentId"></select></label>
+            <label><span data-i18n="fieldOrder">排序</span><input id="editor-field-order" data-editor-field="order" type="number" min="0" max="9999" step="1"></label>
+          </div>
+          <div class="editor-workspace">
+            <label class="markdown-editor"><span data-i18n="markdownSource">Markdown 正文</span><textarea id="editor-field-markdown" data-editor-field="markdown" spellcheck="true" data-i18n-placeholder="markdownPlaceholder" placeholder="# 标题&#10;&#10;开始编写…"></textarea></label>
+            <section class="preview-pane" aria-labelledby="preview-title"><div class="preview-heading"><span id="preview-title" data-i18n="safePreview">安全预览</span><small data-i18n="rawHtmlDisabled">原始 HTML 已禁用</small></div><div id="editor-preview" class="article-content editor-preview"></div></section>
+          </div>
+          <footer class="editor-footer">
+            <button id="delete-article-button" class="danger-button" type="button" data-action="delete-current" hidden data-i18n="delete">删除</button>
+            <div class="editor-footer-main">
+              <button class="secondary-button" type="button" data-action="cancel-editor" data-i18n="cancel">取消</button>
+              <button id="publish-button" class="primary-button" type="button" data-action="publish" data-i18n="publish">发布</button>
+            </div>
+          </footer>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
