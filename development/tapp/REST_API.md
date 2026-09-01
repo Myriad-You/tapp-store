@@ -388,6 +388,9 @@ Widget 注册 body 除 `id`、`name`、`default_size`、`sizes` 等元数据外�
 这些端点主要由 Bridge handler 经 `TappApiService` 调用。除了路由中间件，handler 还应
 校验 Tapp ID、owner、安装批准集与当前动态有效权限。
 
+人设名片走 SDK `Tapp.persona.get`，由宿主合成公开配置、心情带和同源立绘路径；
+没有 `/api/tapp/persona`。沙箱不要自己打 `/api/agent/persona` 或立绘 URL。
+
 ### 平台、AI 与数据
 
 | 方法   | 路径                                                     | 身份 | SDK 能力                        |
@@ -442,10 +445,14 @@ Manifest operation/model tier/context/output 声明，并将任务绑定 subject
 
 除按日聚合的配额计数外，每次受治理的 AI 调用（完成/失败/取消）都会追加一条
 `tapp_ai_cost_ledger` 流水：subject、安装 owner、Tapp、任务、来源（runtime 或
-internal 宿主适配器）、operation、provider/model、输入/输出 token 估算与终态。账本
-append-only、不随每日重置，`GET /api/tapp/ai/v2/ledger` 供登录用户读取本人逐次流水与
-按 Tapp 汇总；该端点是宿主 UI 能力，不进入沙箱 SDK。`cost_micro_usd` 列预留给后续
-接入定价源，当前为 NULL。
+scheduler）、operation、provider/model、输入/输出 token 估算与终态。同一账本也接收
+站内其它出账点（Agent、报告、Agent 人设、Playground、语音、图像等）；文字走
+`AiAnalyzer` 钩子，图像/语音走对应运行时钩子。未标明来源的调用记为 `internal`。
+受治理任务在 provider 调用外包一层 suppress，避免与任务级 `record_ai_cost` 重复。
+账本 append-only、不随每日重置，`GET /api/tapp/ai/v2/ledger` 供登录用户读取本人逐次
+流水与按 Tapp 汇总；管理端 `GET /api/analytics/ai-usage` 按日/用户/模型/来源聚合。
+这两个端点是宿主 UI 能力，不进入沙箱 SDK。`cost_micro_usd` 列预留给后续接入定价源，
+当前为 NULL。
 
 ### One-shot Data Exchange
 
@@ -493,6 +500,7 @@ Interaction 的动作截止时间独立于终态保留时间；所有副本都�
 | 方法 | 路径                         | 身份 | 说明 |
 | ---- | ---------------------------- | ---- | ---- |
 | GET  | `/api/tapp/federation/feed`  | 可选认证 + Runtime Grant | 需 Grant 含 `federation:read`。游客只返回公开活动（`audience: "public"`）；已登录用户返回公开 Feed 与个人时间线的合并结果（`audience: "public+personal"`，同 `activity_id` 时个人条目优先，整体按时间新到旧，条数有上限）。响应形如 `{ items, total, audience }`。 |
+| GET  | `/api/tapp/federation/rooms-feed` | 可选认证 + Runtime Grant | 需 Grant 含 `federation:read`。本实例加入的每个群聊里出现过的每个**实例**（domain）上全部用户的公开帖，去重后按时间新到旧（`audience: "rooms"`，`item.scope: "rooms"`，条数有上限）。与关注关系无关。响应形如 `{ items, total, audience }`。 |
 | GET  | `/api/federation/public/rooms/{room_id}` | **无认证** | 仅 `is_public` 群卡片（name、owner、home_server、member_count 等）。**不**走 Runtime Grant / `host_attribution`（与 WebFinger 同类公开发现）。跨实例 `joinRoom` 用此端点物化本地行。 |
 | GET  | `/api/federation/public/limits` | **无认证** | 活的消息/Note 媒体上限（`message_payload_bytes`、`note_image_bytes`、`note_video_bytes`、`profile`）。宿主桥用来对齐内存节约档；**不**走 Runtime Grant。 |
 
