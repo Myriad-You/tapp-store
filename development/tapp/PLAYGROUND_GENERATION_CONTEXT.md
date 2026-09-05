@@ -1,8 +1,9 @@
 # Playground 生成契约
 
-本文档是 Tapp Playground 发送给 Pro 模型的精简开发上下文。完整解释仍以同目录的
+本文档是 Tapp Playground 发送给 Pro 模型的精简开发上下文，与 `DESIGN_SPEC.md`
+一样**无条件注入**生成 prompt，不依赖检索命中。完整解释仍以同目录的
 `MANIFEST.md`、`API_REFERENCE.md`、`SANDBOX.md`、`STORE.md` 和 `STYLING.md` 为准
-（检索目录见 `tapp_playground_knowledge.rs`）。
+（其余模块文档按检索进入，见 `tapp_playground_knowledge.rs`）。
 
 ## 文件与运行模式
 
@@ -141,14 +142,39 @@ const card = await Tapp.persona.get();
 生成安装后才有意义的能力时：
 
 - 可在 Manifest 声明真实权限与正式运行时代码（见 [API_REFERENCE](./API_REFERENCE.md)）；
-- AI 生图使用 `Tapp.ai.tasks.create({ version: 2, operation: "image", input: { prompt,
-  referenceImages }, output: { format: "image" } })`；不需要参考图时省略 `referenceImages`。
-  Manifest 同时声明 `ai:image`、
-  `ai.operations: ["image"]` 和 `ai.outputFormats: ["image"]`（`ai.protocolVersion: 2`）。
-  参考图放在 `input.referenceImages` 有序数组中，支持 PNG/JPEG/WebP base64 data URL 或
-  `/api/brew/image-cache/...` 路径，最多 4 张、解码后合计 10 MiB。不要放到 `context`，
-  不要直接传 `blob:`/外部 URL，不要指定供应商或模型。文件选择后可用 `FileReader.readAsDataURL`
-  转换；临时预览仍不执行 AI 任务，完整示例见 [AI API](./API_REFERENCE.md#ai-api)。
+- AI **只**走 `Tapp.ai.tasks`（`create` / `get` / `cancel` / `usage` / `subscribe`）。
+  不要发明 `Tapp.ai.generate`、`Tapp.search`、直接 `fetch` 搜索，或供应商 / 模型字段。
+  临时预览仍不执行 AI；下面的代码是安装后才跑的。`operation` 必须与**声明权限**
+  `ai:*`、`ai.operations`、`ai.outputFormats` 对齐（`ai.protocolVersion: 2`）。
+  安装后是否真能调用由**授予权限**决定，不是写进 Manifest 就能用。
+  `operation` 为 `generate` / `analyze` / `chat` / `image` / `search`：
+
+  | operation | 权限 | `input` | `output.format` |
+  | --------- | ---- | ------- | --------------- |
+  | `generate` | `ai:generate` | 字符串或 `{ prompt }` | `text` 或 `json` |
+  | `analyze` | `ai:analyze` | `{ data, instruction? }` | `text` 或 `json` |
+  | `chat` | `ai:chat` | `{ messages: [{ role, content }] }` | `text` 或 `json` |
+  | `image` | `ai:image` | 字符串或 `{ prompt, width?, height?, referenceImages? }` | **必须** `image` |
+  | `search` | `ai:search` | 字符串或 `{ query, searchType?, maxResults?, searchPrompt? }` | **必须** `json` |
+
+  完成态读 `task.result`：`{ format, value, contextProvenance }`。业务数据在 `value`
+  （生图是 `{ url, width, height }`；搜索是 JSON 结果对象）。`subscribe` 的 `result`
+  事件同样带这只信封。
+
+  ```javascript
+  const task = await Tapp.ai.tasks.create({
+    version: 2,
+    operation: "search",
+    input: { query: "Myriad Tapp SDK" },
+    output: { format: "json" },
+  });
+  const hits = task.result && task.result.value;
+  ```
+
+  生图参考图放在 `input.referenceImages` 有序数组中，支持 PNG/JPEG/WebP base64 data URL
+  或 `/api/brew/image-cache/...`，最多 4 张、解码后合计 10 MiB。不要放到 `context`，
+  不要直接传 `blob:` / 外部 URL。文件选择后可用 `FileReader.readAsDataURL` 转换。
+  完整字段见 [AI API](./API_REFERENCE.md#ai-api)。
 - 声明式 HTTP API 必须申请 `network:fetch`。请求体默认使用 `bodyMode: "json"`；纯文本、XML
   使用 UTF-8 `raw`，表单使用 `form`。第三方密钥用 Manifest `credentials` +
   `apis.*.credential`（`in`: `header` / `query` / `form` / `sign`）；密钥不进

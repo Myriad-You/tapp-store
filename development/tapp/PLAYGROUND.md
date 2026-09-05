@@ -18,8 +18,9 @@ Tapp Playground 是 Myriad 内置的临时 Tapp 开发环境。它把 Pro AI、�
 [`PLAYGROUND_GENERATION_CONTEXT.md`](./PLAYGROUND_GENERATION_CONTEXT.md)。
 
 注入模型的文档目录由 `backend/src/services/tapp_playground_knowledge.rs` 的
-`include_str!` 列表决定（含 STORE、MANIFEST、API_REFERENCE 等）；`DESIGN_SPEC.md`
-无条件注入。重新编译 backend 后才会带上文档改动。
+`include_str!` 列表决定（含 STORE、MANIFEST、API_REFERENCE 等）。`DESIGN_SPEC.md`
+与 `PLAYGROUND_GENERATION_CONTEXT.md` 无条件注入生成 prompt。重新编译 backend
+后才会带上文档改动。
 
 ## 为什么不是直接运行 Grok Build
 
@@ -145,18 +146,24 @@ HTML 中的脚本、inline handler、直接 fetch / XHR / WebSocket、`eval`、�
 
 ## 知识检索
 
-Agent 不会声称把所有文档永久放进模型上下文。每轮先从仓库文档规划并检索相关
-章节，例如：`TAPP_DEVELOPMENT`、`QUICKSTART`、`ARCHITECTURE`、`MANIFEST`、
-`API_REFERENCE`、`PAGE`、`WIDGET`、`SANDBOX`、`STYLING`、`GRAPHICS`、
-`REST_API`、`RUNTIME_CONTRACT_DESIGN`、`TROUBLESHOOTING`、`STORE`、`TAPP_FILE_FORMAT`、
-`PLAYGROUND_GENERATION_CONTEXT`。
-检索结果总量受限，并随响应返回来源名称和章节，便于人工审计。
+Agent 不会声称把所有文档永久放进模型上下文。
+
+无条件注入（不依赖检索命中）：
+
+- `DESIGN_SPEC.md` — 设计语言
+- `PLAYGROUND_GENERATION_CONTEXT.md` — 预览边界与调用契约（含 `Tapp.ai.tasks`
+  的 `generate` / `analyze` / `chat` / `image` / `search` 与 `{ format, value,
+  contextProvenance }` 信封）
+
+每轮再从仓库文档规划并检索相关章节，例如：`TAPP_DEVELOPMENT`、`QUICKSTART`、
+`ARCHITECTURE`、`MANIFEST`、`API_REFERENCE`、`PAGE`、`WIDGET`、`SANDBOX`、
+`STYLING`、`GRAPHICS`、`REST_API`、`RUNTIME_CONTRACT_DESIGN`、`TROUBLESHOOTING`、
+`STORE`、`TAPP_FILE_FORMAT`。`PLAYGROUND_GENERATION_CONTEXT` 仍出现在检索目录里
+给规划器点名，但生成时跳过重复摘录。检索结果总量受限，并随响应返回来源名称和
+章节，便于人工审计。
 
 权威文档由后端 `tapp_playground_knowledge.rs` 以 `include_str!` 编译进二进制；
-改 markdown 后需重新编译 backend 才会进入检索目录。`PLAYGROUND_GENERATION_CONTEXT.md`
-作为安全预览契约进入 catalog（并常被检索）；生成侧另有精简契约注入策略，以代码为准。
-
-`DESIGN_SPEC.md` 会**无条件注入**生成 prompt（设计语言），不依赖检索命中。
+改 markdown 后需重新编译 backend 才会进入注入文本与检索目录。
 
 ## 临时预览与正式运行
 

@@ -10,7 +10,7 @@
 | [架构总览](tapp/ARCHITECTURE.md) | 三层代码、三种沙箱、三种安装来源；隐藏 / 销毁 / 卸载 / 常驻 |
 | [Tapp 商店](tapp/STORE.md) | 远程目录 `index.json`、源管理、安装链路、商店索引 UI 字段（如 `icon_shell`）与发布 |
 | [Tapp Playground](tapp/PLAYGROUND.md) | Pro AI 双模式（Page / Widget-only）生成、预览、导出与安装边界 |
-| [Playground 生成上下文](tapp/PLAYGROUND_GENERATION_CONTEXT.md) | 注入模型的开发上下文与能力边界 |
+| [Playground 生成上下文](tapp/PLAYGROUND_GENERATION_CONTEXT.md) | 无条件注入模型的开发上下文（含 `Tapp.ai.tasks` 信封） |
 | [快速入门](tapp/QUICKSTART.md) | CLI 创建/校验/打包，代码架构，生命周期 |
 | [Manifest 配置](tapp/MANIFEST.md) | 可安装 `manifest.json`（camelCase 字段；权限目录含 `ai:search`） |
 | [SDK API 参考](tapp/API_REFERENCE.md) | `window.Tapp`（含 `Tapp.api(name, params)`、`Tapp.game`、`Tapp.ai.tasks`） |
