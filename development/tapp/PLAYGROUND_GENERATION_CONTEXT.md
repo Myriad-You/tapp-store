@@ -13,12 +13,13 @@ Playground 项目至少需要 **Page** 或 **Widgets** 之一（允许 Widget-on
   逻辑写在 `code.page`（打包为 `page/index.js`）；`page.html` 只含 body 内静态语义
   结构；`page.entry` 为 `page/index.js`、`page.template` 为 `page.html`。
 - **Widget-only**（不声明 `page` 层）：不要发明 stub 页面；UI 放在 `code.widget` 与
-  `code.widgetHtml`（打包为 `widget/index.js`）；声明非空 `manifest.widgets` 与
-  `widget:register`，保持 `page` / `pageHtml` 为空。详见 [WIDGET.md](./WIDGET.md)。
-- core 是共享层，三种模式都先执行它。Playground 一层一个文件（`core.js` /
+  `code.widgetHtml`（打包为 `widget/index.js`）；声明非空 `manifest.widgets`。安装校验
+  要求**声明权限**含 `widget:register`（privileged：普通用户不会被**授予**动态注册，
+  Manifest Widget 仍预注册）。保持 `page` / `pageHtml` 为空。详见 [WIDGET.md](./WIDGET.md)。
+- core 是共享层，三种沙箱都先执行它。Playground 一层一个文件（`core.js` /
   `page/index.js` / `widget/index.js`）；跨层共享在 core 里 `module.exports`，层入口
   `require('../core.js')`。再拆文件只在导出 `.tapp` 并用 CLI 打开之后。
-- 没有 `backgroundRequirements` 时不强制 core；声明后台常驻必须有 core。
+- 没有 `backgroundRequirements` 时不强制 core；声明**常驻**必须有 core。
 - `styles.css` 使用普通 CSS，并通过 `var(--tapp-primary)` 读取宿主强调色
   （沙箱内没有 `--color-primary`）。
 - Page 沙箱（有可用 Page 时）运行在没有 `allow-same-origin` 的 sandboxed iframe 中，
@@ -123,10 +124,10 @@ const card = await Tapp.persona.get();
 
 ## 正式安装才可用（预览不要依赖）
 
-临时预览 **不签发 Runtime Grant**。`playgroundPreviewHandlers.ts` 实际注册的大致是：
+临时预览 **不签发 Runtime Grant**。预览里大致能用：
 内存 `storage` / `settings`、`ui` 主题·语言·确认·全屏（通知禁用）、`context.*` 预览桩、
 `persona.get` 固定样例（不打真实人设 API）、`assets.list`（空）/`assets.get`（失败）、
-`api.list`（空）/`api.execute`（禁用）。
+`Tapp.api.list()`（空）/`Tapp.api()`（禁用）。
 
 下列能力在完整 SDK 里可能有方法名，但 **Playground 预览中不可用**（失败或明确错误）：
 
@@ -135,7 +136,7 @@ const card = await Tapp.persona.get();
 - **platform** / **report** / **brewList** / **tappList**（含列表与商店/直接安装）
 - **dataExchange**、**ai**、**agent**、**event** Broker、**scheduler**、宿主 **media** 控制
 - 声明式 **`Tapp.api` 执行**（预览仅 list 空表）
-- **`Tapp.background.require`**（预览无后台常驻；勿空写 `backgroundRequirements`）
+- **`Tapp.background.require`**（预览无常驻；勿空写 `backgroundRequirements`）
 
 生成安装后才有意义的能力时：
 
@@ -182,7 +183,7 @@ Bridge 默认 payload 约 **1 MiB**；正式运行特例：`file.download` 内�
 - **`locales`**：见上文；默认 `en-US` + `ja-JP`。
 - **`iconSvg`**：生产包优先内联 SVG（优先于 emoji `icon`）；简单 demo 可用 emoji。
 - **`minSystemVersion`**：可选语义版本；声明后安装/更新会与宿主 Myriad 版本比较并拒绝过旧实例。新能力依赖新 runtime 时建议填写。
-- **`backgroundRequirements`**：仅当 `code.core` 真正依赖后台常驻（如 scheduler/sync）时填写；勿为「好看」空挂。
+- **`backgroundRequirements`**：仅当 `code.core` 真正依赖常驻（如 scheduler/sync）时填写；勿为「好看」空挂。
 
 ## 安全与兼容性
 
@@ -197,7 +198,8 @@ Bridge 默认 payload 约 **1 MiB**；正式运行特例：`file.download` 内�
   `storage:write`。不要再声明已移除的 `storage`。确认和全屏分别需要
   `ui:confirm` 与 `ui:fullscreen`。
 - 应用分类和 Widget 分类不是同一枚举；Widget 分类仅允许 `stats`、`activity`、
-  `visualization`、`utility`、`custom`，声明 Widget 时必须请求 `widget:register`。
+  `visualization`、`utility`、`custom`。声明 `widgets` 时安装校验要求声明权限含
+  `widget:register`；不要把它理解成「普通用户运行时可以动态注册 Widget」。
 - 顶层 `manifest.settings` 是安装级设置；用户个人偏好放入 `Tapp.storage`，要给访客看的
   站长数据放入 `Tapp.shared`，单个 Widget 实例偏好放入对应的 `widgets[].settings`。
 - 所有设置定义的默认值字段都必须写成 `defaultValue`；`default` 不是合法别名。

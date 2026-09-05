@@ -72,7 +72,7 @@ flowchart TB
 
 前端降级常量 `OFFICIAL_STORE`（`RemoteStoreService`）在 API 不可用时仍指向同一 URL。
 
-当前官方应用目录示例（以仓库 `index.json` 为准）：`com.myriad.music-player`、`com.myriad.quick-notes`、`com.myriad.config-generator`、`com.myriad.doudizhu`、`com.myriad.aro`、`com.myriad.three-lab`。内置演示仅 `helloWorld`；完整应用经商店安装，不随 Myriad 前端打包。
+第一方示例（以仓库 `index.json` 为准，另有第三方应用）：`com.myriad.music-player`、`com.myriad.quick-notes`、`com.myriad.config-generator`、`com.myriad.doudizhu`、`com.myriad.aro`、`com.myriad.three-lab`。完整 id 列表只认当前 `index.json`。内置演示仅 `helloWorld`；完整应用经商店安装，不随 Myriad 前端打包。
 
 ---
 
@@ -346,26 +346,22 @@ flowchart TB
 
 ```text
 tapp-store/
-├── index.json                 # 目录入口（Myriad 源 URL 指向这里）
-├── categories.json            # 可选 UI 元数据（非安装权威）
+├── index.json              # 目录入口（PR 禁止手改；合并后 bot 从 manifest + catalog.json 对齐）
+├── categories.json         # 可选 UI 元数据（非安装权威）
 ├── README.md
-└── apps/
-    └── com.example.app/
-        ├── manifest.json      # 必需
-        ├── core.js            # core 层入口（须与 download.code 一致）
-        ├── page.html          # 可选
-        ├── page.css
-        ├── widget.css
-        ├── widget-4x2.html
-        ├── styles.css
-        ├── README.md
-        ├── assets/            # manifest.assets 声明的二进制
-        │   └── textures/...
-        ├── i18n/
-        │   └── en-US.json
-        └── page/
-            ├── state.js
-            └── index.js
+├── apps/
+│   └── {app_id}/
+│       ├── manifest.json   # 必需（安装与目录对齐的权威源）
+│       ├── catalog.json    # 可选（商店展示：简介 / tags / preview / locales）
+│       ├── core.js         # 示例 core.entry；实际路径以 Manifest 为准
+│       ├── page.html / page.css / widget.css / …
+│       ├── assets/         # manifest.assets 二进制
+│       ├── i18n/
+│       ├── page/           # Page 层入口与其 require 的模块
+│       └── README.md
+├── scripts/                # check-pr-scope / sync-index / validate-app / validate-previews
+├── edge/                   # 可选：全网安装统计（Cloudflare Workers）
+└── development/            # 贡献者文档镜像（契约以 Myriad 主仓库为准）
 ```
 
 也可用 CLI 打出 `.tapp` 再人工展开到 `apps/` 并登记索引；安装权威仍是后端对 Manifest 与资源的校验，与路径风格无关。

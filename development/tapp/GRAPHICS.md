@@ -63,7 +63,8 @@ Tapp.assets.revokeAll();
 - 权限：`media:audio`（basic）
 - 授予后 CSP 为 `media-src blob: data:`，可用 `new Audio(blobUrl)` 播放包内音频
 - **Web Audio API**（`AudioContext` + 振荡器）不依赖 `media-src`，可用于程序化音效
-- 切后台时请在 `Tapp.lifecycle.onPause` 中暂停；`onResume` 恢复
+- 宿主**隐藏**沙箱（切 Tab、最小化、滚出视野）时发 `lifecycle:pause`：在
+  `Tapp.lifecycle.onPause` 里停绘制循环与音频；`onResume` 再开。这不是销毁。
 
 ## WASM
 

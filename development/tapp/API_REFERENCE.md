@@ -27,6 +27,7 @@
 - [人设名片 API](#人设名片-api)
 - [用户角色 API](#用户角色-api)
 - [Federation API](#federation-api)
+- [Game API](#game-api)
 - [Tapp 列表 API](#tapp-列表-api)
 - [Brew 列表 API](#brew-列表-api)
 - [组件注册 API](#组件注册-api)
@@ -535,7 +536,7 @@ const gltf = await new GLTFLoader().loadAsync(url);
 
 ## AI API
 
-**权限**: `ai:generate`, `ai:analyze`, `ai:chat`, `ai:image`
+**权限**: `ai:generate`, `ai:analyze`, `ai:chat`, `ai:image`, `ai:search`
 
 AI 只提供服务端治理的 Task API。Manifest 必须通过 `ai` 声明 operation、model tier、context
 source 与 output format，并同时申请 operation 对应的 `ai:*` 权限。
@@ -568,7 +569,8 @@ stop();
 | --------- | ------- | ---- |
 | `generate` | 非空字符串，或 `{ prompt }` | 文本生成 |
 | `analyze` | `{ data, instruction? }` | `data` 必填 |
-| `chat` | `{ message }` 或等价消息字段 | 对话 |
+| `chat` | `{ messages: [{ role, content }] }` | `role` 为 `system` \| `user` \| `assistant`；1–100 条 |
+| `search` | 非空字符串，或 `{ query, searchType?, maxResults?, searchPrompt? }` | 联网搜索；需 `ai:search` |
 | `image` | 非空字符串，或 `{ prompt, width?, height?, referenceImages? }` | 图片生成；见下表 |
 
 #### `operation: "image"`
@@ -1780,19 +1782,23 @@ Tapp.assets.revokeAll(); // 也会在 onDestroy 时自动调用
 
 ## 能力边界与完整命名空间
 
-`generateFullSDK()` 用于 Page 和 headless core；`generateWidgetSDK()` 是缩小能力面的 Widget 版本。
-完整版当前包含以下命名空间：
+Page 用完整 SDK，Widget 用精简面，headless（常驻）再拿掉可见控制面。方法在 `window.Tapp`
+上可见不等于可调用：还要当前沙箱接了这个方法，并且已有**授予权限**。
+声明式网络的调用约定是可调用函数 **`Tapp.api(name, params)`**，并带 **`Tapp.api.list()`**。
+
+Page 完整面当前包含以下命名空间（`analytics` / `agent` 也挂在 `Tapp` 上）：
 
 | 命名空间                                   | 主要能力                                            | 权限族                             |
 | ------------------------------------------ | --------------------------------------------------- | ---------------------------------- |
+| `lifecycle`, `i18n`                        | `onReady` / `onDestroy` / `onPause` / `onResume`；安装 i18n | public                             |
 | `storage`, `settings`, `shared`            | 私有 KV、安装设置、安装级共享数据（读含签名游客）   | `storage:read`, `storage:write`    |
 | `dataExchange`                             | 逐次授权的跨 Tapp 具名数据交换                      | Manifest + one-shot consent        |
 | `ui`, `animation`, `dynamicContent`, `dom` | 宿主 UI、主题、动画和安全 DOM helper                | `ui:*` 或 public                   |
 | `platform`, `data`                         | 平台数据读取、写入、转换和注册                      | `platform:*`                       |
 | `analytics`                                | 站点访问统计聚合（admin 完整 / 非 admin 访客卡片）  | `analytics:read`                   |
-| `ai`, `report`                             | 服务端治理的 AI Task 与报告读写                     | `ai:*`, `report:*`                 |
+| `ai`, `report`                             | 服务端治理的 AI Task 与报告读写                     | `ai:*`（含 `ai:search`）, `report:*` |
 | `model3d`                                  | Tripo 图生 3D / rig / retarget；`getUrl` 回沙箱 blob | `3d:generate`（资产读取 public） |
-| `widget`                                   | 管理员动态注册与配置 Widget                         | `widget:register`                  |
+| `widget`                                   | Page：动态注册；Widget 沙箱：实例设置 / `invalidate` | `widget:register`（仅 register 系列） |
 | `media`                                    | 播放器读取和控制                                    | `media:*`                          |
 | `context`, `user`                          | 应用、用户、导航、系统和地理上下文                  | public                             |
 | `persona`                                  | Agent 人设只读名片（名字、心情带、主立绘路径）      | public                             |
@@ -1805,15 +1811,28 @@ Tapp.assets.revokeAll(); // 也会在 onDestroy 时自动调用
 | `tappList`                                 | Tapp 查询、安装、启停、卸载与导出                   | `tappList:*`                       |
 | `brewList`                                 | Brew 列表、源、用户分类 create/delete、评论和 OPML  | `brew:*`                           |
 | `federation`                               | 身份、Feed、关注、Note/媒体发布、Channel、Room、Ring、信任和传输 | `federation:*`              |
+| `game`                                     | 联邦房间对局会话（`create`/`join`/`sendIntent`/`sendState`） | `game:session` + `federation:read`/`room`/`message` |
 
-Widget SDK 只保留 Widget 渲染需要的生命周期、UI/主题、用户角色、存储、AI Task、平台读取、报告
-读取、媒体、背景需求、调度、声明式 API、上下文、人设名片、DOM 和文件等子集。它不会自动拥有
-完整版的写入/管理能力。新增或调用 API 时必须核对：
+三种沙箱（Page / Widget / headless）不是同一套对象：
 
-1. SDK 生成器是否暴露方法；
-2. `permissionConfig.ts` 是否声明 action → 权限；
-3. 当前 Page 或 Widget 宿主是否注册 handler；
-4. 后端路由是否执行身份、owner 和权限复核。
+| 命名空间 | Page | Widget | headless |
+| -------- | ---- | ------ | -------- |
+| `lifecycle`, `i18n`, `storage`, `settings`, `shared`, `assets`, `context`, `persona`, `user`, `background`, `animation`, `api`, `dataExchange` | ✅ | ✅ | ✅ |
+| `ai`, `analytics`, `media`, `speech`, `scheduler`, `event`, `agent`, `report` 读 | ✅ | ✅ 按授予，否则拒绝桩 | ✅ |
+| `ui` 主题 / 语言 / 通知 | ✅ | ✅ | ✅ |
+| `ui.openUrl` / `listOpenUrls` | ✅ | ✅ | ❌ 不可用 |
+| `ui` title / confirm / fullscreen | ✅ | ❌ | ❌ |
+| `widget` register 系列 | ✅ | ❌ | ❌ 无此对象 |
+| `widget` 实例设置 / `invalidate` | ❌ | ✅ | ❌ |
+| `tappList`, `component`, `shortcut`, `dynamicContent` | ✅ | ❌ | ❌ 无此对象 |
+| `dom`, `file` | ✅ | ✅ | ❌ 无此对象 |
+| `model3d` | ✅ | 调用会报缺权限 | ❌ 无此对象 |
+| `brewList`, `federation`, `game` | ✅ | ❌ | ✅（有授予权限时可用） |
+| `platform` / `report` 写、`data.transform` | ✅ | ❌ Widget 只读 | ✅ |
+
+Widget 不会自动拥有完整面的写入/管理能力。调用前必须核对：当前是 Page、Widget 还是
+headless、方法是否在上表里、以及是否已有授予权限。新增能力时再核对权限映射、三种沙箱是否
+都该接、后端路由是否复核身份和 owner。
 
 `Tapp.context.getGeo()` 也是公开上下文方法；返回结果由后端地理信息服务决定。专业能力
 的请求/响应结构以对应前端服务类型和后端路由结构为准，不能从方法名猜测参数。
