@@ -1,7 +1,7 @@
 # Tapp 快速入门
 
 Tapp (Third-party App) 是 Myriad 的扩展应用系统，允许开发者创建自定义小组件、工具和功能扩展。
-当前推荐使用 `@myriad/tapp-cli` 创建、校验和打包项目；Manifest 字段与 SDK 能力分别见
+当前推荐使用 `@myriad-you/tapp-cli` 创建、校验和打包项目；Manifest 字段与 SDK 能力分别见
 [Manifest 配置](MANIFEST.md)和 [API 参考](API_REFERENCE.md)。CLI 的完整命令契约见
 [Myriad Tapp CLI](../../../tools/tapp-cli/README.md)。
 
@@ -10,9 +10,9 @@ Tapp (Third-party App) 是 Myriad 的扩展应用系统，允许开发者创建�
 Agent 和 CI 应固定包版本、显式指定 `myriad-tapp` binary，并始终使用 `--json`：
 
 ```bash
-npx --yes --package=@myriad/tapp-cli@0.1.0 myriad-tapp init ./my-tapp --type page
-npx --yes --package=@myriad/tapp-cli@0.1.0 myriad-tapp check ./my-tapp --json
-npx --yes --package=@myriad/tapp-cli@0.1.0 myriad-tapp pack ./my-tapp --json
+npx --yes --package=@myriad-you/tapp-cli@0.1.2 myriad-tapp init ./my-tapp --type page
+npx --yes --package=@myriad-you/tapp-cli@0.1.2 myriad-tapp check ./my-tapp --json
+npx --yes --package=@myriad-you/tapp-cli@0.1.2 myriad-tapp pack ./my-tapp --json
 ```
 
 任何非零退出状态都表示失败。`check` 返回状态 `1` 时，读取 `diagnostics`、修复项目并重新
@@ -25,7 +25,7 @@ npx --yes --package=@myriad/tapp-cli@0.1.0 myriad-tapp pack ./my-tapp --json
 starter：
 
 ```bash
-npm install --global @myriad/tapp-cli@0.1.0
+npm install --global @myriad-you/tapp-cli@0.1.2
 myriad-tapp init ./my-tapp --type page
 ```
 
@@ -47,7 +47,8 @@ myriad-tapp pack .
 列表页支持 **我的 / 站点** 范围、卡片 `1x1`·`2x1` 与登录用户拖拽排序；布局 API 见
 [列表布局](REST_API.md#列表布局-apitappslist-card-sizes)。若声明 `analytics:read`，
 可用 [访问统计 SDK](API_REFERENCE.md#访问统计-api)（admin 完整 summary；user/guest 仅
-访客卡片聚合；关闭采集时 `enabled: false` 短路）。
+访客卡片聚合；关闭采集时 `enabled: false` 短路）。站点 Agent 人设用
+[人设名片](API_REFERENCE.md#人设名片-api)（无需权限；只读名字、心情带、同源立绘路径）。
 
 Page 内可用 Canvas 2D / WebGL。Three.js 当作包内 guest 依赖放进 `page/` 并 require，贴图和
 `.glb` 走 `Tapp.assets`，不要走 CDN。约定见 [图形与轻量游戏](GRAPHICS.md)；可安装的官方
@@ -69,20 +70,22 @@ manifest {
 
 ### 为什么分三层？
 
-1. **避免代码冲突**：Widget 模式和 Page 模式加载不同的代码，互不干扰
+1. **避免代码冲突**：Widget 沙箱和 Page 沙箱加载不同的层，互不干扰
 2. **更小的加载体积**：Widget 只加载 `core + widget`，Page 只加载 `core + page`
 3. **清晰的职责分离**：每个部分专注于单一功能
 
+运行时还有三种沙箱，不是同一套 `window.Tapp`：
+
 ### 代码加载规则
 
-| 模式          | 加载的代码                     | 执行内容                                      |
-| ------------- | ------------------------------ | --------------------------------------------- |
-| Widget 模式   | `core + widget`                | Widget 精简 SDK、生命周期、模板与 `render`    |
-| Page 模式     | core 入口 + page 入口                 | 完整 SDK、生命周期和页面 UI            |
-| Headless 模式 | 仅 `core`                      | 完整 Bridge 与生命周期，无 Page/Widget UI     |
+| 沙箱     | 加载的层                         | 能调用什么 |
+| -------- | -------------------------------- | ---------- |
+| Widget   | `core` + 该 widget               | 精简 SDK：生命周期、模板与 `render`；没有联邦 / 对局 / Tapp·Brew 管理 |
+| Page     | `core` + `page`                  | 完整 SDK、生命周期和页面 UI |
+| headless | 仅 `core`（常驻用这一套）        | 无可见 UI；没有 `widget` / `tappList` / 组件 / 快捷键 / 动态内容 / DOM / 文件下载 / `model3d` |
 
-**三个模式都会触发** `Tapp.lifecycle`（含 `onReady` / `onDestroy` / pause/resume），不能把
-“是否有 onReady”当作代码分层边界。共享与后台逻辑放在 `core`；可见界面放在
+三种沙箱都会触发 `Tapp.lifecycle`（`onReady` / `onDestroy` / `onPause` / `onResume`），不能把
+“是否有 onReady”当作分层边界。`onPause` 是**隐藏**，不是销毁。共享与调度逻辑放在 `core`；可见界面放在
 `widget` / `page`（Widget 以 `Tapp.widgets[id].render` 为主，Page 可在 onReady 中挂载根 UI）。
 
 ### 代码结构示例
@@ -110,7 +113,7 @@ Tapp.widgets['my-widget'] = {
   render: async function(container, props) {
     var colors = core.getThemeColors(props.theme === 'dark');
     container.style.background = colors.bg;
-    container.innerHTML = '<div>Widget Content</div>';
+    container.textContent = 'Widget Content';
   }
 };
 ```
@@ -126,7 +129,7 @@ Tapp.lifecycle.onReady(async function() {
     document.documentElement.classList.contains('dark')
   );
   container.style.color = colors.text;
-  container.innerHTML = '<h1>Page Content</h1>';
+  container.textContent = 'Page Content';
 });
 ```
 
@@ -279,37 +282,30 @@ Tapp.widgets["my-widget"] = {
 
 ## 生命周期
 
-### onReady
+不要把 SDK 回调名理解成「暂停=销毁」。沙箱实例和安装是两层：
 
-当 Tapp 完全加载并准备就绪时触发。
+| 动作 | 发生时机 | SDK | 结果 |
+| ---- | -------- | --- | ---- |
+| **隐藏** | 切 Tab、窗口最小化、滚出视野、多窗口最小化 | `onPause` / `onResume`（宿主发 `lifecycle:pause` / `lifecycle:resume`） | iframe、桥、授予权限和会话令牌都还在；只通知停止活动 |
+| **销毁** | 停应用、代码变更、登录态/权限变更、暂存池淘汰、离开运行页（该页 Page iframe） | `onDestroy` | 这个沙箱实例释放，不可恢复；应用仍装着 |
+| **卸载** | 用户从平台移除该 TAPP | 先销毁全部实例，再清存储与注册 | 应用不再装着，需重新安装 |
+| **常驻** | 声明了 `backgroundRequirements` 或运行时 `Tapp.background.require` | headless core 跨页承接 | 没有页面 iframe，只有后台 core |
 
 ```javascript
 Tapp.lifecycle.onReady(async () => {
-  // 初始化代码
+  // 初始化；三种沙箱都会触发
 });
-```
 
-### onDestroy
-
-当 Tapp 即将被销毁时触发（停止或卸载）。
-
-```javascript
-Tapp.lifecycle.onDestroy(async () => {
-  // 清理代码
-});
-```
-
-### onPause / onResume
-
-当 Tapp 被暂停/恢复时触发。
-
-```javascript
 Tapp.lifecycle.onPause(() => {
-  // 暂停定时器等
+  // 隐藏：停 rAF / 音频，不要当作已经销毁
 });
 
 Tapp.lifecycle.onResume(() => {
-  // 恢复执行
+  // 重新可见
+});
+
+Tapp.lifecycle.onDestroy(async () => {
+  // 本实例即将释放
 });
 ```
 
@@ -451,9 +447,9 @@ Tapp.widgets["feed"] = {
 
 ---
 
-## 后台运行
+## 常驻（headless core）
 
-Tapp 默认在用户离开运行页面后会被**冻结**（暂停执行）。如果 Tapp 需要在后台持续运行，必须**声明后台运行需求**。
+离开运行页会**销毁**该页的 Page 沙箱，不是把页面 iframe「冻结」起来。跨页仍要跑的逻辑必须**声明常驻**（headless core）；没声明时离开页面后实例就没了。
 
 需要在应用重载后、尚未打开 Page/Widget 时就启动 core 的任务，应在 manifest 中声明需求：
 
@@ -463,7 +459,7 @@ Tapp 默认在用户离开运行页面后会被**冻结**（暂停执行）。�
 }
 ```
 
-运行时的 `Tapp.background.require/release` 适合动态增减需求；manifest 声明则负责首次启动和刷新后的恢复。两类来源独立计数，`release` 不会取消 manifest 的常驻声明。后台实例只加载共享 core，不加载 Page HTML/CSS 或 Widget 视图代码。
+运行时的 `Tapp.background.require/release` 适合动态增减需求；manifest 声明则负责首次启动和刷新后的恢复。两类来源独立计数，`release` 不会取消 manifest 的常驻声明。常驻实例只加载共享层 `core`，不加载 Page HTML/CSS 或 Widget 视图代码。
 
 后台同步结果应写入 `Tapp.storage`，让可见 Widget 通过默认 `refreshPolicy` 自动更新（见上一节），不要依赖 Widget 可见 interval。
 

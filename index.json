@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.48",
+  "version": "1.0.52",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-08-24T11:33:10.642Z",
+  "updated_at": "2026-08-28T11:45:43.365Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -1776,6 +1776,428 @@
       "verified": false,
       "created_at": "2026-08-21T07:37:43.563Z",
       "updated_at": "2026-08-21T07:37:43.563Z"
+    },
+    {
+      "id": "cn.echootaku.echo-stage",
+      "name": "回声剧场",
+      "version": "0.1.4",
+      "description": "安全加载本地视觉小说，并用 Myriad AI 创作、绘制与试玩自己的分支故事",
+      "long_description": "回声剧场是一套运行在 Myriad 沙箱中的声明式网页视觉小说启动器与创作工房。它安全读取 game.json、.echo 剧本和用户选择的本地媒体，不执行游戏目录中的任意代码；支持背景、对白、分支、变量、BGM、回看、自动播放、独立存档与 Myriad 宿主自动配音。余响工房可调用受治理的 Myriad AI 生成结构化故事和 16:9 场景图，并在本地解释器检查后立即试玩。应用附带《离岸之前》和《没有寄出的星图》两个明确标注的示例项目。",
+      "locales": {
+        "en-US": {
+          "name": "Echo Stage",
+          "description": "Load local visual novels and use Myriad AI to write, illustrate, and play branching stories",
+          "long_description": "Echo Stage is a sandboxed visual-novel launcher and creation workshop for Myriad. It reads game.json, declarative .echo scripts, and user-selected local media without executing arbitrary game-folder code. It supports branching stories, BGM, backlog, autoplay, isolated saves, and optional Myriad-hosted character dubbing. The Resonance Workshop can generate structured drafts and 16:9 scenes through governed Myriad AI tasks, validate them locally, and play them immediately. Two clearly labeled sample projects are included."
+        },
+        "ja-JP": {
+          "name": "エコーステージ",
+          "description": "ローカル作品を再生し、Myriad AI で分岐物語の執筆・作画・試演を行う",
+          "long_description": "エコーステージは Myriad 上で動くサンドボックス型ビジュアルノベルランチャー兼創作工房です。game.json、宣言型 .echo シナリオ、ユーザーが選んだローカル素材を読み込み、ゲームフォルダー内の任意コードは実行しません。分岐、BGM、履歴、自動再生、作品別セーブ、Myriad ホスト音声による任意の自動読み上げに対応します。余響工房では、管理された Myriad AI タスクで構造化された物語と 16:9 シーンを生成し、ローカル検証後すぐに試演できます。2本のサンプル作品を収録しています。"
+        }
+      },
+      "author": {
+        "name": "EchoOtaku",
+        "url": "https://github.com/EchoOtaku"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.echootaku.echo-stage",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "game",
+      "tags": [
+        "视觉小说",
+        "Galgame",
+        "本地播放器",
+        "分支剧情",
+        "AI 创作",
+        "自动配音"
+      ],
+      "permissions": [
+        "storage:read",
+        "storage:write",
+        "media:audio",
+        "speech:tts",
+        "ui:notification",
+        "ui:theme",
+        "ai:generate",
+        "ai:image"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M4 5.5A2.5 2.5 0 0 1 6.5 3H18a2 2 0 0 1 2 2v12.5a2.5 2.5 0 0 1-2.5 2.5H6.8A2.8 2.8 0 0 1 4 17.2V5.5Z' stroke='currentColor' stroke-width='1.8'/><path d='M8 8h8M8 12h5M8 16h7' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/><path d='m17 3-1 4 4-1' stroke='currentColor' stroke-width='1.6' stroke-linejoin='round'/></svg>",
+      "theme_color": "#315d75",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.echootaku.echo-stage/preview.html",
+        "styles": [
+          "apps/cn.echootaku.echo-stage/page.css",
+          "apps/cn.echootaku.echo-stage/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "theme": "dark"
+      },
+      "download": {
+        "manifest": "apps/cn.echootaku.echo-stage/manifest.json",
+        "code": "apps/cn.echootaku.echo-stage/main.js",
+        "readme": "apps/cn.echootaku.echo-stage/README.md",
+        "page_styles": "apps/cn.echootaku.echo-stage/page.css",
+        "page_template": "apps/cn.echootaku.echo-stage/page.html",
+        "i18n": {
+          "en-US": "apps/cn.echootaku.echo-stage/i18n/en-US.json",
+          "ja-JP": "apps/cn.echootaku.echo-stage/i18n/ja-JP.json",
+          "zh-CN": "apps/cn.echootaku.echo-stage/i18n/zh-CN.json"
+        },
+        "modules": {
+          "page/demo-archive.js": "apps/cn.echootaku.echo-stage/page/demo-archive.js",
+          "page/editor.js": "apps/cn.echootaku.echo-stage/page/editor.js",
+          "page/engine.js": "apps/cn.echootaku.echo-stage/page/engine.js",
+          "page/index.js": "apps/cn.echootaku.echo-stage/page/index.js",
+          "page/player.js": "apps/cn.echootaku.echo-stage/page/player.js"
+        }
+      },
+      "size": 14737452,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-08-26T00:55:42.920Z",
+      "updated_at": "2026-08-26T00:55:42.920Z"
+    },
+    {
+      "id": "cn.echootaku.railway-studio",
+      "name": "轨路工坊",
+      "version": "0.1.0",
+      "description": "在地图上设计铁路线路，并用同一工程生成可解释路线与票价的车票",
+      "long_description": "轨路工坊是一套离线铁路线路图编辑器与车票生成器。用户可导入自己的 PNG、JPEG 或 WebP 地图，在分层制图台中绘制直线与贝塞尔曲线、编辑节点和控制柄、布置站点与文字、配置网格吸附和动画时序。车票可直接输入新站名；尚未绘制的起终点进入横向路线栏，可一键开始放置并自动建立站点、线路与交通连接。车票模块读取同一份工程中的显式拓扑，展示经过线路、预计时间、距离、换乘与逐项票价说明。工程支持版本化 JSON 与静态 SVG 导出；受当前宿主字符串下载契约限制，不虚假声明二进制 PNG 文件导出。",
+      "locales": {
+        "en-US": {
+          "name": "Railway Studio",
+          "description": "Design railway maps and generate tickets with explainable routes and fares from the same project",
+          "long_description": "Railway Studio is an offline railway-map editor and ticket generator. Import your own PNG, JPEG, or WebP map, draw straight and Bezier routes, edit anchors and handles, place stations and labels, and configure snapping and animation timing. New station names entered for tickets become pending route cards in a horizontal tray; placing a card atomically creates station positions, line geometry, and transport links. Tickets read the same project's explicit graph and explain route, time, distance, transfers, and fare. Versioned JSON and static SVG exports are supported; binary PNG download is not misrepresented under the host's current text-only file contract.",
+          "preview": {
+            "version": 1,
+            "type": "snapshot",
+            "html": "apps/cn.echootaku.railway-studio/preview.en-US.html",
+            "styles": [
+              "apps/cn.echootaku.railway-studio/page.css",
+              "apps/cn.echootaku.railway-studio/preview.css"
+            ],
+            "viewport": {
+              "width": 1440,
+              "height": 900
+            },
+            "fit": "cover",
+            "focus": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "theme": "dark"
+          }
+        },
+        "ja-JP": {
+          "name": "レールウェイスタジオ",
+          "description": "同じプロジェクトから路線図を設計し、経路と運賃を説明できる切符を生成します",
+          "long_description": "レールウェイスタジオは、オフラインの路線図エディター兼切符ジェネレーターです。PNG、JPEG、WebP の地図を読み込み、直線やベジェ曲線、駅、文字、スナップ、アニメーションを編集できます。切符で新しい駅名を入力すると未描画経路カードが横スクロール式トレイに追加され、配置操作で駅位置、路線形状、交通接続を一括作成します。切符は同じプロジェクトの明示的なグラフを読み、経路、時間、距離、乗換、運賃内訳を説明します。バージョン付き JSON と静的 SVG に対応し、ホストの文字列専用ダウンロード契約下で PNG バイナリ出力を装いません。",
+          "preview": {
+            "version": 1,
+            "type": "snapshot",
+            "html": "apps/cn.echootaku.railway-studio/preview.ja-JP.html",
+            "styles": [
+              "apps/cn.echootaku.railway-studio/page.css",
+              "apps/cn.echootaku.railway-studio/preview.css"
+            ],
+            "viewport": {
+              "width": 1440,
+              "height": 900
+            },
+            "fit": "cover",
+            "focus": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "theme": "dark"
+          }
+        }
+      },
+      "author": {
+        "name": "EchoOtaku",
+        "url": "https://github.com/EchoOtaku"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.echootaku.railway-studio",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "productivity",
+      "tags": [
+        "铁路",
+        "线路图",
+        "地图编辑",
+        "车票",
+        "SVG",
+        "离线工具"
+      ],
+      "permissions": [
+        "storage:read",
+        "storage:write",
+        "ui:theme",
+        "ui:confirm"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M5 4v16M19 4v16M5 8h14M5 16h14' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/><circle cx='5' cy='8' r='2.2' fill='currentColor'/><circle cx='19' cy='16' r='2.2' fill='currentColor'/><path d='M8 12h8' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/></svg>",
+      "theme_color": "#1f8ca8",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.echootaku.railway-studio/preview.html",
+        "styles": [
+          "apps/cn.echootaku.railway-studio/page.css",
+          "apps/cn.echootaku.railway-studio/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "theme": "dark"
+      },
+      "download": {
+        "manifest": "apps/cn.echootaku.railway-studio/manifest.json",
+        "code": "apps/cn.echootaku.railway-studio/main.js",
+        "readme": "apps/cn.echootaku.railway-studio/README.md",
+        "page_styles": "apps/cn.echootaku.railway-studio/page.css",
+        "page_template": "apps/cn.echootaku.railway-studio/page.html",
+        "i18n": {
+          "en-US": "apps/cn.echootaku.railway-studio/i18n/en-US.json",
+          "ja-JP": "apps/cn.echootaku.railway-studio/i18n/ja-JP.json",
+          "zh-CN": "apps/cn.echootaku.railway-studio/i18n/zh-CN.json"
+        },
+        "modules": {
+          "page/animation.js": "apps/cn.echootaku.railway-studio/page/animation.js",
+          "page/app.js": "apps/cn.echootaku.railway-studio/page/app.js",
+          "page/editor.js": "apps/cn.echootaku.railway-studio/page/editor.js",
+          "page/fares.js": "apps/cn.echootaku.railway-studio/page/fares.js",
+          "page/files.js": "apps/cn.echootaku.railway-studio/page/files.js",
+          "page/geometry.js": "apps/cn.echootaku.railway-studio/page/geometry.js",
+          "page/history.js": "apps/cn.echootaku.railway-studio/page/history.js",
+          "page/index.js": "apps/cn.echootaku.railway-studio/page/index.js",
+          "page/migrations.js": "apps/cn.echootaku.railway-studio/page/migrations.js",
+          "page/network.js": "apps/cn.echootaku.railway-studio/page/network.js",
+          "page/project.js": "apps/cn.echootaku.railway-studio/page/project.js",
+          "page/route-animation.js": "apps/cn.echootaku.railway-studio/page/route-animation.js",
+          "page/route-planner.js": "apps/cn.echootaku.railway-studio/page/route-planner.js",
+          "page/serialization.js": "apps/cn.echootaku.railway-studio/page/serialization.js",
+          "page/storage.js": "apps/cn.echootaku.railway-studio/page/storage.js",
+          "page/ticket.js": "apps/cn.echootaku.railway-studio/page/ticket.js"
+        }
+      },
+      "size": 297979,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-08-27T11:32:51.809Z",
+      "updated_at": "2026-08-27T11:32:51.809Z"
+    },
+    {
+      "id": "cn.astelysin.signature-board",
+      "name": "共享签名板",
+      "version": "0.4.0",
+      "description": "让 Myriad 访客在共享画布上签名、涂鸦并浏览公开历史。",
+      "long_description": "一块由所有访客共同留下痕迹的横向共享签名板。已加入专用 Myriad Federation Room 的成员可以绘制并手动提交签名或画作；访客可查看管理员发布的公开快照。应用提供不可改写的追加式作品历史、举报与隐藏审核、成员封禁、手动画板归档，以及 2x2 / 4x2 主页预览小组件。",
+      "locales": {
+        "en-US": {
+          "name": "Shared Signature Board",
+          "description": "Leave a signature or drawing on a shared canvas",
+          "long_description": "A landscape community signature board where Room members can draw and submit signatures or artwork, while visitors view an administrator-published snapshot. It includes append-only history, moderation, member blocking, manual board archives, and 2x2 / 4x2 dashboard widgets."
+        },
+        "ja-JP": {
+          "name": "共有サインボード",
+          "description": "共有キャンバスにサインや絵を残す",
+          "long_description": "Room メンバーがサインや絵を描いて投稿し、訪問者が管理者公開のスナップショットを閲覧できる横長の共有サインボードです。追記型履歴、モデレーション、メンバーのブロック、手動アーカイブ、2x2 / 4x2 ホームウィジェットに対応します。"
+        }
+      },
+      "author": {
+        "name": "Astelysin"
+      },
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.astelysin.signature-board",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "social",
+      "tags": [
+        "签名板",
+        "绘画",
+        "涂鸦",
+        "社交",
+        "联邦",
+        "Room",
+        "小组件",
+        "多语言"
+      ],
+      "permissions": [
+        "storage:read",
+        "storage:write",
+        "ui:confirm",
+        "widget:register",
+        "federation:read",
+        "federation:room",
+        "federation:message"
+      ],
+      "theme_color": "#8b5cf6",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.astelysin.signature-board/preview.html",
+        "styles": [
+          "apps/cn.astelysin.signature-board/page.css",
+          "apps/cn.astelysin.signature-board/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "theme": "light"
+      },
+      "download": {
+        "manifest": "apps/cn.astelysin.signature-board/manifest.json",
+        "code": "apps/cn.astelysin.signature-board/main.js",
+        "readme": "apps/cn.astelysin.signature-board/README.md",
+        "widget_styles": "apps/cn.astelysin.signature-board/widget.css",
+        "page_styles": "apps/cn.astelysin.signature-board/page.css",
+        "page_template": "apps/cn.astelysin.signature-board/page.html",
+        "widget_templates": {
+          "board-preview": {
+            "2x2": "apps/cn.astelysin.signature-board/templates/widget-2x2.html",
+            "4x2": "apps/cn.astelysin.signature-board/templates/widget-4x2.html"
+          }
+        },
+        "i18n": {
+          "en-US": "apps/cn.astelysin.signature-board/i18n/en-US.json",
+          "ja-JP": "apps/cn.astelysin.signature-board/i18n/ja-JP.json",
+          "zh-CN": "apps/cn.astelysin.signature-board/i18n/zh-CN.json"
+        },
+        "modules": {
+          "page/editor.js": "apps/cn.astelysin.signature-board/page/editor.js",
+          "page/entry.js": "apps/cn.astelysin.signature-board/page/entry.js",
+          "page/runtime.js": "apps/cn.astelysin.signature-board/page/runtime.js",
+          "widget/entry.js": "apps/cn.astelysin.signature-board/widget/entry.js"
+        }
+      },
+      "size": 142828,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-08-28T05:48:02.704Z",
+      "updated_at": "2026-08-28T05:48:02.704Z"
+    },
+    {
+      "id": "cn.astelysin.protein-viewer",
+      "name": "蛋白质 3D 结构查看器",
+      "version": "0.4.3",
+      "description": "简洁的 3D 线框分子查看器：从 RCSB PDB 拉取结构，浏览历史记录，支持残基序列定位、链筛选、测量、结构内搜索、元素配色与链配色。",
+      "long_description": "在 Myriad 里直接浏览蛋白质与分子三维结构。输入 PDB ID（如 1A3N）或按名称搜索 RCSB PDB 库拉取结构，并通过历史记录快速返回最近查看的条目。采用清晰的 Wireframe 线框显示，支持可点击残基序列、链筛选、结构内搜索、两点测距、元素配色与链配色、拖拽旋转、滚轮缩放、自动旋转与全屏查看，并可导出 SVG 截图和 mmCIF 文件。",
+      "locales": {
+        "en-US": {
+          "name": "Protein 3D Viewer",
+          "description": "Interactive Wireframe viewer: load structures from RCSB PDB by ID or search, inspect with orbit controls, residue selection, and measurement."
+        },
+        "ja-JP": {
+          "name": "タンパク質 3D ビューア",
+          "description": "インタラクティブな Wireframe ビューア。RCSB PDB から ID・検索で構造を取得し、回転・ズーム、残基選択、測定に対応します。"
+        }
+      },
+      "author": {
+        "name": "Astelysin"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.astelysin.protein-viewer",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "developer",
+      "tags": [
+        "3D",
+        "分子",
+        "蛋白质",
+        "结构生物学",
+        "PDB",
+        "RCSB",
+        "WebGL",
+        "Three.js",
+        "科学",
+        "查看器",
+        "测量",
+        "历史记录"
+      ],
+      "permissions": [
+        "network:fetch",
+        "storage:read",
+        "ui:theme",
+        "ui:fullscreen",
+        "ui:notification"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='7' cy='8' r='2.4' fill='#ff6b6b'/><circle cx='16' cy='6' r='2.8' fill='#4f8cff'/><circle cx='17' cy='15' r='2.1' fill='#51cf66'/><circle cx='6' cy='17' r='1.7' fill='#ffd43b'/><path d='M9 7.5 13.6 6M8.6 10l5.4 2M16 9l-.4 4M9.2 16.6l4-1.8' stroke='currentColor' stroke-width='1.2' stroke-linecap='round'/></svg>",
+      "theme_color": "#0ea5e9",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.astelysin.protein-viewer/preview.html",
+        "styles": [
+          "apps/cn.astelysin.protein-viewer/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "theme": "light"
+      },
+      "download": {
+        "manifest": "apps/cn.astelysin.protein-viewer/manifest.json",
+        "code": "apps/cn.astelysin.protein-viewer/main.js",
+        "readme": "apps/cn.astelysin.protein-viewer/README.md",
+        "page_styles": "apps/cn.astelysin.protein-viewer/page.css",
+        "page_template": "apps/cn.astelysin.protein-viewer/page.html",
+        "i18n": {
+          "en-US": "apps/cn.astelysin.protein-viewer/i18n/en-US.json",
+          "ja-JP": "apps/cn.astelysin.protein-viewer/i18n/ja-JP.json",
+          "zh-CN": "apps/cn.astelysin.protein-viewer/i18n/zh-CN.json"
+        },
+        "modules": {
+          "page/bonds.js": "apps/cn.astelysin.protein-viewer/page/bonds.js",
+          "page/build.js": "apps/cn.astelysin.protein-viewer/page/build.js",
+          "page/colors.js": "apps/cn.astelysin.protein-viewer/page/colors.js",
+          "page/entry.js": "apps/cn.astelysin.protein-viewer/page/entry.js",
+          "page/parser.js": "apps/cn.astelysin.protein-viewer/page/parser.js",
+          "page/structure-loader.js": "apps/cn.astelysin.protein-viewer/page/structure-loader.js",
+          "page/viewer.js": "apps/cn.astelysin.protein-viewer/page/viewer.js"
+        }
+      },
+      "size": 105246,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-08-28T11:45:43.365Z",
+      "updated_at": "2026-08-28T11:45:43.365Z"
     }
   ],
   "last_updated": "2026-08-04T09:47:35Z"

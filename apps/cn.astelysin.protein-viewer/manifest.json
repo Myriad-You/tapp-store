@@ -1,0 +1,97 @@
+{
+  "id": "cn.astelysin.protein-viewer",
+  "name": "蛋白质 3D 结构查看器",
+  "version": "0.4.3",
+  "minSystemVersion": "0.3.29",
+  "description": "简洁的 3D 线框分子查看器：从 RCSB PDB 拉取结构，浏览历史记录，支持残基序列定位、链筛选、测量、结构内搜索、元素配色与链配色。",
+  "locales": {
+    "en-US": {
+      "name": "Protein 3D Viewer",
+      "description": "Interactive Wireframe viewer: load structures from RCSB PDB by ID or search, inspect with orbit controls, residue selection, and measurement."
+    },
+    "ja-JP": {
+      "name": "タンパク質 3D ビューア",
+      "description": "インタラクティブな Wireframe ビューア。RCSB PDB から ID・検索で構造を取得し、回転・ズーム、残基選択、測定に対応します。"
+    }
+  },
+  "category": "developer",
+  "runtimeModules": [
+    "three"
+  ],
+  "author": {
+    "name": "Astelysin"
+  },
+  "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.astelysin.protein-viewer",
+  "repository": "https://github.com/Myriad-You/tapp-store",
+  "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='7' cy='8' r='2.4' fill='#ff6b6b'/><circle cx='16' cy='6' r='2.8' fill='#4f8cff'/><circle cx='17' cy='15' r='2.1' fill='#51cf66'/><circle cx='6' cy='17' r='1.7' fill='#ffd43b'/><path d='M9 7.5 13.6 6M8.6 10l5.4 2M16 9l-.4 4M9.2 16.6l4-1.8' stroke='currentColor' stroke-width='1.2' stroke-linecap='round'/></svg>",
+  "themeColor": "#0ea5e9",
+  "permissions": [
+    "network:fetch",
+    "storage:read",
+    "ui:theme",
+    "ui:fullscreen",
+    "ui:notification"
+  ],
+  "apis": {
+    "search": {
+      "type": "http",
+      "access": "public",
+      "method": "POST",
+      "endpoint": "https://search.rcsb.org/rcsbsearch/v2/query",
+      "body": {
+        "query": {
+          "type": "terminal",
+          "service": "full_text",
+          "parameters": {
+            "value": "{{params.query}}"
+          }
+        },
+        "return_type": "entry",
+        "request_options": {
+          "return_all_hits": false,
+          "paginate": {
+            "start": 0,
+            "rows": 8
+          }
+        }
+      },
+      "cacheTtl": 600,
+      "description": "按名称关键词搜索 RCSB PDB 条目"
+    },
+    "titles": {
+      "type": "http",
+      "access": "public",
+      "method": "POST",
+      "endpoint": "https://data.rcsb.org/graphql",
+      "body": {
+        "query": "{ entries(entry_ids: {{params.entry_ids}}) { rcsb_id struct { title } rcsb_entry_info { deposited_atom_count } } }"
+      },
+      "cacheTtl": 86400,
+      "description": "批量查询 PDB 条目标题与原子数"
+    },
+    "structure": {
+      "type": "http",
+      "access": "public",
+      "method": "GET",
+      "endpoint": "https://models.rcsb.org/v1/{{params.id}}/full?model_nums=1&encoding=cif&copy_all_categories=false",
+      "cacheTtl": 3600,
+      "description": "按 PDB ID 拉取精简类别的完整 mmCIF 结构坐标"
+    },
+    "structureCa": {
+      "type": "http",
+      "access": "public",
+      "method": "GET",
+      "endpoint": "https://models.rcsb.org/v1/{{params.id}}/atoms?label_atom_id=CA&model_nums=1&encoding=cif&copy_all_categories=false",
+      "cacheTtl": 3600,
+      "description": "完整结构超出宿主响应上限时拉取 Cα 骨架坐标"
+    }
+  },
+  "core": {
+    "entry": "main.js"
+  },
+  "page": {
+    "entry": "page/entry.js",
+    "template": "page.html",
+    "styles": "page.css"
+  }
+}

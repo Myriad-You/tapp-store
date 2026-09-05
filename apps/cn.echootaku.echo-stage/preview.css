@@ -1,0 +1,26 @@
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #020a11; }
+.preview-stage { position: relative; width: 100%; height: 100%; overflow: hidden; color: #f4e5ca; font-family: Inter, "Noto Sans SC", sans-serif; }
+.preview-scene { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.preview-brand { position: absolute; top: 48px; left: 72px; text-shadow: 0 3px 20px #000; }
+.preview-brand h1 { margin: 0; font: 400 50px Georgia, "Noto Serif SC", serif; letter-spacing: .12em; }
+.preview-brand p { margin: 6px 0 0; color: #b88b55; font: 12px Georgia, "Noto Serif SC", serif; letter-spacing: .16em; }
+.preview-launcher { position: absolute; top: 28%; left: 7%; width: 34%; text-shadow: 0 3px 24px #000; }
+.preview-kicker, .preview-samples header span { margin: 0; color: #d5aa72; font: 12px Georgia, serif; letter-spacing: .16em; }
+.preview-launcher h2 { margin: 12px 0 0; font: 400 60px/1.16 Georgia, "Noto Serif SC", serif; letter-spacing: .06em; }
+.preview-launcher > p:not(.preview-kicker) { margin: 22px 0 0; color: rgba(240,226,203,.76); font: 17px/1.85 Georgia, "Noto Serif SC", serif; }
+.preview-actions { display: flex; gap: 12px; margin-top: 28px; }
+.preview-actions span, .preview-play { padding: 12px 20px; border: 1px solid rgba(213,170,114,.6); background: rgba(3,10,16,.72); color: #f4e5ca; font-family: Georgia, "Noto Serif SC", serif; }
+.preview-actions span:first-child { font-size: 19px; }
+.preview-launcher small { display: block; margin-top: 18px; color: rgba(240,226,203,.62); }
+.preview-samples { position: absolute; top: 24%; right: 6%; width: 46%; padding: 22px; border: 1px solid rgba(213,170,114,.25); background: rgba(3,9,14,.58); box-shadow: 0 24px 80px rgba(0,0,0,.36); }
+.preview-samples header { display: flex; align-items: end; justify-content: space-between; margin-bottom: 16px; }
+.preview-samples header h2 { margin: 4px 0 0; font: 400 25px Georgia, "Noto Serif SC", serif; letter-spacing: .08em; }
+.preview-samples header p { width: 210px; margin: 0; color: rgba(240,226,203,.7); font-size: 12px; text-align: right; }
+.preview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.preview-grid article { overflow: hidden; border: 1px solid rgba(213,170,114,.28); background: rgba(2,8,13,.8); }
+.preview-cover { position: relative; aspect-ratio: 16/9; overflow: hidden; }
+.preview-cover img { width: 100%; height: 100%; object-fit: cover; }
+.preview-cover b { position: absolute; right: 10px; bottom: 9px; color: #d5aa72; font: 11px Georgia, serif; letter-spacing: .14em; }
+.preview-grid h3 { margin: 15px 15px 0; font: 400 20px Georgia, "Noto Serif SC", serif; }
+.preview-grid article > p { min-height: 40px; margin: 8px 15px 0; color: rgba(240,226,203,.72); font-size: 12px; line-height: 1.55; }
+.preview-play { display: inline-block; margin: 13px 15px 15px; padding: 8px 14px; font-size: 12px; }

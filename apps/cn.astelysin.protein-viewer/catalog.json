@@ -1,0 +1,19 @@
+{
+  "long_description": "在 Myriad 里直接浏览蛋白质与分子三维结构。输入 PDB ID（如 1A3N）或按名称搜索 RCSB PDB 库拉取结构，并通过历史记录快速返回最近查看的条目。采用清晰的 Wireframe 线框显示，支持可点击残基序列、链筛选、结构内搜索、两点测距、元素配色与链配色、拖拽旋转、滚轮缩放、自动旋转与全屏查看，并可导出 SVG 截图和 mmCIF 文件。",
+  "tags": ["3D", "分子", "蛋白质", "结构生物学", "PDB", "RCSB", "WebGL", "Three.js", "科学", "查看器", "测量", "历史记录"],
+  "featured": false,
+  "verified": false,
+  "license": "MIT",
+  "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.astelysin.protein-viewer",
+  "repository": "https://github.com/Myriad-You/tapp-store",
+  "preview": {
+    "version": 1,
+    "type": "snapshot",
+    "html": "preview.html",
+    "styles": ["preview.css"],
+    "viewport": { "width": 1440, "height": 900 },
+    "fit": "cover",
+    "focus": { "x": 0.5, "y": 0.5 },
+    "theme": "light"
+  }
+}

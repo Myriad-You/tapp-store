@@ -1,0 +1,19 @@
+{
+  "app.name": "共享签名板",
+  "app.description": "在共享画布上留下签名或涂鸦",
+  "widget.title": "共享签名板",
+  "widget.snapshotReady": "最近公开快照",
+  "widget.snapshotWaiting": "等待快照",
+  "widget.live": "共享中",
+  "widget.waiting": "待发布",
+  "widget.empty": "还没有公开快照",
+  "widget.intro": "所有人的签名与画作，共同留在一块画布上。",
+  "widget.drawings": "公开作品",
+  "widget.drawingsShort": "作品",
+  "widget.occupancy": "占用",
+  "widget.archives": "归档",
+  "widget.snapshotMissing": "等待管理员发布",
+  "widget.snapshotPublished": "快照已发布",
+  "widget.readyAria": "共享签名板最近快照",
+  "widget.emptyAria": "共享签名板尚无公开快照"
+}

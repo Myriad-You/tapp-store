@@ -1,0 +1,25 @@
+{
+  "long_description": "一块由所有访客共同留下痕迹的横向共享签名板。已加入专用 Myriad Federation Room 的成员可以绘制并手动提交签名或画作；访客可查看管理员发布的公开快照。应用提供不可改写的追加式作品历史、举报与隐藏审核、成员封禁、手动画板归档，以及 2x2 / 4x2 主页预览小组件。",
+  "tags": ["签名板", "绘画", "涂鸦", "社交", "联邦", "Room", "小组件", "多语言"],
+  "featured": false,
+  "verified": false,
+  "securityReview": true,
+  "preview": {
+    "version": 1,
+    "type": "snapshot",
+    "html": "preview.html",
+    "styles": ["page.css", "preview.css"],
+    "viewport": { "width": 1440, "height": 900 },
+    "fit": "cover",
+    "focus": { "x": 0.5, "y": 0.5 },
+    "theme": "light"
+  },
+  "locales": {
+    "en-US": {
+      "long_description": "A landscape community signature board where Room members can draw and submit signatures or artwork, while visitors view an administrator-published snapshot. It includes append-only history, moderation, member blocking, manual board archives, and 2x2 / 4x2 dashboard widgets."
+    },
+    "ja-JP": {
+      "long_description": "Room メンバーがサインや絵を描いて投稿し、訪問者が管理者公開のスナップショットを閲覧できる横長の共有サインボードです。追記型履歴、モデレーション、メンバーのブロック、手動アーカイブ、2x2 / 4x2 ホームウィジェットに対応します。"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "app.name": "共有サインボード",
+  "app.description": "共有キャンバスにサインや絵を残す",
+  "widget.title": "共有サインボード",
+  "widget.snapshotReady": "最新の公開スナップショット",
+  "widget.snapshotWaiting": "スナップショット待ち",
+  "widget.live": "共有中",
+  "widget.waiting": "公開待ち",
+  "widget.empty": "公開スナップショットはまだありません",
+  "widget.intro": "みんなのサインと絵を、一枚のキャンバスに。",
+  "widget.drawings": "公開作品",
+  "widget.drawingsShort": "作品",
+  "widget.occupancy": "使用率",
+  "widget.archives": "アーカイブ",
+  "widget.snapshotMissing": "管理者の公開を待っています",
+  "widget.snapshotPublished": "スナップショット公開済み",
+  "widget.readyAria": "共有サインボードの最新スナップショット",
+  "widget.emptyAria": "共有サインボードに公開スナップショットはありません"
+}

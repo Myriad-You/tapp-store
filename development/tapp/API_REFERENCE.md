@@ -24,8 +24,10 @@
 - [数据处理 API](#数据处理-api)
 - [媒体控制 API](#媒体控制-api)
 - [上下文 API](#上下文-api)
+- [人设名片 API](#人设名片-api)
 - [用户角色 API](#用户角色-api)
 - [Federation API](#federation-api)
+- [Game API](#game-api)
 - [Tapp 列表 API](#tapp-列表-api)
 - [Brew 列表 API](#brew-列表-api)
 - [组件注册 API](#组件注册-api)
@@ -505,7 +507,7 @@ Manifest 示例：
 
 生成、绑定、重定向走宿主代调 Tripo；密钥不出沙箱。已持久化的 GLB 仍是公开
 content-addressed 资源，`Tapp.model3d.getUrl` / `getMetadata` 不需要本权限（沙箱
-CSP 不能直接 `fetch` `/api/digital-life/3d/assets/...`，由宿主读回后在 iframe 内
+CSP 不能直接 `fetch` `/api/model3d/assets/...`，由宿主读回后在 iframe 内
 做成 blob）。
 
 只在 **Page** 注册生成 handlers；Widget 上的 `Tapp.model3d` 是拒绝桩。
@@ -527,14 +529,14 @@ const gltf = await new GLTFLoader().loadAsync(url);
 ```
 
 `createTask` 的 `operation`：`image_to_model` | `multiview_to_model` | `rig_check` |
-`rig` | `retarget`。未写明的 Web 预算默认值与管理员 Digital Life 管线相同。
+`rig` | `retarget`。未写明的 Web 预算默认值与管理员 Merope 管线相同。
 单次上传上限 16 MiB。
 
 ---
 
 ## AI API
 
-**权限**: `ai:generate`, `ai:analyze`, `ai:chat`, `ai:image`
+**权限**: `ai:generate`, `ai:analyze`, `ai:chat`, `ai:image`, `ai:search`
 
 AI 只提供服务端治理的 Task API。Manifest 必须通过 `ai` 声明 operation、model tier、context
 source 与 output format，并同时申请 operation 对应的 `ai:*` 权限。
@@ -567,8 +569,9 @@ stop();
 | --------- | ------- | ---- |
 | `generate` | 非空字符串，或 `{ prompt }` | 文本生成 |
 | `analyze` | `{ data, instruction? }` | `data` 必填 |
-| `chat` | `{ message }` 或等价消息字段 | 对话 |
-| `image` | 非空字符串，或 `{ prompt, width?, height? }` | 图片生成；见下表 |
+| `chat` | `{ messages: [{ role, content }] }` | `role` 为 `system` \| `user` \| `assistant`；1–100 条 |
+| `search` | 非空字符串，或 `{ query, searchType?, maxResults?, searchPrompt? }` | 联网搜索；需 `ai:search` |
+| `image` | 非空字符串，或 `{ prompt, width?, height?, referenceImages? }` | 图片生成；见下表 |
 
 #### `operation: "image"`
 
@@ -579,6 +582,17 @@ stop();
 | `prompt` | string | — | 非空 | 也可用整段 `input` 字符串代替对象 |
 | `width` | number \| string | `1024` | clamp 到 256–2048 | 宽（像素）；也接受 `"768"` / `"768px"` |
 | `height` | number \| string | `1024` | clamp 到 256–2048 | 高（像素）；也接受 `"1024"` / `"1024px"` |
+| `referenceImages` | string[] | `[]` | 最多 4 张，解码后合计 ≤ 10 MiB | 按数组顺序提供参考图，支持 PNG / JPEG / WebP 的 base64 data URL，或本平台 `/api/brew/image-cache/...` 路径 |
+
+参考图只用于本次生图请求，不会作为文本拼进 prompt。可以在 prompt 中按顺序说明“第一张图的
+人物、第二张图的画风”。省略或传空数组时仍是文生图。参考图在预留额度和创建任务前校验；
+非法格式返回 `INVALID_AI_IMAGE_REFERENCE`，超数量或图片总大小返回 `AI_IMAGE_REFERENCE_LIMIT`。
+除 `referenceImages` 外，序列化后的 `input` 仍限制为 256 KiB，超限返回 `AI_TASK_INPUT_LIMIT`。
+
+本地上传可通过 `FileReader.readAsDataURL(file)` 转成 data URL；包内资源可先用
+`Tapp.assets.getArrayBuffer(path)` 读取，再以正确 MIME 创建 Blob 并转成 data URL。
+`blob:` URL、包内路径、任意 HTTP(S) URL、SVG/GIF 不可直接作为参考图。
+复用上次生成的图片时传任务结果的 `value.url`（平台缓存路径）。
 
 ```javascript
 // 默认 1024×1024
@@ -608,6 +622,32 @@ await Tapp.ai.tasks.create({
   input: { prompt: "wide landscape at dusk", width: 1344, height: 768 },
   output: { format: "image" },
 });
+
+// 多参考图：referenceFile 和 styleFile 来自页面的文件选择控件
+function asDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+await Tapp.ai.tasks.create({
+  version: 2,
+  operation: "image",
+  input: {
+    prompt: "保留第一张图的人物外观，使用第二张图的配色与画风",
+    referenceImages: await Promise.all([
+      asDataUrl(referenceFile),
+      asDataUrl(styleFile),
+    ]),
+    width: 1024,
+    height: 1536,
+  },
+  output: { format: "image" },
+  idempotencyKey: "portrait-with-style-v1",
+});
 ```
 
 成功结果大致为：
@@ -615,16 +655,29 @@ await Tapp.ai.tasks.create({
 ```json
 {
   "format": "image",
-  "value": { "url": "https://...", "width": 768, "height": 1024 }
+  "value": { "url": "/api/brew/image-cache/ab/<sha256>.png", "width": 768, "height": 1024 }
 }
 ```
 
 `image` 必须申请 `ai:image`，Manifest `ai.operations` 含 `"image"`，且 `output.format`
 为 `"image"`。供应商与模型由服务端选择；Tapp 只声明 operation 与输入，不指定 provider。
+平台按授予权限决定是否可调用；新增参考图参数不改变声明、批准或授予权限的规则。
+
+参考图映射到 OpenAI `/images/edits` 的 multipart `image` / `image[]`、OpenRouter 的
+`input_references`、Volcengine/Ark/Seedream 的 `image` 数组，以及 Gemini 的 `inlineData`。
+底层模型是否接受参考图、支持的张数和生成效果由供应商决定，平台的 4 张上限不保证每个模型
+都支持 4 张；供应商拒绝会令任务失败，不会静默丢弃参考图重试文生图。
+供应商错误详情不会返回沙箱，任务返回固定的 `AI_PROVIDER_ERROR` 错误。
+
+供应商接口依据：[OpenAI](https://developers.openai.com/api/docs/guides/image-generation)、
+[OpenRouter](https://openrouter.ai/docs/guides/overview/multimodal/image-generation)、
+[Seedream](https://docs.byteplus.com/api/docs/ModelArk/1824121)、
+[Gemini](https://ai.google.dev/gemini-api/docs/image-generation)。
 
 任务绑定当前 Tapp/subject/owner，最多并发 4 个，125 秒执行上限，终态保留 15 分钟。
 并发/保留上限和 `idempotencyKey` 在跨副本事务中原子判定；同一身份重复提交相同请求只返回
 原任务，不会重复调用模型或重复计费。
+参考图内容与顺序参与幂等判定；替换或调换参考图时应使用新的 `idempotencyKey`。
 `platform`、`report` 上下文还需对应读取权限；跨 Tapp 上下文不能由 AI 接口静默获取，必须
 先走 One-shot Data Exchange。结构化 JSON 输出会在后端解析并验证 inline schema。
 
@@ -964,6 +1017,36 @@ const system = await Tapp.context.getSystem();
 
 ---
 
+## 人设名片 API
+
+**无需权限** — 读取站点 Agent 人设的公开名片。Page、Widget 和 headless core 都可调用。
+
+这是只读投影，不是感知、表演或开口，也不会把形象嵌进沙箱。
+
+```javascript
+const card = await Tapp.persona.get();
+// {
+//   enabled: true,
+//   name: "Arael",
+//   moodBand: "calm",   // floor | sad | tense | calm | excited
+//   activity: "idle",   // idle | working | thinking | talking
+//   portraitUrl: "/api/brew/image-cache/ab/abcd.png" // 或 null
+// }
+
+if (card.portraitUrl) {
+  img.src = card.portraitUrl; // 同源 <img>；CSP 已允许宿主 origin
+}
+```
+
+- `enabled`：人设是否开启。关掉时 `name` 为 `Agent`。
+- `name`：对外显示名。开启但未写名字时为 `Arael`。
+- `moodBand` / `activity`：当前说话对象的心情带与活动。游客没有说话对象状态，得到基线（`calm` / `idle`）。不返回心情数字。
+- `portraitUrl`：宿主同源路径，可直接作为 `<img src>`。没有立绘、或路径不是同源相对路径时为 `null`。不要用 `network:fetch` 去拉这张图；不要假定能拿到性格正文或 live Rig。
+
+Playground 预览返回固定样例，不打真实 API。
+
+---
+
 ## 用户角色 API
 
 **无需权限** - 获取当前用户的角色信息
@@ -1043,12 +1126,23 @@ const timeline = await Tapp.federation.getTimeline(); // 已登录个人 Timelin
 const following = await Tapp.federation.getFollowing();
 const followers = await Tapp.federation.getFollowers();
 
+const rooms = await Tapp.federation.getRoomsFeed();
+// rooms.audience === "rooms"；item.scope 为 "rooms"
+
 await Tapp.federation.follow("https://peer.example/users/alice");
 await Tapp.federation.unfollow("https://peer.example/users/alice");
 ```
 
 `getFeed()` 是角色感知入口：游客只读公开 Activity，已登录用户合并公开 Activity 与自己的
 Timeline。需要同时展示公开内容时优先 `getFeed()`；`getTimeline()` 保留为原始个人 Timeline。
+
+`getRoomsFeed()`（Myriad ≥ v0.4.0）回答的是另一个问题：**本实例加入的每个群聊里，出现过
+的每个实例的每个用户**的公开帖，去重后按时间倒序。范围按 **实例（domain）** 算而不是按成员
+算 —— 只要某个实例在某个已加入的房间里有过一名活跃成员，该实例上全部用户的公开帖都在结果
+里，本站用户也算。与关注关系无关：关注那条线是 `getFeed()` / `getTimeline()`。
+
+本地公开发帖会同时投递给粉丝和群邻实例的共享收件箱；只有 `visibility: "public"` 走群邻投
+递，`followers` / `direct` 的收件人是明确的，不会扩散出寻址范围。
 
 ### 媒体上传与 freeform Note
 
@@ -1688,21 +1782,26 @@ Tapp.assets.revokeAll(); // 也会在 onDestroy 时自动调用
 
 ## 能力边界与完整命名空间
 
-`generateFullSDK()` 用于 Page 和 headless core；`generateWidgetSDK()` 是缩小能力面的 Widget 版本。
-完整版当前包含以下命名空间：
+Page 用完整 SDK，Widget 用精简面，headless（常驻）再拿掉可见控制面。方法在 `window.Tapp`
+上可见不等于可调用：还要当前沙箱接了这个方法，并且已有**授予权限**。
+声明式网络的调用约定是可调用函数 **`Tapp.api(name, params)`**，并带 **`Tapp.api.list()`**。
+
+Page 完整面当前包含以下命名空间（`analytics` / `agent` 也挂在 `Tapp` 上）：
 
 | 命名空间                                   | 主要能力                                            | 权限族                             |
 | ------------------------------------------ | --------------------------------------------------- | ---------------------------------- |
+| `lifecycle`, `i18n`                        | `onReady` / `onDestroy` / `onPause` / `onResume`；安装 i18n | public                             |
 | `storage`, `settings`, `shared`            | 私有 KV、安装设置、安装级共享数据（读含签名游客）   | `storage:read`, `storage:write`    |
 | `dataExchange`                             | 逐次授权的跨 Tapp 具名数据交换                      | Manifest + one-shot consent        |
 | `ui`, `animation`, `dynamicContent`, `dom` | 宿主 UI、主题、动画和安全 DOM helper                | `ui:*` 或 public                   |
 | `platform`, `data`                         | 平台数据读取、写入、转换和注册                      | `platform:*`                       |
 | `analytics`                                | 站点访问统计聚合（admin 完整 / 非 admin 访客卡片）  | `analytics:read`                   |
-| `ai`, `report`                             | 服务端治理的 AI Task 与报告读写                     | `ai:*`, `report:*`                 |
+| `ai`, `report`                             | 服务端治理的 AI Task 与报告读写                     | `ai:*`（含 `ai:search`）, `report:*` |
 | `model3d`                                  | Tripo 图生 3D / rig / retarget；`getUrl` 回沙箱 blob | `3d:generate`（资产读取 public） |
-| `widget`                                   | 管理员动态注册与配置 Widget                         | `widget:register`                  |
+| `widget`                                   | Page：动态注册；Widget 沙箱：实例设置 / `invalidate` | `widget:register`（仅 register 系列） |
 | `media`                                    | 播放器读取和控制                                    | `media:*`                          |
 | `context`, `user`                          | 应用、用户、导航、系统和地理上下文                  | public                             |
+| `persona`                                  | Agent 人设只读名片（名字、心情带、主立绘路径）      | public                             |
 | `component`, `shortcut`                    | 主题/Agent 组件和快捷键注册                         | `component:*`, `shortcut:register` |
 | `event`, `background`, `scheduler`         | 在线 Event Broker、常驻需求和持久化任务             | `event:*`（含 background.require/release→`event:subscribe`）、`scheduler:register` |
 | `agent`                                    | schema 约束的 Agent Interaction                     | Manifest + Runtime Grant           |
@@ -1712,15 +1811,28 @@ Tapp.assets.revokeAll(); // 也会在 onDestroy 时自动调用
 | `tappList`                                 | Tapp 查询、安装、启停、卸载与导出                   | `tappList:*`                       |
 | `brewList`                                 | Brew 列表、源、用户分类 create/delete、评论和 OPML  | `brew:*`                           |
 | `federation`                               | 身份、Feed、关注、Note/媒体发布、Channel、Room、Ring、信任和传输 | `federation:*`              |
+| `game`                                     | 联邦房间对局会话（`create`/`join`/`sendIntent`/`sendState`） | `game:session` + `federation:read`/`room`/`message` |
 
-Widget SDK 只保留 Widget 渲染需要的生命周期、UI/主题、用户角色、存储、AI Task、平台读取、报告
-读取、媒体、背景需求、调度、声明式 API、上下文、DOM 和文件等子集。它不会自动拥有
-完整版的写入/管理能力。新增或调用 API 时必须核对：
+三种沙箱（Page / Widget / headless）不是同一套对象：
 
-1. SDK 生成器是否暴露方法；
-2. `permissionConfig.ts` 是否声明 action → 权限；
-3. 当前 Page 或 Widget 宿主是否注册 handler；
-4. 后端路由是否执行身份、owner 和权限复核。
+| 命名空间 | Page | Widget | headless |
+| -------- | ---- | ------ | -------- |
+| `lifecycle`, `i18n`, `storage`, `settings`, `shared`, `assets`, `context`, `persona`, `user`, `background`, `animation`, `api`, `dataExchange` | ✅ | ✅ | ✅ |
+| `ai`, `analytics`, `media`, `speech`, `scheduler`, `event`, `agent`, `report` 读 | ✅ | ✅ 按授予，否则拒绝桩 | ✅ |
+| `ui` 主题 / 语言 / 通知 | ✅ | ✅ | ✅ |
+| `ui.openUrl` / `listOpenUrls` | ✅ | ✅ | ❌ 不可用 |
+| `ui` title / confirm / fullscreen | ✅ | ❌ | ❌ |
+| `widget` register 系列 | ✅ | ❌ | ❌ 无此对象 |
+| `widget` 实例设置 / `invalidate` | ❌ | ✅ | ❌ |
+| `tappList`, `component`, `shortcut`, `dynamicContent` | ✅ | ❌ | ❌ 无此对象 |
+| `dom`, `file` | ✅ | ✅ | ❌ 无此对象 |
+| `model3d` | ✅ | 调用会报缺权限 | ❌ 无此对象 |
+| `brewList`, `federation`, `game` | ✅ | ❌ | ✅（有授予权限时可用） |
+| `platform` / `report` 写、`data.transform` | ✅ | ❌ Widget 只读 | ✅ |
+
+Widget 不会自动拥有完整面的写入/管理能力。调用前必须核对：当前是 Page、Widget 还是
+headless、方法是否在上表里、以及是否已有授予权限。新增能力时再核对权限映射、三种沙箱是否
+都该接、后端路由是否复核身份和 owner。
 
 `Tapp.context.getGeo()` 也是公开上下文方法；返回结果由后端地理信息服务决定。专业能力
 的请求/响应结构以对应前端服务类型和后端路由结构为准，不能从方法名猜测参数。

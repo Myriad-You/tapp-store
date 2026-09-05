@@ -74,6 +74,8 @@ manifest-src 'none'
 - `img-src` 默认仅 `data:` / `blob:` / 宿主同源。需要外链封面、CDN 图时，在
   `manifest.permissions` 声明 **`network:fetch`**（安装时由用户授权）；CSP 会
   追加 `https:` / `http:`。不要用 `/api/proxy/image` 折中绕过声明。
+  `Tapp.persona.get()` 的 `portraitUrl` 已是宿主同源路径，直接 `<img src>` 即可，不要
+  再申请 `network:fetch` 去拉立绘。
 - `connect-src` 仅 `blob:` / `data:`：包内 Loader（Three `FileLoader`、`.glb`）
   可以读沙箱自己创建的 blob。即使有 `network:fetch`，也不能直接 `fetch` `https:` /
   XHR/WS，出站仍走 Manifest `apis` + Bridge。包装器同样拒绝非 blob/data 的 `fetch`。
@@ -119,8 +121,8 @@ Tapp SDK 把调用转换为请求消息。宿主只接受同时满足以下条�
 - action 所需权限已出现在后端返回的 `granted_permissions` 中；
 - 当前 Page/Widget/headless 宿主注册了对应 handler。
 
-未知 action 默认拒绝。Page 与 Widget 注册的 handler 集不同，因此“SDK 上能看到方法”
-不等于每个运行模式都支持该方法；新增能力时要同步核对两类沙箱。
+未知 action 默认拒绝。Page、Widget、headless 注册的 handler 集不同，因此“SDK 上能看到方法”
+不等于每个运行模式都支持该方法；新增能力时要同步核对三种沙箱配置。
 
 ### Payload 大小
 
@@ -130,6 +132,7 @@ Tapp SDK 把调用转换为请求消息。宿主只接受同时满足以下条�
 | action | 上限 | 说明 |
 | ------ | ---- | ---- |
 | **默认**（绝大多数 API） | JSON 序列化后约 **1 MiB + 64 KiB** envelope | 超限返回 `Payload too large` |
+| `ai.tasks.create`（`operation: "image"` 且 `input.referenceImages` 为数组） | JSON payload **14 MiB** | 为参考图 base64 留出空间；后端另限最多 4 张、解码后合计 10 MiB，其余 `input` 字段合计 256 KiB |
 | `file.download` | 内容 Blob **10 MiB**；`filename` ≤ 1024；可选 `mimeType` ≤ 256 | 不走默认 1 MiB；非法/过大返回 `Invalid or oversized file payload` |
 | `federation.uploadMedia` | raw 媒体按业务 **图片 10 MiB / 视频 50 MiB**；bridge 允许 data URL/base64 字符约 `ceil(50 MiB * 4/3) + 256` | 对齐后端 multipart 路由（body 上限 55 MiB）；字段 `data` 必填字符串 |
 | `tappList.install` / `tappList.getInstallPackage` | JSON 序列化后约 **128 MiB + 512 KiB** | 对齐游戏档整包上限；商店安装只传元数据，不占这笔预算 |
@@ -138,6 +141,9 @@ Tapp SDK 把调用转换为请求消息。宿主只接受同时满足以下条�
 
 - 默认 1 MiB 针对的是 **postMessage JSON payload**，与 `Tapp.storage` 单值 1 MiB 是不同层，
   但数量级一致，避免大 blob 经 bridge 灌入主线程。
+- **AI 参考图**：Page、Widget、Headless 使用同一任务输入。更大的消息预算只对上述生图请求
+  生效，不能据此在文本 AI 或 storage 中传大图。参考图支持 PNG/JPEG/WebP data URL 或
+  本平台图片缓存路径；`blob:`、任意 HTTP(S) URL 不能直接作为参考图，见 [AI API](API_REFERENCE.md#ai-api)。
 - **商店**安装：`tappList.install` 只传元数据（`source: "store"` + `storeSource`，或 HTTP
   catalog `source`，加 `tappId`），包体不经 Bridge；由后端 REST `source=store` 下载，或宿主
   在失败/大包时浏览器下载后再 REST `source=direct` 安装。
@@ -178,8 +184,9 @@ const profile = await Tapp.api("profile", { id: "42" });
 
 ## 权限
 
-Manifest 的 `permissions` 是申请集合；安装批准后写入 `approved_permissions`，运行时的
-`granted_permissions` 则由批准集与当前角色/下放策略动态求交集：
+Manifest 的 `permissions` 是**声明权限**（申请集合）；安装批准后写入
+`approved_permissions`（**批准权限**）。运行时的 `granted_permissions` 是**授予权限**，
+由批准集与当前角色/下放策略动态求交集——只有这一层决定行为：
 
 ```json
 {
@@ -191,12 +198,12 @@ Manifest 的 `permissions` 是申请集合；安装批准后写入 `approved_per
 
 | 等级         | 含义                                         |
 | ------------ | -------------------------------------------- |
-| `public`     | action 不要求 Manifest 权限                  |
+| `public`     | 不要求声明权限                               |
 | `basic`      | 基础能力，仍须申请并被授予                   |
 | `elevated`   | 管理员可以通过权限下放配置授权给非管理员     |
 | `privileged` | 仅管理员，例如平台写入/注册和 Agent 组件注册 |
 
-前端显示的等级只用于说明和快速拒绝，后端动态授权结果才是最终事实。
+前端显示的等级只用于说明和快速拒绝，**授予权限**才是最终事实。
 
 ## DOM 与输入
 
@@ -251,7 +258,7 @@ Manifest **安装级 settings** 由 owner / 管理员写入 installation owner �
 
 ## 已知控制台信息
 
-卸载 iframe 时可能出现 blob URL 清理信息；某些浏览器也不允许重新定义 `top` 或
+销毁 iframe 时可能出现 blob URL 清理信息；某些浏览器也不允许重新定义 `top` 或
 `parent`。这些信息不能被简单当作安全结论：如果 Tapp 功能异常，应先确认 CSP 违规的
 具体指令、Bridge 返回的错误码，以及目标运行模式是否注册了 handler。详见
 [故障排除](TROUBLESHOOTING.md)。

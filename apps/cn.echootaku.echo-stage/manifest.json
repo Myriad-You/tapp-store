@@ -1,0 +1,67 @@
+{
+  "id": "cn.echootaku.echo-stage",
+  "name": "回声剧场",
+  "version": "0.1.4",
+  "minSystemVersion": "0.3.29",
+  "description": "安全加载本地视觉小说，并用 Myriad AI 创作、绘制与试玩自己的分支故事",
+  "locales": {
+    "en-US": {
+      "name": "Echo Stage",
+      "description": "Load local visual novels and use Myriad AI to write, illustrate, and play branching stories"
+    },
+    "ja-JP": {
+      "name": "エコーステージ",
+      "description": "ローカル作品を再生し、Myriad AI で分岐物語の執筆・作画・試演を行う"
+    }
+  },
+  "category": "game",
+  "core": {
+    "entry": "main.js"
+  },
+  "page": {
+    "entry": "page/index.js",
+    "template": "page.html",
+    "styles": "page.css"
+  },
+  "author": {
+    "name": "EchoOtaku",
+    "url": "https://github.com/EchoOtaku"
+  },
+  "permissions": [
+    "storage:read",
+    "storage:write",
+    "media:audio",
+    "speech:tts",
+    "ui:notification",
+    "ui:theme",
+    "ai:generate",
+    "ai:image"
+  ],
+  "ai": {
+    "protocolVersion": 2,
+    "operations": ["generate", "image"],
+    "modelTier": "standard",
+    "contextSources": [],
+    "outputFormats": ["text", "image"]
+  },
+  "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M4 5.5A2.5 2.5 0 0 1 6.5 3H18a2 2 0 0 1 2 2v12.5a2.5 2.5 0 0 1-2.5 2.5H6.8A2.8 2.8 0 0 1 4 17.2V5.5Z' stroke='currentColor' stroke-width='1.8'/><path d='M8 8h8M8 12h5M8 16h7' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/><path d='m17 3-1 4 4-1' stroke='currentColor' stroke-width='1.6' stroke-linejoin='round'/></svg>",
+  "themeColor": "#315d75",
+  "assets": [
+    "assets/demo/game.json",
+    "assets/demo/main.zh-CN.echo",
+    "assets/demo/main.en-US.echo",
+    "assets/demo/main.ja-JP.echo",
+    "assets/demo/station-blue-hour.png",
+    "assets/demo/station-with-yao.png",
+    "assets/demo/echo-theatre-stage.png",
+    "assets/launcher/echo-stage-library.png",
+    "assets/ui/echo-ripples.png",
+    "assets/starlight/game.json",
+    "assets/starlight/main.zh-CN.echo",
+    "assets/starlight/main.en-US.echo",
+    "assets/starlight/main.ja-JP.echo",
+    "assets/starlight/observatory-blue-hour.png",
+    "assets/starlight/observatory-dawn.png",
+    "assets/starlight/echo-theatre-starlight.png"
+  ]
+}

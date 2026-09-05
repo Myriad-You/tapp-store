@@ -10,7 +10,7 @@
 
 **症状**：控制台显示此错误，但 Tapp 功能正常。
 
-**原因**：浏览器在 iframe 沙箱中清理 blob URL 时的正常行为。当 Tapp 页面卸载或刷新时触发。
+**原因**：浏览器在 iframe 沙箱中清理 blob URL 时的正常行为。当该沙箱被销毁或刷新时触发。
 
 **解决方案**：无需处理，这是预期行为，不影响功能。沙箱已配置全局错误处理器来抑制此类错误。
 
@@ -40,7 +40,9 @@ Refused to load the script/style/image '...' because it violates the following C
 
 1. **外部脚本**：不支持直接加载外部 JS 文件；把代码放进包内并用相对路径 `require`
 2. **外部样式**：使用 `styles.css` 文件或内联样式
-3. **图片**：允许 `data:`、`blob:` 和 HTTP(S)，检查 URL 与响应类型
+3. **图片**：默认只允许 `data:`、`blob:` 和宿主同源。外链图要申请 `network:fetch`。
+   `Tapp.persona.get()` 的 `portraitUrl` 已是同源路径，直接 `<img src>`，不要为此再申请
+   `network:fetch`
 4. **媒体**：CSP 默认禁止直接加载；使用宿主媒体 API
 5. **API 请求**：在 Manifest 的 `apis` 中声明，再调用 `Tapp.api(name, params)`
 
@@ -458,6 +460,30 @@ HTTP 声明式 API 都需要，不只是 `protected`）：
   settings 值继续使用。
 - CLI 报 fixed HTTPS、undeclared、forbidden header、duplicate header 或 unbound：按提示修复
   Manifest。凭据只能绑定固定绝对 HTTPS origin 的具名 HTTP API，每个声明都必须至少绑定一次。
+
+---
+
+## AI 生图参考图
+
+### ❌ 参考图报错或未按预期参与生图
+
+`Tapp.ai.tasks.create` 使用 `operation: "image"`，参考图放在 `input.referenceImages`，
+例如 `{ prompt: "保留第一张图的人物，采用第二张图的画风", referenceImages: [subjectDataUrl, styleDataUrl] }`。
+Manifest 必须声明 `ai:image`、AI `image` operation 和 `image` output；实际调用由授予权限决定。
+
+| 症状 / 错误码 | 检查与处理 |
+| ------------- | ---------- |
+| 参考图没有传入 | 使用 `input.referenceImages` 有序数组；不要只把 URL 写进 prompt，也不要放在 `context` 或自行命名 `images` 字段 |
+| `INVALID_AI_IMAGE_REFERENCE` | 使用完整 PNG/JPEG/WebP base64 data URL；文件类型必须匹配文件头。本地缓存路径必须存在，不能直接传外部 URL、`blob:`、包内路径或 SVG/GIF |
+| `AI_IMAGE_REFERENCE_LIMIT` | 最多 4 张，解码后合计 ≤10 MiB；先缩图或压缩，再转为 data URL |
+| `AI_TASK_INPUT_LIMIT` | 除参考图外的序列化 `input` ≤256 KiB；含 base64 的完整输入也有总上限 |
+| Bridge `Payload too large` | 带参考图数组的生图请求 JSON payload ≤14 MiB；其余任务仍使用默认预算 |
+| 任务进入 `failed`，`AI_PROVIDER_ERROR` | 检查宿主生图配置和所选模型是否接受参考图及当前张数；供应商详情不会回传沙箱。平台不会丢弃参考图后重试文生图 |
+| `IDEMPOTENCY_KEY_REUSED` | 修改或调换参考图后使用新幂等键；同一键只能对应同一请求 |
+
+通过 `FileReader.readAsDataURL(file)` 转换本地文件；包内图片先用 `Tapp.assets.getArrayBuffer`
+取得字节。复用生成图片时，传已完成任务结果的 `value.url` 缓存路径。代码示例见
+[AI API](API_REFERENCE.md#ai-api)。Playground 临时预览不执行 AI 任务，需安装后验证。
 
 ---
 

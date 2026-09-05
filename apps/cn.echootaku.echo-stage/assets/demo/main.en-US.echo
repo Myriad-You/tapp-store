@@ -1,0 +1,48 @@
+# Echo Script v1 — Before Leaving Shore
+@label start
+@background empty_station
+@narrate Seven minutes remain before the last coastal train. The tide reaches the platform before the announcement does.
+@speaker Me
+@say Have you really decided to leave?
+@background yao_at_station
+@speaker Yao
+@say A decision does not happen in a single moment. It is more like the tide—by the time you notice, the sand beneath you has changed.
+@speaker Me
+@say If we eventually forget those who leave, did meeting them mean anything?
+@speaker Yao
+@say You are treating meaning as something that must be preserved forever.
+@say When a song ends, the silence does not prove it was never heard.
+@choice Memory gives farewell its meaning => memory | Forgetting is why farewell matters => forgetting | Some words exist without being spoken => unsaid
+@label memory
+@set answer = memory
+@speaker Me
+@say I still want to remember. As long as I remember, nothing is completely lost.
+@speaker Yao
+@say Then remember change, not a version of me pinned to today. A memory that forbids change becomes another kind of forgetting.
+@jump ending
+@label forgetting
+@set answer = forgetting
+@speaker Me
+@say Perhaps we say goodbye carefully because we know we will forget.
+@speaker Yao
+@say Yes. Farewell does not prevent forgetting. It admits that this moment truly belonged to us.
+@jump ending
+@label unsaid
+@set answer = unsaid
+@speaker Me
+@say I prepared so many words. Now it seems all right not to say them.
+@speaker Yao
+@say Silence is not empty. It simply leaves the explanation to our future selves.
+@jump ending
+@label ending
+@background empty_station
+@narrate A distant light moves along the coast. She walks toward the door, neither looking back nor deliberately refusing to.
+@if answer == memory -> memory_end
+@if answer == forgetting -> forgetting_end
+@jump unsaid_end
+@label memory_end
+@end Reverberation | What I remembered was not her departing silhouette, but how the sea became a slightly different color every year afterward.
+@label forgetting_end
+@end Tide | Years later I forgot the exact words, yet whenever train doors close, I still nod gently toward the empty air.
+@label unsaid_end
+@end Negative Space | We never completed that farewell. So it never ended; it only learned to exist without asking for an answer.

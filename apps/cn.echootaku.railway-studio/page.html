@@ -1,0 +1,239 @@
+<div id="railway-studio" class="railway-app" data-theme="dark">
+  <div class="railway-backdrop" aria-hidden="true"></div>
+  <section class="railway-shell" aria-labelledby="app-title">
+    <header class="command-bar">
+      <div class="brand-block">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <div>
+          <strong id="app-title" data-i18n="app.title">轨路工坊</strong>
+          <label class="project-name-field">
+            <span class="visually-hidden" data-i18n="project.name">工程名称</span>
+            <input id="project-name" type="text" maxlength="120" autocomplete="off" spellcheck="false" value="未命名线路工程" aria-label="工程名称" data-i18n-aria="project.name">
+          </label>
+        </div>
+      </div>
+      <nav class="view-switch" aria-label="主视图" data-i18n-aria="view.label">
+        <button type="button" class="is-active" data-action="switch-view" data-view="editor" aria-pressed="true" data-i18n="view.editor">线路图</button>
+        <button type="button" data-action="switch-view" data-view="ticket" aria-pressed="false" data-i18n="view.ticket">车票</button>
+      </nav>
+      <div class="command-group" aria-label="工程命令" data-i18n-aria="project.commands">
+        <button type="button" data-action="new-project" data-i18n="project.new">新建</button>
+        <button type="button" data-action="open-project" data-i18n="project.open">打开</button>
+        <button type="button" data-action="import-background" data-i18n="project.background">背景图</button>
+        <button type="button" data-action="export-json" data-i18n="project.exportJson">JSON</button>
+        <button type="button" data-action="export-svg" data-i18n="project.exportSvg">SVG</button>
+        <button type="button" data-action="export-png-info" data-i18n="project.exportPng">PNG</button>
+      </div>
+    </header>
+
+    <main class="main-area">
+      <section id="editor-view" class="editor-view" data-panel="editor" aria-label="线路图编辑器" data-i18n-aria="editor.label">
+        <aside class="tool-rail" aria-label="绘图工具" data-i18n-aria="tool.label">
+          <button type="button" class="tool-button is-active" data-action="set-tool" data-tool="select" aria-pressed="true"><span>V</span><small data-i18n="tool.select">选择</small></button>
+          <button type="button" class="tool-button" data-action="set-tool" data-tool="pan" aria-pressed="false"><span>H</span><small data-i18n="tool.pan">平移</small></button>
+          <button type="button" class="tool-button" data-action="set-tool" data-tool="line" aria-pressed="false"><span>L</span><small data-i18n="tool.line">线路</small></button>
+          <button type="button" class="tool-button" data-action="set-tool" data-tool="station" aria-pressed="false"><span>S</span><small data-i18n="tool.station">站点</small></button>
+          <button type="button" class="tool-button" data-action="set-tool" data-tool="text" aria-pressed="false"><span>T</span><small data-i18n="tool.text">文字</small></button>
+        </aside>
+
+        <section class="drafting-column">
+          <div class="canvas-toolbar" aria-label="画布命令" data-i18n-aria="canvas.commands">
+            <button type="button" data-action="undo" disabled data-i18n="edit.undo">撤销</button>
+            <button type="button" data-action="redo" disabled data-i18n="edit.redo">重做</button>
+            <span class="toolbar-divider" aria-hidden="true"></span>
+            <button type="button" data-action="zoom-out" aria-label="缩小" data-i18n-aria="canvas.zoomOut">−</button>
+            <output id="zoom-level" aria-live="polite">100%</output>
+            <button type="button" data-action="zoom-in" aria-label="放大" data-i18n-aria="canvas.zoomIn">＋</button>
+            <button type="button" data-action="fit-canvas" data-i18n="canvas.fit">适合画布</button>
+            <button type="button" data-action="toggle-grid" aria-pressed="true" data-i18n="canvas.grid">网格</button>
+            <label class="toolbar-switch" for="snap-toggle">
+              <span data-i18n="canvas.snap">吸附</span>
+              <input id="snap-toggle" type="checkbox" role="switch" data-action="toggle-snap" checked>
+              <span class="switch-track" aria-hidden="true"></span>
+              <span id="snap-state" class="switch-state" aria-hidden="true" data-i18n="canvas.snapOn">开</span>
+            </label>
+            <button id="route-inventory-toggle" type="button" class="route-inventory-toggle" data-action="toggle-route-inventory" aria-expanded="false"><span data-i18n="route.toolbar">路线</span><output id="route-toolbar-count" aria-live="polite">0</output></button>
+            <div id="line-mode-switch" class="line-mode-switch" aria-label="线路绘制模式" data-i18n-aria="line.mode" hidden>
+              <button type="button" data-action="set-line-mode" data-line-mode="segment" aria-pressed="true" data-i18n="line.segment">二点成段</button>
+              <button type="button" data-action="set-line-mode" data-line-mode="polyline" aria-pressed="false" data-i18n="line.polyline">多段路径</button>
+            </div>
+          </div>
+
+          <div id="route-reminder" class="route-reminder" role="status" hidden>
+            <span id="route-reminder-text">有待绘制的车票路线</span>
+            <button type="button" data-action="open-route-inventory" data-i18n="route.openInventory">展开路线栏</button>
+            <button type="button" data-action="close-route-reminder" data-i18n="route.closeReminder">本次关闭</button>
+          </div>
+
+          <div id="drafting-stage" class="drafting-stage" tabindex="0" aria-label="线路图画布" data-i18n-aria="canvas.label">
+            <canvas id="background-canvas" width="1600" height="900" aria-hidden="true"></canvas>
+            <svg id="railway-scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="scene-title scene-description">
+              <title id="scene-title" data-i18n="canvas.sceneTitle">线路工程预览</title>
+              <desc id="scene-description" data-i18n="canvas.sceneDescription">使用对象列表和绘图工具编辑线路、站点和文字</desc>
+              <defs id="animation-defs"></defs>
+              <g id="scene-viewport">
+                <g id="line-layer"></g>
+                <g id="route-animation-layer" aria-hidden="true"></g>
+                <g id="station-layer"></g>
+                <g id="text-layer"></g>
+                <g id="interaction-layer"></g>
+              </g>
+            </svg>
+            <div id="empty-canvas" class="empty-canvas">
+              <strong data-i18n="canvas.emptyTitle">从一条线路开始</strong>
+              <span data-i18n="canvas.emptyBody">导入背景图，或直接在空白制图台上绘制</span>
+            </div>
+          </div>
+
+          <section id="route-inventory" class="route-inventory" aria-labelledby="route-inventory-title" hidden>
+            <header>
+              <div>
+                <h2 id="route-inventory-title" data-i18n="route.inventory">待绘制路线</h2>
+                <output id="route-inventory-count" aria-live="polite">0</output>
+              </div>
+              <div class="route-inventory-actions">
+                <span id="route-placement-actions" class="route-placement-actions" hidden>
+                  <button type="button" data-action="finish-route-placement" data-i18n="route.finish">完成放置</button>
+                  <button type="button" data-action="cancel-route-placement" data-i18n="route.cancel">取消</button>
+                </span>
+                <button type="button" data-action="show-pending-routes" aria-pressed="true" data-i18n="route.pending">待处理</button>
+                <button type="button" data-action="show-ignored-routes" aria-pressed="false" data-i18n="route.ignored">已忽略</button>
+                <button id="close-route-inventory" type="button" data-action="close-route-inventory" aria-label="收起路线栏" data-i18n-aria="route.closeInventory">×</button>
+              </div>
+            </header>
+            <div id="route-card-list" class="route-card-list" role="list" tabindex="0" aria-label="车票路线列表" data-i18n-aria="route.list"></div>
+          </section>
+
+          <div class="timeline-bar">
+            <button type="button" data-action="play-timeline" aria-pressed="false" data-i18n="timeline.play">播放</button>
+            <button type="button" data-action="stop-timeline" data-i18n="timeline.stop">停止</button>
+            <label><span data-i18n="timeline.position">时序位置</span><input id="timeline-position" type="range" min="0" max="6000" value="0" step="10"></label>
+            <output id="timeline-time">0.0s / 6.0s</output>
+          </div>
+        </section>
+
+        <aside id="object-inspector" class="inspector" aria-label="对象检查器" data-i18n-aria="inspector.label">
+          <div class="inspector-tabs" role="tablist" aria-label="检查器面板" data-i18n-aria="inspector.tabs">
+            <button type="button" role="tab" aria-selected="true" data-action="inspector-tab" data-panel="objects" data-i18n="inspector.objects">对象</button>
+            <button type="button" role="tab" aria-selected="false" data-action="inspector-tab" data-panel="properties" data-i18n="inspector.properties">属性</button>
+            <button type="button" role="tab" aria-selected="false" data-action="inspector-tab" data-panel="animation" data-i18n="inspector.animation">动画</button>
+            <button type="button" role="tab" aria-selected="false" data-action="inspector-tab" data-panel="diagnostics" data-i18n="inspector.diagnostics">诊断</button>
+          </div>
+          <section id="objects-panel" class="inspector-panel">
+            <div class="panel-heading"><h2 data-i18n="objects.title">工程对象</h2><button type="button" data-action="delete-selection" disabled data-i18n="objects.delete">删除</button></div>
+            <ul id="object-list" class="object-list" aria-label="可编辑对象列表" data-i18n-aria="objects.list"></ul>
+          </section>
+          <section id="properties-panel" class="inspector-panel" hidden>
+            <h2 data-i18n="properties.title">对象属性</h2>
+            <label><span data-i18n="properties.name">名称</span><input id="property-name" type="text" maxlength="80"></label>
+            <label><span data-i18n="properties.color">颜色</span><input id="property-color" type="color" value="#1f8ca8"></label>
+            <label><span data-i18n="properties.width">线宽</span><input id="property-width" type="number" min="1" max="64" value="8"></label>
+            <button id="upgrade-endpoint-button" type="button" data-action="upgrade-endpoint" data-i18n="line.upgrade" hidden>升级为站点</button>
+            <fieldset class="network-editor">
+              <legend data-i18n="network.title">交通连接</legend>
+              <label><span data-i18n="network.from">起点站</span><select id="edge-from"></select></label>
+              <label><span data-i18n="network.to">终点站</span><select id="edge-to"></select></label>
+              <label><span data-i18n="network.line">所属线路</span><select id="edge-line"></select></label>
+              <div class="network-metrics">
+                <label><span data-i18n="network.distance">距离单位</span><input id="edge-distance" type="number" min="0.01" step="0.01" value="10"></label>
+                <label><span data-i18n="network.minutes">分钟</span><input id="edge-minutes" type="number" min="0.1" step="0.1" value="5"></label>
+              </div>
+              <label class="check-label"><input id="edge-bidirectional" type="checkbox" checked><span data-i18n="network.bidirectional">双向通行</span></label>
+              <button type="button" data-action="add-edge" data-i18n="network.add">添加交通边</button>
+              <ul id="edge-list" class="edge-list" aria-label="交通边列表" data-i18n-aria="network.list"></ul>
+            </fieldset>
+          </section>
+          <section id="animation-panel" class="inspector-panel" hidden>
+            <h2 data-i18n="animation.title">动画时序</h2>
+            <fieldset class="animation-editor">
+              <legend data-i18n="timeline.track">对象动画</legend>
+              <div class="network-metrics">
+                <label><span data-i18n="timeline.start">开始毫秒</span><input id="track-start" type="number" min="0" max="3600000" step="10" value="0"></label>
+                <label><span data-i18n="timeline.duration">持续毫秒</span><input id="track-duration" type="number" min="1" max="3600000" step="10" value="900"></label>
+              </div>
+              <label><span data-i18n="timeline.effect">效果</span><select id="track-effect"><option value="draw" data-i18n="timeline.effectDraw">绘制</option><option value="fade" data-i18n="timeline.effectFade">淡入</option><option value="pulse" data-i18n="timeline.effectPulse">脉冲</option></select></label>
+              <label><span data-i18n="timeline.easing">缓动</span><select id="track-easing"><option value="linear">Linear</option><option value="ease-in">Ease in</option><option value="ease-out">Ease out</option><option value="ease-in-out">Ease in out</option></select></label>
+              <button type="button" data-action="set-track" data-i18n="timeline.apply">应用到选中对象</button>
+            </fieldset>
+            <fieldset class="animation-editor route-animation-editor">
+              <legend data-i18n="animation.routeTitle">行程描边</legend>
+              <label><span data-i18n="animation.origin">起点站</span><select id="route-animation-from"></select></label>
+              <label><span data-i18n="animation.destination">终点站</span><select id="route-animation-to"></select></label>
+              <output id="route-animation-summary" class="route-animation-summary" role="status" aria-live="polite" data-i18n="animation.noRoute">请选择可连通的起点和终点</output>
+              <label class="toolbar-switch route-base-switch" for="route-animation-show-base">
+                <span data-i18n="animation.showBase">显示原路线</span>
+                <input id="route-animation-show-base" type="checkbox" role="switch" checked>
+                <span class="switch-track" aria-hidden="true"></span>
+                <span id="route-animation-base-state" class="switch-state" aria-hidden="true" data-i18n="animation.on">开</span>
+              </label>
+              <div class="network-metrics">
+                <label><span data-i18n="animation.color">高亮颜色</span><input id="route-animation-color" type="color" value="#18a8c7"></label>
+                <label><span data-i18n="animation.width">高亮线宽</span><input id="route-animation-width" type="number" min="1" max="64" value="12"></label>
+              </div>
+              <div class="network-metrics">
+                <label><span data-i18n="timeline.start">开始毫秒</span><input id="route-animation-start" type="number" min="0" max="3600000" step="10" value="0"></label>
+                <label><span data-i18n="timeline.duration">持续毫秒</span><input id="route-animation-duration" type="number" min="1" max="3600000" step="10" value="2400"></label>
+              </div>
+              <label><span data-i18n="timeline.easing">缓动</span><select id="route-animation-easing"><option value="linear">Linear</option><option value="ease-in">Ease in</option><option value="ease-out">Ease out</option><option value="ease-in-out" selected>Ease in out</option></select></label>
+              <div class="route-animation-actions">
+                <button type="button" data-action="apply-route-animation" data-i18n="animation.applyRoute">应用行程动画</button>
+                <button type="button" data-action="recalculate-route-animation" data-i18n="animation.recalculate">重新计算路线</button>
+                <button type="button" data-action="remove-route-animation" data-i18n="animation.removeRoute" disabled>移除动画</button>
+              </div>
+            </fieldset>
+          </section>
+          <section id="diagnostics-panel" class="inspector-panel" hidden>
+            <h2 data-i18n="diagnostics.title">工程诊断</h2>
+            <ul id="diagnostic-list"></ul>
+          </section>
+        </aside>
+      </section>
+
+      <section id="ticket-view" class="ticket-view" data-panel="ticket" hidden>
+        <div class="ticket-controls">
+          <p class="eyebrow" data-i18n="ticket.eyebrow">FROM THE SAME NETWORK</p>
+          <h2 data-i18n="ticket.title">生成一张有依据的车票</h2>
+          <p data-i18n="ticket.body">起终点、路线和票价全部来自当前线路工程。</p>
+          <p id="ticket-station-hint" class="field-hint" data-i18n="ticket.stationHint">可以选择已有站点，也可以输入名称创建规划站点。</p>
+          <label><span data-i18n="ticket.origin">起点</span><input id="ticket-origin" type="text" list="ticket-stations" maxlength="80" autocomplete="off" aria-describedby="ticket-station-hint"></label>
+          <label><span data-i18n="ticket.destination">终点</span><input id="ticket-destination" type="text" list="ticket-stations" maxlength="80" autocomplete="off" aria-describedby="ticket-station-hint"></label>
+          <datalist id="ticket-stations"></datalist>
+          <label><span data-i18n="ticket.nickname">游戏昵称</span><input id="ticket-nickname" type="text" maxlength="32" autocomplete="off"></label>
+          <label><span data-i18n="ticket.service">班次</span><input id="ticket-service" type="text" maxlength="16" value="R-1024"></label>
+          <label><span data-i18n="ticket.departure">发车时间</span><input id="ticket-departure" type="datetime-local"></label>
+          <button type="button" class="primary-button" data-action="generate-ticket" data-i18n="ticket.generate">生成车票</button>
+          <div class="route-save-actions">
+            <button type="button" data-action="save-route-request" data-i18n="route.save">保存待绘制路线</button>
+            <button type="button" data-action="save-route-and-open" data-i18n="route.saveAndOpen">保存并去绘制</button>
+          </div>
+        </div>
+        <div class="ticket-stage">
+          <article id="ticket-preview" class="ticket-card" aria-live="polite" aria-label="车票预览" data-i18n-aria="ticket.preview">
+            <span class="ticket-placeholder" data-i18n="ticket.placeholder">选择当前工程中的两个站点</span>
+          </article>
+          <section class="route-explanation" aria-labelledby="route-explanation-title">
+            <h3 id="route-explanation-title" data-i18n="ticket.explanation">路线与票价说明</h3>
+            <div id="route-details" data-i18n="ticket.noRoute">尚未生成路线</div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer class="status-bar">
+      <span id="save-state" data-i18n="status.local">工程仅保存在当前用户空间</span>
+      <span id="app-status" role="status" aria-live="polite" aria-atomic="true" data-i18n="status.ready">制图台已就绪</span>
+    </footer>
+  </section>
+
+  <input id="project-file-input" class="visually-hidden" type="file" accept="application/json,.json,.railway.json">
+  <input id="background-file-input" class="visually-hidden" type="file" accept="image/png,image/jpeg,image/webp">
+
+  <div id="png-limit-dialog" class="modal" role="dialog" aria-modal="true" aria-labelledby="png-limit-title" hidden>
+    <div class="modal-card">
+      <h2 id="png-limit-title" data-i18n="export.pngUnavailable">当前无法导出 PNG 文件</h2>
+      <p data-i18n="export.pngReason">宿主下载接口只接受字符串。应用不会把 Base64 文本伪装成 PNG。</p>
+      <p data-i18n="export.pngAlternative">请导出 SVG 后转换，或使用应用内栅格预览。</p>
+      <button type="button" data-action="close-png-info" data-i18n="common.close">关闭</button>
+    </div>
+  </div>
+</div>

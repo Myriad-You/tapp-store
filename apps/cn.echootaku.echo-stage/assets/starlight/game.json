@@ -1,0 +1,14 @@
+{
+  "format": "echo-stage/v1",
+  "id": "cn.echootaku.echo-stage.unsent-star-map",
+  "title": "没有寄出的星图",
+  "entries": {
+    "zh-CN": "main.zh-CN.echo",
+    "en-US": "main.en-US.echo",
+    "ja-JP": "main.ja-JP.echo"
+  },
+  "assets": {
+    "observatory": "observatory-blue-hour.png",
+    "dawn": "observatory-dawn.png"
+  }
+}

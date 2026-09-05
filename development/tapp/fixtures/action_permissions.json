@@ -158,6 +158,11 @@
     },
     {
       "domain": "federation",
+      "action": "federation.getRoomsFeed",
+      "permission": "federation:read"
+    },
+    {
+      "domain": "federation",
       "action": "federation.getTimeline",
       "permission": "federation:read"
     },

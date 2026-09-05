@@ -274,6 +274,7 @@ Catalog Sync 使用 `GITHUB_TOKEN` 回写 `index.json`；若开启「禁止 bot 
 | 路径 | 说明 |
 | ---- | ---- |
 | [development/TAPP_DEVELOPMENT.md](./development/TAPP_DEVELOPMENT.md) | 文档索引与 Myriad 链接 |
+| [AI 生图与参考图](./development/tapp/API_REFERENCE.md#ai-api) | `input.referenceImages`、上传转换、限制与幂等；内置 CLI 提供对应 SDK 类型 |
 | [development/tapp/STORE.md](./development/tapp/STORE.md) | 商店协议全文（与 Myriad 同步） |
 | [development/tapp/](./development/tapp/) | Manifest / SDK / 沙箱等镜像 |
 

@@ -1,0 +1,102 @@
+<div class="viewer-shell" data-viewer-page>
+  <header class="viewer-topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="6" cy="8" r="2" fill="currentColor" />
+        <circle cx="17" cy="5" r="2" fill="currentColor" />
+        <circle cx="18" cy="17" r="2" fill="currentColor" />
+        <circle cx="7" cy="18" r="2" fill="currentColor" />
+        <path d="m7.7 8.9 7.5-2.8M7.5 9.5l8.7 6M8.6 16.9l7.1-1.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+      </svg>
+      <div>
+        <h1 data-i18n="appName">蛋白质结构查看器</h1>
+        <p class="tagline" data-i18n="tagline">在线浏览 PDB 分子结构</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <form class="load-form" id="view-load-form">
+        <label class="sr-only" for="view-pdbid" data-i18n="pdbIdLabel">PDB ID</label>
+        <input id="view-pdbid" type="text" inputmode="text" maxlength="8" autocomplete="off" spellcheck="false"
+          placeholder="输入 PDB ID，如 1A3N" aria-label="PDB ID" data-i18n-placeholder="pdbIdPlaceholder" />
+        <button type="submit" id="view-load-btn" class="primary-btn" data-i18n="loadBtn">加载结构</button>
+      </form>
+      <div class="field search-field">
+        <label class="sr-only" for="view-search" data-i18n="searchLabel">按名称搜索</label>
+        <input id="view-search" type="search" autocomplete="off" spellcheck="false"
+          placeholder="按名称搜索结构" aria-label="按名称搜索" data-i18n-placeholder="searchPlaceholder" />
+        <button type="button" id="view-search-btn" class="icon-button" aria-label="搜索" data-i18n-aria-label="searchBtn">⌕</button>
+        <div id="view-search-results" class="search-results" role="listbox" hidden></div>
+      </div>
+      <span class="connection-status" data-status-indicator><i></i><span data-i18n="connected">已连接</span></span>
+      <button type="button" class="icon-button" id="view-fullscreen-top" aria-label="全屏" data-i18n-aria-label="fullscreen">⛶</button>
+    </div>
+  </header>
+
+  <main class="workspace history-collapsed">
+    <aside class="history-panel" aria-label="历史记录">
+      <button type="button" id="view-toggle-history" class="history-toggle" aria-expanded="false" aria-controls="view-history-content" aria-label="展开历史记录" title="展开历史记录">
+        <span id="view-history-toggle-icon" aria-hidden="true">›</span>
+      </button>
+      <div id="view-history-content" class="history-content" hidden>
+        <div class="panel-heading">
+          <div><span class="eyebrow" data-i18n="recent">最近</span><h2 data-i18n="history">历史记录</h2></div>
+          <button type="button" id="view-clear-history" class="text-button" data-i18n="clearHistory">清空</button>
+        </div>
+        <div id="view-history-list" class="history-list"></div>
+        <div id="view-history-empty" class="empty-history"><span class="empty-icon">⌁</span><p data-i18n="historyEmpty">加载过的结构会显示在这里</p></div>
+      </div>
+    </aside>
+
+    <section class="viewer-column">
+      <div class="structure-header">
+        <div class="structure-title"><span class="structure-id" id="view-structure-id">—</span><span class="structure-name" id="view-structure-title" data-i18n="selectHint">请选择一个结构</span></div>
+        <div class="structure-stats" id="view-structure-stats">
+          <span><b id="view-chain-count">—</b> <small data-i18n="chains">条链</small></span>
+          <span><b id="view-residue-count">—</b> <small data-i18n="residues">个残基</small></span>
+          <span><b id="view-atom-count">—</b> <small data-i18n="atomCount">个原子</small></span>
+        </div>
+      </div>
+      <div class="sequence-strip" aria-label="残基位置"><span class="sequence-label" data-i18n="residuePosition">残基位置</span><div id="view-sequence-ruler" class="sequence-ruler"><span>—</span></div></div>
+
+      <div class="viewport">
+        <canvas id="view-canvas"></canvas>
+        <div id="view-spinner" class="spinner" role="status" hidden></div>
+        <div id="view-empty-state" class="viewport-empty"><div class="empty-molecule">✣</div><h3 data-i18n="selectHint">请选择一个结构</h3><p data-i18n="emptyHint">输入 PDB ID，或从名称搜索开始</p></div>
+        <div id="view-selection-card" class="selection-card" hidden></div>
+        <div class="viewport-tools" aria-label="视图工具">
+          <button type="button" id="view-fit" class="tool-button" aria-label="适应画布" data-i18n-aria-label="fitView">⌗</button>
+          <button type="button" id="view-reset-quick" class="tool-button" aria-label="重置视角" data-i18n-aria-label="resetView">↻</button>
+          <button type="button" id="view-zoom-in" class="tool-button" aria-label="放大" data-i18n-aria-label="zoomIn">＋</button>
+          <button type="button" id="view-zoom-out" class="tool-button" aria-label="缩小" data-i18n-aria-label="zoomOut">−</button>
+        </div>
+        <div class="axis-gizmo" aria-hidden="true"><span class="axis-x">X</span><span class="axis-y">Y</span><span class="axis-z">Z</span></div>
+      </div>
+
+      <section class="control-dock" aria-label="视图控制">
+        <div class="dock-heading"><div><span class="eyebrow" data-i18n="controls">控制</span><h2 data-i18n="viewControls">视图控制</h2></div><button type="button" id="view-toggle-controls" class="text-button" aria-expanded="true" data-i18n="collapse">收起</button></div>
+        <div class="dock-content">
+          <div class="control-block representation-fixed"><span class="control-label" data-i18n="representation">表示方式</span><div class="fixed-mode" data-i18n="modeWireframe">线框</div></div>
+          <div class="control-block"><span class="control-label" data-i18n="colorBy">颜色方式</span><div class="segmented-control" role="group" aria-label="颜色方式">
+            <label><input type="radio" name="color" value="element" checked /><span data-i18n="colorElement">按元素着色</span></label>
+            <label><input type="radio" name="color" value="chain" /><span data-i18n="colorChain">按链着色</span></label>
+          </div></div>
+          <div class="control-block view-actions"><span class="control-label" data-i18n="camera">视角</span><div class="button-row"><button type="button" id="view-rotate" class="secondary-btn" aria-pressed="false" data-i18n="autorotate">自动旋转</button><button type="button" id="view-reset" class="secondary-btn" data-i18n="resetView">重置视角</button><button type="button" id="view-fullscreen" class="secondary-btn" data-i18n="fullscreen">全屏</button></div></div>
+        </div>
+      </section>
+    </section>
+
+    <aside class="tools-panel" aria-label="工具">
+      <div class="panel-heading tools-heading"><h2 data-i18n="tools">工具</h2></div>
+      <details class="tool-section" open><summary><span class="section-icon">⌘</span><span data-i18n="structure">结构</span><span class="summary-chevron">⌃</span></summary><div class="tool-section-content">
+        <label class="tool-field"><span data-i18n="chain">链</span><select id="view-chain-select"><option value="all" data-i18n="allChains">全部</option></select></label>
+        <div class="chain-list" id="view-chain-list"></div>
+      </div></details>
+      <details class="tool-section"><summary><span class="section-icon">⌖</span><span data-i18n="measure">测量</span><span class="section-value" id="view-measure-value">—</span><span class="summary-chevron">⌄</span></summary><div class="tool-section-content"><p class="tool-hint" data-i18n="measureHint">点击两个原子测量距离</p><button type="button" id="view-clear-measure" class="secondary-btn full-width" data-i18n="clearMeasure">清除测量</button></div></details>
+      <details class="tool-section"><summary><span class="section-icon">⌕</span><span data-i18n="structureSearch">结构内搜索</span><span class="summary-chevron">⌄</span></summary><div class="tool-section-content"><input id="view-atom-search" class="tool-input" type="search" placeholder="链、残基或原子" data-i18n-placeholder="atomSearchPlaceholder" /><div id="view-atom-results" class="atom-results"></div></div></details>
+      <details class="tool-section"><summary><span class="section-icon">◇</span><span data-i18n="components">组成成分</span><span class="summary-chevron">⌄</span></summary><div class="tool-section-content component-summary" id="view-component-list"><span class="muted-text">—</span></div></details>
+      <details class="tool-section"><summary><span class="section-icon">↓</span><span data-i18n="export">导出</span><span class="summary-chevron">⌄</span></summary><div class="tool-section-content export-actions"><button type="button" id="view-export-image" class="secondary-btn full-width" data-i18n="exportImage">导出截图</button><button type="button" id="view-export-cif" class="secondary-btn full-width" data-i18n="downloadCif">下载 mmCIF</button><button type="button" id="view-copy-id" class="secondary-btn full-width" data-i18n="copyPdbId">复制 PDB ID</button></div></details>
+    </aside>
+  </main>
+  <footer class="viewer-status"><span id="view-status">—</span></footer>
+  <div id="view-toast" class="toast" role="status" aria-live="polite"></div>
+</div>

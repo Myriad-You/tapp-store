@@ -1,0 +1,55 @@
+# Echo Script v1 — 《离岸之前》
+@label start
+@background empty_station
+@narrate 海边的末班车还有七分钟。潮声比广播更早抵达站台。
+@speaker 我
+@say 你真的决定走了？
+@background yao_at_station
+@speaker 遥
+@say 决定并不是某一刻发生的。它更像潮水——等你注意到，脚下已经是另一片沙。
+@speaker 我
+@say 如果一个人离开后，我们终究会忘记，那相遇还有意义吗？
+@speaker 遥
+@say 你把意义想成了必须永久保存的东西。
+@say 可一首歌停止以后，沉默并不会证明它从未响起。
+@choice 记忆让离别有意义 => memory | 正因为会遗忘，告别才必要 => forgetting | 有些话不说也会存在 => unsaid
+
+@label memory
+@set answer = memory
+@speaker 我
+@say 至少我想记住。只要还记得，就不算真正失去。
+@speaker 遥
+@say 那么请记住变化，而不是把我钉在今天。记忆若不允许人改变，也会成为另一种遗忘。
+@jump ending
+
+@label forgetting
+@set answer = forgetting
+@speaker 我
+@say 也许正因为会忘，我们才需要认真说再见。
+@speaker 遥
+@say 是的。告别不是阻止遗忘，而是在遗忘之前，承认这一刻确实属于我们。
+@jump ending
+
+@label unsaid
+@set answer = unsaid
+@speaker 我
+@say 我本来准备了很多话。现在却觉得，不说也没关系。
+@speaker 遥
+@say 沉默不是空白。只是它把解释留给了未来的我们。
+@jump ending
+
+@label ending
+@background empty_station
+@narrate 远处的灯沿着海岸移动。她走向车门，没有回头，也没有刻意不回头。
+@if answer == memory -> memory_end
+@if answer == forgetting -> forgetting_end
+@jump unsaid_end
+
+@label memory_end
+@end 余响 | 后来我记住的，并不是她离开的背影，而是那天以后，海的颜色每年都略有不同。
+
+@label forgetting_end
+@end 潮汐 | 很多年后，我忘了那段对话的原句，却仍会在列车关门时，向无人处轻轻点头。
+
+@label unsaid_end
+@end 留白 | 我们没有完成那场告别。也因此，它没有结束，只是换了一种不再要求回答的方式存在。

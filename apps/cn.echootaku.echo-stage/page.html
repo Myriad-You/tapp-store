@@ -1,0 +1,191 @@
+<div id="echo-background" aria-hidden="true">
+  <img id="library-backdrop" class="library-backdrop" alt="">
+  <img id="scene-image" class="scene-image" alt="">
+  <div class="scene-vignette"></div>
+</div>
+<main id="echo-app" class="echo-app">
+  <section id="loading-layer" class="loading-layer" role="status" aria-live="polite" aria-atomic="true" data-i18n-aria="loading.statusLabel" aria-label="正在准备回声剧场">
+    <div class="loading-echo" aria-hidden="true">
+      <span class="loading-echo-ring"></span>
+      <span class="loading-echo-ring"></span>
+      <span class="loading-echo-ring"></span>
+    </div>
+    <progress class="loading-progress" data-i18n-aria="loading.progress" aria-label="载入进度" aria-labelledby="loading-title" aria-describedby="loading-message"></progress>
+    <p id="loading-title" data-i18n="loading.boot">正在准备回声剧场…</p>
+    <small id="loading-message" data-i18n="loading.hint">故事会在素材准备好后立即开始</small>
+  </section>
+
+  <section id="library-view" class="library-view" hidden aria-labelledby="library-title">
+    <div class="library-scroll">
+      <header class="library-brand">
+        <h1 id="library-title" data-i18n="app.title">回声剧场</h1>
+        <p data-i18n="app.subtitle">本地视觉小说 · 播放器与剧目库</p>
+        <img id="library-ripple-image" class="library-ripple-image" data-asset="assets/ui/echo-ripples.png" decoding="async" aria-hidden="true">
+      </header>
+
+      <div class="launcher-layout">
+        <section class="launcher-intro" aria-labelledby="launcher-title">
+          <p class="launcher-kicker" data-i18n="launcher.eyebrow">本地视觉小说工作台</p>
+          <h2 id="launcher-title" data-i18n="launcher.title">让故事在本地响起</h2>
+          <p class="launcher-description" data-i18n="launcher.description">从本地游戏目录打开故事，或在余响工房创建新的分支叙事。回声剧场只读取声明式内容，不执行游戏脚本。</p>
+          <div id="library-primary-actions" class="launcher-actions">
+            <button id="open-folder" type="button" class="curtain-call" data-i18n="library.openFolder">打开本地游戏</button>
+            <button id="open-editor" type="button" class="curtain-call editor-call" data-i18n="editor.open">新建故事</button>
+            <button id="download-demo" type="button" class="text-action" data-i18n="library.downloadDemo">下载开发示例</button>
+          </div>
+          <input id="folder-input" type="file" webkitdirectory multiple hidden aria-hidden="true">
+          <p class="launcher-format"><strong>.echo-stage / v1</strong><span data-i18n="launcher.formatHint">本地读取 · 独立存档 · 无脚本执行</span></p>
+        </section>
+
+        <section id="library-learning" class="sample-library" aria-labelledby="sample-library-title">
+        <header class="sample-library-header">
+          <div><span data-i18n="samples.eyebrow">了解运行方式</span><h2 id="sample-library-title" data-i18n="samples.title">学习与示例</h2></div>
+          <p data-i18n="samples.hint">这些内置示例仅在你主动选择后启动，不会自动播放。</p>
+        </header>
+        <div class="sample-grid">
+          <article class="sample-card">
+            <div class="sample-cover"><img id="sample-cover-shore" alt=""><span data-i18n="samples.badgeOne">示例 01</span></div>
+            <div class="sample-content">
+              <h3 data-i18n="demo.title">离岸之前</h3>
+              <p data-i18n="demo.description">末班车到来前，一场关于记忆、遗忘和未说出口之事的对话。</p>
+              <div class="sample-actions">
+                <button type="button" class="button primary" data-play-builtin="shore" data-i18n="samples.play">试玩</button>
+                <button type="button" class="button subtle" data-continue-builtin="shore" data-i18n="library.continue" hidden>继续</button>
+              </div>
+            </div>
+          </article>
+          <article class="sample-card">
+            <div class="sample-cover"><img id="sample-cover-starlight" alt=""><span data-i18n="samples.badgeTwo">示例 02</span></div>
+            <div class="sample-content">
+              <h3 data-i18n="starlight.title">没有寄出的星图</h3>
+              <p data-i18n="starlight.description">闭馆前的最后一夜，两个人用一封未寄出的信讨论意义是否需要抵达。</p>
+              <div class="sample-actions">
+                <button type="button" class="button primary" data-play-builtin="starlight" data-i18n="samples.play">试玩</button>
+                <button type="button" class="button subtle" data-continue-builtin="starlight" data-i18n="library.continue" hidden>继续</button>
+              </div>
+            </div>
+          </article>
+        </div>
+        </section>
+      </div>
+      <p id="library-status" class="library-status" role="status"></p>
+    </div>
+  </section>
+
+  <section id="editor-view" class="editor-view" hidden aria-labelledby="editor-title">
+    <header class="editor-toolbar">
+      <button id="editor-back" type="button" class="icon-button" data-i18n="editor.back">剧目库</button>
+      <div class="editor-heading">
+        <span data-i18n="editor.eyebrow">AI STORY WORKSHOP</span>
+        <h1 id="editor-title" data-i18n="editor.title">余响工房</h1>
+      </div>
+      <div class="editor-toolbar-actions">
+        <button id="editor-new" type="button" class="button subtle" data-i18n="editor.new">新建</button>
+        <button id="editor-play" type="button" class="button primary" data-i18n="editor.play">试玩</button>
+        <button id="editor-export" type="button" class="button subtle" data-i18n="editor.export">导出剧本</button>
+      </div>
+    </header>
+
+    <div id="editor-tabs" class="editor-tabs" role="tablist" aria-labelledby="editor-title">
+      <button id="editor-tab-story" type="button" role="tab" aria-controls="editor-pane-story" aria-selected="true" tabindex="0" data-i18n="editor.story">给回声一个起点</button>
+      <button id="editor-tab-script" type="button" role="tab" aria-controls="editor-pane-script" aria-selected="false" tabindex="-1" data-i18n="editor.script">逐句雕刻故事</button>
+      <button id="editor-tab-scene" type="button" role="tab" aria-controls="editor-pane-scene" aria-selected="false" tabindex="-1" data-i18n="editor.scene">舞台视觉</button>
+    </div>
+    <div id="editor-feedback" class="editor-feedback" hidden data-tone="info">
+      <progress id="editor-feedback-progress" data-i18n-aria="editor.progressLabel" aria-label="AI 生成进度" hidden></progress>
+      <div class="editor-feedback-copy" role="status" aria-live="polite" aria-atomic="true">
+        <strong id="editor-feedback-title" data-i18n="editor.noticeInfo">提示</strong>
+        <span id="editor-feedback-message"></span>
+      </div>
+      <button id="editor-feedback-close" class="editor-feedback-close" type="button" data-i18n-aria="editor.dismissFeedback" aria-label="关闭提示" hidden><span aria-hidden="true">×</span></button>
+    </div>
+
+    <div class="editor-shell">
+      <label class="project-picker-label" for="project-picker">
+        <span data-i18n="editor.projectPicker">切换项目</span>
+        <select id="project-picker" aria-label="切换项目" data-i18n-aria="editor.projectPicker"></select>
+      </label>
+      <aside class="project-rail" aria-labelledby="projects-title">
+        <div class="rail-heading"><span data-i18n="editor.projectsEyebrow">你的剧目</span><h2 id="projects-title" data-i18n="editor.projects">项目</h2></div>
+        <div id="project-list" class="project-list"></div>
+        <p class="editor-storage-hint" data-i18n="editor.storageHint">文字项目保存在当前账号；AI 场景图为云端引用。</p>
+      </aside>
+
+      <div class="editor-canvas">
+        <section id="editor-pane-story" class="section story-form editor-pane" role="tabpanel" aria-labelledby="editor-tab-story">
+          <div class="section-heading"><span aria-hidden="true">01</span><div><small data-i18n="editor.storyEyebrow">故事设定</small><h2 id="story-setting-title" data-i18n="editor.story">给回声一个起点</h2></div></div>
+          <label><span data-i18n="editor.name">剧名</span><input id="project-title" maxlength="80" autocomplete="off"></label>
+          <label><span data-i18n="editor.premise">故事想法</span><textarea id="project-premise" rows="3" maxlength="1200" data-i18n-placeholder="editor.premisePlaceholder" placeholder="谁，在什么地方，面临怎样的选择？"></textarea></label>
+          <div class="editor-field-row">
+            <label><span data-i18n="editor.tone">叙事气质</span><select id="project-tone"><option value="poetic" data-i18n="editor.tonePoetic">克制诗意</option><option value="mystery" data-i18n="editor.toneMystery">静谧悬疑</option><option value="warm" data-i18n="editor.toneWarm">温柔日常</option><option value="scifi" data-i18n="editor.toneScifi">思辨科幻</option></select></label>
+            <label><span data-i18n="editor.length">篇幅</span><select id="project-length"><option value="short" data-i18n="editor.lengthShort">短篇 · 2 场</option><option value="medium" data-i18n="editor.lengthMedium">中篇 · 3 场</option></select></label>
+          </div>
+          <button id="ai-write" type="button" class="ai-button"><span><strong data-i18n="editor.aiWrite">请 Myriad AI 编写初稿</strong><small data-i18n="editor.aiWriteHint">生成角色、场景、对白与双分支结局</small></span></button>
+        </section>
+
+        <section id="editor-pane-script" class="section script-workbench editor-pane" role="tabpanel" aria-labelledby="editor-tab-script">
+          <div class="section-heading compact"><span aria-hidden="true">02</span><div><small data-i18n="editor.scriptEyebrow">声明式剧本</small><h2 id="script-title" data-i18n="editor.script">逐句雕刻故事</h2></div><output id="script-health" class="script-health"></output></div>
+          <textarea id="script-editor" class="script-editor" spellcheck="false" aria-label="Echo Script"></textarea>
+          <p class="script-hint" data-i18n="editor.scriptHint">支持 @background、@speaker、@say、@narrate、@choice、@label 与 @end；保存前会由本地解释器检查。</p>
+        </section>
+
+        <aside id="editor-pane-scene" class="aside scene-studio editor-pane" role="tabpanel" aria-labelledby="editor-tab-scene">
+          <div class="section-heading compact"><span aria-hidden="true">03</span><div><small data-i18n="editor.sceneEyebrow">场景画面</small><h2 id="scene-title" data-i18n="editor.scene">舞台视觉</h2></div></div>
+          <label><span data-i18n="editor.assetId">素材 ID</span><input id="scene-id" maxlength="40" value="scene_1" pattern="[A-Za-z0-9._\-]+"></label>
+          <label><span data-i18n="editor.imagePrompt">画面描述</span><textarea id="image-prompt" rows="4" maxlength="1600" data-i18n-placeholder="editor.imagePlaceholder" placeholder="二次元电影感场景、人物位置、光线与情绪……"></textarea></label>
+          <button id="ai-image" type="button" class="ai-button image-button"><span><strong data-i18n="editor.aiImage">生成 16:9 场景图</strong><small data-i18n="editor.aiImageHint">由 Myriad 选择模型，1344 × 768</small></span></button>
+          <figure id="scene-preview" class="scene-preview"><div class="scene-placeholder"><p data-i18n="editor.noImage">还没有生成场景</p></div><img id="scene-preview-image" alt="" hidden><figcaption id="scene-caption"></figcaption></figure>
+          <div id="asset-list" class="asset-list"></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section id="player-view" class="player-view" hidden aria-label="Visual novel player">
+    <header class="player-toolbar">
+      <button id="back-library" type="button" class="icon-button" data-i18n="player.libraryShort" data-i18n-aria="player.library" aria-label="返回游戏库">剧目库</button>
+      <div class="player-title-wrap">
+        <strong id="player-title"></strong>
+        <span id="player-source"></span>
+      </div>
+      <div class="toolbar-actions">
+        <button id="toggle-auto" type="button" class="toolbar-button" aria-pressed="false" data-i18n="player.auto">自动</button>
+        <button id="toggle-voice" type="button" class="toolbar-button" aria-pressed="false" data-i18n="player.voice">配音</button>
+        <button id="open-cast" type="button" class="toolbar-button" data-i18n="player.cast">选角</button>
+        <button id="open-history" type="button" class="toolbar-button" data-i18n="player.history">回看</button>
+        <button id="open-saves" type="button" class="toolbar-button" data-i18n="player.saves">存档</button>
+      </div>
+    </header>
+
+    <div id="ending-card" class="ending-card" hidden>
+      <p class="eyebrow" data-i18n="player.ending">ENDING</p>
+      <h2 id="ending-title"></h2>
+      <p id="ending-text"></p>
+      <button id="restart-story" type="button" class="button primary" data-i18n="player.restart">重新开始</button>
+    </div>
+
+    <section id="dialogue-panel" class="dialogue-panel" aria-live="polite">
+      <div class="dialogue-meta">
+        <strong id="speaker-name"></strong>
+        <span id="auto-indicator" data-i18n="player.autoActive" hidden>自动播放</span>
+        <span id="voice-indicator" data-i18n="player.voiceActive" hidden>宿主配音</span>
+      </div>
+      <p id="dialogue-text"></p>
+      <div id="choice-list" class="choice-list"></div>
+      <button id="advance-story" type="button" class="advance-button" data-i18n="player.advance" data-i18n-aria="player.advance" aria-label="继续">继续</button>
+    </section>
+    <audio id="bgm-player" loop></audio>
+    <audio id="voice-player"></audio>
+  </section>
+
+  <section id="overlay" class="overlay" hidden>
+    <div id="overlay-backdrop" class="overlay-backdrop"></div>
+    <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="overlay-title">
+      <header>
+        <h2 id="overlay-title"></h2>
+        <button id="close-overlay" type="button" class="icon-button" data-i18n="player.closeOverlay" data-i18n-aria="player.closeOverlay" aria-label="关闭">关闭</button>
+      </header>
+      <div id="overlay-content" class="overlay-content"></div>
+    </div>
+  </section>
+</main>

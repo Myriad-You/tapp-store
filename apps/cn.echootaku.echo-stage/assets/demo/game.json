@@ -1,0 +1,16 @@
+{
+  "format": "echo-stage/v1",
+  "id": "cn.echootaku.echo-stage.before-leaving-shore",
+  "title": "离岸之前",
+  "author": "Echo Stage",
+  "description": "在末班车到来之前，两个人谈论记忆、遗忘与告别。",
+  "entries": {
+    "zh-CN": "main.zh-CN.echo",
+    "en-US": "main.en-US.echo",
+    "ja-JP": "main.ja-JP.echo"
+  },
+  "assets": {
+    "empty_station": "station-blue-hour.png",
+    "yao_at_station": "station-with-yao.png"
+  }
+}

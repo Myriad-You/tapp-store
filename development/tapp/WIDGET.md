@@ -19,26 +19,30 @@
 
 ## Widget SDK 限制
 
-> ⚠️ **重要**：Widget 模式使用**简化版 SDK**，仅包含以下 API。需要完整功能请使用 Page 模式。
+> ⚠️ **重要**：三种沙箱不是同一套 `window.Tapp`。Widget 是精简面；Page 是完整面；headless
+> （常驻）没有可见控制面。需要联邦、对局、Tapp / Brew 管理时用 Page（有授予权限时 headless
+> 也可以用联邦和对局），不要假设 Widget 上有这些方法。
 
-| 分类               | Widget SDK                                     | Full SDK (Page/headless) |
-| ------------------ | ---------------------------------------------- | ------------------------ |
-| **存储/全局设置**  | ✅ 完整，含 `getAll`/`usage`                   | ✅ 相同                  |
-| **实例设置 / invalidate** | ✅ `getInstanceSettings` / `updateInstanceSettings` / **`invalidate`** | ❌ **仅 Widget 沙箱**（Page 的 `Tapp.widget` 是 register 系列；headless 无 `Tapp.widget`） |
-| **UI/用户/上下文** | ✅ 主题、通知、语言、角色和运行上下文；**`Tapp.ui.openUrl` / `listOpenUrls`**（需 `ui:openUrl` + `openUrls`） | ✅ 另含 fullscreen/title；同样支持 openUrl |
-| **DOM**            | ✅ 与 Full 共用安全 helper                     | ✅ 相同                  |
-| **包内资源**       | ✅ `Tapp.assets`（list / getUrl / getArrayBuffer / revoke） | ✅ 相同       |
-| **AI**             | ✅ Manifest 声明的 AI Task                     | ✅ 相同                  |
-| **平台数据/报告**  | ✅ 只读                                        | ✅ 读写                  |
-| **媒体/语音/动画** | ✅ 按 Manifest 权限                            | ✅ 相同                  |
-| **事件/数据交换**  | ✅ Event、一次性授权 Data Exchange、Agent 交互 | ✅ 相同                  |
-| **后台需求/调度**  | ✅ 完整                                        | ✅ 相同                  |
-| **声明 API**       | ✅ `Tapp.api()` 与 `Tapp.api.list()`           | ✅ 相同                  |
-| **生命周期**       | ✅ `onReady` / `onDestroy` / pause / resume    | ✅ 相同                  |
-| **管理/联邦能力**  | ❌ Tapp/Brew 管理、组件、快捷键、Federation 等 | ✅ 按权限提供            |
+| 分类 | Widget | Page | headless |
+| ---- | ------ | ---- | -------- |
+| **存储 / settings / shared** | ✅ `getAll`/`usage` | ✅ | ✅ |
+| **实例设置 / `invalidate`** | ✅ `getInstanceSettings` / `updateInstanceSettings` / `invalidate` | ❌ `Tapp.widget` 是 register 系列 | ❌ 无 `Tapp.widget` |
+| **UI 主题 / 语言 / 通知** | ✅ | ✅ | ✅ |
+| **`Tapp.ui.openUrl` / `listOpenUrls`** | ✅ 需 `ui:openUrl` + `openUrls` | ✅ | ❌ 不可用 |
+| **fullscreen / title / confirm** | ❌ | ✅ | ❌ |
+| **人设 / context / user** | ✅ `Tapp.persona.get` 无需权限 | ✅ | ✅ |
+| **DOM / `file.download`** | ✅ | ✅ | ❌ 无此对象 |
+| **`Tapp.assets`** | ✅ | ✅ | ✅ |
+| **AI Task** | ✅ 按授予权限（含 `ai:search`）；否则调用会报缺权限 | ✅ | ✅ |
+| **`Tapp.model3d`** | 调用会报缺权限 | ✅ | ❌ 无此对象 |
+| **平台 / 报告** | ✅ 只读 | ✅ 读写 | ✅ 读写 |
+| **媒体 / 语音 / 动画 / 调度 / 事件 / Data Exchange / Agent** | ✅ 按授予权限 | ✅ | ✅ |
+| **`Tapp.api(name, params)` / `Tapp.api.list()`** | ✅ | ✅ | ✅ |
+| **生命周期** | ✅ `onReady` / `onDestroy` / `onPause` / `onResume`（隐藏≠销毁） | ✅ | ✅ |
+| **`tappList` / `brewList` / `federation` / `game` / 组件 / 快捷键** | ❌ | ✅ | `tappList` / 组件 / 快捷键 ❌；`brewList` / `federation` / `game` ✅ |
 
-Widget 不是纯静态展示层：共享 core 可在其中使用事件、调度和数据交换。但宿主不会给 Widget
-注册平台/报告写入、Tapp/Brew 管理、组件、快捷键和 Federation handler。
+Widget 不是纯静态展示层：共享层 `core` 可在其中使用事件、调度和数据交换。Widget 沙箱没有
+平台/报告写入、Tapp/Brew 管理、组件、快捷键、联邦或 `Tapp.game`。
 
 ---
 
@@ -56,7 +60,8 @@ Tapp.widgets["my-widget"] = {
 ```
 
 > **生命周期**：Widget SDK **会**在 document load 后触发 `Tapp.lifecycle.onReady`（以及
-> pause/resume/destroy）。可见 UI 仍应主要通过 `Tapp.widgets[id].render(container, props)`
+> `onPause`/`onResume`/`onDestroy`）。`onPause` 是宿主**隐藏**该卡（切 Tab、滚出视野），
+> 不是销毁。可见 UI 仍应主要通过 `Tapp.widgets[id].render(container, props)`
 > 由宿主驱动；`onReady` 适合初始化订阅、预取数据或配合 core 的共享逻辑，不要假设只有
 > Page 模式才有 onReady。
 

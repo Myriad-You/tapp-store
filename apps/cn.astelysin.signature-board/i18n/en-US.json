@@ -1,0 +1,19 @@
+{
+  "app.name": "Shared Signature Board",
+  "app.description": "Leave a signature or drawing on a shared canvas",
+  "widget.title": "Shared Signature Board",
+  "widget.snapshotReady": "Latest public snapshot",
+  "widget.snapshotWaiting": "Waiting for snapshot",
+  "widget.live": "Shared",
+  "widget.waiting": "Pending",
+  "widget.empty": "No public snapshot yet",
+  "widget.intro": "Signatures and drawings from everyone, together on one canvas.",
+  "widget.drawings": "Public works",
+  "widget.drawingsShort": "Works",
+  "widget.occupancy": "Filled",
+  "widget.archives": "Archives",
+  "widget.snapshotMissing": "Waiting for an admin snapshot",
+  "widget.snapshotPublished": "Snapshot published",
+  "widget.readyAria": "Latest Shared Signature Board snapshot",
+  "widget.emptyAria": "Shared Signature Board has no public snapshot"
+}

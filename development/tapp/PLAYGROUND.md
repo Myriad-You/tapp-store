@@ -51,7 +51,7 @@ Playground 是桌面管理员工具，不是访客或普通用户功能。
 | 模式 | 判定 | 资源期望 |
 | --- | --- | --- |
 | **Page 模式** | 声明了 `manifest.page` | 非空 `code.page` + `code.pageHtml`；`page.template: "page.html"`；可附带 widgets |
-| **Widget-only** | 未声明 `page` 且 `manifest.widgets` 非空 | 非空 `code.widget` + `code.widgetHtml`；**不强制**生成 stub Page / `page.html`；声明 `widget:register` |
+| **Widget-only** | 未声明 `page` 且 `manifest.widgets` 非空 | 非空 `code.widget` + `code.widgetHtml`；**不强制**生成 stub Page / `page.html`；声明权限含 `widget:register`（安装校验；不等于授予动态注册） |
 | **Page + Widget** | 有可用 Page 且有 widgets | 预览拆成独立 Page / Widget 窗格 |
 
 前端判定「可用 Page」：声明了 `page` 层且 `pageHtml` 非空。仅有 Widget 时
@@ -63,7 +63,7 @@ Playground 打包到固定三文件布局：`core.js`、`page/index.js`、`widge
 仍可包含：`manifest.json`、三个层入口、`styles.css`、`i18n`、package assets、
 background / APIs / AI / events / agent / dataExchange 等 Manifest 扩展（见
 [MANIFEST](./MANIFEST.md)、[WIDGET](./WIDGET.md)、[CLI](../../../tools/tapp-cli/README.md)）。
-没有 `backgroundRequirements` 时，安装契约不强制 core；声明后台常驻才必须有 core。
+没有 `backgroundRequirements` 时，安装契约不强制 core；声明**常驻**才必须有 core。
 
 ### 目录文案：`manifest.locales` ≠ 应用内 `code.i18n`
 
@@ -148,7 +148,7 @@ HTML 中的脚本、inline handler、直接 fetch / XHR / WebSocket、`eval`、�
 Agent 不会声称把所有文档永久放进模型上下文。每轮先从仓库文档规划并检索相关
 章节，例如：`TAPP_DEVELOPMENT`、`QUICKSTART`、`ARCHITECTURE`、`MANIFEST`、
 `API_REFERENCE`、`PAGE`、`WIDGET`、`SANDBOX`、`STYLING`、`GRAPHICS`、
-`REST_API`、`RUNTIME_CONTRACT_DESIGN`、`TROUBLESHOOTING`、`TAPP_FILE_FORMAT`、
+`REST_API`、`RUNTIME_CONTRACT_DESIGN`、`TROUBLESHOOTING`、`STORE`、`TAPP_FILE_FORMAT`、
 `PLAYGROUND_GENERATION_CONTEXT`。
 检索结果总量受限，并随响应返回来源名称和章节，便于人工审计。
 
@@ -162,12 +162,13 @@ Agent 不会声称把所有文档永久放进模型上下文。每轮先从仓�
 
 | 能力 | 临时预览 | 安装后运行 |
 | --- | --- | --- |
-| Page iframe / CSP / SDK | 有可用 Page 时与正式沙箱同构（`previewMode`） | 正式沙箱 |
-| Widget 沙箱 | 有 Widget 时挂载；Playground 使用 `isPreview: false`（可交互） | 主页 / 运行态按宿主策略 |
+| Page iframe / CSP / SDK | 有可用 Page 时与正式沙箱同构 | 正式沙箱 |
+| Widget 沙箱 | 有 Widget 时挂载（可交互） | 主页 / 运行态按宿主策略 |
 | Runtime Grant | **不签发** | 按可见安装与当前角色签发 |
 | `Tapp.storage` | 当前**标签页内存**；预览需声明 `storage:read` / `storage:write` | 当前用户私有存储 |
-| 主题、语言、确认、全屏 | 可用（受限 preview handlers） | 按 Manifest 权限 |
-| 平台、网络、AI、宿主媒体、事件 Broker | 禁用或返回明确错误 | 按 Manifest / 角色 / 后端策略 |
+| 主题、语言、确认、全屏 | 可用（通知除外） | 按授予权限 |
+| `Tapp.persona.get` | 固定样例名片，不打真实 API | 站点公开名片 |
+| 平台、网络、AI、宿主媒体、事件 Broker | 禁用或返回明确错误 | 按声明权限、角色与授予权限 |
 | **Federation**（Feed、Note/媒体、Channel/Room/Ring 等） | **不可用**（无 Grant、无 FederationBridge） | 按 `federation:*` + Runtime Grant |
 | 对访客可见 | 否 | 仅管理员公开安装可见 |
 | Page 运行时自动修复 | 有可用 Page 时最多 **2** 轮 | 不适用 |

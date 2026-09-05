@@ -22,10 +22,13 @@ Manifest 是 Tapp 的核心配置文件，定义了应用的元数据、权限�
 | `backgroundRequirements` | string[] | ❌   | 启动后需常驻的 headless core 能力  |
 | `settings`               | object[] | ❌   | 用户可配置的设置项                 |
 | `apis`                   | object   | ❌   | 命名 API 声明（代理+权限校验）     |
+| `credentials`            | object[] | ❌   | 安装级只写凭据（绑定到具名 HTTP API） |
 | `dataExchange`           | object   | ❌   | 跨 Tapp 具名 import/export 契约    |
 | `ai`                     | object   | ❌   | 服务端治理的 AI Task 声明          |
 | `events`                 | object   | ❌   | Event Broker 发布/订阅 topic 声明  |
 | `agent`                  | object   | ❌   | Agent Interaction 声明             |
+| `game`                   | object   | ❌   | 对局会话 `{protocol, maxPlayers?}`（须 `game:session`） |
+| `runtimeModules`         | string[] | ❌   | 宿主注入库；目前仅 `"three"`（game / developer） |
 | `minSystemVersion`       | string   | ❌   | 最低兼容 Myriad 语义版本           |
 | `homepage`               | string   | ❌   | 应用主页 URL                       |
 | `repository`             | string   | ❌   | 代码仓库 URL                       |
@@ -117,8 +120,9 @@ await Tapp.ui.openUrl({ id: "docs", path: "../evil" }); // reject
 宿主有打开速率限制；实现细节见 [API 参考 · openUrl](API_REFERENCE.md#打开声明链接-openurl)。
 
 Manifest 采用严格字段校验：未声明字段、拼写错误以及已经移除的字段都会让安装失败，
-不会再被静默忽略。所有运行能力都必须直接写入 `permissions`；宿主只会在真正调用时
-按权限和运行时策略决定是否授权。
+不会再被静默忽略。需要授权的运行能力都必须直接写入 `permissions`；宿主只会在真正调用时
+按权限和运行时策略决定是否授权。无需权限的公开 SDK（`Tapp.context`、`Tapp.user`、
+`Tapp.persona`）不要写进 `permissions`，也不存在 `persona:read`。
 
 ### 多语言名称与描述（locales）
 
@@ -173,9 +177,12 @@ Page、Widget 和 headless core 是运行形态，由 `page`、`widgets` 和
 `social`←`communication`，`utility`←`demo|page|test|tool|tools|utilities|widget`。
 
 `version` 必须是语义版本；`themeColor` 使用 `#RRGGBB`；`homepage`、`repository` 和
-作者主页只接受 HTTP(S)。声明 Widget 必须同时声明 `widget:register`；所有 HTTP API
-必须声明 `network:fetch`，内置 AI API 必须声明对应的 `ai:*` 权限。层入口只接受
-不重复的 `.js` 文件名。无效声明会在安装或更新时直接拒绝，不留到运行时静默失败。
+作者主页只接受 HTTP(S)。声明 `widgets` 时安装校验要求 Manifest 的**声明权限**含
+`widget:register`（契约 `WIDGET_MANIFEST_PERMISSION`）。这不等于运行时一定**授予**该权限：
+`widget:register` 是 privileged，普通用户安装时会从授予集里滤掉，Manifest Widget 仍由安装
+预注册，但不能调用动态 `Tapp.widget.register`。所有 HTTP API 必须声明 `network:fetch`，
+内置 AI API 必须声明对应的 `ai:*` 权限（含 `ai:search`）。层入口只接受不重复的 `.js`
+文件名。无效声明会在安装或更新时直接拒绝，不留到运行时静默失败。
 
 `minSystemVersion` 使用语义版本。直接安装、商店安装和更新都会由后端与当前 Myriad
 包版本比较；当前版本过低或字段格式无效时会拒绝写入，避免出现“安装成功但运行时才
@@ -234,7 +241,7 @@ Page、Widget 和 headless core 是运行形态，由 `page`、`widgets` 和
   "backgroundRequirements": ["scheduler", "sync"],
   "homepage": "https://example.com",
   "repository": "https://github.com/example/my-tapp",
-  "minSystemVersion": "0.2.1",
+  "minSystemVersion": "0.4.0",
   "apis": {
     "weather": {
       "type": "http",
@@ -430,7 +437,7 @@ scheduler/headless core，而不是依赖 Widget 的可见计时器。
 ```
 
 至少要声明 `core`、`page`、`widgets` 之一。声明了 `backgroundRequirements` 必须有
-`core`——后台常驻只运行 core。
+`core`——常驻只运行 core。
 
 声明 `page` 层即表示这个应用有可打开的页面：宿主据此决定卡片能不能点开、Dock 里是否
 列出，不存在独立的开关字段可以和实际内容对不上。`page` 层至少要有 `entry` 或
@@ -839,7 +846,7 @@ POST 的 PAYLOAD 是原始 body，超过 1 MiB 先拒；`params` 只来自身体
 入站 **不** 使用 Runtime Grant，也 **不** 查看游客 `network:fetch` 策略；HTTP 出站只要求该公开安装已批准 `network:fetch`。`/tapi` 忽略站点登录 Cookie，只解析 `visibility = all` 的公开安装。
 没有 `GET /tapi/{tappId}` 目录；验签参数写在 Manifest 里交给调用方，不由宿主对外广播本机装了哪些路由。
 入站密钥泄露后，owner 在详情页重填即可作废旧指纹；宿主另有每小时 180 次的凭据封顶。
-验签失败过多会按调用方指纹自动拉黑（不落原始 IP）；详情页可暂停该安装的入站或解除本安装拉黑。暂停/拉黑按安装 owner 隔离。
+验签失败过多会按调用方指纹自动拉黑（不落原始 IP）；详情页可停用该安装的入站（`ROUTE_PAUSED`）或解除本安装拉黑。停用/拉黑按安装 owner 隔离。
 
 ---
 
@@ -943,6 +950,26 @@ Tapp 私有 storage、报告和内部状态不会因为知道另一个 `tappId` 
 - Interaction type 由应用自行命名，但必须与 Agent 能选择的任务类型一致；Tapp 不会获得任意
   DOM 操作权限。
 
+生图（含参考图）的最小声明片段：
+
+```json
+{
+  "permissions": ["ai:image"],
+  "ai": {
+    "protocolVersion": 2,
+    "operations": ["image"],
+    "modelTier": "standard",
+    "contextSources": [],
+    "outputFormats": ["image"]
+  }
+}
+```
+
+`prompt`、`width`、`height`、`referenceImages` 放在每次 `Tapp.ai.tasks.create` 的 `input`
+中。参考图不是 `contextSources`，也不是新增的权限；运行时仍须具有授予权限 `ai:image`。
+支持 PNG/JPEG/WebP 的 base64 data URL 或本平台图片缓存路径，最多 4 张、解码后合计 10 MiB；
+调用示例见 [AI API](API_REFERENCE.md#ai-api)。
+
 ---
 
 ## 权限列表
@@ -985,6 +1012,7 @@ Tapp 私有 storage、报告和内部状态不会因为知道另一个 `tappId` 
 | `ai:analyze`         | AI 数据分析       |
 | `ai:chat`            | AI 对话           |
 | `ai:image`           | AI 图片生成       |
+| `ai:search`          | AI 联网搜索（`Tapp.ai.tasks` `operation: "search"`；默认不下放） |
 | `3d:generate`        | 3D 模型生成（Tripo；默认不下放） |
 | `network:fetch`      | 发送 HTTP 请求    |
 | `component:theme`    | 注册自定义主题    |
