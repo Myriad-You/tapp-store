@@ -1,0 +1,820 @@
+:root {
+  color-scheme: light;
+
+  /* 主题色 · 亮色（默认，html 无 .dark 类） */
+  --ark-gold: #b0803a;
+  --ark-gold-dim: rgba(176, 128, 58, 0.35);
+  --ark-bg: #f5f5f5;
+  --ark-text: #1a1a1a;
+  --ark-text-dim: rgba(0, 0, 0, 0.55);
+  --ark-text-muted: #3a3a3a;
+  --ark-panel: rgba(255, 255, 255, 0.55);
+  --ark-border: rgba(0, 0, 0, 0.22);
+  --ark-border-strong: rgba(0, 0, 0, 0.35);
+  --ark-border-weak: rgba(0, 0, 0, 0.12);
+  --ark-fill: rgba(0, 0, 0, 0.05);
+  --ark-fill-hover: rgba(0, 0, 0, 0.08);
+
+  /* 响应式尺寸：clamp 随视口流畅缩放，媒体查询做断点覆盖 */
+  --char-card-w: clamp(84px, 9vw, 120px);   /* 干员卡片宽 */
+  --char-card-h: calc(var(--char-card-w) * 2.35); /* 卡片高 = 立绘(1:2) + 底部名字区 */
+  --assist-avatar: clamp(84px, 9vw, 100px); /* 助战头像 */
+  --player-avatar: clamp(56px, 6vw, 64px);  /* 玩家头像 */
+}
+
+html.dark {
+  color-scheme: dark;
+
+  /* 主题色 · 暗色 */
+  --ark-gold: #d4b483;
+  --ark-gold-dim: rgba(212, 180, 131, 0.35);
+  --ark-bg: #0a0a0a;
+  --ark-text: #f5f5f5;
+  --ark-text-dim: rgba(255, 255, 255, 0.5);
+  --ark-text-muted: #e0e0e0;
+  --ark-panel: rgba(49, 49, 49, 0.7);
+  --ark-border: rgba(255, 255, 255, 0.35);
+  --ark-border-strong: rgba(255, 255, 255, 0.3);
+  --ark-border-weak: rgba(255, 255, 255, 0.12);
+  --ark-fill: rgba(255, 255, 255, 0.08);
+  --ark-fill-hover: rgba(255, 255, 255, 0.05);
+}
+
+/* 页面根：host 外壳注入的片段根节点（page.template 片段）。
+   样式只作用于自身，不触碰宿主 html/body 外壳（PAGE.md 规范）。 */
+.page {
+  box-sizing: border-box;
+  min-height: 100vh;
+  font: 14px/1.6 system-ui, sans-serif;
+  color: inherit;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* AnimatedView 外层：min-h-screen + pt-20 + px-4/sm:px-6 + pb-24/md:pb-12 */
+.home-view,
+.collection-view {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 80px 16px 96px;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--ark-bg);
+}
+
+/* 装饰纹样与页面遮罩均仅用于暗色模式（decoration/decorator_dark.png、page_mask_dark.png） */
+html.dark .home-view,
+html.dark .collection-view {
+  background-image: var(--page-mask, none), var(--page-decorator, none);
+  background-size: cover, auto;
+  background-repeat: no-repeat, repeat;
+  background-position: center, 0 0;
+}
+
+@media (min-width: 640px) {
+  .home-view,
+  .collection-view {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+@media (min-width: 768px) {
+  .home-view,
+  .collection-view {
+    padding-bottom: 48px;
+  }
+}
+
+/* 内层：max-w-6xl mx-auto */
+.ark-page-inner {
+  width: 100%;
+  max-width: 1152px;
+  margin: 0 auto;
+}
+
+/* 主页页脚：名称版本 + 版权说明（字体样式仿 debug 按钮） */
+.ark-app-footer {
+  text-align: center;
+  padding: 24px 16px 40px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ark-text-dim);
+  opacity: 0.65;
+  line-height: 2;
+}
+
+/* 暗色模式：灰色点网格背景（已弃用，改用 assets/decoration/page_mask_dark.png 资源）
+html.dark .home-view,
+html.dark .collection-view {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.2) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+}
+*/
+
+/* 单列模式下隐藏空白卡片（仅双列需要它填充左列底部） */
+@media (max-width: 899px) {
+  .ark-home-spacer {
+    display: none;
+  }
+}
+
+/* ak-ui fx：倾斜效果（vendored 自 @yunyoujun/ak-ui _ak-fx） */
+.ak-fx--skew-left {
+  transform: skewX(-10deg);
+}
+
+.ak-fx--skew-right {
+  transform: skewX(10deg);
+}
+
+/* ak-ui button（vendored/adapted 自 @yunyoujun/ak-ui _ak-button） */
+[data-ak-ui] .ak-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font-family: var(--ak-font-sans);
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  outline: none;
+  padding: 0;
+  cursor: pointer;
+  color: #fff;
+  background-color: rgba(49, 49, 49, 0.95);
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2), 0 5px 10px rgba(0, 0, 0, 0.5);
+}
+
+[data-ak-ui] .ak-button:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+[data-ak-ui] .ak-button:active:not(:disabled) {
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+[data-ak-ui] .ak-button__icon {
+  display: inline-flex;
+  width: 3rem;
+  height: 3rem;
+  fill: currentColor;
+}
+
+[data-ak-ui] .ak-button--fab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 4rem;
+  height: 3.5rem;
+  background-color: rgba(49, 49, 49, 0.6);
+  box-shadow: 0 8px 10px rgba(0, 0, 0, 0.8);
+}
+
+[data-ak-ui] .ak-button--fab:active {
+  background-color: rgba(49, 49, 49, 0.5);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.8);
+}
+
+[data-ak-ui] .ak-button--fab .ak-button__icon {
+  width: 2.2rem;
+  height: 2.2rem;
+}
+
+/* 项目命令按钮变体（在 vendored .ak-button 之上扩展） */
+[data-ak-ui] .ak-button--info {
+  background-color: var(--ak-signal-info);
+  color: var(--ak-surface-inverse);
+}
+
+[data-ak-ui] .ak-button--success {
+  background-color: var(--ak-signal-success);
+  color: var(--ak-surface-inverse);
+}
+
+[data-ak-ui] .ak-button--ghost {
+  background-color: transparent;
+  color: var(--ak-text-primary);
+  border: var(--ak-line-hairline) solid var(--ark-border-strong);
+  box-shadow: none;
+}
+
+[data-ak-ui] .ak-button--ghost:hover:not(:disabled) {
+  background-color: var(--ark-fill-hover);
+}
+
+/* ak-ui divider：标题下方的分割线 + 刷新时间（vendored/adapted 自 @yunyoujun/ak-ui _ak-divider） */
+.ak-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.25rem 0 1.25rem;
+}
+
+.ak-divider::before,
+.ak-divider::after {
+  content: "";
+  height: 2px;
+  background: var(--ak-text-secondary);
+  opacity: 0.45;
+}
+
+.ak-divider::before {
+  width: 15%;
+}
+
+.ak-divider::after {
+  flex: 1;
+}
+
+.ak-divider span {
+  flex-shrink: 0;
+  color: var(--ak-text-secondary);
+  font-family: var(--ak-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ========================================
+   Loading / 加载（ak-ui loading，vendored/adapted 自 @yunyoujun/ak-ui _ak-loading）
+   ======================================== */
+
+@keyframes ak-radio {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.4);
+  }
+}
+
+.ak-loading {
+  --ak-loading-color: var(--ak-signal-accent);
+  --ak-loading-size: 22px;
+  --ak-loading-border: 4px;
+  position: relative;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  display: inline-block;
+  width: var(--ak-loading-size);
+  height: var(--ak-loading-size);
+  border: var(--ak-loading-border) solid var(--ak-loading-color);
+  background: transparent;
+  transform: rotate(-45deg);
+}
+
+.ak-loading::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  border: var(--ak-loading-border) solid var(--ak-loading-color);
+  transform: translate(-50%, -50%) scale(1);
+  animation: ak-radio 0.7s ease-out infinite;
+}
+
+/* 整页加载遮罩 */
+.ark-page-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ak-surface-canvas);
+}
+
+.ark-spinner-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  min-height: 60px;
+}
+
+/* ========================================
+   Display 布局（宽屏两列 / 窄屏单列）
+   ======================================== */
+
+.ark-display-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ark-display-left {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  overflow: hidden;  /* 防止内部溢出撑大容器 */
+}
+
+.ark-display-right {
+  min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .ark-display-layout {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .ark-display-left {
+    flex: 0 0 50%;
+    width: 50%;
+    max-width: 50%;
+  }
+
+  .ark-display-right {
+    flex: 0 0 50%;
+    width: 50%;
+    max-width: 50%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ark-game-data {
+    flex: 1;
+    min-height: 0;
+    max-height: max(320px, calc(100vh - 250px));
+  }
+}
+
+/* ========================================
+   滚动条：默认隐藏，滚动时才显示
+   ======================================== */
+
+[data-game-content] {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+[data-game-content]::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+[data-game-content]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-game-content]::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+}
+
+[data-game-content].scrolling {
+  scrollbar-color: var(--ark-border) transparent;
+}
+
+[data-game-content].scrolling::-webkit-scrollbar-thumb {
+  background: var(--ark-border);
+}
+
+.ark-game-tabbar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* 我的干员：水平滚动条（默认隐藏，滚动时才显示） */
+
+.ark-my-chars-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.ark-my-chars-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.ark-my-chars-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ark-my-chars-scroll::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+}
+
+.ark-my-chars-scroll.scrolling {
+  scrollbar-color: var(--ark-border) transparent;
+}
+
+.ark-my-chars-scroll.scrolling::-webkit-scrollbar-thumb {
+  background: var(--ark-border);
+}
+
+/* ========================================
+   干员卡片（operator-handbook-item 风格）
+   ======================================== */
+
+.operator-handbook-item-wrapper {
+  position: relative;
+  width: var(--char-card-w);
+  height: var(--char-card-h);
+  overflow: hidden;
+  background: #222;
+  flex-shrink: 0;
+}
+
+.operator-handbook-item-wrapper:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
+  z-index: 10;
+}
+
+.operator-handbook-item-component {
+  position: absolute;
+  box-sizing: border-box;
+}
+
+.operator-handbook-item-bg {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.operator-handbook-item-illustration {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(var(--char-card-w) * 2);
+}
+
+.operator-handbook-item-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  display: block;
+}
+
+.operator-handbook-item-illustration img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center top;
+  display: block;
+}
+
+.operator-handbook-item-decor-main {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.operator-handbook-item-decor-part {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.operator-handbook-item-decor-part-1 {
+  background: #000000;
+  clip-path: polygon(0% 100%, 56% 100%, 0% 72%);
+}
+
+.operator-handbook-item-decor-part-2 {
+  background: #1b191a;
+  clip-path: polygon(0% 25%, 100% 75%, 100% 100%, 56% 100%, 0% 72%);
+}
+
+.operator-handbook-item-decor-part-3 {
+  background: linear-gradient(
+    to bottom right, 
+    rgba(45, 43, 45, 0.9), 
+    rgba(38, 36, 38, 0.96)
+  );
+  clip-path: polygon(0% 0%, 100% 50%, 100% 75%, 0% 25%);
+}
+
+.operator-handbook-item-decor-main-wrap {
+  width: 100%;
+  height: calc(var(--char-card-w) * 0.85);
+  bottom: 0;
+}
+
+.operator-handbook-item-decor-main-wrap.six-star { filter: drop-shadow(0px -8px 12px #eec037); }
+.operator-handbook-item-decor-main-wrap.five-star { filter: drop-shadow(0px -8px 12px #f2dd9e); }
+.operator-handbook-item-decor-main-wrap.four-star { filter: drop-shadow(0px -8px 12px #e6e2f1); }
+.operator-handbook-item-decor-main-wrap.three-star { filter: drop-shadow(0px -8px 12px #00b1ff); }
+.operator-handbook-item-decor-main-wrap.two-star { filter: drop-shadow(0px -8px 12px #d8e22b); }
+.operator-handbook-item-decor-main-wrap.one-star { filter: drop-shadow(0px -8px 12px white); }
+
+.operator-handbook-item-decor-topleft {
+  top: 0;
+  left: 0;
+  background: black;
+  width: calc(var(--char-card-w) * 0.4);
+  height: calc(var(--char-card-w) * 0.4);
+  clip-path: polygon(0% 0%, 100% 0%, 0% 100%);
+}
+
+.operator-handbook-item-name {
+  bottom: calc(var(--char-card-w) * 0.03);
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: white;
+  font-size: calc(var(--char-card-w) * 0.12);
+  font-weight: 400;
+  text-shadow: 0 1px 2px #000;
+  white-space: nowrap;
+  z-index: 6;
+}
+
+.operator-handbook-item-career {
+  top: calc(var(--char-card-w) * 0.05);
+  left: calc(var(--char-card-w) * 0.05);
+  z-index: 5;
+}
+
+.operator-handbook-item-career img {
+  width: calc(var(--char-card-w) * 0.22);
+  height: calc(var(--char-card-w) * 0.22);
+  display: block;
+}
+
+.operator-handbook-item-star {
+  top: calc(var(--char-card-w) * 0.05);
+  left: calc(var(--char-card-w) * 0.3);
+  z-index: 5;
+}
+
+.operator-handbook-item-star img {
+  height: calc(var(--char-card-w) * 0.16);
+  width: auto;
+  display: block;
+}
+
+.operator-handbook-item-elite {
+  bottom: calc(var(--char-card-w) * 0.75);
+  left: calc(var(--char-card-w) * 0.03);
+  z-index: 6;
+}
+
+.operator-handbook-item-elite img {
+  width: calc(var(--char-card-w) * 0.36);
+  height: auto;
+  display: block;
+}
+
+.operator-handbook-item-level {
+  bottom: calc(var(--char-card-w) * 0.23);
+  left: calc(var(--char-card-w) * 0.05);
+  width: calc(var(--char-card-w) * 0.36);
+  height: calc(var(--char-card-w) * 0.36);
+  border: 2px solid #ffe601;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: calc(var(--char-card-w) * 0.14);
+  z-index: 6;
+}
+
+.operator-handbook-item-label-container {
+  bottom: calc(var(--char-card-w) * 0.23);
+  right: calc(var(--char-card-w) * 0.03);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: calc(var(--char-card-w) * 0.04);
+  z-index: 6;
+}
+
+/* ========================================
+   ak-ui（accent 模式）
+   令牌 vendored from @yunyoujun/ak-ui@0.2.1 tokens.css，
+   语义角色按宿主品牌映射；保留现有布局，仅注入字体层级、
+   信号色、可见焦点与克制的几何切角。
+   ======================================== */
+
+:root {
+  /* 调色板 */
+  --ak-color-white: #ffffff;
+  --ak-color-black: #000000;
+  --ak-color-low: #9c9c9c;
+  --ak-color-basic: #d8dd5a;
+  --ak-color-primary: #4aabea;
+  --ak-color-secondary: #cfc2d1;
+  --ak-color-advanced: #f1c644;
+  --ak-color-accent: #f6540e;
+  --ak-color-blue: #22bbff;
+  --ak-color-yellow: #ffd802;
+  --ak-color-dark-blue: #0075a8;
+  --ak-color-light-blue: #3ff7ff;
+  --ak-color-gray: #313131;
+  --ak-color-dark: #222222;
+
+  /* 语义表面：委托宿主品牌 token（单一事实来源） */
+  --ak-surface-canvas: var(--ark-bg);
+  --ak-surface-panel: #ffffff;
+  --ak-surface-muted: rgba(245, 245, 245, 0.92);
+  --ak-surface-raised: rgba(40, 40, 40, 0.92);
+  --ak-surface-inverse: #1a1a1a;
+
+  /* 语义文本 */
+  --ak-text-primary: var(--ark-text);
+  --ak-text-secondary: var(--ark-text-dim);
+  --ak-text-inverse: #f5f5f5;
+
+  /* 功能信号：品牌映射 */
+  --ak-signal-info: var(--ak-color-primary);
+  --ak-signal-action: #f1c644;
+  --ak-signal-accent: var(--ark-gold);
+  --ak-signal-success: #3fb950;
+  --ak-signal-danger: #f85149;
+  --ak-signal-disabled: #9c9c9c;
+
+  /* 字体 */
+  --ak-font-sans: system-ui, -apple-system, sans-serif;
+  --ak-font-serif: "Noto Serif SC", "Source Han Serif SC", Georgia, "SimSun", serif;
+  --ak-font-mono: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  --ak-font-command: var(--ak-font-serif);
+
+  /* 间距 */
+  --ak-space-1: 0.25rem;
+  --ak-space-2: 0.5rem;
+  --ak-space-3: 0.75rem;
+  --ak-space-4: 1rem;
+  --ak-space-5: 1.5rem;
+  --ak-space-6: 2rem;
+
+  /* 几何与深度 */
+  --ak-line-hairline: 1px;
+  --ak-line-strong: 4px;
+  --ak-cut-sm: 0.375rem;
+  --ak-cut-md: 0.75rem;
+  --ak-cut-lg: 1.5rem;
+  --ak-radius-subtle: 2px;
+  --ak-shadow-panel: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.16);
+
+  /* 动效与焦点 */
+  --ak-motion-fast: 120ms;
+  --ak-motion-base: 200ms;
+  --ak-motion-slow: 420ms;
+  --ak-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ak-ease-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ak-focus-color: var(--ak-signal-accent);
+  --ak-focus-width: 3px;
+  --ak-focus-offset: 3px;
+}
+
+html.dark {
+  --ak-surface-panel: #1a1a1a;
+  --ak-surface-muted: rgba(26, 26, 26, 0.92);
+  --ak-surface-raised: rgba(66, 66, 66, 0.92);
+  --ak-surface-inverse: #17191b;
+  --ak-text-inverse: #1b1d1f;
+  --ak-shadow-panel: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.55);
+}
+
+/* —— accent 模式作用域规则（data-ak-ui 内）—— */
+
+/* 可见键盘焦点 */
+[data-ak-ui] :focus-visible {
+  outline: var(--ak-focus-width) solid var(--ak-focus-color);
+  outline-offset: var(--ak-focus-offset);
+}
+
+/* 命令级标题：衬线 + 收紧字距 */
+[data-ak-ui] .ark-page-title {
+  font-family: var(--ak-font-command);
+  letter-spacing: 0.06em;
+}
+
+/* 克制的几何切角（右上角） */
+[data-ak-ui] .ak-cut-tr {
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--ak-cut-sm)) 0,
+    100% var(--ak-cut-sm),
+    100% 100%,
+    0 100%
+  );
+}
+
+/* 左侧信号条 */
+[data-ak-ui] .ak-bar-l {
+  border-left: var(--ak-line-strong) solid var(--ak-signal-accent) !important;
+}
+
+/* 元数据标签：等宽 + 全大写 + 字距 */
+[data-ak-ui] .ak-label-mono {
+  font-family: var(--ak-font-mono) !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase;
+}
+
+/* 交互反馈：全部按钮的通用动效 */
+[data-ak-ui] button {
+  transition:
+    transform var(--ak-motion-fast) var(--ak-ease-standard),
+    filter var(--ak-motion-fast) var(--ak-ease-standard),
+    box-shadow var(--ak-motion-fast) var(--ak-ease-standard),
+    border-color var(--ak-motion-fast) var(--ak-ease-standard),
+    color var(--ak-motion-fast) var(--ak-ease-standard),
+    background-color var(--ak-motion-fast) var(--ak-ease-standard);
+}
+
+[data-ak-ui] button:hover:not(:disabled) {
+  filter: brightness(1.07);
+}
+
+[data-ak-ui] button:active:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+/* —— system 模式：分层表面背景 —— */
+[data-ak-ui] .ak-surface {
+  border: var(--ak-line-hairline) solid var(--ark-border-strong);
+  box-shadow: var(--ak-shadow-panel);
+}
+
+/* —— ak-ui card（vendored/adapted 自 @yunyoujun/ak-ui _ak-card）—— */
+[data-ak-ui] .ak-card {
+  box-sizing: border-box;
+  padding: 12px;
+  background: var(--ark-panel);
+  border: var(--ak-line-hairline) solid var(--ark-border-weak);
+  box-shadow: var(--ak-shadow-panel);
+  transition: box-shadow var(--ak-motion-fast) var(--ak-ease-standard);
+}
+
+[data-ak-ui] .ak-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+
+[data-ak-ui] .ak-card__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ark-text);
+}
+
+/* 条纹卡片（对角斜纹） */
+[data-ak-ui] .ak-card--stripe {
+  --ak-card-stripe: var(--ak-color-low);
+  padding: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 6px,
+    var(--ak-card-stripe) 6px,
+    var(--ak-card-stripe) 8px
+  );
+  border-color: transparent;
+  box-shadow: none;
+  opacity: 0.45;
+}
+
+/* 人物放置卡片（ak-card--place）：底部稀有度色条（accent 模式：克制单线条处理） */
+[data-ak-ui] .ak-card--place {
+  --ak-card-place-color: white;
+  padding: 0;
+  background: transparent;
+  border: var(--ak-line-hairline) solid transparent;
+  border-bottom: var(--ak-line-strong) solid var(--ak-card-place-color);
+}
+
+/* 减少动态偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .ak-loading::after {
+    animation-duration: 2s;
+  }
+
+  [data-ak-ui] button,
+  [data-ak-ui] .ak-button {
+    transition: none;
+  }
+
+  .operator-handbook-item-wrapper:hover {
+    transform: none;
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "title": "明日方舟",
+  "debug": "Debug",
+  "common": {
+    "back": "← 返回",
+    "next": "下一步",
+    "prev": "上一步",
+    "cancel": "取消",
+    "unknown": "未知"
+  },
+  "home": {
+    "refresh": "刷新数据",
+    "refreshTime": "更新于",
+    "loading": "加载中",
+    "enroll": "入职日",
+    "loadFail": "资源加载失败",
+    "errorModule": "skland 模块未加载",
+    "errorNoBinding": "未找到明日方舟绑定账号，请检查 Token 是否有效",
+    "step1": {
+      "title": "步骤 1 · 获取森空岛 Token",
+      "guide": "在森空岛官网（skland.com）已登录的控制台执行以下命令，把结果复制到下方输入框（格式：cred,token）",
+      "copyHint": "点击复制",
+      "copied": "已复制 · 粘贴到森空岛官网控制台执行",
+      "errorFormat": "请输入格式为 cred,token 的值"
+    },
+    "step2": {
+      "title": "步骤 2 · 选择账号",
+      "empty": "无可用账号"
+    }
+  },
+  "collection": {
+    "title": "我的方舟",
+    "tabOperators": "干员",
+    "tabSkins": "时装",
+    "filter": "筛选",
+    "profession": "职业",
+    "rarity": "稀有度",
+    "sort": "类型",
+    "rarity6": "6星",
+    "rarity5": "5星",
+    "rarity4": "4星",
+    "rarity13": "1-3星",
+    "professions": {
+      "pioneer": "先锋",
+      "warrior": "近卫",
+      "tank": "重装",
+      "sniper": "狙击",
+      "caster": "术师",
+      "medic": "医疗",
+      "support": "辅助",
+      "special": "特种"
+    },
+    "sortLevel": "角色等级",
+    "sortSkill": "技能专精",
+    "sortGain": "获取时间",
+    "sortName": "角色名称",
+    "empty": "暂无干员数据",
+    "skinTodoPrefix": "时装资产 · TODO（",
+    "skinTodoSuffix": " 个皮肤）"
+  },
+  "widget": {
+    "empty": "暂无玩家数据，请在应用页面绑定账号"
+  },
+  "footer": {
+    "copyright": "Tapp 所涉及的公司名称、商标、产品等均为其各自所有者的资产，仅供识别。Tapp 内使用的游戏图片、动画、音频、文本原文，仅用于更好地表现游戏资料，其版权属于 Arknights / 上海鹰角网络科技有限公司"
+  },
+  "assets": {
+    "supportUnits": "助战干员",
+    "noSupport": "暂无助战",
+    "myOperators": "我的干员",
+    "noOperators": "暂无干员",
+    "progress": "作战进度",
+    "operators": "干员",
+    "skins": "时装",
+    "furniture": "家具",
+    "medals": "蚀刻章",
+    "gameData": "游戏数据",
+    "tabSidestory": "活动剧情",
+    "tabRogue": "集成战略",
+    "tabCampaign": "剿灭",
+    "tabTower": "保全派驻",
+    "noActivity": "暂无活动",
+    "noRogue": "暂无集成战略",
+    "noCampaign": "暂无剿灭",
+    "noTower": "暂无保全派驻",
+    "fallbackActivity": "活动",
+    "fallbackRogue": "主题",
+    "fallbackCampaign": "剿灭",
+    "fallbackTower": "层",
+    "clearTimes": "通关",
+    "level": "等级",
+    "medal": "徽章",
+    "maxKills": "最大杀敌",
+    "best": "最高"
+  }
+}

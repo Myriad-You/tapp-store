@@ -1,0 +1,52 @@
+<main id="tapp-content" class="page" data-ak-ui>
+  <!-- Home Page / 主页 -->
+  <section data-view="home" class="home-view">
+    <div class="ark-home-inner">
+    </div>
+  </section>
+
+  <!-- Debug Page / 调试页 -->
+  <section data-view="debug" class="debug-view" hidden>
+    <div style="font-family:var(--ak-font-mono);font-size:13px;line-height:1.5;color:var(--ak-text-inverse);background:var(--ak-surface-inverse);min-height:100vh;padding:16px;box-sizing:border-box;">
+      <button type="button" data-nav="home" class="ak-button"
+        style="background:var(--ak-surface-raised);color:var(--ak-text-inverse);font-weight:700;font-size:12px;padding:6px 12px;cursor:pointer;margin-bottom:12px;">
+        ← Back
+      </button>
+      <div style="font-size:18px;font-weight:700;color:var(--ak-text-inverse);margin-bottom:16px;font-family:var(--ak-font-command);letter-spacing:0.06em;">Skland Debug Console</div>
+
+      <div class="ak-cut-tr ak-surface" style="background:var(--ak-surface-raised);border:1px solid rgba(255,255,255,0.14);border-radius:var(--ak-radius-subtle);padding:12px;margin-bottom:12px;">
+        <div class="ak-label-mono" style="font-size:11px;color:var(--ak-text-secondary);margin-bottom:6px;">Skland Token (cred,token)</div>
+        <input data-debug-token type="password" placeholder="cred,token"
+          style="width:100%;box-sizing:border-box;background:var(--ak-surface-inverse);border:1px solid rgba(255,255,255,0.18);border-left:var(--ak-line-strong) solid var(--ak-signal-info);border-radius:var(--ak-radius-subtle);padding:8px 10px;color:var(--ak-signal-success);font-family:inherit;font-size:13px;" />
+      </div>
+
+      <div class="ak-cut-tr ak-surface" style="background:var(--ak-surface-raised);border:1px solid rgba(255,255,255,0.14);border-radius:var(--ak-radius-subtle);padding:12px;margin-bottom:12px;">
+        <div class="ak-label-mono" style="font-size:11px;color:var(--ak-text-secondary);margin-bottom:6px;">Endpoint</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+          <span style="background:var(--ak-signal-info);color:var(--ak-surface-inverse);font-weight:700;font-size:11px;padding:3px 8px;border-radius:var(--ak-radius-subtle);">GET</span>
+          <select data-debug-endpoint
+            style="flex:1;background:var(--ak-surface-inverse);border:1px solid rgba(255,255,255,0.18);border-left:var(--ak-line-strong) solid var(--ak-signal-info);border-radius:var(--ak-radius-subtle);padding:6px 10px;color:var(--ak-text-inverse);font-family:inherit;font-size:12px;">
+            <option value="binding">player/binding</option>
+            <option value="info">player/info</option>
+            <option value="cultivate">cultivate/player</option>
+          </select>
+        </div>
+        <div data-debug-params
+          style="display:none;flex-direction:column;gap:6px;margin-bottom:8px;">
+          <div class="ak-label-mono" style="font-size:11px;color:var(--ak-text-secondary);">Params</div>
+          <input data-debug-uid type="text" placeholder="uid"
+            style="background:var(--ak-surface-inverse);border:1px solid rgba(255,255,255,0.18);border-left:var(--ak-line-strong) solid var(--ak-signal-info);border-radius:var(--ak-radius-subtle);padding:6px 10px;color:var(--ak-text-inverse);font-family:inherit;font-size:12px;" />
+        </div>
+        <button data-debug-send class="ak-button ak-button--success"
+          style="font-weight:700;font-size:13px;padding:8px 18px;cursor:pointer;">
+          Send Request
+        </button>
+      </div>
+
+      <div data-debug-response></div>
+    </div>
+  </section>
+
+  <!-- Collection Page / 干员资产页 -->
+  <section data-view="collection" class="collection-view" hidden></section>
+</main>
