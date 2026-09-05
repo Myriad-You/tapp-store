@@ -551,9 +551,11 @@ let task = await Tapp.ai.tasks.create({
   delivery: "stream",
   idempotencyKey: "summary-42-v1",
 });
+// create 返回 queued 快照，result 仍为空。完成态在 get / subscribe 之后。
 
 const stop = await Tapp.ai.tasks.subscribe(task.taskId, ({ event, data }) => {
   if (event === "delta") renderDelta(data.text);
+  // result / 终态 snapshot 的 data 是任务快照；信封在 data.result
   if (event === "result") renderResult(data.result);
 });
 
@@ -994,25 +996,30 @@ await Tapp.media.setSkipVip(true);
 **无需权限** - 获取应用上下文信息
 
 ```javascript
-// 获取应用信息
+// 获取应用信息（宿主版本与能力，不是 Tapp 包名）
 const app = await Tapp.context.getApp();
-// 返回: { version, name, environment }
+// 返回: { version, locale, theme, features: { aiEnabled, platforms } }
 
 // 获取用户信息
 const user = await Tapp.context.getUser();
-// 返回: { id, username, avatar, preferences }
+// 返回: { id, username, display_name, avatar, avatar_url, isAdmin, role,
+//         authenticated, connectedPlatforms, preferences: { language, timezone } }
 
-// 获取播放器信息
+// 获取播放器信息（无实时曲目时为 idle 零值；正式运行也可走宿主播放器事件）
 const player = await Tapp.context.getPlayer();
-// 返回: { isPlaying, currentTrack, volume }
+// 返回: { isPlaying, isPaused, currentTrack, progress, playlist, mode, volume, muted }
 
 // 获取导航信息
 const nav = await Tapp.context.getNavigation();
-// 返回: { currentPath, params }
+// 返回: { currentPath, previousPath, history, availableRoutes, tappPages }
 
 // 获取系统信息
 const system = await Tapp.context.getSystem();
-// 返回: { theme, language, timezone }
+// 返回: { online, serverConnected, version, backgroundTasks, lastFetch }
+
+// 地理位置（公开上下文；Playground 预览固定返回 null）
+const geo = await Tapp.context.getGeo();
+// 安装后: { lat, lon, city, region, country } 或服务不可用时的失败
 ```
 
 ---
@@ -1724,17 +1731,34 @@ const declaredApis = await Tapp.api.list();
 
 ## 文件与语音 API
 
-**权限**: `storage:read`（`file.download`）
+**权限**: public（`file.download`）
 
-文件下载由宿主创建 Blob 并触发下载，不依赖 iframe 的 download sandbox 权限：
+文件下载由宿主创建 Blob 并触发下载，不依赖 iframe 的 download sandbox 权限，也不申请 `storage:read`（那是私有 KV，不是把已有内容存到本机）。
+
+字符串内容（沙箱里已经有的文本）：
 
 ```javascript
 await Tapp.file.download("hello\n", "hello.txt", "text/plain;charset=utf-8");
 ```
 
-- 内容为字符串；编码后 Blob 大小上限 **10 MiB**（bridge 对 `file.download` 单独校验，
-  不走默认 ~1 MiB postMessage 上限）。
-- `filename` 不能含路径分隔或 `..`；可选 `mimeType` 字符串。
+本站生成资源（宿主读取，沙箱不能 `fetch` 这些路径）：
+
+```javascript
+await Tapp.file.download(task.result.value.url, "cat.png");
+await Tapp.file.download(`/api/model3d/assets/${assetId}`, "model.glb");
+```
+
+沙箱里已有的二进制（TTS `{ audio }`、`getUrl` 返回对象 / `blob:`、data URL）：
+
+```javascript
+await Tapp.file.download(await Tapp.speech.tts({ text: "你好" }));
+await Tapp.file.download(await Tapp.model3d.getUrl(assetId));
+await Tapp.file.download(task); // 生图完成态，读 result.value.url
+```
+
+- 文本 `content`、`base64`、宿主代取的 `url` 落盘上限 **32 MiB**（bridge 不走默认 ~1 MiB postMessage 上限）。
+- `url` **只**接受本站 `/api/brew/image-cache/{subdir}/{sha256}.{jpg|jpeg|png|gif|webp}` 或 `/api/model3d/assets/{sha256}`；任意 http(s) 一律拒绝。
+- `filename` 不能含路径分隔或 `..`。`url` / `base64` 可省略文件名（图 `image.{ext}`，模型 `model.glb`，音频按 MIME，否则 `download.bin`）。可选 `mimeType`。
 
 语音能力需要对应权限：
 
@@ -1806,7 +1830,7 @@ Page 完整面当前包含以下命名空间（`analytics` / `agent` 也挂在 `
 | `event`, `background`, `scheduler`         | 在线 Event Broker、常驻需求和持久化任务             | `event:*`（含 background.require/release→`event:subscribe`）、`scheduler:register` |
 | `agent`                                    | schema 约束的 Agent Interaction                     | Manifest + Runtime Grant           |
 | `api`                                      | Manifest 声明的 HTTP/builtin 能力                   | HTTP 需 `network:fetch`；`access` 仅控制调用者范围 |
-| `file`, `speech`                           | 文件下载、TTS 和 ASR                                | `storage:read`, `speech:*`         |
+| `file`, `speech`                           | 文件下载、TTS 和 ASR                                | public（`file.download`）, `speech:*` |
 | `assets`                                   | 包内静态资源 list/get/blob URL                      | public（限 manifest.assets）       |
 | `tappList`                                 | Tapp 查询、安装、启停、卸载与导出                   | `tappList:*`                       |
 | `brewList`                                 | Brew 列表、源、用户分类 create/delete、评论和 OPML  | `brew:*`                           |
@@ -1834,5 +1858,6 @@ Widget 不会自动拥有完整面的写入/管理能力。调用前必须核对
 headless、方法是否在上表里、以及是否已有授予权限。新增能力时再核对权限映射、三种沙箱是否
 都该接、后端路由是否复核身份和 owner。
 
-`Tapp.context.getGeo()` 也是公开上下文方法；返回结果由后端地理信息服务决定。专业能力
-的请求/响应结构以对应前端服务类型和后端路由结构为准，不能从方法名猜测参数。
+`Tapp.context.getGeo()` 也是公开上下文方法；安装后返回 `{ lat, lon, city, region, country }`
+（由后端地理信息服务决定）。Playground 预览固定返回 `null`。专业能力的请求/响应结构以对应
+前端服务类型和后端路由结构为准，不能从方法名猜测参数。
