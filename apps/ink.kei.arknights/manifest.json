@@ -8,12 +8,12 @@
   },
   "category": "data",
   "core": {
-    "entry": "core.js",
-    "styles": "styles.css"
+    "entry": "core.js"
   },
   "page": {
     "entry": "page/index.js",
-    "template": "page.html"
+    "template": "page/template.html",
+    "styles": "page/styles.css"
   },
   "widgets": [
     {

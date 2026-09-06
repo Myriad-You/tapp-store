@@ -58,7 +58,7 @@ function getPlayerSummary(data) {
   var player = (data && data.player) || {};
   var status = player.status || {};
   var name = status.name || (data && data.nickName) || '';
-  var avatar = (status.avatar && status.avatar.url) || '';
+  var avatar = (status.avatar && isHttpsUrl(status.avatar.url)) ? status.avatar.url : '';
   var level = status.level !== undefined ? String(status.level) : '';
   var charCount = countUniqueChars(player);
   var operators = charCount != null
@@ -92,21 +92,26 @@ function getPlayerSummary(data) {
 
 var _repoBaseCache = '';
 
-// 校验素材仓库基址：仅接受绝对 https://（trim、去尾 /），否则返回 '' 回退默认仓；
-// 拒绝 http: / javascript: / data: / 相对路径等非 https 协议
-function sanitizeRepoBase(v) {
-  if (typeof v !== 'string') return '';
-  var base = v.trim().replace(/\/+$/, '');
-  if (!base || !/^https:\/\//i.test(base)) return '';
+// 校验绝对 https:// URL（trim + 协议/hostname 校验）；拒绝 http: / javascript: / data: / 相对路径等
+function isHttpsUrl(v) {
+  if (typeof v !== 'string') return false;
+  var s = v.trim();
+  if (!s || !/^https:\/\//i.test(s)) return false;
   if (typeof URL === 'function') {
     try {
-      var u = new URL(base);
-      if (u.protocol !== 'https:' || !u.hostname) return '';
+      var u = new URL(s);
+      if (u.protocol !== 'https:' || !u.hostname) return false;
     } catch (e) {
-      return '';
+      return false;
     }
   }
-  return base;
+  return true;
+}
+
+// 校验素材仓库基址：仅接受绝对 https://（trim、去尾 /），否则返回 '' 回退默认仓
+function sanitizeRepoBase(v) {
+  if (!isHttpsUrl(v)) return '';
+  return v.trim().replace(/\/+$/, '');
 }
 
 async function getRepoBase() {
@@ -184,6 +189,7 @@ module.exports = {
   countUniqueChars: countUniqueChars,
   countMedals: countMedals,
   getPlayerSummary: getPlayerSummary,
+  isHttpsUrl: isHttpsUrl,
   sanitizeRepoBase: sanitizeRepoBase,
   getRepoBase: getRepoBase,
   avatarUrl: avatarUrl,

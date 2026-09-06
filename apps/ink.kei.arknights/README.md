@@ -23,6 +23,17 @@
 
 干员头像、精英化标识等素材来自可自定义的素材仓库（默认指向 [leaphy-dev/ArknightsGameResource](https://github.com/leaphy-dev/ArknightsGameResource)），可通过设置项 `resourceBaseUrl` 指向自己的 fork。
 
+## 权限与共享展示
+
+玩家数据通过 `Tapp.shared`（键 `arknights.player`）保存为**共享快照**，绑定凭据（`cred,token`）则存于用户私有 `Tapp.storage`（键 `sklandToken`）。
+
+- **管理员**（`Tapp.user.isAdmin()` 为真）：显示右上角「刷新 / 换绑」按钮与页脚 Debug 入口。
+  - 刷新流程：点刷新 → 粘贴 `cred,token` → 选择绑定账号 → 拉取并写入共享快照。
+- **其他用户**：**只读**。仅展示管理员最近一次写入的共享快照，不显示刷新 / 换绑 / Debug 入口。
+
+> 本应用不会在进入主页时自动静默刷新。共享快照只有在管理员主动刷新后才会更新；
+> 其余用户看到的可能是滞后数据，直到管理员再次刷新。
+
 ## 项目结构
 
 ```

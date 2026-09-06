@@ -396,7 +396,7 @@
     nameRow.setAttribute('class', 'ark-player-header');
     nameRow.setAttribute('style', 'display:flex;align-items:flex-start;gap:16px;margin-bottom:16px;');
 
-    if (status && status.avatar && status.avatar.url) {
+    if (status && status.avatar && core.isHttpsUrl(status.avatar.url)) {
       var avatarBox = document.createElement('div');
       avatarBox.setAttribute('style', 'position:relative;width:var(--player-avatar);height:var(--player-avatar);flex-shrink:0;');
 
