@@ -1,0 +1,41 @@
+{
+  "id": "cn.echootaku.wiki",
+  "name": "Wiki",
+  "version": "0.1.5",
+  "minSystemVersion": "0.3.36",
+  "description": "由管理员维护、面向所有访客只读开放的轻量知识库。",
+  "locales": {
+    "en-US": {
+      "name": "Wiki",
+      "description": "A lightweight, admin-maintained knowledge base that every visitor can read."
+    },
+    "ja-JP": {
+      "name": "Wiki",
+      "description": "管理者が編集し、すべての訪問者が閲覧できる軽量ナレッジベース。"
+    }
+  },
+  "category": "productivity",
+  "author": {
+    "name": "EchoOtaku",
+    "url": "https://echootaku.cn"
+  },
+  "homepage": "https://echootaku.cn",
+  "repository": "https://github.com/Myriad-You/tapp-store",
+  "permissions": [
+    "storage:read",
+    "storage:write",
+    "ui:confirm",
+    "ui:notification",
+    "network:fetch"
+  ],
+  "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M4 4.5A2.5 2.5 0 0 1 6.5 2H11c1.3 0 2.4.7 3 1.7A3.5 3.5 0 0 1 17 2h.5A2.5 2.5 0 0 1 20 4.5V19a2 2 0 0 1-2 2h-1c-1.7 0-2.7.3-3 1-.3-.7-1.3-1-3-1H6a2 2 0 0 1-2-2V4.5z' stroke='currentColor' stroke-width='1.7' stroke-linejoin='round'/><path d='M14 4v18M7.5 7H11M7.5 11H11M17 7h.5' stroke='currentColor' stroke-width='1.7' stroke-linecap='round'/></svg>",
+  "themeColor": "#5B7C70",
+  "core": {
+    "entry": "core.js"
+  },
+  "page": {
+    "entry": "page/index.js",
+    "template": "page.html",
+    "styles": "page.css"
+  }
+}
