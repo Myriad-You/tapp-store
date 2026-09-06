@@ -1,0 +1,12 @@
+{
+  "long_description": "明日方舟玩家个人信息展示：绑定森空岛账号后展示博士等级、助战干员、干员收藏、时装、蚀刻章，以及集成战略 / 剿灭 / 保全派驻等游戏数据。内置干员与时装图鉴（职业 / 稀有度筛选），并提供 4x2 / 4x4 主页小组件。玩家数据以共享快照展示，绑定与刷新由房间管理员维护，其他用户只读。跟随宿主亮暗主题，内置简体中文 / English。",
+  "tags": ["明日方舟", "森空岛", "游戏数据", "图鉴", "小组件", "多语言"],
+  "featured": false,
+  "verified": false,
+  "license": "MIT",
+  "locales": {
+    "en-US": {
+      "long_description": "Arknights player profile viewer: bind a Skland account to show Doctor level, support operators, operator collection, outfits, medals, and game data such as Integrated Strategies / Annihilation / Stationary Security. Includes operator and outfit indexes with class / rarity filters, plus 4x2 / 4x4 home widgets. Player data is shown as a shared snapshot maintained by the room admin; other users are read-only. Follows the host light/dark theme, with Simplified Chinese and English."
+    }
+  }
+}

@@ -133,7 +133,7 @@ Tapp SDK 把调用转换为请求消息。宿主只接受同时满足以下条�
 | ------ | ---- | ---- |
 | **默认**（绝大多数 API） | JSON 序列化后约 **1 MiB + 64 KiB** envelope | 超限返回 `Payload too large` |
 | `ai.tasks.create`（`operation: "image"` 且 `input.referenceImages` 为数组） | JSON payload **14 MiB** | 为参考图 base64 留出空间；后端另限最多 4 张、解码后合计 10 MiB，其余 `input` 字段合计 256 KiB |
-| `file.download` | 内容 Blob **10 MiB**；`filename` ≤ 1024；可选 `mimeType` ≤ 256 | 不走默认 1 MiB；非法/过大返回 `Invalid or oversized file payload` |
+| `file.download` | 文本 / base64 / 宿主代取的生图·3D **32 MiB**；`filename` ≤ 1024；可选 `mimeType` ≤ 256 | 不走默认 1 MiB；`url` 只接受本站 image-cache 或 `/api/model3d/assets/{sha256}`；非法/过大返回 `Invalid or oversized file payload` |
 | `federation.uploadMedia` | raw 媒体按业务 **图片 10 MiB / 视频 50 MiB**；bridge 允许 data URL/base64 字符约 `ceil(50 MiB * 4/3) + 256` | 对齐后端 multipart 路由（body 上限 55 MiB）；字段 `data` 必填字符串 |
 | `tappList.install` / `tappList.getInstallPackage` | JSON 序列化后约 **128 MiB + 512 KiB** | 对齐游戏档整包上限；商店安装只传元数据，不占这笔预算 |
 

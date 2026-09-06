@@ -152,7 +152,7 @@ flowchart TB
 | `locales` | ❌ | BCP-47 → `{ name?, description?, long_description?, preview? }`。`name`/`description` 与 Manifest 回退规则相同；长介绍与预览只属于商店目录，不进入安装 Manifest |
 | `author` | ✅ | `{ name, email?, url? }` |
 | `category` | ✅ | 稳定用途 ID；**安装时必须与 Manifest 分类一致**（含旧别名规范化后） |
-| `permissions` | ✅ | 申请权限列表（展示与安装同意用） |
+| `permissions` | ✅ | 申请权限列表（展示与安装同意用）。须与 Manifest `permissions` 一致；`Tapp.file.download` 是 public，不要写进此列，也不要为了导出文件去申请 `storage:read` |
 | `download` | ✅ | 相对 `base_url` 的下载路径表 |
 | `icon` / `icon_svg` | ❌ | emoji/URL 或内联 SVG（`icon_svg` 优先） |
 | `icon_shell` | ❌ | **仅商店索引 UI**（`index.json` → `RemoteStoreService` / 商店卡片）：`true` 时全彩自定义图标仍套 material 色壳；省略时 auto。**不是**可安装的 Manifest 字段（`TappManifest` 为 `deny_unknown_fields`，写入包内 `manifest.json` 会导致安装失败） |

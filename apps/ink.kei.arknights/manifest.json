@@ -1,0 +1,141 @@
+{
+  "id": "ink.kei.arknights",
+  "name": "Arknights",
+  "version": "0.1.0",
+  "description": "明日方舟玩家个人信息展示",
+  "locales": {
+    "en-US": { "name": "Arknights", "description": "Arknights player profile viewer" }
+  },
+  "category": "data",
+  "core": {
+    "entry": "core.js"
+  },
+  "page": {
+    "entry": "page/index.js",
+    "template": "page/template.html",
+    "styles": "page/styles.css"
+  },
+  "widgets": [
+    {
+      "id": "player-summary",
+      "name": "玩家信息",
+      "description": "展示玩家头像、名称与数据概要（4x4 额外展示助战干员）",
+      "icon": "🧊",
+      "defaultSize": "4x4",
+      "sizes": ["4x2", "4x4"],
+      "category": "stats",
+      "entry": "widget/player-summary.js",
+      "refreshPolicy": {
+        "mode": "event",
+        "refreshOnVisible": true
+      }
+    }
+  ],
+  "author": {
+    "name": "Leaphy"
+  },
+  "permissions": [
+    "storage:read",
+    "storage:write",
+    "network:fetch",
+    "ui:notification",
+    "ui:theme",
+    "ui:confirm",
+    "ui:openUrl",
+    "widget:register"
+  ],
+  "openUrls": [
+    {
+      "id": "skland",
+      "url": "https://www.skland.com"
+    }
+  ],
+  "assets": [
+    "assets/decoration/decorator_dark.png",
+    "assets/decoration/page_mask_dark.png",
+    "assets/rank/elite0.png",
+    "assets/rank/elite1.png",
+    "assets/rank/elite2.png",
+    "assets/profession/pioneer.png",
+    "assets/profession/warrior.png",
+    "assets/profession/tank.png",
+    "assets/profession/sniper.png",
+    "assets/profession/caster.png",
+    "assets/profession/medic.png",
+    "assets/profession/support.png",
+    "assets/profession/special.png",
+    "assets/potential/potential_0.png",
+    "assets/potential/potential_1.png",
+    "assets/potential/potential_2.png",
+    "assets/potential/potential_3.png",
+    "assets/potential/potential_4.png",
+    "assets/potential/potential_5.png",
+    "assets/star/star_0.png",
+    "assets/star/star_1.png",
+    "assets/star/star_2.png",
+    "assets/star/star_3.png",
+    "assets/star/star_4.png",
+    "assets/star/star_5.png",
+    "assets/star/charBg_2-0.png",
+    "assets/star/charBg_r3.png",
+    "assets/star/charBg_r4.png",
+    "assets/star/charBg_r5.png"
+  ],
+  "settings": [
+    {
+      "key": "resourceBaseUrl",
+      "type": "input",
+      "label": "资源仓库地址",
+      "description": "明日方舟素材仓库基础地址，可指向自己的 fork",
+      "placeholder": "https://raw.githubusercontent.com/leaphy-dev/ArknightsGameResource/main",
+      "defaultValue": "https://raw.githubusercontent.com/leaphy-dev/ArknightsGameResource/main"
+    }
+  ],
+  "apis": {
+    "sklandPlayerBinding": {
+      "type": "http",
+      "access": "protected",
+      "endpoint": "https://zonai.skland.com/api/v1/game/player/binding",
+      "method": "GET",
+      "description": "森空岛玩家绑定账号列表",
+      "headers": {
+        "platform": "{{params.platform}}",
+        "timestamp": "{{params.timestamp}}",
+        "dId": "{{params.dId}}",
+        "vName": "{{params.vName}}",
+        "cred": "{{params.cred}}",
+        "sign": "{{params.sign}}"
+      }
+    },
+    "sklandPlayerInfo": {
+      "type": "http",
+      "access": "protected",
+      "endpoint": "https://zonai.skland.com/api/v1/game/player/info?uid={{params.uid}}",
+      "method": "GET",
+      "description": "森空岛玩家信息（含博士等级与干员）",
+      "headers": {
+        "platform": "{{params.platform}}",
+        "timestamp": "{{params.timestamp}}",
+        "dId": "{{params.dId}}",
+        "vName": "{{params.vName}}",
+        "cred": "{{params.cred}}",
+        "sign": "{{params.sign}}"
+      }
+    },
+    "sklandCultivate": {
+      "type": "http",
+      "access": "protected",
+      "endpoint": "https://zonai.skland.com/api/v1/game/cultivate/player?uid={{params.uid}}",
+      "method": "GET",
+      "description": "森空岛仓库材料与干员养成数据",
+      "headers": {
+        "platform": "{{params.platform}}",
+        "timestamp": "{{params.timestamp}}",
+        "dId": "{{params.dId}}",
+        "vName": "{{params.vName}}",
+        "cred": "{{params.cred}}",
+        "sign": "{{params.sign}}"
+      }
+    }
+  }
+}

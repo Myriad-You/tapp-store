@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "checkJs": false,
+    "noEmit": true,
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
+    "maxNodeModuleJsDepth": 0
+  },
+  "include": [
+    "*.js",
+    "**/*.js",
+    "types/**/*.d.ts"
+  ]
+}
