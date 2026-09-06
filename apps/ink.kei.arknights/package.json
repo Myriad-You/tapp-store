@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@myriad-you/tapp-cli": "^0.1.2"
+  }
+}

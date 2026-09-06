@@ -1,0 +1,98 @@
+{
+  "title": "Arknights",
+  "debug": "Debug",
+  "common": {
+    "back": "← Back",
+    "next": "Next",
+    "prev": "Previous",
+    "cancel": "Cancel",
+    "unknown": "Unknown"
+  },
+  "home": {
+    "refresh": "Refresh",
+    "refreshTime": "UPDATED",
+    "loading": "Loading",
+    "enroll": "Enlisted",
+    "loadFail": "Failed to load assets",
+    "errorModule": "skland module not loaded",
+    "errorNoBinding": "No Arknights account bound. Check that your token is valid.",
+    "step1": {
+      "title": "Step 1 · Get Skland token",
+      "guidePrefix": "Run the command below in the logged-in ",
+      "guideLink": "Skland",
+      "guideSuffix": " console, then paste the result into the field below (format: cred,token).",
+      "copyHint": "Click to copy",
+      "copied": "Copied · Paste it into the Skland console",
+      "errorFormat": "Please enter a value in the format cred,token"
+    },
+    "step2": {
+      "title": "Step 2 · Select account",
+      "empty": "No accounts available"
+    }
+  },
+  "collection": {
+    "title": "My Arknights",
+    "tabOperators": "Operators",
+    "tabSkins": "Skins",
+    "filter": "Filter",
+    "profession": "Profession",
+    "rarity": "Rarity",
+    "sort": "Sort",
+    "rarity6": "6★",
+    "rarity5": "5★",
+    "rarity4": "4★",
+    "rarity13": "1-3★",
+    "professions": {
+      "pioneer": "Pioneer",
+      "warrior": "Warrior",
+      "tank": "Tank",
+      "sniper": "Sniper",
+      "caster": "Caster",
+      "medic": "Medic",
+      "support": "Supporter",
+      "special": "Specialist"
+    },
+    "sortLevel": "Level",
+    "sortSkill": "Skill mastery",
+    "sortGain": "Obtained",
+    "sortName": "Name",
+    "empty": "No operator data",
+    "skinTodoPrefix": "Skin assets · TODO (",
+    "skinTodoSuffix": " skins)"
+  },
+  "widget": {
+    "empty": "No player data. Bind an account in the app."
+  },
+  "footer": {
+    "copyright": "All company names, trademarks, and products mentioned are the property of their respective owners and are used for identification only. Game images, animations, audio, and original text used in this Tapp are provided solely to better present game data; their copyright belongs to Arknights / Shanghai Hypergryph Network Technology Co., Ltd."
+  },
+  "assets": {
+    "supportUnits": "Support units",
+    "noSupport": "No support units",
+    "myOperators": "My operators",
+    "noOperators": "No operators",
+    "progress": "Progress",
+    "operators": "Operators",
+    "skins": "Skins",
+    "furniture": "Furniture",
+    "medals": "Medals",
+    "gameData": "Game data",
+    "tabSidestory": "Side stories",
+    "tabRogue": "Roguelike",
+    "tabCampaign": "Annihilation",
+    "tabTower": "Stationing",
+    "noActivity": "No activities",
+    "noRogue": "No roguelike",
+    "noCampaign": "No annihilation",
+    "noTower": "No stationing",
+    "fallbackActivity": "Activity",
+    "fallbackRogue": "Theme",
+    "fallbackCampaign": "Annihilation",
+    "fallbackTower": "Floor",
+    "clearTimes": "Cleared",
+    "level": "Level",
+    "medal": "Medal",
+    "maxKills": "Max kills",
+    "best": "Best"
+  }
+}
