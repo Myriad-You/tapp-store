@@ -1,0 +1,107 @@
+{
+  "id": "cn.wyyzxzyg.daily-brief",
+  "name": "今日简报",
+  "version": "1.0.0",
+  "minSystemVersion": "0.4.0",
+  "description": "汇总 Brew 阅读内容，快速生成一份清晰、可回看的今日简报。",
+  "locales": {
+    "en-US": {
+      "name": "Daily Brief",
+      "description": "Turn your Brew reading queue into a focused daily briefing."
+    },
+    "ja-JP": {
+      "name": "今日のブリーフ",
+      "description": "Brew の記事を集約し、今日の要点をひと目で確認できます。"
+    }
+  },
+  "category": "productivity",
+  "author": {
+    "name": "我願一直向著陽光.℡",
+    "url": "https://github.com/zgzyh"
+  },
+  "permissions": [
+    "brew:read",
+    "storage:read",
+    "storage:write",
+    "ui:theme",
+    "ai:generate",
+    "widget:register"
+  ],
+  "ai": {
+    "protocolVersion": 2,
+    "operations": ["generate"],
+    "modelTier": "standard",
+    "contextSources": ["custom"],
+    "outputFormats": ["text"]
+  },
+  "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z' stroke='currentColor' stroke-width='1.8'/><path d='M7 8h10M7 12h7M7 16h5' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/><path d='m16 15 1.4 1.4L20 13.8' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>",
+  "themeColor": "#F4B860",
+  "widgets": [
+    {
+      "id": "daily-brief",
+      "name": "今日简报",
+      "description": "在主页查看 Brew 未读数量与今日重点。",
+      "icon": "newspaper",
+      "defaultSize": "4x2",
+      "sizes": ["2x2", "4x2", "4x4"],
+      "refreshPolicy": { "mode": "event", "refreshOnVisible": true },
+      "category": "utility",
+      "entry": "main.js",
+      "settings": [
+        {
+          "key": "maxLines",
+          "label": "显示条数",
+          "type": "number",
+          "defaultValue": 3,
+          "min": 1,
+          "max": 6
+        },
+        {
+          "key": "showSummary",
+          "label": "显示摘要",
+          "type": "toggle",
+          "defaultValue": true
+        },
+        {
+          "key": "density",
+          "label": "显示密度",
+          "type": "select",
+          "defaultValue": "comfortable",
+          "options": [
+            { "value": "comfortable", "label": "舒适" },
+            { "value": "compact", "label": "紧凑" }
+          ]
+        }
+      ],
+      "templates": {
+        "2x2": "templates/widget-2x2.html",
+        "4x2": "templates/widget-4x2.html",
+        "4x4": "templates/widget-4x4.html"
+      },
+      "styles": "widget.css"
+    }
+  ],
+  "settings": [
+    {
+      "key": "maxItems",
+      "label": "简报条目上限",
+      "type": "number",
+      "defaultValue": 12,
+      "min": 4,
+      "max": 30
+    },
+    {
+      "key": "defaultFilter",
+      "label": "默认栏目",
+      "type": "select",
+      "defaultValue": "unread",
+      "options": [
+        { "value": "unread", "label": "未读" },
+        { "value": "starred", "label": "收藏" },
+        { "value": "all", "label": "全部" }
+      ]
+    }
+  ],
+  "core": { "entry": "main.js" },
+  "page": { "template": "page.html", "styles": "page.css" }
+}
