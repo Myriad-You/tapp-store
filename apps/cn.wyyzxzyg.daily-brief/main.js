@@ -29,11 +29,12 @@
   function normalizeItem(raw, index) {
     raw = raw && typeof raw === 'object' ? raw : {};
     var source = raw.source && typeof raw.source === 'object' ? raw.source : {};
+    var sourceName = typeof raw.source === 'string' ? raw.source : '';
     return {
       id: text(raw.id || raw.item_id || raw.article_id, 'item-' + index),
       title: text(raw.title || raw.name, '未命名内容'),
       excerpt: text(raw.summary || raw.excerpt || raw.description || raw.content_text || raw.content, ''),
-      source: text(raw.source_name || raw.feed_name || source.name || source.title, 'Brew'),
+      source: text(raw.source_name || raw.feed_name || sourceName || source.name || source.title, 'Brew'),
       url: text(raw.url || raw.link || raw.external_url, ''),
       publishedAt: raw.published_at || raw.publishedAt || raw.created_at || raw.createdAt || null,
       unread: raw.unread === true || raw.is_read === false || raw.read === false,
@@ -320,7 +321,7 @@
         input: { prompt: '你是阅读简报编辑。请只根据下面提供的文章标题和摘要，用中文生成三条今日阅读重点，每条不超过45字；最后给出一条建议先读哪篇及原因。不要虚构原文信息。\n\n' + data },
         output: { format: 'text' },
         delivery: 'result',
-        idempotencyKey: 'daily-brief-' + new Date().toISOString().slice(0, 10) + '-' + state.filter
+        idempotencyKey: 'daily-brief-' + new Date().toISOString().slice(0, 10) + '-' + state.filter + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8)
       });
       var summary = await waitForAiTask(task);
       output.textContent = summary;
@@ -347,6 +348,7 @@
     document.querySelectorAll('[data-filter]').forEach(function (button) {
       button.addEventListener('click', function () {
         state.filter = button.getAttribute('data-filter');
+        setNodeText(document.getElementById('summaryText'), '当前栏目已切换，可以重新生成对应的 AI 摘要。');
         loadBrief();
       });
     });
@@ -355,7 +357,34 @@
     await loadBrief();
   }
 
-  async function renderWidget(root, config) {
+  function prepareWidgetRoot(root) {
+    if (root.dataset.briefInteractive === 'true') return;
+    root.dataset.briefInteractive = 'true';
+    root.setAttribute('role', 'link');
+    root.setAttribute('tabindex', '0');
+    root.setAttribute('aria-label', '打开今日简报');
+    function openBriefPage() {
+      var path = '/tapp/run/' + encodeURIComponent('cn.wyyzxzyg.daily-brief');
+      try {
+        if (window.top && window.top !== window) window.top.location.assign(path);
+        else window.location.assign(path);
+      } catch (error) {
+        window.open(path, '_top');
+      }
+    }
+    root.addEventListener('click', openBriefPage);
+    root.addEventListener('keydown', function (event) {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      openBriefPage();
+    });
+  }
+
+  async function renderWidget(container, props) {
+    var root = container.querySelector('[data-brief-widget]') || container;
+    var config = props && (props.config || props.settings) ? (props.config || props.settings) : {};
+    if (!config || typeof config !== 'object') config = {};
+    prepareWidgetRoot(root);
     var maxLines = Math.max(1, Math.min(6, Number(config.maxLines) || 3));
     root.classList.toggle('is-compact', config.density === 'compact');
     var snapshot = null;
@@ -386,36 +415,25 @@
   async function initWidget() {
     var root = document.querySelector('[data-brief-widget]');
     if (!root) return;
-    root.setAttribute('role', 'link');
-    root.setAttribute('tabindex', '0');
-    root.setAttribute('aria-label', '打开今日简报');
-    function openBriefPage() {
-      var path = '/tapp/run/' + encodeURIComponent('cn.wyyzxzyg.daily-brief');
-      try {
-        if (window.top && window.top !== window) window.top.location.assign(path);
-        else window.location.assign(path);
-      } catch (error) {
-        window.open(path, '_top');
-      }
-    }
-    root.addEventListener('click', openBriefPage);
-    root.addEventListener('keydown', function (event) {
-      if (event.key !== 'Enter' && event.key !== ' ') return;
-      event.preventDefault();
-      openBriefPage();
-    });
     var props = window._TAPP_WIDGET_PROPS || {};
-    var config = props.config || props.settings || {};
-    if (!config || typeof config !== 'object') config = {};
-    await renderWidget(root, config);
+    await renderWidget(root, props);
     if (Tapp.shared && typeof Tapp.shared.onChanged === 'function') {
       var unsubscribe = Tapp.shared.onChanged(function (event) {
-        if (!event || !event.key || event.key === CACHE_KEY) renderWidget(root, config).catch(function () {});
+        if (!event || !event.key || event.key === CACHE_KEY) renderWidget(root, props).catch(function () {});
       });
       if (Tapp.lifecycle && typeof Tapp.lifecycle.onDestroy === 'function') {
         Tapp.lifecycle.onDestroy(function () { if (typeof unsubscribe === 'function') unsubscribe(); });
       }
     }
+  }
+
+  if (typeof Tapp !== 'undefined') {
+    Tapp.widgets = Tapp.widgets || {};
+    Tapp.widgets['daily-brief'] = {
+      render: function (container, props) {
+        return renderWidget(container, props || {});
+      }
+    };
   }
 
   async function start() {
