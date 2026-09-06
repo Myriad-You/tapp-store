@@ -1,0 +1,258 @@
+<!doctype html>
+<html class="dark">
+<body class="dark">
+<main id="tapp-content" class="page" data-ak-ui>
+  <section data-view="home" class="home-view">
+    <div class="ark-page-inner">
+
+      <div class="ark-page-nav" style="display:flex;align-items:center;justify-content:space-between;">
+        <h1 class="ark-page-title" style="font-size:20px;font-weight:600;margin:0;color:var(--ark-text);">明日方舟</h1>
+        <button type="button" class="ak-button ak-button--fab ak-fx--skew-left" aria-label="刷新数据" title="刷新数据">
+          <svg class="ak-fx--skew-right" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div data-page="display" style="margin-top:20px;display:flex;flex-direction:column;">
+        <div class="ak-divider"><span data-refresh-time="1">更新于 2026-09-06 12:00</span></div>
+
+        <div data-display-content="1" style="flex:1;">
+
+          <div class="ark-player-header" style="display:flex;align-items:flex-start;gap:16px;margin-bottom:16px;">
+            <div style="position:relative;width:var(--player-avatar);height:var(--player-avatar);flex-shrink:0;">
+              <div style="width:var(--player-avatar);height:var(--player-avatar);border:2px solid #fff;box-sizing:border-box;background-image:url('data:image/webp;base64,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');background-size:cover;background-position:center;"></div>
+              <div style="position:absolute;top:0;right:0;width:calc(var(--player-avatar)*0.4375);height:calc(var(--player-avatar)*0.4375);border:2px solid var(--ak-color-yellow);border-radius:50%;transform:translate(50%,-50%);background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;font-size:calc(var(--player-avatar)*0.1875);font-weight:600;color:#fff;">120</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <div style="font-size:16px;font-weight:600;color:var(--ark-text);">博士</div>
+              <div style="display:flex;align-items:center;">
+                <span style="font-size:12px;font-weight:700;color:var(--ak-color-black);background:var(--ak-color-blue);padding:0 4px;">入职日</span>
+                <span style="font-size:12px;font-weight:700;color:var(--ak-color-black);background:var(--ak-color-white);padding:0 4px;">2020-05-01</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ark-display-layout">
+            <div class="ark-display-left">
+
+              <div class="ak-card" style="display:flex;gap:8px;width:100%;box-sizing:border-box;min-width:0;">
+                <div style="flex:1;min-width:0;text-align:center;">
+                  <div style="font-family:var(--ak-font-mono);font-size:9px;letter-spacing:0.05em;text-transform:uppercase;color:var(--ak-text-secondary);white-space:nowrap;">作战进度</div>
+                  <div style="font-size:12px;font-weight:600;color:var(--ark-text);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">15-03</div>
+                </div>
+                <div style="flex:1;min-width:0;text-align:center;">
+                  <div style="font-family:var(--ak-font-mono);font-size:9px;letter-spacing:0.05em;text-transform:uppercase;color:var(--ak-text-secondary);white-space:nowrap;">干员</div>
+                  <div style="font-size:12px;font-weight:600;color:var(--ark-text);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">12</div>
+                </div>
+                <div style="flex:1;min-width:0;text-align:center;">
+                  <div style="font-family:var(--ak-font-mono);font-size:9px;letter-spacing:0.05em;text-transform:uppercase;color:var(--ak-text-secondary);white-space:nowrap;">时装</div>
+                  <div style="font-size:12px;font-weight:600;color:var(--ark-text);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">8</div>
+                </div>
+                <div style="flex:1;min-width:0;text-align:center;">
+                  <div style="font-family:var(--ak-font-mono);font-size:9px;letter-spacing:0.05em;text-transform:uppercase;color:var(--ak-text-secondary);white-space:nowrap;">家具</div>
+                  <div style="font-size:12px;font-weight:600;color:var(--ark-text);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">240</div>
+                </div>
+                <div style="flex:1;min-width:0;text-align:center;">
+                  <div style="font-family:var(--ak-font-mono);font-size:9px;letter-spacing:0.05em;text-transform:uppercase;color:var(--ak-text-secondary);white-space:nowrap;">蚀刻章</div>
+                  <div style="font-size:12px;font-weight:600;color:var(--ark-text);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">86</div>
+                </div>
+              </div>
+
+              <div class="ak-card" style="width:100%;box-sizing:border-box;min-width:0;">
+                <div class="ak-card__header">
+                  <span class="ak-card__title"><span style="width:8px;height:8px;background:var(--ak-color-blue);flex-shrink:0;box-sizing:border-box;display:inline-block;"></span>助战干员</span>
+                  <span style="font-size:9px;letter-spacing:0.5px;color:var(--ark-text-dim);">// SUPPORT UNITS</span>
+                </div>
+                <div style="display:flex;gap:12px;flex-wrap:nowrap;justify-content:center;">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0;">
+                    <div class="ak-card ak-card--place" style="width:var(--assist-avatar);height:var(--assist-avatar);overflow:hidden;position:relative;box-sizing:border-box;--ak-card-place-color:var(--ak-color-advanced);">
+                      <div class="pv-avatar pv-avatar-char_002_amiya"></div>
+                      <div style="position:absolute;left:2px;top:2px;display:flex;flex-direction:column;align-items:center;line-height:1;">
+                        <span style="font-family:var(--ak-font-mono);font-size:calc(var(--assist-avatar)*0.1);color:#fff;opacity:0.85;letter-spacing:0.08em;">LV</span>
+                        <span style="font-size:calc(var(--assist-avatar)*0.18);font-weight:500;color:#fff;text-shadow:0 0 2px #000,0 0 2px #000;">90</span>
+                      </div>
+                      <div class="pv-elite-assist pv-elite-2" style="position:absolute;top:-2px;right:-2px;width:calc(var(--assist-avatar)*0.32);height:calc(var(--assist-avatar)*0.32);"></div>
+                    </div>
+                    <div style="font-size:10px;color:var(--ark-text-muted);max-width:calc(var(--assist-avatar) + 8px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">阿米娅</div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0;">
+                    <div class="ak-card ak-card--place" style="width:var(--assist-avatar);height:var(--assist-avatar);overflow:hidden;position:relative;box-sizing:border-box;--ak-card-place-color:var(--ak-color-advanced);">
+                      <div class="pv-avatar pv-avatar-char_103_angel"></div>
+                      <div style="position:absolute;left:2px;top:2px;display:flex;flex-direction:column;align-items:center;line-height:1;">
+                        <span style="font-family:var(--ak-font-mono);font-size:calc(var(--assist-avatar)*0.1);color:#fff;opacity:0.85;letter-spacing:0.08em;">LV</span>
+                        <span style="font-size:calc(var(--assist-avatar)*0.18);font-weight:500;color:#fff;text-shadow:0 0 2px #000,0 0 2px #000;">80</span>
+                      </div>
+                      <div class="pv-elite-assist pv-elite-1" style="position:absolute;top:-2px;right:-2px;width:calc(var(--assist-avatar)*0.32);height:calc(var(--assist-avatar)*0.32);"></div>
+                    </div>
+                    <div style="font-size:10px;color:var(--ark-text-muted);max-width:calc(var(--assist-avatar) + 8px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">能天使</div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0;">
+                    <div class="ak-card ak-card--place" style="width:var(--assist-avatar);height:var(--assist-avatar);overflow:hidden;position:relative;box-sizing:border-box;--ak-card-place-color:var(--ak-color-yellow);">
+                      <div class="pv-avatar pv-avatar-char_102_texas"></div>
+                      <div style="position:absolute;left:2px;top:2px;display:flex;flex-direction:column;align-items:center;line-height:1;">
+                        <span style="font-family:var(--ak-font-mono);font-size:calc(var(--assist-avatar)*0.1);color:#fff;opacity:0.85;letter-spacing:0.08em;">LV</span>
+                        <span style="font-size:calc(var(--assist-avatar)*0.18);font-weight:500;color:#fff;text-shadow:0 0 2px #000,0 0 2px #000;">70</span>
+                      </div>
+                      <div class="pv-elite-assist pv-elite-1" style="position:absolute;top:-2px;right:-2px;width:calc(var(--assist-avatar)*0.32);height:calc(var(--assist-avatar)*0.32);"></div>
+                    </div>
+                    <div style="font-size:10px;color:var(--ark-text-muted);max-width:calc(var(--assist-avatar) + 8px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">德克萨斯</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ak-card" style="max-width:100%;box-sizing:border-box;min-width:0;overflow:hidden;">
+                <div class="ak-card__header" style="align-items:center;">
+                  <div style="display:flex;align-items:baseline;gap:8px;">
+                    <span class="ak-card__title"><span style="width:8px;height:8px;background:var(--ak-color-blue);flex-shrink:0;box-sizing:border-box;display:inline-block;"></span>我的干员</span>
+                    <span style="font-size:9px;letter-spacing:0.5px;color:var(--ark-text-dim);">// MY OPERATORS</span>
+                  </div>
+                  <button type="button" style="font-size:14px;font-weight:600;color:var(--ark-text);background:transparent;border:none;cursor:pointer;padding:0 4px;line-height:1;">→</button>
+                </div>
+                <div class="ark-my-chars-scroll" style="display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;padding-bottom:6px;max-width:100%;">
+                  <div class="operator-handbook-item-wrapper" style="opacity:1;">
+                    <div class="operator-handbook-item-component operator-handbook-item-bg pv-bg pv-bg-6"></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-illustration"><div class="pv-op-art pv-art-char_002_amiya"></div></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-decor-main-wrap six-star">
+                      <div class="operator-handbook-item-decor-main">
+                        <div class="operator-handbook-item-decor-part operator-handbook-item-decor-part-1"></div>
+                        <div class="operator-handbook-item-decor-part operator-handbook-item-decor-part-2"></div>
+                        <div class="operator-handbook-item-decor-part operator-handbook-item-decor-part-3"></div>
+                      </div>
+                    </div>
+                    <div class="operator-handbook-item-component operator-handbook-item-decor-topleft"></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-name">阿米娅</div>
+                    <div class="operator-handbook-item-component operator-handbook-item-career pv-career pv-career-caster"></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-star pv-star pv-star-6"></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-elite pv-elite pv-elite-2"></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-label-container">
+                      <div class="pv-potential pv-potential-5"></div>
+                      <div class="pv-skill pv-skill-char_002_amiya"></div>
+                    </div>
+                    <div class="operator-handbook-item-component operator-handbook-item-level">90</div>
+                  </div>
+                  <div class="operator-handbook-item-wrapper" style="opacity:1;">
+                    <div class="operator-handbook-item-component operator-handbook-item-bg pv-bg pv-bg-6"></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-illustration"><div class="pv-op-art pv-art-char_103_angel"></div></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-decor-main-wrap six-star">
+                      <div class="operator-handbook-item-decor-main">
+                        <div class="operator-handbook-item-decor-part operator-handbook-item-decor-part-1"></div>
+                        <div class="operator-handbook-item-decor-part operator-handbook-item-decor-part-2"></div>
+                        <div class="operator-handbook-item-decor-part operator-handbook-item-decor-part-3"></div>
+                      </div>
+                    </div>
+                    <div class="operator-handbook-item-component operator-handbook-item-decor-topleft"></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-name">能天使</div>
+                    <div class="operator-handbook-item-component operator-handbook-item-career pv-career pv-career-sniper"></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-star pv-star pv-star-6"></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-elite pv-elite pv-elite-1"></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-label-container">
+                      <div class="pv-potential pv-potential-3"></div>
+                      <div class="pv-skill pv-skill-char_103_angel"></div>
+                    </div>
+                    <div class="operator-handbook-item-component operator-handbook-item-level">80</div>
+                  </div>
+                  <div class="operator-handbook-item-wrapper" style="opacity:1;">
+                    <div class="operator-handbook-item-component operator-handbook-item-bg pv-bg pv-bg-5"></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-illustration"><div class="pv-op-art pv-art-char_102_texas"></div></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-decor-main-wrap five-star">
+                      <div class="operator-handbook-item-decor-main">
+                        <div class="operator-handbook-item-decor-part operator-handbook-item-decor-part-1"></div>
+                        <div class="operator-handbook-item-decor-part operator-handbook-item-decor-part-2"></div>
+                        <div class="operator-handbook-item-decor-part operator-handbook-item-decor-part-3"></div>
+                      </div>
+                    </div>
+                    <div class="operator-handbook-item-component operator-handbook-item-decor-topleft"></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-name">德克萨斯</div>
+                    <div class="operator-handbook-item-component operator-handbook-item-career pv-career pv-career-pioneer"></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-star pv-star pv-star-5"></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-elite pv-elite pv-elite-1"></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-label-container">
+                      <div class="pv-potential pv-potential-4"></div>
+                      <div class="pv-skill pv-skill-char_102_texas"></div>
+                    </div>
+                    <div class="operator-handbook-item-component operator-handbook-item-level">70</div>
+                  </div>
+                  <div class="operator-handbook-item-wrapper" style="opacity:1;">
+                    <div class="operator-handbook-item-component operator-handbook-item-bg pv-bg pv-bg-5"></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-illustration"><div class="pv-op-art pv-art-char_108_silent"></div></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-decor-main-wrap five-star">
+                      <div class="operator-handbook-item-decor-main">
+                        <div class="operator-handbook-item-decor-part operator-handbook-item-decor-part-1"></div>
+                        <div class="operator-handbook-item-decor-part operator-handbook-item-decor-part-2"></div>
+                        <div class="operator-handbook-item-decor-part operator-handbook-item-decor-part-3"></div>
+                      </div>
+                    </div>
+                    <div class="operator-handbook-item-component operator-handbook-item-decor-topleft"></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-name">赫默</div>
+                    <div class="operator-handbook-item-component operator-handbook-item-career pv-career pv-career-medic"></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-star pv-star pv-star-5"></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-elite pv-elite pv-elite-1"></div>
+                    <div class="operator-handbook-item-component operator-handbook-item-label-container">
+                      <div class="pv-potential pv-potential-2"></div>
+                      <div class="pv-skill pv-skill-char_108_silent"></div>
+                    </div>
+                    <div class="operator-handbook-item-component operator-handbook-item-level">60</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ark-home-spacer ak-card ak-card--stripe" style="flex:1;min-height:0;box-sizing:border-box;"></div>
+
+            </div>
+
+            <div class="ark-display-right">
+              <div class="ark-game-data ak-card" style="width:100%;box-sizing:border-box;min-width:0;display:flex;flex-direction:column;overflow:hidden;">
+                <div class="ak-card__header" style="flex-shrink:0;">
+                  <span class="ak-card__title"><span style="width:8px;height:8px;background:var(--ak-color-blue);flex-shrink:0;box-sizing:border-box;display:inline-block;"></span>游戏数据</span>
+                  <span style="font-family:var(--ak-font-mono);font-size:9px;letter-spacing:0.08em;color:var(--ak-text-secondary);">// GAME DATA</span>
+                </div>
+                <div class="ark-game-tabbar" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;margin-bottom:10px;flex-shrink:0;">
+                  <button type="button" style="flex-shrink:0;padding:0 16px;height:32px;line-height:32px;font-family:var(--ak-font-mono);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ark-text-muted);background:var(--ark-fill);border:1px solid var(--ark-border-weak);border-radius:var(--ak-radius-subtle);">活动剧情</button>
+                  <button type="button" style="flex-shrink:0;padding:0 16px;height:32px;line-height:32px;font-family:var(--ak-font-mono);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ark-text-muted);background:var(--ark-fill);border:1px solid var(--ark-border-weak);border-radius:var(--ak-radius-subtle);">集成战略</button>
+                  <button type="button" style="flex-shrink:0;padding:0 16px;height:32px;line-height:32px;font-family:var(--ak-font-mono);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ark-text-muted);background:var(--ark-fill);border:1px solid var(--ark-border-weak);border-radius:var(--ak-radius-subtle);">剿灭</button>
+                  <button type="button" style="flex-shrink:0;padding:0 16px;height:32px;line-height:32px;font-family:var(--ak-font-mono);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ark-text-muted);background:var(--ark-fill);border:1px solid var(--ark-border-weak);border-radius:var(--ak-radius-subtle);">保全派驻</button>
+                </div>
+                <div style="position:relative;flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;">
+                  <div data-game-content="1" style="flex:1;min-height:0;overflow-y:auto;min-width:0;">
+                    <div style="position:relative;overflow:hidden;border-radius:8px;margin-bottom:8px;width:100%;height:72px;background:#222;box-sizing:border-box;">
+                      <div style="position:absolute;left:0;top:0;width:100%;height:100%;background:linear-gradient(90deg,rgba(212,180,131,0.4),transparent 70%);"></div>
+                      <div style="position:absolute;left:0;top:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:flex-end;padding:0 12px;text-align:right;box-sizing:border-box;">
+                        <div style="font-size:12px;font-weight:600;color:#fff;text-shadow:0 1px 2px #000;">示例活动 · 别传</div>
+                        <div style="font-size:10px;color:#fff;text-shadow:0 1px 2px #000;margin-top:2px;">12/24</div>
+                      </div>
+                    </div>
+                    <div style="position:relative;overflow:hidden;border-radius:8px;margin-bottom:8px;width:100%;height:72px;background:#222;box-sizing:border-box;">
+                      <div style="position:absolute;left:0;top:0;width:100%;height:100%;background:linear-gradient(90deg,rgba(74,171,234,0.4),transparent 70%);"></div>
+                      <div style="position:absolute;left:0;top:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:flex-end;padding:0 12px;text-align:right;box-sizing:border-box;">
+                        <div style="font-size:12px;font-weight:600;color:#fff;text-shadow:0 1px 2px #000;">示例活动 · 插曲</div>
+                        <div style="font-size:10px;color:#fff;text-shadow:0 1px 2px #000;margin-top:2px;">8/18</div>
+                      </div>
+                    </div>
+                    <div style="position:relative;overflow:hidden;border-radius:8px;margin-bottom:8px;width:100%;height:72px;background:#222;box-sizing:border-box;">
+                      <div style="position:absolute;left:0;top:0;width:100%;height:100%;background:linear-gradient(90deg,rgba(241,198,68,0.4),transparent 70%);"></div>
+                      <div style="position:absolute;left:0;top:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:flex-end;padding:0 12px;text-align:right;box-sizing:border-box;">
+                        <div style="font-size:12px;font-weight:600;color:#fff;text-shadow:0 1px 2px #000;">示例活动 · 主线</div>
+                        <div style="font-size:10px;color:#fff;text-shadow:0 1px 2px #000;margin-top:2px;">15/15</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <footer class="ark-app-footer">
+        <div>明日方舟 · v0.1.1</div>
+        <div>Tapp 所涉及的公司名称、商标、产品等均为其各自所有者的资产，仅供识别。Tapp 内使用的游戏图片、动画、音频、文本原文，仅用于更好地表现游戏资料，其版权属于 Arknights / 上海鹰角网络科技有限公司</div>
+      </footer>
+
+    </div>
+  </section>
+</main>
+</body>
+</html>
