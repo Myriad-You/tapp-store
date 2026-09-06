@@ -18,7 +18,9 @@
     "errorNoBinding": "No Arknights account bound. Check that your token is valid.",
     "step1": {
       "title": "Step 1 · Get Skland token",
-      "guide": "Run the command below in the logged-in Skland (skland.com) console, then paste the result into the field below (format: cred,token).",
+      "guidePrefix": "Run the command below in the logged-in ",
+      "guideLink": "Skland",
+      "guideSuffix": " console, then paste the result into the field below (format: cred,token).",
       "copyHint": "Click to copy",
       "copied": "Copied · Paste it into the Skland console",
       "errorFormat": "Please enter a value in the format cred,token"

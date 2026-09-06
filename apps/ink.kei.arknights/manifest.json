@@ -41,7 +41,14 @@
     "ui:notification",
     "ui:theme",
     "ui:confirm",
+    "ui:openUrl",
     "widget:register"
+  ],
+  "openUrls": [
+    {
+      "id": "skland",
+      "url": "https://www.skland.com"
+    }
   ],
   "assets": [
     "assets/decoration/decorator_dark.png",

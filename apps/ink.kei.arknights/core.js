@@ -92,15 +92,29 @@ function getPlayerSummary(data) {
 
 var _repoBaseCache = '';
 
+// 校验素材仓库基址：仅接受绝对 https://（trim、去尾 /），否则返回 '' 回退默认仓；
+// 拒绝 http: / javascript: / data: / 相对路径等非 https 协议
+function sanitizeRepoBase(v) {
+  if (typeof v !== 'string') return '';
+  var base = v.trim().replace(/\/+$/, '');
+  if (!base || !/^https:\/\//i.test(base)) return '';
+  if (typeof URL === 'function') {
+    try {
+      var u = new URL(base);
+      if (u.protocol !== 'https:' || !u.hostname) return '';
+    } catch (e) {
+      return '';
+    }
+  }
+  return base;
+}
+
 async function getRepoBase() {
   if (_repoBaseCache) return _repoBaseCache;
   var base = 'https://raw.githubusercontent.com/leaphy-dev/ArknightsGameResource/main';
   try {
-    var v = await Tapp.settings.get('resourceBaseUrl');
-    if (v && typeof v === 'string') {
-      v = v.trim().replace(/\/+$/, '');
-      if (v) base = v;
-    }
+    var cleaned = sanitizeRepoBase(await Tapp.settings.get('resourceBaseUrl'));
+    if (cleaned) base = cleaned;
   } catch (e) {}
   _repoBaseCache = base;
   return base;
@@ -170,6 +184,7 @@ module.exports = {
   countUniqueChars: countUniqueChars,
   countMedals: countMedals,
   getPlayerSummary: getPlayerSummary,
+  sanitizeRepoBase: sanitizeRepoBase,
   getRepoBase: getRepoBase,
   avatarUrl: avatarUrl,
   skinAvatarUrl: skinAvatarUrl,

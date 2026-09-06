@@ -18,7 +18,9 @@
     "errorNoBinding": "未找到明日方舟绑定账号，请检查 Token 是否有效",
     "step1": {
       "title": "步骤 1 · 获取森空岛 Token",
-      "guide": "在森空岛官网（skland.com）已登录的控制台执行以下命令，把结果复制到下方输入框（格式：cred,token）",
+      "guidePrefix": "在已登录的",
+      "guideLink": "森空岛官网",
+      "guideSuffix": "控制台执行以下命令，把结果复制到下方输入框（格式：cred,token）",
       "copyHint": "点击复制",
       "copied": "已复制 · 粘贴到森空岛官网控制台执行",
       "errorFormat": "请输入格式为 cred,token 的值"

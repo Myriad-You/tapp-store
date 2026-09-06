@@ -182,7 +182,24 @@
 
     var guide = document.createElement('div');
     guide.setAttribute('style', 'font-size:12px;line-height:1.7;color:var(--ark-text-dim);margin-bottom:12px;');
-    guide.textContent = core.t('home.step1.guide');
+    guide.appendChild(document.createTextNode(core.t('home.step1.guidePrefix')));
+
+    var sklandLink = document.createElement('a');
+    sklandLink.setAttribute('href', '#');
+    sklandLink.setAttribute(
+      'style',
+      'color:var(--ak-color-blue);cursor:pointer;text-decoration:underline;'
+    );
+    sklandLink.textContent = core.t('home.step1.guideLink');
+    sklandLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      try {
+        Tapp.ui.openUrl('skland');
+      } catch (err) {}
+    });
+    guide.appendChild(sklandLink);
+
+    guide.appendChild(document.createTextNode(core.t('home.step1.guideSuffix')));
     step.appendChild(guide);
 
     var code = document.createElement('div');
@@ -234,7 +251,8 @@
     step.appendChild(code);
 
     var input = document.createElement('input');
-    input.type = 'text';
+    input.type = 'password';
+    input.setAttribute('autocomplete', 'off');
     input.setAttribute(
       'style',
       'width:100%;box-sizing:border-box;padding:8px 10px;font-size:13px;border:1px solid var(--ark-border);' +

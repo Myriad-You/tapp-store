@@ -17,31 +17,32 @@ require('./debug.js');
 
   // ========================================
   // 静默刷新（从 storage 读 UID 后拉新数据）
+  // 已禁用：进入 home 页不应自动发 API 请求，刷新仅由用户显式触发
   // ========================================
 
-  async function silentRefresh() {
-    var skland = window.__arkSkland;
-    if (!skland) return;
-    try {
-      var stored = await Tapp.shared.get(core.PLAYER_DATA_KEY);
-      var uid = stored && stored.data && stored.data.uid;
-      if (!uid) return;
-
-      var info = await skland.getPlayerInfo(uid);
-      var data = info && info.data ? info.data : null;
-      await Tapp.shared.set(core.PLAYER_DATA_KEY, {
-        ts: Date.now(),
-        data: {
-          uid: uid,
-          nickName: (stored.data && stored.data.nickName) || '',
-          channelName: (stored.data && stored.data.channelName) || '',
-          player: data
-        }
-      });
-    } catch (e) {
-      console.error('Failed to refresh player data:', e);
-    }
-  }
+  // async function silentRefresh() {
+  //   var skland = window.__arkSkland;
+  //   if (!skland) return;
+  //   try {
+  //     var stored = await Tapp.shared.get(core.PLAYER_DATA_KEY);
+  //     var uid = stored && stored.data && stored.data.uid;
+  //     if (!uid) return;
+  //
+  //     var info = await skland.getPlayerInfo(uid);
+  //     var data = info && info.data ? info.data : null;
+  //     await Tapp.shared.set(core.PLAYER_DATA_KEY, {
+  //       ts: Date.now(),
+  //       data: {
+  //         uid: uid,
+  //         nickName: (stored.data && stored.data.nickName) || '',
+  //         channelName: (stored.data && stored.data.channelName) || '',
+  //         player: data
+  //       }
+  //     });
+  //   } catch (e) {
+  //     console.error('Failed to refresh player data:', e);
+  //   }
+  // }
 
   // ========================================
   // View Router / 视图路由
@@ -130,9 +131,9 @@ require('./debug.js');
       }
     } catch (e) {}
 
-    silentRefresh().catch(function (e) {
-      console.error('Failed to refresh player data:', e);
-    });
+    // silentRefresh().catch(function (e) {
+    //   console.error('Failed to refresh player data:', e);
+    // });
 
     // 后台预热 assets（不阻塞 UI），后续渲染时直接复用已加载结果
     var arkAssets = window.__arkAssets;

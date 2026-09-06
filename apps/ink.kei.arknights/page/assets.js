@@ -45,11 +45,8 @@
     _loadPromise = (async function () {
       try {
         try {
-          var base = await Tapp.settings.get('resourceBaseUrl');
-          if (base && typeof base === 'string') {
-            base = base.trim().replace(/\/+$/, '');
-            if (base) _repoBase = base;
-          }
+          var cleaned = core.sanitizeRepoBase(await Tapp.settings.get('resourceBaseUrl'));
+          if (cleaned) _repoBase = cleaned;
         } catch (e) {}
 
         var jobs = [
