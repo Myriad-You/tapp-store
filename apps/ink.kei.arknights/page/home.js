@@ -645,14 +645,31 @@
     }
   }
 
+  async function fetchPlayerData(binding, credToken) {
+    var skland = window.__arkSkland;
+    if (!skland) throw new Error(core.t('home.errorModule'));
+    var info = await skland.getPlayerInfo(binding.uid, credToken);
+    var data = info && info.data ? info.data : null;
+    await Tapp.shared.set(PLAYER_DATA_KEY, {
+      ts: Date.now(),
+      data: {
+        uid: binding.uid,
+        nickName: binding.nickName || '',
+        channelName: binding.channelName || '',
+        player: data
+      }
+    });
+    try {
+      await Tapp.widget.invalidate('data-ready', { target: { widgetId: 'player-summary' } });
+    } catch (e) {}
+    return data;
+  }
+
   async function selectAccount(wrap, binding, btn) {
     var credToken = state.credToken;
     if (!credToken) {
       try { credToken = (await Tapp.storage.get('sklandToken')) || ''; } catch (e) {}
     }
-
-    var skland = window.__arkSkland;
-    if (!skland) return;
 
     var listBox = wrap.querySelector('[data-account-list]');
     var siblings = [];
@@ -669,17 +686,7 @@
     }
 
     try {
-      var info = await skland.getPlayerInfo(binding.uid, credToken);
-      var data = info && info.data ? info.data : null;
-      await Tapp.shared.set(PLAYER_DATA_KEY, {
-        ts: Date.now(),
-        data: {
-          uid: binding.uid,
-          nickName: binding.nickName || '',
-          channelName: binding.channelName || '',
-          player: data
-        }
-      });
+      var data = await fetchPlayerData(binding, credToken);
       updateRefreshTime(wrap, { ts: Date.now() });
       showPage(wrap, 'display');
       renderDisplay(wrap, {

@@ -1,8 +1,12 @@
 {
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "preview": "node scripts/generate-preview.mjs"
   },
   "dependencies": {
     "@myriad-you/tapp-cli": "^0.1.2"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.4"
   }
 }

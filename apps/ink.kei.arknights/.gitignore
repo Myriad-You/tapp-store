@@ -1,3 +1,5 @@
 /dist
 pack.bat
 pack.ps1
+preview.local.html
+node_modules/
