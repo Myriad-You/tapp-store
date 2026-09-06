@@ -168,7 +168,15 @@ await Tapp.settings.set("refreshInterval", 60);
 // 获取所有已保存声明键
 const allSettings = await Tapp.settings.getAll();
 // 返回: { refreshInterval: 60, showDetails: true, ... }
+
+// 同一 Tapp 的其他沙箱或详情页宿主编辑器写入后触发；写者自己不会收到
+const unsubscribe = Tapp.settings.onChanged(({ key, operation }) => {
+  console.log(key, operation); // operation: set
+});
 ```
+
+`set` 的返回值只表示落盘成功。`onChanged` 是数据信号，**不会**因此 remount Widget
+iframe；需要重跑 `render()` 时用 `Tapp.widget.invalidate`。跨标签页的落盘不会进这条总线。
 
 设置是 Manifest 声明的 **installation owner** 级配置，不是当前用户的私有 storage：
 
@@ -551,9 +559,11 @@ let task = await Tapp.ai.tasks.create({
   delivery: "stream",
   idempotencyKey: "summary-42-v1",
 });
+// create 返回 queued 快照，result 仍为空。完成态在 get / subscribe 之后。
 
 const stop = await Tapp.ai.tasks.subscribe(task.taskId, ({ event, data }) => {
   if (event === "delta") renderDelta(data.text);
+  // result / 终态 snapshot 的 data 是任务快照；信封在 data.result
   if (event === "result") renderResult(data.result);
 });
 
@@ -733,8 +743,7 @@ await Tapp.widget.updateConfig("my-widget", {
 });
 ```
 
-在 **Widget 沙箱**内还提供当前 Dashboard 实例专用 API（无需 `widget:register`）。
-这些方法 **不在** Page / headless 的 `Tapp.widget` 上：
+在 **Widget 沙箱**内还提供当前 Dashboard 实例专用 API（无需 `widget:register`）：
 
 ```javascript
 // 仅 Widget 沙箱
@@ -743,14 +752,23 @@ await Tapp.widget.updateInstanceSettings({ compact: true });
 await Tapp.widget.invalidate("data-ready");
 ```
 
+Page / headless（以及带 `options` 的 Widget 调用）可以定向刷新本 Tapp 的一张可见
+Widget。需要授予的 **`storage:write`**，必须写出本地 `widgetId`，没有 `target: "all"`，
+每张卡至少间隔 15 秒，每个 Tapp 每分钟最多 2 次：
+
+```javascript
+await Tapp.widget.invalidate("config-saved", { target: { widgetId: "stats" } });
+```
+
 | 沙箱 | `Tapp.widget` |
 | ---- | ------------- |
-| Page | `register` / `unregister` / `listRegistered` / `updateConfig` |
-| Widget | `getInstanceSettings` / `updateInstanceSettings` / `invalidate` |
-| headless | 无（对象被删除） |
+| Page | `register` / `unregister` / `listRegistered` / `updateConfig`；`invalidate(reason, { target: { widgetId } })` |
+| Widget | `getInstanceSettings` / `updateInstanceSettings` / `invalidate(reason)`（自己）；带 `target` 时走与 Page 相同的定向路径 |
+| headless | 仅 `invalidate(reason, { target: { widgetId } })` |
 
-跨 Page ↔ Widget 同步数据请用 `Tapp.storage.set`（宿主广播 + `refreshPolicy`），
-不要在 core 里调用 `invalidate`。
+跨 Page ↔ Widget 传数据仍用 `Tapp.storage.set`（会广播并 remount 可见卡）。
+`Tapp.settings.set` 只发 `onChanged`，不拆 iframe。定向 invalidate 只负责触发表面刷新，
+且不能过滤一次 storage 广播。省略 `target` 在 Page/headless 会失败。
 
 `updateInstanceSettings()` 只能更新当前 Widget 的 `widgets[].settings` 已声明字段，宿主会
 按类型、select 选项和数值范围校验，然后写入 Dashboard 布局。顶层 `settings` 仍是整个
@@ -994,25 +1012,30 @@ await Tapp.media.setSkipVip(true);
 **无需权限** - 获取应用上下文信息
 
 ```javascript
-// 获取应用信息
+// 获取应用信息（宿主版本与能力，不是 Tapp 包名）
 const app = await Tapp.context.getApp();
-// 返回: { version, name, environment }
+// 返回: { version, locale, theme, features: { aiEnabled, platforms } }
 
 // 获取用户信息
 const user = await Tapp.context.getUser();
-// 返回: { id, username, avatar, preferences }
+// 返回: { id, username, display_name, avatar, avatar_url, isAdmin, role,
+//         authenticated, connectedPlatforms, preferences: { language, timezone } }
 
-// 获取播放器信息
+// 获取播放器信息（无实时曲目时为 idle 零值；正式运行也可走宿主播放器事件）
 const player = await Tapp.context.getPlayer();
-// 返回: { isPlaying, currentTrack, volume }
+// 返回: { isPlaying, isPaused, currentTrack, progress, playlist, mode, volume, muted }
 
 // 获取导航信息
 const nav = await Tapp.context.getNavigation();
-// 返回: { currentPath, params }
+// 返回: { currentPath, previousPath, history, availableRoutes, tappPages }
 
 // 获取系统信息
 const system = await Tapp.context.getSystem();
-// 返回: { theme, language, timezone }
+// 返回: { online, serverConnected, version, backgroundTasks, lastFetch }
+
+// 地理位置（公开上下文；Playground 预览固定返回 null）
+const geo = await Tapp.context.getGeo();
+// 安装后: { lat, lon, city, region, country } 或服务不可用时的失败
 ```
 
 ---
@@ -1724,17 +1747,34 @@ const declaredApis = await Tapp.api.list();
 
 ## 文件与语音 API
 
-**权限**: `storage:read`（`file.download`）
+**权限**: public（`file.download`）
 
-文件下载由宿主创建 Blob 并触发下载，不依赖 iframe 的 download sandbox 权限：
+文件下载由宿主创建 Blob 并触发下载，不依赖 iframe 的 download sandbox 权限，也不申请 `storage:read`（那是私有 KV，不是把已有内容存到本机）。
+
+字符串内容（沙箱里已经有的文本）：
 
 ```javascript
 await Tapp.file.download("hello\n", "hello.txt", "text/plain;charset=utf-8");
 ```
 
-- 内容为字符串；编码后 Blob 大小上限 **10 MiB**（bridge 对 `file.download` 单独校验，
-  不走默认 ~1 MiB postMessage 上限）。
-- `filename` 不能含路径分隔或 `..`；可选 `mimeType` 字符串。
+本站生成资源（宿主读取，沙箱不能 `fetch` 这些路径）：
+
+```javascript
+await Tapp.file.download(task.result.value.url, "cat.png");
+await Tapp.file.download(`/api/model3d/assets/${assetId}`, "model.glb");
+```
+
+沙箱里已有的二进制（TTS `{ audio }`、`getUrl` 返回对象 / `blob:`、data URL）：
+
+```javascript
+await Tapp.file.download(await Tapp.speech.tts({ text: "你好" }));
+await Tapp.file.download(await Tapp.model3d.getUrl(assetId));
+await Tapp.file.download(task); // 生图完成态，读 result.value.url
+```
+
+- 文本 `content`、`base64`、宿主代取的 `url` 落盘上限 **32 MiB**（bridge 不走默认 ~1 MiB postMessage 上限）。
+- `url` **只**接受本站 `/api/brew/image-cache/{subdir}/{sha256}.{jpg|jpeg|png|gif|webp}` 或 `/api/model3d/assets/{sha256}`；任意 http(s) 一律拒绝。
+- `filename` 不能含路径分隔或 `..`。`url` / `base64` 可省略文件名（图 `image.{ext}`，模型 `model.glb`，音频按 MIME，否则 `download.bin`）。可选 `mimeType`。
 
 语音能力需要对应权限：
 
@@ -1798,7 +1838,7 @@ Page 完整面当前包含以下命名空间（`analytics` / `agent` 也挂在 `
 | `analytics`                                | 站点访问统计聚合（admin 完整 / 非 admin 访客卡片）  | `analytics:read`                   |
 | `ai`, `report`                             | 服务端治理的 AI Task 与报告读写                     | `ai:*`（含 `ai:search`）, `report:*` |
 | `model3d`                                  | Tripo 图生 3D / rig / retarget；`getUrl` 回沙箱 blob | `3d:generate`（资产读取 public） |
-| `widget`                                   | Page：动态注册；Widget 沙箱：实例设置 / `invalidate` | `widget:register`（仅 register 系列） |
+| `widget`                                   | Page：动态注册 + 定向 `invalidate`；Widget 沙箱：实例设置 / 自刷 `invalidate` | `widget:register`（仅 register 系列）；定向 `invalidate` 要 `storage:write` |
 | `media`                                    | 播放器读取和控制                                    | `media:*`                          |
 | `context`, `user`                          | 应用、用户、导航、系统和地理上下文                  | public                             |
 | `persona`                                  | Agent 人设只读名片（名字、心情带、主立绘路径）      | public                             |
@@ -1806,7 +1846,7 @@ Page 完整面当前包含以下命名空间（`analytics` / `agent` 也挂在 `
 | `event`, `background`, `scheduler`         | 在线 Event Broker、常驻需求和持久化任务             | `event:*`（含 background.require/release→`event:subscribe`）、`scheduler:register` |
 | `agent`                                    | schema 约束的 Agent Interaction                     | Manifest + Runtime Grant           |
 | `api`                                      | Manifest 声明的 HTTP/builtin 能力                   | HTTP 需 `network:fetch`；`access` 仅控制调用者范围 |
-| `file`, `speech`                           | 文件下载、TTS 和 ASR                                | `storage:read`, `speech:*`         |
+| `file`, `speech`                           | 文件下载、TTS 和 ASR                                | public（`file.download`）, `speech:*` |
 | `assets`                                   | 包内静态资源 list/get/blob URL                      | public（限 manifest.assets）       |
 | `tappList`                                 | Tapp 查询、安装、启停、卸载与导出                   | `tappList:*`                       |
 | `brewList`                                 | Brew 列表、源、用户分类 create/delete、评论和 OPML  | `brew:*`                           |
@@ -1822,8 +1862,9 @@ Page 完整面当前包含以下命名空间（`analytics` / `agent` 也挂在 `
 | `ui` 主题 / 语言 / 通知 | ✅ | ✅ | ✅ |
 | `ui.openUrl` / `listOpenUrls` | ✅ | ✅ | ❌ 不可用 |
 | `ui` title / confirm / fullscreen | ✅ | ❌ | ❌ |
-| `widget` register 系列 | ✅ | ❌ | ❌ 无此对象 |
-| `widget` 实例设置 / `invalidate` | ❌ | ✅ | ❌ |
+| `widget` register 系列 | ✅ | ❌ | ❌ |
+| `widget` 实例设置 / 自刷 `invalidate` | ❌ | ✅ | ❌ |
+| `widget` 定向 `invalidate({ widgetId })` | ✅ 需 `storage:write` | ✅ 需 `storage:write` | ✅ 需 `storage:write` |
 | `tappList`, `component`, `shortcut`, `dynamicContent` | ✅ | ❌ | ❌ 无此对象 |
 | `dom`, `file` | ✅ | ✅ | ❌ 无此对象 |
 | `model3d` | ✅ | 调用会报缺权限 | ❌ 无此对象 |
@@ -1834,5 +1875,6 @@ Widget 不会自动拥有完整面的写入/管理能力。调用前必须核对
 headless、方法是否在上表里、以及是否已有授予权限。新增能力时再核对权限映射、三种沙箱是否
 都该接、后端路由是否复核身份和 owner。
 
-`Tapp.context.getGeo()` 也是公开上下文方法；返回结果由后端地理信息服务决定。专业能力
-的请求/响应结构以对应前端服务类型和后端路由结构为准，不能从方法名猜测参数。
+`Tapp.context.getGeo()` 也是公开上下文方法；安装后返回 `{ lat, lon, city, region, country }`
+（由后端地理信息服务决定）。Playground 预览固定返回 `null`。专业能力的请求/响应结构以对应
+前端服务类型和后端路由结构为准，不能从方法名猜测参数。
