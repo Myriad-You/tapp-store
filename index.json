@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.58",
+  "version": "1.0.59",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-09-07T09:04:13.485Z",
+  "updated_at": "2026-09-07T23:36:14.580Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -1040,17 +1040,55 @@
     {
       "id": "cn.echootaku.days",
       "name": "朝夕",
-      "version": "0.3.2",
+      "version": "0.4.0",
       "description": "记录值得期待与纪念的日子，在主页随时查看最近倒数。",
-      "long_description": "用朝夕记录生日、纪念日、旅行、考试和其他重要时刻。支持置顶、快捷日期、临近标识、每年重复、自定义分类与颜色、搜索筛选，以及 2x2、4x2、4x4 三种主页小组件。主题工作室默认跟随 Myriad 主色，提供实时预览、三种 Glass 布局、精细分区、圆角和主题码；小组件可选择 Glass/纯色材质、日子范围和显示密度。所有数据仅保存在当前用户的私有存储中。",
+      "long_description": "用朝夕记录生日、纪念日、旅行、考试和其他重要时刻。支持卡片、月历和时间线视图，置顶、快捷日期、每年重复、自定义分类、搜索筛选、版本化 JSON 备份，以及 2x2、4x2、4x4 三种主页小组件。可使用 Myriad 后台任务发送提前提醒，也可由管理员配置的 Myriad AI 把自然语言转换为待确认草稿。主题工作室提供实时预览、Glass 布局、圆角和主题码。除主动调用平台 AI 外，日期数据仅保存在当前用户的私有存储中。",
       "locales": {
         "en-US": {
           "name": "Days",
-          "description": "Keep meaningful dates close and see the next countdown at a glance."
+          "description": "Keep meaningful dates close and see the next countdown at a glance.",
+          "long_description": "Use Days to track birthdays, anniversaries, trips, exams, and other important moments. Switch between card, calendar, and timeline views; pin events, use quick dates, repeat yearly, create custom categories, search and filter, and export versioned JSON backups. Myriad background tasks can send advance reminders, while administrator-configured Myriad AI can turn natural language into a draft for review. Theme Studio provides live previews, Glass layouts, corner controls, and shareable theme codes. Apart from content explicitly sent to platform AI, date data stays in the current user's private storage.",
+          "preview": {
+            "version": 1,
+            "type": "snapshot",
+            "html": "apps/cn.echootaku.days/preview.en-US.html",
+            "styles": [
+              "apps/cn.echootaku.days/preview.css"
+            ],
+            "viewport": {
+              "width": 1280,
+              "height": 720
+            },
+            "fit": "cover",
+            "focus": {
+              "x": 0.5,
+              "y": 0.48
+            },
+            "theme": "light"
+          }
         },
         "ja-JP": {
           "name": "日々",
-          "description": "大切な日を記録し、次のカウントダウンをいつでも確認できます。"
+          "description": "大切な日を記録し、次のカウントダウンをいつでも確認できます。",
+          "long_description": "朝夕で誕生日、記念日、旅行、試験などの大切な日を記録できます。カード・カレンダー・タイムライン表示、固定、クイック日付、毎年の繰り返し、カスタム分類、検索・絞り込み、バージョン付き JSON バックアップに対応しています。Myriad のバックグラウンドタスクで事前通知を送り、管理者が設定した Myriad AI で自然言語から確認用の下書きを作成できます。テーマスタジオではリアルタイムプレビュー、Glass レイアウト、角丸、テーマコードを利用できます。プラットフォーム AI を明示的に使用した場合を除き、日付データは現在のユーザーのプライベートストレージだけに保存されます。",
+          "preview": {
+            "version": 1,
+            "type": "snapshot",
+            "html": "apps/cn.echootaku.days/preview.ja-JP.html",
+            "styles": [
+              "apps/cn.echootaku.days/preview.css"
+            ],
+            "viewport": {
+              "width": 1280,
+              "height": 720
+            },
+            "fit": "cover",
+            "focus": {
+              "x": 0.5,
+              "y": 0.48
+            },
+            "theme": "light"
+          }
         }
       },
       "author": {
@@ -1069,14 +1107,19 @@
         "小组件",
         "主题",
         "Glass",
-        "效率"
+        "效率",
+        "日历",
+        "提醒",
+        "AI"
       ],
       "permissions": [
         "storage:read",
         "storage:write",
         "ui:notification",
         "ui:confirm",
-        "widget:register"
+        "widget:register",
+        "scheduler:register",
+        "ai:generate"
       ],
       "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><rect x='3' y='4.5' width='18' height='16' rx='3' stroke='currentColor' stroke-width='1.8'/><path d='M7.5 2.5v4M16.5 2.5v4M3 9h18' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/><path d='M8 13h3v3H8zM14 13h2' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>",
       "theme_color": "#D97757",
@@ -1117,15 +1160,18 @@
           "en-US": "apps/cn.echootaku.days/i18n/en-US.json",
           "ja-JP": "apps/cn.echootaku.days/i18n/ja-JP.json",
           "zh-CN": "apps/cn.echootaku.days/i18n/zh-CN.json"
+        },
+        "modules": {
+          "widget.js": "apps/cn.echootaku.days/widget.js"
         }
       },
-      "size": 144495,
+      "size": 202954,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-04T05:52:10Z",
-      "updated_at": "2026-08-19T11:09:38.476Z"
+      "updated_at": "2026-09-07T23:36:14.563Z"
     },
     {
       "id": "org.smcresearchhk.math",
@@ -2455,6 +2501,134 @@
       "verified": false,
       "created_at": "2026-09-07T09:04:13.485Z",
       "updated_at": "2026-09-07T09:04:13.485Z"
+    },
+    {
+      "id": "cn.echootaku.wiki",
+      "name": "Wiki",
+      "version": "0.1.6",
+      "description": "由管理员维护、面向所有访客只读开放的轻量知识库。",
+      "long_description": "Wiki 是一款安装级共享知识库：普通用户与公开访客始终只读，installation owner 与当前管理员可创建、编辑、发布和删除文章。正文使用安全 Markdown 渲染，原始 HTML 不执行；发布记录采用不可变共享事件，整库恢复通过批次提交标记一次生效。管理员草稿按用户保存在私有存储，支持约 1 秒自动保存、Markdown/JSON 导入导出、容量预警与发布临时空间预留。远程图片和视频只接受 HTTPS，权限不可用或加载失败时正文仍可阅读。",
+      "locales": {
+        "en-US": {
+          "name": "Wiki",
+          "description": "A lightweight, admin-maintained knowledge base that every visitor can read.",
+          "long_description": "Wiki is an installation-wide shared knowledge base. Regular users and public guests are always read-only, while the installation owner and current administrators can create, edit, publish, and delete articles. Content uses a safe Markdown renderer with raw HTML disabled. Published revisions are immutable shared events, and full restores become visible through one batch commit marker. Per-admin private drafts autosave after about one second. Markdown and JSON import/export, quota warnings, publish reserve space, and HTTPS-only remote media are included.",
+          "preview": {
+            "version": 1,
+            "type": "snapshot",
+            "html": "apps/cn.echootaku.wiki/preview.en-US.html",
+            "styles": [
+              "apps/cn.echootaku.wiki/preview.css"
+            ],
+            "viewport": {
+              "width": 1440,
+              "height": 900
+            },
+            "fit": "cover",
+            "focus": {
+              "x": 0.52,
+              "y": 0.47
+            },
+            "theme": "dark"
+          }
+        },
+        "ja-JP": {
+          "name": "Wiki",
+          "description": "管理者が編集し、すべての訪問者が閲覧できる軽量ナレッジベース。",
+          "long_description": "Wiki はインストール単位で共有するナレッジベースです。一般ユーザーと公開ゲストは常に閲覧専用で、installation owner と現在の管理者だけが記事の作成、編集、公開、削除を行えます。生 HTML を実行しない安全な Markdown 描画、変更不可能な共有イベントによる公開履歴、単一のバッチ確定マーカーで反映する全体復元、管理者ごとの約 1 秒自動保存、Markdown/JSON の入出力、容量警告、HTTPS 限定の外部メディアに対応します。",
+          "preview": {
+            "version": 1,
+            "type": "snapshot",
+            "html": "apps/cn.echootaku.wiki/preview.ja-JP.html",
+            "styles": [
+              "apps/cn.echootaku.wiki/preview.css"
+            ],
+            "viewport": {
+              "width": 1440,
+              "height": 900
+            },
+            "fit": "cover",
+            "focus": {
+              "x": 0.52,
+              "y": 0.47
+            },
+            "theme": "dark"
+          }
+        }
+      },
+      "author": {
+        "name": "EchoOtaku",
+        "url": "https://echootaku.cn"
+      },
+      "license": "MIT",
+      "homepage": "https://echootaku.cn",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "productivity",
+      "tags": [
+        "知识库",
+        "Wiki",
+        "Markdown",
+        "文档",
+        "共享",
+        "多语言"
+      ],
+      "permissions": [
+        "storage:read",
+        "storage:write",
+        "ui:confirm",
+        "ui:notification",
+        "network:fetch"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M4 4.5A2.5 2.5 0 0 1 6.5 2H11c1.3 0 2.4.7 3 1.7A3.5 3.5 0 0 1 17 2h.5A2.5 2.5 0 0 1 20 4.5V19a2 2 0 0 1-2 2h-1c-1.7 0-2.7.3-3 1-.3-.7-1.3-1-3-1H6a2 2 0 0 1-2-2V4.5z' stroke='currentColor' stroke-width='1.7' stroke-linejoin='round'/><path d='M14 4v18M7.5 7H11M7.5 11H11M17 7h.5' stroke='currentColor' stroke-width='1.7' stroke-linecap='round'/></svg>",
+      "theme_color": "#5B7C70",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.echootaku.wiki/preview.html",
+        "styles": [
+          "apps/cn.echootaku.wiki/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.52,
+          "y": 0.47
+        },
+        "theme": "dark"
+      },
+      "download": {
+        "manifest": "apps/cn.echootaku.wiki/manifest.json",
+        "code": "apps/cn.echootaku.wiki/core.js",
+        "readme": "apps/cn.echootaku.wiki/README.md",
+        "page_styles": "apps/cn.echootaku.wiki/page.css",
+        "page_template": "apps/cn.echootaku.wiki/page.html",
+        "i18n": {
+          "zh": "apps/cn.echootaku.wiki/i18n/zh.json",
+          "en": "apps/cn.echootaku.wiki/i18n/en.json",
+          "ja": "apps/cn.echootaku.wiki/i18n/ja.json"
+        },
+        "modules": {
+          "page/clipboard.js": "apps/cn.echootaku.wiki/page/clipboard.js",
+          "page/domain.js": "apps/cn.echootaku.wiki/page/domain.js",
+          "page/draft-saver.js": "apps/cn.echootaku.wiki/page/draft-saver.js",
+          "page/index.js": "apps/cn.echootaku.wiki/page/index.js",
+          "page/markdown.js": "apps/cn.echootaku.wiki/page/markdown.js",
+          "page/presentation.js": "apps/cn.echootaku.wiki/page/presentation.js",
+          "page/renderer.js": "apps/cn.echootaku.wiki/page/renderer.js",
+          "page/repository.js": "apps/cn.echootaku.wiki/page/repository.js"
+        }
+      },
+      "size": 130760,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-09-07T23:36:14.579Z",
+      "updated_at": "2026-09-07T23:36:14.579Z"
     }
   ],
   "last_updated": "2026-08-04T09:47:35Z"
