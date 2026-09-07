@@ -140,7 +140,7 @@
     var snapshot = { items: items, filter: 'all', totalSources: state.totalSources, updatedAt: Date.now(), summary: '' };
     try {
       var old = await Tapp.shared.get(CACHE_KEY);
-      if (old && old.filter === state.filter && old.summary) snapshot.summary = old.summary;
+      if (old && old.summary) snapshot.summary = old.summary;
     } catch (error) {}
     try {
       if (state.role === 'admin' && hasPermission('storage:write')) {
