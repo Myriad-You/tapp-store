@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Wiki 编辑器布局回归夹具</title>
+    <link rel="stylesheet" href="../page.css">
+    <style>
+      html,
+      body {
+        min-height: 100%;
+        margin: 0;
+      }
+
+      body {
+        padding: 24px;
+        background: var(--wiki-surface-muted);
+      }
+
+      .layout-fixture {
+        box-sizing: border-box;
+        width: 561px;
+        height: 448px;
+        background: var(--wiki-surface-strong);
+      }
+    </style>
+  </head>
+  <body>
+    <label class="markdown-editor layout-fixture">
+      <span>Markdown 正文</span>
+      <textarea aria-label="Markdown 正文"># 布局回归
+
+标题行之后应立即进入正文输入区。</textarea>
+    </label>
+  </body>
+</html>

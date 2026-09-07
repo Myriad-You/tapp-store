@@ -1,0 +1,47 @@
+{
+  "long_description": "Wiki 是一款安装级共享知识库：普通用户与公开访客始终只读，installation owner 与当前管理员可创建、编辑、发布和删除文章。正文使用安全 Markdown 渲染，原始 HTML 不执行；发布记录采用不可变共享事件，整库恢复通过批次提交标记一次生效。管理员草稿按用户保存在私有存储，支持约 1 秒自动保存、Markdown/JSON 导入导出、容量预警与发布临时空间预留。远程图片和视频只接受 HTTPS，权限不可用或加载失败时正文仍可阅读。",
+  "tags": ["知识库", "Wiki", "Markdown", "文档", "共享", "多语言"],
+  "featured": false,
+  "verified": false,
+  "license": "MIT",
+  "homepage": "https://echootaku.cn",
+  "repository": "https://github.com/Myriad-You/tapp-store",
+  "preview": {
+    "version": 1,
+    "type": "snapshot",
+    "html": "preview.html",
+    "styles": ["preview.css"],
+    "viewport": { "width": 1440, "height": 900 },
+    "fit": "cover",
+    "focus": { "x": 0.52, "y": 0.47 },
+    "theme": "dark"
+  },
+  "locales": {
+    "en-US": {
+      "long_description": "Wiki is an installation-wide shared knowledge base. Regular users and public guests are always read-only, while the installation owner and current administrators can create, edit, publish, and delete articles. Content uses a safe Markdown renderer with raw HTML disabled. Published revisions are immutable shared events, and full restores become visible through one batch commit marker. Per-admin private drafts autosave after about one second. Markdown and JSON import/export, quota warnings, publish reserve space, and HTTPS-only remote media are included.",
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "preview.en-US.html",
+        "styles": ["preview.css"],
+        "viewport": { "width": 1440, "height": 900 },
+        "fit": "cover",
+        "focus": { "x": 0.52, "y": 0.47 },
+        "theme": "dark"
+      }
+    },
+    "ja-JP": {
+      "long_description": "Wiki はインストール単位で共有するナレッジベースです。一般ユーザーと公開ゲストは常に閲覧専用で、installation owner と現在の管理者だけが記事の作成、編集、公開、削除を行えます。生 HTML を実行しない安全な Markdown 描画、変更不可能な共有イベントによる公開履歴、単一のバッチ確定マーカーで反映する全体復元、管理者ごとの約 1 秒自動保存、Markdown/JSON の入出力、容量警告、HTTPS 限定の外部メディアに対応します。",
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "preview.ja-JP.html",
+        "styles": ["preview.css"],
+        "viewport": { "width": 1440, "height": 900 },
+        "fit": "cover",
+        "focus": { "x": 0.52, "y": 0.47 },
+        "theme": "dark"
+      }
+    }
+  }
+}
