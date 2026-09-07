@@ -53,6 +53,25 @@ var DAYS_I18N_FALLBACK = {
     eyebrowIntro: '大切な日々', eyebrowMoments: 'あなたの瞬間', editorEyebrow: '時の中の一瞬', themeEyebrow: '自分らしいテーマ'
   }
 };
+Object.assign(DAYS_I18N_FALLBACK['zh-CN'], {
+  dataManager:'数据管理', viewMode:'视图', viewCards:'卡片', viewCalendar:'日历', viewTimeline:'时间线', previousMonth:'上个月', nextMonth:'下个月',
+  aiQuickAdd:'AI 快速录入', aiHint:'用自然语言描述日子，AI 只填写草稿，由你确认后保存。', aiPlaceholder:'例如：下个月 18 日妈妈生日，每年提醒我', aiParse:'生成草稿', aiUnavailable:'管理员尚未为 Myriad 配置 AI 能力', aiWorking:'正在理解…', aiReady:'草稿已填写，请检查后保存', aiFailed:'AI 生成失败，请稍后重试',
+  aiSystemPrompt:'今天是 {today}，界面语言为 {locale}。把用户描述转换为日期草稿。日期必须是 YYYY-MM-DD；不确定时选择最合理的未来日期；只返回符合 schema 的 JSON。用户描述：{request}',
+  reminders:'系统提醒', enableReminders:'启用提醒', reminderHint:'由 Myriad 后台任务发送通知', reminderOffsets:'提前提醒', before30Days:'提前 30 天', before7Days:'提前 7 天', before1Day:'提前 1 天', sameDay:'当天', reminderTime:'提醒时间', reminderTaskName:'朝夕：{title}', reminderToday:'今天就是这个重要日子', reminderBefore:'还有 {count} 天', reminderUnavailable:'日子已保存，但当前账号不可使用后台提醒', reminderFailed:'日子已保存，但提醒任务创建失败',
+  dataEyebrow:'掌握你的数据', dataHint:'导出完整备份，或预览并导入另一份备份。', closeData:'关闭数据管理', exportBackup:'导出备份', exportHint:'包含日子、自定义分类、提醒和主题设置。', downloadJson:'下载 JSON', importBackup:'导入备份', chooseFile:'选择 JSON 文件', orPasteJson:'或粘贴 JSON', backupJson:'备份 JSON', importWaiting:'选择文件或粘贴内容后预览。', previewImport:'预览', mergeImport:'合并导入', replaceImport:'替换全部', close:'关闭', exported:'备份已下载', exportFailed:'备份导出失败', importSummary:'有效备份：{events} 个日子，{categories} 个自定义分类，{conflicts} 个同 ID 冲突', importInvalid:'备份无效、过大或版本不受支持', replaceConfirm:'替换会覆盖当前全部日子、分类和主题，继续吗？', importMerged:'备份已合并', importReplaced:'备份已替换', importFailed:'导入失败，原数据已保留'
+});
+Object.assign(DAYS_I18N_FALLBACK['en-US'], {
+  dataManager:'Data', viewMode:'View', viewCards:'Cards', viewCalendar:'Calendar', viewTimeline:'Timeline', previousMonth:'Previous month', nextMonth:'Next month',
+  aiQuickAdd:'AI quick add', aiHint:'Describe a date naturally. AI fills a draft that you review before saving.', aiPlaceholder:'For example: Mom’s birthday on the 18th next month, remind me yearly', aiParse:'Create draft', aiUnavailable:'Your administrator has not configured Myriad AI', aiWorking:'Understanding…', aiReady:'Draft filled. Review it before saving.', aiFailed:'AI could not create a draft. Try again later.', aiSystemPrompt:'Today is {today} and the UI locale is {locale}. Convert the user request into a date draft. Date must be YYYY-MM-DD. If ambiguous, choose the most reasonable future date. Return only schema-valid JSON. Request: {request}',
+  reminders:'Reminders', enableReminders:'Enable reminders', reminderHint:'Sent by a Myriad background task', reminderOffsets:'Reminder lead time', before30Days:'30 days before', before7Days:'7 days before', before1Day:'1 day before', sameDay:'Same day', reminderTime:'Reminder time', reminderTaskName:'Days: {title}', reminderToday:'This important day is today', reminderBefore:'{count} days to go', reminderUnavailable:'Day saved, but background reminders are unavailable for this account', reminderFailed:'Day saved, but reminder scheduling failed',
+  dataEyebrow:'YOUR DATA', dataHint:'Export a full backup, or preview and import another backup.', closeData:'Close data manager', exportBackup:'Export backup', exportHint:'Includes days, custom categories, reminders, and theme settings.', downloadJson:'Download JSON', importBackup:'Import backup', chooseFile:'Choose JSON file', orPasteJson:'Or paste JSON', backupJson:'Backup JSON', importWaiting:'Choose a file or paste content to preview it.', previewImport:'Preview', mergeImport:'Merge import', replaceImport:'Replace all', close:'Close', exported:'Backup downloaded', exportFailed:'Could not export the backup', importSummary:'Valid backup: {events} days, {categories} custom categories, {conflicts} ID conflicts', importInvalid:'Invalid, oversized, or unsupported backup', replaceConfirm:'Replace all current days, categories, and theme?', importMerged:'Backup merged', importReplaced:'Backup replaced', importFailed:'Import failed; your original data was kept'
+});
+Object.assign(DAYS_I18N_FALLBACK['ja-JP'], {
+  dataManager:'データ', viewMode:'表示', viewCards:'カード', viewCalendar:'カレンダー', viewTimeline:'タイムライン', previousMonth:'前の月', nextMonth:'次の月',
+  aiQuickAdd:'AI クイック入力', aiHint:'自然な文章から下書きを作成します。保存前に必ず確認できます。', aiPlaceholder:'例：来月18日は母の誕生日。毎年知らせて', aiParse:'下書きを作成', aiUnavailable:'管理者が Myriad AI を設定していません', aiWorking:'解析中…', aiReady:'下書きを入力しました。確認して保存してください。', aiFailed:'AIで下書きを作成できませんでした。', aiSystemPrompt:'今日は {today}、UI言語は {locale} です。ユーザーの説明を日付の下書きに変換してください。日付は YYYY-MM-DD。不明確な場合は最も自然な未来の日付を選び、schema に合う JSON のみ返してください。説明：{request}',
+  reminders:'リマインダー', enableReminders:'通知を有効にする', reminderHint:'Myriad のバックグラウンドタスクで通知', reminderOffsets:'通知のタイミング', before30Days:'30日前', before7Days:'7日前', before1Day:'1日前', sameDay:'当日', reminderTime:'通知時刻', reminderTaskName:'日々：{title}', reminderToday:'大切な日は今日です', reminderBefore:'あと {count} 日', reminderUnavailable:'保存しましたが、このアカウントでは通知を利用できません', reminderFailed:'保存しましたが、通知を登録できませんでした',
+  dataEyebrow:'あなたのデータ', dataHint:'完全なバックアップを書き出すか、別のバックアップを確認して読み込みます。', closeData:'データ管理を閉じる', exportBackup:'バックアップを書き出す', exportHint:'日付、カスタムカテゴリー、通知、テーマを含みます。', downloadJson:'JSON を保存', importBackup:'バックアップを読み込む', chooseFile:'JSON ファイルを選択', orPasteJson:'または JSON を貼り付け', backupJson:'バックアップ JSON', importWaiting:'ファイルを選ぶか内容を貼り付けてください。', previewImport:'確認', mergeImport:'結合して読み込む', replaceImport:'すべて置換', close:'閉じる', exported:'バックアップを保存しました', exportFailed:'バックアップを書き出せませんでした', importSummary:'有効：{events} 件、カスタムカテゴリー {categories} 件、同一 ID {conflicts} 件', importInvalid:'無効、容量超過、または未対応のバックアップです', replaceConfirm:'現在の日付、カテゴリー、テーマをすべて置き換えますか？', importMerged:'バックアップを結合しました', importReplaced:'バックアップで置き換えました', importFailed:'読み込みに失敗しました。元のデータは保持されています'
+});
 var daysCurrentLocale = 'zh-CN';
 function daysNormalizeLocale(locale) { var value = String(locale || '').toLowerCase(); if (value.indexOf('ja') === 0) return 'ja-JP'; if (value.indexOf('en') === 0) return 'en-US'; return 'zh-CN'; }
 function daysT(key, values) {
@@ -146,9 +165,12 @@ function daysDateKeyFromOffset(offset) {
   return date.getFullYear() + '-' + daysPad(date.getMonth() + 1) + '-' + daysPad(date.getDate());
 }
 function daysParseDate(value) {
-  var parts = String(value || '').split('-').map(Number);
-  if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) return null;
-  return new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0, 0);
+  var match = /^(\d{4,})-(\d{2})-(\d{2})$/.exec(String(value || ''));
+  if (!match) return null;
+  var year = Number(match[1]); var month = Number(match[2]); var day = Number(match[3]);
+  if (!year || month < 1 || month > 12 || day < 1 || day > 31) return null;
+  var date = new Date(0); date.setFullYear(year, month - 1, day); date.setHours(12, 0, 0, 0);
+  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day ? date : null;
 }
 function daysUtcDay(date) { return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000; }
 function daysOccurrence(event, now) {
@@ -383,7 +405,8 @@ function daysRenderWidget(root, events, props, sharedTheme) {
   }
   daysSetText(root, '[data-widget-total]', daysT('dayCount', { count: sorted.length }));
 }
-if (typeof Tapp !== 'undefined' && Tapp.widgets) {
+function daysRegisterWidgetLayer() {
+  if (typeof Tapp === 'undefined' || !Tapp.widgets) return;
   Tapp.widgets['days-countdown'] = {
     render: async function (container, props) {
       var root = container.querySelector('[data-widget-root]') || container;
@@ -411,7 +434,7 @@ if (typeof Tapp !== 'undefined' && Tapp.widgets) {
     }
   };
 }
-
+if (typeof module !== 'undefined' && module.exports) module.exports.registerWidgetLayer = daysRegisterWidgetLayer;
 // ========== Page Code ==========
 var daysPageState = { events: [], categories: [], theme: daysCloneTheme(DAYS_DEFAULT_THEME), primaryColor: null, primaryColorOff: null, primaryColorRevision: 0, filter: 'all', query: '', editingId: null, off: null, editorToken: 0, saving: false, editorReturnFocus: null, themeReturnFocus: null, themeSaveTimer: null, themeSaveToken: 0, controller: null, mountToken: 0, storeRefreshToken: 0, themeRefreshToken: 0, glassVisibilityObserver: null, timers: [] };
 function daysPageSetTimeout(callback, delay) {
@@ -727,8 +750,191 @@ function daysDestroyPage() {
   daysPageState.timers.forEach(clearTimeout); daysPageState.timers = []; daysPageState.controller = null; daysPageState.off = null; daysPageState.primaryColor = null; daysPageState.primaryColorOff = null; daysPageState.themeSaveTimer = null; daysPageState.glassVisibilityObserver = null;
   document.documentElement.classList.remove('days-overlay-open'); document.documentElement.style.removeProperty('--days-scrollbar-gap'); if (document.body) document.body.classList.remove('days-overlay-open'); daysThemeOff = null; daysLocaleOff = null;
 }
+// ========== v0.4 Planning, backup, reminders and AI ==========
+var DAYS_BACKUP_FORMAT = 'cn.echootaku.days.backup';
+var DAYS_BACKUP_VERSION = 1;
+var DAYS_REMINDER_OFFSETS = [0, 1, 7, 30];
+var daysNormalizeEventsBase = daysNormalizeEvents;
+daysNormalizeEvents = function (value) {
+  var sources = Array.isArray(value) ? value.filter(function (item) { return item && typeof item.title === 'string' && daysParseDate(item.date); }) : [];
+  return daysNormalizeEventsBase(value).map(function (event, index) {
+    var source = sources[index]; var reminder = source && source.reminders && typeof source.reminders === 'object' ? source.reminders : {};
+    var offsets = Array.isArray(reminder.offsets) ? reminder.offsets.map(Number).filter(function (item, position, list) { return DAYS_REMINDER_OFFSETS.indexOf(item) >= 0 && list.indexOf(item) === position; }).sort(function (a, b) { return b - a; }) : [];
+    event.reminders = { enabled: Boolean(reminder.enabled) && offsets.length > 0, offsets: offsets, time: /^([01]\d|2[0-3]):[0-5]\d$/.test(String(reminder.time || '')) ? String(reminder.time) : '09:00' };
+    return event;
+  });
+};
+function daysOccurrenceInYear(event, year) {
+  var source = daysParseDate(event && event.date); if (!source) return null;
+  var day = Math.min(source.getDate(), new Date(year, source.getMonth() + 1, 0).getDate()); return new Date(year, source.getMonth(), day);
+}
+function daysPermissionGranted(permission) { try { return Boolean(Tapp.permissions && typeof Tapp.permissions.includes === 'function' && Tapp.permissions.includes(permission)); } catch (_) { return false; } }
+function daysReminderTaskId(eventId, offset) { return 'days-reminder-' + String(eventId || '').replace(/[^a-z0-9._-]/gi, '-').slice(0, 70) + '-' + offset; }
+function daysReminderDate(event, offset) {
+  var target = event.annual ? daysOccurrenceInYear(event, new Date().getFullYear()) : daysParseDate(event.date); if (!target) return null;
+  var parts = String(event.reminders && event.reminders.time || '09:00').split(':'); target.setHours(Number(parts[0]), Number(parts[1]), 0, 0); target.setDate(target.getDate() - Number(offset));
+  if (event.annual && target.getTime() <= Date.now()) { target = daysOccurrenceInYear(event, new Date().getFullYear() + 1); target.setHours(Number(parts[0]), Number(parts[1]), 0, 0); target.setDate(target.getDate() - Number(offset)); }
+  return target;
+}
+function daysReminderTask(event, offset) {
+  var at = daysReminderDate(event, offset); if (!at || at.getTime() <= Date.now()) return null;
+  return { taskId: daysReminderTaskId(event.id, offset), name: daysT('reminderTaskName', { title: event.title }), scheduleType: 'once', schedule: { at: at.getTime() }, executionTarget: 'backend', backendActions: [{ type: 'notification.queue', title: event.title, message: offset === 0 ? daysT('reminderToday') : daysT('reminderBefore', { count: offset }) }], missedPolicy: 'skip' };
+}
+function daysReminderTaskMatches(current, desired) {
+  if (!current || !desired) return false;
+  var scheduleType = current.scheduleType || current.schedule_type; var executionTarget = current.executionTarget || current.execution_target; var missedPolicy = current.missedPolicy || current.missed_policy; var backendActions = current.backendActions || current.backend_actions;
+  return String(scheduleType || '') === desired.scheduleType && Number(current.schedule && current.schedule.at) === desired.schedule.at && String(current.name || '') === desired.name && String(executionTarget || '') === desired.executionTarget && String(missedPolicy || '') === desired.missedPolicy && JSON.stringify(backendActions || []) === JSON.stringify(desired.backendActions);
+}
+async function daysUnregisterReminderTasks(event) {
+  if (!event || !Tapp.scheduler || typeof Tapp.scheduler.unregister !== 'function' || !daysPermissionGranted('scheduler:register')) return;
+  await Promise.all(DAYS_REMINDER_OFFSETS.map(function (offset) { return Tapp.scheduler.unregister(daysReminderTaskId(event.id, offset)).catch(function () {}); }));
+}
+async function daysSyncReminderTasks(event, previous) {
+  if (!daysPermissionGranted('scheduler:register') || !Tapp.scheduler || typeof Tapp.scheduler.register !== 'function') return { ok: false, reason: 'unavailable' };
+  await daysUnregisterReminderTasks(previous || event); if (!event.reminders || !event.reminders.enabled) return { ok: true };
+  var tasks = event.reminders.offsets.map(function (offset) { return daysReminderTask(event, offset); }).filter(Boolean);
+  try { await Promise.all(tasks.map(function (task) { return Tapp.scheduler.register(task); })); return { ok: true }; } catch (error) { console.error('[Days] reminder sync failed', error); return { ok: false, reason: 'failed' }; }
+}
+async function daysReconcileReminders(events) {
+  if (!daysPermissionGranted('scheduler:register') || !Tapp.scheduler || typeof Tapp.scheduler.list !== 'function' || typeof Tapp.scheduler.register !== 'function' || typeof Tapp.scheduler.unregister !== 'function') return;
+  var list = await Tapp.scheduler.list();
+  var items = Array.isArray(list) ? list : Array.isArray(list && list.tasks) ? list.tasks : [];
+  var desired = {};
+  daysNormalizeEvents(events).forEach(function (event) { if (!event.reminders.enabled) return; event.reminders.offsets.forEach(function (offset) { var task = daysReminderTask(event, offset); if (task) desired[task.taskId] = task; }); });
+  var removals = [];
+  items.filter(function (task) { return String(task && (task.taskId || task.task_id || task.id) || '').indexOf('days-reminder-') === 0; }).forEach(function (task) {
+    var id = String(task.taskId || task.task_id || task.id); var expected = desired[id];
+    if (expected && daysReminderTaskMatches(task, expected)) { delete desired[id]; return; }
+    removals.push(Tapp.scheduler.unregister(id).catch(function () {}));
+  });
+  await Promise.all(removals);
+  await Promise.all(Object.keys(desired).map(function (id) { return Tapp.scheduler.register(desired[id]); }));
+}
+var daysReminderReconcilePromise = null;
+var daysReminderReconciledAt = 0;
+function daysRequestReminderReconcile(events, force) {
+  if (!daysPermissionGranted('scheduler:register') || !Tapp.scheduler) return Promise.resolve();
+  if (daysReminderReconcilePromise) return daysReminderReconcilePromise;
+  if (!force && Date.now() - daysReminderReconciledAt < 21600000) return Promise.resolve();
+  daysReminderReconcilePromise = daysReconcileReminders(events).then(function () { daysReminderReconciledAt = Date.now(); }).finally(function () { daysReminderReconcilePromise = null; });
+  return daysReminderReconcilePromise;
+}
+function daysBackupSnapshot() { return { format: DAYS_BACKUP_FORMAT, schemaVersion: DAYS_BACKUP_VERSION, exportedAt: new Date().toISOString(), data: { events: daysNormalizeEvents(daysPageState.events), categories: daysNormalizeCategories(daysPageState.categories), theme: daysNormalizeTheme(daysPageState.theme) } }; }
+function daysParseBackup(text) {
+  var raw = String(text || ''); if (!raw || raw.length > 1048576) throw new Error('backup size'); var value = JSON.parse(raw);
+  if (!value || value.format !== DAYS_BACKUP_FORMAT || value.schemaVersion !== DAYS_BACKUP_VERSION || !value.data || !Array.isArray(value.data.events)) throw new Error('backup format');
+  var store = daysNormalizeStore(value.data.events, value.data.categories); var ids = store.events.map(function (event) { return event.id; });
+  if (store.events.length !== value.data.events.length || ids.some(function (id, index) { return ids.indexOf(id) !== index; })) throw new Error('backup events');
+  return { events: store.events, categories: store.categories, theme: daysNormalizeTheme(value.data.theme) };
+}
+function daysMergeBackup(current, incoming) {
+  var byId = {}; current.events.forEach(function (event) { byId[event.id] = event; }); incoming.events.forEach(function (event) { byId[event.id] = event; });
+  var categories = daysNormalizeCategories(current.categories.concat(incoming.categories)); return { events: Object.keys(byId).map(function (id) { return byId[id]; }), categories: categories, theme: current.theme };
+}
+async function daysPersistSnapshot(snapshot) {
+  var old = { events: daysPageState.events, categories: daysPageState.categories, theme: daysPageState.theme };
+  try { await daysSaveEvents(snapshot.events); await daysSaveCategories(snapshot.categories); await daysSaveTheme(snapshot.theme); }
+  catch (error) { try { await daysSaveEvents(old.events); await daysSaveCategories(old.categories); await daysSaveTheme(old.theme); } catch (_) {} throw error; }
+  daysPageState.events = daysNormalizeEvents(snapshot.events); daysPageState.categories = daysNormalizeCategories(snapshot.categories); daysPageState.theme = daysNormalizeTheme(snapshot.theme);
+}
+function daysRenderViews(root, events) {
+  var list = root.querySelector('[data-event-list]'); var calendar = root.querySelector('[data-calendar]'); var timeline = root.querySelector('[data-timeline]'); var empty = root.querySelector('[data-empty]');
+  if (list) list.hidden = daysPageState.view !== 'cards'; if (calendar) calendar.hidden = daysPageState.view !== 'calendar'; if (timeline) timeline.hidden = daysPageState.view !== 'timeline';
+  if (empty) empty.hidden = events.length > 0; root.querySelectorAll('[data-view]').forEach(function (button) { var active = button.dataset.view === daysPageState.view; button.classList.toggle('is-active', active); button.setAttribute('aria-pressed', active ? 'true' : 'false'); });
+  if (daysPageState.view === 'calendar') daysRenderCalendar(root, events); if (daysPageState.view === 'timeline') daysRenderTimeline(root, events);
+}
+function daysRenderCalendar(root, events) {
+  var grid = root.querySelector('[data-calendar-grid]'); if (!grid) return; grid.textContent = ''; var month = daysPageState.calendarMonth || new Date(); var year = month.getFullYear(); var monthIndex = month.getMonth();
+  daysSetText(root, '[data-calendar-title]', new Intl.DateTimeFormat(daysCurrentLocale, { year: 'numeric', month: 'long' }).format(month));
+  var startOfWeek = daysCurrentLocale === 'en-US' ? 0 : 1; var labels = [];
+  for (var weekday = 0; weekday < 7; weekday += 1) { var labelDate = new Date(2024, 0, 7 + ((startOfWeek + weekday) % 7)); labels.push(new Intl.DateTimeFormat(daysCurrentLocale, { weekday: 'short' }).format(labelDate)); }
+  labels.forEach(function (label) { grid.appendChild(daysElement('div', 'calendar-weekday', label)); });
+  var first = new Date(year, monthIndex, 1); var offset = (first.getDay() - startOfWeek + 7) % 7; var cursor = new Date(year, monthIndex, 1 - offset); var today = daysTodayKey();
+  for (var cell = 0; cell < 42; cell += 1) {
+    var date = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + cell); var key = date.getFullYear() + '-' + daysPad(date.getMonth() + 1) + '-' + daysPad(date.getDate()); var day = daysElement('div', 'calendar-day');
+    day.classList.toggle('is-outside', date.getMonth() !== monthIndex); day.classList.toggle('is-today', key === today); day.appendChild(daysElement('span', 'calendar-day-number', String(date.getDate())));
+    events.filter(function (event) { var target = event.annual ? daysOccurrenceInYear(event, date.getFullYear()) : daysParseDate(event.date); return target && target.getFullYear() === date.getFullYear() && target.getMonth() === date.getMonth() && target.getDate() === date.getDate(); }).slice(0, 3).forEach(function (event) {
+      var button = daysElement('button', 'calendar-event', event.title); button.type = 'button'; button.dataset.eventId = event.id; button.style.setProperty('--event-color', event.color); button.setAttribute('aria-label', daysT('editAria', { title: event.title })); day.appendChild(button);
+    }); grid.appendChild(day);
+  }
+}
+function daysRenderTimeline(root, events) {
+  var container = root.querySelector('[data-timeline]'); if (!container) return; container.textContent = ''; var groups = {};
+  events.map(function (event) { return { event:event, target:event.annual ? daysOccurrence(event,new Date()) : daysParseDate(event.date) }; }).sort(function (a, b) { return a.target - b.target; }).forEach(function (item) { var date = item.target; var key = date.getFullYear() + '-' + daysPad(date.getMonth() + 1); (groups[key] || (groups[key] = [])).push(item); });
+  Object.keys(groups).sort().forEach(function (key) { var section = daysElement('section', 'timeline-group'); section.appendChild(daysElement('h3', '', new Intl.DateTimeFormat(daysCurrentLocale, { year: 'numeric', month: 'long' }).format(daysParseDate(key + '-01')))); var items = daysElement('div', 'timeline-items');
+    groups[key].forEach(function (item) { var event = item.event; var button = daysElement('button', 'timeline-item'); button.type = 'button'; button.dataset.eventId = event.id; button.style.setProperty('--event-color', event.color); button.appendChild(daysElement('strong', '', daysFormatDate(item.target, event.annual))); button.appendChild(daysElement('span', '', event.title)); button.appendChild(daysElement('small', '', daysCategoryLabel(event.category, event.categoryLabel))); items.appendChild(button); }); section.appendChild(items); container.appendChild(section); });
+}
+function daysToggleReminderOptions(root) { var enabled = root.querySelector('[name="reminderEnabled"]'); var options = root.querySelector('[data-reminder-options]'); if (options) options.hidden = !(enabled && enabled.checked); }
+function daysFillAiDraft(root, draft) {
+  var form = root.querySelector('[data-event-form]'); if (!form || !draft) return; var title = String(draft.title || '').trim().slice(0, 80); var date = String(draft.date || ''); if (title) form.elements.title.value = title; if (daysParseDate(date)) form.elements.date.value = date;
+  form.elements.annual.checked = Boolean(draft.annual); form.elements.note.value = String(draft.note || '').slice(0, 240); var category = daysFindCategory(String(draft.category || 'other')); form.elements.category.value = category.id; daysRenderCategoryPicker(root, category.id);
+  var offsets = Array.isArray(draft.reminderOffsets) ? draft.reminderOffsets.map(Number).filter(function (item) { return DAYS_REMINDER_OFFSETS.indexOf(item) >= 0; }) : []; form.elements.reminderEnabled.checked = offsets.length > 0;
+  root.querySelectorAll('[name="reminderOffset"]').forEach(function (input) { input.checked = offsets.indexOf(Number(input.value)) >= 0; }); if (/^([01]\d|2[0-3]):[0-5]\d$/.test(String(draft.reminderTime || ''))) form.elements.reminderTime.value = draft.reminderTime; daysToggleReminderOptions(root);
+}
+function daysExtractAiValue(value) {
+  if (typeof value === 'string') { try { return JSON.parse(value); } catch (_) { return null; } } if (!value || typeof value !== 'object') return null;
+  if (value.title || value.date) return value; return daysExtractAiValue(value.value) || daysExtractAiValue(value.result) || daysExtractAiValue(value.output) || daysExtractAiValue(value.data);
+}
+function daysNormalizeAiDraft(value) { var draft = daysExtractAiValue(value); if (!draft || !String(draft.title || '').trim() || !daysParseDate(String(draft.date || ''))) return null; return draft; }
+async function daysAiParse(root) {
+  var prompt = root.querySelector('[data-ai-prompt]'); var status = root.querySelector('[data-ai-status]'); var button = root.querySelector('[data-action="ai-parse"]'); if (!prompt || !prompt.value.trim()) { if (prompt) prompt.focus(); return; }
+  if (!daysPermissionGranted('ai:generate') || !Tapp.ai || !Tapp.ai.tasks) { if (status) status.textContent = daysT('aiUnavailable'); return; }
+  if (button) button.disabled = true; if (status) status.textContent = daysT('aiWorking');
+  try {
+    var task = await Tapp.ai.tasks.create({ version: 2, operation: 'generate', input: { prompt: daysT('aiSystemPrompt', { today: daysTodayKey(), locale: daysCurrentLocale, request: prompt.value.trim() }) }, context: [], output: { format: 'json', schema: { type: 'object', additionalProperties: false, required: ['title', 'date', 'annual', 'category', 'note', 'reminderOffsets', 'reminderTime'], properties: { title: { type: 'string', maxLength: 80 }, date: { type: 'string' }, annual: { type: 'boolean' }, category: { type: 'string', enum: ['life','birthday','anniversary','study','travel','other'] }, note: { type: 'string', maxLength: 240 }, reminderOffsets: { type: 'array', items: { type: 'number', enum: [0,1,7,30] } }, reminderTime: { type: 'string' } } } }, delivery: 'stream', idempotencyKey: 'days-ai-' + Date.now().toString(36) });
+    var taskId = task && (task.taskId || task.id); daysPageState.aiTaskId = taskId; var immediate = daysNormalizeAiDraft(task); var result = immediate;
+    if (!result && taskId && typeof Tapp.ai.tasks.subscribe === 'function') result = await new Promise(function (resolve, reject) { var settled = false; var timer = daysPageSetTimeout(function () { if (!settled) { settled = true; reject(new Error('AI timeout')); } }, 120000); Tapp.ai.tasks.subscribe(taskId, function (message) { if (settled) return; var parsed = daysExtractAiValue(message); var state = message && (message.event || message.type); if (parsed) { settled = true; daysPageClearTimeout(timer); resolve(parsed); } else if (['error','failed','cancelled'].indexOf(state) >= 0) { settled = true; daysPageClearTimeout(timer); reject(new Error(state)); } }).then(function (off) { if (settled && typeof off === 'function') off(); else daysPageState.aiUnsubscribe = off; }).catch(reject); });
+    if (!result && taskId && typeof Tapp.ai.tasks.get === 'function') result = daysNormalizeAiDraft(await Tapp.ai.tasks.get(taskId)); result = daysNormalizeAiDraft(result); if (!result) throw new Error('AI result missing'); daysFillAiDraft(root, result); if (status) status.textContent = daysT('aiReady');
+  } catch (error) { console.error('[Days] AI parse failed', error); if (status) status.textContent = daysT('aiFailed'); }
+  finally { if (typeof daysPageState.aiUnsubscribe === 'function') { try { daysPageState.aiUnsubscribe(); } catch (_) {} } daysPageState.aiUnsubscribe = null; daysPageState.aiTaskId = null; if (button) button.disabled = false; }
+}
+daysPageState.view = 'cards'; daysPageState.calendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1); daysPageState.importPreview = null; daysPageState.dataReturnFocus = null; daysPageState.aiTaskId = null; daysPageState.aiUnsubscribe = null;
+daysSyncOverlayScrollLock = function (root) {
+  var dialogs = root ? root.querySelectorAll('[data-editor], [data-theme-panel], [data-data-panel]') : []; var locked = Array.prototype.some.call(dialogs, function (dialog) { return !dialog.hidden; });
+  if (locked) { var viewportWidth = Number.isFinite(window.innerWidth) ? window.innerWidth : document.documentElement.clientWidth; document.documentElement.style.setProperty('--days-scrollbar-gap', Math.max(0, viewportWidth - document.documentElement.clientWidth) + 'px'); } else document.documentElement.style.removeProperty('--days-scrollbar-gap');
+  document.documentElement.classList.toggle('days-overlay-open', locked); if (document.body) document.body.classList.toggle('days-overlay-open', locked);
+  Array.prototype.forEach.call(root ? root.children : [], function (child) { var isDialog = child.matches && child.matches('[data-editor], [data-theme-panel], [data-data-panel]'); if (locked && !isDialog) { child.inert = true; child.setAttribute('aria-hidden','true'); child.setAttribute('data-days-dialog-inert',''); } else if (!locked && child.hasAttribute && child.hasAttribute('data-days-dialog-inert')) { child.inert = false; child.removeAttribute('aria-hidden'); child.removeAttribute('data-days-dialog-inert'); } });
+};
+daysActiveDialog = function (root) { var selectors = ['[data-data-panel]','[data-theme-panel]','[data-editor]']; for (var i = 0; i < selectors.length; i += 1) { var dialog = root && root.querySelector(selectors[i]); if (dialog && !dialog.hidden) return dialog; } return null; };
+function daysOpenDataPanel(root) { var panel = root.querySelector('[data-data-panel]'); if (!panel) return; daysPageState.dataReturnFocus = document.activeElement; panel.hidden = false; panel.setAttribute('aria-hidden','false'); daysSyncOverlayScrollLock(root); requestAnimationFrame(function () { panel.classList.add('is-open'); var first = panel.querySelector('button'); if (first) first.focus(); }); }
+function daysCloseDataPanel(root) { var panel = root.querySelector('[data-data-panel]'); if (!panel || panel.hidden) return; var focus = daysPageState.dataReturnFocus; panel.classList.remove('is-open'); daysPageSetTimeout(function () { if (!panel.classList.contains('is-open')) { panel.hidden = true; panel.setAttribute('aria-hidden','true'); daysSyncOverlayScrollLock(root); if (focus && focus.isConnected) focus.focus(); } }, 300); }
+async function daysExportData() { var json = JSON.stringify(daysBackupSnapshot(), null, 2); await Tapp.file.download(json, 'chaoxi-backup-' + daysTodayKey() + '.json', 'application/json'); await daysNotify(daysT('exported')); }
+function daysSetImportPreview(root, snapshot) { daysPageState.importPreview = snapshot; var currentIds = daysPageState.events.map(function (event) { return event.id; }); var conflicts = snapshot.events.filter(function (event) { return currentIds.indexOf(event.id) >= 0; }).length; daysSetText(root, '[data-import-preview]', daysT('importSummary', { events: snapshot.events.length, categories: snapshot.categories.length, conflicts: conflicts })); root.querySelectorAll('[data-action="import-merge"], [data-action="import-replace"]').forEach(function (button) { button.disabled = false; }); }
+function daysPreviewImport(root) { var textarea = root.querySelector('[data-import-json]'); try { daysSetImportPreview(root, daysParseBackup(textarea && textarea.value)); } catch (error) { daysPageState.importPreview = null; daysSetText(root, '[data-import-preview]', daysT('importInvalid')); root.querySelectorAll('[data-action="import-merge"], [data-action="import-replace"]').forEach(function (button) { button.disabled = true; }); } }
+async function daysApplyImport(root, mode) {
+  var incoming = daysPageState.importPreview; if (!incoming) return; if (mode === 'replace' && !(await Tapp.ui.confirm(daysT('replaceConfirm')))) return;
+  var snapshot = mode === 'merge' ? daysMergeBackup({ events: daysPageState.events, categories: daysPageState.categories, theme: daysPageState.theme }, incoming) : incoming; await daysPersistSnapshot(snapshot); daysRenderPage(root); daysCloseDataPanel(root); daysReconcileReminders(daysPageState.events).catch(console.error); await daysNotify(daysT(mode === 'merge' ? 'importMerged' : 'importReplaced'));
+}
+var daysRenderPageBase = daysRenderPage;
+daysRenderPage = function (root) { daysRenderPageBase(root); daysRenderViews(root, daysFilteredEvents()); };
+var daysOpenEditorBase = daysOpenEditor;
+daysOpenEditor = function (root, event) {
+  daysOpenEditorBase(root, event); var reminder = event && event.reminders || { enabled:false, offsets:[], time:'09:00' }; var form = root.querySelector('[data-event-form]'); form.elements.reminderEnabled.checked = Boolean(reminder.enabled); form.elements.reminderTime.value = reminder.time || '09:00'; root.querySelectorAll('[name="reminderOffset"]').forEach(function (input) { input.checked = reminder.offsets.indexOf(Number(input.value)) >= 0; }); var prompt = root.querySelector('[data-ai-prompt]'); var status = root.querySelector('[data-ai-status]'); if (prompt) prompt.value = ''; if (status) status.textContent = daysPermissionGranted('ai:generate') ? '' : daysT('aiUnavailable'); daysToggleReminderOptions(root);
+};
+daysSubmitEvent = async function (root, form) {
+  var id = String(form.elements.id.value || ''); var existing = daysPageState.events.find(function (event) { return event.id === id; }); if (typeof form.reportValidity === 'function' && !form.reportValidity()) return false; var selectedCategory = daysFindCategory(form.elements.category.value); var offsets = Array.prototype.map.call(form.querySelectorAll('[name="reminderOffset"]:checked'), function (input) { return Number(input.value); });
+  var next = { id: id || ('day-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,7)), title: String(form.elements.title.value || '').trim(), date: String(form.elements.date.value || ''), category:selectedCategory.id, categoryLabel:selectedCategory.custom ? selectedCategory.label : '', note:String(form.elements.note.value || '').trim(), annual:form.elements.annual.checked, pinned:form.elements.pinned.checked, color:String(form.elements.color.value || '#D97757'), createdAt:existing ? existing.createdAt : Date.now(), reminders:{ enabled:form.elements.reminderEnabled.checked && offsets.length > 0, offsets:offsets, time:String(form.elements.reminderTime.value || '09:00') } };
+  if (!next.title || !daysParseDate(next.date)) return false; var nextEvents = existing ? daysPageState.events.map(function (event) { return event.id === id ? next : event; }) : daysPageState.events.concat(next); await daysSaveEvents(nextEvents); daysPageState.events = daysNormalizeEvents(nextEvents); var sync = await daysSyncReminderTasks(next, existing); daysCloseEditor(root); daysRenderPage(root); await daysNotify(daysT(existing ? 'updated' : 'saved')); if (!sync.ok && next.reminders.enabled) await daysNotify(daysT(sync.reason === 'unavailable' ? 'reminderUnavailable' : 'reminderFailed'), 'warning'); return true;
+};
+daysDeleteEvent = async function (root) { var event = daysPageState.events.find(function (item) { return item.id === daysPageState.editingId; }); if (!event) return; if (!(await Tapp.ui.confirm(daysT('deleteConfirm',{title:event.title})))) return; var next = daysPageState.events.filter(function (item) { return item.id !== event.id; }); await daysSaveEvents(next); daysPageState.events = next; await daysUnregisterReminderTasks(event); daysCloseEditor(root); daysRenderPage(root); await daysNotify(daysT('deleted'),'info'); };
+var daysMountPageBase = daysMountPage;
+daysMountPage = async function (root) {
+  await daysMountPageBase(root); if (root.dataset.v040Ready === 'true') return; root.dataset.v040Ready = 'true'; var signal = daysPageState.controller && daysPageState.controller.signal;
+  root.addEventListener('click', function (event) { var action = event.target.closest('[data-action]'); var name = action && action.dataset.action;
+    if (name === 'open-data') { daysCloseEditor(root); daysCloseThemeStudio(root); daysOpenDataPanel(root); }
+    if (name === 'close-data') daysCloseDataPanel(root); if (name === 'export-data') daysExportData().catch(function (error) { console.error(error); daysNotify(daysT('exportFailed'),'error'); }); if (name === 'preview-import') daysPreviewImport(root); if (name === 'import-merge') daysApplyImport(root,'merge').catch(function (error) { console.error(error); daysNotify(daysT('importFailed'),'error'); }); if (name === 'import-replace') daysApplyImport(root,'replace').catch(function (error) { console.error(error); daysNotify(daysT('importFailed'),'error'); }); if (name === 'ai-parse') daysAiParse(root);
+    if (name === 'calendar-prev' || name === 'calendar-next') { var delta = name === 'calendar-prev' ? -1 : 1; daysPageState.calendarMonth = new Date(daysPageState.calendarMonth.getFullYear(), daysPageState.calendarMonth.getMonth() + delta, 1); daysRenderPage(root); } if (name === 'calendar-today') { daysPageState.calendarMonth = new Date(new Date().getFullYear(),new Date().getMonth(),1); daysRenderPage(root); }
+    var view = event.target.closest('[data-view]'); if (view) { daysPageState.view = view.dataset.view; daysRenderPage(root); }
+  }, signal ? { signal:signal } : undefined);
+  root.addEventListener('change', function (event) { if (event.target.matches('[name="reminderEnabled"]')) daysToggleReminderOptions(root); if (event.target.matches('[data-import-file]')) { var file = event.target.files && event.target.files[0]; if (!file || file.size > 1048576) { daysSetText(root,'[data-import-preview]',daysT('importInvalid')); return; } file.text().then(function (text) { var area = root.querySelector('[data-import-json]'); area.value = text; daysPreviewImport(root); }).catch(console.error); } }, signal ? {signal:signal} : undefined);
+  root.addEventListener('keydown', function (event) { if (event.key === 'Escape') { var panel = root.querySelector('[data-data-panel]'); if (panel && !panel.hidden) daysCloseDataPanel(root); } }, signal ? {signal:signal} : undefined);
+  daysRequestReminderReconcile(daysPageState.events, true).catch(function (error) { console.error('[Days] reminder reconcile failed', error); });
+};
+var daysDestroyPageBase = daysDestroyPage;
+daysDestroyPage = function () { if (typeof daysPageState.aiUnsubscribe === 'function') { try { daysPageState.aiUnsubscribe(); } catch (_) {} } if (daysPageState.aiTaskId && Tapp.ai && Tapp.ai.tasks && typeof Tapp.ai.tasks.cancel === 'function') Tapp.ai.tasks.cancel(daysPageState.aiTaskId).catch(function () {}); daysPageState.aiUnsubscribe = null; daysPageState.aiTaskId = null; daysDestroyPageBase(); };
+
 if (typeof Tapp !== 'undefined' && Tapp.lifecycle) {
   Tapp.lifecycle.onReady(function () { var root = document.querySelector('[data-days-page]'); if (root) daysMountPage(root).catch(console.error); });
-  if (typeof Tapp.lifecycle.onResume === 'function') Tapp.lifecycle.onResume(function () { var root = document.querySelector('[data-days-page]'); if (root) daysRequestGlassComposite(document.documentElement); });
+  if (typeof Tapp.lifecycle.onResume === 'function') Tapp.lifecycle.onResume(function () { var root = document.querySelector('[data-days-page]'); if (root) { daysRequestGlassComposite(document.documentElement); daysRequestReminderReconcile(daysPageState.events, false).catch(function (error) { console.error('[Days] reminder reconcile failed', error); }); } });
   Tapp.lifecycle.onDestroy(daysDestroyPage);
 }

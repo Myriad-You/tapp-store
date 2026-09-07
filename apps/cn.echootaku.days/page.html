@@ -7,6 +7,9 @@
       <p class="page-subtitle" data-i18n="subtitle">把期待写进日历，也把走过的日子留在身边。</p>
     </div>
     <div class="header-actions">
+      <button class="theme-button glass days-glass-surface" type="button" data-action="open-data" data-glass-key="toolbar">
+        <span data-i18n="dataManager">数据管理</span>
+      </button>
       <button class="theme-button glass days-glass-surface" type="button" data-action="open-theme" data-glass-key="toolbar">
         <span data-i18n="themeStudio">主题工作室</span>
       </button>
@@ -50,7 +53,17 @@
       </div>
       <span class="event-total" data-event-total>0 个日子</span>
     </div>
+    <div class="view-switch glass days-glass-surface" data-glass-key="toolbar" role="group" aria-label="视图" data-i18n-aria-label="viewMode">
+      <button type="button" data-view="cards" class="is-active" aria-pressed="true" data-i18n="viewCards">卡片</button>
+      <button type="button" data-view="calendar" aria-pressed="false" data-i18n="viewCalendar">日历</button>
+      <button type="button" data-view="timeline" aria-pressed="false" data-i18n="viewTimeline">时间线</button>
+    </div>
     <div class="event-grid" data-event-list></div>
+    <section class="calendar-view glass days-glass-surface" data-calendar data-glass-key="cards" hidden aria-label="日历" data-i18n-aria-label="viewCalendar">
+      <header class="calendar-toolbar"><button type="button" data-action="calendar-prev" aria-label="上个月" data-i18n-aria-label="previousMonth">‹</button><h3 data-calendar-title></h3><div><button type="button" data-action="calendar-today" data-i18n="today">今天</button><button type="button" data-action="calendar-next" aria-label="下个月" data-i18n-aria-label="nextMonth">›</button></div></header>
+      <div class="calendar-grid" data-calendar-grid></div>
+    </section>
+    <section class="timeline-view" data-timeline hidden aria-label="时间线" data-i18n-aria-label="viewTimeline"></section>
     <div class="empty-state glass days-glass-surface" data-glass-key="cards" data-empty hidden>
       <div class="empty-mark" aria-hidden="true">◌</div>
       <h3 data-i18n="emptyTitle">还没有符合条件的日子</h3>
@@ -71,6 +84,11 @@
       </header>
 
       <input type="hidden" name="id" />
+      <section class="ai-assistant glass days-glass-surface" data-glass-key="editor">
+        <div><h3 data-i18n="aiQuickAdd">AI 快速录入</h3><p data-i18n="aiHint">用自然语言描述日子，AI 只填写草稿，由你确认后保存。</p></div>
+        <textarea data-ai-prompt rows="2" maxlength="600" placeholder="例如：下个月 18 日妈妈生日，每年提醒我" data-i18n-placeholder="aiPlaceholder" aria-label="AI 快速录入" data-i18n-aria-label="aiQuickAdd"></textarea>
+        <div class="ai-actions"><span data-ai-status role="status"></span><button class="secondary-button" type="button" data-action="ai-parse" data-i18n="aiParse">生成草稿</button></div>
+      </section>
       <label class="field">
         <span data-i18n="name">名称</span>
         <input name="title" maxlength="80" required placeholder="例如：去看海的日子" data-i18n-placeholder="namePlaceholder" />
@@ -120,6 +138,19 @@
           <input name="color" type="color" value="#D97757" aria-label="标记颜色" data-i18n-aria-label="color" />
         </label>
       </div>
+      <fieldset class="reminder-field">
+        <legend data-i18n="reminders">系统提醒</legend>
+        <label class="toggle-field"><input name="reminderEnabled" type="checkbox" /><span><b data-i18n="enableReminders">启用提醒</b><small data-i18n="reminderHint">由 Myriad 后台任务发送通知</small></span></label>
+        <div class="reminder-options" data-reminder-options hidden>
+          <div role="group" aria-label="提前提醒" data-i18n-aria-label="reminderOffsets">
+            <label><input type="checkbox" name="reminderOffset" value="30" /><span data-i18n="before30Days">提前 30 天</span></label>
+            <label><input type="checkbox" name="reminderOffset" value="7" /><span data-i18n="before7Days">提前 7 天</span></label>
+            <label><input type="checkbox" name="reminderOffset" value="1" /><span data-i18n="before1Day">提前 1 天</span></label>
+            <label><input type="checkbox" name="reminderOffset" value="0" /><span data-i18n="sameDay">当天</span></label>
+          </div>
+          <label class="field"><span data-i18n="reminderTime">提醒时间</span><input name="reminderTime" type="time" value="09:00" /></label>
+        </div>
+      </fieldset>
       <footer>
         <button class="danger-button" type="button" data-action="delete-event" hidden data-i18n="delete">删除</button>
         <span class="footer-spacer"></span>
@@ -127,6 +158,16 @@
         <button class="primary-button" type="button" data-action="save-event" data-i18n="save">保存日子</button>
       </footer>
     </form>
+  </section>
+
+  <section class="data-panel" data-data-panel hidden role="dialog" aria-modal="true" aria-labelledby="data-title" aria-hidden="true">
+    <div class="data-backdrop" data-action="close-data"></div>
+    <div class="data-card glass days-glass-surface" data-glass-key="editor">
+      <header><div><p class="eyebrow" data-i18n="dataEyebrow">掌握你的数据</p><h2 id="data-title" data-i18n="dataManager">数据管理</h2><p data-i18n="dataHint">导出完整备份，或预览并导入另一份备份。</p></div><button class="icon-button" type="button" data-action="close-data" aria-label="关闭数据管理" data-i18n-aria-label="closeData">×</button></header>
+      <section class="data-export"><div><h3 data-i18n="exportBackup">导出备份</h3><p data-i18n="exportHint">包含日子、自定义分类、提醒和主题设置。</p></div><button class="primary-button" type="button" data-action="export-data" data-i18n="downloadJson">下载 JSON</button></section>
+      <section class="data-import"><h3 data-i18n="importBackup">导入备份</h3><label class="file-picker"><span data-i18n="chooseFile">选择 JSON 文件</span><input type="file" data-import-file accept="application/json,.json" /></label><label class="field"><span data-i18n="orPasteJson">或粘贴 JSON</span><textarea data-import-json rows="7" maxlength="1048576" placeholder="{ ... }" aria-label="备份 JSON" data-i18n-aria-label="backupJson"></textarea></label><div class="import-preview" data-import-preview role="status" data-i18n="importWaiting">选择文件或粘贴内容后预览。</div><div class="data-actions"><button class="secondary-button" type="button" data-action="preview-import" data-i18n="previewImport">预览</button><button class="secondary-button" type="button" data-action="import-merge" disabled data-i18n="mergeImport">合并导入</button><button class="danger-button" type="button" data-action="import-replace" disabled data-i18n="replaceImport">替换全部</button></div></section>
+      <footer><button class="secondary-button" type="button" data-action="close-data" data-i18n="close">关闭</button></footer>
+    </div>
   </section>
 
   <section class="theme-panel" data-theme-panel hidden role="dialog" aria-modal="true" aria-labelledby="theme-title" aria-hidden="true">
@@ -158,7 +199,7 @@
           <input name="themeAccent" type="color" value="#D97757" />
         </label>
         <label class="field theme-strength-field">
-          <span><span data-i18n="glassStrength">Glass 强度</span><b data-glass-strength-value>72%</b></span>
+          <span><span data-i18n="glassStrength">Glass 强度</span><b data-glass-strength-value>64%</b></span>
           <input name="glassStrength" type="range" min="0" max="100" step="1" value="64" />
         </label>
         <label class="field">
