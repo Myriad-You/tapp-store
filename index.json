@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.59",
+  "version": "1.0.60",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-09-07T23:36:14.580Z",
+  "updated_at": "2026-09-07T23:38:42.151Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -2629,6 +2629,107 @@
       "verified": false,
       "created_at": "2026-09-07T23:36:14.579Z",
       "updated_at": "2026-09-07T23:36:14.579Z"
+    },
+    {
+      "id": "cn.echootaku.footprint-earth",
+      "name": "足迹地球",
+      "version": "0.1.0",
+      "description": "用标准国家与地区代码记录 Owner 足迹，并展示满足隐私阈值的访客聚合。",
+      "long_description": "一个强调隐私边界的共享足迹地球。Owner 可按标准国家或一级行政区代码公开居住与旅行经历；已加入专用 Federation Room 的成员只能提交代码化访客足迹。管理员从不可改写的事件历史生成 k≥3 的桶化公共投影，匿名访客与可交互小组件只读取该投影，不接触 Actor、消息 ID、精确时间、任意坐标、城市或自由文本。包含审核员授权、隐藏/恢复、举报、封禁、容量警告与批次轮换。",
+      "locales": {
+        "en-US": {
+          "name": "Footprint Earth",
+          "description": "Publish code-only owner footprints and privacy-thresholded visitor aggregates",
+          "long_description": "A privacy-bounded shared footprint globe. Owners publish residence and travel at standard country or first-level region granularity; Room members submit code-only visitor footprints. Administrators publish k≥3 bucketed aggregates, while guests and the interactive widget never receive actor IDs, message IDs, precise timestamps, arbitrary coordinates, cities, or free text."
+        },
+        "ja-JP": {
+          "name": "足あと地球",
+          "description": "標準地域コードだけで Owner の足あととプライバシー集計を表示",
+          "long_description": "プライバシー境界を明確にした共有足あと地球です。Owner は標準の国・第一行政区コードで居住と旅行を公開し、Room メンバーはコード化された訪問先だけを投稿します。管理者が k≥3 の区間集計を公開し、ゲストとインタラクティブウィジェットには Actor、メッセージ ID、正確な時刻、任意座標、都市、自由文を渡しません。"
+        }
+      },
+      "author": {
+        "name": "EchoOtaku",
+        "url": "https://github.com/EchoOtaku"
+      },
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.echootaku.footprint-earth",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "social",
+      "tags": [
+        "足迹",
+        "地球",
+        "旅行",
+        "社交",
+        "隐私",
+        "联邦",
+        "Room",
+        "小组件",
+        "多语言"
+      ],
+      "permissions": [
+        "storage:read",
+        "storage:write",
+        "ui:confirm",
+        "widget:register",
+        "federation:read",
+        "federation:room",
+        "federation:message"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='12' cy='12' r='8.5' stroke='currentColor' stroke-width='1.7'/><path d='M3.8 12h16.4M12 3.5c2.3 2.4 3.5 5.2 3.5 8.5S14.3 18.1 12 20.5C9.7 18.1 8.5 15.3 8.5 12S9.7 5.9 12 3.5Z' stroke='currentColor' stroke-width='1.4'/><circle cx='16.8' cy='7.4' r='2.2' fill='#ea580c' stroke='white' stroke-width='1'/></svg>",
+      "theme_color": "#246b7c",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.echootaku.footprint-earth/preview.html",
+        "styles": [
+          "apps/cn.echootaku.footprint-earth/page.css",
+          "apps/cn.echootaku.footprint-earth/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.48
+        },
+        "theme": "light"
+      },
+      "download": {
+        "manifest": "apps/cn.echootaku.footprint-earth/manifest.json",
+        "code": "apps/cn.echootaku.footprint-earth/main.js",
+        "readme": "apps/cn.echootaku.footprint-earth/README.md",
+        "widget_styles": "apps/cn.echootaku.footprint-earth/widget.css",
+        "page_styles": "apps/cn.echootaku.footprint-earth/page.css",
+        "page_template": "apps/cn.echootaku.footprint-earth/page.html",
+        "widget_templates": {
+          "footprint-globe": {
+            "2x2": "apps/cn.echootaku.footprint-earth/templates/widget-2x2.html",
+            "4x2": "apps/cn.echootaku.footprint-earth/templates/widget-4x2.html",
+            "4x4": "apps/cn.echootaku.footprint-earth/templates/widget-4x4.html"
+          }
+        },
+        "i18n": {
+          "en-US": "apps/cn.echootaku.footprint-earth/i18n/en-US.json",
+          "ja-JP": "apps/cn.echootaku.footprint-earth/i18n/ja-JP.json",
+          "zh-CN": "apps/cn.echootaku.footprint-earth/i18n/zh-CN.json"
+        },
+        "modules": {
+          "page/entry.js": "apps/cn.echootaku.footprint-earth/page/entry.js",
+          "page/runtime.js": "apps/cn.echootaku.footprint-earth/page/runtime.js",
+          "page/view.js": "apps/cn.echootaku.footprint-earth/page/view.js",
+          "widget/entry.js": "apps/cn.echootaku.footprint-earth/widget/entry.js"
+        }
+      },
+      "size": 565348,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-09-07T23:38:42.151Z",
+      "updated_at": "2026-09-07T23:38:42.151Z"
     }
   ],
   "last_updated": "2026-08-04T09:47:35Z"
