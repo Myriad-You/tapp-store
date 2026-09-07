@@ -1,7 +1,7 @@
 {
   "id": "ink.kei.arknights",
   "name": "Arknights",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "明日方舟玩家个人信息展示",
   "locales": {
     "en-US": { "name": "Arknights", "description": "Arknights player profile viewer" }
@@ -10,7 +10,8 @@
   "icon": "♜",
   "minSystemVersion": "0.4.8",
   "core": {
-    "entry": "core.js"
+    "entry": "core.js",
+    "styles": "core.css"
   },
   "page": {
     "entry": "page/index.js",
@@ -27,6 +28,7 @@
       "sizes": ["4x2", "4x4"],
       "category": "stats",
       "entry": "widget/player-summary.js",
+      "styles": "widget/styles.css",
       "refreshPolicy": {
         "mode": "event",
         "refreshOnVisible": false

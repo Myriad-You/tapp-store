@@ -129,8 +129,8 @@
 
   function buildWide(c, primary, scale, fontScale, summary, props) {
     return (
-      '<div style="position:relative;width:100%;height:100%;border-radius:12px;overflow:hidden;' +
-      'background:' + c.bg + ';border:1px solid ' + c.border + ';' + c.glass + '">' +
+      '<div class="w-glass" style="position:relative;width:100%;height:100%;border-radius:12px;overflow:hidden;' +
+      'background:' + c.bg + ';border:1px solid ' + c.border + ';">' +
       buildGlow(primary) +
       '<div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;' +
       'padding:' + Math.round(12 * scale) + 'px;">' +
@@ -143,8 +143,8 @@
 
   function buildLarge(c, primary, scale, fontScale, summary, assist, props) {
     return (
-      '<div style="position:relative;width:100%;height:100%;border-radius:12px;overflow:hidden;' +
-      'background:' + c.bg + ';border:1px solid ' + c.border + ';' + c.glass + '">' +
+      '<div class="w-glass" style="position:relative;width:100%;height:100%;border-radius:12px;overflow:hidden;' +
+      'background:' + c.bg + ';border:1px solid ' + c.border + ';">' +
       buildGlow(primary) +
       '<div style="position:absolute;inset:0;display:flex;flex-direction:column;' +
       'padding:' + Math.round(14 * scale) + 'px;">' +
@@ -167,34 +167,28 @@
 
   function buildEmpty(c, primary, scale, fontScale) {
     return (
-      '<div style="position:relative;width:100%;height:100%;border-radius:12px;overflow:hidden;' +
-      'background:' + c.bg + ';border:1px solid ' + c.border + ';' + c.glass + '">' +
+      '<div class="w-glass" style="position:relative;width:100%;height:100%;border-radius:12px;overflow:hidden;' +
+      'background:' + c.bg + ';border:1px solid ' + c.border + ';">' +
       buildGlow(primary) +
       '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;' +
       'justify-content:center;padding:12px;">' +
-      '<span style="font-size:' + Math.round(24 * scale) + 'px;margin-bottom:6px;">🛡️</span>' +
+      '<span style="font-size:' + Math.round(24 * scale) + 'px;margin-bottom:6px;"> </span>' +
       '<span style="font-size:' + Math.round(12 * fontScale) + 'px;color:' + c.textMuted + ';text-align:center;">' +
       esc(core.t('widget.empty')) + '</span>' +
       '</div></div>'
     );
   }
 
-  function buildShell(c, primary, scale, fontScale, size, props) {
-    var placeholder = {
-      name: '—',
-      avatar: '',
-      level: '',
-      items: [
-        ['assets.progress', '—'],
-        ['assets.operators', '—'],
-        ['assets.skins', '—'],
-        ['assets.furniture', '—'],
-        ['assets.medals', '—']
-      ]
-    };
-    return size === '4x4'
-      ? buildLarge(c, primary, scale, fontScale, placeholder, [], props)
-      : buildWide(c, primary, scale, fontScale, placeholder, props);
+  function buildLoading(c, primary, scale) {
+    return (
+      '<div class="w-glass" style="position:relative;width:100%;height:100%;border-radius:12px;overflow:hidden;' +
+      'background:' + c.bg + ';border:1px solid ' + c.border + ';">' +
+      buildGlow(primary) +
+      '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">' +
+      '<div class="ak-loading" style="--ak-loading-size:' + Math.round(26 * scale) + 'px;' +
+      '--ak-loading-border:3px;--ak-loading-color:' + primary + ';"></div>' +
+      '</div></div>'
+    );
   }
 
   function bindImgFallback(container) {
@@ -216,16 +210,14 @@
     var fontScale = props.fontScale || 1;
     var primary = props.primaryColor || '#8b5cf6';
 
-    var isDark = theme === 'dark';
     var c = {
-      bg: isDark ? 'rgba(26,26,26,0.8)' : 'rgba(255,255,255,0.7)',
-      glass: 'backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);',
-      border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.3)',
-      cellBorder: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)',
-      textMain: isDark ? '#f5f5f5' : '#1f1f1f',
-      textDim: isDark ? '#a3a3a3' : '#4b5563',
-      textMuted: isDark ? '#737373' : '#9ca3af',
-      cellBg: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.6)'
+      bg: 'var(--w-bg)',
+      border: 'var(--w-border)',
+      cellBorder: 'var(--w-cell-border)',
+      textMain: 'var(--w-text-main)',
+      textDim: 'var(--w-text-dim)',
+      textMuted: 'var(--w-text-muted)',
+      cellBg: 'var(--w-cell-bg)'
     };
 
     var propsKey = [
@@ -238,13 +230,13 @@
     ].join('|');
 
     // 首帧同步渲染：容器为空时优先复用上次已渲染的真实数据 HTML，
-    // 避免 refreshOnVisible 重建容器时先闪现“占位壳”；仅首次真正无缓存时才用占位壳
+    // 避免重建容器时先闪现加载动画；仅首次真正无缓存时才显示加载动画
     if (!container.firstChild) {
       if (cache.html && cache.propsKey === propsKey) {
         container.innerHTML = cache.html;
         bindImgFallback(container);
       } else {
-        container.innerHTML = buildShell(c, primary, scale, fontScale, size, props);
+        container.innerHTML = buildLoading(c, primary, scale);
       }
     }
 

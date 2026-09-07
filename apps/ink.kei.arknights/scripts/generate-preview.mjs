@@ -123,7 +123,10 @@ async function fetchImage(url, opts, fallback) {
     clearTimeout(timer);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     return compress(Buffer.from(await res.arrayBuffer()), opts);
-  } catch {
+  } catch (err) {
+    console.warn(
+      `[preview] fetch failed → fallback: ${url} — ${(err && err.message) || err}`
+    );
     return fallback;
   }
 }

@@ -1,0 +1,49 @@
+/* ========================================
+   Core 共享样式（Page / Widget / headless 通用）
+   目前仅加载动画（.ak-loading，ak-ui loading vendored/adapted）
+   ======================================== */
+
+@keyframes ak-radio {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.4);
+  }
+}
+
+.ak-loading {
+  --ak-loading-color: var(--ak-signal-accent, #d4b483);
+  --ak-loading-size: 22px;
+  --ak-loading-border: 4px;
+  position: relative;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  display: inline-block;
+  width: var(--ak-loading-size);
+  height: var(--ak-loading-size);
+  border: var(--ak-loading-border) solid var(--ak-loading-color);
+  background: transparent;
+  transform: rotate(-45deg);
+}
+
+.ak-loading::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  border: var(--ak-loading-border) solid var(--ak-loading-color);
+  transform: translate(-50%, -50%) scale(1);
+  animation: ak-radio 0.7s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ak-loading::after {
+    animation-duration: 2s;
+  }
+}
