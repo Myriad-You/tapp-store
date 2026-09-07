@@ -1,0 +1,41 @@
+<main class="brief-app">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">DAILY BRIEF · <span id="todayLabel">TODAY</span></p>
+      <h1>把今天值得读的，放在一起。</h1>
+      <p class="hero-copy">从 Brew 提取重点，少一点信息噪音，多一点清晰行动。</p>
+    </div>
+    <button id="refreshButton" class="primary-button" type="button">刷新简报</button>
+  </header>
+
+  <section class="stats-grid" aria-label="简报统计">
+    <article class="stat-card accent"><span>本期收录</span><strong id="itemCount">—</strong><small>条内容</small></article>
+    <article class="stat-card"><span>未读</span><strong id="unreadCount">—</strong><small>等待浏览</small></article>
+    <article class="stat-card"><span>来源</span><strong id="sourceCount">—</strong><small>个订阅源</small></article>
+    <article class="stat-card"><span>更新时间</span><strong id="updatedTime">—</strong><small>最近同步</small></article>
+  </section>
+
+  <section class="workspace">
+    <div class="feed-panel">
+      <div class="section-heading">
+        <div class="filter-tabs" role="tablist" aria-label="栏目筛选">
+          <button type="button" data-filter="unread" class="active">未读</button>
+          <button type="button" data-filter="starred">收藏</button>
+          <button type="button" data-filter="all">全部</button>
+        </div>
+        <div class="access-status"><span id="roleBadge" class="role-badge">访客可读</span><span id="statusText" class="status-text">准备加载</span></div>
+      </div>
+      <div id="feedList" class="feed-list" aria-live="polite"></div>
+    </div>
+
+    <aside class="summary-panel">
+      <div class="summary-orbit" aria-hidden="true"><span></span></div>
+      <p class="eyebrow">MYRIAD AI</p>
+      <h2>本期摘要</h2>
+      <div id="summaryText" class="summary-text">加载简报后，可以让 AI 把当前内容提炼成三条重点。</div>
+      <button id="summarizeButton" class="secondary-button" type="button" disabled>生成摘要</button>
+      <p class="privacy-note">仅发送当前标题和摘要，不包含账号凭据。</p>
+      <div class="access-note"><strong id="accessTitle">访问权限</strong><p id="accessNote">访客可以浏览公开简报；管理功能仅向管理员开放。</p></div>
+    </aside>
+  </section>
+</main>

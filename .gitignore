@@ -5,3 +5,8 @@ apps/com.myriad.video-prompt-generator/.DS_Store
 apps/.DS_Store
 .DS_Store
 node_modules/
+
+# Local Tapp package output
+/dist/
+apps/*/dist/
+*.tapp

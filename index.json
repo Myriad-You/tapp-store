@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.53",
+  "version": "1.0.55",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-09-06T11:32:56.291Z",
+  "updated_at": "2026-09-07T03:43:32.212Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -2202,7 +2202,7 @@
     {
       "id": "ink.kei.arknights",
       "name": "Arknights",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "description": "明日方舟玩家个人信息展示",
       "long_description": "明日方舟玩家个人信息展示：绑定森空岛账号后展示博士等级、助战干员、干员收藏、时装、蚀刻章，以及集成战略 / 剿灭 / 保全派驻等游戏数据。内置干员与时装图鉴（职业 / 稀有度筛选），并提供 4x2 / 4x4 主页小组件。玩家数据以共享快照展示，绑定与刷新由房间管理员维护，其他用户只读。跟随宿主亮暗主题，内置简体中文 / English。",
       "locales": {
@@ -2217,7 +2217,7 @@
       },
       "license": "MIT",
       "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/ink.kei.arknights",
-      "repository": "https://github.com/Myriad-You/tapp-store",
+      "repository": "https://github.com/leaphy-dev/Myriad-Tapp-Arknights",
       "category": "data",
       "tags": [
         "明日方舟",
@@ -2238,6 +2238,25 @@
         "widget:register"
       ],
       "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/ink.kei.arknights/preview.html",
+        "styles": [
+          "apps/ink.kei.arknights/page/styles.css",
+          "apps/ink.kei.arknights/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "theme": "dark"
+      },
       "download": {
         "manifest": "apps/ink.kei.arknights/manifest.json",
         "code": "apps/ink.kei.arknights/core.js",
@@ -2259,13 +2278,95 @@
           "widget/player-summary.js": "apps/ink.kei.arknights/widget/player-summary.js"
         }
       },
-      "size": 961768,
+      "size": 962091,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-09-06T11:32:56.291Z",
-      "updated_at": "2026-09-06T11:32:56.291Z"
+      "updated_at": "2026-09-06T23:39:15.146Z"
+    },
+    {
+      "id": "cn.wyyzxzyg.daily-brief",
+      "name": "今日简报",
+      "version": "1.0.0",
+      "description": "汇总 Brew 阅读内容，快速生成一份清晰、可回看的今日简报。",
+      "long_description": "今日简报把分散在 Brew 中的阅读内容整理成一页专注视图。访客可以浏览站点公开简报并切换栏目；登录用户可使用站长下放的增强权限；安装设置、公共组件管理等控制面操作仅限管理员。需要进一步提炼时，可让 Myriad AI 根据当前条目生成简短的今日重点。没有 Brew 数据时会显示明确的引导，不会伪造内容。",
+      "locales": {
+        "en-US": {
+          "name": "Daily Brief",
+          "description": "Turn your Brew reading queue into a focused daily briefing.",
+          "long_description": "Daily Brief turns your Brew reading queue into a calm, focused overview. Filter unread or starred stories, keep the latest snapshot on your dashboard, and ask Myriad AI for a concise summary when you need it."
+        },
+        "ja-JP": {
+          "name": "今日のブリーフ",
+          "description": "Brew の記事を集約し、今日の要点をひと目で確認できます。",
+          "long_description": "今日のブリーフは Brew の記事を落ち着いた一覧にまとめます。未読・お気に入りを切り替え、最新のスナップショットをウィジェットで確認し、必要なときだけ AI で要点を整理できます。"
+        }
+      },
+      "author": {
+        "name": "我願一直向著陽光.℡",
+        "url": "https://github.com/zgzyh"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.wyyzxzyg.daily-brief",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "productivity",
+      "tags": [
+        "简报",
+        "Brew",
+        "阅读",
+        "AI",
+        "小组件"
+      ],
+      "permissions": [
+        "brew:read",
+        "storage:read",
+        "storage:write",
+        "ui:theme",
+        "ai:generate",
+        "widget:register"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z' stroke='currentColor' stroke-width='1.8'/><path d='M7 8h10M7 12h7M7 16h5' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/><path d='m16 15 1.4 1.4L20 13.8' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>",
+      "theme_color": "#F4B860",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.wyyzxzyg.daily-brief/preview.html",
+        "styles": [
+          "apps/cn.wyyzxzyg.daily-brief/page.css",
+          "apps/cn.wyyzxzyg.daily-brief/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "theme": "dark"
+      },
+      "download": {
+        "manifest": "apps/cn.wyyzxzyg.daily-brief/manifest.json",
+        "code": "apps/cn.wyyzxzyg.daily-brief/main.js",
+        "readme": "apps/cn.wyyzxzyg.daily-brief/README.md",
+        "widget_styles": "apps/cn.wyyzxzyg.daily-brief/widget.css",
+        "page_styles": "apps/cn.wyyzxzyg.daily-brief/page.css",
+        "page_template": "apps/cn.wyyzxzyg.daily-brief/page.html",
+        "widget_templates": {
+          "daily-brief": {
+            "2x2": "apps/cn.wyyzxzyg.daily-brief/templates/widget-2x2.html",
+            "4x2": "apps/cn.wyyzxzyg.daily-brief/templates/widget-4x2.html",
+            "4x4": "apps/cn.wyyzxzyg.daily-brief/templates/widget-4x4.html"
+          }
+        }
+      },
+      "size": 36824,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-09-07T03:43:32.212Z",
+      "updated_at": "2026-09-07T03:43:32.212Z"
     }
   ],
   "last_updated": "2026-08-04T09:47:35Z"
