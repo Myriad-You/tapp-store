@@ -1,10 +1,13 @@
 {
   "id": "ink.kei.arknights",
   "name": "Arknights",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "明日方舟玩家个人信息展示",
   "locales": {
-    "en-US": { "name": "Arknights", "description": "Arknights player profile viewer" }
+    "en-US": {
+      "name": "Arknights",
+      "description": "Arknights player profile viewer"
+    }
   },
   "category": "data",
   "icon": "♜",
@@ -25,8 +28,11 @@
       "description": "展示玩家头像、名称与数据概要（4x4 额外展示助战干员）",
       "icon": "🧊",
       "defaultSize": "4x4",
-      "sizes": ["4x2", "4x4"],
-      "category": "stats",
+      "sizes": [
+        "4x2",
+        "4x4"
+      ],
+      "category": "data",
       "entry": "widget/player-summary.js",
       "styles": "widget/styles.css",
       "refreshPolicy": {
