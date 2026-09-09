@@ -1,7 +1,7 @@
 {
   "id": "cn.xciy.xingchen.widgets",
   "name": "星辰小组件",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "minSystemVersion": "0.3.23",
   "description": "GitHub 数据卡片、照片墙、纪念日、世界时钟、系统访客统计与个人信息小组件合集。",
   "locales": {
@@ -30,7 +30,7 @@
       "name": "GitHub 数据卡片",
       "description": "展示统计、热门语言、仓库、Gist 或 WakaTime 卡片，并支持官方文档中的高级查询参数。",
       "icon": "★",
-      "category": "stats",
+      "category": "developer",
       "defaultSize": "4x2",
       "sizes": [
         "2x2",
@@ -403,7 +403,7 @@
       "name": "网站访客",
       "description": "读取 Myriad 内置站点分析，展示累计访问量或累计独立访客。",
       "icon": "◉",
-      "category": "stats",
+      "category": "data",
       "defaultSize": "4x1",
       "sizes": [
         "2x1",
@@ -504,7 +504,7 @@
       "name": "照片墙",
       "description": "用全幅主图与拼贴网格铺满桌面模块，最多展示九张网络照片。",
       "icon": "▧",
-      "category": "visualization",
+      "category": "media",
       "defaultSize": "4x2",
       "sizes": [
         "2x1",
