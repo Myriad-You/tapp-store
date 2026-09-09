@@ -1,7 +1,7 @@
 {
   "id": "cn.xciy.rocom.merchant",
   "name": "洛克王国情报台",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "查看远行商人、活动日历、最新公告与精灵图鉴。",
   "locales": {
     "en-US": {
@@ -48,7 +48,7 @@
       "name": "远行商人速览",
       "description": "在桌面查看当前轮次、倒计时与商品。",
       "icon": "M",
-      "category": "activity",
+      "category": "utility",
       "defaultSize": "2x2",
       "sizes": [
         "2x2",
