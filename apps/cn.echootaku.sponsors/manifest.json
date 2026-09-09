@@ -1,7 +1,7 @@
 {
   "id": "cn.echootaku.sponsors",
   "name": "赞助者名单",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "minSystemVersion": "0.3.29",
   "description": "聚合多个赞助平台的支持者，在一个私密仪表盘中查看。",
   "locales": {
@@ -58,8 +58,12 @@
       "name": "赞助观测日志",
       "description": "以天文观测日志查看赞助者数量、月度支持与代表星体。",
       "defaultSize": "4x2",
-      "sizes": ["2x2", "4x2", "4x4"],
-      "category": "visualization",
+      "sizes": [
+        "2x2",
+        "4x2",
+        "4x4"
+      ],
+      "category": "social",
       "refreshPolicy": {
         "mode": "event",
         "refreshOnVisible": true
@@ -139,7 +143,9 @@
       "access": "manager",
       "endpoint": "https://ifdian.net/api/open/query-sponsor",
       "method": "POST",
-      "headers": { "Accept": "application/json" },
+      "headers": {
+        "Accept": "application/json"
+      },
       "body": {
         "user_id": "{{settings.afdianUserId}}",
         "params": "{{params.query}}",
@@ -151,7 +157,11 @@
         "field": "sign",
         "sign": {
           "alg": "md5-sorted-kv",
-          "over": ["params", "ts", "user_id"],
+          "over": [
+            "params",
+            "ts",
+            "user_id"
+          ],
           "timestampField": "ts"
         }
       },
@@ -163,7 +173,9 @@
       "access": "manager",
       "endpoint": "https://www.patreon.com/api/oauth2/v2/campaigns?fields%5Bcampaign%5D=currency",
       "method": "GET",
-      "headers": { "Accept": "application/json" },
+      "headers": {
+        "Accept": "application/json"
+      },
       "credential": {
         "key": "patreonToken",
         "header": "Authorization",
@@ -188,7 +200,9 @@
       },
       "body": {
         "query": "query SponsorRoster($login: String!) { user(login: $login) { sponsorshipsAsMaintainer(first: 100, activeOnly: false, includePrivate: true, orderBy: {field: CREATED_AT, direction: DESC}) { nodes { createdAt isActive isOneTimePayment privacyLevel sponsorEntity { __typename ... on User { login name } ... on Organization { login name } } tier { name monthlyPriceInCents } } pageInfo { hasNextPage endCursor } totalCount totalRecurringMonthlyPriceInCents } } }",
-        "variables": { "login": "{{params.login}}" }
+        "variables": {
+          "login": "{{params.login}}"
+        }
       },
       "cacheTtl": 300,
       "description": "读取 GitHub 个人账号收到的首批 Sponsors 记录"
@@ -209,7 +223,10 @@
       },
       "body": {
         "query": "query SponsorRoster($login: String!, $after: String!) { user(login: $login) { sponsorshipsAsMaintainer(first: 100, after: $after, activeOnly: false, includePrivate: true, orderBy: {field: CREATED_AT, direction: DESC}) { nodes { createdAt isActive isOneTimePayment privacyLevel sponsorEntity { __typename ... on User { login name } ... on Organization { login name } } tier { name monthlyPriceInCents } } pageInfo { hasNextPage endCursor } totalCount totalRecurringMonthlyPriceInCents } } }",
-        "variables": { "login": "{{params.login}}", "after": "{{params.after}}" }
+        "variables": {
+          "login": "{{params.login}}",
+          "after": "{{params.after}}"
+        }
       },
       "cacheTtl": 300,
       "description": "继续读取 GitHub Sponsors 分页记录"
@@ -230,7 +247,9 @@
       },
       "body": {
         "query": "query SponsorLifetime($login: String!) { user(login: $login) { lifetimeReceivedSponsorshipValues(first: 100) { nodes { amountInCents sponsor { __typename ... on User { login } ... on Organization { login } } } pageInfo { hasNextPage endCursor } } } }",
-        "variables": { "login": "{{params.login}}" }
+        "variables": {
+          "login": "{{params.login}}"
+        }
       },
       "cacheTtl": 300,
       "description": "读取 GitHub Sponsors 首批累计赞助金额"
@@ -251,7 +270,10 @@
       },
       "body": {
         "query": "query SponsorLifetime($login: String!, $after: String!) { user(login: $login) { lifetimeReceivedSponsorshipValues(first: 100, after: $after) { nodes { amountInCents sponsor { __typename ... on User { login } ... on Organization { login } } } pageInfo { hasNextPage endCursor } } } }",
-        "variables": { "login": "{{params.login}}", "after": "{{params.after}}" }
+        "variables": {
+          "login": "{{params.login}}",
+          "after": "{{params.after}}"
+        }
       },
       "cacheTtl": 300,
       "description": "继续读取 GitHub Sponsors 累计赞助金额"
@@ -261,7 +283,9 @@
       "access": "manager",
       "endpoint": "https://www.patreon.com/api/oauth2/v2/campaigns/{{params.campaignId}}/members?fields%5Bmember%5D=full_name,patron_status,last_charge_date,campaign_lifetime_support_cents,currently_entitled_amount_cents&page%5Bcount%5D=1000",
       "method": "GET",
-      "headers": { "Accept": "application/json" },
+      "headers": {
+        "Accept": "application/json"
+      },
       "credential": {
         "key": "patreonToken",
         "header": "Authorization",
@@ -275,7 +299,9 @@
       "access": "manager",
       "endpoint": "https://www.patreon.com/api/oauth2/v2/campaigns/{{params.campaignId}}/members?fields%5Bmember%5D=full_name,patron_status,last_charge_date,campaign_lifetime_support_cents,currently_entitled_amount_cents&page%5Bcount%5D=1000&page%5Bcursor%5D={{params.cursor}}",
       "method": "GET",
-      "headers": { "Accept": "application/json" },
+      "headers": {
+        "Accept": "application/json"
+      },
       "credential": {
         "key": "patreonToken",
         "header": "Authorization",
