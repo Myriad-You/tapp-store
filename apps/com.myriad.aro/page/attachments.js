@@ -815,7 +815,7 @@ function openReportPicker(icons, titles) {
 
   showPickerLoading(body);
 
-  Tapp.report.listReports().then(function (res) {
+  Tapp.report.platform.list().then(function (res) {
     allReports = (res && res.reports) || [];
     renderReportItems(allReports);
   }).catch(function () { showPickerEmpty(body); });
@@ -848,7 +848,7 @@ function openReportPicker(icons, titles) {
     var name = snap.summary || selectedReport.type || 'Report';
     var desc = snap.platform || '';
     if (selectedReport.createdAt) desc += (desc ? ' · ' : '') + new Date(selectedReport.createdAt).toLocaleDateString();
-    // Snapshot fields travel with the message so recipients can render without getReport (user-scoped).
+    // Snapshot fields travel with the message so recipients can render without platform.get (user-scoped).
     setPendingAttach({
       type: type,
       name: name,
@@ -954,7 +954,7 @@ function formatReportContentBody(content, fallbackPreview) {
 }
 
 /**
- * Structured HTML sections for report *detail* (owner getReport path).
+ * Structured HTML sections for report *detail* (owner platform.get path).
  * Complementary to formatReportContentBody (plain text used for share snapshots).
  * Never esc() objects — only primitives/arrays of primitives.
  */

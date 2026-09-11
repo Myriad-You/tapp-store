@@ -814,10 +814,10 @@ function bindEvents() {
     updateCamera();
   });
   $id('view-fullscreen').addEventListener('click', function () {
-    if (typeof Tapp !== 'undefined' && Tapp.ui && typeof Tapp.ui.requestFullscreen === 'function') Tapp.ui.requestFullscreen();
+    if (typeof Tapp !== 'undefined' && Tapp.ui && Tapp.ui.fullscreen && typeof Tapp.ui.fullscreen.request === 'function') Tapp.ui.fullscreen.request();
   });
   $id('view-fullscreen-top').addEventListener('click', function () {
-    if (typeof Tapp !== 'undefined' && Tapp.ui && typeof Tapp.ui.requestFullscreen === 'function') Tapp.ui.requestFullscreen();
+    if (typeof Tapp !== 'undefined' && Tapp.ui && Tapp.ui.fullscreen && typeof Tapp.ui.fullscreen.request === 'function') Tapp.ui.fullscreen.request();
   });
   $id('view-reset-quick').addEventListener('click', function () { if (state.structure) frameCamera(); updateCamera(); });
   $id('view-fit').addEventListener('click', function () { if (state.structure) frameCamera(); updateCamera(); });
