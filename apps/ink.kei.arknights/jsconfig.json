@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "checkJs": false,
+    "checkJs": true,
+    "noImplicitAny": false,
     "noEmit": true,
     "lib": [
       "ES2022",

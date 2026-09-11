@@ -1,17 +1,14 @@
 {
   "id": "ink.kei.arknights",
   "name": "Arknights",
-  "version": "0.1.3",
+  "version": "1.0.0",
   "description": "明日方舟玩家个人信息展示",
   "locales": {
-    "en-US": {
-      "name": "Arknights",
-      "description": "Arknights player profile viewer"
-    }
+    "en-US": { "name": "Arknights", "description": "Arknights player profile viewer" }
   },
-  "category": "data",
+  "category": "utility",
   "icon": "♜",
-  "minSystemVersion": "0.4.8",
+  "minSystemVersion": "0.4.9",
   "core": {
     "entry": "core.js",
     "styles": "core.css"
@@ -28,13 +25,20 @@
       "description": "展示玩家头像、名称与数据概要（4x4 额外展示助战干员）",
       "icon": "🧊",
       "defaultSize": "4x4",
-      "sizes": [
-        "4x2",
-        "4x4"
-      ],
-      "category": "data",
+      "sizes": ["4x2", "4x4"],
+      "category": "utility",
       "entry": "widget/player-summary.js",
       "styles": "widget/styles.css",
+      "settings": [
+        {
+          "key": "uid",
+          "type": "input",
+          "label": "玩家 UID",
+          "description": "指定本卡片展示的玩家 UID；留空则自动展示默认 / 上次浏览的玩家。",
+          "placeholder": "玩家 UID",
+          "defaultValue": ""
+        }
+      ],
       "refreshPolicy": {
         "mode": "event",
         "refreshOnVisible": false
@@ -61,8 +65,13 @@
     }
   ],
   "assets": [
+    "assets/decoration/char_icon.png",
     "assets/decoration/decorator_dark.png",
+    "assets/decoration/furniture_icon.png",
+    "assets/decoration/main_icon.png",
+    "assets/decoration/medal_icon.png",
     "assets/decoration/page_mask_dark.png",
+    "assets/decoration/skin_icon.png",
     "assets/rank/elite0.png",
     "assets/rank/elite1.png",
     "assets/rank/elite2.png",
@@ -145,6 +154,66 @@
         "vName": "{{params.vName}}",
         "cred": "{{params.cred}}",
         "sign": "{{params.sign}}"
+      }
+    },
+    "sklandCheckCred": {
+      "type": "http",
+      "access": "protected",
+      "endpoint": "https://zonai.skland.com/api/v1/user/check",
+      "method": "GET",
+      "description": "校验森空岛 Cred 有效性",
+      "headers": {
+        "cred": "{{params.cred}}"
+      }
+    },
+    "sklandGetCredByCode": {
+      "type": "http",
+      "access": "protected",
+      "endpoint": "https://zonai.skland.com/api/v1/user/auth/generate_cred_by_code",
+      "method": "POST",
+      "description": "用授权码换取森空岛 Cred 与签名 Token",
+      "headers": {
+        "Content-Type": "application/json",
+        "platform": "{{params.platform}}",
+        "timestamp": "{{params.timestamp}}",
+        "dId": "{{params.dId}}",
+        "vName": "{{params.vName}}"
+      },
+      "body": {
+        "kind": 1,
+        "code": "{{params.code}}"
+      }
+    },
+    "hypergryphOauth2": {
+      "type": "http",
+      "access": "protected",
+      "endpoint": "https://as.hypergryph.com/user/oauth2/v2/grant",
+      "method": "POST",
+      "description": "鹰角网络 OAuth2，用账号 Token 换取授权码",
+      "headers": {
+        "User-Agent": "Skland/1.62.0 (com.hypergryph.skland; build:106200040; Android 36; ) Okhttp/4.11.0",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "token": "{{params.token}}",
+        "appCode": "4ca99fa6b56cc2ba",
+        "type": 0
+      }
+    },
+    "hypergryphLogin": {
+      "type": "http",
+      "access": "protected",
+      "endpoint": "https://as.hypergryph.com/user/auth/v1/token_by_phone_password",
+      "method": "POST",
+      "description": "鹰角网络账号密码登录，获取账号 Token",
+      "headers": {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Linux; Android 12; SM-A5560 Build/V417IR; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/101.0.4951.61 Safari/537.36; SKLand/1.52.1",
+        "X-Requested-With": "com.hypergryph.skland"
+      },
+      "body": {
+        "phone": "{{params.phone}}",
+        "password": "{{params.password}}"
       }
     }
   }

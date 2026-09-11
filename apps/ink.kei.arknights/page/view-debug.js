@@ -3,6 +3,8 @@
 // ========================================
 
 (function () {
+  var core = require('../core.js');
+
   function initDebug(container) {
     var tokenInput = container.querySelector('[data-debug-token]');
     var endpointSelect = container.querySelector('[data-debug-endpoint]');
@@ -22,20 +24,20 @@
     updateParams();
 
     if (endpointSelect) {
-      endpointSelect.addEventListener('change', updateParams);
+      endpointSelect.onchange = updateParams;
     }
 
     if (sendBtn) {
-      sendBtn.addEventListener('click', function () {
+      sendBtn.onclick = function () {
         runRequest(tokenInput, endpointSelect, uidInput, responsePanel);
-      });
+      };
     }
   }
 
   async function loadSavedToken(input) {
     if (!input) return;
     try {
-      var saved = await Tapp.storage.get('sklandToken');
+      var saved = await Tapp.storage.get('hgToken');
       if (saved && typeof saved === 'string') {
         input.value = saved;
       }
@@ -48,7 +50,7 @@
 
     var endpoint = endpointSelect ? endpointSelect.value : 'binding';
     var uid = uidInput ? uidInput.value.trim() : '';
-    var credToken = tokenInput ? tokenInput.value.trim() : '';
+    var hgToken = tokenInput ? tokenInput.value.trim() : '';
 
     var summary = document.createElement('div');
     summary.setAttribute(
@@ -58,22 +60,22 @@
     );
     renderSummaryRow(summary, 'Request URL', 'https://zonai.skland.com' + endpointPath(endpoint));
     renderSummaryRow(summary, 'Method', 'GET');
-    renderSummaryRow(summary, 'Auth', 'skland cred+sign');
+    renderSummaryRow(summary, 'Auth', 'hgToken → cred+sign');
     panel.appendChild(summary);
 
     try {
-      var skland = window.__arkSkland;
+      var skland = core.skland;
       if (!skland) throw new Error('skland module not loaded');
 
       var res;
       if (endpoint === 'info') {
         if (!uid) throw new Error('uid required');
-        res = await skland.getPlayerInfo(uid, credToken);
+        res = await skland.getPlayerInfo(uid, hgToken);
       } else if (endpoint === 'cultivate') {
         if (!uid) throw new Error('uid required');
-        res = await skland.getCultivate(uid, credToken);
+        res = await skland.getCultivate(uid, hgToken);
       } else {
-        res = await skland.getPlayerBinding(credToken);
+        res = await skland.getPlayerBinding(hgToken);
       }
       renderResponse(panel, res);
     } catch (e) {
@@ -112,22 +114,75 @@
         'border-radius:var(--ak-radius-subtle);padding:10px;margin-top:8px;'
     );
 
+    var text = JSON.stringify(res, null, 2);
+
+    var head = document.createElement('div');
+    head.setAttribute('style', 'display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;');
+
     var hasCode = res && res.code !== undefined && res.code !== null;
     var code = hasCode ? res.code : '?';
     var color = code === 0 || code === 200 ? 'var(--ak-signal-success)' : code === -1 ? 'var(--ak-signal-danger)' : 'var(--ak-signal-action)';
     var codeLine = document.createElement('div');
-    codeLine.setAttribute('style', 'font-size:12px;color:' + color + ';margin-bottom:6px;');
+    codeLine.setAttribute('style', 'font-size:12px;color:' + color + ';min-width:0;word-break:break-all;');
     codeLine.textContent = 'code: ' + code + (res && res.msg ? ' — ' + res.msg : '');
-    block.appendChild(codeLine);
+    head.appendChild(codeLine);
+
+    var copyBtn = document.createElement('button');
+    copyBtn.type = 'button';
+    copyBtn.className = 'ak-button';
+    copyBtn.setAttribute('style', 'flex-shrink:0;font-size:11px;padding:4px 10px;cursor:pointer;');
+    copyBtn.textContent = core.t('common.copy');
+    copyBtn.addEventListener('click', function () {
+      copyText(text, copyBtn);
+    });
+    head.appendChild(copyBtn);
+
+    block.appendChild(head);
 
     var pre = document.createElement('pre');
     pre.setAttribute(
       'style',
       'margin:0;white-space:pre-wrap;word-break:break-all;color:var(--ak-text-inverse);font-size:12px;max-height:360px;overflow:auto;'
     );
-    pre.textContent = JSON.stringify(res, null, 2);
+    pre.textContent = text;
     block.appendChild(pre);
     panel.appendChild(block);
+  }
+
+  function copyText(text, btn) {
+    function feedback(ok) {
+      btn.textContent = ok ? core.t('common.copied') : core.t('common.copyFail');
+      if (btn._copyTimer) clearTimeout(btn._copyTimer);
+      btn._copyTimer = setTimeout(function () {
+        btn.textContent = core.t('common.copy');
+      }, 1500);
+    }
+
+    function fallback() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('style', 'position:fixed;top:-9999px;left:-9999px;');
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        var ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return ok;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { feedback(true); }, function () { feedback(fallback()); });
+      } else {
+        feedback(fallback());
+      }
+    } catch (e) {
+      feedback(fallback());
+    }
   }
 
   Tapp.pages['debug'] = {

@@ -39,7 +39,7 @@ const PLAYER = {
   level: 120,
   enrollDate: '2020-05-01',
   stats: [
-    ['作战进度', '15-03'],
+    ['作战进度', '15-4'],
     ['干员', '12'],
     ['时装', '8'],
     ['家具', '240'],
@@ -57,9 +57,9 @@ const PLAYER = {
     { id: 'char_108_silent', name: '赫默', profession: 'medic', rarity: 5, level: 60, evolvePhase: 1, potentialRank: 2, skillId: 'skchr_silent_2' },
   ],
   activities: [
-    { name: '示例活动 · 别传', progress: '12/24' },
-    { name: '示例活动 · 插曲', progress: '8/18' },
-    { name: '示例活动 · 主线', progress: '15/15' },
+    { name: '示例活动 · 别传', cleared: 12, total: 24, status: '进行中', done: false },
+    { name: '示例活动 · 插曲', cleared: 8, total: 18, status: '进行中', done: false },
+    { name: '示例活动 · 主线', cleared: 15, total: 15, status: '已完成', done: true },
   ],
 };
 
@@ -298,12 +298,22 @@ function statCell(label, value) {
 function activityCard(act, i) {
   const tints = ['rgba(212,180,131,0.4)', 'rgba(74,171,234,0.4)', 'rgba(241,198,68,0.4)'];
   const tint = tints[i % tints.length];
+  const pct = act.total > 0 ? Math.round((act.cleared / act.total) * 100) : 0;
+  const fg = act.done ? 'rgba(255,255,255,0.45)' : '#fff';
   return [
     '                    <div style="position:relative;overflow:hidden;border-radius:8px;margin-bottom:8px;width:100%;height:72px;background:#222;box-sizing:border-box;">',
     `                      <div style="position:absolute;left:0;top:0;width:100%;height:100%;background:linear-gradient(90deg,${tint},transparent 70%);"></div>`,
     '                      <div style="position:absolute;left:0;top:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:flex-end;padding:0 12px;text-align:right;box-sizing:border-box;">',
     `                        <div style="font-size:12px;font-weight:600;color:#fff;text-shadow:0 1px 2px #000;">${act.name}</div>`,
-    `                        <div style="font-size:10px;color:#fff;text-shadow:0 1px 2px #000;margin-top:2px;">${act.progress}</div>`,
+    '                        <div style="align-self:flex-end;width:40%;display:flex;flex-direction:column;gap:3px;margin-top:5px;box-sizing:border-box;">',
+    '                          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:6px;">',
+    `                            <span style="font-size:10px;color:${fg};text-shadow:0 1px 2px #000;">${act.status}</span>`,
+    `                            <span style="font-size:10px;color:${fg};text-shadow:0 1px 2px #000;">${act.cleared}/${act.total}</span>`,
+    '                          </div>',
+    '                          <div style="position:relative;height:4px;background:rgba(255,255,255,0.22);border-radius:2px;overflow:hidden;">',
+    `                            <div style="position:absolute;left:0;top:0;height:100%;width:${pct}%;background:${fg};border-radius:2px;"></div>`,
+    '                          </div>',
+    '                        </div>',
     '                      </div>',
     '                    </div>',
   ].join('\n');
@@ -363,8 +373,8 @@ ${statsHtml}
 
               <div class="ak-card" style="width:100%;box-sizing:border-box;min-width:0;">
                 <div class="ak-card__header">
-                  <span class="ak-card__title"><span style="width:8px;height:8px;background:var(--ak-color-blue);flex-shrink:0;box-sizing:border-box;display:inline-block;"></span>助战干员</span>
-                  <span style="font-size:9px;letter-spacing:0.5px;color:var(--ark-text-dim);">// SUPPORT UNITS</span>
+                  <span class="ak-card__title"><span style="width:8px;height:8px;background:var(--ak-color-blue);flex-shrink:0;box-sizing:border-box;display:inline-block;box-shadow:0 0 5px var(--ak-color-blue),0 0 12px rgba(34,187,255,0.6);"></span>助战干员</span>
+                  <span style="font-family:var(--ak-font-mono);font-size:9px;letter-spacing:0.08em;color:var(--ak-text-secondary);">// SUPPORT UNITS</span>
                 </div>
                 <div style="display:flex;gap:12px;flex-wrap:nowrap;justify-content:center;">
 ${assistHtml}
@@ -374,12 +384,12 @@ ${assistHtml}
               <div class="ak-card" style="max-width:100%;box-sizing:border-box;min-width:0;overflow:hidden;">
                 <div class="ak-card__header" style="align-items:center;">
                   <div style="display:flex;align-items:baseline;gap:8px;">
-                    <span class="ak-card__title"><span style="width:8px;height:8px;background:var(--ak-color-blue);flex-shrink:0;box-sizing:border-box;display:inline-block;"></span>我的干员</span>
-                    <span style="font-size:9px;letter-spacing:0.5px;color:var(--ark-text-dim);">// MY OPERATORS</span>
+                    <span class="ak-card__title"><span style="width:8px;height:8px;background:var(--ak-color-blue);flex-shrink:0;box-sizing:border-box;display:inline-block;box-shadow:0 0 5px var(--ak-color-blue),0 0 12px rgba(34,187,255,0.6);"></span>我的干员</span>
+                    <span style="font-family:var(--ak-font-mono);font-size:9px;letter-spacing:0.08em;color:var(--ak-text-secondary);">// MY OPERATORS</span>
                   </div>
                   <button type="button" style="font-size:14px;font-weight:600;color:var(--ark-text);background:transparent;border:none;cursor:pointer;padding:0 4px;line-height:1;">→</button>
                 </div>
-                <div class="ark-my-chars-scroll" style="display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;padding-bottom:6px;max-width:100%;">
+                <div class="ark-my-chars-scroll" style="display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;padding:8px 0;max-width:100%;">
 ${charsHtml}
                 </div>
               </div>
@@ -391,7 +401,7 @@ ${charsHtml}
             <div class="ark-display-right">
               <div class="ark-game-data ak-card" style="width:100%;box-sizing:border-box;min-width:0;display:flex;flex-direction:column;overflow:hidden;">
                 <div class="ak-card__header" style="flex-shrink:0;">
-                  <span class="ak-card__title"><span style="width:8px;height:8px;background:var(--ak-color-blue);flex-shrink:0;box-sizing:border-box;display:inline-block;"></span>游戏数据</span>
+                  <span class="ak-card__title"><span style="width:8px;height:8px;background:var(--ak-color-blue);flex-shrink:0;box-sizing:border-box;display:inline-block;box-shadow:0 0 5px var(--ak-color-blue),0 0 12px rgba(34,187,255,0.6);"></span>游戏数据</span>
                   <span style="font-family:var(--ak-font-mono);font-size:9px;letter-spacing:0.08em;color:var(--ak-text-secondary);">// GAME DATA</span>
                 </div>
                 <div class="ark-game-tabbar" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;margin-bottom:10px;flex-shrink:0;">

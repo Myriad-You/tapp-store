@@ -5,62 +5,44 @@
 var core = require('../core.js');
 
 // 加载页面模块（IIFE 模式，执行后挂载到全局）
-require('./crypto.js');
-require('./skland.js');
-require('./assets.js');
-require('./home.js');
-require('./collection.js');
-require('./debug.js');
+require('./ui-assets.js');
+require('./ui-dialog.js');
+require('./view-home.js');
+require('./view-player-list.js');
+require('./view-add-player.js');
+require('./view-collection.js');
+require('./view-debug.js');
 
 (function () {
   var currentTheme = 'light';
 
   // ========================================
-  // 静默刷新（从 storage 读 UID 后拉新数据）
-  // 已禁用：进入 home 页不应自动发 API 请求，刷新仅由用户显式触发
-  // ========================================
-
-  // async function silentRefresh() {
-  //   var skland = window.__arkSkland;
-  //   if (!skland) return;
-  //   try {
-  //     var stored = await Tapp.shared.get(core.PLAYER_DATA_KEY);
-  //     var uid = stored && stored.data && stored.data.uid;
-  //     if (!uid) return;
-  //
-  //     var info = await skland.getPlayerInfo(uid);
-  //     var data = info && info.data ? info.data : null;
-  //     await Tapp.shared.set(core.PLAYER_DATA_KEY, {
-  //       ts: Date.now(),
-  //       data: {
-  //         uid: uid,
-  //         nickName: (stored.data && stored.data.nickName) || '',
-  //         channelName: (stored.data && stored.data.channelName) || '',
-  //         player: data
-  //       }
-  //     });
-  //   } catch (e) {
-  //     console.error('Failed to refresh player data:', e);
-  //   }
-  // }
-
-  // ========================================
   // View Router / 视图路由
   // ========================================
 
-  var VIEW_NAMES = ['home', 'debug', 'collection'];
+  var VIEW_NAMES = ['home', 'debug', 'collection', 'playerList', 'addPlayer'];
   var DEFAULT_VIEW = 'home';
 
   function navigate(name) {
     if (VIEW_NAMES.indexOf(name) === -1) name = DEFAULT_VIEW;
-    if (name === 'debug' && !window.__arkIsAdmin) return;
+    if ((name === 'debug' || name === 'addPlayer') && !window.__arkIsAdmin) return;
 
     var container = document.getElementById('tapp-content');
     if (!container) return;
 
     var views = container.querySelectorAll('[data-view]');
+    var target = null;
     for (var i = 0; i < views.length; i++) {
-      views[i].hidden = views[i].getAttribute('data-view') !== name;
+      var isTarget = views[i].getAttribute('data-view') === name;
+      views[i].hidden = !isTarget;
+      if (isTarget) target = views[i];
+    }
+
+    // 视图切换入场动画（重复进入同一视图也重放）
+    if (target) {
+      target.classList.remove('ark-view-enter');
+      void target.offsetWidth;
+      target.classList.add('ark-view-enter');
     }
 
     var pages = (typeof Tapp !== 'undefined' && Tapp.pages) || {};
@@ -69,6 +51,9 @@ require('./debug.js');
       page.render(container);
     }
   }
+
+  // 供各视图程序化跳转（如主页无数据时跳转添加玩家页）
+  window.__arkNavigate = navigate;
 
   function closestByAttr(el, selector) {
     var node = el;
@@ -130,10 +115,6 @@ require('./debug.js');
         document.documentElement.style.setProperty('--page-decorator', 'url("' + decorator.url + '")');
       }
     } catch (e) {}
-
-    // silentRefresh().catch(function (e) {
-    //   console.error('Failed to refresh player data:', e);
-    // });
 
     // 后台预热 assets（不阻塞 UI），后续渲染时直接复用已加载结果
     var arkAssets = window.__arkAssets;
