@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.60",
+  "version": "1.0.61",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-09-07T23:38:42.151Z",
+  "updated_at": "2026-09-11T02:30:24.188Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -378,7 +378,7 @@
     {
       "id": "com.myriad.doudizhu",
       "name": "斗地主",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "description": "三人单机斗地主：经典牌桌与若泉绮羽㥹銯麏主题、完整规则、智能提示与本地 AI",
       "long_description": "从零重写的三人单机斗地主。使用标准 54 张扑克牌，支持随机发牌、叫地主与抢地主、完整牌型校验、连续两家不出后重新领出、默认 20 秒回合倒计时、自动托管、三档本地 AI、提示、倍率、春天与反春天、断局续玩和本地战绩。默认使用经典绿色牌桌，并可在 Tapp 内切换若泉绮羽㥹銯麏主题；主题覆盖人物卡面、卡背、大厅、牌桌、按钮与回合提示，同时保留高对比点数和花色。提供 1×1、2×2 与 4×2 今日战绩小组件，并优先显示当前 Myriad 用户名与头像。个人游戏偏好和玩家数据均按主体隔离；支持中英日三语和宿主明暗主题，无联网权限，不读取其他玩家隐藏手牌。",
       "locales": {
@@ -509,13 +509,13 @@
           "page/theme.js": "apps/com.myriad.doudizhu/page/theme.js"
         }
       },
-      "size": 2359893,
+      "size": 2359892,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2026-07-20T00:00:00Z",
-      "updated_at": "2026-08-19T11:09:38.472Z"
+      "updated_at": "2026-09-11T02:30:24.164Z"
     },
     {
       "id": "com.myriad.aro",
@@ -663,7 +663,7 @@
           "page/views.js": "apps/com.myriad.aro/page/views.js"
         }
       },
-      "size": 1189280,
+      "size": 1189322,
       "downloads": 0,
       "rating": 0,
       "featured": true,
@@ -881,7 +881,7 @@
     {
       "id": "cn.xciy.rocom.merchant",
       "name": "洛克王国情报台",
-      "version": "1.4.3",
+      "version": "1.4.4",
       "description": "查看远行商人、活动日历、最新公告与精灵图鉴。",
       "long_description": "洛克王国情报台用于快速查看远行商人当前轮次、换货倒计时、在售商品、关注清单命中、活动行程、官方公告与精灵图鉴搜索。提供页面视图与 2x2 / 4x2 / 4x4 小组件，适合放在桌面持续关注商人刷新。",
       "locales": {
@@ -947,18 +947,18 @@
           }
         }
       },
-      "size": 142541,
+      "size": 142540,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-02T05:39:55Z",
-      "updated_at": "2026-08-19T11:09:38.475Z"
+      "updated_at": "2026-09-11T02:30:24.171Z"
     },
     {
       "id": "cn.xciy.xingchen.widgets",
       "name": "星辰小组件",
-      "version": "0.9.2",
+      "version": "0.9.3",
       "description": "GitHub 数据卡片、照片墙、纪念日、世界时钟、系统访客统计与个人信息小组件合集。",
       "long_description": "提供 GitHub Stats Extended 卡片、全幅多尺寸照片墙、Myriad 内置站点分析累计访问量/独立访客，以及邮箱、QQ、微信、Telegram、GitHub、Gitee、哔哩哔哩和自定义个人信息展示。支持多种桌面尺寸与独立配色设置。",
       "locales": {
@@ -1029,13 +1029,13 @@
           }
         }
       },
-      "size": 204450,
+      "size": 204445,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-04T02:07:42Z",
-      "updated_at": "2026-08-19T11:09:38.475Z"
+      "updated_at": "2026-09-11T02:30:24.172Z"
     },
     {
       "id": "cn.echootaku.days",
@@ -1306,7 +1306,7 @@
     {
       "id": "cn.echootaku.github-workbench",
       "name": "GitHub 工作台",
-      "version": "0.1.3",
+      "version": "0.1.4",
       "description": "集中查看待审 PR、分配给我的 Issue、失败 Actions 与仓库发布动态。",
       "long_description": "面向程序员的只读 GitHub 工作台：集中查看请求你审阅的 Pull Request、分配给你的 Issue，以及所选仓库最近失败的 GitHub Actions 和 Releases。支持 2x2、4x2、4x4 桌面小组件。GitHub Token 使用 Myriad 安装级只写凭据保存，沙箱无法读取；所有 GitHub API 均限制为安装 owner / 管理员调用。首版不提供合并、评论、关闭 Issue 或重跑工作流等写操作。",
       "locales": {
@@ -1386,13 +1386,13 @@
           "zh-CN": "apps/cn.echootaku.github-workbench/i18n/zh-CN.json"
         }
       },
-      "size": 55439,
+      "size": 55443,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-10T22:16:30.796Z",
-      "updated_at": "2026-08-19T11:09:38.477Z"
+      "updated_at": "2026-09-11T02:30:24.176Z"
     },
     {
       "id": "cn.echootaku.gomoku",
@@ -1657,7 +1657,7 @@
           "page/scene.js": "apps/com.myriad.three-lab/page/scene.js"
         }
       },
-      "size": 12460,
+      "size": 12463,
       "downloads": 0,
       "rating": 0,
       "featured": false,
@@ -1735,7 +1735,7 @@
     {
       "id": "cn.echootaku.sponsors",
       "name": "赞助者名单",
-      "version": "0.1.18",
+      "version": "0.1.19",
       "description": "聚合多个赞助平台的支持者，在一个私密仪表盘中查看。",
       "long_description": "面向创作者的私密赞助者聚合仪表盘。提供深空观测站与传统名册双视图：每位支持者是一颗具有自然色温的恒星，同币种内累计赞助越高越明亮，当前支持金额决定大小；可缩放星图、调整景深并查看支持者的观测档案。2×2、4×2 与 4×4 小组件采用天文台观测日志设计，只读已同步的私有快照，在主页展示赞助者数量、分币种月度支持、代表星体和静态星图。通过 Myriad 只写凭据与声明式网络 API 接入 GitHub Sponsors、Patreon 和爱发电；各平台可独立隐藏并停止同步，已有快照不会因此删除。",
       "locales": {
@@ -1812,13 +1812,13 @@
           "zh-CN": "apps/cn.echootaku.sponsors/i18n/zh-CN.json"
         }
       },
-      "size": 3657504,
+      "size": 3657725,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-21T07:37:43.563Z",
-      "updated_at": "2026-08-21T07:37:43.563Z"
+      "updated_at": "2026-09-11T02:30:24.179Z"
     },
     {
       "id": "cn.echootaku.echo-stage",
@@ -2054,7 +2054,7 @@
     {
       "id": "cn.astelysin.signature-board",
       "name": "共享签名板",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "description": "让 Myriad 访客在共享画布上签名、涂鸦并浏览公开历史。",
       "long_description": "一块由所有访客共同留下痕迹的横向共享签名板。已加入专用 Myriad Federation Room 的成员可以绘制并手动提交签名或画作；访客可查看管理员发布的公开快照。应用提供不可改写的追加式作品历史、举报与隐藏审核、成员封禁、手动画板归档，以及 2x2 / 4x2 主页预览小组件。",
       "locales": {
@@ -2140,13 +2140,13 @@
           "widget/entry.js": "apps/cn.astelysin.signature-board/widget/entry.js"
         }
       },
-      "size": 142828,
+      "size": 142851,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-28T05:48:02.704Z",
-      "updated_at": "2026-08-28T05:48:02.704Z"
+      "updated_at": "2026-09-11T02:30:24.182Z"
     },
     {
       "id": "cn.astelysin.protein-viewer",
@@ -2234,7 +2234,7 @@
           "page/viewer.js": "apps/cn.astelysin.protein-viewer/page/viewer.js"
         }
       },
-      "size": 105246,
+      "size": 105294,
       "downloads": 0,
       "rating": 0,
       "featured": false,
@@ -2245,7 +2245,7 @@
     {
       "id": "ink.kei.arknights",
       "name": "Arknights",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "description": "明日方舟玩家个人信息展示",
       "long_description": "明日方舟玩家个人信息展示：绑定森空岛账号后展示博士等级、助战干员、干员收藏、时装、蚀刻章，以及集成战略 / 剿灭 / 保全派驻等游戏数据。内置干员与时装图鉴（职业 / 稀有度筛选），并提供 4x2 / 4x4 主页小组件。玩家数据以共享快照展示，绑定与刷新由房间管理员维护，其他用户只读。跟随宿主亮暗主题，内置简体中文 / English。",
       "locales": {
@@ -2324,13 +2324,13 @@
           "widget/player-summary.js": "apps/ink.kei.arknights/widget/player-summary.js"
         }
       },
-      "size": 962929,
+      "size": 962968,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-09-06T11:32:56.291Z",
-      "updated_at": "2026-09-07T07:40:36.160Z"
+      "updated_at": "2026-09-11T02:30:24.185Z"
     },
     {
       "id": "cn.wyyzxzyg.daily-brief",
