@@ -401,6 +401,15 @@ async function setStoragePlayerMap(map) {
   try { await Tapp.storage.set(PLAYER_MAP_KEY, map); } catch (e) {}
 }
 
+// 读取某玩家的鹰角账号 Token（多账户：以玩家列表记录为准）
+async function getPlayerToken(uid) {
+  uid = String(uid || '');
+  if (!uid) return '';
+  var map = await getStoragePlayerMap();
+  var t = map[uid] && map[uid].hgToken;
+  return t ? String(t) : '';
+}
+
 // 读公开玩家列表（非管理员用）
 async function getPublicPlayerMap() {
   try {
@@ -573,6 +582,7 @@ module.exports = {
   PUBLIC_PLAYER_MAP_KEY: PUBLIC_PLAYER_MAP_KEY,
   LAST_VIEWED_KEY: LAST_VIEWED_KEY,
   getStoragePlayerMap: getStoragePlayerMap,
+  getPlayerToken: getPlayerToken,
   getPublicPlayerMap: getPublicPlayerMap,
   getPlayerMap: getPlayerMap,
   savePlayer: savePlayer,

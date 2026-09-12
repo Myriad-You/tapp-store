@@ -13,7 +13,7 @@
     var sendBtn = container.querySelector('[data-debug-send]');
     var responsePanel = container.querySelector('[data-debug-response]');
 
-    loadSavedToken(tokenInput);
+    loadSavedPlayer(tokenInput, uidInput);
 
     function updateParams() {
       var v = endpointSelect ? endpointSelect.value : '';
@@ -34,13 +34,14 @@
     }
   }
 
-  async function loadSavedToken(input) {
-    if (!input) return;
+  // 从玩家列表预填默认玩家的 uid 与 Token（多账户）
+  async function loadSavedPlayer(tokenInput, uidInput) {
     try {
-      var saved = await Tapp.storage.get('hgToken');
-      if (saved && typeof saved === 'string') {
-        input.value = saved;
-      }
+      var map = await core.getStoragePlayerMap();
+      var entry = core.pickPlayerEntry(map, '');
+      if (!entry) return;
+      if (uidInput && !uidInput.value) uidInput.value = entry.uid || '';
+      if (tokenInput && !tokenInput.value && entry.hgToken) tokenInput.value = entry.hgToken;
     } catch (e) {}
   }
 
@@ -79,7 +80,8 @@
       }
       renderResponse(panel, res);
     } catch (e) {
-      renderResponse(panel, { code: -1, msg: String((e && e.message) || e), data: null });
+      var err = /** @type {{ message?: string }} */ (e);
+      renderResponse(panel, { code: -1, msg: String((err && err.message) || e), data: null });
     }
   }
 

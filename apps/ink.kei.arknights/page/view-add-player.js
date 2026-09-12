@@ -183,7 +183,6 @@
       try {
         var token = await core.skland.loginByPassword(phone, password);
         state.token = token;
-        try { await Tapp.storage.set('hgToken', token); } catch (e) {}
         await runBinding(wrap, step, nextBtn);
       } catch (e) {
         showError(step, String(e));
@@ -277,14 +276,6 @@
 
   // ==================== 流程 ====================
 
-  async function getStoredToken() {
-    var token = state.token;
-    if (!token) {
-      try { token = String((await Tapp.storage.get('hgToken')) || ''); } catch (e) {}
-    }
-    return token || '';
-  }
-
   async function resolveBinds(hgToken) {
     var bindingRes = await core.skland.getPlayerBinding(hgToken);
     var list = bindingRes && bindingRes.data && bindingRes.data.list;
@@ -338,7 +329,7 @@
   }
 
   async function selectAccount(wrap, binding, btn) {
-    var token = await getStoredToken();
+    var hgToken = state.token || '';
 
     var listBox = wrap.querySelector('[data-account-list]');
     var siblings = [];
@@ -355,13 +346,14 @@
     }
 
     try {
-      var record = await fetchPlayerData(binding, token);
+      var record = await fetchPlayerData(binding, hgToken);
       await core.savePlayer({
         uid: binding.uid,
         platform: binding.channelName || '',
         name: binding.nickName || '',
         playerdata: record
-      }, token, false);
+      }, hgToken, false);
+      
       navigate('home');
     } catch (e) {
       showError(wrap.querySelector('[data-page="step2"]'), String(e));

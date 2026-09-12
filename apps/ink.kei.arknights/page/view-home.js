@@ -211,12 +211,6 @@
     showPage(wrap, 'display');
   }
 
-  async function getStoredToken() {
-    var token = '';
-    try { token = String((await Tapp.storage.get('hgToken')) || ''); } catch (e) {}
-    return token || '';
-  }
-
   // 刷新中状态：按钮图标旋转 + 展示区顶部扫描条
   function setRefreshing(wrap, btn, on) {
     var page = wrap.querySelector('[data-page="display"]');
@@ -232,7 +226,7 @@
     var uid = state.currentUid;
     if (!uid) { initView(wrap); return; }
 
-    var hgToken = await getStoredToken();
+    var hgToken = await core.getPlayerToken(uid);
     if (!hgToken) { navigate('addPlayer'); return; }
 
     setRefreshing(wrap, btn, true);
@@ -253,10 +247,11 @@
       var entry = await core.updatePlayerData(uid, record);
       await showPlayer(wrap, entry || { uid: uid, playerdata: record, lastUpdate: record.ts });
     } catch (e) {
-      if (e && e.authError) {
+      var err = /** @type {{ authError?: boolean, message?: string }} */ (e);
+      if (err && err.authError) {
         navigate('addPlayer');
       } else {
-        showError(wrap.querySelector('[data-page="display"]'), String((e && e.message) || e));
+        showError(wrap.querySelector('[data-page="display"]'), String((err && err.message) || e));
       }
     } finally {
       setRefreshing(wrap, btn, false);

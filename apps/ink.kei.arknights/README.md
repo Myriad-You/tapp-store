@@ -30,7 +30,7 @@
 - 私有列表（`Tapp.storage`，键 `arkPlayerMap`）：完整记录，含 `hgToken`、`isPublic`，仅管理员读写。
 - 公开列表（`Tapp.shared`，键 `arkPublicPlayerMap`）：仅 `isPublic` 的记录，剔除 `hgToken` / `isPublic`，供所有用户只读展示。
 
-鹰角账号 `hgToken` 存于用户私有 `Tapp.storage`（键 `hgToken`）；森空岛 `cred` 与签名 token 由账号 Token 在会话内自动换取，不落盘。`arkLastViewedPlayer` 记录当前用户上次浏览的玩家 `uid`。
+鹰角账号 `hgToken` 存于用户私有 `Tapp.storage` 的玩家列表记录中（`arkPlayerMap[uid].hgToken`）；森空岛 `cred` 与签名 token 由账号 Token 在会话内自动换取，不落盘。`arkLastViewedPlayer` 记录当前用户上次浏览的玩家 `uid`。
 
 - **管理员**（`Tapp.user.isAdmin()` 为真）：读私有列表；右上角「刷新」刷新当前浏览玩家（仅 token 失效才跳转添加玩家页），旁边「玩家列表」管理账户（公开开关 / 默认展示，底部加号进入添加玩家页）；页脚有 Debug 入口。
 - **其他用户**：读公开列表，只读。公开列表为空时，展示区居中显示 `No Player Data`。
