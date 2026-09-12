@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.61",
+  "version": "1.0.62",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-09-11T02:30:24.188Z",
+  "updated_at": "2026-09-12T05:32:49.798Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -2245,7 +2245,7 @@
     {
       "id": "ink.kei.arknights",
       "name": "Arknights",
-      "version": "0.1.3",
+      "version": "1.0.0",
       "description": "明日方舟玩家个人信息展示",
       "long_description": "明日方舟玩家个人信息展示：绑定森空岛账号后展示博士等级、助战干员、干员收藏、时装、蚀刻章，以及集成战略 / 剿灭 / 保全派驻等游戏数据。内置干员与时装图鉴（职业 / 稀有度筛选），并提供 4x2 / 4x4 主页小组件。玩家数据以共享快照展示，绑定与刷新由房间管理员维护，其他用户只读。跟随宿主亮暗主题，内置简体中文 / English。",
       "locales": {
@@ -2261,7 +2261,7 @@
       "license": "MIT",
       "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/ink.kei.arknights",
       "repository": "https://github.com/leaphy-dev/Myriad-Tapp-Arknights",
-      "category": "data",
+      "category": "utility",
       "tags": [
         "明日方舟",
         "森空岛",
@@ -2314,23 +2314,26 @@
           "zh-CN": "apps/ink.kei.arknights/i18n/zh-CN.json"
         },
         "modules": {
-          "page/assets.js": "apps/ink.kei.arknights/page/assets.js",
-          "page/collection.js": "apps/ink.kei.arknights/page/collection.js",
-          "page/crypto.js": "apps/ink.kei.arknights/page/crypto.js",
-          "page/debug.js": "apps/ink.kei.arknights/page/debug.js",
-          "page/home.js": "apps/ink.kei.arknights/page/home.js",
+          "page/api-crypto.js": "apps/ink.kei.arknights/page/api-crypto.js",
+          "page/api-skland.js": "apps/ink.kei.arknights/page/api-skland.js",
           "page/index.js": "apps/ink.kei.arknights/page/index.js",
-          "page/skland.js": "apps/ink.kei.arknights/page/skland.js",
+          "page/ui-assets.js": "apps/ink.kei.arknights/page/ui-assets.js",
+          "page/ui-dialog.js": "apps/ink.kei.arknights/page/ui-dialog.js",
+          "page/view-add-player.js": "apps/ink.kei.arknights/page/view-add-player.js",
+          "page/view-collection.js": "apps/ink.kei.arknights/page/view-collection.js",
+          "page/view-debug.js": "apps/ink.kei.arknights/page/view-debug.js",
+          "page/view-home.js": "apps/ink.kei.arknights/page/view-home.js",
+          "page/view-player-list.js": "apps/ink.kei.arknights/page/view-player-list.js",
           "widget/player-summary.js": "apps/ink.kei.arknights/widget/player-summary.js"
         }
       },
-      "size": 962968,
+      "size": 1036982,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-09-06T11:32:56.291Z",
-      "updated_at": "2026-09-11T02:30:24.185Z"
+      "updated_at": "2026-09-12T05:32:49.795Z"
     },
     {
       "id": "cn.wyyzxzyg.daily-brief",
