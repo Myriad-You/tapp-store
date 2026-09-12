@@ -53,9 +53,33 @@ html.dark {
   display: none !important;
 }
 
+/* 视图切换入场动画（.ark-view-enter 由 index.js 路由添加） */
+@keyframes ark-view-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ark-view-enter {
+  animation: ark-view-enter var(--ak-motion-base) var(--ak-ease-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ark-view-enter {
+    animation: none;
+  }
+}
+
 /* AnimatedView 外层：min-h-screen + pt-20 + px-4/sm:px-6 + pb-24/md:pb-12 */
 .home-view,
-.collection-view {
+.collection-view,
+.player-list-view,
+.add-player-view {
   width: 100%;
   box-sizing: border-box;
   min-height: 100vh;
@@ -67,7 +91,9 @@ html.dark {
 
 /* 装饰纹样与页面遮罩均仅用于暗色模式（decoration/decorator_dark.png、page_mask_dark.png） */
 html.dark .home-view,
-html.dark .collection-view {
+html.dark .collection-view,
+html.dark .player-list-view,
+html.dark .add-player-view {
   background-image: var(--page-mask, none), var(--page-decorator, none);
   background-size: cover, auto;
   background-repeat: no-repeat, repeat;
@@ -76,7 +102,8 @@ html.dark .collection-view {
 
 @media (min-width: 640px) {
   .home-view,
-  .collection-view {
+  .collection-view,
+  .player-list-view {
     padding-left: 24px;
     padding-right: 24px;
   }
@@ -84,7 +111,8 @@ html.dark .collection-view {
 
 @media (min-width: 768px) {
   .home-view,
-  .collection-view {
+  .collection-view,
+  .player-list-view {
     padding-bottom: 48px;
   }
 }
@@ -94,6 +122,17 @@ html.dark .collection-view {
   width: 100%;
   max-width: 1152px;
   margin: 0 auto;
+}
+
+/* 添加玩家页：收窄为居中的表单列 */
+.add-player-view .ark-page-inner {
+  max-width: 620px;
+}
+
+/* 添加玩家页：弹簧，把页脚推到底部（页脚不受表单列宽度限制） */
+.add-player-view .ark-add-spacer {
+  flex: 1 1 auto;
+  min-height: 16px;
 }
 
 /* 主页页脚：名称版本 + 版权说明（字体样式仿 debug 按钮） */
@@ -117,7 +156,7 @@ html.dark .collection-view {
 
 /* 单列模式下隐藏空白卡片（仅双列需要它填充左列底部） */
 @media (max-width: 899px) {
-  .ark-home-spacer {
+  .home-view .ark-home-spacer {
     display: none;
   }
 }
@@ -197,6 +236,11 @@ html.dark .collection-view {
   color: var(--ak-surface-inverse);
 }
 
+[data-ak-ui] .ak-button--danger {
+  background-color: var(--ak-signal-danger);
+  color: var(--ak-surface-inverse);
+}
+
 [data-ak-ui] .ak-button--ghost {
   background-color: transparent;
   color: var(--ak-text-primary);
@@ -256,6 +300,107 @@ html.dark .collection-view {
   background: var(--ak-surface-canvas);
 }
 
+/* 整页加载动画：ak-loading 旋转方块 + 等宽标签 + 扫描条 */
+.ark-page-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.ark-page-loader__label {
+  font-family: var(--ak-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ak-text-secondary);
+}
+
+.ark-page-loader__bar {
+  position: relative;
+  width: 132px;
+  height: 2px;
+  overflow: hidden;
+  background: var(--ak-border-weak);
+}
+
+.ark-page-loader__bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 45%;
+  height: 100%;
+  background: var(--ak-signal-accent);
+  transform: translateX(-110%);
+  animation: ark-page-loader-sweep 1.15s var(--ak-ease-standard) infinite;
+}
+
+@keyframes ark-page-loader-sweep {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(240%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ark-page-loader__bar::after {
+    animation-duration: 2.4s;
+  }
+}
+
+/* ========================================
+   刷新数据按钮：刷新中图标旋转 + 展示区顶部扫描条
+   ======================================== */
+
+.home-view .ark-refresh-btn[aria-busy="true"] {
+  cursor: progress;
+  opacity: 0.75;
+}
+
+.home-view .ark-refresh-btn[aria-busy="true"] [data-refresh-icon] {
+  animation: ark-refresh-spin 0.9s linear infinite;
+}
+
+@keyframes ark-refresh-spin {
+  from {
+    transform: skewX(10deg) rotate(0deg);
+  }
+  to {
+    transform: skewX(10deg) rotate(360deg);
+  }
+}
+
+.home-view .ark-refreshing {
+  /* 用背景绘制扫描条：背景始终被元素盒子裁剪，不会撑出横向滚动条 */
+  background-image: linear-gradient(90deg, transparent, var(--ak-signal-accent), transparent);
+  background-repeat: no-repeat;
+  background-size: 40% 2px;
+  background-position: -40% 0;
+  animation: ark-refresh-scan 1.1s var(--ak-ease-standard) infinite;
+}
+
+@keyframes ark-refresh-scan {
+  0% {
+    background-position: -40% 0;
+  }
+  100% {
+    background-position: 140% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-view .ark-refresh-btn[aria-busy="true"] [data-refresh-icon] {
+    animation-duration: 2s;
+  }
+
+  .home-view .ark-refreshing {
+    animation-duration: 2.4s;
+  }
+}
+
 .ark-spinner-box {
   display: flex;
   align-items: center;
@@ -268,14 +413,14 @@ html.dark .collection-view {
    Display 布局（宽屏两列 / 窄屏单列）
    ======================================== */
 
-.ark-display-layout {
+.home-view .ark-display-layout {
   display: flex;
   flex-direction: column;
   gap: 12px;
   min-width: 0;
 }
 
-.ark-display-left {
+.home-view .ark-display-left {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -283,23 +428,38 @@ html.dark .collection-view {
   overflow: hidden;  /* 防止内部溢出撑大容器 */
 }
 
-.ark-display-right {
+.home-view .ark-display-right {
   min-width: 0;
 }
 
+/* 玩家数据概要图标：白色描边，亮色模式下反色以在浅色背景可见 */
+.home-view .ark-summary-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 4px;
+  opacity: 0.85;
+  filter: invert(1);
+}
+
+html.dark .home-view .ark-summary-icon {
+  filter: none;
+}
+
 @media (min-width: 900px) {
-  .ark-display-layout {
+  .home-view .ark-display-layout {
     flex-direction: row;
     align-items: stretch;
   }
 
-  .ark-display-left {
+  .home-view .ark-display-left {
     flex: 0 0 50%;
     width: 50%;
     max-width: 50%;
   }
 
-  .ark-display-right {
+  .home-view .ark-display-right {
     flex: 0 0 50%;
     width: 50%;
     max-width: 50%;
@@ -308,7 +468,7 @@ html.dark .collection-view {
     flex-direction: column;
   }
 
-  .ark-game-data {
+  .home-view .ark-game-data {
     flex: 1;
     min-height: 0;
     max-height: max(320px, calc(100vh - 250px));
@@ -319,65 +479,49 @@ html.dark .collection-view {
    滚动条：默认隐藏，滚动时才显示
    ======================================== */
 
-[data-game-content] {
+.home-view [data-game-content] {
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
 }
 
-[data-game-content]::-webkit-scrollbar {
+.home-view [data-game-content]::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
-[data-game-content]::-webkit-scrollbar-track {
+.home-view [data-game-content]::-webkit-scrollbar-track {
   background: transparent;
 }
 
-[data-game-content]::-webkit-scrollbar-thumb {
+.home-view [data-game-content]::-webkit-scrollbar-thumb {
   background: transparent;
   border-radius: 3px;
 }
 
-[data-game-content].scrolling {
+.home-view [data-game-content].scrolling {
   scrollbar-color: var(--ark-border) transparent;
 }
 
-[data-game-content].scrolling::-webkit-scrollbar-thumb {
+.home-view [data-game-content].scrolling::-webkit-scrollbar-thumb {
   background: var(--ark-border);
 }
 
-.ark-game-tabbar::-webkit-scrollbar {
+.home-view .ark-game-tabbar::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
 }
 
-/* 我的干员：水平滚动条（默认隐藏，滚动时才显示） */
+/* 我的干员：水平滚动（滚动条完全隐藏） */
 
-.ark-my-chars-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
+.home-view .ark-my-chars-scroll {
+  scrollbar-width: none;
 }
 
-.ark-my-chars-scroll::-webkit-scrollbar {
-  height: 6px;
-}
-
-.ark-my-chars-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.ark-my-chars-scroll::-webkit-scrollbar-thumb {
-  background: transparent;
-  border-radius: 3px;
-}
-
-.ark-my-chars-scroll.scrolling {
-  scrollbar-color: var(--ark-border) transparent;
-}
-
-.ark-my-chars-scroll.scrolling::-webkit-scrollbar-thumb {
-  background: var(--ark-border);
+.home-view .ark-my-chars-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 /* ========================================
@@ -565,6 +709,92 @@ html.dark .collection-view {
 }
 
 /* ========================================
+   皮肤卡片（独立样式，不带干员卡片的稀有度背景）
+   ======================================== */
+
+.ark-skin-card {
+  position: relative;
+  width: var(--char-card-w);
+  height: var(--char-card-h);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--ak-surface-panel);
+  border: var(--ak-line-hairline) solid var(--ark-border-weak);
+  border-radius: var(--ak-radius-subtle);
+  transition: transform var(--ak-motion-base) var(--ak-ease-standard),
+    box-shadow var(--ak-motion-base) var(--ak-ease-standard),
+    border-color var(--ak-motion-base) var(--ak-ease-standard),
+    opacity 0.4s ease;
+}
+
+.ark-skin-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--ak-signal-accent);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
+  z-index: 10;
+}
+
+.ark-skin-card__illust {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(var(--char-card-w) * 2);
+}
+
+.ark-skin-card__illust img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center top;
+  display: block;
+}
+
+.ark-skin-card__spinner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ark-skin-card__name {
+  position: absolute;
+  bottom: calc(var(--char-card-w) * 0.03);
+  left: 0;
+  right: 0;
+  padding: 0 4px;
+  box-sizing: border-box;
+  text-align: center;
+  color: var(--ak-text-primary);
+  font-size: calc(var(--char-card-w) * 0.12);
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 6;
+}
+
+.ark-skin-card__char {
+  position: absolute;
+  bottom: calc(var(--char-card-w) * 0.2);
+  left: 0;
+  right: 0;
+  padding: 0 4px;
+  box-sizing: border-box;
+  text-align: center;
+  color: var(--ak-text-secondary);
+  font-size: calc(var(--char-card-w) * 0.09);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 6;
+}
+
+/* ========================================
    ak-ui（accent 模式）
    令牌 vendored from @yunyoujun/ak-ui@0.2.1 tokens.css，
    语义角色按宿主品牌映射；保留现有布局，仅注入字体层级、
@@ -647,7 +877,8 @@ html.dark {
   --ak-surface-muted: rgba(26, 26, 26, 0.92);
   --ak-surface-raised: rgba(66, 66, 66, 0.92);
   --ak-surface-inverse: #17191b;
-  --ak-text-inverse: #1b1d1f;
+  /* 反色文本须与 --ak-surface-inverse（深色）对比；暗色下仍为浅色，否则 Debug 控制台同色不可见 */
+  --ak-text-inverse: #f5f5f5;
   --ak-shadow-panel: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.55);
 }
 
@@ -739,6 +970,32 @@ html.dark {
   color: var(--ark-text);
 }
 
+/* 卡片标题前蓝色方块：局部光晕（克制的呼吸反馈） */
+@keyframes ak-title-sq-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 3px var(--ak-color-blue),
+      0 0 7px color-mix(in srgb, var(--ak-color-blue) 45%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 5px var(--ak-color-blue),
+      0 0 14px color-mix(in srgb, var(--ak-color-blue) 75%, transparent);
+  }
+}
+
+[data-ak-ui] .ark-card-title__sq {
+  animation: ak-title-sq-glow 2.4s var(--ak-ease-standard) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ak-ui] .ark-card-title__sq {
+    animation: none;
+    box-shadow: 0 0 6px color-mix(in srgb, var(--ak-color-blue) 60%, transparent);
+  }
+}
+
 /* 条纹卡片（对角斜纹） */
 [data-ak-ui] .ak-card--stripe {
   --ak-card-stripe: var(--ak-color-low);
@@ -764,6 +1021,173 @@ html.dark {
   border-bottom: var(--ak-line-strong) solid var(--ak-card-place-color);
 }
 
+/* ========================================
+   ak-notice（vendored/adapted 自 @yunyoujun/ak-ui _ak-notice）
+   情报 / 告警条：左侧信号条 + 等宽代码 + 标题与正文
+   ======================================== */
+
+.ak-notice-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+[data-ak-ui] .ak-notice {
+  --ak-notice-signal: var(--ak-signal-info);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  background: var(--ark-panel);
+  border: var(--ak-line-hairline) solid var(--ark-border-weak);
+  border-left: var(--ak-line-strong) solid var(--ak-notice-signal);
+}
+
+[data-ak-ui] .ak-notice--info {
+  --ak-notice-signal: var(--ak-signal-info);
+}
+
+[data-ak-ui] .ak-notice--warning {
+  --ak-notice-signal: var(--ak-signal-action);
+}
+
+[data-ak-ui] .ak-notice--danger {
+  --ak-notice-signal: var(--ak-signal-danger);
+}
+
+.ak-notice__code {
+  flex-shrink: 0;
+  align-self: flex-start;
+  padding: 2px 6px;
+  font-family: var(--ak-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ak-notice-signal);
+  border: var(--ak-line-hairline) solid var(--ak-notice-signal);
+}
+
+.ak-notice__body {
+  min-width: 0;
+}
+
+.ak-notice__title {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ak-text-primary);
+}
+
+.ak-notice__message {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--ak-text-secondary);
+}
+
+/* ========================================
+   ak-dialog（native <dialog> + ak-ui system）
+   ======================================== */
+
+.ak-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(420px, calc(100vw - 32px));
+  height: fit-content;
+  max-height: calc(100vh - 32px);
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--ak-text-primary);
+  overflow: visible;
+}
+
+.ak-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.ak-dialog__panel {
+  box-sizing: border-box;
+  padding: 20px;
+  background: var(--ak-surface-panel);
+  border: var(--ak-line-hairline) solid var(--ark-border-strong);
+  box-shadow: var(--ak-shadow-panel);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--ak-cut-md)) 0,
+    100% var(--ak-cut-md),
+    100% 100%,
+    0 100%
+  );
+}
+
+@keyframes ak-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ak-dialog[open] .ak-dialog__panel {
+  animation: ak-dialog-in var(--ak-motion-base) var(--ak-ease-emphasized);
+}
+
+.ak-dialog__eyebrow {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-family: var(--ak-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ak-signal-accent);
+}
+
+.ak-dialog__title {
+  margin: 0;
+  font-family: var(--ak-font-command);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--ak-text-primary);
+}
+
+.ak-dialog__description {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ak-text-secondary);
+}
+
+.ak-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.ak-dialog__cancel,
+.ak-dialog__confirm {
+  min-width: 88px;
+  height: 36px;
+  padding: 0 16px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ak-dialog[open] .ak-dialog__panel {
+    animation: none;
+  }
+}
+
 /* 减少动态偏好 */
 @media (prefers-reduced-motion: reduce) {
   [data-ak-ui] button,
@@ -771,7 +1195,250 @@ html.dark {
     transition: none;
   }
 
-  .operator-handbook-item-wrapper:hover {
+  .operator-handbook-item-wrapper:hover,
+  .ark-skin-card:hover {
     transform: none;
+  }
+}
+
+/* ========================================
+   No Player Data / 空数据占位（非管理员）
+   ======================================== */
+
+.ark-no-data {
+  flex: 1;
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ak-text-secondary);
+  font-family: var(--ak-font-mono);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ========================================
+   Player List / 玩家列表（ak-ui system）
+   ======================================== */
+
+.player-list-view .ark-player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.player-list-view .ark-player-list-empty {
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--ak-text-secondary);
+  font-family: var(--ak-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+[data-ak-ui] .player-list-view .ark-player-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  background: var(--ark-panel);
+  border-left: var(--ak-line-strong) solid var(--ak-signal-accent);
+}
+
+.player-list-view .ark-player-card__main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.player-list-view .ark-player-card__name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ark-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-list-view .ark-player-card__meta {
+  font-size: 11px;
+  color: var(--ak-text-secondary);
+  word-break: break-all;
+}
+
+.player-list-view .ark-player-card__controls {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-shrink: 0;
+}
+
+.player-list-view .ark-player-card__delete {
+  border-color: color-mix(in srgb, var(--ak-signal-danger) 45%, var(--ark-border-strong));
+}
+
+.player-list-view .ark-player-card__delete:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--ak-signal-danger) 12%, transparent);
+  border-color: var(--ak-signal-danger);
+}
+
+/* 添加玩家：列表底部加号卡片（管理员） */
+[data-ak-ui] .player-list-view .ark-player-add {
+  justify-content: center;
+  min-height: 56px;
+  cursor: pointer;
+  background: transparent;
+  border-style: dashed;
+  color: var(--ak-text-secondary);
+}
+
+[data-ak-ui] .player-list-view .ark-player-add:hover:not(:disabled) {
+  color: var(--ak-text);
+  border-color: var(--ak-signal-accent);
+}
+
+.player-list-view .ark-player-add__plus {
+  font-size: 26px;
+  line-height: 1;
+  font-weight: 300;
+}
+
+/* 开关：showPublic */
+.ark-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ark-switch[data-disabled] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.ark-switch__input,
+.ark-radio__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ark-switch__track {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 20px;
+  flex-shrink: 0;
+  background: var(--ark-fill);
+  border: var(--ak-line-hairline) solid var(--ark-border-strong);
+  transition:
+    background var(--ak-motion-fast) var(--ak-ease-standard),
+    border-color var(--ak-motion-fast) var(--ak-ease-standard);
+}
+
+.ark-switch__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background: var(--ak-text-secondary);
+  transition:
+    transform var(--ak-motion-fast) var(--ak-ease-standard),
+    background var(--ak-motion-fast) var(--ak-ease-standard);
+}
+
+.ark-switch__input:checked + .ark-switch__track {
+  background: color-mix(in srgb, var(--ak-signal-success) 30%, transparent);
+  border-color: var(--ak-signal-success);
+}
+
+.ark-switch__input:checked + .ark-switch__track .ark-switch__thumb {
+  transform: translateX(18px);
+  background: var(--ak-signal-success);
+}
+
+.ark-switch__input:focus-visible + .ark-switch__track {
+  outline: var(--ak-focus-width) solid var(--ak-focus-color);
+  outline-offset: var(--ak-focus-offset);
+}
+
+.ark-switch__label,
+.ark-radio__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ark-text);
+  font-family: var(--ak-font-mono);
+  letter-spacing: 0.06em;
+}
+
+/* 单选：默认展示 */
+.ark-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ark-radio[data-disabled] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.ark-radio__dot {
+  position: relative;
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: var(--ak-line-hairline) solid var(--ark-border-strong);
+  border-radius: 50%;
+  transition: border-color var(--ak-motion-fast) var(--ak-ease-standard);
+}
+
+.ark-radio__input:checked + .ark-radio__dot {
+  border-color: var(--ak-signal-action);
+}
+
+.ark-radio__input:checked + .ark-radio__dot::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--ak-signal-action);
+}
+
+.ark-radio__input:focus-visible + .ark-radio__dot {
+  outline: var(--ak-focus-width) solid var(--ak-focus-color);
+  outline-offset: var(--ak-focus-offset);
+}
+
+@media (max-width: 480px) {
+  [data-ak-ui] .player-list-view .ark-player-card {
+    align-items: flex-start;
+  }
+
+  .player-list-view .ark-player-card__controls {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ark-switch__track,
+  .ark-switch__thumb,
+  .ark-radio__dot {
+    transition: none;
   }
 }

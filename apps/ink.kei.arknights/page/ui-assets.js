@@ -4,12 +4,13 @@
 
 (function () {
   var core = require('../core.js');
-  var _charInfoMap = null;
+
   var _eliteUrls = {};
   var _professionUrls = {};
   var _potentialUrls = {};
   var _starUrls = {};
   var _rarityBgUrls = {};
+  var _summaryIconUrls = {};
   var _loadPromise = null;
   var _repoBase = 'https://raw.githubusercontent.com/leaphy-dev/ArknightsGameResource/main';
 
@@ -17,10 +18,21 @@
   var RARITY_CLASSES = ['one-star', 'two-star', 'three-star', 'four-star', 'five-star', 'six-star'];
   var RARITY_BG_KEYS = ['2-0', 'r3', 'r4', 'r5'];
 
+  // 玩家数据概要图标：概要项 i18n key → 图标文件（assets/decoration/）
+  var SUMMARY_ICONS = {
+    'assets.progress': 'main_icon.png',
+    'assets.operators': 'char_icon.png',
+    'assets.skins': 'skin_icon.png',
+    'assets.furniture': 'furniture_icon.png',
+    'assets.medals': 'medal_icon.png'
+  };
+  var SUMMARY_ICON_KEYS = Object.keys(SUMMARY_ICONS);
+
   function makeCardTitle(text) {
     var el = document.createElement('span');
     el.setAttribute('class', 'ak-card__title');
     var sq = document.createElement('span');
+    sq.setAttribute('class', 'ark-card-title__sq');
     sq.setAttribute('style', 'width:8px;height:8px;background:var(--ak-color-blue);flex-shrink:0;box-sizing:border-box;');
     el.appendChild(sq);
     el.appendChild(document.createTextNode(text));
@@ -40,6 +52,19 @@
     throw new Error('no base64 decoder');
   }
 
+  // 分片并发读取包内资源 URL，避免一次性触发过多 bridge 请求
+  async function getAssetUrls(paths, chunkSize) {
+    var size = chunkSize || 8;
+    var out = [];
+    for (var i = 0; i < paths.length; i += size) {
+      var part = await Promise.all(
+        paths.slice(i, i + size).map(function (p) { return Tapp.assets.getUrl(p); })
+      );
+      out = out.concat(part);
+    }
+    return out;
+  }
+
   function loadAssets() {
     if (_loadPromise) return _loadPromise;
     _loadPromise = (async function () {
@@ -49,25 +74,28 @@
           if (cleaned) _repoBase = cleaned;
         } catch (e) {}
 
-        var jobs = [
-          Tapp.assets.getUrl('assets/rank/elite0.png'),
-          Tapp.assets.getUrl('assets/rank/elite1.png'),
-          Tapp.assets.getUrl('assets/rank/elite2.png')
+        var paths = [
+          'assets/rank/elite0.png',
+          'assets/rank/elite1.png',
+          'assets/rank/elite2.png'
         ];
         for (var i = 0; i < PROFESSIONS.length; i++) {
-          jobs.push(Tapp.assets.getUrl('assets/profession/' + PROFESSIONS[i] + '.png'));
+          paths.push('assets/profession/' + PROFESSIONS[i] + '.png');
         }
         for (var p = 0; p < 6; p++) {
-          jobs.push(Tapp.assets.getUrl('assets/potential/potential_' + p + '.png'));
+          paths.push('assets/potential/potential_' + p + '.png');
         }
         for (var s = 0; s < 6; s++) {
-          jobs.push(Tapp.assets.getUrl('assets/star/star_' + s + '.png'));
+          paths.push('assets/star/star_' + s + '.png');
         }
         for (var b = 0; b < RARITY_BG_KEYS.length; b++) {
-          jobs.push(Tapp.assets.getUrl('assets/star/charBg_' + RARITY_BG_KEYS[b] + '.png'));
+          paths.push('assets/star/charBg_' + RARITY_BG_KEYS[b] + '.png');
+        }
+        for (var ic = 0; ic < SUMMARY_ICON_KEYS.length; ic++) {
+          paths.push('assets/decoration/' + SUMMARY_ICONS[SUMMARY_ICON_KEYS[ic]]);
         }
 
-        var results = await Promise.all(jobs);
+        var results = await getAssetUrls(paths);
         _eliteUrls[0] = results[0].url;
         _eliteUrls[1] = results[1].url;
         _eliteUrls[2] = results[2].url;
@@ -86,6 +114,10 @@
         idx += 6;
         for (var m = 0; m < RARITY_BG_KEYS.length; m++) {
           _rarityBgUrls[RARITY_BG_KEYS[m]] = results[idx + m].url;
+        }
+        idx += RARITY_BG_KEYS.length;
+        for (var ic2 = 0; ic2 < SUMMARY_ICON_KEYS.length; ic2++) {
+          _summaryIconUrls[SUMMARY_ICON_KEYS[ic2]] = results[idx + ic2].url;
         }
         return true;
       } catch (e) {
@@ -108,7 +140,6 @@
   }
 
   function portraitUrl(charId, evolvePhase) {
-    // TODO: 根据潜能识别皮肤，以后解析skin字段
     var suffix = evolvePhase === 2 ? '_2' : '_1';
     return _repoBase + '/portrait/' + charId + suffix + '.png';
   }
@@ -137,14 +168,9 @@
     return _rarityBgUrls[key] || '';
   }
 
-  function setCharInfoMap(map) {
-    _charInfoMap = map || null;
-  }
-
-  function operatorName(charId) {
-    var info = _charInfoMap && _charInfoMap[charId];
-    return (info && info.name) || charId;
-  }
+  // function setCharInfoMap(map) {
+  //   _charInfoMap = map || null;
+  // }
 
   function placeColor(rarity) {
     if (rarity >= 5) return 'var(--ak-color-advanced)';
@@ -152,8 +178,8 @@
     return 'white';
   }
 
-  function buildOperatorAvatar(op) {
-    var info = _charInfoMap && _charInfoMap[op.id];
+  function buildOperatorAvatar(op, uid) {
+    var info = core.getCharInfoMap(uid)[op.id];
     var rarity = info && info.rarity != null ? info.rarity : 0;
 
     var wrap = document.createElement('div');
@@ -232,7 +258,7 @@
     return wrap;
   }
 
-  function buildAssistUnit(assistList) {
+  function buildAssistUnit(assistList, uid) {
     var list = Array.isArray(assistList) ? assistList.slice(0, 3) : [];
 
     var wrap = document.createElement('div');
@@ -248,7 +274,7 @@
     var zh = makeCardTitle(core.t('assets.supportUnits'));
 
     var en = document.createElement('span');
-    en.setAttribute('style', 'font-size:9px;letter-spacing:0.5px;color:var(--ark-text-dim);');
+    en.setAttribute('style', 'font-family:var(--ak-font-mono);font-size:9px;letter-spacing:0.08em;color:var(--ak-text-secondary);');
     en.textContent = '// SUPPORT UNITS';
 
     header.appendChild(zh);
@@ -266,7 +292,7 @@
     var row = document.createElement('div');
     row.setAttribute('style', 'display:flex;gap:12px;flex-wrap:nowrap;justify-content:center;');
 
-    for (var i = 0; i < list.length; i++) {
+    for (let i = 0; i < list.length; i++) {
       var op = {
         id: list[i].charId,
         level: list[i].level,
@@ -278,7 +304,7 @@
       var unit = document.createElement('div');
       unit.setAttribute('style', 'display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0;');
 
-      var avatar = buildOperatorAvatar(op);
+      var avatar = buildOperatorAvatar(op, uid);
       unit.appendChild(avatar);
 
       var name = document.createElement('div');
@@ -287,7 +313,7 @@
         'font-size:10px;color:var(--ark-text-muted);max-width:calc(var(--assist-avatar) + 8px);' +
           'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'
       );
-      name.textContent = operatorName(op.id);
+      name.textContent = core.getOperatorName(op.id, uid);
       unit.appendChild(name);
 
       row.appendChild(unit);
@@ -297,7 +323,7 @@
     return wrap;
   }
 
-  function buildMyChars(chars, charInfoMap) {
+  function buildMyChars(chars, charInfoMap, uid) {
     var list = Array.isArray(chars) ? chars.slice() : [];
     list.sort(function (a, b) {
       var infoA = charInfoMap && charInfoMap[a.charId];
@@ -327,7 +353,7 @@
     var zh = makeCardTitle(core.t('assets.myOperators'));
 
     var en = document.createElement('span');
-    en.setAttribute('style', 'font-size:9px;letter-spacing:0.5px;color:var(--ark-text-dim);');
+    en.setAttribute('style', 'font-family:var(--ak-font-mono);font-size:9px;letter-spacing:0.08em;color:var(--ak-text-secondary);');
     en.textContent = '// MY OPERATORS';
 
     left.appendChild(zh);
@@ -359,16 +385,9 @@
     grid.setAttribute('class', 'ark-my-chars-scroll');
     grid.setAttribute(
       'style',
-      'display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;padding-bottom:6px;' +
+      'display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;padding:8px 0;' +
         'max-width:100%;'
     );
-    grid.addEventListener('scroll', function () {
-      grid.classList.add('scrolling');
-      if (grid._scrollTimer) clearTimeout(grid._scrollTimer);
-      grid._scrollTimer = setTimeout(function () {
-        grid.classList.remove('scrolling');
-      }, 400);
-    });
     grid.addEventListener('wheel', function (e) {
       if (grid.scrollWidth > grid.clientWidth) {
         grid.scrollLeft += e.deltaY;
@@ -378,7 +397,7 @@
 
     for (var i = 0; i < list.length; i++) {
       var info = charInfoMap && charInfoMap[list[i].charId];
-      var card = buildCharCard(list[i], info);
+      var card = buildCharCard(list[i], info, uid);
       grid.appendChild(card);
       (function (c, delay) {
         setTimeout(function () {
@@ -391,8 +410,8 @@
     return wrap;
   }
 
-  function buildCharCard(char, info) {
-    var rarity = info && info.rarity != null ? info.rarity : 0;
+  function buildCharCard(char, charInfo, uid) {
+    var rarity = charInfo && charInfo.rarity != null ? charInfo.rarity : 0;
 
     var card = document.createElement('div');
     card.className = 'operator-handbook-item-wrapper';
@@ -458,12 +477,12 @@
 
     var nameEl = document.createElement('div');
     nameEl.className = 'operator-handbook-item-component operator-handbook-item-name';
-    nameEl.textContent = operatorName(char.charId);
+    nameEl.textContent = core.getOperatorName(char.charId, uid);
     card.appendChild(nameEl);
 
     var career = document.createElement('div');
     career.className = 'operator-handbook-item-component operator-handbook-item-career';
-    var profKey = info && info.profession ? info.profession.toLowerCase() : '';
+    var profKey = charInfo && charInfo.profession ? charInfo.profession.toLowerCase() : '';
     var profUrl = _professionUrls[profKey];
     if (profUrl) {
       var profImg = document.createElement('img');
@@ -534,7 +553,7 @@
       lvCircle.textContent = String(char.level);
       card.appendChild(lvCircle);
     }
-
+    //优先用皮肤
     var illusSrc = skinUrl(char.skinId) || portraitUrl(char.charId, char.evolvePhase || 0);
     if (typeof IntersectionObserver !== 'undefined') {
       var io = new IntersectionObserver(function (entries) {
@@ -553,8 +572,80 @@
     return card;
   }
 
-  function buildPlayerInfoCard(player) {
-    var summary = core.getPlayerSummary({ player: player });
+  function buildSkinCard(skin, skinInfo, uid) {
+    var info = skinInfo || {};
+    var charId = info.charId || '';
+
+    var card = document.createElement('div');
+    card.className = 'ark-skin-card';
+    card.setAttribute('style', 'opacity:0;');
+
+    var illus = document.createElement('div');
+    illus.className = 'ark-skin-card__illust';
+
+    var illusImg = document.createElement('img');
+    illusImg.referrerPolicy = 'no-referrer';
+    illusImg.alt = '';
+    illusImg.setAttribute('style', 'opacity:0;transition:opacity 0.3s ease;');
+
+    var spinner = document.createElement('div');
+    spinner.className = 'ark-skin-card__spinner';
+    var spinnerEl = document.createElement('div');
+    spinnerEl.setAttribute('class', 'ak-loading');
+    spinnerEl.setAttribute('style', 'width:calc(var(--char-card-w) * 0.16);height:calc(var(--char-card-w) * 0.16);--ak-loading-border:3px;');
+    spinner.appendChild(spinnerEl);
+
+    illusImg.onload = function () {
+      illusImg.style.opacity = '1';
+      spinner.remove();
+    };
+    illusImg.onerror = function () {
+      spinner.remove();
+    };
+
+    illus.appendChild(illusImg);
+    illus.appendChild(spinner);
+    card.appendChild(illus);
+
+    // 干员名（皮肤名上方的小字）
+    if (charId) {
+      var charEl = document.createElement('div');
+      charEl.className = 'ark-skin-card__char';
+      charEl.textContent = core.getOperatorName(charId, uid);
+      card.appendChild(charEl);
+    }
+
+    // 皮肤名
+    var nameEl = document.createElement('div');
+    nameEl.className = 'ark-skin-card__name';
+    nameEl.textContent = info.name || skin.id;
+    card.appendChild(nameEl);
+
+    // 皮肤立绘：品牌皮肤用专属立绘，其余回落干员精英立绘
+    var src = skinUrl(skin.id) || (charId ? portraitUrl(charId, 2) : '');
+    if (src) {
+      if (typeof IntersectionObserver !== 'undefined') {
+        var io = new IntersectionObserver(function (entries) {
+          for (var ei = 0; ei < entries.length; ei++) {
+            if (entries[ei].isIntersecting) {
+              illusImg.src = src;
+              io.disconnect();
+            }
+          }
+        }, { rootMargin: '120px' });
+        io.observe(card);
+      } else {
+        illusImg.src = src;
+      }
+    } else {
+      spinner.remove();
+    }
+
+    return card;
+  }
+
+  function buildPlayerInfoCard(uid) {
+    var summary = core.generatePlayerSummary(uid);
 
     var wrap = document.createElement('div');
     wrap.setAttribute(
@@ -568,6 +659,16 @@
     for (var i = 0; i < rows.length; i++) {
       var cell = document.createElement('div');
       cell.setAttribute('style', 'flex:1;min-width:0;text-align:center;');
+
+      // 图标：位于文字描述上方
+      var key = rows[i][0];
+      var icon = document.createElement('img');
+      icon.setAttribute('class', 'ark-summary-icon');
+      icon.setAttribute('alt', '');
+      icon.setAttribute('aria-hidden', 'true');
+      if (_summaryIconUrls[key]) icon.src = _summaryIconUrls[key];
+      cell.appendChild(icon);
+
       var lab = document.createElement('div');
       lab.setAttribute(
         'style',
@@ -590,7 +691,7 @@
     return wrap;
   }
 
-  function buildGameDataCard(player) {
+  function buildGameDataCard(uid) {
     var wrap = document.createElement('div');
     wrap.setAttribute('class', 'ark-game-data ak-card');
     wrap.setAttribute(
@@ -689,23 +790,23 @@
         );
         tab.addEventListener('click', function () {
           contentBox.innerHTML = '';
-          renderGameMode(contentBox, key, player);
+          renderGameMode(contentBox, key, uid);
         });
         tabBar.appendChild(tab);
       })(tabs[i][0], tabs[i][1]);
     }
 
     // 默认显示第一个
-    renderGameMode(contentBox, 'sidestory', player);
+    renderGameMode(contentBox, 'sidestory', uid);
 
     return wrap;
   }
 
-  function renderGameMode(contentBox, key, player) {
-    if (key === 'sidestory') renderActivity(contentBox, player);
-    else if (key === 'rogue') renderRogue(contentBox, player);
-    else if (key === 'campaign') renderCampaign(contentBox, player);
-    else if (key === 'tower') renderTower(contentBox, player);
+  function renderGameMode(contentBox, key, uid) {
+    if (key === 'sidestory') renderActivity(contentBox, uid);
+    else if (key === 'rogue') renderRogue(contentBox, uid);
+    else if (key === 'campaign') renderCampaign(contentBox, uid);
+    else if (key === 'tower') renderTower(contentBox, uid);
   }
 
   function simpleRow(parent, label, value) {
@@ -734,7 +835,7 @@
     return holder;
   }
 
-  function buildModeSubCard(picUrl, name, lines) {
+  function buildModeSubCard(picUrl, name, lines, progress) {
     var box = document.createElement('div');
     box.setAttribute(
       'style',
@@ -777,6 +878,10 @@
       }
     }
 
+    if (progress) {
+      overlay.appendChild(buildProgressRow(progress));
+    }
+
     box.appendChild(overlay);
 
     if (picUrl) {
@@ -798,16 +903,64 @@
     return box;
   }
 
-  function renderActivity(contentBox, player) {
-    var list = player && Array.isArray(player.activity) ? player.activity : [];
+  // 进度块：仅占卡片右侧 40%，状态标签与文字进度位于进度条上方；
+  // 仅「已完成」时三者灰显。
+  function buildProgressRow(progress) {
+    var done = !!(progress && progress.done);
+    var ratio = progress && typeof progress.ratio === 'number' ? progress.ratio : 0;
+    if (!(ratio >= 0)) ratio = 0;
+    if (ratio > 1) ratio = 1;
+    var pct = Math.round(ratio * 100);
+    var fg = done ? 'rgba(255,255,255,0.45)' : '#fff';
+
+    var wrap = document.createElement('div');
+    wrap.setAttribute(
+      'style',
+      'align-self:flex-end;width:40%;display:flex;flex-direction:column;gap:3px;margin-top:5px;box-sizing:border-box;'
+    );
+
+    var top = document.createElement('div');
+    top.setAttribute('style', 'display:flex;align-items:baseline;justify-content:space-between;gap:6px;');
+
+    var label = document.createElement('span');
+    label.setAttribute('style', 'font-size:10px;color:' + fg + ';text-shadow:0 1px 2px #000;');
+    label.textContent = progress ? progress.status : '';
+    top.appendChild(label);
+
+    var text = document.createElement('span');
+    text.setAttribute('style', 'font-size:10px;color:' + fg + ';text-shadow:0 1px 2px #000;');
+    text.textContent = progress ? progress.text : '';
+    top.appendChild(text);
+
+    wrap.appendChild(top);
+
+    var track = document.createElement('div');
+    track.setAttribute(
+      'style',
+      'position:relative;height:4px;background:rgba(255,255,255,0.22);border-radius:2px;overflow:hidden;'
+    );
+    var fill = document.createElement('div');
+    fill.setAttribute(
+      'style',
+      'position:absolute;left:0;top:0;height:100%;width:' + pct + '%;background:' + fg + ';border-radius:2px;'
+    );
+    track.appendChild(fill);
+    wrap.appendChild(track);
+
+    return wrap;
+  }
+
+  function renderActivity(contentBox, uid) {
+    var list = core.getPlayerActivity(uid);
     if (!list.length) {
       contentBox.textContent = core.t('assets.noActivity');
       return;
     }
+    list = list.slice().reverse();
     var shown = 0;
     for (var i = 0; i < list.length; i++) {
       var act = list[i];
-      var info = player.activityInfoMap && player.activityInfoMap[act.actId];
+      var info = core.getActivityInfoMap(uid)[act.actId];
       var name = info && info.name ? info.name : (act.actId || core.t('assets.fallbackActivity'));
       var picUrl = info && info.picUrl;
       if (!picUrl) continue;
@@ -819,23 +972,29 @@
           cleared += act.zones[z].clearedStage || 0;
         }
       }
-      var lines = [total ? (cleared + '/' + total) : '--'];
-      contentBox.appendChild(buildModeSubCard(picUrl, name, lines));
+      var done = total > 0 && cleared >= total;
+      var progress = {
+        ratio: total > 0 ? cleared / total : 0,
+        text: total ? (cleared + '/' + total) : '--',
+        status: done ? core.t('assets.completed') : core.t('assets.inProgress'),
+        done: done
+      };
+      contentBox.appendChild(buildModeSubCard(picUrl, name, null, progress));
       shown++;
     }
     if (!shown) contentBox.textContent = core.t('assets.noActivity');
   }
 
-  function renderRogue(contentBox, player) {
-    var records = player && player.rogue && Array.isArray(player.rogue.records) ? player.rogue.records : [];
+  function renderRogue(contentBox, uid) {
+    var records = core.getPlayerRogue(uid)?.records;
     if (!records.length) {
       contentBox.textContent = core.t('assets.noRogue');
       return;
     }
     var shown = 0;
-    for (var i = 0; i < records.length; i++) {
+    for (let i = 0; i < records.length; i++) {
       var r = records[i];
-      var info = player.rogueInfoMap && player.rogueInfoMap[r.rogueId];
+      var info = core.getRogueInfoMap(uid)[r.rogueId];
       var name = info && info.name ? info.name : (r.rogueId || core.t('assets.fallbackRogue'));
       var picUrl = info && info.picUrl;
       if (!picUrl) continue;
@@ -850,13 +1009,13 @@
     if (!shown) contentBox.textContent = core.t('assets.noRogue');
   }
 
-  function renderCampaign(contentBox, player) {
-    var records = player && player.campaign && Array.isArray(player.campaign.records) ? player.campaign.records : [];
+  function renderCampaign(contentBox, uid) {
+    var records = core.getPlayerCampaign(uid)?.records;
     if (!records.length) { contentBox.textContent = core.t('assets.noCampaign'); return; }
     var shown = 0;
-    for (var i = 0; i < records.length; i++) {
+    for (let i = 0; i < records.length; i++) {
       var r = records[i];
-      var info = player.campaignInfoMap && player.campaignInfoMap[r.campaignId];
+      var info = core.getCampaignInfoMap(uid)[r.campaignId];
       var picUrl = info && info.picUrl;
       if (!picUrl) continue;
       var name = info && info.name ? info.name : (r.campaignId || core.t('assets.fallbackCampaign'));
@@ -867,13 +1026,13 @@
     if (!shown) contentBox.textContent = core.t('assets.noCampaign');
   }
 
-  function renderTower(contentBox, player) {
-    var records = player && player.tower && Array.isArray(player.tower.records) ? player.tower.records : [];
+  function renderTower(contentBox, uid) {
+    var records = core.getPlayerTower(uid)?.records;
     if (!records.length) { contentBox.textContent = core.t('assets.noTower'); return; }
     var shown = 0;
-    for (var i = 0; i < records.length; i++) {
+    for (let i = 0; i < records.length; i++) {
       var r = records[i];
-      var info = player.towerInfoMap && player.towerInfoMap[r.towerId];
+      var info = core.getTowerInfoMap(uid)[r.towerId];
       var picUrl = info && info.picUrl;
       if (!picUrl) continue;
       var name = info && info.name ? info.name : (r.towerId || (core.t('assets.fallbackTower') + (i + 1)));
@@ -893,16 +1052,16 @@
 
   window.__arkAssets = {
     loadAssets: loadAssets,
-    setCharInfoMap: setCharInfoMap,
+
     buildOperatorAvatar: buildOperatorAvatar,
     buildAssistUnit: buildAssistUnit,
     buildMyChars: buildMyChars,
     buildCharCard: buildCharCard,
+    buildSkinCard: buildSkinCard,
     buildPlayerInfoCard: buildPlayerInfoCard,
     buildGameDataCard: buildGameDataCard,
     buildSpacer: buildSpacer,
-    operatorName: operatorName,
-    charInfoMap: function () { return _charInfoMap; },
+
     professionUrl: function (key) { return _professionUrls[key] || ''; },
     skinUrl: skinUrl
   };

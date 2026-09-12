@@ -15,8 +15,8 @@
       <div style="font-size:18px;font-weight:700;color:var(--ak-text-inverse);margin-bottom:16px;font-family:var(--ak-font-command);letter-spacing:0.06em;">Skland Debug Console</div>
 
       <div class="ak-cut-tr ak-surface" style="background:var(--ak-surface-raised);border:1px solid rgba(255,255,255,0.14);border-radius:var(--ak-radius-subtle);padding:12px;margin-bottom:12px;">
-        <div class="ak-label-mono" style="font-size:11px;color:var(--ak-text-secondary);margin-bottom:6px;">Skland Token (cred,token)</div>
-        <input data-debug-token type="password" placeholder="cred,token"
+        <div class="ak-label-mono" style="font-size:11px;color:var(--ak-text-secondary);margin-bottom:6px;">Skland hgToken</div>
+        <input data-debug-token type="password" placeholder="hgToken"
           style="width:100%;box-sizing:border-box;background:var(--ak-surface-inverse);border:1px solid rgba(255,255,255,0.18);border-left:var(--ak-line-strong) solid var(--ak-signal-info);border-radius:var(--ak-radius-subtle);padding:8px 10px;color:var(--ak-signal-success);font-family:inherit;font-size:13px;" />
       </div>
 
@@ -49,4 +49,10 @@
 
   <!-- Collection Page / 干员资产页 -->
   <section data-view="collection" class="collection-view" hidden></section>
+
+  <!-- Player List Page / 玩家列表页 -->
+  <section data-view="playerList" class="player-list-view" hidden></section>
+
+  <!-- Add Player Page / 添加玩家页 -->
+  <section data-view="addPlayer" class="add-player-view" hidden></section>
 </main>
