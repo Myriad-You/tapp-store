@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.62",
+  "version": "1.0.63",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-09-12T05:32:49.798Z",
+  "updated_at": "2026-09-15T14:41:20.445Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -253,14 +253,14 @@
     {
       "id": "com.myriad.config-generator",
       "name": "Myriad 安装配置生成",
-      "version": "1.0.5",
+      "version": "1.0.6",
       "description": "分步生成 Compose、.env 与反代配置，覆盖常见面板、编排界面与外层反代",
-      "long_description": "按欢迎、部署方式、域名、站点、数据库、限额的步骤，生成官方生产拓扑所需的 docker-compose、.env、反代配置与部署说明。可选 1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy 或命令行。Nginx 类方式请先创建站点并完成 SSL，再上传现有 conf；平台反代与 Caddy 不要求上传。密钥与镜像版本将自动填入，高级选项默认收起。密钥经白名单校验，并对 .env 再解析以防止注入。",
+      "long_description": "按欢迎、部署方式、域名、站点、数据库、限额的步骤，生成官方生产拓扑所需的 docker-compose、.env、反代配置与部署说明。产物含 web、federation-worker、persona-worker 与互不相同的 worker 库口令。可选 1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy 或命令行。Nginx 类方式请先创建站点并完成 SSL，再上传现有 conf；平台反代与 Caddy 不要求上传。密钥与镜像版本将自动填入，高级选项默认收起。密钥经白名单校验，并对 .env 再解析以防止注入。",
       "locales": {
         "en-US": {
           "name": "Myriad Install Config Generator",
           "description": "Generate Compose, .env, and reverse-proxy files for common panels, compose UIs, and outer proxies",
-          "long_description": "A step wizard (welcome, method, domain, site, database, limits) generates official production docker-compose, .env, reverse-proxy files, and deploy notes. Choose 1Panel, Baota, aaPanel, Portainer, Dockge, Coolify, Dokploy, Nginx Proxy Manager, Caddy, or the CLI. Nginx-based methods still expect an existing site and SSL upload; platform proxies and Caddy do not. Secrets and image tags are filled in automatically; advanced options stay collapsed. Secrets are allowlisted and the .env is parsed again to block injection.",
+          "long_description": "A step wizard (welcome, method, domain, site, database, limits) generates official production docker-compose, .env, reverse-proxy files, and deploy notes. The stack includes web, federation-worker, persona-worker, and distinct worker database passwords. Choose 1Panel, Baota, aaPanel, Portainer, Dockge, Coolify, Dokploy, Nginx Proxy Manager, Caddy, or the CLI. Nginx-based methods still expect an existing site and SSL upload; platform proxies and Caddy do not. Secrets and image tags are filled in automatically; advanced options stay collapsed. Secrets are allowlisted and the .env is parsed again to block injection.",
           "preview": {
             "version": 1,
             "type": "snapshot",
@@ -284,7 +284,7 @@
         "ja-JP": {
           "name": "Myriad インストール設定ジェネレーター",
           "description": "一般的なパネル、編成 UI、外側リバースプロキシ向けに Compose・.env・リバースプロキシ設定を手順に沿って生成",
-          "long_description": "ようこそ、デプロイ方法、ドメイン、サイト、データベース、上限の手順で、公式本番トポロジの docker-compose、.env、リバースプロキシ設定、デプロイ手順を生成します。1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy、または CLI を選べます。Nginx 系は先にサイト作成と SSL、既存 conf のアップロードが必要です。プラットフォーム側のリバースプロキシと Caddy では不要です。シークレットとイメージタグは自動入力され、詳細設定は折りたたまれます。シークレットはホワイトリストで検証し、.env を再パースしてインジェクションを防ぎます。",
+          "long_description": "ようこそ、デプロイ方法、ドメイン、サイト、データベース、上限の手順で、公式本番トポロジの docker-compose、.env、リバースプロキシ設定、デプロイ手順を生成します。生成物には web、federation-worker、persona-worker と、互いに異なる worker 用データベースパスワードが含まれます。1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy、または CLI を選べます。Nginx 系は先にサイト作成と SSL、既存 conf のアップロードが必要です。プラットフォーム側のリバースプロキシと Caddy では不要です。シークレットとイメージタグは自動入力され、詳細設定は折りたたまれます。シークレットはホワイトリストで検証し、.env を再パースしてインジェクションを防ぎます。",
           "preview": {
             "version": 1,
             "type": "snapshot",
@@ -367,13 +367,13 @@
           "zh-CN": "apps/com.myriad.config-generator/i18n/zh-CN.json"
         }
       },
-      "size": 387869,
+      "size": 403144,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-14T00:00:00Z",
-      "updated_at": "2026-08-22T03:32:38.207Z"
+      "updated_at": "2026-09-15T14:41:20.412Z"
     },
     {
       "id": "com.myriad.doudizhu",
