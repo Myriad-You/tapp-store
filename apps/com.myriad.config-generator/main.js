@@ -334,7 +334,7 @@ var I18N_FALLBACK = {
   "wizard.advanced": "高级",
   "wizard.progress": "{done} / {total}",
   "welcome.title": "准备安装配置",
-  "welcome.lead": "选择部署方式并填写站点域名。部分方式须先创建站点并完成证书配置。密钥与镜像版本将自动填入。",
+  "welcome.lead": "选择部署方式并填写站点域名。产物是官方三进程拓扑（web + federation-worker + persona-worker）。部分方式须先创建站点并完成证书配置。密钥与镜像版本将自动填入。",
   "welcome.feature.panel": "选择方式",
   "welcome.feature.domain": "填写域名",
   "welcome.feature.site": "准备站点",
@@ -401,7 +401,7 @@ var I18N_FALLBACK = {
   "db.bundledDesc": "随编排一并部署，无需另行建库",
   "db.external": "外置",
   "db.externalDesc": "填写现有数据库的连接信息",
-  "db.bundledHint": "数据库名、用户与密码将自动写入，无需另行记录。",
+  "db.bundledHint": "数据库名、用户与密码将自动写入。同时生成互不相同的 worker 库口令，不复用管理员密码。",
   "db.host": "主机",
   "db.port": "端口",
   "db.name": "数据库名",
@@ -409,13 +409,13 @@ var I18N_FALLBACK = {
   "db.sslmode": "sslmode",
   "db.sslUnset": "不设置",
   "db.extraNetwork": "附加 Docker 子网",
-  "db.extraNetworkHint": "仅当数据库与 Myriad 不在同一 Docker 网络时需要。1Panel 常见值为 1panel-network。",
+  "db.extraNetworkHint": "仅 web 可加入。worker 只挂 myriad-net，主机须从业务网可达。1Panel 常见值为 1panel-network。",
   "db.password": "数据库密码",
   "db.passwordPlaceholder": "请填写外置数据库的实际密码",
   "db.genPassword": "生成随机密码",
   "db.hostPlaceholder": "host.docker.internal 或 IP",
   "limits.title": "资源配置",
-  "limits.lead": "请按服务器可用资源选择限额。不确定时请使用推荐档。",
+  "limits.lead": "请按服务器可用资源选择限额。不确定时请使用推荐档。federation-worker / persona-worker 使用官方固定限额，不随此档改。",
   "limits.group": "资源档",
   "limits.small": "小型",
   "limits.smallDesc": "约 1–2 GB",
@@ -431,7 +431,7 @@ var I18N_FALLBACK = {
   "limits.db": "数据库",
   "limits.dbDesc": "供内置 PostgreSQL 使用。选择外置时不会生成该容器。",
   "limits.backend": "后端",
-  "limits.backendDesc": "API 与后台任务。",
+  "limits.backendDesc": "web 进程。federation-worker 固定 0.5 核 / 512M，persona-worker 固定 1 核 / 1G。",
   "limits.frontend": "前端",
   "limits.frontendDesc": "站点页面。",
   "limits.cpu": "CPU（核）",
@@ -568,6 +568,7 @@ var I18N_FALLBACK = {
   "nginx.summary.nginxTRequired": "手写解析器不能替代 nginx -t；上线前请在目标机执行校验命令",
   "validation.envOk": "✓ .env 密钥白名单与再解析通过",
   "validation.proxyOk": "✓ PROXY_ALLOW_DIRECT_UPDATER=false（单次）",
+  "validation.workersOk": "✓ federation-worker / persona-worker 与 proxy 上游已写入",
   "validation.digestPinned": "✓ 已 pin 部分镜像 digest",
   "validation.mutableTag": "· 镜像为可变 tag（可选 vX.Y.Z@sha256:…）",
   "validation.nginxPrefix": "Nginx：",
@@ -1062,7 +1063,7 @@ function buildPanelDeploySection(panelId, mainDomain, httpBind, httpPort, isExte
       '',
       '1. 新建 Docker Compose 服务，粘贴 `docker-compose.yml`，并配置 `.env`',
       '2. 在 Coolify 中为 `' + mainDomain + '` 添加域名并启用 HTTPS',
-      '3. 必须整站转发（含 `/.well-known/webfinger`、`/inbox`、`/users/`、`/api/*` 与 WebSocket）',
+      '3. 必须整站转发（含 `/.well-known/webfinger`、`/inbox`、`/users/`、`/media/federation/`、对象解引用前缀与 `/api/*` / WebSocket）',
       '4. 目标为 Myriad proxy：`' + bind + '`（若 Coolify 与 compose 同机，常用 `http://127.0.0.1:' + httpPort + '`）',
       '',
       pgSection
@@ -1237,12 +1238,13 @@ services:
           cpus: '0.5'
           memory: 512M
     environment:
+      MYRIAD_PROCESS_ROLE: web
       DATABASE_URL: \${DATABASE_URL}
       SERVER_HOST: 0.0.0.0
       SERVER_PORT: 1103
       DATA_DIR: /app/data
       CACHE_DIR: /app/cache
-      JWT_SECRET: \${JWT_SECRET}
+{{BACKEND_WORKER_PASSWORD_LINES}}      JWT_SECRET: \${JWT_SECRET}
       MYRIAD_SETUP_SECRET: \${MYRIAD_SETUP_SECRET:?Set MYRIAD_SETUP_SECRET in .env}
       ANALYTICS_SALT: \${ANALYTICS_SALT:-}
       TAPP_STORE_STATS_URL: \${TAPP_STORE_STATS_URL:-https://stats.store.myriad.you}
@@ -1280,6 +1282,114 @@ services:
       driver: "json-file"
       options: { max-size: "10m", max-file: "3" }
 
+  federation-worker:
+    image: \${BACKEND_IMAGE:-docker.io/somekawahitomi/myriad-backend}:\${MYRIAD_TAG}
+    container_name: myriad-federation-worker
+    command: ["/app/myriad-federation-worker"]
+    user: "1000:1000"
+    deploy:
+      resources:
+        limits: { cpus: '0.5', memory: 512M, pids: 64 }
+        reservations: { cpus: '0.1', memory: 64M }
+    pids_limit: 64
+    environment:
+      MYRIAD_PROCESS_ROLE: federation-worker
+      DATABASE_URL: {{FEDERATION_WORKER_DATABASE_URL}}
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 1103
+      DATA_DIR: /app/data
+      CACHE_DIR: /tmp/cache
+      JWT_SECRET: \${JWT_SECRET}
+      CORS_ORIGINS: \${CORS_ORIGINS:-http://localhost}
+      ENVIRONMENT: \${ENVIRONMENT:-production}
+      FRONTEND_URL: \${FRONTEND_URL:-}
+      BASE_URL: \${BASE_URL:-}
+      TRUST_PROXY_HEADERS: "true"
+      TRUST_PROXY_PEERS: \${TRUST_PROXY_PEERS:-127.0.0.0/8,::1,172.17.0.0/16,172.28.0.0/16}
+      RUST_LOG: \${RUST_LOG:-info}
+    depends_on:
+      backend: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "/usr/bin/wget", "--spider", "-q", "http://localhost:1103/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    volumes:
+      - backend_data:/app/data:ro
+      - type: volume
+        source: backend_data
+        target: /app/data/federation
+        volume: { subpath: federation, nocopy: true }
+      - type: volume
+        source: backend_data
+        target: /app/data/federation_media
+        volume: { subpath: federation_media, nocopy: true }
+      - type: volume
+        source: backend_cache
+        target: /tmp/cache/images
+        volume: { subpath: images, nocopy: true }
+    networks: [myriad-net]
+    # Geographic disablement exits 0; do not loop an idle worker.
+    restart: on-failure
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    read_only: true
+    tmpfs: ["/tmp:size=32m,mode=1777"]
+    logging:
+      driver: "json-file"
+      options: { max-size: "10m", max-file: "3" }
+
+  persona-worker:
+    image: \${BACKEND_IMAGE:-docker.io/somekawahitomi/myriad-backend}:\${MYRIAD_TAG}
+    container_name: myriad-persona-worker
+    command: ["/app/myriad-persona-worker"]
+    user: "1000:1000"
+    deploy:
+      resources:
+        limits: { cpus: '1.0', memory: 1G, pids: 64 }
+        reservations: { cpus: '0.1', memory: 64M }
+    pids_limit: 64
+    environment:
+      MYRIAD_PROCESS_ROLE: persona-worker
+      DATABASE_URL: {{PERSONA_WORKER_DATABASE_URL}}
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 1103
+      DATA_DIR: /app/data
+      CACHE_DIR: /app/cache
+      JWT_SECRET: \${JWT_SECRET}
+      CORS_ORIGINS: \${CORS_ORIGINS:-http://localhost}
+      ENVIRONMENT: \${ENVIRONMENT:-production}
+      FRONTEND_URL: \${FRONTEND_URL:-}
+      BASE_URL: \${BASE_URL:-}
+      TRUST_PROXY_HEADERS: "true"
+      TRUST_PROXY_PEERS: \${TRUST_PROXY_PEERS:-127.0.0.0/8,::1,172.17.0.0/16,172.28.0.0/16}
+      PERSONA_WEB_UPSTREAM: http://backend:1103
+      MYRIAD_MCP_GATEWAY_URL: \${MYRIAD_MCP_GATEWAY_URL:-}
+      MYRIAD_MCP_GATEWAY_TOKEN: \${MYRIAD_MCP_GATEWAY_TOKEN:-}
+      RUST_LOG: \${RUST_LOG:-info}
+    depends_on:
+      backend: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "/usr/bin/wget", "--spider", "-q", "http://localhost:1103/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    volumes:
+      - backend_data:/app/data
+      - backend_cache:/app/cache
+    networks: [myriad-net]
+    stop_grace_period: 45s
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    read_only: true
+    tmpfs: ["/tmp:size=32m,mode=1777"]
+    logging:
+      driver: "json-file"
+      options: { max-size: "10m", max-file: "3" }
+
   frontend:
     image: \${FRONTEND_IMAGE:-docker.io/somekawahitomi/myriad-frontend}:\${MYRIAD_TAG}
     container_name: myriad-frontend
@@ -1294,10 +1404,11 @@ services:
     environment:
       NODE_ENV: production
       TZ: Asia/Shanghai
+      BRANDING_METADATA_URL: http://backend:1103/api/config/metadata
     depends_on:
       backend: { condition: service_healthy }
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:1102"]
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:1102"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -1311,10 +1422,10 @@ services:
       driver: "json-file"
       options: { max-size: "10m", max-file: "3" }
 
-  # proxy: only public host port. Routes SPA, /api, health, and federation public paths
-  # (/.well-known/webfinger|nodeinfo, /nodeinfo/2.1, /inbox, /users/*). Outer TLS
-  # must whole-site reverse-proxy here — not /api-only. Preserve public Host for
-  # ActivityPub HTTP Signatures. Bind stays HTTP_BIND_ADDRESS:HTTP_PORT (1Panel-friendly).
+  # proxy: only public host port. SPA → frontend; persona prefixes → persona-worker;
+  # federation HTTP/WS + AP/media → federation-worker; remaining /api, health, SEO → backend.
+  # Outer TLS must whole-site reverse-proxy here — not /api-only. Preserve public Host
+  # for ActivityPub HTTP Signatures. Bind stays HTTP_BIND_ADDRESS:HTTP_PORT (1Panel-friendly).
   proxy:
     image: \${PROXY_IMAGE:-docker.io/somekawahitomi/myriad-proxy}:\${PROXY_TAG}
     container_name: myriad-proxy
@@ -1323,6 +1434,8 @@ services:
     environment:
       PROXY_STATE_FILE: /state/maintenance.json
       PROXY_BACKEND_UPSTREAM: http://backend:1103
+      PROXY_FEDERATION_UPSTREAM: http://federation-worker:1103
+      PROXY_PERSONA_UPSTREAM: http://persona-worker:1103
       PROXY_FRONTEND_UPSTREAM: http://frontend:1102
       PROXY_UPDATER_UPSTREAM: http://updater:1101
       PROXY_TRUSTED_UPSTREAMS: \${PROXY_TRUSTED_UPSTREAMS:-}
@@ -1412,12 +1525,15 @@ services:
       # UPDATER_TAG here: the digest pin in UPDATER_IMAGE_REF is what runs.
       TZ: Asia/Shanghai
     volumes:
-      # v0.3.37 writes .env via sibling .bak/.tmp. A file bind over a read-only
-      # deploy root returns EROFS at SwapTag. Keep the root writable; Guard
-      # policy stays a separate read-only directory mount.
+      # Deployment definitions are immutable to a compromised updater. Overlay
+      # only the state it genuinely owns as writable submounts.
       - type: bind
         source: \${MYRIAD_COMPOSE_HOST_ROOT:-.}
         target: /host/compose
+        read_only: true
+      - type: bind
+        source: \${MYRIAD_COMPOSE_HOST_ROOT:-.}/.env
+        target: /host/compose/.env
       - type: bind
         source: \${MYRIAD_COMPOSE_HOST_ROOT:-.}/state
         target: /host/compose/state
@@ -1525,8 +1641,8 @@ CHECK_INTERVAL_SECS=3600
 
 HTTP_BIND_ADDRESS={{HTTP_BIND_ADDRESS}}
 HTTP_PORT={{HTTP_PORT}}
-# PROXY_TRUSTED_UPSTREAMS: empty trusts private/loopback peers only (outer panel/Nginx).
-# Never set 0.0.0.0/0 (would trust forged X-Forwarded-* from anyone).
+# PROXY_TRUSTED_UPSTREAMS: empty trusts no forwarded headers (outer panel/Nginx
+# must be listed explicitly). Never set 0.0.0.0/0.
 # PROXY_TRUSTED_UPSTREAMS=
 # TRUST_PROXY_PEERS=127.0.0.0/8,::1,172.17.0.0/16,172.28.0.0/16
 PROXY_ALLOW_DIRECT_UPDATER=false
@@ -1539,7 +1655,11 @@ MYRIAD_MEMORY_PROFILE={{MYRIAD_MEMORY_PROFILE}}
 # MYRIAD_DB_MODE=bundled|external — external: no compose postgres; updater skips pgdata snapshots
 MYRIAD_DB_MODE={{MYRIAD_DB_MODE}}
 {{POSTGRES_ENV_BLOCK}}DATABASE_URL={{DATABASE_URL}}
-JWT_SECRET={{JWT_SECRET}}
+# Worker logins: distinct URL-safe secrets. Web provisions reserved roles after
+# migrations. Workers never receive POSTGRES_PASSWORD.
+PERSONA_DB_PASSWORD={{PERSONA_DB_PASSWORD}}
+FEDERATION_DB_PASSWORD={{FEDERATION_DB_PASSWORD}}
+{{WORKER_DATABASE_URL_BLOCK}}JWT_SECRET={{JWT_SECRET}}
 # First-owner claim passphrase. The setup wizard asks for this when creating the site owner.
 MYRIAD_SETUP_SECRET={{MYRIAD_SETUP_SECRET}}
 # Visitor-hash salt (openssl rand -hex 32). Auto-filled; do not reuse JWT_SECRET.
@@ -1566,7 +1686,9 @@ MYRIAD_GUARD_ENV_FILE={{MYRIAD_GUARD_ENV_FILE}}
 
 // Whole-site reverse proxy to Myriad proxy (NOT /api-only). Federation paths that
 // MUST reach proxy: /.well-known/webfinger, /.well-known/nodeinfo, /nodeinfo/2.1,
-// /inbox, /users/, plus /api/* (federation WS under /api/federation/*/ws).
+// /inbox, /users/, /media/federation/, /activities/ /notes/ /reports/ /tapps/
+// /library/ /phantasi/articles/, plus /api/* (federation WS under
+// /api/federation/*/ws).
 var DEFAULT_NGINX_TEMPLATE = `server {
     listen 80;
     server_name {{MAIN_DOMAIN}};
@@ -1583,7 +1705,8 @@ var DEFAULT_NGINX_TEMPLATE = `server {
 
     # Whole-site → Myriad proxy (SPA + /api + federation). Do NOT proxy only /api.
     # Must reach proxy: /.well-known/webfinger, /.well-known/nodeinfo, /nodeinfo/2.1,
-    # /inbox, /users/, /api/* (incl. WS /api/federation/*/ws). Preserve Host for HTTP Signatures.
+    # /inbox, /users/, /media/federation/, /phantasi/articles/, /api/* (incl. WS).
+    # Preserve Host for HTTP Signatures.
     location / {
         proxy_pass http://127.0.0.1:{{HTTP_PORT}};
 
@@ -1598,10 +1721,10 @@ var DEFAULT_NGINX_TEMPLATE = `server {
 
         proxy_connect_timeout 300s;
         proxy_send_timeout 300s;
-        proxy_read_timeout 300s;
+        proxy_read_timeout 3600s;
 
         proxy_buffering off;
-        client_max_body_size 50M;
+        client_max_body_size 130M;
     }
 
     location = /healthz {
@@ -1634,7 +1757,8 @@ var DEFAULT_EXTRA_NGINX_TEMPLATE = `server {
 
     # Whole-site → Myriad proxy (SPA + /api + federation). Do NOT proxy only /api.
     # Must reach proxy: /.well-known/webfinger, /.well-known/nodeinfo, /nodeinfo/2.1,
-    # /inbox, /users/, /api/* (incl. WS /api/federation/*/ws). Preserve Host for HTTP Signatures.
+    # /inbox, /users/, /media/federation/, /phantasi/articles/, /api/* (incl. WS).
+    # Preserve Host for HTTP Signatures.
     location / {
         proxy_pass http://127.0.0.1:{{HTTP_PORT}};
 
@@ -1649,10 +1773,10 @@ var DEFAULT_EXTRA_NGINX_TEMPLATE = `server {
 
         proxy_connect_timeout 300s;
         proxy_send_timeout 300s;
-        proxy_read_timeout 300s;
+        proxy_read_timeout 3600s;
 
         proxy_buffering off;
-        client_max_body_size 50M;
+        client_max_body_size 130M;
     }
 
     # Block dangerous extensions under .well-known; do NOT block webfinger/nodeinfo.
@@ -1687,17 +1811,22 @@ var DEPLOY_NOTES_TEMPLATE = `# Myriad 部署
 | myriad-docker-guard-net (internal) | updater, docker-guard |
 
 \`backend-volume-init\` 使用 \`network_mode: none\`；仅 proxy 开宿主端口。
+\`federation-worker\` / \`persona-worker\` 与 backend 同一镜像，固定限额；只挂 \`myriad-net\`，不进管理网，也不进附加 Docker 子网。
 
 ## 联邦 / Federation
 
 - \`BASE_URL\` / \`FRONTEND_URL\` = 公网 HTTPS 源站（如 \`https://{{MAIN_DOMAIN}}\`），用于 Actor URL；联邦必填。
 - 外层 Nginx/Caddy 必须 **整站** 反代到 Myriad proxy（\`HTTP_BIND_ADDRESS:HTTP_PORT\`），**请勿仅反代 /api**。
-- 以下路径必须到达 proxy（再由 proxy 转 backend）：
+- proxy 再分：persona 前缀 → \`persona-worker\`；联邦 HTTP/WS / AP / 媒体 → \`federation-worker\`；其余 \`/api\`、health、SEO → web。
+- 关闸时 \`federation-worker\` 以退出码 0 结束（\`restart: on-failure\` 不空转）。生产公网对已退出 worker 是 proxy **502**，不是 web 404。
+- 以下路径必须到达 proxy：
   - \`/.well-known/webfinger\`
   - \`/.well-known/nodeinfo\`
   - \`/nodeinfo/2.1\`
   - \`/inbox\`
   - \`/users/\`
+  - \`/media/federation/\`
+  - \`/activities/\` \`/notes/\` \`/reports/\` \`/tapps/\` \`/library/\` \`/phantasi/articles/\`（对象解引用前缀）
   - \`/api/*\`（含联邦 WebSocket \`/api/federation/*/ws\`）
 - ACME：\`/.well-known/acme-challenge/\` 由外层 Nginx 本地提供；其余 \`.well-known\` 仍走 proxy。
 - 冒烟（期望 JSON，不是 HTML）：
@@ -1707,6 +1836,7 @@ curl -sS "https://{{MAIN_DOMAIN}}/.well-known/webfinger?resource=acct:USER@{{MAI
 curl -sS "https://{{MAIN_DOMAIN}}/.well-known/nodeinfo" | head -c 200
 \`\`\`
 
+{{DEPLOY_WORKER_DB_SECTION}}
 {{PANEL_DEPLOY_SECTION}}
 
 ## 启动（命令行等价）
@@ -1722,7 +1852,7 @@ docker compose --env-file .env up -d
 
 首次打开站点会进入安装向导。创建所有者时必须填写 **安装暗号**（\`.env\` 里的 \`MYRIAD_SETUP_SECRET\`）。也可以打开 \`https://{{MAIN_DOMAIN}}/#setup_secret=…\`，向导会自动填入。能读到这份配置或链接的人才能当站长。
 
-可选：\`scripts/docker/deploy.sh up\`（含环境初始化与部署检查）。
+若在 Myriad 仓库目录部署：\`bash scripts/extra/deploy.sh up\`。面板粘贴编排时直接 \`docker compose --env-file .env up -d\`。
 
 ## HTTPS
 
@@ -1837,7 +1967,8 @@ var EXPECTED_ENV_KEYS_BASE = [
   'COMPOSE_PROJECT_NAME', 'UPDATE_TOKEN', 'UPDATER_GATEWAY_SECRET', 'CHANNEL',
   'UPDATE_MODE', 'MYRIAD_GITHUB_REPO', 'CHECK_INTERVAL_SECS',
   'HTTP_BIND_ADDRESS', 'HTTP_PORT', 'PROXY_ALLOW_DIRECT_UPDATER',
-  'COSIGN_VERIFY', 'MYRIAD_MEMORY_PROFILE', 'MYRIAD_DB_MODE', 'DATABASE_URL', 'JWT_SECRET',
+  'COSIGN_VERIFY', 'MYRIAD_MEMORY_PROFILE', 'MYRIAD_DB_MODE', 'DATABASE_URL',
+  'PERSONA_DB_PASSWORD', 'FEDERATION_DB_PASSWORD', 'JWT_SECRET',
   'MYRIAD_SETUP_SECRET', 'ANALYTICS_SALT', 'TAPP_STORE_STATS_URL',
   'TAPP_STORE_STATS_ENABLED', 'CORS_ORIGINS', 'BASE_URL', 'FRONTEND_URL',
   'MYRIAD_COMPOSE_HOST_ROOT', 'MYRIAD_GUARD_ENV_FILE', 'DOCKER_GUARD_IMAGE',
@@ -1936,6 +2067,23 @@ function validateGeneratedEnv(envText, secrets, opts) {
     throw new Error('ANALYTICS_SALT 写入 .env 后与输入不一致');
   }
   requireSafeDotenvToken(parsed.map.ANALYTICS_SALT, 'ANALYTICS_SALT');
+  if (secrets.PERSONA_DB_PASSWORD && parsed.map.PERSONA_DB_PASSWORD !== secrets.PERSONA_DB_PASSWORD) {
+    throw new Error('PERSONA_DB_PASSWORD 写入 .env 后与输入不一致');
+  }
+  requireSafeDotenvToken(parsed.map.PERSONA_DB_PASSWORD, 'PERSONA_DB_PASSWORD');
+  if (secrets.FEDERATION_DB_PASSWORD && parsed.map.FEDERATION_DB_PASSWORD !== secrets.FEDERATION_DB_PASSWORD) {
+    throw new Error('FEDERATION_DB_PASSWORD 写入 .env 后与输入不一致');
+  }
+  requireSafeDotenvToken(parsed.map.FEDERATION_DB_PASSWORD, 'FEDERATION_DB_PASSWORD');
+  if (parsed.map.PERSONA_DB_PASSWORD === parsed.map.FEDERATION_DB_PASSWORD) {
+    throw new Error('PERSONA_DB_PASSWORD 与 FEDERATION_DB_PASSWORD 必须不同');
+  }
+  if (opts.bundled && parsed.map.POSTGRES_PASSWORD) {
+    if (parsed.map.PERSONA_DB_PASSWORD === parsed.map.POSTGRES_PASSWORD ||
+        parsed.map.FEDERATION_DB_PASSWORD === parsed.map.POSTGRES_PASSWORD) {
+      throw new Error('worker 数据库密码不能复用 POSTGRES_PASSWORD');
+    }
+  }
   if (parsed.map.TAPP_STORE_STATS_ENABLED !== 'true' && parsed.map.TAPP_STORE_STATS_ENABLED !== 'false') {
     throw new Error('TAPP_STORE_STATS_ENABLED 必须是 true 或 false');
   }
@@ -1946,6 +2094,8 @@ function validateGeneratedEnv(envText, secrets, opts) {
   var expected = EXPECTED_ENV_KEYS_BASE.slice();
   if (opts.bundled) {
     expected = expected.concat(['POSTGRES_DB', 'POSTGRES_USER', 'POSTGRES_PASSWORD']);
+  } else {
+    expected = expected.concat(['PERSONA_DATABASE_URL', 'FEDERATION_DATABASE_URL']);
   }
   for (var j = 0; j < expected.length; j++) {
     if (!Object.prototype.hasOwnProperty.call(parsed.map, expected[j])) {
@@ -1959,6 +2109,36 @@ function validateGeneratedEnv(envText, secrets, opts) {
     }
   }
   return parsed;
+}
+
+function assertGeneratedComposeContract(composeText) {
+  var text = String(composeText || '');
+  if (!/^\s+federation-worker:/m.test(text) || !/^\s+persona-worker:/m.test(text)) {
+    throw new Error('compose 缺少 federation-worker / persona-worker');
+  }
+  if (!/MYRIAD_PROCESS_ROLE: web/.test(text)) {
+    throw new Error('backend 必须设置 MYRIAD_PROCESS_ROLE=web');
+  }
+  if (!/PROXY_FEDERATION_UPSTREAM: http:\/\/federation-worker:1103/.test(text) ||
+      !/PROXY_PERSONA_UPSTREAM: http:\/\/persona-worker:1103/.test(text)) {
+    throw new Error('proxy 必须指向 federation-worker / persona-worker');
+  }
+  if (!/PERSONA_WEB_UPSTREAM: http:\/\/backend:1103/.test(text)) {
+    throw new Error('persona-worker 必须设置 PERSONA_WEB_UPSTREAM');
+  }
+  if (/brew\/articles/.test(text)) {
+    throw new Error('对象解引用路径必须是 /phantasi/articles/，不是 /brew/articles/');
+  }
+  var fedBlock = text.match(/federation-worker:[\s\S]*?\n  persona-worker:/);
+  var personaBlock = text.match(/persona-worker:[\s\S]*?\n  frontend:/);
+  if (!fedBlock || !/networks: \[myriad-net\]/.test(fedBlock[0]) ||
+      /myriad-backend-ext|myriad-admin-net/.test(fedBlock[0])) {
+    throw new Error('federation-worker 只能挂 myriad-net');
+  }
+  if (!personaBlock || !/networks: \[myriad-net\]/.test(personaBlock[0]) ||
+      /myriad-backend-ext|myriad-admin-net/.test(personaBlock[0])) {
+    throw new Error('persona-worker 只能挂 myriad-net');
+  }
 }
 
 function parseMemoryToBytes(value) {
@@ -2408,13 +2588,15 @@ async function refreshLatestTags(inputs, channelSelect, opts) {
 
 // Whole-site reverse proxy to Myriad proxy — never rewrite to /api-only.
 // Federation paths that MUST reach proxy: /.well-known/webfinger, /.well-known/nodeinfo,
-// /nodeinfo/2.1, /inbox, /users/, /api/* (WS under /api/federation/*/ws).
+// /nodeinfo/2.1, /inbox, /users/, /media/federation/, /phantasi/articles/, /api/*
+// (WS under /api/federation/*/ws).
 function buildNginxProxyLocation(httpPort, indent) {
   var childIndent = indent + '    ';
   return [
     indent + '# Whole-site → Myriad proxy (SPA + /api + federation). Do NOT proxy only /api.',
     indent + '# Must reach proxy: /.well-known/webfinger, /.well-known/nodeinfo, /nodeinfo/2.1,',
-    indent + '# /inbox, /users/, /api/* (incl. WS /api/federation/*/ws). Preserve Host for HTTP Signatures.',
+    indent + '# /inbox, /users/, /media/federation/, /phantasi/articles/, /api/* (incl. WS).',
+    indent + '# Preserve Host for HTTP Signatures.',
     indent + 'location / {',
     childIndent + 'proxy_pass http://127.0.0.1:' + httpPort + ';',
     '',
@@ -2429,9 +2611,9 @@ function buildNginxProxyLocation(httpPort, indent) {
     '',
     childIndent + 'proxy_connect_timeout 300s;',
     childIndent + 'proxy_send_timeout 300s;',
-    childIndent + 'proxy_read_timeout 300s;',
+    childIndent + 'proxy_read_timeout 3600s;',
     childIndent + 'proxy_buffering off;',
-    childIndent + 'client_max_body_size 50M;',
+    childIndent + 'client_max_body_size 130M;',
     indent + '}'
   ].join('\n');
 }
@@ -2720,6 +2902,8 @@ var state = {
   updaterGatewaySecret: '',
   setupSecret: '',
   analyticsSalt: '',
+  personaDbPassword: '',
+  federationDbPassword: '',
   nginxConfig: null,
   nginxFileName: '',
   extraNginxConfig: null,
@@ -3960,7 +4144,7 @@ function generateConfigs() {
   var updaterPgdataVolume = '';
   var composeStartHint = 'mkdir -p state backups && docker compose --env-file .env up -d';
   var postgresEnvBlock = '';
-  var deployNetMembers = 'proxy, frontend, backend';
+  var deployNetMembers = 'proxy, frontend, backend, federation-worker, persona-worker';
   var deployMkdir = 'mkdir -p state backups guard-policy';
   var deployDataSection =
     '## 数据\n\n' +
@@ -3985,7 +4169,7 @@ function generateConfigs() {
       'POSTGRES_DB=' + state.dbName + '\n' +
       'POSTGRES_USER=' + state.dbUser + '\n' +
       'POSTGRES_PASSWORD=' + state.dbPassword + '\n';
-    deployNetMembers = 'proxy, frontend, backend, postgres';
+    deployNetMembers = 'proxy, frontend, backend, federation-worker, persona-worker, postgres';
     // alpine postgres 镜像系统用户 uid 70；面板文件管理创建目录常为 root → 必须 chown
     deployMkdir =
       'mkdir -p pgdata state backups guard-policy\n' +
@@ -4014,8 +4198,84 @@ function generateConfigs() {
     ? 'MYRIAD_BACKEND_EXTRA_NETWORK=' + extraNetworkName + '\n'
     : '';
 
+  var deployWorkerDbSection;
+  if (isExternal) {
+    deployWorkerDbSection =
+      '## Worker 数据库\n\n' +
+      '外置模式写入 `PERSONA_DATABASE_URL` / `FEDERATION_DATABASE_URL`（同一库，独立登录 `myriad_persona` / `myriad_federation`）。\n' +
+      'web 可选带 `PERSONA_DB_PASSWORD` / `FEDERATION_DB_PASSWORD`，以便迁移登录预置保留角色。\n' +
+      '`federation-worker` / `persona-worker` 只挂 `myriad-net`，**不能**加入附加 Docker 子网（updater / Guard 会拒）。\n' +
+      '因此 worker URL 的主机必须从 myriad-net 可达（IP / `host.docker.internal` / 已发布端口），不要只写仅存在于附加子网的容器 DNS 名。\n';
+  } else {
+    deployWorkerDbSection =
+      '## Worker 数据库\n\n' +
+      '自动写入互不相同的 `PERSONA_DB_PASSWORD` / `FEDERATION_DB_PASSWORD`，且不复用 `POSTGRES_PASSWORD`。\n' +
+      'web 启动后预置 `myriad_persona` / `myriad_federation`。worker 进程拿不到管理员库口令。\n';
+  }
+
   if (!state.analyticsSalt) {
     state.analyticsSalt = generateHex(32);
+  }
+  if (!state.personaDbPassword) {
+    state.personaDbPassword = generateUpdateToken();
+  }
+  if (!state.federationDbPassword) {
+    state.federationDbPassword = generateUpdateToken();
+  }
+  if (state.personaDbPassword === state.federationDbPassword) {
+    state.federationDbPassword = generateUpdateToken();
+  }
+  if (!isExternal && state.dbPassword) {
+    if (state.personaDbPassword === state.dbPassword) {
+      state.personaDbPassword = generateUpdateToken();
+    }
+    if (state.federationDbPassword === state.dbPassword ||
+        state.federationDbPassword === state.personaDbPassword) {
+      state.federationDbPassword = generateUpdateToken();
+    }
+  }
+  requireSafeDotenvToken(state.personaDbPassword, 'PERSONA_DB_PASSWORD');
+  requireSafeDotenvToken(state.federationDbPassword, 'FEDERATION_DB_PASSWORD');
+
+  var backendWorkerPasswordLines;
+  var federationWorkerDatabaseUrl;
+  var personaWorkerDatabaseUrl;
+  var workerDatabaseUrlBlock = '';
+  if (isExternal) {
+    backendWorkerPasswordLines =
+      '      PERSONA_DB_PASSWORD: ${PERSONA_DB_PASSWORD:-}\n' +
+      '      FEDERATION_DB_PASSWORD: ${FEDERATION_DB_PASSWORD:-}\n';
+    federationWorkerDatabaseUrl =
+      '${FEDERATION_DATABASE_URL:?Set an independently provisioned worker role URL}';
+    personaWorkerDatabaseUrl =
+      '${PERSONA_DATABASE_URL:?Set an independently provisioned worker role URL}';
+    workerDatabaseUrlBlock =
+      'PERSONA_DATABASE_URL=' + buildDatabaseUrl({
+        user: 'myriad_persona',
+        password: state.personaDbPassword,
+        host: state.dbHost,
+        port: state.dbPort,
+        database: state.dbName,
+        sslmode: state.dbSslmode
+      }) + '\n' +
+      'FEDERATION_DATABASE_URL=' + buildDatabaseUrl({
+        user: 'myriad_federation',
+        password: state.federationDbPassword,
+        host: state.dbHost,
+        port: state.dbPort,
+        database: state.dbName,
+        sslmode: state.dbSslmode
+      }) + '\n';
+  } else {
+    backendWorkerPasswordLines =
+      '      PERSONA_DB_PASSWORD: ${PERSONA_DB_PASSWORD:?Run deploy.sh to generate worker DB passwords}\n' +
+      '      FEDERATION_DB_PASSWORD: ${FEDERATION_DB_PASSWORD:?Run deploy.sh to generate worker DB passwords}\n';
+    federationWorkerDatabaseUrl =
+      'postgres://myriad_federation:${FEDERATION_DB_PASSWORD:?Run deploy.sh to generate worker DB passwords}@postgres:5432/' +
+      state.dbName;
+    personaWorkerDatabaseUrl =
+      'postgres://myriad_persona:${PERSONA_DB_PASSWORD:?Run deploy.sh to generate worker DB passwords}@postgres:5432/' +
+      state.dbName;
   }
   if (!state.updaterDigest) {
     throw new Error(t('error.needUpdaterDigest'));
@@ -4031,12 +4291,17 @@ function generateConfigs() {
     COMPOSE_START_HINT: composeStartHint,
     POSTGRES_SERVICE: postgresService,
     BACKEND_DEPENDS_ON: backendDependsOn,
+    BACKEND_WORKER_PASSWORD_LINES: backendWorkerPasswordLines,
+    FEDERATION_WORKER_DATABASE_URL: federationWorkerDatabaseUrl,
+    PERSONA_WORKER_DATABASE_URL: personaWorkerDatabaseUrl,
+    WORKER_DATABASE_URL_BLOCK: workerDatabaseUrlBlock,
     UPDATER_PGDATA_LINE: updaterPgdataLine,
     UPDATER_PGDATA_VOLUME: updaterPgdataVolume,
     POSTGRES_ENV_BLOCK: postgresEnvBlock,
     DEPLOY_NET_MEMBERS: deployNetMembers,
     DEPLOY_MKDIR: deployMkdir,
     DEPLOY_DATA_SECTION: deployDataSection,
+    DEPLOY_WORKER_DB_SECTION: deployWorkerDbSection,
     DB_VERSION: state.dbVersion,
     POSTGRES_DB: state.dbName,
     POSTGRES_USER: state.dbUser,
@@ -4053,6 +4318,8 @@ function generateConfigs() {
     UPDATER_GATEWAY_SECRET: state.updaterGatewaySecret,
     MYRIAD_SETUP_SECRET: state.setupSecret,
     ANALYTICS_SALT: state.analyticsSalt,
+    PERSONA_DB_PASSWORD: state.personaDbPassword,
+    FEDERATION_DB_PASSWORD: state.federationDbPassword,
     MAIN_DOMAIN: state.mainDomain,
     EXTRA_DOMAIN: state.extraDomain || '',
     CORS_ORIGINS: corsOrigins,
@@ -4100,6 +4367,7 @@ function generateConfigs() {
   };
 
   var dockerCompose = applyPlaceholders(DOCKER_COMPOSE_TEMPLATE, map);
+  assertGeneratedComposeContract(dockerCompose);
   var envFile = applyPlaceholders(ENV_TEMPLATE, map);
   var guardEnv = applyPlaceholders(GUARD_ENV_TEMPLATE, map);
   var deployNotes = applyPlaceholders(DEPLOY_NOTES_TEMPLATE, map);
@@ -4143,6 +4411,8 @@ function generateConfigs() {
     MYRIAD_SETUP_SECRET: state.setupSecret,
     ANALYTICS_SALT: state.analyticsSalt,
     GUARD_SELF_UPDATE_TOKEN: guardToken,
+    PERSONA_DB_PASSWORD: state.personaDbPassword,
+    FEDERATION_DB_PASSWORD: state.federationDbPassword,
     POSTGRES_PASSWORD: isExternal ? undefined : state.dbPassword
   }, { bundled: !isExternal });
 
@@ -4227,6 +4497,7 @@ function generateConfigs() {
     validationEl.textContent = [
       t('validation.envOk'),
       t('validation.proxyOk'),
+      t('validation.workersOk'),
       state.myriadDigest || state.proxyDigest || state.updaterDigest
         ? t('validation.digestPinned')
         : t('validation.mutableTag'),

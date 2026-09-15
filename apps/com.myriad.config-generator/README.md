@@ -4,11 +4,11 @@
 
 ## 版本
 
-`1.0.4`
+`1.0.6`
 
 ## 安全
 
-- **密钥白名单**：`JWT_SECRET` / `UPDATE_TOKEN` / `UPDATER_GATEWAY_SECRET` / `MYRIAD_SETUP_SECRET` / `ANALYTICS_SALT`（及 bundled `POSTGRES_PASSWORD`）须匹配 `[A-Za-z0-9_-]{32,512}`；拒绝 CR/LF/NUL、`#`、`=`、空白，避免未加引号 `.env` 注入。
+- **密钥白名单**：`JWT_SECRET` / `UPDATE_TOKEN` / `UPDATER_GATEWAY_SECRET` / `MYRIAD_SETUP_SECRET` / `ANALYTICS_SALT` / `PERSONA_DB_PASSWORD` / `FEDERATION_DB_PASSWORD`（及 bundled `POSTGRES_PASSWORD`）须匹配 `[A-Za-z0-9_-]{32,512}`；拒绝 CR/LF/NUL、`#`、`=`、空白，避免未加引号 `.env` 注入。worker 密码互不相同，且不得复用 `POSTGRES_PASSWORD`。
 - **访客统计盐**：自动生成 32 字节 hex 写入 `ANALYTICS_SALT`，并注入 backend；勿与 JWT 混用。
 - **安装暗号**：`MYRIAD_SETUP_SECRET` 写入 `.env` 并注入 backend。生成页和结果区都会提醒先复制，首次向导创建所有者必须对上。
 - **生成后自检**：对产物再 `parseDotenvStrict`，校验密钥一致、期望键齐全、`PROXY_ALLOW_DIRECT_UPDATER=false` 仅一次。
@@ -53,7 +53,7 @@ DEPLOY：`chown -R 70:70 pgdata && chmod 700 pgdata`。
 
 | 文件 | 内容 |
 |------|------|
-| `docker-compose.yml` | proxy / frontend / backend / backend-volume-init / [postgres] / docker-guard / updater / updater-gateway |
+| `docker-compose.yml` | proxy / frontend / backend / federation-worker / persona-worker / backend-volume-init / [postgres] / docker-guard / updater / updater-gateway |
 | `.env` | 密钥、tag、`MYRIAD_DB_MODE`、Guard 插值项（勿提交） |
 | `docker-guard.env` | 策略预览：digest 钉死的 `DOCKER_GUARD_IMAGE` + `GUARD_SELF_UPDATE_TOKEN`。Guard 首次启动会写入 `./guard-policy/`，无需手工安装 |
 | `<domain>.conf` | Nginx 类方式：外层整站反代到 proxy（含 ACME 本地挑战） |
@@ -64,8 +64,8 @@ DEPLOY：`chown -R 70:70 pgdata && chmod 700 pgdata`。
 
 | 模式 | 说明 |
 |------|------|
-| `bundled`（默认） | compose 含 `postgres` 服务、`./pgdata`、`depends_on: service_healthy`；`DATABASE_URL` 指向 `postgres:5432`；updater 可快照 pgdata |
-| `external` | **不**生成 `postgres` 服务；backend **不** `depends_on` postgres；`DATABASE_URL` 为用户外置库完整 URL；不强制 `mkdir pgdata` / 不设 `UPDATER_PGDATA` |
+| `bundled`（默认） | compose 含 `postgres` 服务、`./pgdata`、`depends_on: service_healthy`；`DATABASE_URL` 指向 `postgres:5432`；updater 可快照 pgdata。自动写入 `PERSONA_DB_PASSWORD` / `FEDERATION_DB_PASSWORD`，web 启动后预置保留角色。 |
+| `external` | **不**生成 `postgres` 服务；backend **不** `depends_on` postgres；`DATABASE_URL` 为用户外置库完整 URL；同时写入 `PERSONA_DATABASE_URL` / `FEDERATION_DATABASE_URL`（同一库，独立登录）。worker URL 主机须从 `myriad-net` 可达。不强制 `mkdir pgdata` / 不设 `UPDATER_PGDATA` |
 
 外置库（1Panel 外部 DB、托管 Postgres 等）选 **外置 Postgres**，避免 updater 重启后再起内置库冲突。
 
@@ -77,15 +77,20 @@ DEPLOY：`chown -R 70:70 pgdata && chmod 700 pgdata`。
 
 | 网络 | 成员 |
 |------|------|
-| `myriad-net` | proxy, frontend, backend（bundled 时含 postgres） |
+| `myriad-net` | proxy, frontend, backend, federation-worker, persona-worker（bundled 时含 postgres） |
 | `myriad-admin-net` | backend, updater, updater-gateway, proxy |
 | `myriad-docker-guard-net` (internal) | updater, docker-guard |
 
 - backend-volume-init 使用 `network_mode: none`
 - 仅 docker-guard 挂 sock；仅 proxy 映射宿主端口
 - Guard 镜像必须是 `docker.io/somekawahitomi/myriad-updater@sha256:<64hex>`；策略由 Guard 写入 `./guard-policy/docker-guard.env`，updater 只读挂载该目录
-- updater 的编排根目录可写：v0.3.37 换 tag 会在 `.env` 旁写 `.bak`/`.tmp`，只读根 + `.env` 文件绑定会 EROFS
+- updater 编排根只读；可写叠加 `.env` / `state` /（bundled）`pgdata`。Guard 策略目录只读
 - `backend-volume-init` 必须声明 `logging: json-file`；缺省时 Compose v5 会送空 `LogConfig.Type`，Guard 会拒掉更新器的 `compose run`
+- backend `MYRIAD_PROCESS_ROLE=web`；`federation-worker` / `persona-worker` 用同一 backend 镜像与固定限额（updater 预检要求）
+- worker **只**挂 `myriad-net`。附加 Docker 子网只能给 web；updater / Guard 会拒 worker 进别的网
+- 关闸时 `federation-worker` 退出码 0（`restart: on-failure`）。生产公网对已退出 worker 是 proxy **502**，不是 web 404
+- proxy 必须带 `PROXY_FEDERATION_UPSTREAM=http://federation-worker:1103` 与 `PROXY_PERSONA_UPSTREAM=http://persona-worker:1103`
+- frontend 注入 `BRANDING_METADATA_URL=http://backend:1103/api/config/metadata`
 - backend 只持 `UPDATER_GATEWAY_SECRET`，经 gateway 更新
 - backend-volume-init 会在 backend 启动前修复持久卷权限
 - 禁止 `:latest`
@@ -110,6 +115,8 @@ DEPLOY：`chown -R 70:70 pgdata && chmod 700 pgdata`。
 - `/nodeinfo/2.1`
 - `/inbox`
 - `/users/`
+- `/media/federation/`
+- `/activities/` `/notes/` `/reports/` `/tapps/` `/library/` `/phantasi/articles/`（对象解引用前缀；精确 `/reports` `/library` 仍走 SEO/SPA）
 - `/api/*`（含联邦 WebSocket `/api/federation/*/ws`）
 
 冒烟（期望 JSON，不是 HTML）：
@@ -152,12 +159,12 @@ chmod 600 .env
 docker compose up -d
 ```
 
-可选：`scripts/docker/deploy.sh up`。
+若在 Myriad 仓库目录部署：`bash scripts/extra/deploy.sh up`。面板粘贴编排时直接 `docker compose --env-file .env up -d`。
 
 ## 注意
 
 - 勿公开 `.env`
 - 仅 proxy 映射宿主端口（`HTTP_BIND_ADDRESS` 默认本机绑定，适配面板 Nginx 反代；`HTTP_PORT` 默认 18080）
 - cosign=`off` 时需双钥匙（见生成的 `.env`）
-- `PROXY_TRUSTED_UPSTREAMS` 空=信任私网/回环上游；切勿 `0.0.0.0/0`
+- `PROXY_TRUSTED_UPSTREAMS` 空=不信任任何转发头；外层面板/Nginx 必须显式列入。切勿 `0.0.0.0/0`
 - 外置模式下数据库备份不由 Myriad updater 负责
