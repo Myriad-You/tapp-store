@@ -67,6 +67,13 @@ try {
         assert.ok(!Object.hasOwn(services[name].networks, 'myriad-admin-net') && !Object.hasOwn(services[name].networks, 'myriad-docker-guard-net'), 'Worker stays outside administrative networks');
       }
       assert.equal(services.proxy.environment.PROXY_ALLOW_DIRECT_UPDATER, 'false');
+      assert.ok(!Object.hasOwn(services.backend.environment, 'PROXY_ENABLED'));
+      assert.ok(!Object.hasOwn(services.backend.environment, 'GEMINI_BASE_URL'));
+      assert.doesNotMatch(output.env, /^PROXY_ENABLED=/m);
+      assert.doesNotMatch(output.env, /^GEMINI_BASE_URL=/m);
+      assert.doesNotMatch(output.env, /^GITHUB_API_BASE_URL=/m);
+      assert.ok(output.notes.includes('PROXY_ENABLED'));
+      assert.ok(output.notes.includes('/journal/feeds/:id'));
       assert.ok(services.updater.volumes.some(v => v.target === '/host/compose/.env' && v.type === 'bind'), 'Updater receives a real env file');
       if (panelId === 'caddy') assert.ok(output.caddy.includes('example.com') && output.caddy.includes('reverse_proxy'));
       if (!['coolify', 'dokploy', 'npm', 'caddy'].includes(panelId)) assert.ok(output.nginx.includes('proxy_pass'));

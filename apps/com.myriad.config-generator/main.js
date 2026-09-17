@@ -515,8 +515,8 @@ var I18N_FALLBACK = {
   "notify.downloadOk": "文件已下载：{filename}",
   "notify.downloadStarted": "已开始下载：{filename}",
   "notify.generated": "配置已生成。请先复制安装暗号，创建所有者时须填写。",
-  "notify.tagsAligned": "已更新为 Docker Hub 共同 versioned tag",
-  "notify.tagsMixed": "已更新 tag（proxy / updater 可能与应用版本不同）",
+  "notify.tagsAligned": "已更新为各镜像最新 versioned tag",
+  "notify.tagsMixed": "已更新 tag（backend 与 frontend 版本不一致）",
   "notify.tagsFailed": "获取最新版本失败：{message}",
   "error.needMainDomain": "请填写主域名",
   "error.badMainDomain": "主域名格式无效",
@@ -554,8 +554,8 @@ var I18N_FALLBACK = {
   "error.dbPasswordStep": "请填写外置数据库密码",
   "tags.loading": "正在获取最新版本…",
   "tags.loadingHub": "正在从 Docker Hub 获取最新 versioned tag…",
-  "tags.aligned": "四组件同版本",
-  "tags.mismatch": "组件 tag 可能不一致，请确认兼容",
+  "tags.aligned": "各仓独立最新",
+  "tags.mismatch": "backend 与 frontend tag 不一致",
   "tags.partialFail": "部分仓库失败：{detail}",
   "tags.resolved": "已解析：MYRIAD={myriad} · PROXY={proxy} · UPDATER={updater} · {align}{fail}（业务使用版本标签；Guard / updater 固定 digest）",
   "tags.failStatus": "获取失败：{message}。请手动填写 versioned tag。",
@@ -1260,6 +1260,7 @@ services:
     environment:
       NODE_ENV: production
       TZ: Asia/Shanghai
+      # Operator-only; never taken from the request. Same public fields as SEO.
       BRANDING_METADATA_URL: http://backend:1103/api/config/metadata
     depends_on:
       backend: { condition: service_healthy }
@@ -1529,6 +1530,10 @@ CORS_ORIGINS={{CORS_ORIGINS}}
 # BASE_URL / FRONTEND_URL = public HTTPS origin (required for federation Actor URLs)
 BASE_URL=https://{{MAIN_DOMAIN}}
 FRONTEND_URL=https://{{MAIN_DOMAIN}}
+# 站点公网 origin 仍写 BASE_URL（改域名时适配 FRONTEND_URL / CORS_ORIGINS）。
+# AI / 平台密钥 / 出站 HTTP 代理 / Gemini·GitHub API 镜像走 /config → 高级，落库。
+# 不写入 PROXY_ENABLED / PROXY_URL / PROXY_BYPASS / GEMINI_BASE_URL / GITHUB_API_BASE_URL。
+# 升级时旧 .env 若仍有这些键，backend 会忽略。管理台保存不再双写它们。
 # RUST_LOG=info
 `;
 
@@ -1676,6 +1681,7 @@ var DEPLOY_NOTES_TEMPLATE = `# Myriad 部署
 - \`BASE_URL\` / \`FRONTEND_URL\` = 公网 HTTPS 源站（如 \`https://{{MAIN_DOMAIN}}\`），用于 Actor URL；联邦必填。
 - 外层 Nginx/Caddy 必须 **整站** 反代到 Myriad proxy（\`HTTP_BIND_ADDRESS:HTTP_PORT\`），**请勿仅反代 /api**。
 - proxy 再分：persona 前缀 → \`persona-worker\`；联邦 HTTP/WS / AP / 媒体 → \`federation-worker\`；其余 \`/api\`、health、SEO → web。
+- Journal SEO 壳（\`/journal\`、\`/journal/notes\`、\`/journal/articles/*\`）同样走整站反代。\`/journal/friends\` 与 \`/journal/topics/*\` 是 crawler 的 noindex 壳。已无独立 \`/journal/feeds/:id\`。
 - 关闸时 \`federation-worker\` 以退出码 0 结束（\`restart: on-failure\` 不空转）。生产公网对已退出 worker 是 proxy **502**，不是 web 404。
 - 以下路径必须到达 proxy：
   - \`/.well-known/webfinger\`
@@ -1693,6 +1699,14 @@ var DEPLOY_NOTES_TEMPLATE = `# Myriad 部署
 curl -sS "https://{{MAIN_DOMAIN}}/.well-known/webfinger?resource=acct:USER@{{MAIN_DOMAIN}}" | head -c 200
 curl -sS "https://{{MAIN_DOMAIN}}/.well-known/nodeinfo" | head -c 200
 \`\`\`
+
+## 配置归属
+
+编排只写进程基础设施：数据库连接、JWT、公网 origin / CORS、镜像 tag、安装暗号、worker 库口令。
+YouTube / OpenXBL / PSN、出站 HTTP 代理（\`PROXY_ENABLED\` / \`PROXY_URL\` / \`PROXY_BYPASS\`）、Gemini / GitHub API 镜像走 \`/config\` → 高级，落库。
+生成器不写入这些键。升级时若旧 \`.env\` 仍有它们，backend 会忽略。
+管理台保存只双写 \`BASE_URL\`（改公网 origin 时同时改 \`FRONTEND_URL\` / \`CORS_ORIGINS\`）。
+\`PUBLIC_API_URL\` 是前端构建戳，运行时镜像不读。
 
 {{DEPLOY_WORKER_DB_SECTION}}
 {{PANEL_DEPLOY_SECTION}}
@@ -2366,22 +2380,21 @@ async function resolveLatestImageTags() {
   var proxyTags = lists[2];
   var updaterTags = lists[3];
 
-  // 优先四仓共同 versioned tag（兼容矩阵最稳）
-  var allCommon = pickLatestCommonVersionedTag([backendTags, frontendTags, proxyTags, updaterTags]);
-  var myriadTag = allCommon || pickLatestCommonVersionedTag([backendTags, frontendTags]);
-  if (!myriadTag) {
-    myriadTag = pickLatestVersionedTag(backendTags) || pickLatestVersionedTag(frontendTags);
-  }
-  // proxy/updater：有共同矩阵时对齐；否则各自最新，并标记可能不一致
-  var proxyTag = allCommon || pickLatestVersionedTag(proxyTags) || myriadTag;
-  var updaterTag = allCommon || pickLatestVersionedTag(updaterTags) || myriadTag;
+  // MYRIAD_TAG is shared by backend + frontend. PROXY_TAG and UPDATER_TAG
+  // each take that image's own latest versioned tag — do not pin all four together.
+  var businessCommon = pickLatestCommonVersionedTag([backendTags, frontendTags]);
+  var myriadTag = businessCommon || pickLatestVersionedTag(backendTags) || pickLatestVersionedTag(frontendTags);
+  var proxyTag = pickLatestVersionedTag(proxyTags) || '';
+  var updaterTag = pickLatestVersionedTag(updaterTags) || '';
 
   if (!myriadTag && !proxyTag && !updaterTag) {
     var detail = failures.length ? '（' + failures.join('; ') + '）' : '';
     throw new Error(t('tags.hubEmpty', { detail: detail }));
   }
 
-  var aligned = !!(allCommon && proxyTag === myriadTag && updaterTag === myriadTag);
+  var backendLatest = pickLatestVersionedTag(backendTags);
+  var frontendLatest = pickLatestVersionedTag(frontendTags);
+  var aligned = !(backendLatest && frontendLatest && backendLatest !== frontendLatest);
 
   return {
     myriadTag: myriadTag || '',
@@ -2393,7 +2406,7 @@ async function resolveLatestImageTags() {
     updaterCount: updaterTags.length,
     failures: failures,
     versionAligned: aligned,
-    commonTag: allCommon || ''
+    commonTag: businessCommon || ''
   };
 }
 

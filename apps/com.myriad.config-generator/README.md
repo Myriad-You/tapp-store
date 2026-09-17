@@ -1,6 +1,6 @@
 # Myriad 安装配置生成
 
-版本 **1.1.1**。生成新安装配置，或导入旧 `docker-compose.yml` 与 `.env`，生成保留既有数据身份的升级配置。工具只读取用户提供的文件并生成下载结果，不连接或修改服务器。
+版本 **1.0.0**。生成新安装配置，或导入旧 `docker-compose.yml` 与 `.env`，生成保留既有数据身份的升级配置。工具只读取用户提供的文件并生成下载结果，不连接或修改服务器。
 
 ## 输出与部署目录
 
@@ -83,7 +83,7 @@ Guard、updater、updater-gateway 共用 `UPDATER_IMAGE:UPDATER_TAG` 部署目�
 
 业务 backend / frontend / proxy 使用版本 tag；拒绝业务 digest 输入，避免同一 digest 错用于不同镜像，或使 updater 的版本切换失效。Guard 与 updater 使用 updater 仓库解析得到的 digest 固定镜像；不接受 `latest`。
 
-新装自动生成独立身份密钥、安装暗号与统计盐，产物经密钥与 `.env` 一致性检查。`MYRIAD_SETUP_SECRET` 用于首次创建所有者。`PROXY_ALLOW_DIRECT_UPDATER` 保持 false，backend 经 gateway 更新；应用层第三方密钥不在此写入。高级资源限额与内存节约模式可按主机能力调整。
+新装自动生成独立身份密钥、安装暗号与统计盐，产物经密钥与 `.env` 一致性检查。`MYRIAD_SETUP_SECRET` 用于首次创建所有者。`PROXY_ALLOW_DIRECT_UPDATER` 保持 false，backend 经 gateway 更新。YouTube / OpenXBL / PSN、出站 HTTP 代理（`PROXY_ENABLED` / `PROXY_URL` / `PROXY_BYPASS`）与 Gemini / GitHub API 镜像不在此写入，走 `/config` → 高级；宿主 `.env` 残留键会被忽略。管理台保存只双写 `BASE_URL`（改公网 origin 时同时改 `FRONTEND_URL` / `CORS_ORIGINS`）。高级资源限额与内存节约模式可按主机能力调整。
 
 ## 验证
 

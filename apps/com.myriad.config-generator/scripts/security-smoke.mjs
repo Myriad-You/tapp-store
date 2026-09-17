@@ -64,6 +64,8 @@ assert.doesNotMatch(main, /\/etc\/myriad/)
 assert.doesNotMatch(main, /MYRIAD_ALLOW_REMOTE_BOOTSTRAP/)
 assert.doesNotMatch(main, /DOCKER_GUARD_ALLOWED_IMAGES: \\\$\{BACKEND_IMAGE/)
 assert.doesNotMatch(main, /await Promise\.all\(\s*\[\s*fetchDockerHubTags/)
+assert.doesNotMatch(main, /优先四仓共同/)
+assert.match(main, /each take that image's own latest versioned tag/)
 // Image identity is baked into runtime ENV. Compose must not overlay
 // MYRIAD_TAG / PROXY_TAG / UPDATER_TAG as MYRIAD_VERSION.
 assert.doesNotMatch(main, /MYRIAD_VERSION:\s*\\\$\{(?:MYRIAD_TAG|PROXY_TAG|UPDATER_TAG)\}/)
@@ -73,6 +75,9 @@ assert.match(main, /TAPP_STORE_STATS_URL: \\\$\{TAPP_STORE_STATS_URL:-https:\/\/
 assert.match(main, /TAPP_STORE_STATS_ENABLED: \\\$\{TAPP_STORE_STATS_ENABLED:-true\}/)
 assert.doesNotMatch(main, /YOUTUBE_API_KEY:|OPENXBL_API_KEY:|PSN_NPSSO:/)
 assert.doesNotMatch(main, /PUBLIC_API_URL:/)
+assert.doesNotMatch(main, /(?:PROXY_ENABLED|GEMINI_BASE_URL|GITHUB_API_BASE_URL):/)
+assert.match(main, /管理台保存不再双写它们/)
+assert.match(main, /\/journal\/feeds\/:id/)
 assert.match(main, /MYRIAD_DB_MODE: \$\{MYRIAD_DB_MODE:-external\}/)
 
 // Extract pure helpers by executing a slice of main.js (no DOM / Tapp)
