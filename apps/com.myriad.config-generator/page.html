@@ -11,6 +11,7 @@
         </p>
       </header>
 
+      <p id="upgrade-active" class="cg-ob-note" hidden data-i18n="upgrade.active">Upgrade mode: existing database and credentials are preserved.</p>
       <div class="cg-ob__viewport">
         <!-- 1. 欢迎 -->
         <div class="cg-ob__pane is-welcome" data-step="welcome">
@@ -49,10 +50,36 @@
           </div>
           <div class="cg-ob-bar is-split">
             <p class="cg-ob-bar__note" data-i18n="welcome.note">本工具仅生成配置文件，不会修改服务器。</p>
-            <button type="button" class="cg-ob-cta" data-wizard-next title="开始" aria-label="开始" data-i18n-title="common.start" data-i18n-aria-label="common.start">
+            <button type="button" id="btn-start-upgrade" class="btn-secondary" data-i18n="upgrade.start">Upgrade existing installation</button>
+            <button type="button" id="btn-start-new" class="cg-ob-cta" data-wizard-next title="开始" aria-label="开始" data-i18n-title="common.start" data-i18n-aria-label="common.start">
               <span data-i18n="common.start">开始</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </button>
+          </div>
+        </div>
+
+        <div class="cg-ob__pane" data-step="upgrade" hidden>
+          <div class="cg-ob-hero">
+            <h1 data-i18n="upgrade.title">Upgrade an existing installation</h1>
+            <p class="cg-ob-hero__lead" data-i18n="upgrade.lead">Import the old Compose and .env. Existing credentials and data locations stay unchanged; no files are uploaded.</p>
+          </div>
+          <div class="cg-ob-body">
+            <label class="cg-ob-field">
+              <span class="cg-ob-field__label" data-i18n="upgrade.compose">Old docker-compose.yml</span>
+              <input id="upgrade-compose-file" type="file" accept=".yml,.yaml,.txt" aria-label="Compose file" data-i18n-aria-label="upgrade.compose">
+              <textarea id="upgrade-compose" aria-label="Old Compose text" data-i18n-aria-label="upgrade.compose" class="form-input cg-upgrade-input" rows="8" spellcheck="false" autocomplete="off" data-i18n-placeholder="upgrade.composePlaceholder" placeholder="Paste the old Compose here"></textarea>
+            </label>
+            <label class="cg-ob-field">
+              <span class="cg-ob-field__label" data-i18n="upgrade.env">Old .env (contains secrets)</span>
+              <input id="upgrade-env-file" type="file" aria-label="Environment file" data-i18n-aria-label="upgrade.env">
+              <textarea id="upgrade-env" aria-label="Old environment text" data-i18n-aria-label="upgrade.env" class="form-input cg-upgrade-input" rows="7" spellcheck="false" autocomplete="off" data-i18n-placeholder="upgrade.envPlaceholder" placeholder="Paste the old .env here"></textarea>
+            </label>
+            <p id="upgrade-status" class="cg-ob-note" role="status" aria-live="polite"></p>
+            <div id="upgrade-report" class="cg-upgrade-report"></div>
+          </div>
+          <div class="cg-ob-bar">
+            <button id="btn-inspect-upgrade" type="button" class="cg-ob-cta" data-i18n="upgrade.inspect">Read and check</button>
+            <button id="btn-continue-upgrade" type="button" class="cg-ob-cta" hidden data-i18n="upgrade.continue">Continue with these settings</button>
           </div>
         </div>
 
@@ -63,6 +90,12 @@
             <p class="cg-ob-hero__lead" data-i18n="panel.lead">请选择当前使用的面板、编排界面或外层反代。若直接使用 Docker，请选择「命令行」。</p>
           </div>
           <div class="cg-ob-body">
+            <label class="cg-ob-field">
+              <span class="cg-ob-field__label" data-i18n="deployment.root">Deployment directory on the Docker host</span>
+              <input id="compose-host-root" class="form-input cg-ob-input" type="text" value="/opt/myriad" spellcheck="false" autocomplete="off">
+              <small data-i18n="deployment.rootHint">Save docker-compose.yml and .env in this actual host directory. Panel variable forms alone are not enough.</small>
+            </label>
+
             <div class="panel-mode-toggle cg-choice" role="radiogroup" aria-label="部署方式" data-i18n-aria-label="panel.group">
               <label class="panel-mode-option cg-choice__card is-active">
                 <input type="radio" name="panel-mode" value="1panel" checked>
@@ -310,7 +343,7 @@
                 </label>
                 <label class="cg-ob-field is-wide">
                   <span class="cg-ob-field__label"><span data-i18n="db.extraNetwork">附加 Docker 子网</span> <i class="cg-ob-field__optional" data-i18n="common.optional">可选</i></span>
-                  <input type="text" id="db-extra-network" class="form-input cg-ob-input" placeholder="1panel-network" autocomplete="off">
+                  <input type="text" id="db-extra-network" class="form-input cg-ob-input" placeholder="myriad-backend-ext" autocomplete="off">
                   <span class="cg-ob-field__hint" data-i18n="db.extraNetworkHint">仅当数据库与 Myriad 不在同一 Docker 网络时需要。1Panel 常见值为 1panel-network。</span>
                 </label>
               </div>
@@ -485,7 +518,7 @@
 
             <label class="cg-ob-field" id="db-version-field">
               <span class="cg-ob-field__label" data-i18n="advanced.pgVersion">PostgreSQL 版本</span>
-              <input type="number" id="db-version" class="form-input cg-ob-input" value="18" min="18" max="20" step="1">
+              <input type="number" id="db-version" class="form-input cg-ob-input" value="18" min="18" max="18" step="1">
             </label>
           </div>
           <div class="cg-ob-bar">
@@ -503,6 +536,11 @@
             <p class="cg-ob-hero__lead" id="results-intro">请先保存安装暗号，再按面板说明放置文件。</p>
           </div>
           <div class="cg-ob-body">
+            <section id="upgrade-result-section" class="cg-guide-card" hidden>
+              <h2 data-i18n="upgrade.resultTitle">Upgrade review</h2>
+              <p data-i18n="upgrade.resultLead">Back up the database and old files first. Review DEPLOY.md before replacing files; do not remove data volumes.</p>
+              <div id="upgrade-result-report" class="cg-upgrade-report"></div>
+            </section>
             <ol class="cg-guide-overview" id="cg-guide-overview"></ol>
 
             <article class="cg-guide-card" id="setup-secret-reminder" hidden>
@@ -525,6 +563,15 @@
 
             <p class="cg-files-kicker" data-i18n="done.filesKicker">全部文件</p>
             <div class="cg-files">
+              <div class="result-card cg-file" id="card-traefik" hidden>
+                <div class="result-header">
+                  <span class="result-name" id="name-traefik">myriad-traefik.yml</span>
+                  <button type="button" class="btn-copy" data-target="traefik" data-i18n="common.copy">Copy</button>
+                  <button type="button" class="btn-download" data-filename="myriad-traefik.yml" data-target="traefik" data-i18n="common.download">Download</button>
+                </div>
+                <pre class="result-content"><code id="result-traefik"></code></pre>
+              </div>
+
               <div class="result-card cg-file" data-file="compose">
                 <div class="result-header">
                   <span class="result-name">docker-compose.yml</span>

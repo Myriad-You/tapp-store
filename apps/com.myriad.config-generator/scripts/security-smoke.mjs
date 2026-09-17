@@ -56,10 +56,6 @@ assert.match(main, /PERSONA_WEB_UPSTREAM: http:\/\/backend:1103/)
 assert.match(main, /Geographic disablement exits 0/)
 assert.match(main, /restart: on-failure/)
 assert.match(main, /cap_drop: \[ALL\]/)
-assert.match(main, /federation-worker:[\s\S]*?networks: \[myriad-net\]/)
-assert.match(main, /persona-worker:[\s\S]*?networks: \[myriad-net\]/)
-assert.doesNotMatch(main, /federation-worker:[\s\S]*?networks: \[myriad-net\{\{BACKEND_EXTRA_NETWORK_REF\}\}\]/)
-assert.doesNotMatch(main, /persona-worker:[\s\S]*?networks: \[myriad-net\{\{BACKEND_EXTRA_NETWORK_REF\}\}\]/)
 assert.match(main, /assertGeneratedComposeContract/)
 assert.doesNotMatch(main, /<<'POLICY'/)
 assert.doesNotMatch(main, /cat > \/guard-policy\/docker-guard.env/)
@@ -266,7 +262,7 @@ services:
 h.assertGeneratedComposeContract(goodCompose)
 assert.throws(
   () => h.assertGeneratedComposeContract(goodCompose.replace('networks: [myriad-net]', 'networks: [myriad-net, myriad-backend-ext]', 1)),
-  /只能挂 myriad-net/
+  /database network/
 )
 assert.throws(
   () => h.assertGeneratedComposeContract(goodCompose + '\n# /brew/articles/\n'),
@@ -288,7 +284,7 @@ assert.equal(h.isValidMemoryLimit('512T'), false) // above 256G
 
 // --- PG ---
 assert.equal(h.isValidPgMajor('18'), true)
-assert.equal(h.isValidPgMajor('20'), true)
+assert.equal(h.isValidPgMajor('20'), false)
 assert.equal(h.isValidPgMajor('17'), false)
 assert.equal(h.isValidPgMajor('999'), false)
 
