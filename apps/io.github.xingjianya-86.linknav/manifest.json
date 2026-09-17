@@ -1,0 +1,91 @@
+{
+  "id": "io.github.xingjianya-86.linknav",
+  "name": "链接小窝",
+  "version": "1.0.0",
+  "description": "收集与分享网址的萌系导航页：管理员维护共享链接目录并按角色分层可见，人人可收藏，桌面小组件快捷直达",
+  "locales": {
+    "en-US": {
+      "name": "LinkNav",
+      "description": "A kawaii link nest: admins curate a shared link directory with role-based visibility, everyone keeps personal favorites, plus a dashboard widget for quick access"
+    },
+    "ja-JP": {
+      "name": "リンクの小部屋",
+      "description": "みんなで集めるかわいいリンク集。管理者が共有リンクをロール別に公開し、お気に入りとウィジェットで素早くアクセス"
+    }
+  },
+  "category": "utility",
+  "author": {
+    "name": "xingjianya-86",
+    "url": "https://github.com/xingjianya-86"
+  },
+  "permissions": [
+    "storage:read",
+    "storage:write",
+    "ui:openUrl",
+    "ui:notification",
+    "ui:confirm",
+    "ui:theme",
+    "widget:register"
+  ],
+  "iconSvg": "<svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><rect width='24' height='24' rx='7' fill='#ffd3e0'/><path d='M12 4.4l2 4 4.4.6-3.2 3.1.8 4.4-4-2.1-4 2.1.8-4.4-3.2-3.1 4.4-.6z' fill='#fff' stroke='#f48fb1' stroke-width='1' stroke-linejoin='round'/><path d='M9.3 17.4c.7 1 1.6 1.5 2.7 1.5s2-.5 2.7-1.5' fill='none' stroke='#f48fb1' stroke-width='1.1' stroke-linecap='round'/></svg>",
+  "themeColor": "#ffb7ce",
+  "core": {
+    "entry": "core.js"
+  },
+  "page": {
+    "entry": "page/index.js",
+    "template": "page.html",
+    "styles": "page.css"
+  },
+  "widgets": [
+    {
+      "id": "quick-links",
+      "name": "小窝快捷链接",
+      "description": "置顶链接一键直达",
+      "icon": "⭐",
+      "entry": "widget/index.js",
+      "styles": "widget.css",
+      "defaultSize": "2x2",
+      "sizes": ["2x2", "4x2"],
+      "category": "utility",
+      "refreshPolicy": {
+        "mode": "event",
+        "refreshOnVisible": true
+      },
+      "templates": {
+        "2x2": "widget-2x2.html",
+        "4x2": "widget-4x2.html"
+      }
+    }
+  ],
+  "openUrls": [
+    { "id": "github", "url": "https://github.com", "match": "origin" },
+    { "id": "gitlab", "url": "https://gitlab.com", "match": "origin" },
+    { "id": "gitee", "url": "https://gitee.com", "match": "origin" },
+    { "id": "stackoverflow", "url": "https://stackoverflow.com", "match": "origin" },
+    { "id": "mdn", "url": "https://developer.mozilla.org", "match": "origin" },
+    { "id": "wikipedia-zh", "url": "https://zh.wikipedia.org", "match": "origin" },
+    { "id": "wikipedia-en", "url": "https://en.wikipedia.org", "match": "origin" },
+    { "id": "npm", "url": "https://www.npmjs.com", "match": "origin" },
+    { "id": "huggingface", "url": "https://huggingface.co", "match": "origin" },
+    { "id": "juejin", "url": "https://juejin.cn", "match": "origin" },
+    { "id": "csdn", "url": "https://www.csdn.net", "match": "origin" },
+    { "id": "zhihu", "url": "https://www.zhihu.com", "match": "origin" },
+    { "id": "bilibili", "url": "https://www.bilibili.com", "match": "origin" },
+    { "id": "douban", "url": "https://www.douban.com", "match": "origin" },
+    { "id": "weibo", "url": "https://weibo.com", "match": "origin" },
+    { "id": "youtube", "url": "https://www.youtube.com", "match": "origin" },
+    { "id": "aliyun-dev", "url": "https://developer.aliyun.com", "match": "origin" },
+    { "id": "tencent-cloud", "url": "https://cloud.tencent.com", "match": "origin" },
+    { "id": "google", "url": "https://www.google.com", "match": "origin" },
+    { "id": "baidu", "url": "https://www.baidu.com", "match": "origin" },
+    { "id": "bing", "url": "https://www.bing.com", "match": "origin" },
+    { "id": "notion", "url": "https://www.notion.so", "match": "origin" },
+    { "id": "figma", "url": "https://www.figma.com", "match": "origin" },
+    { "id": "openai", "url": "https://openai.com", "match": "origin" },
+    { "id": "chatgpt", "url": "https://chatgpt.com", "match": "origin" },
+    { "id": "claude", "url": "https://claude.ai", "match": "origin" },
+    { "id": "x", "url": "https://x.com", "match": "origin" },
+    { "id": "v2ex", "url": "https://www.v2ex.com", "match": "origin" }
+  ]
+}
