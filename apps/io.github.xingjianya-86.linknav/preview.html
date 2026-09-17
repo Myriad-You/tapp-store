@@ -1,0 +1,179 @@
+<main class="ln-app ln-preview">
+  <div class="ln-bg" aria-hidden="true">
+    <span class="ln-orb ln-orb-a"></span>
+    <span class="ln-orb ln-orb-b"></span>
+    <span class="ln-orb ln-orb-c"></span>
+    <span class="ln-dot ln-dot-1">✦</span>
+    <span class="ln-dot ln-dot-2">✧</span>
+    <span class="ln-dot ln-dot-3">♪</span>
+    <span class="ln-dot ln-dot-4">✦</span>
+    <span class="ln-dot ln-dot-5">♡</span>
+  </div>
+
+  <header class="ln-hero">
+    <div class="ln-hero-main">
+      <div class="ln-mascot-wrap" aria-hidden="true">
+        <svg class="ln-mascot" data-mood="idle" data-crown="true" viewBox="0 0 140 124" focusable="false">
+          <g class="ln-mascot-crown">
+            <path d="M57 20 L64 7 L70.5 17 L77 5 L84 20 Z" />
+            <rect x="57" y="19" width="27" height="5.5" rx="2.75" />
+          </g>
+          <path class="ln-mascot-ear" d="M34 50 L25 17 Q23 9 32 14 L61 31 Z" />
+          <path class="ln-mascot-ear" d="M106 50 L115 17 Q117 9 108 14 L79 31 Z" />
+          <ellipse class="ln-mascot-body" cx="70" cy="70" rx="46" ry="42" />
+          <ellipse class="ln-mascot-belly" cx="70" cy="84" rx="29" ry="22" />
+          <g class="ln-mascot-pose ln-mascot-happy">
+            <path class="ln-mascot-eye-curve" d="M45 68 Q52 58.5 59 68" />
+            <path class="ln-mascot-eye-curve" d="M81 68 Q88 58.5 95 68" />
+            <path class="ln-mascot-mouth-open" d="M61 76 Q70 90 79 76 Q70 82 61 76" />
+          </g>
+          <ellipse class="ln-mascot-blush" cx="38" cy="78" rx="7.5" ry="4.5" />
+          <ellipse class="ln-mascot-blush" cx="102" cy="78" rx="7.5" ry="4.5" />
+          <path class="ln-mascot-star" d="M70 99 l2.6 5.3 5.8 .85 -4.2 4.1 1 5.8 -5.2 -2.75 -5.2 2.75 1 -5.8 -4.2 -4.1 5.8 -.85 z" />
+        </svg>
+      </div>
+      <div class="ln-hero-text">
+        <p class="ln-kicker"><span class="ln-role-badge" data-role="admin">管理员</span></p>
+        <h1 class="ln-title">链接小窝</h1>
+        <p class="ln-subtitle">把小窝里的好链接叼给你～</p>
+        <p class="ln-count">窝里共有 6 个宝物～</p>
+      </div>
+      <button class="ln-add-btn" type="button">＋ 投喂新链接</button>
+    </div>
+  </header>
+
+  <section class="ln-toolbar" aria-label="搜索与视图">
+    <label class="ln-search">
+      <span class="ln-search-icon" aria-hidden="true">⌕</span>
+      <input type="search" placeholder="搜索链接 / 标签 / 域名…" value="" readonly />
+    </label>
+    <div class="ln-views">
+      <button class="ln-view is-active" type="button">全部链接</button>
+      <button class="ln-view" type="button">我的收藏 (2)</button>
+    </div>
+  </section>
+
+  <nav class="ln-chips" aria-label="标签筛选">
+    <button class="ln-chip is-active" type="button">全部</button>
+    <button class="ln-chip" type="button">开发 2</button>
+    <button class="ln-chip" type="button">视频 1</button>
+    <button class="ln-chip" type="button">文档 1</button>
+    <button class="ln-chip" type="button">设计 1</button>
+  </nav>
+
+  <section class="ln-list">
+    <article class="ln-card" style="--ln-tilt:-0.55deg">
+      <div class="ln-card-badges"><span class="ln-badge ln-badge-pin">置顶</span></div>
+      <button class="ln-card-main" type="button">
+        <span class="ln-card-icon">🐙</span>
+        <span class="ln-card-body">
+          <span class="ln-card-title">GitHub</span>
+          <span class="ln-card-host">github.com</span>
+          <span class="ln-card-desc">代码托管与协作，小窝的常驻嘉宾</span>
+        </span>
+      </button>
+      <div class="ln-card-foot">
+        <div class="ln-card-tags"><span class="ln-tag">开发</span></div>
+        <div class="ln-card-actions">
+          <button class="ln-star" type="button" data-active="true">★</button>
+          <button class="ln-mini" type="button">复制</button>
+          <button class="ln-mini" type="button">编辑</button>
+        </div>
+      </div>
+    </article>
+
+    <article class="ln-card" style="--ln-tilt:0.55deg">
+      <button class="ln-card-main" type="button">
+        <span class="ln-card-icon">📺</span>
+        <span class="ln-card-body">
+          <span class="ln-card-title">哔哩哔哩</span>
+          <span class="ln-card-host">bilibili.com</span>
+          <span class="ln-card-desc">学习视频与快乐源泉</span>
+        </span>
+      </button>
+      <div class="ln-card-foot">
+        <div class="ln-card-tags"><span class="ln-tag">视频</span></div>
+        <div class="ln-card-actions">
+          <button class="ln-star" type="button">☆</button>
+          <button class="ln-mini" type="button">复制</button>
+        </div>
+      </div>
+    </article>
+
+    <article class="ln-card" style="--ln-tilt:-0.55deg">
+      <button class="ln-card-main" type="button">
+        <span class="ln-card-icon">📘</span>
+        <span class="ln-card-body">
+          <span class="ln-card-title">MDN Web Docs</span>
+          <span class="ln-card-host">developer.mozilla.org</span>
+          <span class="ln-card-desc">Web 开发者的抽屉书</span>
+        </span>
+      </button>
+      <div class="ln-card-foot">
+        <div class="ln-card-tags"><span class="ln-tag">开发</span><span class="ln-tag">文档</span></div>
+        <div class="ln-card-actions">
+          <button class="ln-star" type="button" data-active="true">★</button>
+          <button class="ln-mini" type="button">复制</button>
+        </div>
+      </div>
+    </article>
+
+    <article class="ln-card" style="--ln-tilt:0.55deg">
+      <div class="ln-card-badges"><span class="ln-badge ln-badge-user">登录可见</span></div>
+      <button class="ln-card-main" type="button">
+        <span class="ln-card-icon">💬</span>
+        <span class="ln-card-body">
+          <span class="ln-card-title">知乎</span>
+          <span class="ln-card-host">zhihu.com</span>
+          <span class="ln-card-desc">有问题就会有答案（登录后可见）</span>
+        </span>
+      </button>
+      <div class="ln-card-foot">
+        <div class="ln-card-tags"></div>
+        <div class="ln-card-actions">
+          <button class="ln-star" type="button">☆</button>
+          <button class="ln-mini" type="button">复制</button>
+        </div>
+      </div>
+    </article>
+
+    <article class="ln-card" style="--ln-tilt:-0.55deg">
+      <div class="ln-card-badges"><span class="ln-badge ln-badge-admin">管理员可见</span></div>
+      <button class="ln-card-main" type="button">
+        <span class="ln-card-icon">🔒</span>
+        <span class="ln-card-body">
+          <span class="ln-card-title">站点运营后台</span>
+          <span class="ln-card-host">myriad.example.com</span>
+          <span class="ln-card-desc">只给管理员看的内部链接</span>
+        </span>
+      </button>
+      <div class="ln-card-foot">
+        <div class="ln-card-tags"></div>
+        <div class="ln-card-actions">
+          <button class="ln-mini is-copy-only" type="button">复制</button>
+          <button class="ln-mini" type="button">编辑</button>
+        </div>
+      </div>
+    </article>
+
+    <article class="ln-card" style="--ln-tilt:0.55deg">
+      <button class="ln-card-main" type="button">
+        <span class="ln-card-icon">🎨</span>
+        <span class="ln-card-body">
+          <span class="ln-card-title">Figma</span>
+          <span class="ln-card-host">figma.com</span>
+          <span class="ln-card-desc">界面设计与素材板</span>
+        </span>
+      </button>
+      <div class="ln-card-foot">
+        <div class="ln-card-tags"><span class="ln-tag">设计</span></div>
+        <div class="ln-card-actions">
+          <button class="ln-star" type="button">☆</button>
+          <button class="ln-mini" type="button">复制</button>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <footer class="ln-footer"><span>链接由站长与管理员整理 · 收藏只属于你自己</span></footer>
+</main>
