@@ -122,10 +122,13 @@ THE SOFTWARE.
     // Super constructor
     Error.call(this);
 
-    this.name = 'YAMLException';
+    // Local TAPP compatibility patch: inherited Error fields are frozen.
+    Object.defineProperties(this, {
+      name: { value: 'YAMLException', writable: true, enumerable: true, configurable: true },
+      message: { value: formatError({ reason: reason, mark: mark }, false), writable: true, enumerable: true, configurable: true }
+    });
     this.reason = reason;
     this.mark = mark;
-    this.message = formatError(this, false);
 
     // Include stack trace in error object
     if (Error.captureStackTrace) {
@@ -139,13 +142,16 @@ THE SOFTWARE.
 
 
   // Inherit from Error
-  YAMLException$1.prototype = Object.create(Error.prototype);
-  YAMLException$1.prototype.constructor = YAMLException$1;
-
-
-  YAMLException$1.prototype.toString = function toString(compact) {
-    return this.name + ': ' + formatError(this, compact);
-  };
+  // Define own properties instead of assigning over frozen inherited fields.
+  YAMLException$1.prototype = Object.create(Error.prototype, {
+    constructor: { value: YAMLException$1, writable: true, enumerable: true, configurable: true },
+    toString: {
+      value: function toString(compact) {
+        return this.name + ': ' + formatError(this, compact);
+      },
+      writable: true, enumerable: true, configurable: true
+    }
+  });
 
 
   var exception = YAMLException$1;
