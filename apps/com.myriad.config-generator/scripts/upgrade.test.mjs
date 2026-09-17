@@ -1,3 +1,4 @@
+import { generate } from './generator-harness.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
@@ -230,4 +231,28 @@ test('bootstrap mode requires a complete independent password pair',()=>{
  assert.throws(()=>engine.upgradeGenerated(generated(true),engine.inspectLegacy(JSON.stringify(c),env)),/both|pair/);
  const bundled=fixture();bundled.services.backend.environment.PERSONA_DB_PASSWORD='P'.repeat(40);bundled.services.backend.environment.FEDERATION_DB_PASSWORD='P'.repeat(40);
  assert.throws(()=>engine.upgradeGenerated(generated(),engine.inspectLegacy(JSON.stringify(bundled),oldEnv)),/independent|distinct/);
+});
+
+test('stale distinct updater pins cannot override fresh or upgraded deployment targets', () => {
+  const fresh = generate({ updaterTag: 'v1.2.4', proxyTag: 'v1.1.0' });
+  const staleEnv = fresh.env.replace(/^UPDATER_TAG=.*$/m, 'UPDATER_TAG=v1.2.5')
+    .replace(/^DOCKER_GUARD_IMAGE=.*$/m, 'DOCKER_GUARD_IMAGE=docker.io/somekawahitomi/myriad-updater@sha256:' + 'b'.repeat(64))
+    .replace(/^UPDATER_IMAGE_REF=.*$/m, 'UPDATER_IMAGE_REF=docker.io/somekawahitomi/myriad-updater@sha256:' + 'c'.repeat(64))
+    + '\nUPDATER_GATEWAY_IMAGE_REF=docker.io/somekawahitomi/myriad-updater@sha256:' + 'd'.repeat(64) + '\n';
+  const legacy = engine.inspectLegacy(fresh.compose, staleEnv);
+  function assertShared(resolved, tag) {
+    const expected = 'docker.io/somekawahitomi/myriad-updater:' + tag;
+    for (const name of ['docker-guard', 'updater', 'updater-gateway']) assert.equal(resolved.compose.services[name].image, expected);
+    assert.equal(resolved.compose.services['docker-guard'].environment.DOCKER_GUARD_EXPECTED_IMAGE, expected);
+  }
+  assertShared(legacy, 'v1.2.5');
+  // Simulate the old generator's separate digest references before migration.
+  const old = yaml.load(fresh.compose);
+  old.services['docker-guard'].image = '${DOCKER_GUARD_IMAGE}';
+  old.services['docker-guard'].environment.DOCKER_GUARD_EXPECTED_IMAGE = '${DOCKER_GUARD_IMAGE}';
+  for (const name of ['updater', 'updater-gateway']) old.services[name].image = '${UPDATER_IMAGE_REF}';
+  const migrated = engine.upgradeGenerated({compose:fresh.compose,env:fresh.env,guardEnv:fresh.guard,deploy:fresh.notes}, engine.inspectLegacy(yaml.dump(old), staleEnv));
+  assertShared(engine.inspectLegacy(migrated.compose, migrated.env), 'v1.2.4');
+  assertShared(engine.inspectLegacy(migrated.compose, migrated.env.replace(/^UPDATER_TAG=.*$/m, 'UPDATER_TAG=v1.2.6')), 'v1.2.6');
+  assert.equal(engine.parseEnv(migrated.env).UPDATER_GATEWAY_IMAGE_REF, undefined);
 });

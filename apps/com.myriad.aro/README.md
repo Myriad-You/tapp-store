@@ -20,7 +20,7 @@
 
 `storage:read`, `storage:write`, `ui:notification`,
 `federation:read|interact|post|channel|room|message|files`,
-`platform:read`, `report:read`, `tappList:read|manage`, `brew:read`,
+`platform:read`, `report:read`, `tappList:read|manage`, `phantasi:read`,
 `media:control`, `network:fetch`
 
 > 联邦写权限按动作域拆分：发帖与投递队列走 `federation:post`，关注/点赞/收藏/转发走

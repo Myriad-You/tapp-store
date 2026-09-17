@@ -489,7 +489,7 @@ function openBrewPicker(icons, titles) {
 
   showPickerLoading(body);
 
-  Tapp.brewList.list({ limit: 50 }).then(function (res) {
+  Tapp.phantasiList.list({ limit: 50 }).then(function (res) {
     allBrews = (res && res.items) || [];
     renderBrewItems(allBrews);
   }).catch(function () { showPickerEmpty(body); });

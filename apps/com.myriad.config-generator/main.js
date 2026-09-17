@@ -1310,7 +1310,7 @@ services:
 
   docker-guard:
     # Writes ./guard-policy/docker-guard.env on first start.
-    image: \${DOCKER_GUARD_IMAGE:?Set DOCKER_GUARD_IMAGE in .env to an exact repo@sha256 digest}
+    image: \${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG:?Set UPDATER_TAG to a release or dev tag}
     container_name: myriad-docker-guard
     entrypoint: ["/bin/sh", "-c"]
     command:
@@ -1325,7 +1325,7 @@ services:
       MYRIAD_DOCKER_GUARD_NETWORK: \${GUARD_MYRIAD_DOCKER_GUARD_NETWORK:-myriad-docker-guard-net}
       DOCKER_GUARD_COMPOSE_DIR: /host/compose
       DOCKER_GUARD_STATE_DIR: /host/state
-      DOCKER_GUARD_EXPECTED_IMAGE: \${DOCKER_GUARD_IMAGE}
+      DOCKER_GUARD_EXPECTED_IMAGE: \${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG:?Set UPDATER_TAG to a release or dev tag}
       DOCKER_GUARD_HOST_POLICY_PATH: /guard-policy/docker-guard.env
       DOCKER_GUARD_SELF_UPDATE_TOKEN: \${GUARD_SELF_UPDATE_TOKEN:?Host Guard self-update token is required}
       RUST_LOG: \${DOCKER_GUARD_LOG:-info}
@@ -1357,7 +1357,7 @@ services:
       options: { max-size: "10m", max-file: "3" }
 
   updater:
-    image: \${UPDATER_IMAGE_REF:-\${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG}}
+    image: \${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG:?Set UPDATER_TAG to a release or dev tag}
     container_name: myriad-updater
     environment:
       UPDATE_TOKEN: \${UPDATE_TOKEN}
@@ -1378,7 +1378,7 @@ services:
       COMPOSE_PROJECT_NAME: \${COMPOSE_PROJECT_NAME:-myriad}
       MYRIAD_DOCKER_NETWORK: \${MYRIAD_DOCKER_NETWORK:-myriad-net}
       # Identity is baked into the image (Dockerfile ENV). Do not overlay
-      # UPDATER_TAG here: the digest pin in UPDATER_IMAGE_REF is what runs.
+      # UPDATER_TAG as MYRIAD_VERSION; it only selects the deployment image.
       TZ: Asia/Shanghai
     volumes:
       # Deployment definitions are immutable to a compromised updater. Overlay
@@ -1413,7 +1413,7 @@ services:
       options: { max-size: "10m", max-file: "3" }
 
   updater-gateway:
-    image: \${UPDATER_IMAGE_REF:-\${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG}}
+    image: \${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG:?Set UPDATER_TAG to a release or dev tag}
     container_name: myriad-updater-gateway
     entrypoint: ["/usr/bin/tini", "--", "/usr/local/bin/myriad-updater-gateway"]
     environment:
@@ -1465,6 +1465,7 @@ var ENV_TEMPLATE = `# Myriad .env — chmod 600，勿提交 Git
 MYRIAD_TAG={{MYRIAD_TAG}}
 # PROXY_TAG is separate from MYRIAD_TAG — bump when proxy gains AP routing / federation fixes
 PROXY_TAG={{PROXY_TAG}}
+# Shared deployment target for Guard, updater and updater-gateway.
 UPDATER_TAG={{UPDATER_TAG}}
 BACKEND_IMAGE=docker.io/somekawahitomi/myriad-backend
 FRONTEND_IMAGE=docker.io/somekawahitomi/myriad-frontend
@@ -1477,6 +1478,7 @@ MYRIAD_DOCKER_GUARD_NETWORK={{MYRIAD_DOCKER_GUARD_NETWORK}}
 {{BACKEND_EXTRA_NETWORK_LINE}}
 MYRIAD_COMPOSE_HOST_ROOT={{MYRIAD_COMPOSE_HOST_ROOT}}
 MYRIAD_GUARD_ENV_FILE={{MYRIAD_GUARD_ENV_FILE}}
+# Digest records for verification/recovery; never override the deployment tag.
 DOCKER_GUARD_IMAGE={{DOCKER_GUARD_IMAGE}}
 UPDATER_IMAGE_REF={{UPDATER_IMAGE_REF}}
 GUARD_SELF_UPDATE_TOKEN={{GUARD_SELF_UPDATE_TOKEN}}
@@ -1720,7 +1722,7 @@ https://{{MAIN_DOMAIN}} → \`{{HTTP_BIND_ADDRESS}}:{{HTTP_PORT}}\`（整站反�
 
 proxy 有 AP 路由变更时需单独 bump \`PROXY_TAG\`（与 \`MYRIAD_TAG\` 独立）。
 
-v0.3.29+ 的 Guard 不再读取 \`DOCKER_GUARD_ALLOWED_IMAGES\`。生成的 \`.env\` 已含 digest 钉死的 \`DOCKER_GUARD_IMAGE\` 与 \`GUARD_SELF_UPDATE_TOKEN\`；将生成的策略文件保存为 \`guard-policy/docker-guard.env\` 后启动。
+v0.3.29+ 的 Guard 不再读取 \`DOCKER_GUARD_ALLOWED_IMAGES\`。生成的 \`.env\` 已含用于核验与恢复的 \`DOCKER_GUARD_IMAGE\` 摘要记录与 \`GUARD_SELF_UPDATE_TOKEN\`；将生成的策略文件保存为 \`guard-policy/docker-guard.env\` 后启动。
 
 {{DEPLOY_DATA_SECTION}}
 
@@ -1736,7 +1738,7 @@ docker exec myriad-updater myriad-rescue exit-maintenance --force
 ## 版本
 
 MYRIAD_TAG={{MYRIAD_TAG}} · PROXY_TAG={{PROXY_TAG}} · UPDATER_TAG={{UPDATER_TAG}}  
-禁止 \`:latest\`。TCB 以 \`.env\` 的 \`UPDATER_IMAGE_REF\` digest 为准，不要把 \`UPDATER_TAG\` 当成正在运行的更新器。生成器会写入完整 image 引用。
+禁止 \`:latest\`。Guard、updater、updater-gateway 共用 \`UPDATER_IMAGE:UPDATER_TAG\` 作为部署目标；修改 tag 后重建三个容器即可切换版本。摘要记录仅用于核验与恢复，不覆盖部署目标；实际版本以镜像内置版本为准。
 
 ## 生成后自检（务必）
 

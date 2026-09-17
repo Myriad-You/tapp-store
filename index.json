@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.66",
+  "version": "1.0.67",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-09-17T01:26:02.861Z",
+  "updated_at": "2026-09-17T07:54:58.139Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -253,7 +253,7 @@
     {
       "id": "com.myriad.config-generator",
       "name": "Myriad 安装配置生成",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "description": "生成新安装配置或导入旧 Compose 与 .env 升级，提供十种平台的部署与反代指南",
       "long_description": "生成 Myriad 新安装配置，或导入旧 Compose 与 .env 生成升级产物。提供十种平台的固定宿主目录部署与整站反代指南：1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy 和 CLI。容器反代通过业务网络访问 myriad-proxy:80；Coolify / Dokploy 提供独立 Traefik 动态配置。外置 Docker 数据库使用固定 myriad-backend-ext 网络，web 与两个 worker 同时接入，worker 保持独立登录与管理网络隔离。升级要求原项目名，保留受支持的数据身份与密钥；内置 PostgreSQL 须为 18+，未知服务或自定义挂载拒绝自动迁移。工具只生成文件，不修改服务器；实际网络、证书和数据库权限需在部署时验证。",
       "locales": {
@@ -373,13 +373,13 @@
           "vendor/js-yaml.js": "apps/com.myriad.config-generator/vendor/js-yaml.js"
         }
       },
-      "size": 580825,
+      "size": 581716,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-14T00:00:00Z",
-      "updated_at": "2026-09-16T15:17:36.955Z"
+      "updated_at": "2026-09-17T07:54:58.050Z"
     },
     {
       "id": "com.myriad.doudizhu",
@@ -526,7 +526,7 @@
     {
       "id": "com.myriad.aro",
       "name": "Aro",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "description": "社交中心，统一管理消息、时间线与个人资料",
       "long_description": "Aro 是 Myriad 官方社交中心，把联邦私信与群聊、时间线和个人资料收在同一处。信使支持 Channel / Room、端到端加密、群共享与本机贴纸包、表情、附件（图片、文件、Tapp、Brew、资料库与报告）、@ 提及、置顶与转发，以及后台轮询新消息通知。时间线可发帖、引用转发、收藏与关注。设置页可查看出站投递队列（取消 / 重试）并轮换联邦签名密钥。聊天记录可在本机导出或导入 JSON 备份。界面支持中英日与宿主明暗主题。",
       "locales": {
@@ -607,7 +607,7 @@
         "report:read",
         "tappList:read",
         "tappList:manage",
-        "brew:read",
+        "phantasi:read",
         "media:control",
         "network:fetch"
       ],
@@ -669,13 +669,13 @@
           "page/views.js": "apps/com.myriad.aro/page/views.js"
         }
       },
-      "size": 1189322,
+      "size": 1189334,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-01T00:00:00Z",
-      "updated_at": "2026-09-07T07:56:51.102Z"
+      "updated_at": "2026-09-17T07:54:58.064Z"
     },
     {
       "id": "cn.wyyzxzyg.cdn-cache",

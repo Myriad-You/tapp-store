@@ -37,6 +37,10 @@ try {
       assert.equal(result.status, 0, `Compose config rejects generated artifacts: ${result.stderr}`);
       const config = JSON.parse(result.stdout);
       const services = config.services;
+      for (const name of ['docker-guard', 'updater', 'updater-gateway']) {
+        assert.equal(services[name].image, 'docker.io/somekawahitomi/myriad-updater:v1.2.3', `${name} uses the shared deployment target`);
+      }
+      assert.equal(services['docker-guard'].environment.DOCKER_GUARD_EXPECTED_IMAGE, services.updater.image);
       const names = ['backend', 'federation-worker', 'persona-worker'];
       for (const name of names) {
         const service = services[name];
@@ -62,8 +66,6 @@ try {
         assert.ok(!Object.values(env).includes('D'.repeat(40)), 'No admin password in worker environment');
         assert.ok(!Object.hasOwn(services[name].networks, 'myriad-admin-net') && !Object.hasOwn(services[name].networks, 'myriad-docker-guard-net'), 'Worker stays outside administrative networks');
       }
-      assert.match(services['docker-guard'].image, /@sha256:[a-f0-9]{64}$/);
-      assert.match(services.updater.image, /@sha256:[a-f0-9]{64}$/);
       assert.equal(services.proxy.environment.PROXY_ALLOW_DIRECT_UPDATER, 'false');
       assert.ok(services.updater.volumes.some(v => v.target === '/host/compose/.env' && v.type === 'bind'), 'Updater receives a real env file');
       if (panelId === 'caddy') assert.ok(output.caddy.includes('example.com') && output.caddy.includes('reverse_proxy'));
@@ -77,6 +79,10 @@ try {
       assert.equal(migratedResult.status, 0, migratedResult.stderr);
       const migratedConfig = JSON.parse(migratedResult.stdout);
       assert.equal(migratedConfig.name, config.name);
+      for (const name of ['docker-guard', 'updater', 'updater-gateway']) {
+        assert.equal(migratedConfig.services[name].image, 'docker.io/somekawahitomi/myriad-updater:v1.2.4', `${name} follows the upgraded target despite digest records`);
+      }
+      assert.equal(migratedConfig.services['docker-guard'].environment.DOCKER_GUARD_EXPECTED_IMAGE, migratedConfig.services.updater.image);
       for (const name of names) {
         assert.equal(migratedConfig.services[name].environment.DATABASE_URL, services[name].environment.DATABASE_URL);
         assert.deepEqual(migratedConfig.services[name].networks, services[name].networks);

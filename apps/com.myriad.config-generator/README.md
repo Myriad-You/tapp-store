@@ -1,6 +1,6 @@
 # Myriad 安装配置生成
 
-版本 **1.1.0**。生成新安装配置，或导入旧 `docker-compose.yml` 与 `.env`，生成保留既有数据身份的升级配置。工具只读取用户提供的文件并生成下载结果，不连接或修改服务器。
+版本 **1.1.1**。生成新安装配置，或导入旧 `docker-compose.yml` 与 `.env`，生成保留既有数据身份的升级配置。工具只读取用户提供的文件并生成下载结果，不连接或修改服务器。
 
 ## 输出与部署目录
 
@@ -60,6 +60,10 @@
 | 外置数据库网络 `myriad-backend-ext`，按需 | 仅 backend 与两个 worker |
 
 worker 使用独立数据库登录，不能复用管理员登录或管理员口令。内置模式由 web 预置 worker 角色。外置新装默认也由 web 预置，因此管理登录须有权执行角色创建/修改、角色参数、GRANT/REVOKE 及默认权限操作，仅能连接或执行普通迁移不够。受限托管库需 DBA 预置符合 Myriad worker 策略的独立角色，同时清空 backend 的两项 `*_DB_PASSWORD`，并将两个 worker URL 改为实际登录。升级保留原角色管理方式，不擅自启用角色修改。worker 不进入管理网络或 Guard 网络。只有 docker-guard 挂载 Docker socket；只有 proxy 发布宿主端口。
+
+## 更新器镜像
+
+Guard、updater、updater-gateway 共用 `UPDATER_IMAGE:UPDATER_TAG` 部署目标。三个容器使用同一镜像；修改 tag 后重建即可切换版本。`DOCKER_GUARD_IMAGE`、`UPDATER_IMAGE_REF` 是核验与恢复用的摘要记录，不覆盖部署目标。导入旧配置升级也遵循这一规则，Guard 的预期镜像跟随相同部署目标。实际版本仍由镜像内置版本报告。
 
 ## 导入旧配置升级
 
