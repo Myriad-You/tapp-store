@@ -134,6 +134,16 @@
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
 }
 
+.lnw-icon-img {
+  object-fit: cover;
+  padding: 1px;
+  background: #fff;
+}
+
+.dark .lnw-icon-img {
+  background: rgba(255, 255, 255, 0.12);
+}
+
 .lnw-text {
   display: flex;
   flex-direction: column;
