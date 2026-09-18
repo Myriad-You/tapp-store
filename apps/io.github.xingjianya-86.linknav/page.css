@@ -390,9 +390,10 @@
 
 /* ---------- 批量导入 / 导出 ---------- */
 
-.ln-io-dialog {
-  width: min(1180px, calc(100vw - 8px));
-  max-width: min(1180px, calc(100vw - 8px));
+dialog.ln-io-dialog {
+  width: calc(100vw - 2px);
+  max-width: calc(100vw - 2px);
+  max-height: min(92vh, 960px);
 }
 
 .ln-io-shell {
@@ -408,7 +409,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 14px 16px 0;
+  padding: 14px 10px 0;
 }
 
 .ln-io-head h2 {
@@ -425,7 +426,7 @@
   grid-template-columns: 1fr;
   gap: 16px;
   align-content: start;
-  padding: 0 14px 14px;
+  padding: 0 10px 10px;
 }
 
 @media (min-width: 680px) {
@@ -513,7 +514,7 @@
 .ln-io-tabs {
   display: flex;
   gap: 6px;
-  margin: 12px 14px;
+  margin: 12px 10px;
   padding: 4px;
   border-radius: 999px;
   background: rgba(var(--ln-accent-rgb), 0.12);
