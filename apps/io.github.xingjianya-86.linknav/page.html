@@ -1,0 +1,141 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Zen+Maru+Gothic:wght@400;700&display=swap">
+
+<main class="ln-app" data-ln-app>
+  <div class="ln-bg" aria-hidden="true">
+    <span class="ln-orb ln-orb-a"></span>
+    <span class="ln-orb ln-orb-b"></span>
+    <span class="ln-orb ln-orb-c"></span>
+    <span class="ln-dot ln-dot-1">✦</span>
+    <span class="ln-dot ln-dot-2">✧</span>
+    <span class="ln-dot ln-dot-3">♪</span>
+    <span class="ln-dot ln-dot-4">✦</span>
+    <span class="ln-dot ln-dot-5">♡</span>
+  </div>
+
+  <header class="ln-hero">
+    <div class="ln-hero-main">
+      <div class="ln-mascot-wrap" aria-hidden="true">
+        <svg class="ln-mascot" data-ln-mascot data-mood="idle" data-crown="false" viewBox="0 0 140 124" focusable="false">
+          <g class="ln-mascot-crown">
+            <path d="M57 20 L64 7 L70.5 17 L77 5 L84 20 Z" />
+            <rect x="57" y="19" width="27" height="5.5" rx="2.75" />
+          </g>
+          <path class="ln-mascot-ear" d="M34 50 L25 17 Q23 9 32 14 L61 31 Z" />
+          <path class="ln-mascot-ear" d="M106 50 L115 17 Q117 9 108 14 L79 31 Z" />
+          <ellipse class="ln-mascot-body" cx="70" cy="70" rx="46" ry="42" />
+          <ellipse class="ln-mascot-belly" cx="70" cy="84" rx="29" ry="22" />
+          <g class="ln-mascot-pose ln-mascot-idle">
+            <ellipse class="ln-mascot-eye" cx="52" cy="66" rx="6" ry="7.6" />
+            <ellipse class="ln-mascot-eye" cx="88" cy="66" rx="6" ry="7.6" />
+            <circle class="ln-mascot-shine" cx="54" cy="62.5" r="2" />
+            <circle class="ln-mascot-shine" cx="90" cy="62.5" r="2" />
+            <path class="ln-mascot-mouth" d="M63 78 Q70 84 77 78" />
+          </g>
+          <g class="ln-mascot-pose ln-mascot-happy">
+            <path class="ln-mascot-eye-curve" d="M45 68 Q52 58.5 59 68" />
+            <path class="ln-mascot-eye-curve" d="M81 68 Q88 58.5 95 68" />
+            <path class="ln-mascot-mouth-open" d="M61 76 Q70 90 79 76 Q70 82 61 76" />
+          </g>
+          <g class="ln-mascot-pose ln-mascot-sad">
+            <ellipse class="ln-mascot-eye" cx="52" cy="66" rx="5.4" ry="6.4" />
+            <ellipse class="ln-mascot-eye" cx="88" cy="66" rx="5.4" ry="6.4" />
+            <path class="ln-mascot-mouth" d="M63 81 Q70 76 77 81" />
+            <path class="ln-mascot-tear" d="M99 72 q3.4 5.6 0 7.8 q-3.4 -2.2 0 -7.8" />
+          </g>
+          <ellipse class="ln-mascot-blush" cx="38" cy="78" rx="7.5" ry="4.5" />
+          <ellipse class="ln-mascot-blush" cx="102" cy="78" rx="7.5" ry="4.5" />
+          <path class="ln-mascot-star" d="M70 99 l2.6 5.3 5.8 .85 -4.2 4.1 1 5.8 -5.2 -2.75 -5.2 2.75 1 -5.8 -4.2 -4.1 5.8 -.85 z" />
+        </svg>
+      </div>
+      <div class="ln-hero-text">
+        <p class="ln-kicker"><span class="ln-role-badge" data-ln-role-badge>游客</span></p>
+        <h1 class="ln-title" data-ln-title>链接小窝</h1>
+        <p class="ln-subtitle" data-ln-subtitle></p>
+        <p class="ln-count" data-ln-count></p>
+      </div>
+      <button class="ln-add-btn" type="button" data-action="add" hidden>＋ <span data-ln-add-text></span></button>
+    </div>
+  </header>
+
+  <section class="ln-toolbar" aria-label="搜索与视图">
+    <label class="ln-search">
+      <span class="ln-search-icon" aria-hidden="true">⌕</span>
+      <input type="search" data-ln-search autocomplete="off" />
+      <button class="ln-search-clear" type="button" data-action="clear-search" aria-label="clear search" hidden>×</button>
+    </label>
+    <div class="ln-views" role="tablist">
+      <button class="ln-view is-active" type="button" data-view="all" role="tab" aria-selected="true" data-ln-view-all></button>
+      <button class="ln-view" type="button" data-view="fav" role="tab" aria-selected="false" data-ln-view-fav></button>
+    </div>
+  </section>
+
+  <nav class="ln-chips" data-ln-chips aria-label="标签筛选"></nav>
+
+  <section class="ln-list" data-ln-list aria-live="polite"></section>
+
+  <div class="ln-empty" data-ln-empty hidden>
+    <div class="ln-empty-mascot" data-ln-empty-mascot aria-hidden="true">(´･ω･`)</div>
+    <p class="ln-empty-text" data-ln-empty-text></p>
+  </div>
+
+  <footer class="ln-footer"><span data-ln-footer></span></footer>
+</main>
+
+<dialog class="ln-dialog" data-ln-dialog aria-labelledby="ln-dialog-title">
+  <form class="ln-form" data-ln-form novalidate>
+    <header class="ln-dialog-head">
+      <h2 id="ln-dialog-title" data-ln-dialog-title></h2>
+      <button class="ln-icon-btn" type="button" data-action="close-dialog" aria-label="close">×</button>
+    </header>
+    <label class="ln-field">
+      <span data-ln-label-url></span>
+      <input type="url" data-ln-input-url maxlength="2048" placeholder="https://" required />
+    </label>
+    <p class="ln-hint" data-ln-url-hint></p>
+    <label class="ln-field">
+      <span data-ln-label-title></span>
+      <input type="text" data-ln-input-title maxlength="120" />
+    </label>
+    <label class="ln-field">
+      <span data-ln-label-desc></span>
+      <textarea data-ln-input-desc rows="2" maxlength="300"></textarea>
+    </label>
+    <div class="ln-field-row">
+      <label class="ln-field ln-field-icon">
+        <span data-ln-label-icon></span>
+        <input type="text" data-ln-input-icon maxlength="8" placeholder="🐱" />
+      </label>
+      <label class="ln-field ln-field-audience">
+        <span data-ln-label-audience></span>
+        <select data-ln-input-audience>
+          <option value="guest" data-ln-opt-guest></option>
+          <option value="user" data-ln-opt-user></option>
+          <option value="admin" data-ln-opt-admin></option>
+        </select>
+      </label>
+    </div>
+    <label class="ln-field">
+      <span data-ln-label-tags></span>
+      <input type="text" data-ln-input-tags maxlength="120" placeholder="开发, 工具" />
+    </label>
+    <label class="ln-toggle">
+      <input type="checkbox" data-ln-input-pinned />
+      <span class="ln-toggle-track" aria-hidden="true"><span class="ln-toggle-thumb"></span></span>
+      <span data-ln-label-pinned></span>
+    </label>
+    <footer class="ln-dialog-actions">
+      <button class="ln-btn ln-btn-ghost" type="button" data-action="close-dialog" data-ln-btn-cancel></button>
+      <button class="ln-btn ln-btn-primary" type="submit" data-ln-btn-save></button>
+    </footer>
+  </form>
+</dialog>
+
+<div class="ln-copy-panel" data-ln-copy-panel hidden>
+  <p class="ln-copy-title" data-ln-copy-title></p>
+  <input type="text" readonly data-ln-copy-input />
+  <button class="ln-btn ln-btn-primary" type="button" data-action="close-copy" data-ln-btn-close-copy></button>
+</div>
+
+<div class="ln-toast" data-ln-toast hidden role="status" aria-live="polite"></div>

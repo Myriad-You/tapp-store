@@ -40,8 +40,23 @@ assert.match(main, /if \[ ! -f \/guard-policy\/docker-guard.env \]; then umask 0
 assert.match(main, /backend-volume-init:[\s\S]*?logging:\s*\n\s*driver: \"json-file\"/)
 assert.match(main, /MYRIAD_GUARD_ENV_FILE: 'guard-policy\/docker-guard.env'/)
 assert.match(main, /DOCKER_GUARD_HOST_POLICY_PATH: \/guard-policy\/docker-guard.env/)
-assert.match(main, /returns EROFS at SwapTag/)
-assert.doesNotMatch(main, /target: \/host\/compose\/\.env/)
+assert.match(main, /Deployment definitions are immutable/)
+assert.match(main, /target: \/host\/compose\/\.env/)
+assert.match(main, /MYRIAD_PROCESS_ROLE: web/)
+assert.match(main, /federation-worker:/)
+assert.match(main, /persona-worker:/)
+assert.match(main, /PROXY_FEDERATION_UPSTREAM: http:\/\/federation-worker:1103/)
+assert.match(main, /PROXY_PERSONA_UPSTREAM: http:\/\/persona-worker:1103/)
+assert.match(main, /\/activities\//)
+assert.match(main, /\/phantasi\/articles\//)
+assert.match(main, /BRANDING_METADATA_URL: http:\/\/backend:1103\/api\/config\/metadata/)
+assert.match(main, /PERSONA_DB_PASSWORD/)
+assert.match(main, /FEDERATION_DB_PASSWORD/)
+assert.match(main, /PERSONA_WEB_UPSTREAM: http:\/\/backend:1103/)
+assert.match(main, /Geographic disablement exits 0/)
+assert.match(main, /restart: on-failure/)
+assert.match(main, /cap_drop: \[ALL\]/)
+assert.match(main, /assertGeneratedComposeContract/)
 assert.doesNotMatch(main, /<<'POLICY'/)
 assert.doesNotMatch(main, /cat > \/guard-policy\/docker-guard.env/)
 assert.doesNotMatch(main, /guard-policy-init/)
@@ -49,6 +64,8 @@ assert.doesNotMatch(main, /\/etc\/myriad/)
 assert.doesNotMatch(main, /MYRIAD_ALLOW_REMOTE_BOOTSTRAP/)
 assert.doesNotMatch(main, /DOCKER_GUARD_ALLOWED_IMAGES: \\\$\{BACKEND_IMAGE/)
 assert.doesNotMatch(main, /await Promise\.all\(\s*\[\s*fetchDockerHubTags/)
+assert.doesNotMatch(main, /优先四仓共同/)
+assert.match(main, /each take that image's own latest versioned tag/)
 // Image identity is baked into runtime ENV. Compose must not overlay
 // MYRIAD_TAG / PROXY_TAG / UPDATER_TAG as MYRIAD_VERSION.
 assert.doesNotMatch(main, /MYRIAD_VERSION:\s*\\\$\{(?:MYRIAD_TAG|PROXY_TAG|UPDATER_TAG)\}/)
@@ -58,6 +75,9 @@ assert.match(main, /TAPP_STORE_STATS_URL: \\\$\{TAPP_STORE_STATS_URL:-https:\/\/
 assert.match(main, /TAPP_STORE_STATS_ENABLED: \\\$\{TAPP_STORE_STATS_ENABLED:-true\}/)
 assert.doesNotMatch(main, /YOUTUBE_API_KEY:|OPENXBL_API_KEY:|PSN_NPSSO:/)
 assert.doesNotMatch(main, /PUBLIC_API_URL:/)
+assert.doesNotMatch(main, /(?:PROXY_ENABLED|GEMINI_BASE_URL|GITHUB_API_BASE_URL):/)
+assert.match(main, /管理台保存不再双写它们/)
+assert.match(main, /\/journal\/feeds\/:id/)
 assert.match(main, /MYRIAD_DB_MODE: \$\{MYRIAD_DB_MODE:-external\}/)
 
 // Extract pure helpers by executing a slice of main.js (no DOM / Tapp)
@@ -81,7 +101,8 @@ function loadHelpers() {
     prelude + '\n' + slice +
     '; return {' +
     ' isSafeDotenvToken, requireSafeDotenvToken, parseDotenvStrict, validateGeneratedEnv,' +
-    ' parseMemoryToBytes, isValidMemoryLimit, isValidPgMajor, parseImageRef, buildImageRef,' +
+    ' assertGeneratedComposeContract, parseMemoryToBytes, isValidMemoryLimit, isValidPgMajor,' +
+    ' parseImageRef, buildImageRef,' +
     ' DOTENV_TOKEN_RE, NGINX_UPLOAD_MAX_BYTES, PG_VERSION_MIN, PG_VERSION_MAX,' +
     ' MEM_MIN_BYTES, MEM_MAX_BYTES, EXPECTED_ENV_KEYS_BASE' +
     ' };'
@@ -168,6 +189,8 @@ function buildCleanEnv(secrets, bundled) {
     'CORS_ORIGINS=https://example.com',
     'BASE_URL=https://example.com',
     'FRONTEND_URL=https://example.com',
+    'PERSONA_DB_PASSWORD=' + secrets.PERSONA_DB_PASSWORD,
+    'FEDERATION_DB_PASSWORD=' + secrets.FEDERATION_DB_PASSWORD,
     'MYRIAD_COMPOSE_HOST_ROOT=.',
     'MYRIAD_GUARD_ENV_FILE=guard-policy/docker-guard.env',
     'DOCKER_GUARD_IMAGE=docker.io/somekawahitomi/myriad-updater@sha256:' + 'a'.repeat(64),
@@ -188,12 +211,68 @@ const secrets = {
   MYRIAD_SETUP_SECRET: 'S'.repeat(40),
   POSTGRES_PASSWORD: 'P'.repeat(40),
   GUARD_SELF_UPDATE_TOKEN: 'H'.repeat(40),
-  ANALYTICS_SALT: 'a'.repeat(64)
+  ANALYTICS_SALT: 'a'.repeat(64),
+  PERSONA_DB_PASSWORD: 'W'.repeat(40),
+  FEDERATION_DB_PASSWORD: 'F'.repeat(40)
 }
 const clean = buildCleanEnv(secrets, true)
 const parsed = h.validateGeneratedEnv(clean, secrets, { bundled: true })
 assert.equal(parsed.map.JWT_SECRET, secrets.JWT_SECRET)
 assert.ok(parsed.keys.includes('POSTGRES_PASSWORD'))
+
+const sameSecrets = Object.assign({}, secrets, {
+  FEDERATION_DB_PASSWORD: secrets.PERSONA_DB_PASSWORD
+})
+assert.throws(
+  () => h.validateGeneratedEnv(buildCleanEnv(sameSecrets, true), sameSecrets, { bundled: true }),
+  /必须不同/
+)
+
+const external = buildCleanEnv(secrets, false)
+  .replace(
+    'DATABASE_URL=postgres://myriad:x@postgres:5432/myriad',
+    [
+      'DATABASE_URL=postgres://myriad:x@db.example:5432/myriad',
+      'PERSONA_DATABASE_URL=postgres://myriad_persona:x@db.example:5432/myriad',
+      'FEDERATION_DATABASE_URL=postgres://myriad_federation:x@db.example:5432/myriad'
+    ].join('\n')
+  )
+const parsedExternal = h.validateGeneratedEnv(external, secrets, { bundled: false })
+assert.ok(parsedExternal.keys.includes('PERSONA_DATABASE_URL'))
+assert.ok(parsedExternal.keys.includes('FEDERATION_DATABASE_URL'))
+assert.ok(!parsedExternal.keys.includes('POSTGRES_PASSWORD'))
+
+const goodCompose = `
+services:
+  backend:
+    environment:
+      MYRIAD_PROCESS_ROLE: web
+  federation-worker:
+    environment:
+      MYRIAD_PROCESS_ROLE: federation-worker
+    networks: [myriad-net]
+    restart: on-failure
+  persona-worker:
+    environment:
+      MYRIAD_PROCESS_ROLE: persona-worker
+      PERSONA_WEB_UPSTREAM: http://backend:1103
+    networks: [myriad-net]
+  frontend:
+    image: x
+  proxy:
+    environment:
+      PROXY_FEDERATION_UPSTREAM: http://federation-worker:1103
+      PROXY_PERSONA_UPSTREAM: http://persona-worker:1103
+`
+h.assertGeneratedComposeContract(goodCompose)
+assert.throws(
+  () => h.assertGeneratedComposeContract(goodCompose.replace('networks: [myriad-net]', 'networks: [myriad-net, myriad-backend-ext]', 1)),
+  /database network/
+)
+assert.throws(
+  () => h.assertGeneratedComposeContract(goodCompose + '\n# /brew/articles/\n'),
+  /phantasi/
+)
 
 // multi-line secret value rejected at parse
 assert.throws(
@@ -210,7 +289,7 @@ assert.equal(h.isValidMemoryLimit('512T'), false) // above 256G
 
 // --- PG ---
 assert.equal(h.isValidPgMajor('18'), true)
-assert.equal(h.isValidPgMajor('20'), true)
+assert.equal(h.isValidPgMajor('20'), false)
 assert.equal(h.isValidPgMajor('17'), false)
 assert.equal(h.isValidPgMajor('999'), false)
 

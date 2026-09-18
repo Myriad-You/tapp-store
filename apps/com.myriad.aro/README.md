@@ -2,7 +2,7 @@
 
 社交中心：消息（Channel/Room）、时间线与个人资料。
 
-> 官方社交 Tapp（version 1.2.0，需 Myriad ≥ v0.3.36）。设置页含出站投递队列与联邦签名密钥轮换（需宿主 `federation.rotateKeys`）。
+> 官方社交 Tapp（version 1.0.0，需 Myriad ≥ v0.3.36）。设置页含出站投递队列与联邦签名密钥轮换（需宿主 `federation.rotateKeys`）。
 
 ## 功能
 
@@ -20,7 +20,7 @@
 
 `storage:read`, `storage:write`, `ui:notification`,
 `federation:read|interact|post|channel|room|message|files`,
-`platform:read`, `report:read`, `tappList:read|manage`, `brew:read`,
+`platform:read`, `report:read`, `tappList:read|manage`, `phantasi:read`,
 `media:control`, `network:fetch`
 
 > 联邦写权限按动作域拆分：发帖与投递队列走 `federation:post`，关注/点赞/收藏/转发走
@@ -182,7 +182,7 @@ page/index.js        # page 层入口：按依赖顺序 require 同层文件，�
 page/scope.js        # 层内共享作用域（把跨文件的名字挂回沙箱全局）
 page/*.js            # UI 真源，由 page/index.js 的 require 闭包拉入
 i18n/{zh,en,ja}.json
-manifest.json        # version 1.2.0
+manifest.json        # version 1.0.0
 ```
 
 层入口由 manifest 的 `core.entry` / `page.entry` 声明；层内其余文件不进 manifest，

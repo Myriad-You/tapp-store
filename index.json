@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.62",
+  "version": "1.0.70",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-09-12T05:32:49.798Z",
+  "updated_at": "2026-09-17T23:49:32.230Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -14,7 +14,7 @@
     {
       "id": "com.myriad.music-player",
       "name": "音乐播放器",
-      "version": "1.0.1",
+      "version": "1.0.0",
       "description": "控制系统音乐播放，查看歌词与播放列表",
       "long_description": "对接系统播放器，显示封面、进度与播放控制；支持同步歌词、列表搜索，以及顺序、循环、单曲和随机模式。",
       "locales": {
@@ -125,12 +125,12 @@
       "featured": true,
       "verified": true,
       "created_at": "2025-12-10T00:00:00Z",
-      "updated_at": "2026-08-19T11:09:38.469Z"
+      "updated_at": "2026-09-17T12:46:49.459Z"
     },
     {
       "id": "com.myriad.quick-notes",
       "name": "便携便签",
-      "version": "1.0.1",
+      "version": "1.0.0",
       "description": "快速记录想法，支持搜索与主页小组件",
       "long_description": "在页面中编写、搜索和整理便签，并通过 4×2 / 4×4 小组件在主页速览或速记。支持置顶、颜色、排序、导出导入与可选时间戳；便签保存在当前用户的私有存储中。跟随宿主明暗主题，内置中英日三语。",
       "locales": {
@@ -248,19 +248,19 @@
       "featured": true,
       "verified": true,
       "created_at": "2025-12-04T00:00:00Z",
-      "updated_at": "2026-08-19T11:09:38.471Z"
+      "updated_at": "2026-09-17T12:46:49.464Z"
     },
     {
       "id": "com.myriad.config-generator",
       "name": "Myriad 安装配置生成",
-      "version": "1.0.5",
-      "description": "分步生成 Compose、.env 与反代配置，覆盖常见面板、编排界面与外层反代",
-      "long_description": "按欢迎、部署方式、域名、站点、数据库、限额的步骤，生成官方生产拓扑所需的 docker-compose、.env、反代配置与部署说明。可选 1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy 或命令行。Nginx 类方式请先创建站点并完成 SSL，再上传现有 conf；平台反代与 Caddy 不要求上传。密钥与镜像版本将自动填入，高级选项默认收起。密钥经白名单校验，并对 .env 再解析以防止注入。",
+      "version": "1.0.0",
+      "description": "生成新安装配置或导入旧 Compose 与 .env 升级，提供十种平台的部署与反代指南",
+      "long_description": "生成 Myriad 新安装配置，或导入旧 Compose 与 .env 生成升级产物。提供十种平台的固定宿主目录部署与整站反代指南：1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy 和 CLI。容器反代通过业务网络访问 myriad-proxy:80；Coolify / Dokploy 提供独立 Traefik 动态配置。外置 Docker 数据库使用固定 myriad-backend-ext 网络，web 与两个 worker 同时接入，worker 保持独立登录与管理网络隔离。升级要求原项目名，保留受支持的数据身份与密钥；内置 PostgreSQL 须为 18+，未知服务或自定义挂载拒绝自动迁移。工具只生成文件，不修改服务器；实际网络、证书和数据库权限需在部署时验证。",
       "locales": {
         "en-US": {
           "name": "Myriad Install Config Generator",
-          "description": "Generate Compose, .env, and reverse-proxy files for common panels, compose UIs, and outer proxies",
-          "long_description": "A step wizard (welcome, method, domain, site, database, limits) generates official production docker-compose, .env, reverse-proxy files, and deploy notes. Choose 1Panel, Baota, aaPanel, Portainer, Dockge, Coolify, Dokploy, Nginx Proxy Manager, Caddy, or the CLI. Nginx-based methods still expect an existing site and SSL upload; platform proxies and Caddy do not. Secrets and image tags are filled in automatically; advanced options stay collapsed. Secrets are allowlisted and the .env is parsed again to block injection.",
+          "description": "Generate fresh installs or upgrade existing Compose and .env files, with deployment and proxy guides for ten platforms",
+          "long_description": "Generate a fresh Myriad deployment or import existing Compose and .env files for an upgrade. Includes physical host-directory and full-site proxy guides for ten platforms: 1Panel, Baota, aaPanel, Portainer, Dockge, Coolify, Dokploy, Nginx Proxy Manager, Caddy, and CLI. Container proxies reach myriad-proxy:80 through the business network; Coolify and Dokploy receive separate Traefik dynamic configuration. External Docker databases use the fixed myriad-backend-ext network shared by web and both workers, with independent worker logins and isolated management networks. Upgrades require the original project name and preserve supported data identity and secrets. Bundled PostgreSQL must be 18+; unknown services and custom mounts require manual migration. Generates files only; runtime networking, certificates, and database privileges still require verification.",
           "preview": {
             "version": 1,
             "type": "snapshot",
@@ -283,8 +283,8 @@
         },
         "ja-JP": {
           "name": "Myriad インストール設定ジェネレーター",
-          "description": "一般的なパネル、編成 UI、外側リバースプロキシ向けに Compose・.env・リバースプロキシ設定を手順に沿って生成",
-          "long_description": "ようこそ、デプロイ方法、ドメイン、サイト、データベース、上限の手順で、公式本番トポロジの docker-compose、.env、リバースプロキシ設定、デプロイ手順を生成します。1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy、または CLI を選べます。Nginx 系は先にサイト作成と SSL、既存 conf のアップロードが必要です。プラットフォーム側のリバースプロキシと Caddy では不要です。シークレットとイメージタグは自動入力され、詳細設定は折りたたまれます。シークレットはホワイトリストで検証し、.env を再パースしてインジェクションを防ぎます。",
+          "description": "新規設定の生成と既存 Compose・.env のアップグレード。10 環境向けのデプロイ・プロキシ手順を提供",
+          "long_description": "Myriad の新規設定を生成するか、既存の Compose と .env を読み込んでアップグレード設定を作成します。1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy、CLI の 10 環境向けに、実ホスト上の配置先とサイト全体のプロキシ手順を提供。コンテナ側プロキシは業務ネットワーク経由で myriad-proxy:80 に接続し、Coolify / Dokploy 用には Traefik 動的設定を生成します。外部 Docker DB は固定 myriad-backend-ext ネットワークに web と両 worker を接続し、worker の独立ログインと管理ネットワーク隔離を維持します。アップグレードには元のプロジェクト名が必要です。対応するデータ識別情報と秘密情報を保持し、内蔵 PostgreSQL は 18 以上が必要です。未知のサービスや独自マウントは自動移行を拒否します。サーバーは変更せず、ネットワーク・証明書・DB 権限は実環境での確認が必要です。",
           "preview": {
             "version": 1,
             "type": "snapshot",
@@ -316,6 +316,7 @@
       "category": "developer",
       "tags": [
         "配置",
+        "升级",
         "部署",
         "Docker",
         "Nginx",
@@ -365,20 +366,25 @@
           "en-US": "apps/com.myriad.config-generator/i18n/en-US.json",
           "ja-JP": "apps/com.myriad.config-generator/i18n/ja-JP.json",
           "zh-CN": "apps/com.myriad.config-generator/i18n/zh-CN.json"
+        },
+        "modules": {
+          "platform.js": "apps/com.myriad.config-generator/platform.js",
+          "upgrade.js": "apps/com.myriad.config-generator/upgrade.js",
+          "vendor/js-yaml.js": "apps/com.myriad.config-generator/vendor/js-yaml.js"
         }
       },
-      "size": 387869,
+      "size": 583090,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-14T00:00:00Z",
-      "updated_at": "2026-08-22T03:32:38.207Z"
+      "updated_at": "2026-09-17T12:46:49.469Z"
     },
     {
       "id": "com.myriad.doudizhu",
       "name": "斗地主",
-      "version": "1.0.2",
+      "version": "1.0.0",
       "description": "三人单机斗地主：经典牌桌与若泉绮羽㥹銯麏主题、完整规则、智能提示与本地 AI",
       "long_description": "从零重写的三人单机斗地主。使用标准 54 张扑克牌，支持随机发牌、叫地主与抢地主、完整牌型校验、连续两家不出后重新领出、默认 20 秒回合倒计时、自动托管、三档本地 AI、提示、倍率、春天与反春天、断局续玩和本地战绩。默认使用经典绿色牌桌，并可在 Tapp 内切换若泉绮羽㥹銯麏主题；主题覆盖人物卡面、卡背、大厅、牌桌、按钮与回合提示，同时保留高对比点数和花色。提供 1×1、2×2 与 4×2 今日战绩小组件，并优先显示当前 Myriad 用户名与头像。个人游戏偏好和玩家数据均按主体隔离；支持中英日三语和宿主明暗主题，无联网权限，不读取其他玩家隐藏手牌。",
       "locales": {
@@ -515,12 +521,12 @@
       "featured": true,
       "verified": true,
       "created_at": "2026-07-20T00:00:00Z",
-      "updated_at": "2026-09-11T02:30:24.164Z"
+      "updated_at": "2026-09-17T12:46:49.475Z"
     },
     {
       "id": "com.myriad.aro",
       "name": "Aro",
-      "version": "1.2.0",
+      "version": "1.0.0",
       "description": "社交中心，统一管理消息、时间线与个人资料",
       "long_description": "Aro 是 Myriad 官方社交中心，把联邦私信与群聊、时间线和个人资料收在同一处。信使支持 Channel / Room、端到端加密、群共享与本机贴纸包、表情、附件（图片、文件、Tapp、Brew、资料库与报告）、@ 提及、置顶与转发，以及后台轮询新消息通知。时间线可发帖、引用转发、收藏与关注。设置页可查看出站投递队列（取消 / 重试）并轮换联邦签名密钥。聊天记录可在本机导出或导入 JSON 备份。界面支持中英日与宿主明暗主题。",
       "locales": {
@@ -601,7 +607,7 @@
         "report:read",
         "tappList:read",
         "tappList:manage",
-        "brew:read",
+        "phantasi:read",
         "media:control",
         "network:fetch"
       ],
@@ -663,13 +669,13 @@
           "page/views.js": "apps/com.myriad.aro/page/views.js"
         }
       },
-      "size": 1189322,
+      "size": 1189334,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-01T00:00:00Z",
-      "updated_at": "2026-09-07T07:56:51.102Z"
+      "updated_at": "2026-09-17T12:46:49.488Z"
     },
     {
       "id": "cn.wyyzxzyg.cdn-cache",
@@ -1547,7 +1553,7 @@
     {
       "id": "com.myriad.three-lab",
       "name": "Three 实验室",
-      "version": "1.0.2",
+      "version": "1.0.0",
       "description": "官方 Three.js 示例：包内贴图与 GLB、pause 停帧、销毁时释放 WebGL",
       "long_description": "演示如何在 Tapp Page 里使用 Three.js：库打成由 page.entry 依赖图加载的 IIFE，先 getUrlMap 再用 rewriteUrl 接到 LoadingManager。棋盘贴图和立方体 GLB 都走包内路径。离开页面会暂停 rAF，销毁时释放渲染器。不是宿主内置引擎，也不走 CDN。",
       "locales": {
@@ -1663,7 +1669,7 @@
       "featured": false,
       "verified": true,
       "created_at": "2026-08-14T09:55:45.239Z",
-      "updated_at": "2026-08-19T11:26:32.406Z"
+      "updated_at": "2026-09-17T12:46:49.543Z"
     },
     {
       "id": "top.360nenz.metro-guide",
@@ -2733,6 +2739,103 @@
       "verified": false,
       "created_at": "2026-09-07T23:38:42.151Z",
       "updated_at": "2026-09-07T23:38:42.151Z"
+    },
+    {
+      "id": "io.github.xingjianya-86.linknav",
+      "name": "链接小窝",
+      "version": "1.0.0",
+      "description": "收集与分享网址的萌系导航页：管理员维护共享链接目录并按角色分层可见，人人可收藏，桌面小组件快捷直达",
+      "long_description": "链接小窝是一个把网址收藏与分享做成萌系贴纸风的导航页。管理员在小窝里录入链接，并给每条链接设置可见范围——所有人（含游客）、登录用户或仅管理员，前端会按当前角色自动隐藏无权查看的内容；其中「仅管理员」的链接保存在安装级私有数据里，不会进入访客可读的共享数据。\n\n每位登录用户都可以点卡片上的小星星收藏自己喜欢的链接，收藏保存在自己的私有空间，互不可见。桌面小组件会展示置顶链接，点击即可直达。\n\n出于 Myriad 沙箱的安全限制，应用只能打开 Manifest 中声明的站点白名单（首批约 28 个常见站点，命中域名后自动打开）；白名单之外的链接会显示「复制」，一键复制到剪贴板后手动打开，不会静默失败。\n\n界面支持浅色 / 深色主题，文案提供简体中文、English 和日本語，动效会跟随系统「减少动态效果」设置自动收敛。应用不联网、不申请网络权限，链接数据只保存在你的 Myriad 实例中。",
+      "locales": {
+        "en-US": {
+          "name": "LinkNav",
+          "description": "A kawaii link nest: admins curate a shared link directory with role-based visibility, everyone keeps personal favorites, plus a dashboard widget for quick access",
+          "long_description": "LinkNav turns a link collection into a soft sticker-style homepage. Admins feed links into the nest and set each link's audience — everyone (including guests), signed-in users, or admins only. The frontend filters by the current role, and admin-only links live in installation-scoped private data so they are never exposed to visitor-readable shared data.\n\nEvery signed-in user can tap the little star to keep personal favorites, stored in their own private space. A dashboard widget shows pinned links for one-tap access.\n\nBecause the Myriad sandbox only allows opening URLs declared in the manifest allowlist (about 28 popular sites in this release), links outside the allowlist show a Copy action instead of failing silently — copy the URL and open it manually.\n\nThe UI adapts to light and dark themes, speaks Simplified Chinese, English and Japanese, and respects the system reduced-motion preference. The app makes no network requests and stores link data only inside your Myriad instance."
+        },
+        "ja-JP": {
+          "name": "リンクの小部屋",
+          "description": "みんなで集めるかわいいリンク集。管理者が共有リンクをロール別に公開し、お気に入りとウィジェットで素早くアクセス",
+          "long_description": "「リンクの小部屋」は、リンク集をやわらかいステッカー風のホームページに変えるアプリです。管理者がリンクを登録し、公開範囲を「全員（ゲスト含む）」「ログインユーザー」「管理者のみ」から選べます。画面は現在のロールに合わせて自動で絞り込み、「管理者のみ」のリンクはインストール単位のプライベートデータに保存されるため、訪問者が読める共有データには出ません。\n\nログインユーザーはカードの星を押すだけでお気に入りを保存でき、お気に入りは自分のプライベート領域にだけ保存されます。ダッシュボードウィジェットにはピン留めリンクが表示され、ワンタップで開けます。\n\nMyriad のサンドボックスは Manifest で宣言した許可リスト（本バージョンでは主要 28 サイト）しか開けないため、リスト外のリンクは「コピー」ボタンに切り替わります。コピーして手動で開いてください。\n\nライト / ダークテーマ、簡体字中国語・英語・日本語に対応し、システムの「視差効果を減らす」設定にも従います。ネットワークリクエストは行わず、リンクデータはあなたの Myriad インスタンス内だけに保存されます。"
+        }
+      },
+      "author": {
+        "name": "xingjianya-86",
+        "url": "https://github.com/xingjianya-86"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/io.github.xingjianya-86.linknav",
+      "repository": "https://github.com/xingjianya-86/tapp-store",
+      "category": "utility",
+      "tags": [
+        "导航",
+        "网址",
+        "收藏",
+        "分享",
+        "链接",
+        "效率",
+        "萌系"
+      ],
+      "permissions": [
+        "storage:read",
+        "storage:write",
+        "ui:openUrl",
+        "ui:notification",
+        "ui:confirm",
+        "ui:theme",
+        "widget:register"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><rect width='24' height='24' rx='7' fill='#ffd3e0'/><path d='M12 4.4l2 4 4.4.6-3.2 3.1.8 4.4-4-2.1-4 2.1.8-4.4-3.2-3.1 4.4-.6z' fill='#fff' stroke='#f48fb1' stroke-width='1' stroke-linejoin='round'/><path d='M9.3 17.4c.7 1 1.6 1.5 2.7 1.5s2-.5 2.7-1.5' fill='none' stroke='#f48fb1' stroke-width='1.1' stroke-linecap='round'/></svg>",
+      "theme_color": "#ffb7ce",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/io.github.xingjianya-86.linknav/preview.html",
+        "styles": [
+          "apps/io.github.xingjianya-86.linknav/page.css",
+          "apps/io.github.xingjianya-86.linknav/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.4
+        },
+        "theme": "light"
+      },
+      "download": {
+        "manifest": "apps/io.github.xingjianya-86.linknav/manifest.json",
+        "code": "apps/io.github.xingjianya-86.linknav/core.js",
+        "readme": "apps/io.github.xingjianya-86.linknav/README.md",
+        "widget_styles": "apps/io.github.xingjianya-86.linknav/widget.css",
+        "page_styles": "apps/io.github.xingjianya-86.linknav/page.css",
+        "page_template": "apps/io.github.xingjianya-86.linknav/page.html",
+        "widget_templates": {
+          "quick-links": {
+            "2x2": "apps/io.github.xingjianya-86.linknav/widget-2x2.html",
+            "4x2": "apps/io.github.xingjianya-86.linknav/widget-4x2.html"
+          }
+        },
+        "i18n": {
+          "en-US": "apps/io.github.xingjianya-86.linknav/i18n/en-US.json",
+          "ja-JP": "apps/io.github.xingjianya-86.linknav/i18n/ja-JP.json",
+          "zh-CN": "apps/io.github.xingjianya-86.linknav/i18n/zh-CN.json"
+        },
+        "modules": {
+          "page/index.js": "apps/io.github.xingjianya-86.linknav/page/index.js",
+          "widget/index.js": "apps/io.github.xingjianya-86.linknav/widget/index.js"
+        }
+      },
+      "size": 82617,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-09-17T23:49:32.230Z",
+      "updated_at": "2026-09-17T23:49:32.230Z"
     }
   ],
   "last_updated": "2026-08-04T09:47:35Z"

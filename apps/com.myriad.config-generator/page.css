@@ -2032,3 +2032,13 @@ select.form-select:not(.cg-select-native) {
     animation: none !important;
   }
 }
+
+/* Local upgrade import and migration review. */
+.cg-upgrade-input { width: 100%; min-height: 10rem; resize: vertical; font-family: ui-monospace, monospace; font-size: .85rem; line-height: 1.5; }
+.cg-upgrade-report { overflow-wrap: anywhere; font-size: .9rem; line-height: 1.65; }
+.cg-upgrade-report h3 { margin: 1rem 0 .35rem; font-size: .95rem; }
+.cg-upgrade-report ul { margin: 0; padding-inline-start: 1.4rem; }
+.cg-ob-bar { flex-wrap: wrap; gap: .75rem; }
+#btn-start-upgrade { padding: .8rem 1rem; border-radius: 999px; background: transparent; border: 1px solid currentColor; color: inherit; cursor: pointer; }
+#upgrade-active { margin: .5rem 1.5rem; }
+#upgrade-result-section { margin-bottom: 1rem; }

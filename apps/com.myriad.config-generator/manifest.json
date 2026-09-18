@@ -1,17 +1,17 @@
 {
   "id": "com.myriad.config-generator",
   "name": "Myriad 安装配置生成",
-  "version": "1.0.5",
+  "version": "1.0.0",
   "minSystemVersion": "0.2.1",
-  "description": "分步生成 Compose、.env 与反代配置，覆盖常见面板、编排界面与外层反代",
+  "description": "生成新安装配置或导入旧 Compose 与 .env 升级，提供十种平台的部署与反代指南",
   "locales": {
     "en-US": {
       "name": "Myriad Install Config Generator",
-      "description": "Generate Compose, .env, and reverse-proxy files for common panels, compose UIs, and outer proxies"
+      "description": "Generate fresh installs or upgrade existing Compose and .env files, with deployment and proxy guides for ten platforms"
     },
     "ja-JP": {
       "name": "Myriad インストール設定ジェネレーター",
-      "description": "一般的なパネル、編成 UI、外側リバースプロキシ向けに Compose・.env・リバースプロキシ設定を手順に沿って生成"
+      "description": "新規設定の生成と既存 Compose・.env のアップグレード。10 環境向けのデプロイ・プロキシ手順を提供"
     }
   },
   "category": "developer",
