@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.71",
+  "version": "1.0.72",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-09-18T01:20:17.386Z",
+  "updated_at": "2026-09-18T23:37:27.534Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -2743,19 +2743,19 @@
     {
       "id": "io.github.xingjianya-86.linknav",
       "name": "链接小窝",
-      "version": "1.0.0",
+      "version": "1.2.0",
       "description": "收集与分享网址的萌系导航页：管理员维护共享链接目录并按角色分层可见，人人可收藏，桌面小组件快捷直达",
-      "long_description": "链接小窝是一个把网址收藏与分享做成萌系贴纸风的导航页。管理员在小窝里录入链接，并给每条链接设置可见范围——所有人（含游客）、登录用户或仅管理员，前端会按当前角色自动隐藏无权查看的内容；其中「仅管理员」的链接保存在安装级私有数据里，不会进入访客可读的共享数据。\n\n每位登录用户都可以点卡片上的小星星收藏自己喜欢的链接，收藏保存在自己的私有空间，互不可见。桌面小组件会展示置顶链接，点击即可直达。\n\n出于 Myriad 沙箱的安全限制，应用只能打开 Manifest 中声明的站点白名单（首批约 28 个常见站点，命中域名后自动打开）；白名单之外的链接会显示「复制」，一键复制到剪贴板后手动打开，不会静默失败。\n\n界面支持浅色 / 深色主题，文案提供简体中文、English 和日本語，动效会跟随系统「减少动态效果」设置自动收敛。应用不联网、不申请网络权限，链接数据只保存在你的 Myriad 实例中。",
+      "long_description": "链接小窝是一个把网址收藏与分享做成萌系贴纸风的导航页。管理员在小窝里录入链接，并给每条链接设置可见范围——所有人（含游客）、登录用户或仅管理员，前端会按当前角色自动隐藏无权查看的内容；其中「仅管理员」的链接保存在安装级私有数据里，不会进入访客可读的共享数据。\n\n每位登录用户都可以点卡片上的小星星收藏自己喜欢的链接，收藏保存在自己的私有空间，互不可见。桌面小组件会展示置顶链接，点击即可直达。图标支持上传本地图片压缩后缓存进应用数据，也支持管理员在浏览器里自动获取 favicon；缓存后的图标对所有访客可见、离线可用。站长还可以批量导入（JSON / URL 列表 / 书签 HTML / CSV）与导出（完整 JSON / URL 文本 / CSV / 收藏），备份和迁移都很方便。\n\n出于 Myriad 沙箱的安全限制，应用只能打开 Manifest 中声明的站点白名单（首批约 28 个常见站点，命中域名后自动打开）；白名单之外的链接可以「搜索打开」——用已声明的搜索引擎打开该网址，也可以一键复制后手动打开，不会静默失败。\n\n界面支持浅色 / 深色主题，文案提供简体中文、English 和日本語，动效会跟随系统「减少动态效果」设置自动收敛。应用默认离线可用：联网仅用于管理员在浏览器里获取 favicon（需 network:fetch 授权；未授权时自动隐藏该按钮，仍可手动上传）。图标缓存后访客离线也能正常显示，链接数据只保存在你的 Myriad 实例中。",
       "locales": {
         "en-US": {
           "name": "LinkNav",
           "description": "A kawaii link nest: admins curate a shared link directory with role-based visibility, everyone keeps personal favorites, plus a dashboard widget for quick access",
-          "long_description": "LinkNav turns a link collection into a soft sticker-style homepage. Admins feed links into the nest and set each link's audience — everyone (including guests), signed-in users, or admins only. The frontend filters by the current role, and admin-only links live in installation-scoped private data so they are never exposed to visitor-readable shared data.\n\nEvery signed-in user can tap the little star to keep personal favorites, stored in their own private space. A dashboard widget shows pinned links for one-tap access.\n\nBecause the Myriad sandbox only allows opening URLs declared in the manifest allowlist (about 28 popular sites in this release), links outside the allowlist show a Copy action instead of failing silently — copy the URL and open it manually.\n\nThe UI adapts to light and dark themes, speaks Simplified Chinese, English and Japanese, and respects the system reduced-motion preference. The app makes no network requests and stores link data only inside your Myriad instance."
+          "long_description": "LinkNav turns a link collection into a soft sticker-style homepage. Admins feed links into the nest and set each link's audience — everyone (including guests), signed-in users, or admins only. The frontend filters by the current role, and admin-only links live in installation-scoped private data so they are never exposed to visitor-readable shared data.\n\nEvery signed-in user can tap the little star to keep personal favorites, stored in their own private space. A dashboard widget shows pinned links for one-tap access. Icons can be uploaded and cached locally in app data, or fetched automatically in the admin's browser; cached icons are visible to every visitor and work offline. Admins can also batch import (JSON / URL list / bookmarks HTML / CSV) and export (full JSON / URL text / CSV / favorites) for easy backup and migration.\n\nBecause the Myriad sandbox only allows opening URLs declared in the manifest allowlist (about 28 popular sites in this release), links outside the allowlist offer a Search action (opens the URL in a declared search engine) plus Copy, so nothing fails silently.\n\nThe UI adapts to light and dark themes, speaks Simplified Chinese, English and Japanese, and respects the system reduced-motion preference. The app is offline-first: networking is used only when an admin fetches a favicon in the browser (requires the network:fetch grant; without it the fetch button is hidden and manual upload still works). Cached icons keep working offline, and link data is stored only inside your Myriad instance."
         },
         "ja-JP": {
           "name": "リンクの小部屋",
           "description": "みんなで集めるかわいいリンク集。管理者が共有リンクをロール別に公開し、お気に入りとウィジェットで素早くアクセス",
-          "long_description": "「リンクの小部屋」は、リンク集をやわらかいステッカー風のホームページに変えるアプリです。管理者がリンクを登録し、公開範囲を「全員（ゲスト含む）」「ログインユーザー」「管理者のみ」から選べます。画面は現在のロールに合わせて自動で絞り込み、「管理者のみ」のリンクはインストール単位のプライベートデータに保存されるため、訪問者が読める共有データには出ません。\n\nログインユーザーはカードの星を押すだけでお気に入りを保存でき、お気に入りは自分のプライベート領域にだけ保存されます。ダッシュボードウィジェットにはピン留めリンクが表示され、ワンタップで開けます。\n\nMyriad のサンドボックスは Manifest で宣言した許可リスト（本バージョンでは主要 28 サイト）しか開けないため、リスト外のリンクは「コピー」ボタンに切り替わります。コピーして手動で開いてください。\n\nライト / ダークテーマ、簡体字中国語・英語・日本語に対応し、システムの「視差効果を減らす」設定にも従います。ネットワークリクエストは行わず、リンクデータはあなたの Myriad インスタンス内だけに保存されます。"
+          "long_description": "「リンクの小部屋」は、リンク集をやわらかいステッカー風のホームページに変えるアプリです。管理者がリンクを登録し、公開範囲を「全員（ゲスト含む）」「ログインユーザー」「管理者のみ」から選べます。画面は現在のロールに合わせて自動で絞り込み、「管理者のみ」のリンクはインストール単位のプライベートデータに保存されるため、訪問者が読める共有データには出ません。\n\nログインユーザーはカードの星を押すだけでお気に入りを保存でき、お気に入りは自分のプライベート領域にだけ保存されます。ダッシュボードウィジェットにはピン留めリンクが表示され、ワンタップで開けます。アイコンはローカル画像を圧縮してアプリ内データに保存でき、管理者のブラウザで favicon を自動取得もできます。キャッシュ済みアイコンは全員に表示され、オフラインでも使えます。管理者は一括インポート（JSON / URL リスト / ブックマーク HTML / CSV）とエクスポート（完全な JSON / URL テキスト / CSV / お気に入り）もでき、バックアップや移行が簡単です。\n\nMyriad のサンドボックスは Manifest で宣言した許可リスト（本バージョンでは主要 28 サイト）しか開けないため、リスト外のリンクは「検索で開く」と「コピー」を表示します。検索は宣言済みの検索エンジンで URL を開きます。\n\nライト / ダークテーマ、簡体字中国語・英語・日本語に対応し、システムの「視差効果を減らす」設定にも従います。アプリはオフライン優先です。ネットワークを使うのは、管理者がブラウザで favicon を取得するときだけです（network:fetch の許可が必要。未許可の場合は取得ボタンが自動的に非表示になり、手動アップロードは引き続き利用できます）。キャッシュ済みアイコンはオフラインでも表示され、リンクデータはあなたの Myriad インスタンス内だけに保存されます。"
         }
       },
       "author": {
@@ -2764,8 +2764,8 @@
       },
       "license": "MIT",
       "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/io.github.xingjianya-86.linknav",
-      "repository": "https://github.com/xingjianya-86/tapp-store",
-      "category": "utility",
+      "repository": "https://github.com/Myriad-You/tapp-store/tree/main/apps/io.github.xingjianya-86.linknav",
+      "category": "social",
       "tags": [
         "导航",
         "网址",
@@ -2773,11 +2773,14 @@
         "分享",
         "链接",
         "效率",
+        "社交",
+        "协作",
         "萌系"
       ],
       "permissions": [
         "storage:read",
         "storage:write",
+        "network:fetch",
         "ui:openUrl",
         "ui:notification",
         "ui:confirm",
@@ -2829,13 +2832,13 @@
           "widget/index.js": "apps/io.github.xingjianya-86.linknav/widget/index.js"
         }
       },
-      "size": 82617,
+      "size": 184391,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-09-17T23:49:32.230Z",
-      "updated_at": "2026-09-17T23:49:32.230Z"
+      "updated_at": "2026-09-18T23:37:27.534Z"
     }
   ],
   "last_updated": "2026-08-04T09:47:35Z"
