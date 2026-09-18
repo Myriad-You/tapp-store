@@ -585,6 +585,16 @@
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
 }
 
+.ln-card-icon-img {
+  object-fit: cover;
+  padding: 2px;
+  background: #fff;
+}
+
+.dark .ln-card-icon-img {
+  background: rgba(255, 255, 255, 0.12);
+}
+
 .ln-card-body {
   display: flex;
   flex-direction: column;
@@ -851,6 +861,63 @@
 .ln-field-icon input {
   text-align: center;
   font-size: 18px;
+}
+
+.ln-field-media {
+  gap: 6px;
+}
+
+.ln-icon-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ln-icon-preview {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: rgba(var(--ln-accent-rgb), 0.14);
+  border: 2px dashed rgba(var(--ln-accent-rgb), 0.45);
+  overflow: hidden;
+}
+
+.ln-icon-preview[data-empty="false"] {
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.9);
+  background: #fff;
+}
+
+.dark .ln-icon-preview[data-empty="false"] {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ln-icon-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ln-icon-preview-fallback {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ln-accent);
+}
+
+.ln-icon-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ln-btn-mini {
+  padding: 6px 12px;
+  font-size: 12px;
 }
 
 .ln-hint {

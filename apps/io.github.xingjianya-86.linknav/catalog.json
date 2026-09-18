@@ -1,8 +1,8 @@
 {
-  "long_description": "链接小窝是一个把网址收藏与分享做成萌系贴纸风的导航页。管理员在小窝里录入链接，并给每条链接设置可见范围——所有人（含游客）、登录用户或仅管理员，前端会按当前角色自动隐藏无权查看的内容；其中「仅管理员」的链接保存在安装级私有数据里，不会进入访客可读的共享数据。\n\n每位登录用户都可以点卡片上的小星星收藏自己喜欢的链接，收藏保存在自己的私有空间，互不可见。桌面小组件会展示置顶链接，点击即可直达。\n\n出于 Myriad 沙箱的安全限制，应用只能打开 Manifest 中声明的站点白名单（首批约 28 个常见站点，命中域名后自动打开）；白名单之外的链接会显示「复制」，一键复制到剪贴板后手动打开，不会静默失败。\n\n界面支持浅色 / 深色主题，文案提供简体中文、English 和日本語，动效会跟随系统「减少动态效果」设置自动收敛。应用不联网、不申请网络权限，链接数据只保存在你的 Myriad 实例中。",
-  "tags": ["导航", "网址", "收藏", "分享", "链接", "效率", "萌系"],
+  "long_description": "链接小窝是一个把网址收藏与分享做成萌系贴纸风的导航页。管理员在小窝里录入链接，并给每条链接设置可见范围——所有人（含游客）、登录用户或仅管理员，前端会按当前角色自动隐藏无权查看的内容；其中「仅管理员」的链接保存在安装级私有数据里，不会进入访客可读的共享数据。\n\n每位登录用户都可以点卡片上的小星星收藏自己喜欢的链接，收藏保存在自己的私有空间，互不可见。桌面小组件会展示置顶链接，点击即可直达。图标支持上传本地图片压缩后缓存进应用数据，也支持管理员在浏览器里自动获取 favicon；缓存后的图标对所有访客可见、离线可用。\n\n出于 Myriad 沙箱的安全限制，应用只能打开 Manifest 中声明的站点白名单（首批约 28 个常见站点，命中域名后自动打开）；白名单之外的链接可以「搜索打开」——用已声明的搜索引擎打开该网址，也可以一键复制后手动打开，不会静默失败。\n\n界面支持浅色 / 深色主题，文案提供简体中文、English 和日本語，动效会跟随系统「减少动态效果」设置自动收敛。应用不联网、不申请网络权限，链接数据只保存在你的 Myriad 实例中。",
+  "tags": ["导航", "网址", "收藏", "分享", "链接", "效率", "社交", "协作", "萌系"],
   "license": "MIT",
-  "repository": "https://github.com/xingjianya-86/tapp-store",
+  "repository": "https://github.com/Myriad-You/tapp-store/tree/main/apps/io.github.xingjianya-86.linknav",
   "preview": {
     "version": 1,
     "type": "snapshot",
@@ -15,10 +15,10 @@
   },
   "locales": {
     "en-US": {
-      "long_description": "LinkNav turns a link collection into a soft sticker-style homepage. Admins feed links into the nest and set each link's audience — everyone (including guests), signed-in users, or admins only. The frontend filters by the current role, and admin-only links live in installation-scoped private data so they are never exposed to visitor-readable shared data.\n\nEvery signed-in user can tap the little star to keep personal favorites, stored in their own private space. A dashboard widget shows pinned links for one-tap access.\n\nBecause the Myriad sandbox only allows opening URLs declared in the manifest allowlist (about 28 popular sites in this release), links outside the allowlist show a Copy action instead of failing silently — copy the URL and open it manually.\n\nThe UI adapts to light and dark themes, speaks Simplified Chinese, English and Japanese, and respects the system reduced-motion preference. The app makes no network requests and stores link data only inside your Myriad instance."
+      "long_description": "LinkNav turns a link collection into a soft sticker-style homepage. Admins feed links into the nest and set each link's audience — everyone (including guests), signed-in users, or admins only. The frontend filters by the current role, and admin-only links live in installation-scoped private data so they are never exposed to visitor-readable shared data.\n\nEvery signed-in user can tap the little star to keep personal favorites, stored in their own private space. A dashboard widget shows pinned links for one-tap access. Icons can be uploaded and cached locally in app data, or fetched automatically in the admin's browser; cached icons are visible to every visitor and work offline.\n\nBecause the Myriad sandbox only allows opening URLs declared in the manifest allowlist (about 28 popular sites in this release), links outside the allowlist offer a Search action (opens the URL in a declared search engine) plus Copy, so nothing fails silently.\n\nThe UI adapts to light and dark themes, speaks Simplified Chinese, English and Japanese, and respects the system reduced-motion preference. The app makes no network requests and stores link data only inside your Myriad instance."
     },
     "ja-JP": {
-      "long_description": "「リンクの小部屋」は、リンク集をやわらかいステッカー風のホームページに変えるアプリです。管理者がリンクを登録し、公開範囲を「全員（ゲスト含む）」「ログインユーザー」「管理者のみ」から選べます。画面は現在のロールに合わせて自動で絞り込み、「管理者のみ」のリンクはインストール単位のプライベートデータに保存されるため、訪問者が読める共有データには出ません。\n\nログインユーザーはカードの星を押すだけでお気に入りを保存でき、お気に入りは自分のプライベート領域にだけ保存されます。ダッシュボードウィジェットにはピン留めリンクが表示され、ワンタップで開けます。\n\nMyriad のサンドボックスは Manifest で宣言した許可リスト（本バージョンでは主要 28 サイト）しか開けないため、リスト外のリンクは「コピー」ボタンに切り替わります。コピーして手動で開いてください。\n\nライト / ダークテーマ、簡体字中国語・英語・日本語に対応し、システムの「視差効果を減らす」設定にも従います。ネットワークリクエストは行わず、リンクデータはあなたの Myriad インスタンス内だけに保存されます。"
+      "long_description": "「リンクの小部屋」は、リンク集をやわらかいステッカー風のホームページに変えるアプリです。管理者がリンクを登録し、公開範囲を「全員（ゲスト含む）」「ログインユーザー」「管理者のみ」から選べます。画面は現在のロールに合わせて自動で絞り込み、「管理者のみ」のリンクはインストール単位のプライベートデータに保存されるため、訪問者が読める共有データには出ません。\n\nログインユーザーはカードの星を押すだけでお気に入りを保存でき、お気に入りは自分のプライベート領域にだけ保存されます。ダッシュボードウィジェットにはピン留めリンクが表示され、ワンタップで開けます。アイコンはローカル画像を圧縮してアプリ内データに保存でき、管理者のブラウザで favicon を自動取得もできます。キャッシュ済みアイコンは全員に表示され、オフラインでも使えます。\n\nMyriad のサンドボックスは Manifest で宣言した許可リスト（本バージョンでは主要 28 サイト）しか開けないため、リスト外のリンクは「検索で開く」と「コピー」を表示します。検索は宣言済みの検索エンジンで URL を開きます。\n\nライト / ダークテーマ、簡体字中国語・英語・日本語に対応し、システムの「視差効果を減らす」設定にも従います。ネットワークリクエストは行わず、リンクデータはあなたの Myriad インスタンス内だけに保存されます。"
     }
   }
 }

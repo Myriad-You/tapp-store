@@ -6,6 +6,8 @@
 
 const core = require("../core.js");
 
+const FAVICON_SERVICE = "https://icon.horse/icon/";
+
 const state = {
   role: "guest",
   links: [],
@@ -16,6 +18,10 @@ const state = {
   view: "all",
   editingId: null,
   motion: true,
+  iconDraft: "",
+  iconOriginal: "",
+  canRemote: false,
+  fetchBusy: false,
 };
 
 const refs = {};
@@ -79,6 +85,12 @@ function collectRefs() {
     inputTags: "[data-ln-input-tags]",
     inputPinned: "[data-ln-input-pinned]",
     urlHint: "[data-ln-url-hint]",
+    iconPreview: "[data-ln-icon-preview]",
+    iconPreviewImg: "[data-ln-icon-preview-img]",
+    iconFallback: "[data-ln-icon-fallback]",
+    iconFile: "[data-ln-icon-file]",
+    iconHint: "[data-ln-icon-hint]",
+    btnFetchIcon: "[data-ln-btn-fetch]",
     copyPanel: "[data-ln-copy-panel]",
     copyTitle: "[data-ln-copy-title]",
     copyInput: "[data-ln-copy-input]",
@@ -105,6 +117,10 @@ function bindStaticText() {
   setText(document.querySelector("[data-ln-label-title]"), t("app.field.title"));
   setText(document.querySelector("[data-ln-label-desc]"), t("app.field.desc"));
   setText(document.querySelector("[data-ln-label-icon]"), t("app.field.icon"));
+  setText(document.querySelector("[data-ln-label-icon-media]"), t("app.field.iconMedia"));
+  setText(document.querySelector("[data-ln-btn-pick]"), t("app.icon.upload"));
+  setText(document.querySelector("[data-ln-btn-fetch]"), t("app.icon.fetch"));
+  setText(document.querySelector("[data-ln-btn-clear]"), t("app.icon.clear"));
   setText(document.querySelector("[data-ln-label-audience]"), t("app.field.audience"));
   setText(document.querySelector("[data-ln-label-tags]"), t("app.field.tags"));
   setText(document.querySelector("[data-ln-label-pinned]"), t("app.field.pinned"));
@@ -242,7 +258,17 @@ function createCard(link, index) {
   const main = el("button", "ln-card-main");
   main.type = "button";
   main.dataset.action = "open";
-  const icon = el("span", "ln-card-icon", iconOf(link));
+  let icon;
+  if (link.iconData) {
+    icon = document.createElement("img");
+    icon.className = "ln-card-icon ln-card-icon-img";
+    icon.src = link.iconData;
+    icon.alt = "";
+    icon.decoding = "async";
+    icon.loading = "lazy";
+  } else {
+    icon = el("span", "ln-card-icon", iconOf(link));
+  }
   const body = el("span", "ln-card-body");
   body.appendChild(el("span", "ln-card-title", link.title));
   body.appendChild(el("span", "ln-card-host", core.hostOf(link.url)));
@@ -268,7 +294,10 @@ function createCard(link, index) {
   const target = core.resolveTarget(link.url, state.openUrls) || link.target;
   const openable = !!target;
   const copy = actionButton("ln-mini", "copy", t("app.copy"));
-  if (!openable) copy.classList.add("is-copy-only");
+  if (!openable) {
+    copy.classList.add("is-copy-only");
+    actions.appendChild(actionButton("ln-mini", "search", t("app.search")));
+  }
   actions.appendChild(copy);
   if (state.role === "admin") {
     actions.appendChild(actionButton("ln-mini", "edit", t("app.edit")));
@@ -331,7 +360,13 @@ function findLink(id) {
 async function handleOpen(link) {
   const result = await core.openLink(link, state.openUrls);
   if (result.opened) return;
-  toast(t("app.copyOnly"), "sad");
+  await handleSearch(link);
+}
+
+async function handleSearch(link) {
+  const result = await core.openSearch(link.url);
+  if (result.opened) return;
+  toast(t("app.searchFail"), "sad");
   await handleCopy(link, true);
 }
 
@@ -392,6 +427,8 @@ async function handleFavorite(link) {
 function openDialog(link) {
   if (!refs.dialog) return;
   state.editingId = link ? link.id : null;
+  state.iconDraft = link && link.iconData ? link.iconData : "";
+  state.iconOriginal = state.iconDraft;
   setText(refs.dialogTitle, link ? t("app.edit") : t("app.addTitle"));
   refs.inputUrl.value = link ? link.url : "";
   refs.inputTitle.value = link ? link.title : "";
@@ -401,8 +438,180 @@ function openDialog(link) {
   refs.inputTags.value = link ? link.tags.join(", ") : "";
   refs.inputPinned.checked = link ? link.pinned : false;
   updateUrlHint();
+  renderIconPreview();
+  updateIconHint("", "");
   refs.dialog.showModal();
   refs.inputUrl.focus();
+}
+
+function renderIconPreview() {
+  if (!refs.iconPreview) return;
+  const hasImage = !!state.iconDraft;
+  if (refs.iconPreviewImg) {
+    if (hasImage) {
+      refs.iconPreviewImg.src = state.iconDraft;
+      refs.iconPreviewImg.hidden = false;
+    } else {
+      refs.iconPreviewImg.removeAttribute("src");
+      refs.iconPreviewImg.hidden = true;
+    }
+  }
+  if (refs.iconFallback) {
+    const emoji = refs.inputIcon && refs.inputIcon.value.trim() ? refs.inputIcon.value.trim() : "＋";
+    refs.iconFallback.textContent = emoji;
+    refs.iconFallback.hidden = hasImage;
+  }
+  refs.iconPreview.dataset.empty = hasImage ? "false" : "true";
+  if (refs.btnFetchIcon) {
+    refs.btnFetchIcon.hidden = !(state.role === "admin" && state.canRemote);
+  }
+}
+
+function updateIconHint(text, stateName) {
+  if (!refs.iconHint) return;
+  setText(refs.iconHint, text || "");
+  refs.iconHint.dataset.state = stateName || "";
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise(function (resolve, reject) {
+    const reader = new FileReader();
+    reader.onload = function () {
+      resolve(String(reader.result || ""));
+    };
+    reader.onerror = function () {
+      reject(reader.error || new Error("READ_FAILED"));
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImage(src) {
+  return new Promise(function (resolve, reject) {
+    const img = new Image();
+    img.onload = function () {
+      resolve(img);
+    };
+    img.onerror = function () {
+      reject(new Error("IMAGE_LOAD_FAILED"));
+    };
+    img.src = src;
+  });
+}
+
+function drawIcon(img, size) {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("CANVAS_UNAVAILABLE");
+  const width = img.naturalWidth || img.width || size;
+  const height = img.naturalHeight || img.height || size;
+  const scale = Math.max(size / width, size / height);
+  const drawW = Math.max(1, Math.round(width * scale));
+  const drawH = Math.max(1, Math.round(height * scale));
+  ctx.clearRect(0, 0, size, size);
+  ctx.drawImage(img, Math.round((size - drawW) / 2), Math.round((size - drawH) / 2), drawW, drawH);
+  return canvas.toDataURL("image/png");
+}
+
+async function compressIcon(source, size) {
+  const img = await loadImage(source);
+  return drawIcon(img, size);
+}
+
+function loadCorsImage(url, timeoutMs) {
+  return new Promise(function (resolve, reject) {
+    const img = new Image();
+    let settled = false;
+    const timer = setTimeout(function () {
+      if (settled) return;
+      settled = true;
+      reject(new Error("TIMEOUT"));
+    }, timeoutMs || 9000);
+    img.crossOrigin = "anonymous";
+    img.onload = function () {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(img);
+    };
+    img.onerror = function () {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      reject(new Error("IMAGE_LOAD_FAILED"));
+    };
+    img.src = url;
+  });
+}
+
+function toIconDataUriFromImage(img) {
+  let out = drawIcon(img, 64);
+  if (out.length > core.MAX_ICON_BYTES) out = drawIcon(img, 48);
+  if (out.length > core.MAX_ICON_BYTES) throw new Error("ICON_TOO_LARGE");
+  return out;
+}
+
+async function fetchFaviconAuto() {
+  if (state.fetchBusy || !state.canRemote || state.role !== "admin") return;
+  if (!refs.dialog || !refs.dialog.open) return;
+  const url = core.sanitizeUrl(refs.inputUrl ? refs.inputUrl.value : "");
+  if (!url) return;
+  const domain = core.hostOf(url);
+  if (!domain) return;
+  state.fetchBusy = true;
+  updateIconHint(t("app.icon.fetching"), "");
+  try {
+    const img = await loadCorsImage(FAVICON_SERVICE + encodeURIComponent(domain), 9000);
+    state.iconDraft = toIconDataUriFromImage(img);
+    renderIconPreview();
+    updateIconHint(t("app.icon.ready"), "ok");
+  } catch (err) {
+    updateIconHint(t("app.icon.fetchFail"), "warn");
+  } finally {
+    state.fetchBusy = false;
+  }
+}
+
+async function toIconDataUri(source) {
+  let out = await compressIcon(source, 64);
+  if (out.length > core.MAX_ICON_BYTES) out = await compressIcon(source, 48);
+  if (out.length > core.MAX_ICON_BYTES) throw new Error("ICON_TOO_LARGE");
+  return out;
+}
+
+async function handlePickIconFile(file) {
+  if (!file) return;
+  updateIconHint(t("app.icon.processing"), "");
+  try {
+    if (!/^image\/(png|jpeg|webp)$/i.test(file.type)) throw new Error("BAD_TYPE");
+    if (file.size > 256 * 1024) throw new Error("TOO_LARGE_RAW");
+    const raw = await readFileAsDataUrl(file);
+    state.iconDraft = await toIconDataUri(raw);
+    renderIconPreview();
+    updateIconHint(t("app.icon.ready"), "ok");
+  } catch (err) {
+    const code = err && err.message;
+    const message = code === "BAD_TYPE" ? t("app.icon.badType") : t("app.icon.tooLarge");
+    updateIconHint(message, "error");
+  }
+}
+
+function handleClearIcon() {
+  state.iconDraft = "";
+  renderIconPreview();
+  updateIconHint("", "");
+}
+
+async function persistIcon(link) {
+  if (state.iconDraft === state.iconOriginal) return;
+  if (state.iconDraft) {
+    await core.removeIcon(link.id, state.role);
+    await core.saveIcon(link.id, state.iconDraft, link.audience, state.role);
+  } else if (state.iconOriginal) {
+    await core.removeIcon(link.id, state.role);
+  }
 }
 
 function closeDialog() {
@@ -425,7 +634,7 @@ function updateUrlHint() {
     return;
   }
   const target = core.resolveTarget(url, state.openUrls);
-  setText(refs.urlHint, target ? t("app.openable") : t("app.copyOnly"));
+  setText(refs.urlHint, target ? t("app.openable") : t("app.searchOnly"));
   refs.urlHint.dataset.state = target ? "ok" : "warn";
 }
 
@@ -465,11 +674,19 @@ async function saveDialog() {
   next.push(link);
   try {
     await core.saveLinks(next, state.role);
+    await persistIcon(link);
+    await core.pruneIcons(
+      next.map(function (item) {
+        return item.id;
+      }),
+      state.role,
+    );
     closeDialog();
     await reload(false);
     toast(t("app.saved"), "happy");
   } catch (err) {
-    toast(t("app.saveFail"), "sad");
+    const code = err && err.message;
+    toast(code === "ICON_QUOTA" || code === "ICON_TOO_LARGE" ? t("app.icon.quota") : t("app.saveFail"), "sad");
   }
 }
 
@@ -486,6 +703,13 @@ async function handleDelete(link) {
   });
   try {
     await core.saveLinks(next, state.role);
+    await core.removeIcon(link.id, state.role);
+    await core.pruneIcons(
+      next.map(function (item) {
+        return item.id;
+      }),
+      state.role,
+    );
     await reload(false);
     toast(t("app.deleted"), "sad");
   } catch (err) {
@@ -537,6 +761,8 @@ function bindEvents() {
         handleOpen(link);
       } else if (action === "copy") {
         handleCopy(link, false);
+      } else if (action === "search") {
+        handleSearch(link);
       } else if (action === "fav") {
         event.stopPropagation();
         handleFavorite(link);
@@ -547,28 +773,60 @@ function bindEvents() {
       }
     });
   }
-  const app = refs.app || document;
-  app.addEventListener("click", function (event) {
+  document.addEventListener("click", function (event) {
     const actionNode = event.target.closest("[data-action]");
     if (!actionNode) return;
     const action = actionNode.dataset.action;
-    if (action === "add") openDialog(null);
-    else if (action === "clear-search") {
+    if (action === "add") {
+      openDialog(null);
+    } else if (action === "clear-search") {
       state.query = "";
       refs.search.value = "";
       refs.searchClear.hidden = true;
       renderList();
-    } else if (action === "close-dialog") closeDialog();
-    else if (action === "close-copy") refs.copyPanel.hidden = true;
+    } else if (action === "close-dialog") {
+      closeDialog();
+    } else if (action === "close-copy") {
+      refs.copyPanel.hidden = true;
+    } else if (action === "save-link") {
+      saveDialog();
+    } else if (action === "pick-icon") {
+      if (refs.iconFile) refs.iconFile.click();
+    } else if (action === "clear-icon") {
+      handleClearIcon();
+    } else if (action === "fetch-icon") {
+      fetchFaviconAuto();
+    }
   });
-  if (refs.form) {
-    refs.form.addEventListener("submit", function (event) {
+  if (refs.inputUrl) {
+    refs.inputUrl.addEventListener("input", updateUrlHint);
+    refs.inputUrl.addEventListener("blur", function () {
+      if (!state.iconDraft) fetchFaviconAuto();
+    });
+  }
+  if (refs.inputIcon) {
+    refs.inputIcon.addEventListener("input", renderIconPreview);
+  }
+  if (refs.iconFile) {
+    refs.iconFile.addEventListener("change", function () {
+      const file = refs.iconFile.files && refs.iconFile.files[0];
+      handlePickIconFile(file);
+      refs.iconFile.value = "";
+    });
+  }
+  if (refs.dialog) {
+    refs.dialog.addEventListener("close", function () {
+      state.editingId = null;
+      state.iconDraft = "";
+      state.iconOriginal = "";
+    });
+    refs.dialog.addEventListener("keydown", function (event) {
+      if (event.key !== "Enter") return;
+      const target = event.target;
+      if (!target || target.tagName === "TEXTAREA" || target.tagName === "BUTTON") return;
       event.preventDefault();
       saveDialog();
     });
-  }
-  if (refs.inputUrl) {
-    refs.inputUrl.addEventListener("input", updateUrlHint);
   }
   if (refs.copyPanel) {
     refs.copyPanel.addEventListener("click", function (event) {
@@ -609,6 +867,11 @@ Tapp.lifecycle.onReady(async function () {
   collectRefs();
   state.role = await core.getRole();
   state.openUrls = await core.listOpenUrls();
+  try {
+    state.canRemote = Array.isArray(Tapp.permissions) && Tapp.permissions.indexOf("network:fetch") >= 0;
+  } catch (err) {
+    state.canRemote = false;
+  }
   try {
     state.motion = (await Tapp.animation.getLevel()) !== "none";
   } catch (err) {

@@ -1,7 +1,7 @@
 {
   "id": "io.github.xingjianya-86.linknav",
   "name": "链接小窝",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "收集与分享网址的萌系导航页：管理员维护共享链接目录并按角色分层可见，人人可收藏，桌面小组件快捷直达",
   "locales": {
     "en-US": {
@@ -13,7 +13,7 @@
       "description": "みんなで集めるかわいいリンク集。管理者が共有リンクをロール別に公開し、お気に入りとウィジェットで素早くアクセス"
     }
   },
-  "category": "utility",
+  "category": "social",
   "author": {
     "name": "xingjianya-86",
     "url": "https://github.com/xingjianya-86"
@@ -21,6 +21,7 @@
   "permissions": [
     "storage:read",
     "storage:write",
+    "network:fetch",
     "ui:openUrl",
     "ui:notification",
     "ui:confirm",
@@ -47,7 +48,7 @@
       "styles": "widget.css",
       "defaultSize": "2x2",
       "sizes": ["2x2", "4x2"],
-      "category": "utility",
+      "category": "social",
       "refreshPolicy": {
         "mode": "event",
         "refreshOnVisible": true

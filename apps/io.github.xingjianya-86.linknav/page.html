@@ -84,7 +84,7 @@
 </main>
 
 <dialog class="ln-dialog" data-ln-dialog aria-labelledby="ln-dialog-title">
-  <form class="ln-form" data-ln-form novalidate>
+  <div class="ln-form" data-ln-form role="group">
     <header class="ln-dialog-head">
       <h2 id="ln-dialog-title" data-ln-dialog-title></h2>
       <button class="ln-icon-btn" type="button" data-action="close-dialog" aria-label="close">×</button>
@@ -116,6 +116,22 @@
         </select>
       </label>
     </div>
+    <div class="ln-field ln-field-media">
+      <span data-ln-label-icon-media></span>
+      <div class="ln-icon-row">
+        <span class="ln-icon-preview" data-ln-icon-preview data-empty="true">
+          <img class="ln-icon-preview-img" data-ln-icon-preview-img alt="" hidden />
+          <span class="ln-icon-preview-fallback" data-ln-icon-fallback aria-hidden="true">＋</span>
+        </span>
+        <div class="ln-icon-actions">
+          <button class="ln-btn ln-btn-ghost ln-btn-mini" type="button" data-action="pick-icon" data-ln-btn-pick></button>
+          <button class="ln-btn ln-btn-ghost ln-btn-mini" type="button" data-action="fetch-icon" data-ln-btn-fetch hidden></button>
+          <button class="ln-btn ln-btn-ghost ln-btn-mini" type="button" data-action="clear-icon" data-ln-btn-clear></button>
+        </div>
+        <input type="file" accept="image/png,image/jpeg,image/webp" data-ln-icon-file hidden />
+      </div>
+      <p class="ln-hint" data-ln-icon-hint></p>
+    </div>
     <label class="ln-field">
       <span data-ln-label-tags></span>
       <input type="text" data-ln-input-tags maxlength="120" placeholder="开发, 工具" />
@@ -127,9 +143,9 @@
     </label>
     <footer class="ln-dialog-actions">
       <button class="ln-btn ln-btn-ghost" type="button" data-action="close-dialog" data-ln-btn-cancel></button>
-      <button class="ln-btn ln-btn-primary" type="submit" data-ln-btn-save></button>
+      <button class="ln-btn ln-btn-primary" type="button" data-action="save-link" data-ln-btn-save></button>
     </footer>
-  </form>
+  </div>
 </dialog>
 
 <div class="ln-copy-panel" data-ln-copy-panel hidden>

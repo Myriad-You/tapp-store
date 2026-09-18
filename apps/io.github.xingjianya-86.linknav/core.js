@@ -7,8 +7,11 @@
 const SHARED_KEY = "linknav.links.v1";
 const PRIVATE_KEY = "linknav.links.v1";
 const FAV_KEY = "linknav.favorites.v1";
+const ICON_PREFIX = "linknav.icon.v1.";
 const MAX_LINKS = 500;
 const MAX_FAVORITES = 500;
+const MAX_ICON_BYTES = 64 * 1024;
+const MAX_ICON_TOTAL_BYTES = 4 * 1024 * 1024;
 
 const ROLE_RANK = { guest: 0, user: 1, admin: 2 };
 
@@ -156,9 +159,104 @@ async function loadAllLinks(includePrivate) {
   return merged;
 }
 
+function isIconDataUri(value) {
+  return typeof value === "string" && /^data:image\/(png|jpeg|webp);base64,/i.test(value);
+}
+
+function iconKey(linkId) {
+  return ICON_PREFIX + linkId;
+}
+
+async function loadIcons(includePrivate) {
+  const icons = {};
+  async function collect(store) {
+    try {
+      const all = await store.getAll();
+      Object.keys(all || {}).forEach(function (key) {
+        if (key.indexOf(ICON_PREFIX) !== 0) return;
+        const value = all[key];
+        const data = typeof value === "string" ? value : value && typeof value.data === "string" ? value.data : "";
+        if (isIconDataUri(data)) icons[key.slice(ICON_PREFIX.length)] = data;
+      });
+    } catch (err) {
+      /* 读取失败时按无图标处理 */
+    }
+  }
+  await collect(Tapp.shared);
+  if (includePrivate) await collect(Tapp.private);
+  return icons;
+}
+
+async function iconUsage() {
+  let bytes = 0;
+  async function sum(store) {
+    try {
+      const all = await store.getAll();
+      Object.keys(all || {}).forEach(function (key) {
+        if (key.indexOf(ICON_PREFIX) === 0) bytes += String(all[key] || "").length;
+      });
+    } catch (err) {
+      /* ignore */
+    }
+  }
+  await sum(Tapp.shared);
+  await sum(Tapp.private);
+  return bytes;
+}
+
+async function saveIcon(linkId, dataUri, audience, role) {
+  if (role !== "admin") throw new Error("FORBIDDEN");
+  if (!isIconDataUri(dataUri)) throw new Error("BAD_ICON");
+  if (dataUri.length > MAX_ICON_BYTES) throw new Error("ICON_TOO_LARGE");
+  const total = await iconUsage();
+  if (total > MAX_ICON_TOTAL_BYTES) throw new Error("ICON_QUOTA");
+  const store = audience === "admin" ? Tapp.private : Tapp.shared;
+  await store.set(iconKey(linkId), dataUri);
+  return true;
+}
+
+async function removeIcon(linkId, role) {
+  if (role !== "admin") throw new Error("FORBIDDEN");
+  try {
+    await Tapp.shared.remove(iconKey(linkId));
+  } catch (err) {
+    /* ignore */
+  }
+  try {
+    await Tapp.private.remove(iconKey(linkId));
+  } catch (err) {
+    /* ignore */
+  }
+}
+
+async function pruneIcons(liveIds, role) {
+  if (role !== "admin") return;
+  const live = {};
+  (Array.isArray(liveIds) ? liveIds : []).forEach(function (id) {
+    live[id] = true;
+  });
+  async function prune(store) {
+    try {
+      const keys = await store.keys();
+      for (let i = 0; i < (keys || []).length; i++) {
+        const key = keys[i];
+        if (typeof key !== "string" || key.indexOf(ICON_PREFIX) !== 0) continue;
+        const id = key.slice(ICON_PREFIX.length);
+        if (!live[id]) await store.remove(key);
+      }
+    } catch (err) {
+      /* ignore */
+    }
+  }
+  await prune(Tapp.shared);
+  await prune(Tapp.private);
+}
+
 async function loadLinks(role) {
   const viewerRank = rank(role || (await getRole()));
-  const all = await loadAllLinks(viewerRank >= ROLE_RANK.admin);
+  const includePrivate = viewerRank >= ROLE_RANK.admin;
+  const all = await loadAllLinks(includePrivate);
+  const icons = await loadIcons(includePrivate);
   return all
     .filter(function (link) {
       return rank(link.audience) <= viewerRank;
@@ -167,6 +265,10 @@ async function loadLinks(role) {
       if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
       if (a.order !== b.order) return a.order - b.order;
       return b.addedAt - a.addedAt;
+    })
+    .map(function (link) {
+      if (icons[link.id]) link.iconData = icons[link.id];
+      return link;
     });
 }
 
@@ -340,6 +442,32 @@ async function openLink(link, entries) {
   }
 }
 
+/**
+ * 白名单外的链接兜底：用已声明的搜索引擎打开目标网址。
+ * 按 Bing → Baidu → Google 顺序尝试，全部失败返回 { opened: false }。
+ */
+const SEARCH_ENGINES = [
+  { id: "bing", path: "search", queryKey: "q" },
+  { id: "baidu", path: "s", queryKey: "wd" },
+  { id: "google", path: "search", queryKey: "q" },
+];
+
+async function openSearch(targetUrl) {
+  if (typeof targetUrl !== "string" || !targetUrl) return { opened: false, reason: "no-url" };
+  for (let i = 0; i < SEARCH_ENGINES.length; i++) {
+    const engine = SEARCH_ENGINES[i];
+    const query = {};
+    query[engine.queryKey] = targetUrl;
+    try {
+      await Tapp.ui.openUrl({ id: engine.id, path: engine.path, query: query });
+      return { opened: true, engine: engine.id };
+    } catch (err) {
+      /* 尝试下一个引擎 */
+    }
+  }
+  return { opened: false, reason: "search-failed" };
+}
+
 async function copyText(text) {
   if (typeof text !== "string" || !text) return false;
   try {
@@ -361,7 +489,16 @@ module.exports = {
   SHARED_KEY: SHARED_KEY,
   PRIVATE_KEY: PRIVATE_KEY,
   FAV_KEY: FAV_KEY,
+  ICON_PREFIX: ICON_PREFIX,
   MAX_LINKS: MAX_LINKS,
+  MAX_ICON_BYTES: MAX_ICON_BYTES,
+  MAX_ICON_TOTAL_BYTES: MAX_ICON_TOTAL_BYTES,
+  isIconDataUri: isIconDataUri,
+  loadIcons: loadIcons,
+  iconUsage: iconUsage,
+  saveIcon: saveIcon,
+  removeIcon: removeIcon,
+  pruneIcons: pruneIcons,
   getRole: getRole,
   rank: rank,
   sanitizeUrl: sanitizeUrl,
@@ -375,6 +512,7 @@ module.exports = {
   listOpenUrls: listOpenUrls,
   resolveTarget: resolveTarget,
   openLink: openLink,
+  openSearch: openSearch,
   copyText: copyText,
   newLinkId: newLinkId,
 };
