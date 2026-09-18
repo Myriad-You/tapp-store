@@ -255,12 +255,12 @@
       "name": "Myriad 安装配置生成",
       "version": "1.0.0",
       "description": "生成新安装配置或导入旧 Compose 与 .env 升级，提供十种平台的部署与反代指南",
-      "long_description": "生成 Myriad 新安装配置，或导入旧 Compose 与 .env 生成升级产物。提供十种平台的固定宿主目录部署与整站反代指南：1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy 和 CLI。容器反代通过业务网络访问 myriad-proxy:80；Coolify / Dokploy 提供独立 Traefik 动态配置。外置 Docker 数据库使用实际名称可自定义的附加网络（Compose 键名 myriad-backend-ext），web 与两个 worker 同时接入，worker 保持独立登录与管理网络隔离。升级要求原项目名，保留受支持的数据身份与密钥；内置 PostgreSQL 须为 18+，未知服务或自定义挂载拒绝自动迁移。工具只生成文件，不修改服务器；实际网络、证书和数据库权限需在部署时验证。",
+      "long_description": "生成 Myriad 新安装配置，或导入旧 Compose 与 .env 生成升级产物。提供十种平台的固定宿主目录部署与整站反代指南：1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy 和 CLI。容器反代通过业务网络访问 myriad-proxy:80；Coolify / Dokploy 提供独立 Traefik 动态配置。外置 Docker 数据库使用固定 myriad-backend-ext 网络，web 与两个 worker 同时接入，worker 保持独立登录与管理网络隔离。升级要求原项目名，保留受支持的数据身份与密钥；内置 PostgreSQL 须为 18+，未知服务或自定义挂载拒绝自动迁移。工具只生成文件，不修改服务器；实际网络、证书和数据库权限需在部署时验证。",
       "locales": {
         "en-US": {
           "name": "Myriad Install Config Generator",
           "description": "Generate fresh installs or upgrade existing Compose and .env files, with deployment and proxy guides for ten platforms",
-          "long_description": "Generate a fresh Myriad deployment or import existing Compose and .env files for an upgrade. Includes physical host-directory and full-site proxy guides for ten platforms: 1Panel, Baota, aaPanel, Portainer, Dockge, Coolify, Dokploy, Nginx Proxy Manager, Caddy, and CLI. Container proxies reach myriad-proxy:80 through the business network; Coolify and Dokploy receive separate Traefik dynamic configuration. External Docker databases use an attach network with a customizable actual name (Compose key myriad-backend-ext) shared by web and both workers, with independent worker logins and isolated management networks. Upgrades require the original project name and preserve supported data identity and secrets. Bundled PostgreSQL must be 18+; unknown services and custom mounts require manual migration. Generates files only; runtime networking, certificates, and database privileges still require verification.",
+          "long_description": "Generate a fresh Myriad deployment or import existing Compose and .env files for an upgrade. Includes physical host-directory and full-site proxy guides for ten platforms: 1Panel, Baota, aaPanel, Portainer, Dockge, Coolify, Dokploy, Nginx Proxy Manager, Caddy, and CLI. Container proxies reach myriad-proxy:80 through the business network; Coolify and Dokploy receive separate Traefik dynamic configuration. External Docker databases use the fixed myriad-backend-ext network shared by web and both workers, with independent worker logins and isolated management networks. Upgrades require the original project name and preserve supported data identity and secrets. Bundled PostgreSQL must be 18+; unknown services and custom mounts require manual migration. Generates files only; runtime networking, certificates, and database privileges still require verification.",
           "preview": {
             "version": 1,
             "type": "snapshot",
@@ -284,7 +284,7 @@
         "ja-JP": {
           "name": "Myriad インストール設定ジェネレーター",
           "description": "新規設定の生成と既存 Compose・.env のアップグレード。10 環境向けのデプロイ・プロキシ手順を提供",
-          "long_description": "Myriad の新規設定を生成するか、既存の Compose と .env を読み込んでアップグレード設定を作成します。1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy、CLI の 10 環境向けに、実ホスト上の配置先とサイト全体のプロキシ手順を提供。コンテナ側プロキシは業務ネットワーク経由で myriad-proxy:80 に接続し、Coolify / Dokploy 用には Traefik 動的設定を生成します。外部 Docker DB は実際の名前をカスタマイズできる追加ネットワーク（Compose 上のキーは myriad-backend-ext）に web と両 worker を接続し、worker の独立ログインと管理ネットワーク隔離を維持します。アップグレードには元のプロジェクト名が必要です。対応するデータ識別情報と秘密情報を保持し、内蔵 PostgreSQL は 18 以上が必要です。未知のサービスや独自マウントは自動移行を拒否します。サーバーは変更せず、ネットワーク・証明書・DB 権限は実環境での確認が必要です。",
+          "long_description": "Myriad の新規設定を生成するか、既存の Compose と .env を読み込んでアップグレード設定を作成します。1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy、CLI の 10 環境向けに、実ホスト上の配置先とサイト全体のプロキシ手順を提供。コンテナ側プロキシは業務ネットワーク経由で myriad-proxy:80 に接続し、Coolify / Dokploy 用には Traefik 動的設定を生成します。外部 Docker DB は固定 myriad-backend-ext ネットワークに web と両 worker を接続し、worker の独立ログインと管理ネットワーク隔離を維持します。アップグレードには元のプロジェクト名が必要です。対応するデータ識別情報と秘密情報を保持し、内蔵 PostgreSQL は 18 以上が必要です。未知のサービスや独自マウントは自動移行を拒否します。サーバーは変更せず、ネットワーク・証明書・DB 権限は実環境での確認が必要です。",
           "preview": {
             "version": 1,
             "type": "snapshot",
