@@ -411,8 +411,8 @@ var I18N_FALLBACK = {
   "db.user": "用户名",
   "db.sslmode": "sslmode",
   "db.sslUnset": "不设置",
-  "db.extraNetwork": "外部数据库共享网（可选，固定为 myriad-backend-ext）",
-  "db.extraNetworkHint": "外部数据库共享网（可选，固定为 myriad-backend-ext）",
+  "db.extraNetwork": "外部数据库共享网（可选）",
+  "db.extraNetworkHint": "外部数据库共享网（可选）",
   "db.password": "数据库密码",
   "db.passwordPlaceholder": "请填写外置数据库的实际密码",
   "db.genPassword": "生成随机密码",
@@ -526,7 +526,7 @@ var I18N_FALLBACK = {
   "error.badDbHost": "请填写有效的数据库主机（IP / 主机名 / host.docker.internal）",
   "error.badDbPort": "数据库端口无效",
   "error.badSslmode": "sslmode 无效",
-  "error.badExtraNetwork": "外部数据库共享网络仅支持 myriad-backend-ext；请将数据库容器接入该网络。",
+  "error.badExtraNetwork": "外部数据库共享网络名不合法：需以字母或数字开头，只能包含字母、数字、_、.、-。",
   "error.needDbPassword": "请填写外置数据库密码",
   "error.badHttpBind": "HTTP 监听地址无效",
   "error.badHttpPort": "HTTP 端口无效",
@@ -1676,7 +1676,7 @@ var DEPLOY_NOTES_TEMPLATE = `# Myriad 部署
 | myriad-docker-guard-net (internal) | updater, docker-guard |
 
 \`backend-volume-init\` 使用 \`network_mode: none\`；仅 proxy 开宿主端口。
-\`federation-worker\` / \`persona-worker\` 与 backend 同一镜像，固定限额；挂业务网络；使用 Docker 外置数据库时，与 backend 一起加入固定的 \`myriad-backend-ext\`。worker 不加入管理网络。
+\`federation-worker\` / \`persona-worker\` 与 backend 同一镜像，固定限额；挂业务网络；使用 Docker 外置数据库时，与 backend 一起加入附加数据库网络（Compose 内键名为 \`myriad-backend-ext\`，实际 Docker 名称可自定义）。worker 不加入管理网络。
 
 ## 联邦 / Federation
 
@@ -2742,6 +2742,12 @@ var SSLMODE_ALLOWED = {
   'verify-full': true
 };
 
+// Docker network names: alphanumeric start, then [A-Za-z0-9_.-]
+var DOCKER_NETWORK_NAME_RE = /^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/;
+function isValidDockerNetworkName(name) {
+  return typeof name === 'string' && DOCKER_NETWORK_NAME_RE.test(name);
+}
+
 // Build postgres:// URL with encoded user/password; optional sslmode query.
 function buildDatabaseUrl(opts) {
   var user = opts.user;
@@ -3743,7 +3749,7 @@ function initPage() {
         }
         // 附加外部子网可选：非空时须为合法 Docker 网络名
         var dbExtraNetwork = (dbExtraNetworkInput && dbExtraNetworkInput.value.trim()) || '';
-        if (dbExtraNetwork && dbExtraNetwork !== 'myriad-backend-ext') {
+        if (dbExtraNetwork && !isValidDockerNetworkName(dbExtraNetwork)) {
           showNotification(t('error.badExtraNetwork'), 'error');
           if (dbExtraNetworkInput) dbExtraNetworkInput.focus();
           return;
@@ -4193,7 +4199,7 @@ function generateConfigs() {
     throw new Error(t('error.badComposeRoot'));
   }
   if (state.myriadDigest || state.proxyDigest) throw new Error(t('error.businessDigest'));
-  if (state.dbExtraNetwork && state.dbExtraNetwork !== 'myriad-backend-ext') throw new Error(t('error.badExtraNetwork'));
+  if (state.dbExtraNetwork && !isValidDockerNetworkName(state.dbExtraNetwork)) throw new Error(t('error.badExtraNetwork'));
   var corsOrigins = buildCorsOrigins(state.mainDomain, state.extraDomain);
   var isExternal = state.dbMode === 'external';
   var panelId = state.panelId || '1panel';
@@ -4292,7 +4298,7 @@ function generateConfigs() {
       '外置模式写入 `PERSONA_DATABASE_URL` / `FEDERATION_DATABASE_URL`（同一库，独立登录 `myriad_persona` / `myriad_federation`）。\n' +
       '新装默认由 web 预置 worker 角色：backend 的两项 `*_DB_PASSWORD` 均非空。数据库管理登录必须有权执行角色创建/修改、角色参数、GRANT/REVOKE 和默认权限；仅能连接数据库或执行普通迁移不够。\n' +
       '托管库不允许上述操作时，请 DBA 按 Myriad worker 策略预置独立角色；将 backend 的 `PERSONA_DB_PASSWORD` 与 `FEDERATION_DB_PASSWORD` 同时清空，并把两个 `*_DATABASE_URL` 改成实际预置角色连接。角色权限、连接数和资源限制必须通过 worker 启动检查。升级时保留旧部署的角色管理方式。\n' +
-      (extraNetworkName ? 'backend 和两个 worker 均接入固定网络 `myriad-backend-ext`。先创建该网络并将数据库容器接入；旧版 updater/Guard 需先升级。\n' : '三个进程均须能访问数据库地址。使用 host.docker.internal 时均已写入 host-gateway 映射。\n');
+      (extraNetworkName ? 'backend 和两个 worker 均接入附加网络 `myriad-backend-ext`（实际 Docker 名称 `' + extraNetworkName + '`）。先创建该网络并将数据库容器接入；旧版 updater/Guard 需先升级。\n' : '三个进程均须能访问数据库地址。使用 host.docker.internal 时均已写入 host-gateway 映射。\n');
   } else {
     deployWorkerDbSection =
       '## Worker 数据库\n\n' +
