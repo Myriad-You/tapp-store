@@ -20,7 +20,7 @@ const modes = [
   { name: 'bundled', dbMode: 'bundled' },
   { name: 'external-routed', dbMode: 'external', dbHost: 'db.example.com', dbSslmode: 'require' },
   { name: 'external-host', dbMode: 'external', dbHost: 'host.docker.internal', dbSslmode: 'require' },
-  { name: 'external-docker', dbMode: 'external', dbHost: 'database', dbExtraNetwork: 'myriad-backend-ext' }
+  { name: 'external-docker', dbMode: 'external', dbHost: 'database', dbExtraNetwork: '1panel-network' }
 ];
 try {
   for (const panelId of panels) for (const mode of modes) {
@@ -49,7 +49,7 @@ try {
         assert.equal(Object.hasOwn(service.networks, 'myriad-backend-ext'), mode.name === 'external-docker', `${name} joins the external DB network exactly when needed`);
       }
       if (mode.name === 'external-docker') {
-        assert.equal(config.networks['myriad-backend-ext'].name, 'myriad-backend-ext', 'Guard-approved actual Docker network name is fixed');
+        assert.equal(config.networks['myriad-backend-ext'].name, '1panel-network', 'custom actual Docker network name is preserved');
         assert.equal(config.networks['myriad-backend-ext'].external, true);
         for (const [name, service] of Object.entries(services)) if (!names.includes(name)) assert.ok(!Object.hasOwn(service.networks || {}, 'myriad-backend-ext'), `${name} cannot access the DB external network`);
       }
@@ -109,7 +109,7 @@ for (const [label, overrides] of [
   ['missing original directory', { composeHostRoot: '' }],
   ['business backend digest', { myriadDigest: 'b'.repeat(64) }],
   ['business proxy digest', { proxyDigest: 'c'.repeat(64) }],
-  ['unapproved actual DB network', { dbMode: 'external', dbHost: 'database', dbExtraNetwork: 'custom-db-net' }]
+  ['invalid actual DB network name', { dbMode: 'external', dbHost: 'database', dbExtraNetwork: 'bad net' }]
 ]) {
   try { assert.throws(() => generate(overrides), error => error.code !== 'MODULE_NOT_FOUND' && /digest|businessDigest|镜像|网络|network|badExtraNetwork|目录|badComposeRoot/i.test(error.message), `${label} must be rejected before download`); console.log(`PASS reject ${label}`); }
   catch (error) { failures.push(error.message); console.error(`FAIL ${error.message}`); }

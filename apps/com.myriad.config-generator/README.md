@@ -50,14 +50,14 @@
 外置库有两条连接路径：
 
 - 路由地址：三个数据库客户端都能访问的主机地址与端口。`host.docker.internal` 是否可解析取决于运行环境，不能仅凭名称假设可达。
-- Docker 容器 DNS：外部网络的**实际 Docker 名称必须为 `myriad-backend-ext`**；先把数据库容器加入此网络。backend、persona-worker 与 federation-worker 同时接入。任意自定义实际网络名不受当前 Guard 支持。
+- Docker 容器 DNS：在「附加 Docker 子网」填写数据库容器实际加入的 Docker 网络名（合法网络名，如 `1panel-network`）；生成配置会把它作为外部网络接入 backend、persona-worker 与 federation-worker。Compose 内该网络的键名固定为 `myriad-backend-ext`，实际 Docker 名称由 `MYRIAD_BACKEND_EXTRA_NETWORK` 指定。部署前请确认运行时 Guard/updater 支持该实际网络名。
 
 | 网络 | Myriad 成员 |
 | --- | --- |
 | 业务网络，默认 `myriad-net` | proxy、frontend、backend、两个 worker；内置模式另含 postgres |
 | 管理网络，默认 `myriad-admin-net` | backend、proxy、updater、updater-gateway |
 | Guard 网络，默认 `myriad-docker-guard-net` | updater、docker-guard |
-| 外置数据库网络 `myriad-backend-ext`，按需 | 仅 backend 与两个 worker |
+| 附加外置数据库网络（Compose 键名 `myriad-backend-ext`，实际名可自定义），按需 | 仅 backend 与两个 worker |
 
 worker 使用独立数据库登录，不能复用管理员登录或管理员口令。内置模式由 web 预置 worker 角色。外置新装默认也由 web 预置，因此管理登录须有权执行角色创建/修改、角色参数、GRANT/REVOKE 及默认权限操作，仅能连接或执行普通迁移不够。受限托管库需 DBA 预置符合 Myriad worker 策略的独立角色，同时清空 backend 的两项 `*_DB_PASSWORD`，并将两个 worker URL 改为实际登录。升级保留原角色管理方式，不擅自启用角色修改。worker 不进入管理网络或 Guard 网络。只有 docker-guard 挂载 Docker socket；只有 proxy 发布宿主端口。
 
@@ -76,7 +76,7 @@ Guard、updater、updater-gateway 共用 `UPDATER_IMAGE:UPDATER_TAG` 部署目�
 - 保留原数据库 URL、JWT 等身份密钥和受支持的数据卷；旧文件若只提供相对路径，生成前须明确原来的绝对部署目录。
 - 未知服务、自定义数据挂载、非标准卷身份、未知字段或不受支持的命令与网络会拒绝自动升级，转为人工迁移；不会静默删掉这些配置。
 - 外置旧配置未启用角色预置且缺少 worker URL 时，拒绝生成：先由 DBA 预置两个角色并提供实际 URL，避免生成不存在的登录。
-- 外置数据库版本、角色权限、网络是否可达无法从两份文件证明，需要部署者验证。只有实际名称为 `myriad-backend-ext` 的附加数据库网络可以自动接入两个 worker。
+- 外置数据库版本、角色权限、网络是否可达无法从两份文件证明，需要部署者验证。附加数据库网络的实际 Docker 名称会原样保留并自动接入两个 worker。
 - 升级产物可能含已展开的凭据，因此 **Compose 与 `.env` 都按机密文件处理**。先备份数据库和卷，再评审生成差异和升级报告；工具不会自动应用更改。
 
 ## 镜像与密钥

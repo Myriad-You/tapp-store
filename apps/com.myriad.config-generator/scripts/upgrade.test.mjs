@@ -79,12 +79,16 @@ test('blocks old PostgreSQL major, unsafe custom services/mounts and unknown ser
  const edits=[c=>c.services.postgres.image='postgres:17-alpine',c=>c.services.sidecar={image:'private'},c=>c.services.backend.volumes=['/secrets:/app/data'],c=>c.services.postgres.volumes=['dbdata:/var/lib/postgresql'],c=>c.services.backend.privileged=true,c=>c.services.backend.build='.'];
  for(const edit of edits){const c=fixture();edit(c);assert.throws(()=>engine.inspectLegacy(JSON.stringify(c),oldEnv));}
 });
-test('blocks external database network rename instead of silently disconnecting database',()=>{
+test('preserves custom external database network name instead of silently disconnecting database',()=>{
  const c=fixture(true);c.networks.db={external:true,name:'existing-db-network'};c.services.backend.networks.push('db');
- assert.throws(()=>engine.inspectLegacy(JSON.stringify(c),oldEnv),/myriad-backend-ext/);
- c.networks.db.name='myriad-backend-ext';
- const l=engine.inspectLegacy(JSON.stringify(c),oldEnv+workerUrls); const r=yaml.load(engine.upgradeGenerated(generated(true),l).compose);
+ const l=engine.inspectLegacy(JSON.stringify(c),oldEnv+workerUrls);assert.equal(l.statePatch.dbExtraNetwork,'existing-db-network');
+ const r=yaml.load(engine.upgradeGenerated(generated(true),l).compose);
+ assert.equal(r.networks['myriad-backend-ext'].name,'existing-db-network');
  for(const name of ['backend','persona-worker','federation-worker'])assert.ok(r.services[name].networks.includes('myriad-backend-ext'));
+});
+test('rejects invalid external database network name',()=>{
+ const c=fixture(true);c.networks.db={external:true,name:'bad net'};c.services.backend.networks.push('db');
+ assert.throws(()=>engine.inspectLegacy(JSON.stringify(c),oldEnv),/network/);
 });
 test('retains explicit volume identity and absolute standard project bind root; blocks changed identity',()=>{
  const c=fixture();c.volumes.backend_data={external:true,name:'original_backend_data'};c.services.postgres.volumes=['/srv/myriad/pgdata:/var/lib/postgresql'];c.services.updater.volumes=['/srv/myriad:/host/compose:ro'];c.services.proxy.volumes=['/srv/myriad/state:/state:ro'];

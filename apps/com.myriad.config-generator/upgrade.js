@@ -6,6 +6,7 @@ var yaml = require('./vendor/js-yaml.js');
 var MAX_INPUT = 262144;
 var SERVICES = ['postgres','backend-volume-init','backend','frontend','proxy','updater','updater-gateway','docker-guard','persona-worker','federation-worker'];
 var CORE_NETS = ['myriad-net','myriad-admin-net','myriad-docker-guard-net'];
+var NETWORK_NAME = /^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/;
 var WORKERS = ['persona-worker','federation-worker'];
 // Mirrors updater/src/docker/guard/validate.rs worker environment boundary.
 var WORKER_ENV = ['MYRIAD_PROCESS_ROLE','DATABASE_URL','SERVER_HOST','SERVER_PORT','DATA_DIR','CACHE_DIR','JWT_SECRET','MYRIAD_DATA_KEY','CORS_ORIGINS','ENVIRONMENT','FRONTEND_URL','BASE_URL','RUST_LOG','TZ','PATH','MYRIAD_VERSION','MYRIAD_COMMIT_SHA','TRUST_PROXY_HEADERS','TRUST_PROXY_PEERS'];
@@ -178,15 +179,15 @@ function inspectLegacy(composeText,envText) {
     ['POSTGRES_DB','POSTGRES_USER'].forEach(function(k){if(pg.environment[k]&&pg.environment[k]!==db[k==='POSTGRES_DB'?'dbName':'dbUser'])fail('services.postgres.environment.'+k,'does not match backend database URL');});
     if(db.dbHost!=='postgres')fail('services.backend.environment.DATABASE_URL','bundled deployment must address the existing postgres service');
   }
-  var nets=compose.networks||{},extra=false;
+  var nets=compose.networks||{},extra=false,extraNetworkName='';
   if(!object(nets))fail('compose.networks','expected mapping');
   Object.keys(nets).forEach(function(key){
     var n=nets[key]||{};if(!object(n))fail('compose.networks','invalid definition');
-    if(CORE_NETS.indexOf(key)<0){if(n.external!==true||n.name!=='myriad-backend-ext')fail('compose.networks','external database must already be attached to the fixed myriad-backend-ext network; attach the database there and update this file before importing');extra=true;}
+    if(CORE_NETS.indexOf(key)<0){if(n.external!==true||typeof n.name!=='string'||!NETWORK_NAME.test(n.name))fail('compose.networks','external database network must be external:true with a valid Docker network name; attach the database there and update this file before importing');extra=true;extraNetworkName=n.name;}
   });
-  Object.keys(services).forEach(function(name){networkList(services[name],'services.'+name).forEach(function(k){if(!own(nets,k))fail('services.'+name+'.networks','network definition missing');if(CORE_NETS.indexOf(k)<0&&['backend'].concat(WORKERS).indexOf(name)<0)fail('services.'+name+'.networks','only the three database clients may join myriad-backend-ext');});});
+  Object.keys(services).forEach(function(name){networkList(services[name],'services.'+name).forEach(function(k){if(!own(nets,k))fail('services.'+name+'.networks','network definition missing');if(CORE_NETS.indexOf(k)<0&&['backend'].concat(WORKERS).indexOf(name)<0)fail('services.'+name+'.networks','only the three database clients may join the external database network');});});
   CORE_NETS.forEach(function(k,index){if(nets[k])statePatch[['netMyriad','netAdmin','netGuard'][index]]=nets[k].name||(nets[k].external?k:project+'_'+k);});
-  if(extra)statePatch.dbExtraNetwork='myriad-backend-ext';
+  if(extra)statePatch.dbExtraNetwork=extraNetworkName;
   if(be.BASE_URL||be.FRONTEND_URL){try{statePatch.mainDomain=new URL(be.BASE_URL||be.FRONTEND_URL).hostname;}catch(e){fail('services.backend.environment.BASE_URL','invalid public URL');}}
   if(services.proxy&&services.proxy.ports){if(!Array.isArray(services.proxy.ports)||services.proxy.ports.length!==1||typeof services.proxy.ports[0]!=='string')fail('services.proxy.ports','one short-syntax HTTP port required');var port=services.proxy.ports[0].match(/^(?:(\d+\.\d+\.\d+\.\d+):)?(\d+):80(?:\/tcp)?$/);if(!port)fail('services.proxy.ports','unsupported public port mapping');statePatch.httpBindAddress=port[1]||'0.0.0.0';statePatch.httpPort=Number(port[2]);}
   WORKERS.forEach(function(name){
@@ -254,7 +255,8 @@ function upgradeGenerated(generated,legacy) {
   compose.networks=compose.networks||{};
   CORE_NETS.forEach(function(key){if(old.networks&&old.networks[key])compose.networks[key]=clone(old.networks[key]);});
   if(legacy.extraNetwork){
-    compose.networks['myriad-backend-ext']={name:'myriad-backend-ext',external:true};env.MYRIAD_BACKEND_EXTRA_NETWORK='myriad-backend-ext';
+    var extraNetworkName=legacy.statePatch.dbExtraNetwork||'myriad-backend-ext';
+    compose.networks['myriad-backend-ext']={name:extraNetworkName,external:true};env.MYRIAD_BACKEND_EXTRA_NETWORK=extraNetworkName;
     ['backend'].concat(WORKERS).forEach(function(name){var n=networkList(compose.services[name],'generated.services.'+name);if(n.indexOf('myriad-backend-ext')<0)n.push('myriad-backend-ext');compose.services[name].networks=n;});
   }
   WORKERS.forEach(function(name){
