@@ -503,6 +503,7 @@ module.exports = {
   rank: rank,
   sanitizeUrl: sanitizeUrl,
   hostOf: hostOf,
+  normalizeLink: normalizeLink,
   loadAllLinks: loadAllLinks,
   loadLinks: loadLinks,
   saveLinks: saveLinks,

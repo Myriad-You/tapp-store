@@ -22,12 +22,37 @@ const state = {
   iconOriginal: "",
   canRemote: false,
   fetchBusy: false,
+  ioMode: "export",
+  ioFormat: "json",
+  ioIncludeIcons: false,
+  importRows: [],
+  importFilter: "all",
+  importBusy: false,
+  importDefaultAudience: "guest",
+  importDedupe: "skip",
+  importFetchIcons: false,
+  importFormat: "auto",
+  importTotal: 0,
+  importDone: 0,
+  importResult: "",
+  importResultState: "done",
+};
+
+const IMPORT_SAMPLES = {
+  json:
+    '{\n  "app": "io.github.xingjianya-86.linknav",\n  "schema": 1,\n  "links": [\n    { "title": "GitHub", "url": "https://github.com", "icon": "🐙", "tags": ["开发"], "audience": "guest", "pinned": true },\n    { "title": "MDN", "url": "https://developer.mozilla.org", "tags": ["文档"], "audience": "user" }\n  ]\n}\n',
+  text:
+    "GitHub https://github.com #开发 #工具\nhttps://developer.mozilla.org MDN #文档\nhttps://www.bilibili.com\n// 以 // 开头的行是注释\n",
+  csv:
+    "标题,网址,备注,标签,可见性,置顶,图标\nGitHub,https://github.com,代码托管,开发,guest,1,🐙\nMDN,https://developer.mozilla.org,文档,文档|前端,user,,\n",
 };
 
 const refs = {};
 let toastTimer = 0;
 let moodTimer = 0;
 let reloadTimer = 0;
+let parseTimer = 0;
+let parseFlashTimer = 0;
 
 function t(key, params) {
   try {
@@ -91,6 +116,30 @@ function collectRefs() {
     iconFile: "[data-ln-icon-file]",
     iconHint: "[data-ln-icon-hint]",
     btnFetchIcon: "[data-ln-btn-fetch]",
+    ioBtn: "[data-action='io-open']",
+    ioText: "[data-ln-io-text]",
+    ioDialog: "[data-ln-io-dialog]",
+    ioTitle: "[data-ln-io-title]",
+    ioPanelExport: "[data-ln-io-panel-export]",
+    ioPanelImport: "[data-ln-io-panel-import]",
+    ioFavOption: "[data-ln-io-fav-option]",
+    ioIncludeIcons: "[data-ln-io-include-icons]",
+    ioExportHint: "[data-ln-io-export-hint]",
+    ioDrop: "[data-ln-io-drop]",
+    ioFile: "[data-ln-io-file]",
+    ioPaste: "[data-ln-io-paste]",
+    ioDefaultAudience: "[data-ln-io-default-audience]",
+    ioImportFormat: "[data-ln-io-import-format]",
+    ioFetchIcons: "[data-ln-io-fetch-icons]",
+    ioImportHint: "[data-ln-io-import-hint]",
+    ioPreviewState: "[data-ln-io-preview-state]",
+    ioStatus: "[data-ln-io-status]",
+    ioStatusText: "[data-ln-io-status-text]",
+    ioStatusTrack: "[data-ln-io-status-track]",
+    ioStatusFill: "[data-ln-io-status-fill]",
+    ioFilters: "[data-ln-io-filters]",
+    ioList: "[data-ln-io-list]",
+    ioSelectAll: "[data-ln-io-select-all]",
     copyPanel: "[data-ln-copy-panel]",
     copyTitle: "[data-ln-copy-title]",
     copyInput: "[data-ln-copy-input]",
@@ -112,7 +161,7 @@ function bindStaticText() {
   if (refs.subtitle) refs.subtitle.textContent = t("app.subtitle");
   setText(refs.viewAll, t("app.view.all"));
   setText(refs.viewFav, t("app.view.fav"));
-  setText(refs.footer, t("app.footer"));
+  renderFooter();
   setText(document.querySelector("[data-ln-label-url]"), t("app.field.url"));
   setText(document.querySelector("[data-ln-label-title]"), t("app.field.title"));
   setText(document.querySelector("[data-ln-label-desc]"), t("app.field.desc"));
@@ -131,6 +180,63 @@ function bindStaticText() {
   setText(document.querySelector("[data-ln-btn-save]"), t("app.save"));
   setText(document.querySelector("[data-ln-btn-close-copy]"), t("app.cancel"));
   setText(refs.copyTitle, t("app.copyTitle"));
+  setText(refs.ioText, t("app.io.open"));
+  setText(refs.ioTitle, t("app.io.title"));
+  setText(document.querySelector("[data-ln-io-tab-export]"), t("app.io.tab.export"));
+  setText(document.querySelector("[data-ln-io-tab-import]"), t("app.io.tab.import"));
+  setText(document.querySelector("[data-ln-io-title-export-format]"), t("app.io.export.format"));
+  setText(document.querySelector("[data-ln-io-title-export-info]"), t("app.io.card.exportInfo"));
+  setText(document.querySelector("[data-ln-io-title-source]"), t("app.io.card.source"));
+  setText(document.querySelector("[data-ln-io-title-import-settings]"), t("app.io.card.importSettings"));
+  setText(document.querySelector("[data-ln-io-title-preview]"), t("app.io.card.preview"));
+  renderPreviewState("idle", t("app.io.preview.waiting"));
+  setText(document.querySelector("[data-ln-io-fmt-json]"), t("app.io.export.json"));
+  setText(document.querySelector("[data-ln-io-fmt-text]"), t("app.io.export.text"));
+  setText(document.querySelector("[data-ln-io-fmt-csv]"), t("app.io.export.csv"));
+  setText(document.querySelector("[data-ln-io-fmt-fav]"), t("app.io.export.favorites"));
+  setText(document.querySelector("[data-ln-io-fmt-json-desc]"), t("app.io.export.jsonDesc"));
+  setText(document.querySelector("[data-ln-io-fmt-text-desc]"), t("app.io.export.textDesc"));
+  setText(document.querySelector("[data-ln-io-fmt-csv-desc]"), t("app.io.export.csvDesc"));
+  setText(document.querySelector("[data-ln-io-fmt-fav-desc]"), t("app.io.export.favoritesDesc"));
+  setText(document.querySelector("[data-ln-io-label-include-icons]"), t("app.io.export.includeIcons"));
+  setText(document.querySelector("[data-ln-io-btn-copy]"), t("app.io.export.copy"));
+  setText(document.querySelector("[data-ln-io-btn-download]"), t("app.io.export.download"));
+  setText(document.querySelector("[data-ln-io-drop-text]"), t("app.io.import.drop"));
+  setText(document.querySelector("[data-ln-io-btn-pick]"), t("app.io.import.pick"));
+  setText(document.querySelector("[data-ln-io-btn-clear]"), t("app.io.import.clear"));
+  setText(document.querySelector("[data-ln-io-btn-parse]"), t("app.io.import.parse"));
+  setText(document.querySelector("[data-ln-io-label-default-audience]"), t("app.io.import.defaultAudience"));
+  setText(document.querySelector("[data-ln-io-opt-guest]"), t("app.audience.guest"));
+  setText(document.querySelector("[data-ln-io-opt-user]"), t("app.audience.user"));
+  setText(document.querySelector("[data-ln-io-opt-admin]"), t("app.audience.admin"));
+  setText(document.querySelector("[data-ln-io-dedupe-skip]"), t("app.io.import.dedupeSkip"));
+  setText(document.querySelector("[data-ln-io-dedupe-overwrite]"), t("app.io.import.dedupeOverwrite"));
+  setText(document.querySelector("[data-ln-io-label-fetch-icons]"), t("app.io.import.fetchIcons"));
+  setText(document.querySelector("[data-ln-io-btn-reset]"), t("app.io.import.reset"));
+  setText(document.querySelector("[data-ln-io-btn-import]"), t("app.io.import.run"));
+  setText(document.querySelector("[data-ln-io-label-import-format]"), t("app.io.import.format"));
+  setText(document.querySelector("[data-ln-io-ifmt-auto]"), t("app.io.import.format.auto"));
+  setText(document.querySelector("[data-ln-io-ifmt-json]"), t("app.io.import.format.json"));
+  setText(document.querySelector("[data-ln-io-ifmt-text]"), t("app.io.import.format.text"));
+  setText(document.querySelector("[data-ln-io-ifmt-html]"), t("app.io.import.format.html"));
+  setText(document.querySelector("[data-ln-io-ifmt-csv]"), t("app.io.import.format.csv"));
+  setText(document.querySelector("[data-ln-io-sample-json]"), t("app.io.import.sampleJson"));
+  setText(document.querySelector("[data-ln-io-sample-text]"), t("app.io.import.sampleText"));
+  setText(document.querySelector("[data-ln-io-sample-csv]"), t("app.io.import.sampleCsv"));
+  setText(document.querySelector("[data-ln-io-template]"), t("app.io.import.template"));
+  if (refs.ioPaste) refs.ioPaste.placeholder = t("app.io.import.pastePlaceholder");
+  setText(document.querySelector("[data-ln-io-note]"), t("app.io.import.note"));
+}
+
+function renderFooter() {
+  let suffix = "";
+  try {
+    const info = Tapp.lifecycle && typeof Tapp.lifecycle.getInfo === "function" ? Tapp.lifecycle.getInfo() : null;
+    if (info && typeof info.version === "string" && info.version) suffix = " · v" + info.version;
+  } catch (err) {
+    suffix = "";
+  }
+  setText(refs.footer, t("app.footer") + suffix);
 }
 
 function roleLabel() {
@@ -150,14 +256,34 @@ function setMood(mood) {
   }
 }
 
+function topLayerContainer() {
+  if (refs.ioDialog && refs.ioDialog.open) return refs.ioDialog;
+  if (refs.dialog && refs.dialog.open) return refs.dialog;
+  return document.body;
+}
+
+function moveOverlay(node) {
+  if (!node) return;
+  const host = topLayerContainer();
+  if (node.parentElement !== host) host.appendChild(node);
+}
+
+function returnOverlay(node) {
+  if (node && node.parentElement !== document.body) document.body.appendChild(node);
+}
+
 function toast(text, mood) {
   if (!refs.toast) return;
+  moveOverlay(refs.toast);
   refs.toast.textContent = text;
   refs.toast.dataset.mood = mood || "idle";
   refs.toast.hidden = false;
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(function () {
-    if (refs.toast) refs.toast.hidden = true;
+    if (refs.toast) {
+      refs.toast.hidden = true;
+      returnOverlay(refs.toast);
+    }
   }, 2400);
   if (mood) setMood(mood);
 }
@@ -192,6 +318,7 @@ function renderHeader() {
   const total = state.links.length;
   setText(refs.count, t("app.count", { count: total }));
   if (refs.addBtn) refs.addBtn.hidden = state.role !== "admin";
+  if (refs.ioBtn) refs.ioBtn.hidden = state.role !== "admin";
   if (refs.mascot) refs.mascot.dataset.crown = state.role === "admin" ? "true" : "false";
   if (refs.viewFav) {
     refs.viewFav.textContent = t("app.view.fav") + " (" + state.favoriteSet.size + ")";
@@ -397,11 +524,18 @@ async function handleCopy(link, silent) {
 
 function showCopyPanel(url) {
   if (!refs.copyPanel) return;
+  moveOverlay(refs.copyPanel);
   if (refs.copyInput) {
     refs.copyInput.value = url;
     refs.copyInput.select();
   }
   refs.copyPanel.hidden = false;
+}
+
+function hideCopyPanel() {
+  if (!refs.copyPanel) return;
+  refs.copyPanel.hidden = true;
+  returnOverlay(refs.copyPanel);
 }
 
 async function handleFavorite(link) {
@@ -717,6 +851,1062 @@ async function handleDelete(link) {
   }
 }
 
+/* ---------- 批量导入 / 导出 ---------- */
+
+function ioStamp() {
+  return new Date().toISOString().slice(0, 10).replace(/-/g, "");
+}
+
+function csvEscape(value) {
+  const text = value == null ? "" : String(value);
+  if (/[",\r\n]/.test(text)) return '"' + text.replace(/"/g, '""') + '"';
+  return text;
+}
+
+function parseCsvRows(text) {
+  const rows = [];
+  let row = [];
+  let field = "";
+  let inQuotes = false;
+  const src = String(text || "").replace(/^\uFEFF/, "");
+  for (let i = 0; i < src.length; i++) {
+    const ch = src.charAt(i);
+    if (inQuotes) {
+      if (ch === '"') {
+        if (src.charAt(i + 1) === '"') {
+          field += '"';
+          i += 1;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        field += ch;
+      }
+    } else if (ch === '"') {
+      inQuotes = true;
+    } else if (ch === ",") {
+      row.push(field);
+      field = "";
+    } else if (ch === "\n") {
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = "";
+    } else if (ch !== "\r") {
+      field += ch;
+    }
+  }
+  if (field.length || row.length) {
+    row.push(field);
+    rows.push(row);
+  }
+  return rows;
+}
+
+function parseImportJson(text) {
+  const data = JSON.parse(text);
+  let rawLinks = [];
+  let icons = {};
+  if (Array.isArray(data)) {
+    rawLinks = data;
+  } else if (data && typeof data === "object") {
+    if (Array.isArray(data.links)) rawLinks = data.links;
+    else if (Array.isArray(data.apps)) rawLinks = data.apps;
+    if (data.icons && typeof data.icons === "object" && !Array.isArray(data.icons)) icons = data.icons;
+  }
+  return rawLinks.map(function (raw) {
+    const url = raw && typeof raw.url === "string" ? core.sanitizeUrl(raw.url) : "";
+    const iconData = url && typeof icons[url] === "string" ? icons[url] : "";
+    return { raw: raw, iconData: core.isIconDataUri(iconData) ? iconData : "" };
+  });
+}
+
+function parseCsvImport(text) {
+  const rows = parseCsvRows(text);
+  if (!rows.length) return [];
+  const header = rows[0].map(function (cell) {
+    return String(cell || "").trim().toLowerCase();
+  });
+  function column(names) {
+    for (let i = 0; i < names.length; i++) {
+      const index = header.indexOf(names[i]);
+      if (index >= 0) return index;
+    }
+    return -1;
+  }
+  const iTitle = column(["标题", "title", "name"]);
+  const iUrl = column(["网址", "url", "link", "地址"]);
+  const iDesc = column(["备注", "desc", "description", "描述"]);
+  const iTags = column(["标签", "tags"]);
+  const iAudience = column(["可见性", "audience", "visibility"]);
+  const iPinned = column(["置顶", "pinned"]);
+  const iIcon = column(["图标", "icon", "emoji"]);
+  const out = [];
+  for (let r = 1; r < rows.length; r++) {
+    const row = rows[r];
+    if (!row.some(function (cell) {
+      return String(cell || "").trim();
+    })) {
+      continue;
+    }
+    function cell(index) {
+      return index >= 0 && row[index] != null ? String(row[index]).trim() : "";
+    }
+    out.push({
+      raw: {
+        title: cell(iTitle),
+        url: iUrl >= 0 ? cell(iUrl) : String(row[0] || "").trim(),
+        desc: cell(iDesc),
+        tags: iTags >= 0 ? cell(iTags).split(/[|,，]/) : [],
+        audience: cell(iAudience),
+        pinned: iPinned >= 0 ? /^(1|true|yes|y|是|置顶)$/i.test(cell(iPinned)) : false,
+        icon: cell(iIcon),
+      },
+    });
+  }
+  return out;
+}
+
+function parseBookmarksImport(text) {
+  const doc = new DOMParser().parseFromString(String(text || ""), "text/html");
+  const nodes = doc.querySelectorAll("a[href]");
+  const out = [];
+  for (let i = 0; i < nodes.length; i++) {
+    const anchor = nodes[i];
+    out.push({
+      raw: {
+        title: String(anchor.textContent || "").trim(),
+        url: anchor.getAttribute("href") || "",
+      },
+    });
+  }
+  return out;
+}
+
+function parseUrlText(text) {
+  const out = [];
+  const lines = String(text || "").replace(/^\uFEFF/, "").split(/\r?\n/);
+  lines.forEach(function (line) {
+    const raw = line.trim();
+    if (!raw || raw.indexOf("//") === 0) return;
+    let rest = raw;
+    const tags = [];
+    const tagMatch = rest.match(/(\s+#[^\s#]+)+\s*$/);
+    if (tagMatch) {
+      tagMatch[0].trim().split(/\s+/).forEach(function (token) {
+        tags.push(token.replace(/^#/, ""));
+      });
+      rest = rest.slice(0, rest.length - tagMatch[0].length).trim();
+    }
+    const tokens = rest.split(/\s+/).filter(Boolean);
+    let urlIndex = -1;
+    for (let i = 0; i < tokens.length; i++) {
+      if (/^https?:\/\//i.test(tokens[i])) {
+        urlIndex = i;
+        break;
+      }
+    }
+    if (urlIndex < 0) {
+      out.push({ raw: { title: "", url: "", tags: tags }, invalid: true });
+      return;
+    }
+    const url = tokens[urlIndex].replace(/[)\]}>，。；;]+$/, "");
+    const title = tokens.filter(function (_, i) {
+      return i !== urlIndex;
+    }).join(" ").trim();
+    out.push({ raw: { title: title, url: url, tags: tags } });
+  });
+  return out;
+}
+
+function autoDetectParse(text, filename) {
+  const name = String(filename || "").toLowerCase();
+  const trimmed = String(text || "").trim();
+  if (!trimmed) return [];
+  if (name.slice(-5) === ".json" || trimmed.charAt(0) === "[" || trimmed.charAt(0) === "{") {
+    try {
+      return parseImportJson(trimmed);
+    } catch (err) {
+      return null;
+    }
+  }
+  if (name.slice(-4) === ".csv") return parseCsvImport(text);
+  if (name.slice(-5) === ".html" || name.slice(-4) === ".htm" || /<a[\s>]/i.test(trimmed)) {
+    return parseBookmarksImport(text);
+  }
+  return parseUrlText(text);
+}
+
+function detectAndParse(text, filename) {
+  const forced = state.importFormat;
+  if (forced === "json") {
+    try {
+      const parsed = parseImportJson(String(text || "").trim());
+      if (parsed && parsed.length) return parsed;
+    } catch (err) {
+      /* 交给自动识别兜底 */
+    }
+    return autoDetectParse(text, filename);
+  }
+  if (forced === "csv") {
+    const parsed = parseCsvImport(text);
+    if (parsed && parsed.length) return parsed;
+    return autoDetectParse(text, filename);
+  }
+  if (forced === "html") {
+    const parsed = parseBookmarksImport(text);
+    if (parsed && parsed.length) return parsed;
+    return autoDetectParse(text, filename);
+  }
+  if (forced === "text") return parseUrlText(text);
+  return autoDetectParse(text, filename);
+}
+
+function buildImportRows(parsed) {
+  const existing = {};
+  state.links.forEach(function (link) {
+    const key = core.sanitizeUrl(link.url) || link.url;
+    existing[key] = link;
+  });
+  const seen = {};
+  const rows = [];
+  (parsed || []).forEach(function (item, index) {
+    const raw = item && item.raw ? item.raw : {};
+    const iconData = item && item.iconData ? item.iconData : "";
+    const link = core.normalizeLink(
+      {
+        title: raw.title,
+        url: raw.url,
+        icon: raw.icon,
+        desc: raw.desc,
+        tags: raw.tags,
+        audience: raw.audience || state.importDefaultAudience,
+        pinned: raw.pinned === true,
+      },
+      index,
+    );
+    if (!link) {
+      rows.push({
+        key: "bad_" + index + "_" + rows.length,
+        invalid: true,
+        checked: false,
+        status: "invalid",
+        title: String(raw.title || "").slice(0, 80),
+        url: String(raw.url || "").slice(0, 200),
+        tags: [],
+        audience: state.importDefaultAudience,
+        icon: "",
+        iconData: "",
+        pinned: false,
+        message: t("app.io.import.noteInvalid"),
+      });
+      return;
+    }
+    const key = core.sanitizeUrl(link.url) || link.url;
+    const duplicate = !!existing[key] || !!seen[key];
+    seen[key] = true;
+    rows.push({
+      key: key + "#" + index,
+      invalid: false,
+      checked: !duplicate,
+      status: duplicate ? "duplicate" : "new",
+      title: link.title,
+      url: link.url,
+      tags: link.tags,
+      audience: link.audience,
+      icon: link.icon,
+      iconData: core.isIconDataUri(iconData) ? iconData : "",
+      pinned: link.pinned,
+      message: duplicate ? t("app.io.import.noteDuplicate") : "",
+    });
+  });
+  return rows;
+}
+
+function importCounts() {
+  const counts = { all: state.importRows.length, new: 0, duplicate: 0, invalid: 0, checked: 0 };
+  state.importRows.forEach(function (row) {
+    if (row.status === "invalid") counts.invalid += 1;
+    else if (row.status === "duplicate" || row.status === "skipped") counts.duplicate += 1;
+    else counts.new += 1;
+    if (row.checked && !row.invalid) counts.checked += 1;
+  });
+  return counts;
+}
+
+function importRowVisible(row) {
+  if (state.importFilter === "all") return true;
+  if (state.importFilter === "invalid") return row.status === "invalid";
+  if (state.importFilter === "duplicate") return row.status === "duplicate" || row.status === "skipped";
+  return row.status === "new" || row.status === "imported" || row.status === "fetched";
+}
+
+function importStatusLabel(row) {
+  if (row.status === "invalid") return t("app.io.import.statusInvalid");
+  if (row.status === "duplicate") return t("app.io.import.statusDuplicate");
+  if (row.status === "skipped") return t("app.io.import.statusSkipped");
+  if (row.status === "imported") return t("app.io.import.statusImported");
+  if (row.status === "fetched") return t("app.io.import.statusFetched");
+  return t("app.io.import.statusNew");
+}
+
+function createImportRow(row) {
+  const rowEl = el("div", "ln-io-row");
+  rowEl.dataset.key = row.key;
+  if (row.invalid) rowEl.classList.add("is-invalid");
+  else if (row.status === "duplicate" || row.status === "skipped") rowEl.classList.add("is-duplicate");
+  else if (row.status === "imported" || row.status === "fetched") rowEl.classList.add("is-done");
+
+  const check = document.createElement("input");
+  check.type = "checkbox";
+  check.checked = !row.invalid && row.checked;
+  check.disabled = row.invalid || state.importBusy;
+  check.setAttribute("aria-label", row.title || row.url || "link");
+  check.addEventListener("change", function () {
+    row.checked = check.checked;
+    renderImportStatus();
+  });
+  rowEl.appendChild(check);
+
+  let icon;
+  if (row.iconData) {
+    icon = document.createElement("img");
+    icon.className = "ln-io-row-icon";
+    icon.src = row.iconData;
+    icon.alt = "";
+    icon.decoding = "async";
+  } else {
+    icon = el("span", "ln-io-row-icon ln-io-row-icon-text");
+    icon.textContent = row.icon || (row.title ? row.title.trim().charAt(0).toUpperCase() : "☆");
+  }
+  rowEl.appendChild(icon);
+
+  const main = el("div", "ln-io-row-main");
+  main.appendChild(el("span", "ln-io-row-title", row.title || row.url || ""));
+  main.appendChild(el("span", "ln-io-row-host", row.url ? core.hostOf(row.url) || row.url : ""));
+  if (row.message) main.appendChild(el("span", "ln-io-row-msg", row.message));
+  rowEl.appendChild(main);
+
+  const select = document.createElement("select");
+  select.className = "ln-io-row-audience";
+  select.disabled = row.invalid || state.importBusy;
+  select.setAttribute("aria-label", t("app.field.audience"));
+  [
+    ["guest", t("app.audience.guest")],
+    ["user", t("app.audience.user")],
+    ["admin", t("app.audience.admin")],
+  ].forEach(function (pair) {
+    const option = document.createElement("option");
+    option.value = pair[0];
+    option.textContent = pair[1];
+    select.appendChild(option);
+  });
+  select.value = row.audience;
+  select.addEventListener("change", function () {
+    row.audience = select.value;
+  });
+  rowEl.appendChild(select);
+
+  rowEl.appendChild(el("span", "ln-io-badge", importStatusLabel(row)));
+  return rowEl;
+}
+
+function renderImportStatus() {
+  if (!refs.ioStatus) return;
+  let text = "";
+  let stateName = "idle";
+  let progress = -1;
+  if (state.importBusy) {
+    stateName = "run";
+    text = t("app.io.import.progress", { done: state.importDone, total: state.importTotal });
+    progress = state.importTotal ? Math.min(100, Math.round((state.importDone / state.importTotal) * 100)) : 0;
+  } else if (state.importResult) {
+    stateName = state.importResultState || "done";
+    text = state.importResult;
+  } else {
+    const counts = importCounts();
+    text = t("app.io.import.summary", {
+      total: counts.all,
+      checked: counts.checked,
+      duplicate: counts.duplicate,
+      invalid: counts.invalid,
+    });
+    stateName = counts.invalid ? "warn" : "idle";
+  }
+  refs.ioStatus.dataset.state = stateName;
+  setText(refs.ioStatusText, text);
+  if (refs.ioStatusTrack && refs.ioStatusFill) {
+    if (progress >= 0) {
+      refs.ioStatusTrack.hidden = false;
+      refs.ioStatusFill.style.width = progress + "%";
+    } else {
+      refs.ioStatusTrack.hidden = true;
+      refs.ioStatusFill.style.width = "0%";
+    }
+  }
+}
+
+function flashParseButton(label) {
+  const btn = document.querySelector("[data-ln-io-btn-parse]");
+  if (!btn) return;
+  if (parseFlashTimer) clearTimeout(parseFlashTimer);
+  btn.textContent = label;
+  parseFlashTimer = setTimeout(function () {
+    btn.textContent = t("app.io.import.parse");
+  }, 1800);
+}
+
+function renderPreviewState(kind, text) {
+  if (!refs.ioPreviewState) return;
+  refs.ioPreviewState.textContent = text || "";
+  refs.ioPreviewState.dataset.state = kind || "idle";
+}
+
+function autoGrowPaste() {
+  if (!refs.ioPaste) return;
+  refs.ioPaste.style.height = "auto";
+  const next = Math.min(refs.ioPaste.scrollHeight || 0, 140);
+  refs.ioPaste.style.height = next + "px";
+}
+
+function setImportLock(locked) {
+  const importBtn = document.querySelector("[data-ln-io-btn-import]");
+  const resetBtn = document.querySelector("[data-ln-io-btn-reset]");
+  const parseBtn = document.querySelector("[data-ln-io-btn-parse]");
+  const closeBtn = document.querySelector("[data-action='close-io']");
+  if (importBtn) {
+    importBtn.disabled = locked;
+    setText(importBtn, locked ? t("app.io.import.running") : t("app.io.import.run"));
+  }
+  if (resetBtn) resetBtn.disabled = locked;
+  if (parseBtn) parseBtn.disabled = locked;
+  if (closeBtn) closeBtn.disabled = locked;
+}
+
+function renderImportFilters() {
+  if (!refs.ioFilters) return;
+  refs.ioFilters.replaceChildren();
+  const counts = importCounts();
+  [
+    ["all", t("app.io.import.filterAll"), counts.all],
+    ["new", t("app.io.import.filterNew"), counts.new],
+    ["duplicate", t("app.io.import.filterDuplicate"), counts.duplicate],
+    ["invalid", t("app.io.import.filterInvalid"), counts.invalid],
+  ].forEach(function (def) {
+    const chip = el("button", "ln-chip", def[1] + " " + def[2]);
+    chip.type = "button";
+    if (state.importFilter === def[0]) chip.classList.add("is-active");
+    chip.addEventListener("click", function () {
+      state.importFilter = def[0];
+      renderImportList();
+    });
+    refs.ioFilters.appendChild(chip);
+  });
+}
+
+function renderImportList() {
+  if (!refs.ioList) return;
+  renderImportFilters();
+  refs.ioList.replaceChildren();
+  const visible = state.importRows.filter(importRowVisible);
+  visible.forEach(function (row) {
+    refs.ioList.appendChild(createImportRow(row));
+  });
+  if (!visible.length) {
+    refs.ioList.appendChild(el("p", "ln-io-empty", t("app.io.import.pastePlaceholder")));
+  }
+  if (refs.ioSelectAll) {
+    const allChecked = visible.length > 0 && visible.every(function (row) {
+      return row.invalid || row.checked;
+    });
+    setText(refs.ioSelectAll, allChecked ? t("app.io.import.deselectAll") : t("app.io.import.selectAll"));
+  }
+  renderImportStatus();
+}
+
+function handleImportParse(text, filename) {
+  try {
+    const source = String(text == null ? "" : text);
+    if (!filename && !source.trim()) {
+      renderPreviewState("warn", t("app.io.import.emptySource"));
+      if (refs.ioImportHint) {
+        setText(refs.ioImportHint, t("app.io.import.emptySource"));
+        refs.ioImportHint.dataset.state = "warn";
+      }
+      flashParseButton(t("app.io.import.parseNone"));
+      toast(t("app.io.import.emptySource"), "sad");
+      return;
+    }
+    const parsed = detectAndParse(source, filename);
+    if (!parsed) {
+      renderPreviewState("error", t("app.io.preview.error"));
+      if (refs.ioImportHint) {
+        setText(refs.ioImportHint, t("app.io.import.jsonFail"));
+        refs.ioImportHint.dataset.state = "error";
+      }
+      flashParseButton(t("app.io.import.parseNone"));
+      toast(t("app.io.import.jsonFail"), "sad");
+      return;
+    }
+    const rows = buildImportRows(parsed);
+    if (!rows.length) {
+      state.importRows = [];
+      state.importFilter = "all";
+      state.importResult = "";
+      renderPreviewState("warn", t("app.io.preview.none"));
+      if (refs.ioImportHint) {
+        setText(refs.ioImportHint, t("app.io.import.noRows"));
+        refs.ioImportHint.dataset.state = "warn";
+      }
+      renderImportList();
+      flashParseButton(t("app.io.import.parseNone"));
+      toast(t("app.io.import.noRows"), "sad");
+      return;
+    }
+    state.importRows = rows;
+    state.importFilter = "all";
+    state.importResult = "";
+    if (refs.ioImportHint) {
+      setText(refs.ioImportHint, "");
+      refs.ioImportHint.dataset.state = "";
+    }
+    renderPreviewState("ok", t("app.io.preview.parsed", { count: rows.length }));
+    renderImportList();
+    if (refs.ioList) refs.ioList.scrollIntoView({ block: "nearest" });
+    flashParseButton(t("app.io.import.parseOk", { count: rows.length }));
+    toast(t("app.io.import.parsed", { count: rows.length }), "happy");
+  } catch (err) {
+    const detail = err && err.message ? "：" + err.message : "";
+    renderPreviewState("error", t("app.io.preview.error") + detail);
+    flashParseButton(t("app.io.import.parseNone"));
+    toast(t("app.io.preview.error") + detail, "sad");
+  }
+}
+
+function handleIoFile(file) {
+  if (!file) return;
+  state.importFormat = "auto";
+  if (refs.ioImportFormat) refs.ioImportFormat.value = "auto";
+  const reader = new FileReader();
+  reader.onload = function () {
+    const text = String(reader.result || "");
+    if (refs.ioPaste) refs.ioPaste.value = text.length > 20000 ? "" : text;
+    autoGrowPaste();
+    handleImportParse(text, file.name || "");
+  };
+  reader.onerror = function () {
+    if (refs.ioImportHint) {
+      setText(refs.ioImportHint, t("app.io.import.parseFail"));
+      refs.ioImportHint.dataset.state = "error";
+    }
+  };
+  reader.readAsText(file);
+}
+
+function applyImportSample(kind) {
+  state.importFormat = kind === "json" ? "json" : kind === "csv" ? "csv" : "text";
+  if (refs.ioImportFormat) refs.ioImportFormat.value = state.importFormat;
+  const sample = IMPORT_SAMPLES[kind] || "";
+  if (refs.ioPaste) refs.ioPaste.value = sample;
+  autoGrowPaste();
+  handleImportParse(sample, "");
+}
+
+async function downloadImportTemplate() {
+  const template = {
+    app: "io.github.xingjianya-86.linknav",
+    schema: 1,
+    links: [{ title: "", url: "https://", icon: "", desc: "", tags: [], audience: "guest", pinned: false }],
+  };
+  const content = JSON.stringify(template, null, 2) + "\n";
+  const filename = "linknav-template-" + ioStamp() + ".json";
+  try {
+    await Tapp.file.download(content, filename, "application/json");
+    toast(t("app.io.export.downloaded"), "happy");
+  } catch (err) {
+    await handleCopyText(content, t("app.io.export.downloadFail"));
+  }
+}
+
+function resetImport() {
+  state.importRows = [];
+  state.importFilter = "all";
+  state.importResult = "";
+  state.importBusy = false;
+  state.importDone = 0;
+  state.importTotal = 0;
+  if (parseTimer) clearTimeout(parseTimer);
+  if (parseFlashTimer) clearTimeout(parseFlashTimer);
+  const parseButton = document.querySelector("[data-ln-io-btn-parse]");
+  if (parseButton) parseButton.textContent = t("app.io.import.parse");
+  setImportLock(false);
+  if (refs.ioPaste) {
+    refs.ioPaste.value = "";
+    refs.ioPaste.style.height = "";
+  }
+  if (refs.ioFile) refs.ioFile.value = "";
+  if (refs.ioImportHint) {
+    setText(refs.ioImportHint, "");
+    refs.ioImportHint.dataset.state = "";
+  }
+  renderPreviewState("idle", t("app.io.preview.waiting"));
+  renderImportList();
+}
+
+function setIoMode(mode) {
+  state.ioMode = mode === "import" ? "import" : "export";
+  const isExport = state.ioMode === "export";
+  if (refs.ioPanelExport) refs.ioPanelExport.hidden = !isExport;
+  if (refs.ioPanelImport) refs.ioPanelImport.hidden = isExport;
+  const exportTab = document.querySelector("[data-ln-io-tab-export]");
+  const importTab = document.querySelector("[data-ln-io-tab-import]");
+  if (exportTab) {
+    exportTab.classList.toggle("is-active", isExport);
+    exportTab.setAttribute("aria-selected", isExport ? "true" : "false");
+  }
+  if (importTab) {
+    importTab.classList.toggle("is-active", !isExport);
+    importTab.setAttribute("aria-selected", !isExport ? "true" : "false");
+  }
+}
+
+function updateIoExportControls() {
+  const isJson = state.ioFormat === "json";
+  if (refs.ioIncludeIcons) {
+    const toggle = refs.ioIncludeIcons.closest(".ln-toggle");
+    if (toggle) toggle.hidden = !isJson;
+  }
+}
+
+function openIoDialog() {
+  if (!refs.ioDialog) return;
+  state.importBusy = false;
+  setImportLock(false);
+  setIoMode("export");
+  if (refs.ioFavOption) refs.ioFavOption.hidden = state.role === "guest";
+  if (refs.ioExportHint) setText(refs.ioExportHint, t("app.io.export.hint"));
+  if (refs.ioFetchIcons) {
+    refs.ioFetchIcons.disabled = !state.canRemote;
+    refs.ioFetchIcons.checked = state.canRemote;
+    state.importFetchIcons = state.canRemote;
+  }
+  updateIoExportControls();
+  refs.ioDialog.showModal();
+}
+
+function buildExportPackage() {
+  const links = state.links.slice();
+  if (!links.length) return null;
+  const stamp = ioStamp();
+  if (state.ioFormat === "favorites") {
+    const urls = links
+      .filter(function (link) {
+        return state.favoriteSet.has(link.id);
+      })
+      .map(function (link) {
+        return link.url;
+      });
+    if (!urls.length) return null;
+    return {
+      content: urls.join("\n") + "\n",
+      filename: "linknav-favorites-" + stamp + ".txt",
+      mime: "text/plain;charset=utf-8",
+    };
+  }
+  if (state.ioFormat === "text") {
+    return {
+      content: links
+        .map(function (link) {
+          return link.url;
+        })
+        .join("\n") + "\n",
+      filename: "linknav-urls-" + stamp + ".txt",
+      mime: "text/plain;charset=utf-8",
+    };
+  }
+  if (state.ioFormat === "csv") {
+    const rows = [["标题", "网址", "备注", "标签", "可见性", "置顶", "图标"]];
+    links.forEach(function (link) {
+      rows.push([link.title, link.url, link.desc, link.tags.join("|"), link.audience, link.pinned ? "1" : "", link.icon]);
+    });
+    const content =
+      "\uFEFF" +
+      rows
+        .map(function (row) {
+          return row.map(csvEscape).join(",");
+        })
+        .join("\r\n") +
+      "\r\n";
+    return { content: content, filename: "linknav-links-" + stamp + ".csv", mime: "text/csv;charset=utf-8" };
+  }
+  const payload = {
+    app: "io.github.xingjianya-86.linknav",
+    schema: 1,
+    exportedAt: new Date().toISOString(),
+    links: links.map(function (link) {
+      return {
+        title: link.title,
+        url: link.url,
+        icon: link.icon,
+        desc: link.desc,
+        tags: link.tags,
+        audience: link.audience,
+        pinned: link.pinned,
+        order: link.order,
+      };
+    }),
+  };
+  if (state.ioIncludeIcons) {
+    const icons = {};
+    links.forEach(function (link) {
+      if (link.iconData) icons[link.url] = link.iconData;
+    });
+    if (Object.keys(icons).length) payload.icons = icons;
+  }
+  return {
+    content: JSON.stringify(payload, null, 2) + "\n",
+    filename: "linknav-links-" + stamp + ".json",
+    mime: "application/json",
+  };
+}
+
+async function handleCopyText(text, failMessage) {
+  const ok = await core.copyText(text);
+  if (ok) {
+    toast(t("app.copied"), "happy");
+    return true;
+  }
+  showCopyPanel(text);
+  toast(failMessage || t("app.copyFail"), "sad");
+  return false;
+}
+
+async function downloadExport() {
+  const pkg = buildExportPackage();
+  if (!pkg) {
+    toast(t("app.io.export.empty"), "sad");
+    return;
+  }
+  try {
+    await Tapp.file.download(pkg.content, pkg.filename, pkg.mime);
+    toast(t("app.io.export.downloaded"), "happy");
+  } catch (err) {
+    await handleCopyText(pkg.content, t("app.io.export.downloadFail"));
+  }
+}
+
+async function copyExport() {
+  const pkg = buildExportPackage();
+  if (!pkg) {
+    toast(t("app.io.export.empty"), "sad");
+    return;
+  }
+  await handleCopyText(pkg.content, t("app.copyFail"));
+}
+
+function toggleImportSelection() {
+  const visible = state.importRows.filter(importRowVisible).filter(function (row) {
+    return !row.invalid;
+  });
+  const allChecked = visible.length > 0 && visible.every(function (row) {
+    return row.checked;
+  });
+  visible.forEach(function (row) {
+    row.checked = !allChecked;
+  });
+  renderImportList();
+}
+
+async function runImport() {
+  if (state.importBusy) return;
+  if (!state.importRows.length && refs.ioPaste && refs.ioPaste.value.trim()) {
+    handleImportParse(refs.ioPaste.value, "");
+  }
+  const selected = state.importRows.filter(function (row) {
+    return row.checked && !row.invalid;
+  });
+  if (!selected.length) {
+    const rows = state.importRows;
+    if (!rows.length) {
+      toast(t("app.io.import.emptySource"), "sad");
+    } else if (rows.every(function (row) {
+      return row.invalid;
+    })) {
+      toast(t("app.io.import.allInvalid"), "sad");
+    } else if (rows.every(function (row) {
+      return row.invalid || row.status === "duplicate" || row.status === "skipped";
+    })) {
+      toast(t("app.io.import.allDuplicate"), "sad");
+    } else {
+      toast(t("app.io.import.nothing"), "sad");
+    }
+    return;
+  }
+
+  const all = state.links.slice();
+  const byUrl = {};
+  all.forEach(function (link) {
+    const key = core.sanitizeUrl(link.url) || link.url;
+    byUrl[key] = link;
+  });
+  const newCount = selected.filter(function (row) {
+    return !byUrl[core.sanitizeUrl(row.url) || row.url];
+  }).length;
+  if (state.links.length + newCount > core.MAX_LINKS) {
+    toast(t("app.io.import.limit"), "sad");
+    return;
+  }
+
+  state.importBusy = true;
+  state.importResult = "";
+  state.importDone = 0;
+  state.importTotal = selected.length;
+  setImportLock(true);
+  if (refs.ioImportHint) {
+    setText(refs.ioImportHint, "");
+    refs.ioImportHint.dataset.state = "";
+  }
+  renderImportList();
+  let added = 0;
+  let updated = 0;
+  let skipped = 0;
+  const iconJobs = [];
+  selected.forEach(function (row) {
+    const key = core.sanitizeUrl(row.url) || row.url;
+    const existing = byUrl[key];
+    if (existing) {
+      if (state.importDedupe !== "overwrite") {
+        skipped += 1;
+        row.status = "skipped";
+        row.message = "";
+        return;
+      }
+      existing.title = row.title || existing.title;
+      existing.desc = row.desc || existing.desc;
+      existing.icon = row.icon || existing.icon;
+      if (row.tags.length) existing.tags = row.tags.slice(0, 8);
+      existing.audience = row.audience;
+      existing.pinned = row.pinned || existing.pinned;
+      existing.target = core.resolveTarget(existing.url, state.openUrls) || existing.target;
+      updated += 1;
+      row.status = "imported";
+      if (row.iconData) iconJobs.push({ link: existing, row: row, data: row.iconData });
+      return;
+    }
+    const link = {
+      id: core.newLinkId(),
+      url: row.url,
+      title: row.title || core.hostOf(row.url) || row.url,
+      target: core.resolveTarget(row.url, state.openUrls),
+      icon: row.icon || "",
+      desc: row.desc || "",
+      tags: row.tags.slice(0, 8),
+      audience: row.audience,
+      pinned: !!row.pinned,
+      order: (all.length + added) * 10,
+      addedAt: Date.now(),
+      addedBy: "",
+    };
+    all.push(link);
+    byUrl[key] = link;
+    added += 1;
+    row.status = "imported";
+    if (row.iconData) iconJobs.push({ link: link, row: row, data: row.iconData });
+  });
+  state.importDone = selected.length;
+  renderImportStatus();
+
+  try {
+    await core.saveLinks(all, state.role);
+  } catch (err) {
+    state.importBusy = false;
+    state.importResult = t("app.saveFail");
+    state.importResultState = "error";
+    setImportLock(false);
+    renderImportList();
+    toast(t("app.saveFail"), "sad");
+    return;
+  }
+
+  let iconOk = 0;
+  let iconFail = 0;
+  for (let i = 0; i < iconJobs.length; i++) {
+    try {
+      await core.saveIcon(iconJobs[i].link.id, iconJobs[i].data, iconJobs[i].link.audience, state.role);
+      iconJobs[i].link.iconData = iconJobs[i].data;
+      iconOk += 1;
+    } catch (err) {
+      iconFail += 1;
+      iconJobs[i].row.message = t("app.icon.quota");
+    }
+    state.importDone += 1;
+    renderImportStatus();
+  }
+
+  const fetchRows = [];
+  if (state.importFetchIcons && state.canRemote) {
+    selected.forEach(function (row) {
+      if (row.status === "skipped") return;
+      const target = byUrl[core.sanitizeUrl(row.url) || row.url];
+      if (!target || target.iconData) return;
+      if (!core.hostOf(row.url)) return;
+      fetchRows.push({ row: row, target: target });
+    });
+    state.importTotal += fetchRows.length;
+    renderImportStatus();
+  }
+  for (let i = 0; i < fetchRows.length; i++) {
+    const row = fetchRows[i].row;
+    const target = fetchRows[i].target;
+    const domain = core.hostOf(row.url);
+    row.message = t("app.icon.fetching");
+    renderImportList();
+    try {
+      const img = await loadCorsImage(FAVICON_SERVICE + encodeURIComponent(domain), 9000);
+      const dataUri = toIconDataUriFromImage(img);
+      await core.saveIcon(target.id, dataUri, target.audience, state.role);
+      target.iconData = dataUri;
+      iconOk += 1;
+      row.status = "fetched";
+      row.message = "";
+    } catch (err) {
+      iconFail += 1;
+      row.message = t("app.icon.fetchFail");
+    }
+    state.importDone += 1;
+    renderImportStatus();
+    renderImportList();
+  }
+
+  await core.pruneIcons(
+    all.map(function (link) {
+      return link.id;
+    }),
+    state.role,
+  );
+  await reload(false);
+  state.importBusy = false;
+  state.importDone = state.importTotal;
+  state.importResult =
+    t("app.io.import.done", { added: added, updated: updated, skipped: skipped, failed: 0 }) +
+    (iconOk || iconFail ? " · " + t("app.io.import.iconsDone", { ok: iconOk, fail: iconFail }) : "");
+  state.importResultState = iconFail ? "warn" : "done";
+  setImportLock(false);
+  renderImportList();
+  toast(t("app.io.import.done", { added: added, updated: updated, skipped: skipped, failed: 0 }), "happy");
+}
+
+function bindIoEvents() {
+  document.querySelectorAll("[data-io-tab]").forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      setIoMode(tab.dataset.ioTab);
+    });
+  });
+  document.querySelectorAll("[data-ln-io-format]").forEach(function (input) {
+    input.addEventListener("change", function () {
+      if (!input.checked) return;
+      state.ioFormat = input.value;
+      updateIoExportControls();
+    });
+  });
+  if (refs.ioIncludeIcons) {
+    refs.ioIncludeIcons.addEventListener("change", function () {
+      state.ioIncludeIcons = refs.ioIncludeIcons.checked;
+    });
+  }
+  if (refs.ioDefaultAudience) {
+    refs.ioDefaultAudience.addEventListener("change", function () {
+      state.importDefaultAudience = refs.ioDefaultAudience.value;
+    });
+  }
+  if (refs.ioImportFormat) {
+    refs.ioImportFormat.addEventListener("change", function () {
+      state.importFormat = refs.ioImportFormat.value;
+      if (refs.ioPaste && refs.ioPaste.value.trim()) handleImportParse(refs.ioPaste.value, "");
+    });
+  }
+  const parseButton = document.querySelector("[data-ln-io-btn-parse]");
+  if (parseButton) {
+    parseButton.addEventListener("click", function () {
+      handleImportParse(refs.ioPaste ? refs.ioPaste.value : "", "");
+    });
+  }
+  if (refs.ioPaste) {
+    refs.ioPaste.addEventListener("input", function () {
+      autoGrowPaste();
+      if (parseTimer) clearTimeout(parseTimer);
+      const value = refs.ioPaste.value;
+      parseTimer = setTimeout(function () {
+        if (value.trim()) {
+          handleImportParse(value, "");
+        } else if (state.importRows.length) {
+          state.importRows = [];
+          state.importResult = "";
+          renderImportList();
+        }
+      }, 500);
+    });
+  }
+  document.querySelectorAll("[data-ln-io-dedupe]").forEach(function (input) {
+    input.addEventListener("change", function () {
+      if (!input.checked) return;
+      state.importDedupe = input.value;
+      const wantChecked = state.importDedupe === "overwrite";
+      state.importRows.forEach(function (row) {
+        if (row.invalid) return;
+        if (row.status === "duplicate" || row.status === "skipped") {
+          row.checked = wantChecked;
+          if (wantChecked && row.status === "skipped") row.status = "duplicate";
+        }
+      });
+      renderImportList();
+    });
+  });
+  if (refs.ioFetchIcons) {
+    refs.ioFetchIcons.addEventListener("change", function () {
+      state.importFetchIcons = refs.ioFetchIcons.checked;
+    });
+  }
+  if (refs.ioFile) {
+    refs.ioFile.addEventListener("change", function () {
+      const file = refs.ioFile.files && refs.ioFile.files[0];
+      handleIoFile(file);
+      refs.ioFile.value = "";
+    });
+  }
+  if (refs.ioDrop) {
+    ["dragenter", "dragover"].forEach(function (name) {
+      refs.ioDrop.addEventListener(name, function (event) {
+        event.preventDefault();
+        refs.ioDrop.classList.add("is-drag");
+      });
+    });
+    ["dragleave", "dragend"].forEach(function (name) {
+      refs.ioDrop.addEventListener(name, function (event) {
+        event.preventDefault();
+        refs.ioDrop.classList.remove("is-drag");
+      });
+    });
+    refs.ioDrop.addEventListener("drop", function (event) {
+      event.preventDefault();
+      refs.ioDrop.classList.remove("is-drag");
+      const files = event.dataTransfer && event.dataTransfer.files;
+      if (files && files[0]) handleIoFile(files[0]);
+    });
+  }
+  if (refs.ioDialog) {
+    refs.ioDialog.addEventListener("cancel", function (event) {
+      if (state.importBusy) event.preventDefault();
+    });
+    refs.ioDialog.addEventListener("close", function () {
+      state.importBusy = false;
+      setImportLock(false);
+      returnOverlay(refs.toast);
+      returnOverlay(refs.copyPanel);
+    });
+  }
+}
+
 function bindEvents() {
   if (refs.search) {
     refs.search.addEventListener("input", function () {
@@ -787,7 +1977,7 @@ function bindEvents() {
     } else if (action === "close-dialog") {
       closeDialog();
     } else if (action === "close-copy") {
-      refs.copyPanel.hidden = true;
+      hideCopyPanel();
     } else if (action === "save-link") {
       saveDialog();
     } else if (action === "pick-icon") {
@@ -796,6 +1986,32 @@ function bindEvents() {
       handleClearIcon();
     } else if (action === "fetch-icon") {
       fetchFaviconAuto();
+    } else if (action === "io-open") {
+      openIoDialog();
+    } else if (action === "close-io") {
+      if (!state.importBusy && refs.ioDialog) refs.ioDialog.close();
+    } else if (action === "io-pick-file") {
+      if (refs.ioFile) refs.ioFile.click();
+    } else if (action === "io-clear") {
+      resetImport();
+    } else if (action === "io-sample-json") {
+      applyImportSample("json");
+    } else if (action === "io-sample-text") {
+      applyImportSample("text");
+    } else if (action === "io-sample-csv") {
+      applyImportSample("csv");
+    } else if (action === "io-template") {
+      downloadImportTemplate();
+    } else if (action === "io-select-all") {
+      toggleImportSelection();
+    } else if (action === "io-import") {
+      runImport();
+    } else if (action === "io-reset") {
+      resetImport();
+    } else if (action === "io-download") {
+      downloadExport();
+    } else if (action === "io-copy") {
+      copyExport();
     }
   });
   if (refs.inputUrl) {
@@ -819,6 +2035,8 @@ function bindEvents() {
       state.editingId = null;
       state.iconDraft = "";
       state.iconOriginal = "";
+      returnOverlay(refs.toast);
+      returnOverlay(refs.copyPanel);
     });
     refs.dialog.addEventListener("keydown", function (event) {
       if (event.key !== "Enter") return;
@@ -830,9 +2048,10 @@ function bindEvents() {
   }
   if (refs.copyPanel) {
     refs.copyPanel.addEventListener("click", function (event) {
-      if (event.target === refs.copyPanel) refs.copyPanel.hidden = true;
+      if (event.target === refs.copyPanel) hideCopyPanel();
     });
   }
+  bindIoEvents();
 }
 
 function bindDataSignals() {

@@ -1,7 +1,7 @@
 {
   "id": "io.github.xingjianya-86.linknav",
   "name": "链接小窝",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "收集与分享网址的萌系导航页：管理员维护共享链接目录并按角色分层可见，人人可收藏，桌面小组件快捷直达",
   "locales": {
     "en-US": {
@@ -41,7 +41,7 @@
   "widgets": [
     {
       "id": "quick-links",
-      "name": "小窝快捷链接",
+      "name": "链接小窝",
       "description": "置顶链接一键直达",
       "icon": "⭐",
       "entry": "widget/index.js",
