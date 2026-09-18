@@ -1114,6 +1114,7 @@ services:
       BASE_URL: \${BASE_URL:-}
       RUST_LOG: \${RUST_LOG:-info}
       TZ: Asia/Shanghai
+      MALLOC_ARENA_MAX: \${MALLOC_ARENA_MAX:-4}
       MYRIAD_MEMORY_PROFILE: \${MYRIAD_MEMORY_PROFILE:-default}
       MYRIAD_UPDATER_URL: http://updater-gateway:1104
       UPDATER_GATEWAY_SECRET: \${UPDATER_GATEWAY_SECRET}
@@ -1534,6 +1535,7 @@ FRONTEND_URL=https://{{MAIN_DOMAIN}}
 # AI / 平台密钥 / 出站 HTTP 代理 / Gemini·GitHub API 镜像走 /config → 高级，落库。
 # 不写入 PROXY_ENABLED / PROXY_URL / PROXY_BYPASS / GEMINI_BASE_URL / GITHUB_API_BASE_URL。
 # 升级时旧 .env 若仍有这些键，backend 会忽略。管理台保存不再双写它们。
+# MALLOC_ARENA_MAX=4
 # RUST_LOG=info
 `;
 
