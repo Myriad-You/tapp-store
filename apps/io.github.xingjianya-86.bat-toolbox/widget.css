@@ -1,0 +1,671 @@
+/* 银河球棒侠 · Widget 样式（共享令牌与原子类见 styles.css） */
+
+.gtw {
+  --gtw-scale: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: calc(6px * var(--gtw-scale));
+  width: 100%;
+  height: 100%;
+  padding: calc(10px * var(--gtw-scale));
+  box-sizing: border-box;
+  overflow: hidden;
+  font-family: var(--gt-font);
+  color: var(--gt-ink);
+  background: var(--gt-bg);
+}
+
+.gtw * {
+  box-sizing: border-box;
+}
+
+.gtw .gt-avatar-wrap {
+  width: calc(46px * var(--gtw-scale));
+  height: calc(46px * var(--gtw-scale));
+  border-width: calc(2px * var(--gtw-scale));
+  box-shadow: 0 calc(3px * var(--gtw-scale)) calc(8px * var(--gtw-scale)) rgba(var(--gt-accent-rgb), 0.3);
+}
+
+.gtw .gt-avatar-fallback {
+  font-size: calc(18px * var(--gtw-scale));
+}
+
+.gtw .gt-avatar-bbs {
+  right: calc(-3px * var(--gtw-scale));
+  bottom: calc(-3px * var(--gtw-scale));
+  width: calc(18px * var(--gtw-scale));
+  height: calc(18px * var(--gtw-scale));
+  border-width: calc(1.5px * var(--gtw-scale));
+}
+
+.gtw-head {
+  display: flex;
+  align-items: center;
+  gap: calc(8px * var(--gtw-scale));
+}
+
+.gtw-head-text {
+  min-width: 0;
+}
+
+.gtw-name {
+  margin: 0;
+  font-size: calc(13px * var(--gtw-scale));
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gtw-level {
+  margin: 0;
+  font-size: calc(10px * var(--gtw-scale));
+  font-weight: 700;
+  color: var(--gt-accent);
+}
+
+.gtw-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(6px * var(--gtw-scale));
+  margin-top: calc(2px * var(--gtw-scale));
+}
+
+.gtw .gt-pill {
+  gap: calc(3px * var(--gtw-scale));
+  padding: calc(2px * var(--gtw-scale)) calc(7px * var(--gtw-scale));
+  border-width: calc(1.5px * var(--gtw-scale));
+  font-size: calc(11px * var(--gtw-scale));
+}
+
+.gtw-chars {
+  display: flex;
+  gap: calc(5px * var(--gtw-scale));
+  margin-top: auto;
+}
+
+.gtw-char {
+  position: relative;
+  width: calc(30px * var(--gtw-scale));
+  height: calc(30px * var(--gtw-scale));
+  border-radius: calc(10px * var(--gtw-scale));
+  overflow: hidden;
+  border: calc(1.5px * var(--gtw-scale)) solid rgba(255, 255, 255, 0.85);
+  background: rgba(var(--gt-accent-rgb), 0.16);
+}
+
+.gtw-char .gt-char-img,
+.gtw-char .gt-char-fallback {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.gtw-char .gt-char-fallback {
+  font-size: calc(13px * var(--gtw-scale));
+}
+
+.gtw .gt-empty {
+  margin: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: calc(11px * var(--gtw-scale));
+}
+
+/* 编辑模式：内容不吞指针事件，并显示虚线提示（官方示例写法） */
+
+.gtw-edit {
+  outline: 2px dashed rgba(var(--gt-accent-rgb), 0.65);
+  outline-offset: -3px;
+  border-radius: calc(14px * var(--gtw-scale));
+}
+
+.gtw-edit,
+.gtw-edit * {
+  pointer-events: none !important;
+}
+
+/* 2x2：状态三行 */
+
+.gtw-stats--rows {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(4px * var(--gtw-scale));
+}
+
+.gtw-stats--rows .gt-pill {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+/* 4x2：头像 + 名字/等级 + 横排状态 + 横滑角色 */
+
+.gtw-size-4x2 .gtw-stats {
+  margin-top: 0;
+  margin-left: auto;
+  justify-content: flex-end;
+}
+
+/* 4x4：大面板，状态 + 时间 + 摘要 + 横滑角色 */
+
+.gtw-size-4x4 .gtw-stats {
+  margin-top: 0;
+  margin-left: auto;
+  justify-content: flex-end;
+}
+
+.gtw-size-4x4 .gtw-times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(10px * var(--gtw-scale));
+}
+
+.gtw-size-4x4 .gtw-time {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: calc(4px * var(--gtw-scale));
+  font-size: calc(10px * var(--gtw-scale));
+  font-weight: 700;
+  color: var(--gt-ink-soft);
+}
+
+.gtw-size-4x4 .gtw-stats-line {
+  margin: 0;
+  font-size: calc(11px * var(--gtw-scale));
+  font-weight: 700;
+  color: var(--gt-ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 角色横滑（4x2 / 4x4）：60px 头像，可点击 */
+
+.gtw-chars--scroll {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: calc(8px * var(--gtw-scale));
+  margin-top: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: calc(2px * var(--gtw-scale));
+  scrollbar-width: thin;
+}
+
+.gtw-chars--rows2 {
+  display: grid;
+  grid-template-columns: repeat(6, calc(60px * var(--gtw-scale)));
+  grid-template-rows: repeat(2, auto);
+  gap: calc(8px * var(--gtw-scale));
+  margin-top: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: calc(2px * var(--gtw-scale));
+  scrollbar-width: thin;
+}
+
+.gtw-size-4x2 .gtw-char,
+.gtw-size-4x4 .gtw-char {
+  flex: 0 0 auto;
+  width: calc(60px * var(--gtw-scale));
+  height: calc(60px * var(--gtw-scale));
+  border-radius: calc(16px * var(--gtw-scale));
+}
+
+.gtw-size-4x2 .gtw-char .gt-char-img,
+.gtw-size-4x2 .gtw-char .gt-char-fallback,
+.gtw-size-4x4 .gtw-char .gt-char-img,
+.gtw-size-4x4 .gtw-char .gt-char-fallback {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  font-size: calc(24px * var(--gtw-scale));
+}
+
+.gtw-char.is-clickable {
+  cursor: pointer;
+}
+
+.gtw-char--labeled {
+  width: calc(60px * var(--gtw-scale)) !important;
+  height: auto !important;
+  border: 0;
+  background: none;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(2px * var(--gtw-scale));
+}
+
+.gtw-char--labeled .gt-char-img,
+.gtw-char--labeled .gt-char-fallback {
+  width: calc(60px * var(--gtw-scale));
+  height: calc(60px * var(--gtw-scale));
+  border-radius: calc(16px * var(--gtw-scale));
+  border: calc(1.5px * var(--gtw-scale)) solid rgba(255, 255, 255, 0.85);
+}
+
+.gtw-char-name {
+  max-width: 100%;
+  font-size: calc(10px * var(--gtw-scale));
+  font-weight: 700;
+  color: var(--gt-ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* abyss：2x2 双大数；4x2/4x4 双栏 */
+
+.gtw-abyss {
+  gap: calc(6px * var(--gtw-scale));
+}
+
+.gtw-abyss.gtw-size-2x2 {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: calc(16px * var(--gtw-scale));
+}
+
+.gtw-abyss-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(2px * var(--gtw-scale));
+}
+
+.gtw-abyss-stat strong {
+  font-size: calc(28px * var(--gtw-scale));
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.gtw-abyss-stat span {
+  font-size: calc(10px * var(--gtw-scale));
+  font-weight: 700;
+  color: var(--gt-ink-soft);
+}
+
+/* 楼层行（4x2：通关时间；4x4：+ 上下半队伍） */
+
+.gtw-floor-rows {
+  display: flex;
+  flex-direction: column;
+  gap: calc(4px * var(--gtw-scale));
+  margin-top: auto;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.gtw-floor-rows--grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: calc(6px * var(--gtw-scale));
+  margin-top: 0;
+}
+
+.gtw-floor-row {
+  display: flex;
+  flex-direction: column;
+  gap: calc(2px * var(--gtw-scale));
+}
+
+.gtw-floor-head {
+  display: flex;
+  align-items: center;
+  gap: calc(6px * var(--gtw-scale));
+  font-size: calc(10px * var(--gtw-scale));
+  font-weight: 700;
+  color: var(--gt-ink-soft);
+}
+
+.gtw-floor-name {
+  font-weight: 800;
+  color: var(--gt-ink);
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gtw-floor-stars {
+  color: #f5a623;
+  letter-spacing: calc(1px * var(--gtw-scale));
+}
+
+.gtw-floor-time {
+  margin-left: auto;
+}
+
+.gtw-team-line {
+  display: flex;
+  align-items: center;
+  gap: calc(6px * var(--gtw-scale));
+  flex-wrap: wrap;
+}
+
+.gtw-team-label {
+  font-size: calc(9px * var(--gtw-scale));
+  font-weight: 800;
+  color: var(--gt-ink-soft);
+}
+
+.gtw-team {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(2px * var(--gtw-scale));
+}
+
+.gtw-team-half {
+  font-size: calc(9px * var(--gtw-scale));
+  font-weight: 700;
+  color: var(--gt-ink-soft);
+}
+
+.gtw-team-avatar {
+  width: calc(20px * var(--gtw-scale));
+  height: calc(20px * var(--gtw-scale));
+  border-radius: 50%;
+  object-fit: cover;
+  border: calc(1px * var(--gtw-scale)) solid rgba(255, 255, 255, 0.85);
+}
+
+/* 剧诗轮次行（4x4） */
+
+.gtw-rounds--grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: calc(6px * var(--gtw-scale));
+  overflow-y: auto;
+  min-height: 0;
+  margin-top: 0;
+}
+
+.gtw-round-row {
+  display: flex;
+  align-items: center;
+  gap: calc(6px * var(--gtw-scale));
+}
+
+.gtw-round-name {
+  font-size: calc(10px * var(--gtw-scale));
+  font-weight: 800;
+  color: var(--gt-ink);
+}
+
+.gtw-round-medal {
+  margin-left: auto;
+  font-size: calc(12px * var(--gtw-scale));
+}
+
+.gtw-abyss-row {
+  display: flex;
+  gap: calc(8px * var(--gtw-scale));
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.gtw-abyss-col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(4px * var(--gtw-scale));
+  padding: calc(8px * var(--gtw-scale));
+  border-radius: calc(14px * var(--gtw-scale));
+  background: rgba(255, 255, 255, 0.6);
+  border: calc(1.5px * var(--gtw-scale)) solid rgba(255, 255, 255, 0.85);
+}
+
+.dark .gtw-abyss-col {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.gtw-abyss-title {
+  margin: 0;
+  font-size: calc(11px * var(--gtw-scale));
+  font-weight: 800;
+  color: var(--gt-ink-soft);
+}
+
+.gtw-abyss-big {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: calc(4px * var(--gtw-scale));
+}
+
+.gtw-abyss-big strong {
+  font-size: calc(24px * var(--gtw-scale));
+  font-weight: 800;
+}
+
+.gtw-abyss-big span {
+  font-size: calc(11px * var(--gtw-scale));
+  font-weight: 700;
+  color: var(--gt-accent);
+}
+
+.gtw-abyss-sub {
+  margin: 0;
+  font-size: calc(10px * var(--gtw-scale));
+  font-weight: 700;
+  color: var(--gt-ink-soft);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* 深渊 Tab */
+
+.gtw-tabs {
+  display: flex;
+  gap: calc(4px * var(--gtw-scale));
+  padding: calc(3px * var(--gtw-scale));
+  border-radius: 999px;
+  background: rgba(var(--gt-accent-rgb), 0.12);
+  border: calc(1.5px * var(--gtw-scale)) solid var(--gt-line);
+}
+
+.gtw-tab {
+  flex: 1 1 0;
+  border: 0;
+  background: transparent;
+  padding: calc(4px * var(--gtw-scale)) calc(10px * var(--gtw-scale));
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: calc(10px * var(--gtw-scale));
+  font-weight: 800;
+  color: var(--gt-ink-soft);
+  cursor: pointer;
+}
+
+.gtw-tab.is-active {
+  background: rgba(var(--gt-accent-rgb), 0.9);
+  color: #fff;
+}
+
+.gtw-abyss-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+}
+
+.gtw-abyss-panel .gtw-abyss-col {
+  flex: 1 1 auto;
+}
+
+/* 星穹战绩 2x2：三行星星数 */
+
+.gtw-endgame-rows {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(6px * var(--gtw-scale));
+}
+
+.gtw-endgame-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(8px * var(--gtw-scale));
+  padding: calc(5px * var(--gtw-scale)) calc(10px * var(--gtw-scale));
+  border-radius: calc(12px * var(--gtw-scale));
+  background: rgba(255, 255, 255, 0.6);
+  border: calc(1.5px * var(--gtw-scale)) solid rgba(255, 255, 255, 0.85);
+}
+
+.dark .gtw-endgame-row {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.gtw-endgame-name {
+  font-size: calc(11px * var(--gtw-scale));
+  font-weight: 800;
+  color: var(--gt-ink-soft);
+}
+
+.gtw-endgame-row strong {
+  font-size: calc(16px * var(--gtw-scale));
+  font-weight: 800;
+  color: var(--gt-ink);
+}
+
+.gtw-team-score {
+  margin-left: auto;
+  font-size: calc(9px * var(--gtw-scale));
+  font-weight: 700;
+  color: var(--gt-ink-soft);
+}
+
+/* 星穹战绩 4x4：记录整栏铺满，[标签 15%] [队伍头像 70%] [日期 15%] */
+
+.gtw-endgame.gtw-size-4x4 .gtw-floor-rows--grid {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  flex: 1 1 auto;
+}
+
+.gtw-endgame.gtw-size-4x4 .gtw-floor-row {
+  gap: calc(4px * var(--gtw-scale));
+}
+
+.gtw-endgame.gtw-size-4x4 .gtw-floor-head {
+  font-size: calc(11px * var(--gtw-scale));
+}
+
+.gtw-endgame.gtw-size-4x4 .gtw-team-avatar {
+  width: calc(26px * var(--gtw-scale));
+  height: calc(26px * var(--gtw-scale));
+}
+
+.gtw-record-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 70%) auto;
+  align-items: center;
+  gap: calc(3px * var(--gtw-scale));
+  padding: calc(2px * var(--gtw-scale)) calc(1px * var(--gtw-scale));
+}
+
+.gtw-record-row + .gtw-record-row {
+  border-top: calc(1px * var(--gtw-scale)) dashed rgba(var(--gt-accent-rgb), 0.25);
+}
+
+.gtw-record-label {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+  font-size: calc(10px * var(--gtw-scale));
+  font-weight: 800;
+  color: var(--gt-ink);
+}
+
+.gtw-record-label span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gtw-record-half {
+  color: var(--gt-ink-soft);
+  font-weight: 700;
+}
+
+.gtw-record-team {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(3px * var(--gtw-scale));
+  min-width: 0;
+}
+
+.gtw-record-date {
+  text-align: right;
+  font-size: calc(9px * var(--gtw-scale));
+  font-weight: 700;
+  color: var(--gt-ink-soft);
+  white-space: nowrap;
+}
+
+/* 40px 圆角方块头像（同每日面板角色格） */
+
+.gtw-record-avatar {
+  position: relative;
+  flex: 0 0 auto;
+  width: calc(40px * var(--gtw-scale));
+  height: calc(40px * var(--gtw-scale));
+  border-radius: calc(12px * var(--gtw-scale));
+  overflow: hidden;
+  border: calc(1.5px * var(--gtw-scale)) solid rgba(255, 255, 255, 0.85);
+  background: rgba(var(--gt-accent-rgb), 0.16);
+}
+
+.gtw-record-avatar .gt-char-img,
+.gtw-record-avatar .gt-char-fallback {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.gtw-record-avatar .gt-char-fallback {
+  font-size: calc(18px * var(--gtw-scale));
+}
+
+/* 星铁角色格：方形 icon 补上圆角卡片效果（覆盖 4x4 的 border-radius:0） */
+
+.gtw-size-4x4 .gtw-char--labeled .gt-char-img,
+.gtw-size-4x4 .gtw-char--labeled .gt-char-fallback {
+  width: calc(60px * var(--gtw-scale));
+  height: calc(60px * var(--gtw-scale));
+  border-radius: calc(16px * var(--gtw-scale));
+  border: calc(1.5px * var(--gtw-scale)) solid rgba(255, 255, 255, 0.9);
+  background: rgba(var(--gt-accent-rgb), 0.16);
+  box-shadow: 0 calc(3px * var(--gtw-scale)) calc(8px * var(--gtw-scale)) rgba(var(--gt-accent-rgb), 0.22);
+}
+
+.gtw-char--labeled.is-clickable {
+  transition: transform 0.12s ease;
+}
+
+.gtw-char--labeled.is-clickable:active {
+  transform: scale(0.96);
+}
+
+
