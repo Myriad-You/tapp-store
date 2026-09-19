@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.73",
+  "version": "1.0.74",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-09-18T23:37:45.800Z",
+  "updated_at": "2026-09-19T11:39:01.895Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -2839,6 +2839,97 @@
       "verified": false,
       "created_at": "2026-09-17T23:49:32.230Z",
       "updated_at": "2026-09-18T23:37:27.534Z"
+    },
+    {
+      "id": "io.github.xingjianya-86.genshin-toolbox",
+      "name": "应急食品",
+      "version": "1.6.5",
+      "description": "米游社扫码绑定后展示原神账号资料、树脂委托、角色简表、深境螺旋与幻想真境剧诗战绩，并提供 2x2 / 4x2 / 4x4 桌面小组件",
+      "long_description": "应急食品是一个把米游社原神战绩搬进 Myriad 的数据面板 Tapp。站长用米游社 App 扫码绑定（或手动粘贴 Cookie）后，页面会展示原粹树脂与恢复时间、每日委托、洞天宝钱、探索与成就统计，以及角色简表（点击头像直达观测枢角色词条）。深渊区块支持深境螺旋本期 / 上期与幻想真境剧诗，逐间展示上下半队伍与通关时间，并汇总总星数。\n\n桌面小组件提供 2x2 / 4x2 / 4x4 三种尺寸：2x2 显示树脂、委托与宝钱；4x2 横排状态并展示前 8 名角色；4x4 额外显示回满时间、探索成就与前 12 名角色。角色头像点击即可跳转观测枢。\n\n数据全部来自米游社公开接口：扫码登录会自动补齐 ltoken 与 cookie_token，机器码 / 设备指纹在站长设置里配置；头像与角色图会压缩成 64px 缓存到本地（增量、限总量），离线也能显示。所有设置与凭据只保存在安装级私有数据里，仅站长可读。应用内置风控冷却（命中风控码后自动暂停请求并逐级延长冷却）、6 小时定时刷新与调试面板，支持简体中文、English、日本語以及浅色 / 深色主题。",
+      "locales": {
+        "en-US": {
+          "name": "Emergency Food",
+          "description": "Bind your miHoYo account by QR login to show Genshin profile, resin & commissions, characters, Spiral Abyss and Imaginarium Theater records, with 2x2 / 4x2 / 4x4 dashboard widgets",
+          "long_description": "Emergency Food brings your miHoYo Genshin Impact records into Myriad. After the admin binds an account with QR login (or pastes a Cookie), the page shows Original Resin and its recovery time, daily commissions, Realm Currency, exploration and achievement stats, plus a character list whose avatars open the official wiki entry. The Abyss section covers Spiral Abyss (current / previous) and the Imaginarium Theater with per-chamber first/second half teams and clear times, plus total stars.\n\nDashboard widgets come in 2x2 / 4x2 / 4x4: 2x2 shows Resin, commissions and Realm Currency; 4x2 adds an inline status row and the top 8 characters; 4x4 also shows full-recovery times, exploration stats and the top 12 characters. Tapping a character opens the wiki.\n\nAll data comes from miHoYo public APIs. QR login fills in ltoken and cookie_token automatically, device info is configurable in admin settings, and avatars/character art are compressed to 64px and cached locally (incremental, size-capped) so they still render offline. Settings and credentials live only in installation-scoped private data readable by admins. The app ships risk-control cooldown, a 6-hour scheduled refresh and a debug panel, and speaks Simplified Chinese, English and Japanese with light / dark themes."
+        },
+        "ja-JP": {
+          "name": "緊急食料",
+          "description": "miHoYo アカウントを QR ログインで連携し、原神のプロフィール・樹脂・キャラ・深境螺旋・幻想真境劇詩の記録を表示。2x2 / 4x2 / 4x4 ウィジェット対応",
+          "long_description": "「緊急食料」は、miHoYo の原神の戦績を Myriad に持ち込むデータパネル Tapp です。管理者が miHoYo アプリで QR 連携（または Cookie を貼り付け）すると、ページに原石（樹脂）と回復時間、デイリー依頼、洞天宝銭、探索・実績の統計、キャラクター一覧（アイコンをタップで観測枢の該当ページを開きます）を表示します。深境螺旋（今期 / 前期）と幻想真境劇詩のブロックでは、各間の前半 / 後半チームとクリア時間、合計星数を表示します。\n\nダッシュボードウィジェットは 2x2 / 4x2 / 4x4 の 3 サイズ。2x2 は樹脂・依頼・宝銭、4x2 は横並びの状態と上位 8 キャラ、4x4 は全回復時間・探索実績・上位 12 キャラを表示します。キャラのアイコンをタップすると観測枢が開きます。\n\nデータはすべて miHoYo の公開 API から取得します。QR ログインで ltoken と cookie_token を自動補完し、端末情報は管理者設定で指定できます。アイコンとキャラ画像は 64px に圧縮してローカルにキャッシュ（差分・容量上限あり）するため、オフラインでも表示できます。設定と認証情報はインストール単位のプライベートデータにのみ保存され、管理者だけが閲覧できます。リスク管理のクールダウン、6 時間ごとの自動更新、デバッグパネルを備え、簡体字中国語・英語・日本語とライト / ダークテーマに対応します。"
+        }
+      },
+      "author": {
+        "name": "xingjianya-86",
+        "url": "https://github.com/xingjianya-86"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/io.github.xingjianya-86.genshin-toolbox",
+      "repository": "https://github.com/xingjianya-86/genshin-toolbox",
+      "category": "game",
+      "tags": [
+        "原神",
+        "米游社",
+        "树脂",
+        "委托",
+        "深渊",
+        "幻想真境剧诗",
+        "角色",
+        "小组件",
+        "游戏",
+        "Genshin"
+      ],
+      "permissions": [
+        "network:fetch",
+        "storage:read",
+        "storage:write",
+        "ui:notification",
+        "ui:confirm",
+        "ui:theme",
+        "ui:openUrl",
+        "widget:register",
+        "scheduler:register"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><rect width='24' height='24' rx='7' fill='#3b4a6b'/><path d='M12 3.6l2.2 4.9 5.3.6-4 3.6 1.1 5.3L12 15.4l-4.6 2.6 1.1-5.3-4-3.6 5.3-.6z' fill='#ffe08a' stroke='#ffd166' stroke-width='0.8' stroke-linejoin='round'/><circle cx='12' cy='12.4' r='2.1' fill='#3b4a6b'/></svg>",
+      "theme_color": "#ffd166",
+      "screenshots": [],
+      "download": {
+        "manifest": "apps/io.github.xingjianya-86.genshin-toolbox/manifest.json",
+        "code": "apps/io.github.xingjianya-86.genshin-toolbox/core.js",
+        "readme": "apps/io.github.xingjianya-86.genshin-toolbox/README.md",
+        "styles": "apps/io.github.xingjianya-86.genshin-toolbox/styles.css",
+        "widget_styles": "apps/io.github.xingjianya-86.genshin-toolbox/widget.css",
+        "page_styles": "apps/io.github.xingjianya-86.genshin-toolbox/page.css",
+        "page_template": "apps/io.github.xingjianya-86.genshin-toolbox/page.html",
+        "widget_templates": {
+          "genshin": {
+            "2x2": "apps/io.github.xingjianya-86.genshin-toolbox/widget-genshin-2x2.html",
+            "4x2": "apps/io.github.xingjianya-86.genshin-toolbox/widget-genshin-4x2.html",
+            "4x4": "apps/io.github.xingjianya-86.genshin-toolbox/widget-genshin-4x4.html"
+          },
+          "abyss": {
+            "2x2": "apps/io.github.xingjianya-86.genshin-toolbox/widget-abyss-2x2.html",
+            "4x2": "apps/io.github.xingjianya-86.genshin-toolbox/widget-abyss-4x2.html",
+            "4x4": "apps/io.github.xingjianya-86.genshin-toolbox/widget-abyss-4x4.html"
+          }
+        },
+        "i18n": {
+          "en-US": "apps/io.github.xingjianya-86.genshin-toolbox/i18n/en-US.json",
+          "ja-JP": "apps/io.github.xingjianya-86.genshin-toolbox/i18n/ja-JP.json",
+          "zh-CN": "apps/io.github.xingjianya-86.genshin-toolbox/i18n/zh-CN.json"
+        },
+        "modules": {
+          "page/index.js": "apps/io.github.xingjianya-86.genshin-toolbox/page/index.js",
+          "page/qrcode.js": "apps/io.github.xingjianya-86.genshin-toolbox/page/qrcode.js",
+          "widget/index.js": "apps/io.github.xingjianya-86.genshin-toolbox/widget/index.js"
+        }
+      },
+      "size": 232466,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-09-19T11:39:01.894Z",
+      "updated_at": "2026-09-19T11:39:01.894Z"
     }
   ],
   "last_updated": "2026-08-04T09:47:35Z"
