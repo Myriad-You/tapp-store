@@ -1,0 +1,169 @@
+<main class="gt-app" data-gt-app>
+  <div class="gt-bg" aria-hidden="true">
+    <span class="gt-orb gt-orb-a"></span>
+    <span class="gt-orb gt-orb-b"></span>
+    <span class="gt-star gt-star-a">✦</span>
+    <span class="gt-star gt-star-b">✧</span>
+    <span class="gt-star gt-star-c">✦</span>
+  </div>
+
+  <header class="gt-head">
+    <div class="gt-profile">
+      <div class="gt-avatar-wrap">
+        <img class="gt-avatar" data-gt-game-avatar alt="" hidden />
+        <span class="gt-avatar-fallback" data-gt-avatar-fallback>★</span>
+        <img class="gt-avatar-bbs" data-gt-bbs-avatar alt="" hidden />
+      </div>
+      <div class="gt-profile-text">
+        <p class="gt-kicker"><span class="gt-badge" data-gt-role-badge>游客</span></p>
+        <h1 class="gt-title" data-gt-title>银河球棒侠</h1>
+        <p class="gt-sub" data-gt-subtitle></p>
+        <p class="gt-meta" data-gt-meta></p>
+      </div>
+    </div>
+    <div class="gt-head-actions">
+      <button class="gt-btn" type="button" data-action="refresh" data-gt-refresh hidden>刷新</button>
+      <button class="gt-btn gt-btn-primary" type="button" data-action="bind" data-gt-bind hidden>扫码绑定</button>
+    </div>
+  </header>
+
+  <div class="gt-alert" data-gt-alert hidden></div>
+
+  <section class="gt-cards">
+    <article class="gt-card">
+      <header class="gt-card-head"><span class="gt-card-icon">⚡</span><span data-gt-label-stamina>开拓力</span></header>
+      <p class="gt-card-value"><strong data-gt-stamina>--</strong><span data-gt-stamina-max></span></p>
+      <div class="gt-bar"><span class="gt-bar-fill" data-gt-stamina-bar></span></div>
+      <p class="gt-card-foot" data-gt-stamina-time></p>
+    </article>
+    <article class="gt-card">
+      <header class="gt-card-head"><span class="gt-card-icon">🔋</span><span data-gt-label-reserve>后备开拓力</span></header>
+      <p class="gt-card-value"><strong data-gt-reserve>--</strong></p>
+      <p class="gt-card-foot" data-gt-reserve-foot></p>
+    </article>
+    <article class="gt-card">
+      <header class="gt-card-head"><span class="gt-card-icon">📋</span><span data-gt-label-train>每日实训</span></header>
+      <p class="gt-card-value"><strong data-gt-train>--</strong></p>
+      <p class="gt-card-foot" data-gt-train-foot></p>
+    </article>
+    <article class="gt-card">
+      <header class="gt-card-head"><span class="gt-card-icon">🛰️</span><span data-gt-label-expedition>委托</span></header>
+      <p class="gt-card-value"><strong data-gt-expedition>--</strong></p>
+      <p class="gt-card-foot" data-gt-expedition-foot></p>
+    </article>
+    <article class="gt-card">
+      <header class="gt-card-head"><span class="gt-card-icon">🐛</span><span data-gt-label-cocoon>历战余响</span></header>
+      <p class="gt-card-value"><strong data-gt-cocoon>--</strong></p>
+      <p class="gt-card-foot" data-gt-cocoon-foot></p>
+    </article>
+    <article class="gt-card">
+      <header class="gt-card-head"><span class="gt-card-icon">🎲</span><span data-gt-label-rogue>差分宇宙</span></header>
+      <p class="gt-card-value"><strong data-gt-rogue>--</strong></p>
+      <p class="gt-card-foot" data-gt-rogue-foot></p>
+    </article>
+    <article class="gt-card">
+      <header class="gt-card-head"><span class="gt-card-icon">🗺️</span><span data-gt-label-stats>探索与成就</span></header>
+      <p class="gt-card-foot" data-gt-stats></p>
+    </article>
+  </section>
+
+  <section class="gt-section">
+    <div class="gt-section-head">
+      <h2 data-gt-label-chars>角色</h2>
+      <span class="gt-count" data-gt-char-count></span>
+    </div>
+    <div class="gt-chars" data-gt-chars></div>
+  </section>
+
+  <section class="gt-section">
+    <div class="gt-section-head">
+      <h2 data-gt-label-endgame>星穹战绩</h2>
+      <div class="gt-tabs" role="tablist">
+        <button class="gt-tab is-active" type="button" data-gt-tab="moc" role="tab" aria-selected="true" data-gt-tab-moc>混沌回忆</button>
+        <button class="gt-tab" type="button" data-gt-tab="fiction" role="tab" aria-selected="false" data-gt-tab-fiction>虚构叙事</button>
+        <button class="gt-tab" type="button" data-gt-tab="apocalyptic" role="tab" aria-selected="false" data-gt-tab-apocalyptic>末日幻影</button>
+      </div>
+    </div>
+    <div data-gt-panel="moc">
+      <div class="gt-subtabs">
+        <button class="gt-chip is-active" type="button" data-gt-schedule="1" data-gt-schedule-current>本期</button>
+        <button class="gt-chip" type="button" data-gt-schedule="2" data-gt-schedule-previous>上期</button>
+      </div>
+      <div class="gt-abyss" data-gt-moc></div>
+    </div>
+    <div data-gt-panel="fiction" hidden>
+      <div class="gt-abyss" data-gt-fiction></div>
+    </div>
+    <div data-gt-panel="apocalyptic" hidden>
+      <div class="gt-abyss" data-gt-apocalyptic></div>
+    </div>
+  </section>
+
+  <section class="gt-section gt-admin" data-gt-admin hidden>
+    <div class="gt-section-head"><h2 data-gt-label-admin>站长设置</h2></div>
+    <p class="gt-note" data-gt-admin-note></p>
+    <label class="gt-field">
+      <span data-gt-label-uid>游戏 UID</span>
+      <input type="text" inputmode="numeric" autocomplete="off" data-gt-config-uid placeholder="100000000" />
+    </label>
+    <label class="gt-field">
+      <span data-gt-label-server>服务器</span>
+      <select data-gt-config-server>
+        <option value="prod_gf_cn">官服</option>
+        <option value="prod_qd_cn">B服</option>
+        <option value="os">国际服（按 UID 自动判区）</option>
+      </select>
+    </label>
+    <label class="gt-field">
+      <span data-gt-label-device>机器码 / 设备信息</span>
+      <textarea data-gt-config-device rows="3" spellcheck="false"></textarea>
+    </label>
+    <div class="gt-actions">
+      <button class="gt-btn gt-btn-primary" type="button" data-action="save-settings" data-gt-save-settings>保存设置</button>
+    </div>
+    <p class="gt-note" data-gt-device-preview></p>
+    <label class="gt-field">
+      <span data-gt-label-cookie>手动 Cookie</span>
+      <textarea data-gt-cookie rows="3" spellcheck="false"></textarea>
+    </label>
+    <div class="gt-actions">
+      <button class="gt-btn" type="button" data-action="save-cookie" data-gt-save-cookie>保存 Cookie</button>
+      <button class="gt-btn" type="button" data-action="clear-auth" data-gt-clear-auth>清除绑定</button>
+    </div>
+  </section>
+
+  <section class="gt-section gt-debug" data-gt-debug hidden>
+    <div class="gt-section-head">
+      <h2 data-gt-label-debug>调试</h2>
+      <span class="gt-count" data-gt-debug-role></span>
+    </div>
+    <pre class="gt-debug-info" data-gt-debug-info></pre>
+    <div class="gt-actions">
+      <button class="gt-btn gt-btn-primary" type="button" data-action="debug-run" data-gt-debug-run>测试 API</button>
+      <button class="gt-btn" type="button" data-action="debug-sync" data-gt-debug-sync>手动触发同步</button>
+      <button class="gt-btn" type="button" data-action="debug-image" data-gt-debug-image>测试图片缓存</button>
+      <button class="gt-btn" type="button" data-action="debug-copy" data-gt-debug-copy>复制调试信息</button>
+      <button class="gt-btn" type="button" data-action="debug-clear" data-gt-debug-clear>清空缓存</button>
+    </div>
+    <textarea class="gt-debug-output" data-gt-debug-output rows="12" readonly spellcheck="false"></textarea>
+  </section>
+
+  <footer class="gt-footer"><span data-gt-footer></span></footer>
+</main>
+
+<dialog class="gt-dialog" data-gt-qr-dialog aria-labelledby="gt-qr-title">
+  <header class="gt-dialog-head">
+    <h2 id="gt-qr-title" data-gt-qr-title>扫码绑定</h2>
+    <button class="gt-icon-btn" type="button" data-action="close-qr" aria-label="close">×</button>
+  </header>
+  <div class="gt-qr-wrap">
+    <canvas class="gt-qr-canvas" data-gt-qr-canvas width="240" height="240"></canvas>
+    <p class="gt-qr-state" data-gt-qr-state></p>
+  </div>
+  <p class="gt-qr-tip" data-gt-qr-tip></p>
+  <footer class="gt-dialog-actions">
+    <button class="gt-btn" type="button" data-action="close-qr" data-gt-qr-cancel>取消</button>
+  </footer>
+</dialog>
+
+<div class="gt-toast" data-gt-toast hidden role="status" aria-live="polite"></div>
