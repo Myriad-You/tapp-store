@@ -263,6 +263,12 @@ services:
     environment:
       PROXY_FEDERATION_UPSTREAM: http://federation-worker:1103
       PROXY_PERSONA_UPSTREAM: http://persona-worker:1103
+  docker-guard:
+    image: \${MYRIAD_TCB_GUARD_IMAGE:-x}
+  updater:
+    image: \${MYRIAD_TCB_UPDATER_IMAGE:-x}
+  updater-gateway:
+    image: \${MYRIAD_TCB_GATEWAY_IMAGE:-x}
 `
 h.assertGeneratedComposeContract(goodCompose)
 assert.throws(
