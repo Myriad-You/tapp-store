@@ -72,9 +72,19 @@ Tapp.widgets["quick-links"] = {
       item.type = "button";
       item.className = "lnw-item";
       item.setAttribute("aria-label", link.title);
-      const icon = document.createElement("span");
-      icon.className = "lnw-icon";
-      icon.textContent = letterIcon(link);
+      let icon;
+      if (link.iconData) {
+        icon = document.createElement("img");
+        icon.className = "lnw-icon lnw-icon-img";
+        icon.src = link.iconData;
+        icon.alt = "";
+        icon.decoding = "async";
+        icon.loading = "lazy";
+      } else {
+        icon = document.createElement("span");
+        icon.className = "lnw-icon";
+        icon.textContent = letterIcon(link);
+      }
       const text = document.createElement("span");
       text.className = "lnw-text";
       const name = document.createElement("span");
