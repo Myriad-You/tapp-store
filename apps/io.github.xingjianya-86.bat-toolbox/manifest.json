@@ -1,0 +1,332 @@
+{
+  "id": "io.github.xingjianya-86.bat-toolbox",
+  "name": "银河球棒侠",
+  "version": "1.0.10",
+  "description": "米游社扫码绑定后展示星穹铁道账号资料、开拓力委托、角色简表、混沌回忆/虚构叙事/末日幻影战绩，并提供 2x2 / 4x2 / 4x4 桌面小组件",
+  "locales": {
+    "en-US": {
+      "name": "Galactic Batter",
+      "description": "Bind your miHoYo account by QR login to show Honkai: Star Rail profile, stamina & assignments, characters, Memory of Chaos / Pure Fiction / Apocalyptic Shadow records, with 2x2 / 4x2 / 4x4 dashboard widgets"
+    },
+    "ja-JP": {
+      "name": "銀河バットマン",
+      "description": "miHoYo アカウントを QR ログインで連携し、スターレイルのプロフィール・開拓力・キャラ・混沌の記憶・虚構叙事・末日の幻影の記録を表示。2x2 / 4x2 / 4x4 ウィジェット対応"
+    }
+  },
+  "category": "game",
+  "author": {
+    "name": "xingjianya-86",
+    "url": "https://github.com/xingjianya-86"
+  },
+  "permissions": [
+    "network:fetch",
+    "storage:read",
+    "storage:write",
+    "ui:notification",
+    "ui:confirm",
+    "ui:theme",
+    "ui:openUrl",
+    "widget:register",
+    "scheduler:register"
+  ],
+  "backgroundRequirements": [
+    "scheduler",
+    "sync"
+  ],
+  "openUrls": [
+    {
+      "id": "sr-wiki",
+      "url": "https://bbs.mihoyo.com/sr/wiki/content/",
+      "match": "prefix"
+    }
+  ],
+  "iconSvg": "<svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><rect width='24' height='24' rx='7' fill='#2b3357'/><path d='M4 15.2c3.6 0 5.2-2.6 7.2-5.2 1.6-2.1 3-3.6 5.4-3.6 2.1 0 3.4 1.2 3.4 2.7 0 1.4-1 2.4-2.6 2.4-.8 0-1.4-.2-2-.5-.5 1.3-2.4 3.9-5.2 5.6-2.2 1.4-4.4 2-6.2 2z' fill='#ffcf4d'/><circle cx='17.4' cy='10.4' r='1.2' fill='#2b3357'/></svg>",
+  "themeColor": "#ffcf4d",
+  "core": {
+    "entry": "core.js",
+    "styles": "styles.css"
+  },
+  "page": {
+    "entry": "page/index.js",
+    "template": "page.html",
+    "styles": "page.css"
+  },
+  "widgets": [
+    {
+      "id": "starrail",
+      "name": "开拓面板",
+      "description": "头像、开拓力、每日实训与角色简表",
+      "icon": "🚄",
+      "entry": "widget/index.js",
+      "styles": "widget.css",
+      "defaultSize": "2x2",
+      "sizes": [
+        "2x2",
+        "4x2",
+        "4x4"
+      ],
+      "category": "game",
+      "refreshPolicy": {
+        "mode": "event",
+        "refreshOnVisible": false
+      },
+      "templates": {
+        "2x2": "widget-starrail-2x2.html",
+        "4x2": "widget-starrail-4x2.html",
+        "4x4": "widget-starrail-4x4.html"
+      }
+    },
+    {
+      "id": "endgame",
+      "name": "星穹战绩",
+      "description": "混沌回忆、虚构叙事与末日幻影通关概览",
+      "icon": "⚔️",
+      "entry": "widget/index.js",
+      "styles": "widget.css",
+      "defaultSize": "2x2",
+      "sizes": [
+        "2x2",
+        "4x2",
+        "4x4"
+      ],
+      "category": "game",
+      "refreshPolicy": {
+        "mode": "event",
+        "refreshOnVisible": false
+      },
+      "templates": {
+        "2x2": "widget-endgame-2x2.html",
+        "4x2": "widget-endgame-4x2.html",
+        "4x4": "widget-endgame-4x4.html"
+      }
+    }
+  ],
+  "apis": {
+    "dailyNote": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "https://api-takumi-record.mihoyo.com/game_record/app/hkrpg/api/note?role_id={{params.role_id}}&server={{params.server}}",
+      "method": "GET",
+      "headers": {
+        "DS": "{{params.ds}}",
+        "x-rpc-app_version": "2.102.1",
+        "x-rpc-client_type": "5",
+        "X-Requested-With": "com.mihoyo.hyperion",
+        "Referer": "https://webstatic.mihoyo.com/",
+        "Origin": "https://webstatic.mihoyo.com",
+        "Cookie": "{{params.cookie}}",
+        "x-rpc-device_id": "{{params.device_id}}",
+        "x-rpc-device_fp": "{{params.device_fp}}"
+      },
+      "description": "开拓力与委托便笺"
+    },
+    "playerIndex": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "https://api-takumi-record.mihoyo.com/game_record/app/hkrpg/api/index?role_id={{params.role_id}}&server={{params.server}}",
+      "method": "GET",
+      "headers": {
+        "DS": "{{params.ds}}",
+        "x-rpc-app_version": "2.102.1",
+        "x-rpc-client_type": "5",
+        "X-Requested-With": "com.mihoyo.hyperion",
+        "Referer": "https://webstatic.mihoyo.com/",
+        "Origin": "https://webstatic.mihoyo.com",
+        "Cookie": "{{params.cookie}}",
+        "x-rpc-device_id": "{{params.device_id}}",
+        "x-rpc-device_fp": "{{params.device_fp}}"
+      },
+      "description": "玩家资料与角色简表"
+    },
+    "roleBasicInfo": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "https://api-takumi-record.mihoyo.com/game_record/app/hkrpg/api/role/basicInfo?role_id={{params.role_id}}&server={{params.server}}",
+      "method": "GET",
+      "headers": {
+        "DS": "{{params.ds}}",
+        "x-rpc-app_version": "2.102.1",
+        "x-rpc-client_type": "5",
+        "X-Requested-With": "com.mihoyo.hyperion",
+        "Referer": "https://webstatic.mihoyo.com/",
+        "Origin": "https://webstatic.mihoyo.com",
+        "Cookie": "{{params.cookie}}",
+        "x-rpc-device_id": "{{params.device_id}}",
+        "x-rpc-device_fp": "{{params.device_fp}}"
+      },
+      "description": "角色基础信息（昵称/等级/头像）"
+    },
+    "challenge": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "https://api-takumi-record.mihoyo.com/game_record/app/hkrpg/api/challenge?need_all=true&role_id={{params.role_id}}&schedule_type={{params.schedule_type}}&server={{params.server}}",
+      "method": "GET",
+      "headers": {
+        "DS": "{{params.ds}}",
+        "x-rpc-app_version": "2.102.1",
+        "x-rpc-client_type": "5",
+        "X-Requested-With": "com.mihoyo.hyperion",
+        "Referer": "https://webstatic.mihoyo.com/",
+        "Origin": "https://webstatic.mihoyo.com",
+        "Cookie": "{{params.cookie}}",
+        "x-rpc-device_id": "{{params.device_id}}",
+        "x-rpc-device_fp": "{{params.device_fp}}"
+      },
+      "description": "混沌回忆战绩"
+    },
+    "challengeStory": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "https://api-takumi-record.mihoyo.com/game_record/app/hkrpg/api/challenge_story?isPrev=true&need_all=true&role_id={{params.role_id}}&schedule_type={{params.schedule_type}}&server={{params.server}}",
+      "method": "GET",
+      "headers": {
+        "DS": "{{params.ds}}",
+        "x-rpc-app_version": "2.102.1",
+        "x-rpc-client_type": "5",
+        "X-Requested-With": "com.mihoyo.hyperion",
+        "Referer": "https://webstatic.mihoyo.com/",
+        "Origin": "https://webstatic.mihoyo.com",
+        "Cookie": "{{params.cookie}}",
+        "x-rpc-device_id": "{{params.device_id}}",
+        "x-rpc-device_fp": "{{params.device_fp}}"
+      },
+      "description": "虚构叙事战绩"
+    },
+    "challengeBoss": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "https://api-takumi-record.mihoyo.com/game_record/app/hkrpg/api/challenge_boss?isPrev=true&need_all=true&role_id={{params.role_id}}&schedule_type={{params.schedule_type}}&server={{params.server}}",
+      "method": "GET",
+      "headers": {
+        "DS": "{{params.ds}}",
+        "x-rpc-app_version": "2.102.1",
+        "x-rpc-client_type": "5",
+        "X-Requested-With": "com.mihoyo.hyperion",
+        "Referer": "https://webstatic.mihoyo.com/",
+        "Origin": "https://webstatic.mihoyo.com",
+        "Cookie": "{{params.cookie}}",
+        "x-rpc-device_id": "{{params.device_id}}",
+        "x-rpc-device_fp": "{{params.device_fp}}"
+      },
+      "description": "末日幻影战绩"
+    },
+    "bbsUser": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "https://bbs-api.miyoushe.com/user/wapi/getUserFullInfo?uid={{params.uid}}&gids=6",
+      "method": "GET",
+      "headers": {
+        "DS": "{{params.ds}}",
+        "x-rpc-app_version": "2.102.1",
+        "x-rpc-client_type": "5",
+        "X-Requested-With": "com.mihoyo.hyperion",
+        "Referer": "https://webstatic.mihoyo.com/",
+        "Origin": "https://webstatic.mihoyo.com",
+        "Cookie": "{{params.cookie}}",
+        "x-rpc-device_id": "{{params.device_id}}",
+        "x-rpc-device_fp": "{{params.device_fp}}"
+      },
+      "description": "米游社账号资料"
+    },
+    "hypQrCreate": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "https://passport-api.mihoyo.com/account/ma-cn-passport/app/createQRLogin",
+      "method": "POST",
+      "headers": {
+        "x-rpc-app_id": "ddxf5dufpuyo",
+        "x-rpc-client_type": "3",
+        "x-rpc-device_id": "{{params.device_id}}",
+        "User-Agent": "HYPContainer/1.3.3.182"
+      },
+      "body": {},
+      "description": "创建 HYP 扫码登录"
+    },
+    "hypQrCheck": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "https://passport-api.mihoyo.com/account/ma-cn-passport/app/queryQRLoginStatus",
+      "method": "POST",
+      "headers": {
+        "x-rpc-app_id": "ddxf5dufpuyo",
+        "x-rpc-client_type": "3",
+        "x-rpc-device_id": "{{params.device_id}}",
+        "User-Agent": "HYPContainer/1.3.3.182"
+      },
+      "body": {
+        "ticket": "{{params.ticket}}"
+      },
+      "description": "查询 HYP 扫码状态"
+    },
+    "getLTokenBySToken": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "https://api-takumi.mihoyo.com/account/auth/api/getLTokenBySToken?stoken={{params.stoken}}&uid={{params.uid}}&mid={{params.mid}}",
+      "method": "GET",
+      "headers": {
+        "x-rpc-app_version": "2.102.1",
+        "x-rpc-client_type": "5",
+        "X-Requested-With": "com.mihoyo.hyperion",
+        "x-rpc-app_id": "bll8iq97cem8",
+        "x-rpc-verify_key": "bll8iq97cem8",
+        "Referer": "https://app.mihoyo.com",
+        "Origin": "https://app.mihoyo.com",
+        "DS": "{{params.ds}}",
+        "Cookie": "mid={{params.mid}};stoken={{params.stoken}}"
+      },
+      "description": "stoken 换 ltoken（兜底）"
+    },
+    "stokenToCookie": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "https://passport-api.mihoyo.com/account/auth/api/getCookieAccountInfoBySToken?stoken={{params.stoken}}&uid={{params.uid}}&mid={{params.mid}}",
+      "method": "GET",
+      "headers": {
+        "x-rpc-app_version": "2.102.1",
+        "x-rpc-client_type": "5",
+        "X-Requested-With": "com.mihoyo.hyperion",
+        "Referer": "https://webstatic.mihoyo.com/",
+        "Origin": "https://webstatic.mihoyo.com",
+        "Cookie": "stuid={{params.uid}};stoken={{params.stoken}};mid={{params.mid}}"
+      },
+      "description": "stoken 换 cookie_token"
+    },
+    "obcSearch": {
+      "type": "http",
+      "access": "public",
+      "endpoint": "https://api-static.mihoyo.com/common/blackboard/sr_wiki/v1/search/content?app_sn=sr_wiki&keyword={{params.keyword}}&page=1&size=5",
+      "method": "GET",
+      "headers": {
+        "Referer": "https://bbs.mihoyo.com/",
+        "Origin": "https://bbs.mihoyo.com",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+      },
+      "description": "开拓者笔记角色词条搜索"
+    },
+    "deviceFp": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "https://public-data-api.mihoyo.com/device-fp/api/getFp",
+      "method": "POST",
+      "headers": {
+        "x-rpc-app_version": "2.102.1",
+        "x-rpc-client_type": "5",
+        "X-Requested-With": "com.mihoyo.hyperion",
+        "User-Agent": "Mozilla/5.0 (Linux; Android 13; PHK110 Build/SKQ1.221119.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/126.0.6478.133 Mobile Safari/537.36 miHoYoBBS/2.102.1",
+        "Referer": "https://webstatic.mihoyo.com/",
+        "Origin": "https://webstatic.mihoyo.com"
+      },
+      "body": {
+        "device_id": "{{params.device_id}}",
+        "seed_id": "{{params.seed_id}}",
+        "platform": "2",
+        "seed_time": "{{params.seed_time}}",
+        "ext_fields": "{{params.ext_fields}}",
+        "app_name": "bbs_cn",
+        "bbs_device_id": "{{params.bbs_device_id}}",
+        "device_fp": "{{params.device_fp}}"
+      },
+      "description": "生成设备指纹"
+    }
+  }
+}
