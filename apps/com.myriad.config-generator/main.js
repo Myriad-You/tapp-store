@@ -1059,7 +1059,7 @@ var POSTGRES_SERVICE_TEMPLATE = `  postgres:
 `;
 
 var DOCKER_COMPOSE_TEMPLATE = `# Myriad
-# nets: myriad-net | myriad-admin-net | myriad-docker-guard-net(internal)
+# nets: myriad-net | myriad-admin-net | myriad-docker-guard-net(internal){{EXTRA_NETWORK_HEADER}}
 # MYRIAD_DB_MODE={{MYRIAD_DB_MODE}}
 # {{COMPOSE_START_HINT}}
 
@@ -1312,7 +1312,9 @@ services:
 
   docker-guard:
     # Writes ./guard-policy/docker-guard.env on first start.
-    image: \${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG:?Set UPDATER_TAG to a release or dev tag}
+    # Trusted handoffs select the exact digest via process-only MYRIAD_TCB_GUARD_IMAGE;
+    # an ordinary host rebuild falls back to UPDATER_TAG.
+    image: \${MYRIAD_TCB_GUARD_IMAGE:-\${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG:?Set UPDATER_TAG to a release or dev tag}}
     container_name: myriad-docker-guard
     entrypoint: ["/bin/sh", "-c"]
     command:
@@ -1325,9 +1327,9 @@ services:
       MYRIAD_DOCKER_NETWORK: \${GUARD_MYRIAD_DOCKER_NETWORK:-myriad-net}
       MYRIAD_ADMIN_NETWORK: \${GUARD_MYRIAD_ADMIN_NETWORK:-myriad-admin-net}
       MYRIAD_DOCKER_GUARD_NETWORK: \${GUARD_MYRIAD_DOCKER_GUARD_NETWORK:-myriad-docker-guard-net}
-      DOCKER_GUARD_COMPOSE_DIR: /host/compose
+{{GUARD_EXTRA_NETWORK_LINE}}      DOCKER_GUARD_COMPOSE_DIR: /host/compose
       DOCKER_GUARD_STATE_DIR: /host/state
-      DOCKER_GUARD_EXPECTED_IMAGE: \${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG:?Set UPDATER_TAG to a release or dev tag}
+      DOCKER_GUARD_EXPECTED_IMAGE: \${MYRIAD_TCB_GUARD_IMAGE:-\${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG:?Set UPDATER_TAG to a release or dev tag}}
       DOCKER_GUARD_HOST_POLICY_PATH: /guard-policy/docker-guard.env
       DOCKER_GUARD_SELF_UPDATE_TOKEN: \${GUARD_SELF_UPDATE_TOKEN:?Host Guard self-update token is required}
       RUST_LOG: \${DOCKER_GUARD_LOG:-info}
@@ -1359,7 +1361,7 @@ services:
       options: { max-size: "10m", max-file: "3" }
 
   updater:
-    image: \${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG:?Set UPDATER_TAG to a release or dev tag}
+    image: \${MYRIAD_TCB_UPDATER_IMAGE:-\${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG:?Set UPDATER_TAG to a release or dev tag}}
     container_name: myriad-updater
     environment:
       UPDATE_TOKEN: \${UPDATE_TOKEN}
@@ -1415,7 +1417,7 @@ services:
       options: { max-size: "10m", max-file: "3" }
 
   updater-gateway:
-    image: \${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG:?Set UPDATER_TAG to a release or dev tag}
+    image: \${MYRIAD_TCB_GATEWAY_IMAGE:-\${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG:?Set UPDATER_TAG to a release or dev tag}}
     container_name: myriad-updater-gateway
     entrypoint: ["/usr/bin/tini", "--", "/usr/local/bin/myriad-updater-gateway"]
     environment:
@@ -2006,7 +2008,15 @@ function assertGeneratedComposeContract(composeText) {
   if (/brew\/articles/.test(text)) {
     throw new Error('对象解引用路径必须是 /phantasi/articles/，不是 /brew/articles/');
   }
+  ['MYRIAD_TCB_GUARD_IMAGE', 'MYRIAD_TCB_UPDATER_IMAGE', 'MYRIAD_TCB_GATEWAY_IMAGE'].forEach(function (key) {
+    if (text.indexOf('${' + key + ':-') === -1) {
+      throw new Error('compose 缺少 ' + key + ' 选择器；TCB 自更新需要它来选精确 digest');
+    }
+  });
   var external = /networks: \[myriad-net, myriad-admin-net, myriad-backend-ext\]/.test(text);
+  if (external && !/MYRIAD_BACKEND_EXTRA_NETWORK: \$\{MYRIAD_BACKEND_EXTRA_NETWORK:-myriad-backend-ext\}/.test(text)) {
+    throw new Error('docker-guard 必须透传 MYRIAD_BACKEND_EXTRA_NETWORK，否则 Guard 会拒绝外部库网络');
+  }
   ['federation-worker', 'persona-worker'].forEach(function (name) {
     var start = text.indexOf('  ' + name + ':\n');
     // Locate the next service, not nested four-space fields.
@@ -4301,10 +4311,20 @@ function generateConfigs() {
   var extraNetworkName = isExternal ? (state.dbExtraNetwork || '').trim() : '';
   var backendExtraNetworkRef = extraNetworkName ? ', myriad-backend-ext' : '';
   var extraNetworkDecl = extraNetworkName
-    ? '  myriad-backend-ext:\n    external: true\n    name: ${MYRIAD_BACKEND_EXTRA_NETWORK}\n'
+    ? '  # External database shared network (external DB mode only).\n' +
+      '  # Pre-create it on the host and attach the database container; backend and both\n' +
+      '  # workers join it and no other service may. The real Docker name is\n' +
+      '  # MYRIAD_BACKEND_EXTRA_NETWORK in .env; Guard accepts it for those three services.\n' +
+      '  myriad-backend-ext:\n    external: true\n    name: ${MYRIAD_BACKEND_EXTRA_NETWORK}\n'
     : '';
   var backendExtraNetworkLine = extraNetworkName
     ? 'MYRIAD_BACKEND_EXTRA_NETWORK=' + extraNetworkName + '\n'
+    : '';
+  var extraNetworkHeader = extraNetworkName ? ' | myriad-backend-ext(external DB)' : '';
+  var guardExtraNetworkLine = extraNetworkName
+    ? '      # External DB: Guard must see the same network name or it rejects the\n' +
+      '      # backend/worker attachment. Defaults to myriad-backend-ext when unset.\n' +
+      '      MYRIAD_BACKEND_EXTRA_NETWORK: ${MYRIAD_BACKEND_EXTRA_NETWORK:-myriad-backend-ext}\n'
     : '';
 
   var deployWorkerDbSection;
@@ -4448,6 +4468,8 @@ function generateConfigs() {
     DB_EXTRA_HOSTS: isExternal && state.dbHost === 'host.docker.internal' ? '    extra_hosts:\n      - \"host.docker.internal:host-gateway\"\n' : '',
     BACKEND_EXTRA_NETWORK_REF: backendExtraNetworkRef,
     EXTRA_NETWORK_DECL: extraNetworkDecl,
+    EXTRA_NETWORK_HEADER: extraNetworkHeader,
+    GUARD_EXTRA_NETWORK_LINE: guardExtraNetworkLine,
     BACKEND_EXTRA_NETWORK_LINE: backendExtraNetworkLine,
     MYRIAD_TAG: state.myriadTag,
     PROXY_TAG: state.proxyTag,

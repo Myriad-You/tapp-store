@@ -51,6 +51,7 @@ try {
       if (mode.name === 'external-docker') {
         assert.equal(config.networks['myriad-backend-ext'].name, '1panel-network', 'custom actual Docker network name is preserved');
         assert.equal(config.networks['myriad-backend-ext'].external, true);
+        assert.equal(services['docker-guard'].environment.MYRIAD_BACKEND_EXTRA_NETWORK, '1panel-network', 'Guard receives the external DB network name');
         for (const [name, service] of Object.entries(services)) if (!names.includes(name)) assert.ok(!Object.hasOwn(service.networks || {}, 'myriad-backend-ext'), `${name} cannot access the DB external network`);
       }
       assert.equal(Boolean(services.postgres), mode.dbMode === 'bundled');
