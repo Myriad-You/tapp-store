@@ -427,9 +427,9 @@ var I18N_FALLBACK = {
   "limits.large": "宽裕",
   "limits.largeDesc": "4 GB 以上",
   "limits.custom": "自定义限额",
-  "limits.hintSmall": "小型档：数据库 0.5 核 / 512M，后端 1 核 / 1G，前端 0.5 核 / 256M。已自动启用内存节约。",
-  "limits.hintStandard": "推荐档：数据库 1 核 / 1G，后端 2 核 / 2G，前端 1 核 / 512M。",
-  "limits.hintLarge": "宽裕档：数据库 2 核 / 2G，后端 2 核 / 2G，前端 1 核 / 1G。",
+  "limits.hintSmall": "小型档：数据库 0.5 核 / 512M，后端 1 核 / 1G，前端 0.5 核 / 256M。glibc arena 2。已自动启用内存节约。",
+  "limits.hintStandard": "推荐档：数据库 1 核 / 1G，后端 2 核 / 2G，前端 1 核 / 512M。glibc arena 4。",
+  "limits.hintLarge": "宽裕档：数据库 2 核 / 2G，后端 2 核 / 2G，前端 1 核 / 1G。glibc arena 8。",
   "limits.hintCustom": "请分别填写各服务的 CPU 与内存。内存格式如 512M、2G。",
   "limits.db": "数据库",
   "limits.dbDesc": "供内置 PostgreSQL 使用。选择外置时不会生成该容器。",
@@ -1114,7 +1114,7 @@ services:
       BASE_URL: \${BASE_URL:-}
       RUST_LOG: \${RUST_LOG:-info}
       TZ: Asia/Shanghai
-      MALLOC_ARENA_MAX: \${MALLOC_ARENA_MAX:-4}
+      MALLOC_ARENA_MAX: \${MALLOC_ARENA_MAX:-{{MALLOC_ARENA_MAX}}}
       MYRIAD_MEMORY_PROFILE: \${MYRIAD_MEMORY_PROFILE:-default}
       MYRIAD_UPDATER_URL: http://updater-gateway:1104
       UPDATER_GATEWAY_SECRET: \${UPDATER_GATEWAY_SECRET}
@@ -1535,7 +1535,7 @@ FRONTEND_URL=https://{{MAIN_DOMAIN}}
 # AI / 平台密钥 / 出站 HTTP 代理 / Gemini·GitHub API 镜像走 /config → 高级，落库。
 # 不写入 PROXY_ENABLED / PROXY_URL / PROXY_BYPASS / GEMINI_BASE_URL / GITHUB_API_BASE_URL。
 # 升级时旧 .env 若仍有这些键，backend 会忽略。管理台保存不再双写它们。
-# MALLOC_ARENA_MAX=4
+MALLOC_ARENA_MAX={{MALLOC_ARENA_MAX}}
 # RUST_LOG=info
 `;
 
@@ -1841,7 +1841,7 @@ var EXPECTED_ENV_KEYS_BASE = [
   'COMPOSE_PROJECT_NAME', 'UPDATE_TOKEN', 'UPDATER_GATEWAY_SECRET', 'CHANNEL',
   'UPDATE_MODE', 'MYRIAD_GITHUB_REPO', 'CHECK_INTERVAL_SECS',
   'HTTP_BIND_ADDRESS', 'HTTP_PORT', 'PROXY_ALLOW_DIRECT_UPDATER',
-  'COSIGN_VERIFY', 'MYRIAD_MEMORY_PROFILE', 'MYRIAD_DB_MODE', 'DATABASE_URL',
+  'COSIGN_VERIFY', 'MYRIAD_MEMORY_PROFILE', 'MALLOC_ARENA_MAX', 'MYRIAD_DB_MODE', 'DATABASE_URL',
   'PERSONA_DB_PASSWORD', 'FEDERATION_DB_PASSWORD', 'JWT_SECRET',
   'MYRIAD_SETUP_SECRET', 'ANALYTICS_SALT', 'TAPP_STORE_STATS_URL',
   'TAPP_STORE_STATS_ENABLED', 'CORS_ORIGINS', 'BASE_URL', 'FRONTEND_URL',
@@ -1923,6 +1923,9 @@ function validateGeneratedEnv(envText, secrets, opts) {
   }
   if (parsed.map.MYRIAD_MEMORY_PROFILE !== 'saver' && parsed.map.MYRIAD_MEMORY_PROFILE !== 'default') {
     throw new Error('MYRIAD_MEMORY_PROFILE 必须是 saver 或 default');
+  }
+  if (parsed.map.MALLOC_ARENA_MAX !== '2' && parsed.map.MALLOC_ARENA_MAX !== '4' && parsed.map.MALLOC_ARENA_MAX !== '8') {
+    throw new Error('MALLOC_ARENA_MAX 必须是 2、4 或 8');
   }
   if (!GUARD_IMAGE_RE.test(parsed.map.DOCKER_GUARD_IMAGE || '')) {
     throw new Error('DOCKER_GUARD_IMAGE 必须是 docker.io/somekawahitomi/myriad-updater@sha256:<64hex>');
@@ -2801,6 +2804,8 @@ var state = {
   dbCpuLimit: '1.0',
   dbMemLimit: '1G',
   memoryProfile: 'default',
+  limitPreset: 'standard',
+  mallocArenaMax: '4',
   // 运行时由 Docker Hub 解析填充，不在源码中写死版本
   myriadTag: '',
   proxyTag: '',
@@ -2858,23 +2863,31 @@ var LIMIT_PRESETS = {
     dbCpu: '0.5', dbMem: '512M',
     backendCpu: '1.0', backendMem: '1G',
     frontendCpu: '0.5', frontendMem: '256M',
-    memorySaver: true
+    memorySaver: true,
+    mallocArenaMax: '2'
   },
   standard: {
     hintKey: 'limits.hintStandard',
     dbCpu: '1.0', dbMem: '1G',
     backendCpu: '2.0', backendMem: '2G',
     frontendCpu: '1.0', frontendMem: '512M',
-    memorySaver: false
+    memorySaver: false,
+    mallocArenaMax: '4'
   },
   large: {
     hintKey: 'limits.hintLarge',
     dbCpu: '2.0', dbMem: '2G',
     backendCpu: '2.0', backendMem: '2G',
     frontendCpu: '1.0', frontendMem: '1G',
-    memorySaver: false
+    memorySaver: false,
+    mallocArenaMax: '8'
   }
 };
+
+function resolveMallocArenaMax(preset) {
+  var spec = LIMIT_PRESETS[preset];
+  return (spec && spec.mallocArenaMax) || '4';
+}
 
 function wizardPane(step) {
   return document.querySelector('.cg-ob__pane[data-step="' + step + '"]');
@@ -3534,6 +3547,7 @@ function initPage() {
   }
 
   function syncLimitPresetUi(mode) {
+    state.limitPreset = mode;
     var customFields = document.getElementById('limit-custom-fields');
     var hint = document.getElementById('limit-preset-hint');
     var customBtn = document.getElementById('limit-preset-custom');
@@ -3877,6 +3891,7 @@ function initPage() {
       state.frontendMemLimit = frontendMemLimitInput.value.trim() || '512M';
       var memorySaverEl = document.getElementById('memory-saver');
       state.memoryProfile = (memorySaverEl && memorySaverEl.checked) ? 'saver' : 'default';
+      state.limitPreset = getSelectedLimitPreset();
 
       var cpuValues = isExternal
         ? [state.backendCpuLimit, state.frontendCpuLimit]
@@ -4192,6 +4207,7 @@ function applyPlaceholders(template, map) {
 }
 
 function generateConfigs() {
+  state.mallocArenaMax = resolveMallocArenaMax(state.limitPreset);
   if (!upgradeSession.legacy && state.dbMode !== 'external' && !isValidPgMajor(state.dbVersion)) {
     throw new Error(t('error.badPgVersion', { min: PG_VERSION_MIN, max: PG_VERSION_MAX }));
   }
@@ -4439,6 +4455,7 @@ function generateConfigs() {
     CHANNEL: state.channel,
     COSIGN_VERIFY: state.cosignVerify,
     MYRIAD_MEMORY_PROFILE: state.memoryProfile === 'saver' ? 'saver' : 'default',
+    MALLOC_ARENA_MAX: state.mallocArenaMax || '4',
     COSIGN_INSECURE_HINT: cosignInsecureHint,
     PANEL_LABEL: t(panel.label),
     PANEL_DEPLOY_SECTION: buildPanelDeploySection(

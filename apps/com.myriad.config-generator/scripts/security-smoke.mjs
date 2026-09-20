@@ -11,6 +11,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
+import { generate } from './generator-harness.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const mainPath = join(root, 'main.js')
@@ -73,6 +74,9 @@ assert.match(main, /Identity is baked into the image/)
 assert.match(main, /ANALYTICS_SALT: \\\$\{ANALYTICS_SALT:-\}/)
 assert.match(main, /TAPP_STORE_STATS_URL: \\\$\{TAPP_STORE_STATS_URL:-https:\/\/stats\.store\.myriad\.you\}/)
 assert.match(main, /TAPP_STORE_STATS_ENABLED: \\\$\{TAPP_STORE_STATS_ENABLED:-true\}/)
+assert.match(main, /MALLOC_ARENA_MAX: \\\$\{MALLOC_ARENA_MAX:-\{\{MALLOC_ARENA_MAX\}\}\}/)
+assert.match(main, /mallocArenaMax: '2'/)
+assert.match(main, /mallocArenaMax: '8'/)
 assert.doesNotMatch(main, /YOUTUBE_API_KEY:|OPENXBL_API_KEY:|PSN_NPSSO:/)
 assert.doesNotMatch(main, /PUBLIC_API_URL:/)
 assert.doesNotMatch(main, /(?:PROXY_ENABLED|GEMINI_BASE_URL|GITHUB_API_BASE_URL):/)
@@ -170,6 +174,7 @@ function buildCleanEnv(secrets, bundled) {
     'PROXY_ALLOW_DIRECT_UPDATER=false',
     'COSIGN_VERIFY=strict',
     'MYRIAD_MEMORY_PROFILE=default',
+    'MALLOC_ARENA_MAX=4',
     'MYRIAD_DB_MODE=' + (bundled ? 'bundled' : 'external'),
   ]
   if (bundled) {
@@ -312,5 +317,11 @@ assert.equal(
 
 assert.ok(h.NGINX_UPLOAD_MAX_BYTES <= 1024 * 1024)
 assert.equal(h.PG_VERSION_MIN, 18)
+
+const generatedStandard = generate()
+assert.match(generatedStandard.env, /^MALLOC_ARENA_MAX=4$/m)
+assert.match(generatedStandard.compose, /MALLOC_ARENA_MAX: \$\{MALLOC_ARENA_MAX:-4\}/)
+assert.match(generate({ limitPreset: 'small' }).env, /^MALLOC_ARENA_MAX=2$/m)
+assert.match(generate({ limitPreset: 'large' }).env, /^MALLOC_ARENA_MAX=8$/m)
 
 console.log('config-generator security-smoke: ok')
