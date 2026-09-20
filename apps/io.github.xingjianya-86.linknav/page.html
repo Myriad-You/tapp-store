@@ -55,7 +55,10 @@
         <p class="ln-subtitle" data-ln-subtitle></p>
         <p class="ln-count" data-ln-count></p>
       </div>
-      <button class="ln-add-btn" type="button" data-action="add" hidden>＋ <span data-ln-add-text></span></button>
+      <div class="ln-hero-actions">
+        <button class="ln-add-btn" type="button" data-action="add" hidden>＋ <span data-ln-add-text></span></button>
+        <button class="ln-add-btn ln-add-btn-ghost" type="button" data-action="io-open" hidden>⇅ <span data-ln-io-text></span></button>
+      </div>
     </div>
   </header>
 
@@ -84,7 +87,7 @@
 </main>
 
 <dialog class="ln-dialog" data-ln-dialog aria-labelledby="ln-dialog-title">
-  <form class="ln-form" data-ln-form novalidate>
+  <div class="ln-form" data-ln-form role="group">
     <header class="ln-dialog-head">
       <h2 id="ln-dialog-title" data-ln-dialog-title></h2>
       <button class="ln-icon-btn" type="button" data-action="close-dialog" aria-label="close">×</button>
@@ -116,6 +119,22 @@
         </select>
       </label>
     </div>
+    <div class="ln-field ln-field-media">
+      <span data-ln-label-icon-media></span>
+      <div class="ln-icon-row">
+        <span class="ln-icon-preview" data-ln-icon-preview data-empty="true">
+          <img class="ln-icon-preview-img" data-ln-icon-preview-img alt="" hidden />
+          <span class="ln-icon-preview-fallback" data-ln-icon-fallback aria-hidden="true">＋</span>
+        </span>
+        <div class="ln-icon-actions">
+          <button class="ln-btn ln-btn-ghost ln-btn-mini" type="button" data-action="pick-icon" data-ln-btn-pick></button>
+          <button class="ln-btn ln-btn-ghost ln-btn-mini" type="button" data-action="fetch-icon" data-ln-btn-fetch hidden></button>
+          <button class="ln-btn ln-btn-ghost ln-btn-mini" type="button" data-action="clear-icon" data-ln-btn-clear></button>
+        </div>
+        <input type="file" accept="image/png,image/jpeg,image/webp" data-ln-icon-file hidden />
+      </div>
+      <p class="ln-hint" data-ln-icon-hint></p>
+    </div>
     <label class="ln-field">
       <span data-ln-label-tags></span>
       <input type="text" data-ln-input-tags maxlength="120" placeholder="开发, 工具" />
@@ -127,14 +146,185 @@
     </label>
     <footer class="ln-dialog-actions">
       <button class="ln-btn ln-btn-ghost" type="button" data-action="close-dialog" data-ln-btn-cancel></button>
-      <button class="ln-btn ln-btn-primary" type="submit" data-ln-btn-save></button>
+      <button class="ln-btn ln-btn-primary" type="button" data-action="save-link" data-ln-btn-save></button>
     </footer>
-  </form>
+  </div>
+</dialog>
+
+<dialog class="ln-dialog ln-io-dialog" data-ln-io-dialog aria-labelledby="ln-io-title">
+  <div class="ln-io-shell">
+    <header class="ln-io-head">
+      <h2 id="ln-io-title" data-ln-io-title></h2>
+      <button class="ln-icon-btn" type="button" data-action="close-io" aria-label="close">×</button>
+    </header>
+    <div class="ln-io-tabs" role="tablist">
+      <button class="ln-io-tab is-active" type="button" data-io-tab="export" role="tab" aria-selected="true" data-ln-io-tab-export></button>
+      <button class="ln-io-tab" type="button" data-io-tab="import" role="tab" aria-selected="false" data-ln-io-tab-import></button>
+    </div>
+
+    <div class="ln-io-body" data-ln-io-panel-export>
+      <div class="ln-io-col">
+        <section class="ln-io-card">
+          <h3 class="ln-io-card-title" data-ln-io-title-export-format></h3>
+          <div class="ln-io-formats">
+          <label class="ln-io-format-card">
+            <input type="radio" name="ln-io-format" value="json" checked data-ln-io-format />
+            <span class="ln-io-format-surface">
+              <span class="ln-io-format-mark" aria-hidden="true">📦</span>
+              <span class="ln-io-format-text">
+                <span class="ln-io-format-name" data-ln-io-fmt-json></span>
+                <span class="ln-io-format-desc" data-ln-io-fmt-json-desc></span>
+              </span>
+              <span class="ln-io-format-check" aria-hidden="true">✓</span>
+            </span>
+          </label>
+          <label class="ln-io-format-card">
+            <input type="radio" name="ln-io-format" value="text" data-ln-io-format />
+            <span class="ln-io-format-surface">
+              <span class="ln-io-format-mark" aria-hidden="true">🔗</span>
+              <span class="ln-io-format-text">
+                <span class="ln-io-format-name" data-ln-io-fmt-text></span>
+                <span class="ln-io-format-desc" data-ln-io-fmt-text-desc></span>
+              </span>
+              <span class="ln-io-format-check" aria-hidden="true">✓</span>
+            </span>
+          </label>
+          <label class="ln-io-format-card">
+            <input type="radio" name="ln-io-format" value="csv" data-ln-io-format />
+            <span class="ln-io-format-surface">
+              <span class="ln-io-format-mark" aria-hidden="true">📊</span>
+              <span class="ln-io-format-text">
+                <span class="ln-io-format-name" data-ln-io-fmt-csv></span>
+                <span class="ln-io-format-desc" data-ln-io-fmt-csv-desc></span>
+              </span>
+              <span class="ln-io-format-check" aria-hidden="true">✓</span>
+            </span>
+          </label>
+          <label class="ln-io-format-card" data-ln-io-fav-option hidden>
+            <input type="radio" name="ln-io-format" value="favorites" data-ln-io-format />
+            <span class="ln-io-format-surface">
+              <span class="ln-io-format-mark" aria-hidden="true">⭐</span>
+              <span class="ln-io-format-text">
+                <span class="ln-io-format-name" data-ln-io-fmt-fav></span>
+                <span class="ln-io-format-desc" data-ln-io-fmt-fav-desc></span>
+              </span>
+              <span class="ln-io-format-check" aria-hidden="true">✓</span>
+            </span>
+          </label>
+          </div>
+          <label class="ln-toggle" data-ln-io-icons-toggle>
+            <input type="checkbox" data-ln-io-include-icons />
+            <span class="ln-toggle-track" aria-hidden="true"><span class="ln-toggle-thumb"></span></span>
+            <span data-ln-io-label-include-icons></span>
+          </label>
+        </section>
+      </div>
+      <div class="ln-io-col">
+        <section class="ln-io-card">
+          <h3 class="ln-io-card-title" data-ln-io-title-export-info></h3>
+          <p class="ln-io-note" data-ln-io-export-hint></p>
+        </section>
+        <div class="ln-io-actions">
+          <button class="ln-btn ln-btn-ghost" type="button" data-action="io-copy" data-ln-io-btn-copy></button>
+          <button class="ln-btn ln-btn-primary" type="button" data-action="io-download" data-ln-io-btn-download></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ln-io-body" data-ln-io-panel-import hidden>
+      <div class="ln-io-col">
+        <section class="ln-io-card">
+          <h3 class="ln-io-card-title" data-ln-io-title-source></h3>
+          <div class="ln-io-drop" data-ln-io-drop>
+        <p class="ln-io-drop-text" data-ln-io-drop-text></p>
+        <div class="ln-io-drop-actions">
+          <button class="ln-btn ln-btn-ghost ln-btn-mini" type="button" data-action="io-pick-file" data-ln-io-btn-pick></button>
+          <button class="ln-btn ln-btn-ghost ln-btn-mini" type="button" data-action="io-clear" data-ln-io-btn-clear></button>
+        </div>
+        <input type="file" accept=".json,.txt,.csv,.html,.htm,application/json,text/plain,text/csv,text/html" data-ln-io-file hidden />
+      </div>
+      <textarea class="ln-io-textarea" data-ln-io-paste rows="3" spellcheck="false"></textarea>
+      <div class="ln-io-samples">
+        <label class="ln-field ln-io-format-select">
+          <span data-ln-io-label-import-format></span>
+          <select data-ln-io-import-format>
+            <option value="auto" data-ln-io-ifmt-auto></option>
+            <option value="json" data-ln-io-ifmt-json></option>
+            <option value="text" data-ln-io-ifmt-text></option>
+            <option value="html" data-ln-io-ifmt-html></option>
+            <option value="csv" data-ln-io-ifmt-csv></option>
+          </select>
+        </label>
+        <div class="ln-io-sample-buttons">
+          <button class="ln-btn ln-btn-ghost ln-btn-mini" type="button" data-action="io-sample-json" data-ln-io-sample-json></button>
+          <button class="ln-btn ln-btn-ghost ln-btn-mini" type="button" data-action="io-sample-text" data-ln-io-sample-text></button>
+          <button class="ln-btn ln-btn-ghost ln-btn-mini" type="button" data-action="io-sample-csv" data-ln-io-sample-csv></button>
+          <button class="ln-btn ln-btn-ghost ln-btn-mini" type="button" data-action="io-template" data-ln-io-template></button>
+        </div>
+      </div>
+      <div class="ln-io-parse-row">
+        <button class="ln-btn ln-btn-ghost ln-btn-mini" type="button" data-action="io-parse" data-ln-io-btn-parse></button>
+      </div>
+      <p class="ln-io-note" data-ln-io-note></p>
+        </section>
+        <section class="ln-io-card">
+          <h3 class="ln-io-card-title" data-ln-io-title-import-settings></h3>
+          <div class="ln-io-controls">
+        <label class="ln-field ln-field-audience">
+          <span data-ln-io-label-default-audience></span>
+          <select data-ln-io-default-audience>
+            <option value="guest" data-ln-io-opt-guest></option>
+            <option value="user" data-ln-io-opt-user></option>
+            <option value="admin" data-ln-io-opt-admin></option>
+          </select>
+        </label>
+        <div class="ln-io-dedupe" role="radiogroup">
+          <label class="ln-io-seg">
+            <input type="radio" name="ln-io-dedupe" value="skip" checked data-ln-io-dedupe />
+            <span class="ln-io-seg-surface" data-ln-io-dedupe-skip></span>
+          </label>
+          <label class="ln-io-seg">
+            <input type="radio" name="ln-io-dedupe" value="overwrite" data-ln-io-dedupe />
+            <span class="ln-io-seg-surface" data-ln-io-dedupe-overwrite></span>
+          </label>
+        </div>
+        <label class="ln-toggle" data-ln-io-fetch-toggle>
+          <input type="checkbox" data-ln-io-fetch-icons />
+          <span class="ln-toggle-track" aria-hidden="true"><span class="ln-toggle-thumb"></span></span>
+          <span data-ln-io-label-fetch-icons></span>
+        </label>
+      </div>
+        </section>
+      </div>
+      <div class="ln-io-col">
+        <section class="ln-io-card ln-io-card-preview">
+          <h3 class="ln-io-card-title">
+            <span data-ln-io-title-preview></span>
+            <span class="ln-io-preview-state" data-ln-io-preview-state data-state="idle"></span>
+          </h3>
+          <p class="ln-hint" data-ln-io-import-hint></p>
+          <div class="ln-io-list-head">
+            <button class="ln-mini" type="button" data-action="io-select-all" data-ln-io-select-all></button>
+            <div class="ln-io-filters" data-ln-io-filters></div>
+          </div>
+          <div class="ln-io-list" data-ln-io-list></div>
+        </section>
+        <div class="ln-io-status" data-ln-io-status data-state="idle" role="status" aria-live="polite">
+          <span class="ln-io-status-text" data-ln-io-status-text></span>
+          <span class="ln-io-status-track" data-ln-io-status-track hidden><span class="ln-io-status-fill" data-ln-io-status-fill></span></span>
+        </div>
+        <div class="ln-io-actions">
+          <button class="ln-btn ln-btn-ghost" type="button" data-action="io-reset" data-ln-io-btn-reset></button>
+          <button class="ln-btn ln-btn-primary" type="button" data-action="io-import" data-ln-io-btn-import></button>
+        </div>
+      </div>
+    </div>
+  </div>
 </dialog>
 
 <div class="ln-copy-panel" data-ln-copy-panel hidden>
   <p class="ln-copy-title" data-ln-copy-title></p>
-  <input type="text" readonly data-ln-copy-input />
+  <textarea class="ln-copy-input" readonly data-ln-copy-input rows="7" spellcheck="false"></textarea>
   <button class="ln-btn ln-btn-primary" type="button" data-action="close-copy" data-ln-btn-close-copy></button>
 </div>
 

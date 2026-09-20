@@ -1,0 +1,166 @@
+/* 银河球棒侠 · 共享样式（core.styles：Page / Widget / headless 共用） */
+
+:root {
+  --gt-accent: var(--tapp-primary, #ffd166);
+  --gt-accent-rgb: var(--tapp-primary-rgb, 255, 209, 102);
+  --gt-ink: #3c3a46;
+  --gt-ink-soft: rgba(60, 58, 70, 0.62);
+  --gt-surface: rgba(255, 255, 255, 0.76);
+  --gt-surface-strong: rgba(255, 255, 255, 0.94);
+  --gt-line: rgba(255, 255, 255, 0.8);
+  --gt-radius: 22px;
+  --gt-font: "M PLUS Rounded 1c", "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yuanti SC",
+    "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  --gt-bg:
+    radial-gradient(120% 80% at 10% 0%, rgba(var(--gt-accent-rgb), 0.2), transparent 60%),
+    radial-gradient(100% 70% at 95% 8%, rgba(var(--gt-accent-rgb), 0.12), transparent 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 42%);
+}
+
+.dark {
+  --gt-ink: #f2eef7;
+  --gt-ink-soft: rgba(242, 238, 247, 0.62);
+  --gt-surface: rgba(38, 36, 42, 0.78);
+  --gt-surface-strong: rgba(30, 29, 34, 0.94);
+  --gt-line: rgba(255, 255, 255, 0.12);
+  --gt-bg:
+    radial-gradient(120% 80% at 10% 0%, rgba(var(--gt-accent-rgb), 0.16), transparent 60%),
+    radial-gradient(100% 70% at 95% 8%, rgba(var(--gt-accent-rgb), 0.1), transparent 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 42%);
+}
+
+[hidden] {
+  display: none !important;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--gt-accent-rgb), 0.5) rgba(var(--gt-accent-rgb), 0.08);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(var(--gt-accent-rgb), 0.08);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(var(--gt-accent-rgb), 0.45);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--gt-accent-rgb), 0.7);
+  background-clip: padding-box;
+}
+
+/* 圆头像 + 米游社角标 */
+
+.gt-avatar-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(var(--gt-accent-rgb), 0.2);
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 8px 20px rgba(var(--gt-accent-rgb), 0.3);
+}
+
+.dark .gt-avatar-wrap {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.gt-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.gt-avatar-fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  color: var(--gt-accent);
+}
+
+.gt-avatar-bbs {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  background: #fff;
+}
+
+/* 角色图与占位 */
+
+.gt-char-img {
+  object-fit: cover;
+  border: 2px solid var(--gt-line);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.gt-char-fallback {
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: #fff;
+  border: 2px solid var(--gt-line);
+}
+
+/* 胶囊标签 */
+
+.gt-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1.5px solid var(--gt-line);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.dark .gt-pill {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.gt-pill strong {
+  color: var(--gt-ink);
+}
+
+/* 空态 */
+
+.gt-empty {
+  padding: 20px;
+  border-radius: 16px;
+  border: 2px dashed rgba(var(--gt-accent-rgb), 0.4);
+  background: rgba(var(--gt-accent-rgb), 0.06);
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gt-ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-app *,
+  .gt-app *::before,
+  .gt-app *::after,
+  .gtw *,
+  .gtw *::before,
+  .gtw *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
