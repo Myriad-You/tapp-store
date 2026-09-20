@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.76",
+  "version": "1.0.77",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-09-20T01:22:19.669Z",
+  "updated_at": "2026-09-20T09:31:22.054Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -253,7 +253,7 @@
     {
       "id": "com.myriad.config-generator",
       "name": "Myriad 安装配置生成",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "description": "生成新安装配置或导入旧 Compose 与 .env 升级，提供十种平台的部署与反代指南",
       "long_description": "生成 Myriad 新安装配置，或导入旧 Compose 与 .env 生成升级产物。提供十种平台的固定宿主目录部署与整站反代指南：1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy 和 CLI。容器反代通过业务网络访问 myriad-proxy:80；Coolify / Dokploy 提供独立 Traefik 动态配置。外置 Docker 数据库使用实际名称可自定义的附加网络（Compose 键名 myriad-backend-ext），web 与两个 worker 同时接入，worker 保持独立登录与管理网络隔离。升级要求原项目名，保留受支持的数据身份与密钥；内置 PostgreSQL 须为 18+，未知服务或自定义挂载拒绝自动迁移。工具只生成文件，不修改服务器；实际网络、证书和数据库权限需在部署时验证。",
       "locales": {
@@ -373,13 +373,13 @@
           "vendor/js-yaml.js": "apps/com.myriad.config-generator/vendor/js-yaml.js"
         }
       },
-      "size": 584669,
+      "size": 586373,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-14T00:00:00Z",
-      "updated_at": "2026-09-18T23:37:45.772Z"
+      "updated_at": "2026-09-20T09:31:22.018Z"
     },
     {
       "id": "com.myriad.doudizhu",
