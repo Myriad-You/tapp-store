@@ -154,10 +154,10 @@ function inspectLegacy(composeText,envText) {
       if(m.options&&!/^(?:ro|rw)$/.test(m.options))fail(path+'.volumes','custom mount options require manual upgrade');
       if(m.bind&&Object.keys(m.bind).some(function(k){return k!=='create_host_path';}))fail(path+'.volumes','custom bind options require manual upgrade');
       if(['backend','backend-volume-init','persona-worker','federation-worker'].indexOf(name)>=0){
-        var fixed=m.type==='volume'&&((m.source==='backend_data'&&['/app/data','/app/data/federation','/app/data/federation_media'].indexOf(m.target)>=0)||(m.source==='backend_cache'&&['/app/cache','/tmp/cache/images'].indexOf(m.target)>=0));
-        if((name==='federation-worker'&&['/app/data/federation','/app/data/federation_media','/tmp/cache/images'].indexOf(m.target)>=0)||(m.volume&&Object.keys(m.volume).length)){
+        var fixed=m.type==='volume'&&((m.source==='backend_data'&&['/app/data','/app/data/federation','/app/data/federation_media','/app/data/media'].indexOf(m.target)>=0)||(m.source==='backend_cache'&&['/app/cache','/tmp/cache/images'].indexOf(m.target)>=0));
+        if((name==='federation-worker'&&['/app/data/federation','/app/data/federation_media','/app/data/media','/tmp/cache/images'].indexOf(m.target)>=0)||(m.volume&&Object.keys(m.volume).length)){
           if(!m.volume)fail(path+'.volumes','fixed federation subpath and nocopy options are required; a full-volume mount would change the data location');
-          var expectedSubpath={'/app/data/federation':'federation','/app/data/federation_media':'federation_media','/tmp/cache/images':'images'}[m.target];
+          var expectedSubpath={'/app/data/federation':'federation','/app/data/federation_media':'federation_media','/app/data/media':'media','/tmp/cache/images':'images'}[m.target];
           if(name!=='federation-worker'||!expectedSubpath||m.volume.subpath!==expectedSubpath||m.volume.nocopy!==true||Object.keys(m.volume).some(function(k){return k!=='subpath'&&k!=='nocopy';}))fail(path+'.volumes','custom volume subpath/options cannot be converted without changing stored data; manual migration required');
         }
         if(!fixed)fail(path+'.volumes','Guard requires original backend_data/backend_cache named volumes; custom binds/storage need manual migration');

@@ -1,7 +1,7 @@
 {
   "id": "com.myriad.config-generator",
   "name": "Myriad 安装配置生成",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "minSystemVersion": "0.2.1",
   "description": "生成新安装配置或导入旧 Compose 与 .env 升级，提供十种平台的部署与反代指南",
   "locales": {

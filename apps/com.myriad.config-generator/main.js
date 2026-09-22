@@ -1183,6 +1183,10 @@ services:
         target: /app/data/federation_media
         volume: { subpath: federation_media, nocopy: true }
       - type: volume
+        source: backend_data
+        target: /app/data/media
+        volume: { subpath: media, nocopy: true }
+      - type: volume
         source: backend_cache
         target: /tmp/cache/images
         volume: { subpath: images, nocopy: true }
