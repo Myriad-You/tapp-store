@@ -100,6 +100,20 @@ jobs:
             console.log("myriad-tapp check passed");
           '
 
+      - name: Verify config-generator storage, upgrades and deployment matrix
+        if: steps.app.outputs.app_id == 'com.myriad.config-generator'
+        working-directory: apps/com.myriad.config-generator
+        env:
+          JSDOM_MODULE_PATH: ${{ runner.temp }}/config-generator-tests/node_modules/jsdom
+        run: |
+          set -euo pipefail
+          npm install --prefix "$RUNNER_TEMP/config-generator-tests" --no-audit --no-fund jsdom@30.1.1
+          node --test scripts/upgrade.test.mjs scripts/storage.test.mjs scripts/upgrade-ui.test.mjs scripts/yaml-sandbox.test.mjs
+          node scripts/security-smoke.mjs
+          node scripts/platform-guide-smoke.mjs
+          node scripts/platform-matrix.mjs
+          node scripts/storage-docker.mjs
+
       - name: Dry-run catalog sync (workspace only)
         run: |
           # Align index.json in the runner so preview checks match post-merge state.

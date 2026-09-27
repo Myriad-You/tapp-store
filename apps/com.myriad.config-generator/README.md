@@ -1,6 +1,6 @@
 # Myriad 安装配置生成
 
-版本 **1.0.0**。生成新安装配置，或导入旧 `docker-compose.yml` 与 `.env`，生成保留既有数据身份的升级配置。工具只读取用户提供的文件并生成下载结果，不连接或修改服务器。
+版本 **1.0.6**。生成新安装配置，或导入旧 `docker-compose.yml` 与 `.env`，生成保留既有数据身份的升级配置。工具只读取用户提供的文件并生成下载结果，不连接或修改服务器。
 
 ## 输出与部署目录
 
@@ -17,6 +17,18 @@
 所有方式都需要 Docker daemon 所在主机上的**真实绝对目录**，新装默认 `/opt/myriad`。Compose、`.env` 与 `guard-policy/docker-guard.env` 必须保存在该目录。面板 UI 中导入环境变量不能替代 updater 挂载的真实 `.env` 文件。面板容器内路径也不一定是主机路径。
 
 新装项目名为 `myriad`；升级必须使用原项目名与原部署目录。不得为了套用示例而换目录、改项目名、删除卷或初始化新数据目录。按生成的 `DEPLOY.md` 准备权限，执行 `docker compose ... config --quiet` 后再启动。
+
+## 数据目录与兼容要求
+
+新装使用部署目录下的 `./data` 和 `./cache`，所有业务 bind 都显式设置 `create_host_path: false`。backend、初始化服务和 persona 使用根目录；federation 只读挂载 data 根，只能写入 federation、federation_media、media 和缓存 images 子目录。
+
+目录存储要求 **updater/Guard 稳定版 v0.5.8 或更新版本**。生成器仍从真实发布信息选择版本；若只有旧版本、预发布版或无法判定的标签，会阻止生成目录布局，不会虚构已发布镜像。此版本的发布依赖 [Myriad #592](https://github.com/Myriad-You/Myriad/pull/592) 及兼容 updater 镜像正式可用。
+
+启动前必须执行 `DEPLOY.md` 的存储准备段：校验物理部署目录、data/cache 根目录与 worker 子目录，拒绝软链接和同项目残留命名卷，再以 Docker helper 创建 worker 子目录。Docker 创建 worker 容器早于启动初始化服务，仅依赖 `depends_on` 不足以准备 bind 来源。helper 不要求宿主操作员拥有 uid 1000 私有目录的访问权限；正式初始化服务随后修复属主和写权限，根目录保持 0700。命令需要 Docker 权限，内置 PG 的属主调整仍需要宿主相应权限。
+
+升级不会自动迁移存储：旧 `backend_data`/`backend_cache` 命名卷保持原项目卷名、声明与数据来源；已使用目录的部署继续使用原目录，并在准备时拒绝缺失的根目录。命名卷准备先检查卷存在且为普通 local 卷，不会自动创建替代空卷；具有宿主 bind driver options 的旧卷需要运维核验后按主仓库迁移流程处理。目录与卷混用、越界路径、改变 federation 子目录或写权限均拒绝自动升级。
+
+浏览器无法检查宿主软链接、真实卷驱动参数、镜像内置版本或磁盘数据；生成文件的校验不等于服务器验证。迁移旧卷请遵循主仓库的 [DATA_LAYOUT.md](https://github.com/Myriad-You/Myriad/blob/preview/docs/deployment/DATA_LAYOUT.md)，备份、校验数据后再切换，不能仅改 Compose source。
 
 ## 十种部署方式
 
@@ -74,14 +86,14 @@ Guard、updater、updater-gateway 共用 `UPDATER_IMAGE:UPDATER_TAG` 部署目�
 - **原项目名必需。** 从旧 `.env` 的 `COMPOSE_PROJECT_NAME`、Compose `name` 或 Guard 项目配置识别；缺失时拒绝猜测。须先查明真实原项目名再补入文件。
 - **内置 PostgreSQL 必须为 18 或更高版本。** 保留原数据库镜像与 pgdata 挂载，不执行 PG 大版本升级。PG 17 及以下应先另行完成备份与数据库迁移。
 - 保留原数据库 URL、JWT 等身份密钥和受支持的数据卷；旧文件若只提供相对路径，生成前须明确原来的绝对部署目录。
-- 未知服务、自定义数据挂载、非标准卷身份、未知字段或不受支持的命令与网络会拒绝自动升级，转为人工迁移；不会静默删掉这些配置。
+- 未知服务、固定部署目录以外的数据挂载、非标准卷身份、未知字段或不受支持的命令与网络会拒绝自动升级，转为人工迁移；不会静默删掉这些配置。
 - 外置旧配置未启用角色预置且缺少 worker URL 时，拒绝生成：先由 DBA 预置两个角色并提供实际 URL，避免生成不存在的登录。
 - 外置数据库版本、角色权限、网络是否可达无法从两份文件证明，需要部署者验证。附加数据库网络的实际 Docker 名称会原样保留并自动接入两个 worker。
 - 升级产物可能含已展开的凭据，因此 **Compose 与 `.env` 都按机密文件处理**。先备份数据库和卷，再评审生成差异和升级报告；工具不会自动应用更改。
 
 ## 镜像与密钥
 
-业务 backend / frontend / proxy 使用版本 tag；拒绝业务 digest 输入，避免同一 digest 错用于不同镜像，或使 updater 的版本切换失效。Guard 与 updater 使用 updater 仓库解析得到的 digest 固定镜像；不接受 `latest`。
+业务 backend / frontend / proxy 使用版本 tag；拒绝业务 digest 输入，避免同一 digest 错用于不同镜像，或使 updater 的版本切换失效。Guard、updater 和 gateway 共用所选 updater tag，解析得到的 digest 用于核验与恢复记录；不接受 `latest`。
 
 新装自动生成独立身份密钥、安装暗号与统计盐，产物经密钥与 `.env` 一致性检查。`MYRIAD_SETUP_SECRET` 用于首次创建所有者。`PROXY_ALLOW_DIRECT_UPDATER` 保持 false，backend 经 gateway 更新。YouTube / OpenXBL / PSN、出站 HTTP 代理（`PROXY_ENABLED` / `PROXY_URL` / `PROXY_BYPASS`）与 Gemini / GitHub API 镜像不在此写入，走 `/config` → 高级；宿主 `.env` 残留键会被忽略。管理台保存只双写 `BASE_URL`（改公网 origin 时同时改 `FRONTEND_URL` / `CORS_ORIGINS`）。高级资源限额与内存节约模式可按主机能力调整。
 
@@ -94,6 +106,10 @@ node scripts/security-smoke.mjs
 node scripts/platform-guide-smoke.mjs
 node scripts/platform-matrix.mjs
 node scripts/upgrade.test.mjs
+node scripts/storage.test.mjs
+node scripts/yaml-sandbox.test.mjs
+# 另需可用 Docker daemon，仅创建并清理测试目录和测试卷：
+node scripts/storage-docker.mjs
 ```
 
 页面操作回归另外使用 jsdom（无需加入应用运行包）：

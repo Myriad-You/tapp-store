@@ -1,3 +1,4 @@
+var Storage = require('./storage.js');
 var UpgradeEngine = require('./upgrade.js');
 var PlatformGuides = require('./platform.js');
 
@@ -727,6 +728,7 @@ var I18N_FALLBACK = {
   "deployment.verify": "检查站点与三个进程",
   "deployment.verifyBody": "检查 backend、federation-worker 和 persona-worker，再打开域名检查 HTTPS。首次安装按提示创建所有者。",
   "error.badComposeRoot": "请输入原 Docker 主机上的绝对部署目录，如 /opt/myriad；不能含空格、.. 或控制字符。",
+  "error.storageUpdater": "目录存储要求 updater/Guard 稳定版 v0.5.8 或更新版本。请等待兼容版本发布并选择该版本；旧命名卷升级会保留原卷。",
   "error.businessDigest": "业务和 proxy 版本请填写版本标签，不要附加 digest；更新器需要切换这些标签。Guard 和 updater 会单独锁定 digest。"
 };
 
@@ -1011,7 +1013,9 @@ function buildPanelDeploySection(panelId, mainDomain, httpBind, httpPort, isExte
   return PlatformGuides.buildPlatformGuide(panelId, {
     domain: mainDomain, httpBind: httpBind, httpPort: httpPort,
     composeHostRoot: state.composeHostRoot || '/opt/myriad',
-    netMyriad: state.netMyriad || 'myriad-net', external: isExternal
+    netMyriad: state.netMyriad || 'myriad-net', external: isExternal,
+    storage: upgradeSession.legacy ? upgradeSession.legacy.storage : Storage.layout(),
+    project: upgradeSession.legacy ? upgradeSession.legacy.project : 'myriad'
   });
 }
 
@@ -1081,8 +1085,14 @@ services:
     environment:
       MYRIAD_VOLUME_INIT_ONLY: "true"
     volumes:
-      - backend_cache:/app/cache
-      - backend_data:/app/data
+      - type: bind
+        source: ./cache
+        target: /app/cache
+        bind: { create_host_path: false }
+      - type: bind
+        source: ./data
+        target: /app/data
+        bind: { create_host_path: false }
     network_mode: none
     restart: "no"
     security_opt: [no-new-privileges:true]
@@ -1137,14 +1147,20 @@ services:
       retries: 3
       start_period: 60s
     volumes:
-      - backend_cache:/app/cache
-      - backend_data:/app/data
+      - type: bind
+        source: ./cache
+        target: /app/cache
+        bind: { create_host_path: false }
+      - type: bind
+        source: ./data
+        target: /app/data
+        bind: { create_host_path: false }
 {{DB_EXTRA_HOSTS}}    networks: [myriad-net, myriad-admin-net{{BACKEND_EXTRA_NETWORK_REF}}]
     restart: unless-stopped
     security_opt: [no-new-privileges:true]
     read_only: false
     tmpfs: [/tmp]
-    # uid 1000；backend-volume-init 会先修复 volume 写权限
+    # uid 1000；backend-volume-init 会先修复数据与缓存的写权限
     logging:
       driver: "json-file"
       options: { max-size: "10m", max-file: "3" }
@@ -1183,23 +1199,27 @@ services:
       retries: 3
       start_period: 60s
     volumes:
-      - backend_data:/app/data:ro
-      - type: volume
-        source: backend_data
+      - type: bind
+        source: ./data
+        target: /app/data
+        read_only: true
+        bind: { create_host_path: false }
+      - type: bind
+        source: ./data/federation
         target: /app/data/federation
-        volume: { subpath: federation, nocopy: true }
-      - type: volume
-        source: backend_data
+        bind: { create_host_path: false }
+      - type: bind
+        source: ./data/federation_media
         target: /app/data/federation_media
-        volume: { subpath: federation_media, nocopy: true }
-      - type: volume
-        source: backend_data
+        bind: { create_host_path: false }
+      - type: bind
+        source: ./data/media
         target: /app/data/media
-        volume: { subpath: media, nocopy: true }
-      - type: volume
-        source: backend_cache
+        bind: { create_host_path: false }
+      - type: bind
+        source: ./cache/images
         target: /tmp/cache/images
-        volume: { subpath: images, nocopy: true }
+        bind: { create_host_path: false }
 {{DB_EXTRA_HOSTS}}    networks: [myriad-net{{BACKEND_EXTRA_NETWORK_REF}}]
     # Geographic disablement exits 0; do not loop an idle worker.
     restart: on-failure
@@ -1248,8 +1268,14 @@ services:
       retries: 3
       start_period: 60s
     volumes:
-      - backend_data:/app/data
-      - backend_cache:/app/cache
+      - type: bind
+        source: ./data
+        target: /app/data
+        bind: { create_host_path: false }
+      - type: bind
+        source: ./cache
+        target: /app/cache
+        bind: { create_host_path: false }
 {{DB_EXTRA_HOSTS}}    networks: [myriad-net{{BACKEND_EXTRA_NETWORK_REF}}]
     stop_grace_period: 45s
     restart: unless-stopped
@@ -1456,10 +1482,6 @@ services:
     logging:
       driver: "json-file"
       options: { max-size: "10m", max-file: "3" }
-
-volumes:
-  backend_cache: { driver: local }
-  backend_data: { driver: local }
 
 networks:
   myriad-net:
@@ -1738,7 +1760,7 @@ docker compose --env-file .env pull
 docker compose --env-file .env up -d
 \`\`\`
 
-\`backend-volume-init\` 会在 backend 启动前修复持久卷权限；无需手工 chown。
+\`backend-volume-init\` 会在 backend 启动前修复数据与缓存的属主和写权限；无需手工 chown。
 
 首次打开站点会进入安装向导。创建所有者时必须填写 **安装暗号**（\`.env\` 里的 \`MYRIAD_SETUP_SECRET\`）。也可以打开 \`https://{{MAIN_DOMAIN}}/#setup_secret=…\`，向导会自动填入。能读到这份配置或链接的人才能当站长。
 
@@ -4347,6 +4369,7 @@ function applyPlaceholders(template, map) {
 
 function generateConfigs() {
   state.mallocArenaMax = resolveMallocArenaMax(state.limitPreset);
+  if ((!upgradeSession.legacy || upgradeSession.legacy.storage.kind === 'bind') && !Storage.supportsBind(state.updaterTag)) throw new Error(t('error.storageUpdater'));
   if (!upgradeSession.legacy && state.dbMode !== 'external' && !isValidPgMajor(state.dbVersion)) {
     throw new Error(t('error.badPgVersion', { min: PG_VERSION_MIN, max: PG_VERSION_MAX }));
   }
@@ -4390,7 +4413,6 @@ function generateConfigs() {
   var backendDependsOn = '      backend-volume-init: { condition: service_completed_successfully }\n';
   var updaterPgdataLine = '';
   var updaterPgdataVolume = '';
-  var composeStartHint = 'mkdir -p state backups && docker compose --env-file .env up -d';
   var postgresEnvBlock = '';
   var deployNetMembers = 'proxy, frontend, backend, federation-worker, persona-worker';
   var deployMkdir = 'mkdir -p state backups guard-policy';
@@ -4411,8 +4433,6 @@ function generateConfigs() {
       '      backend-volume-init: { condition: service_completed_successfully }\n';
     updaterPgdataLine = '      UPDATER_PGDATA: /host/compose/pgdata\n';
     updaterPgdataVolume = '      - type: bind\n        source: ${MYRIAD_COMPOSE_HOST_ROOT:-.}/pgdata\n        target: /host/compose/pgdata\n';
-    composeStartHint =
-      'mkdir -p pgdata state backups && chown -R 70:70 pgdata && chmod 700 pgdata && docker compose --env-file .env up -d';
     postgresEnvBlock =
       'POSTGRES_DB=' + state.dbName + '\n' +
       'POSTGRES_USER=' + state.dbUser + '\n' +
@@ -4436,6 +4456,9 @@ function generateConfigs() {
       '# POSTGRES_DB=' + state.dbName + '\n' +
       '# POSTGRES_USER=' + state.dbUser + '\n';
   }
+
+  deployMkdir = 'cd ' + state.composeHostRoot + ' || exit 1\n' +
+    Storage.preparation(upgradeSession.legacy ? upgradeSession.legacy.storage : Storage.layout(), state.composeHostRoot, upgradeSession.legacy ? upgradeSession.legacy.project : 'myriad') + '\n' + deployMkdir;
 
   var extraNetworkName = isExternal ? (state.dbExtraNetwork || '').trim() : '';
   var backendExtraNetworkRef = extraNetworkName ? ', myriad-backend-ext' : '';
@@ -4549,7 +4572,7 @@ function generateConfigs() {
 
   var map = {
     MYRIAD_DB_MODE: isExternal ? 'external' : 'bundled',
-    COMPOSE_START_HINT: composeStartHint,
+    COMPOSE_START_HINT: 'Prepare storage using DEPLOY.md before docker compose --env-file .env up -d',
     POSTGRES_SERVICE: postgresService,
     BACKEND_DEPENDS_ON: backendDependsOn,
     BACKEND_WORKER_PASSWORD_LINES: backendWorkerPasswordLines,

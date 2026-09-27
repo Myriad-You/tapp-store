@@ -1,3 +1,4 @@
+var Storage = require('./storage.js');
 // Deployment ownership stays with the physical Docker-host Compose directory.
 // The platform's outer reverse proxy only joins Myriad's business network.
 var PLATFORMS = {
@@ -45,7 +46,8 @@ function buildPlatformGuide(panelId, ctx) {
     '## ' + PLATFORMS[panelId] + ' 部署', '',
     '本方案使用 Docker 主机上的固定 Compose 项目。先把生成文件保存到 `' + root + '`：`docker-compose.yml`、`.env`、`guard-policy/docker-guard.env`。目录是 Docker daemon 所在服务器的真实路径，不是面板容器内路径。',
     '`.env` 必须是实际文件；面板 UI 环境变量仅供 Compose 插值，不能代替 updater 挂载的文件。三份文件与面板变量必须保持一致。项目名必须与 `.env` 的 `COMPOSE_PROJECT_NAME` 一致（新安装默认 `myriad`），保留生成的容器名、网络名和安全边界。', '',
-    '在该服务器终端准备目录与权限，然后运行：', '```sh', 'cd ' + shellQuote(root),
+    '在该服务器终端准备目录与权限，然后运行：', '```sh', 'cd ' + shellQuote(root) + ' || exit 1',
+    Storage.preparation(ctx.storage, root, ctx.project),
     'mkdir -p state backups guard-policy', 'chmod 600 .env guard-policy/docker-guard.env'
   ];
   if (!ctx.external) lines.push('mkdir -p pgdata', 'chown -R 70:70 pgdata', 'chmod 700 pgdata');

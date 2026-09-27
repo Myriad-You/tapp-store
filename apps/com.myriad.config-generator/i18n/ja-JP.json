@@ -410,5 +410,6 @@
   "deployment.verify": "サイトと 3 プロセスを確認",
   "deployment.verifyBody": "backend、federation-worker、persona-worker を確認し、ドメインで HTTPS を確認します。新規インストール時のみ所有者を設定してください。",
   "error.badComposeRoot": "/opt/myriad のような Docker ホストの絶対パスを入力してください。空白、..、制御文字は使用できません。",
-  "error.businessDigest": "業務用と proxy イメージは digest を付けずバージョンタグを指定してください。Guard と updater は別に固定します。"
+  "error.businessDigest": "業務用と proxy イメージは digest を付けずバージョンタグを指定してください。Guard と updater は別に固定します。",
+  "error.storageUpdater": "ディレクトリ保存には updater/Guard 安定版 v0.5.8 以降が必要です。対応版の公開後に選択してください。既存の名前付きボリュームはアップグレード時も保持されます。"
 }

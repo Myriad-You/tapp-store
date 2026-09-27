@@ -37,6 +37,17 @@ try {
       assert.equal(result.status, 0, `Compose config rejects generated artifacts: ${result.stderr}`);
       const config = JSON.parse(result.stdout);
       const services = config.services;
+      assert.ok(!config.volumes || !Object.keys(config.volumes).length, 'Fresh storage must not register named volumes');
+      for (const name of ['backend', 'backend-volume-init', 'persona-worker', 'federation-worker']) {
+        for (const mount of services[name].volumes) {
+          assert.equal(mount.type, 'bind');
+          assert.equal(mount.bind?.create_host_path ?? false, false);
+          assert.ok(mount.source.startsWith(dir + '/data') || mount.source.startsWith(dir + '/cache'));
+          assert.equal(Boolean(mount.read_only), name === 'federation-worker' && mount.target === '/app/data');
+        }
+      }
+      assert.ok(output.notes.indexOf('# END MYRIAD STORAGE PREPARATION') < output.notes.indexOf('docker compose --env-file .env up -d'));
+
       for (const name of ['docker-guard', 'updater', 'updater-gateway']) {
         assert.equal(services[name].image, 'docker.io/somekawahitomi/myriad-updater:v1.2.3', `${name} uses the shared deployment target`);
       }
