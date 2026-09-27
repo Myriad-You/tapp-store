@@ -410,5 +410,6 @@
   "deployment.verify": "检查站点与三个进程",
   "deployment.verifyBody": "检查 backend、federation-worker 和 persona-worker，再打开域名检查 HTTPS。首次安装按提示创建所有者。",
   "error.badComposeRoot": "请输入原 Docker 主机上的绝对部署目录，如 /opt/myriad；不能含空格、.. 或控制字符。",
-  "error.businessDigest": "业务和 proxy 版本请填写版本标签，不要附加 digest；更新器需要切换这些标签。Guard 和 updater 会单独锁定 digest。"
+  "error.businessDigest": "业务和 proxy 版本请填写版本标签，不要附加 digest；更新器需要切换这些标签。Guard 和 updater 会单独锁定 digest。",
+  "error.storageUpdater": "目录存储要求 updater/Guard 稳定版 v0.5.8 或更新版本。请等待兼容版本发布并选择该版本；旧命名卷升级会保留原卷。"
 }

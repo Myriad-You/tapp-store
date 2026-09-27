@@ -3,6 +3,7 @@
  */
 'use strict';
 var yaml = require('./vendor/js-yaml.js');
+var Storage = require('./storage.js');
 var MAX_INPUT = 262144;
 var SERVICES = ['postgres','backend-volume-init','backend','frontend','proxy','updater','updater-gateway','docker-guard','persona-worker','federation-worker'];
 var CORE_NETS = ['myriad-net','myriad-admin-net','myriad-docker-guard-net'];
@@ -109,6 +110,7 @@ function dbInfo(value,path) {
 function normalizeRoot(root) {if(typeof root!=='string'||root.indexOf('..')!==-1||root[0]==='~')fail('MYRIAD_COMPOSE_HOST_ROOT','use original deployment directory without parent traversal');return root.replace(/\/+$/,'')||'/';}
 function inspectLegacy(composeText,envText) {
   var env=parseEnv(envText),compose=mapTree(parseYaml(composeText),function(v){return interpolate(v,env,'compose');});
+  ['MYRIAD_TCB_GUARD_IMAGE','MYRIAD_TCB_UPDATER_IMAGE','MYRIAD_TCB_GATEWAY_IMAGE'].forEach(function(key){if(own(env,key))fail('.env.'+key,'handoff-only image selectors must not be persisted in deployment files');});
   var report={preserved:[],added:[],warnings:[]},statePatch={};
   Object.keys(compose).forEach(function(k){if(['services','name','version','networks','volumes'].indexOf(k)<0)fail('compose','unsupported top-level field; merge manually before upgrading');});
   var services=compose.services;
@@ -135,6 +137,9 @@ function inspectLegacy(composeText,envText) {
   var volumes=compose.volumes||{};
   if(!object(volumes))fail('compose.volumes','expected mapping');
   Object.keys(volumes).forEach(function(name){if(name!=='backend_data'&&name!=='backend_cache')fail('compose.volumes','unrecognized volume; retain it in a manual upgrade');var v=volumes[name]||{};if(!object(v))fail('compose.volumes','invalid volume definition');Object.keys(v).forEach(function(k){if(['driver','name','external','labels'].indexOf(k)<0)fail('compose.volumes','custom volume driver settings require manual upgrade');});if(v.driver&&v.driver!=='local')fail('compose.volumes','only local storage supported');if((v.name&&v.name!==project+'_'+name)||(v.external&&!v.name))fail('compose.volumes','volume identity differs from Guard project storage; manual migration required');});
+  var businessMounts={}; Storage.BUSINESS.forEach(function(name){if(services[name])businessMounts[name]=mounts(services[name],'services.'+name);});
+  var storage=Storage.inspect(businessMounts,root,volumes);
+  report.preserved.push(storage.kind==='bind'?'Original Compose-local data/cache directories retained; updater/Guard v0.5.8+ required':'Original backend_data/backend_cache named volumes retained; no implicit migration');
   Object.keys(services).forEach(function(name){
     var s=services[name],path='services.'+name;
     if(WORKERS.indexOf(name)>=0){
@@ -147,21 +152,14 @@ function inspectLegacy(composeText,envText) {
     if(s.ports&&name!=='proxy')fail(path+'.ports','only proxy may publish a host port');
     if(WORKERS.indexOf(name)>=0&&s.command&&JSON.stringify(s.command)!==JSON.stringify(['/app/myriad-'+name]))fail(path+'.command','custom worker executable requires manual upgrade');
     ['DATA_DIR','CACHE_DIR'].forEach(function(key){var expected=key==='DATA_DIR'?'/app/data':name==='federation-worker'?'/tmp/cache':'/app/cache';if(s.environment[key]&&s.environment[key]!==expected)fail(path+'.environment.'+key,'custom data path requires manual migration');});
-    if(name==='backend'){var storage=mounts(s,path);if(storage.length!==2||!storage.some(function(m){return m.source==='backend_data'&&m.target==='/app/data';})||!storage.some(function(m){return m.source==='backend_cache'&&m.target==='/app/cache';}))fail(path+'.volumes','both existing backend_data and backend_cache mounts are required');}
+
     if(s.command&&['postgres','docker-guard','persona-worker','federation-worker'].indexOf(name)<0)fail(path+'.command','custom command requires manual upgrade');
     if(s.entrypoint&&['docker-guard','updater-gateway'].indexOf(name)<0)fail(path+'.entrypoint','custom entrypoint requires manual upgrade');
     mounts(s,path).forEach(function(m){
       if(m.options&&!/^(?:ro|rw)$/.test(m.options))fail(path+'.volumes','custom mount options require manual upgrade');
       if(m.bind&&Object.keys(m.bind).some(function(k){return k!=='create_host_path';}))fail(path+'.volumes','custom bind options require manual upgrade');
       if(['backend','backend-volume-init','persona-worker','federation-worker'].indexOf(name)>=0){
-        var fixed=m.type==='volume'&&((m.source==='backend_data'&&['/app/data','/app/data/federation','/app/data/federation_media','/app/data/media'].indexOf(m.target)>=0)||(m.source==='backend_cache'&&['/app/cache','/tmp/cache/images'].indexOf(m.target)>=0));
-        if((name==='federation-worker'&&['/app/data/federation','/app/data/federation_media','/app/data/media','/tmp/cache/images'].indexOf(m.target)>=0)||(m.volume&&Object.keys(m.volume).length)){
-          if(!m.volume)fail(path+'.volumes','fixed federation subpath and nocopy options are required; a full-volume mount would change the data location');
-          var expectedSubpath={'/app/data/federation':'federation','/app/data/federation_media':'federation_media','/app/data/media':'media','/tmp/cache/images':'images'}[m.target];
-          if(name!=='federation-worker'||!expectedSubpath||m.volume.subpath!==expectedSubpath||m.volume.nocopy!==true||Object.keys(m.volume).some(function(k){return k!=='subpath'&&k!=='nocopy';}))fail(path+'.volumes','custom volume subpath/options cannot be converted without changing stored data; manual migration required');
-        }
-        if(!fixed)fail(path+'.volumes','Guard requires original backend_data/backend_cache named volumes; custom binds/storage need manual migration');
-        if(!own(volumes,m.source))fail(path+'.volumes','named volume definition missing');
+        // Storage.inspect validates complete service layouts and mount options.
       }else{
         var pairs={postgres:[['pgdata','/var/lib/postgresql']],proxy:[['state','/state']],updater:[['','/host/compose'],['.env','/host/compose/.env'],['state','/host/compose/state'],['pgdata','/host/compose/pgdata'],['guard-policy','/run/secrets']], 'docker-guard':[['','/host/compose'],['state','/host/state'],['guard-policy','/guard-policy']]};
         var allowed=name==='docker-guard'&&m.source==='/var/run/docker.sock'&&m.target==='/var/run/docker.sock';
@@ -205,7 +203,7 @@ function inspectLegacy(composeText,envText) {
   if(!env.COMPOSE_PROJECT_NAME)report.warnings.push('Keep running Compose with the same existing project name and deployment directory.');
   if(statePatch.dbMode==='external')report.warnings.push('External PostgreSQL version, role privileges, and reachability require operator verification; they cannot be inspected from these files.');
   report.warnings.push('Back up PostgreSQL and data volumes before applying; do not delete volumes or initialize a new deployment directory.');
-  return {compose:compose,env:env,statePatch:statePatch,report:report,project:project,root:root,extraNetwork:extra};
+  return {compose:compose,env:env,statePatch:statePatch,report:report,project:project,root:root,extraNetwork:extra,storage:storage};
 }
 function serializeEnv(env){return '# Upgrade output: contains existing secrets. Keep private.\n'+Object.keys(env).map(function(key){return key+"='"+String(env[key]).replace(/\\/g,'\\\\').replace(/'/g,"\\'")+"'";}).join('\n')+'\n';}
 function upgradeGenerated(generated,legacy) {
@@ -251,7 +249,9 @@ function upgradeGenerated(generated,legacy) {
     var password=compose.services.backend.environment[key];
     if(password&&!/^[A-Za-z0-9_-]{32,128}$/.test(password))fail('services.backend.environment.'+key,'backend-managed worker passwords require 32–128 URL-safe characters; use independently preprovisioned external roles for other credentials');
   });
-  compose.volumes=clone(old.volumes||{});
+  if(legacy.storage.kind==='bind'&&!Storage.supportsBind(env.UPDATER_TAG))fail('UPDATER_TAG','Compose-local storage requires stable updater/Guard v0.5.8 or newer');
+  Storage.BUSINESS.forEach(function(name){if(compose.services[name])compose.services[name].volumes=Storage.mounts(legacy.storage,name);});
+  if(legacy.storage.kind==='volume')compose.volumes=clone(old.volumes||{});else delete compose.volumes;
   compose.networks=compose.networks||{};
   CORE_NETS.forEach(function(key){if(old.networks&&old.networks[key])compose.networks[key]=clone(old.networks[key]);});
   if(legacy.extraNetwork){
@@ -293,6 +293,6 @@ function upgradeGenerated(generated,legacy) {
     if(values.DOCKER_GUARD_EXPECTED_IMAGE)escaped.services[name].environment.DOCKER_GUARD_EXPECTED_IMAGE=generatedCompose.services[name].environment.DOCKER_GUARD_EXPECTED_IMAGE;
   });
   var output=yaml.dump(escaped,{schema:yaml.CORE_SCHEMA,noRefs:true,lineWidth:-1,noCompatMode:true});
-  return {compose:output,env:serializeEnv(env),guardEnv:serializeEnv(guard),deploy:String(generated.deploy||'')+'\n\n## Existing deployment upgrade\n\nKeep the original deployment directory and project name. Back up PostgreSQL and data volumes. Review the Compose diff, verify with `docker compose --env-file .env config`, then apply with `docker compose --env-file .env up -d`. Never delete data volumes or initialize fresh storage during this upgrade.\n'+['preserved','added','warnings'].map(function(kind){return '\n### '+kind+'\n\n'+report[kind].map(function(item){return '- '+item;}).join('\n')+'\n';}).join(''),report:report};
+  return {compose:output,env:serializeEnv(env),guardEnv:serializeEnv(guard),deploy:Storage.replacePreparation(generated.deploy,legacy.storage,confirmedRoot,legacy.project)+'\n\n## Existing deployment upgrade\n\nKeep the original deployment directory and project name. Back up PostgreSQL and data volumes. Review the Compose diff, verify with `docker compose --env-file .env config`, then apply with `docker compose --env-file .env up -d`. Never delete data volumes or initialize fresh storage during this upgrade.\n'+['preserved','added','warnings'].map(function(kind){return '\n### '+kind+'\n\n'+report[kind].map(function(item){return '- '+item;}).join('\n')+'\n';}).join(''),report:report};
 }
 module.exports={parseEnv:parseEnv,inspectLegacy:inspectLegacy,upgradeGenerated:upgradeGenerated};

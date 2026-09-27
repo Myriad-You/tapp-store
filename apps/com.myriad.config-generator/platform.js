@@ -1,3 +1,4 @@
+var Storage = require('./storage.js');
 // Deployment ownership stays with the physical Docker-host Compose directory.
 // The platform's outer reverse proxy only joins Myriad's business network.
 var PLATFORMS = {
@@ -49,6 +50,7 @@ function buildPlatformGuide(panelId, ctx) {
     'mkdir -p state backups guard-policy', 'chmod 600 .env guard-policy/docker-guard.env'
   ];
   if (!ctx.external) lines.push('mkdir -p pgdata', 'chown -R 70:70 pgdata', 'chmod 700 pgdata');
+  lines.push(Storage.preparation(ctx.storage, root, ctx.project));
   lines.push('docker compose --env-file .env config --quiet', 'docker compose --env-file .env up -d', 'docker compose --env-file .env ps', '```', '',
     '将 `' + domain + '` 的 A / AAAA 记录指向反代服务器；只发布实际可达的地址。证书签发还取决于公网 DNS、80/443 可达性与证书服务，这些没有在生成时实测。');
   if (panelId === 'portainer') lines.push('', 'Portainer 使用 Docker Standalone 环境查看该主机项目；不要用 Swarm Stack 替代。若通过 Stacks 管理，必须使用固定主机目录的同一份配置、相同的 `COMPOSE_PROJECT_NAME` 和完整变量，并确认预览未改变服务。Load variables from .env 只导入变量，仍须保存上面的真实 `.env` 文件。', '[Portainer 变量说明](https://docs.portainer.io/faqs/troubleshooting/stacks-deployments-and-updates/environment-variable-management-in-docker-.env-vs.-stack.env)');

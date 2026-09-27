@@ -410,5 +410,6 @@
   "deployment.verify": "Verify the site and all three processes",
   "deployment.verifyBody": "Check backend, federation-worker and persona-worker, then verify HTTPS at your domain. Complete owner setup only for a new installation.",
   "error.badComposeRoot": "Enter an absolute Docker-host directory such as /opt/myriad; no spaces, .. or control characters.",
-  "error.businessDigest": "Use version tags without digests for business and proxy images so the updater can change them. Guard and updater are pinned separately."
+  "error.businessDigest": "Use version tags without digests for business and proxy images so the updater can change them. Guard and updater are pinned separately.",
+  "error.storageUpdater": "Directory storage requires stable updater/Guard v0.5.8 or newer. Wait for a compatible release and select it. Upgrading legacy named volumes preserves their identity."
 }

@@ -94,3 +94,10 @@ test('real click generation preserves quoted legacy JWT and database credentials
  const output=await page.output();assert.ok(output.compose,page.notifications.map(n=>n.message).join('\n'));
  const resolved=engine.inspectLegacy(output.compose,output.env);assert.equal(resolved.statePatch.jwtSecret,jwt);assert.equal(resolved.statePatch.dbPassword,password);
 });
+
+test('page blocks directory generation with an incompatible selected updater release',async t=>{
+  const page=await openPage(t);page.inspect(legacy());page.enter('updater-tag','v0.5.7');
+  const result=await page.output();assert.equal(result.compose,'');
+  assert.ok(page.notifications.some(n=>/v0.5.8/.test(n.message)),page.notifications.map(n=>n.message).join('\n'));
+  page.enter('updater-tag','v0.5.8');assert.ok((await page.output()).compose);
+});
