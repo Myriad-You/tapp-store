@@ -1,7 +1,7 @@
 {
   "id": "com.myriad.config-generator",
   "name": "Myriad 安装配置生成",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "minSystemVersion": "0.2.1",
   "description": "生成新安装配置或导入旧 Compose 与 .env 升级，提供十种平台的部署与反代指南",
   "locales": {
@@ -41,6 +41,17 @@
       "type": "http",
       "method": "GET",
       "endpoint": "https://hub.docker.com/v2/repositories/somekawahitomi/{{params.repo}}/tags/{{params.tag}}",
+      "cacheTtl": 300
+    },
+    "githubReleases": {
+      "access": "public",
+      "type": "http",
+      "method": "GET",
+      "endpoint": "https://api.github.com/repos/Myriad-You/Myriad/releases?per_page=20",
+      "headers": {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "Myriad-Config-Generator (https://github.com/Myriad-You/tapp-store)"
+      },
       "cacheTtl": 300
     }
   },

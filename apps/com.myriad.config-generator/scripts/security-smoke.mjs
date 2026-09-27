@@ -41,7 +41,7 @@ assert.match(main, /if \[ ! -f \/guard-policy\/docker-guard.env \]; then umask 0
 assert.match(main, /backend-volume-init:[\s\S]*?logging:\s*\n\s*driver: \"json-file\"/)
 assert.match(main, /MYRIAD_GUARD_ENV_FILE: 'guard-policy\/docker-guard.env'/)
 assert.match(main, /DOCKER_GUARD_HOST_POLICY_PATH: \/guard-policy\/docker-guard.env/)
-assert.match(main, /Deployment definitions are immutable/)
+assert.match(main, /The deployment root is writable/)
 assert.match(main, /target: \/host\/compose\/\.env/)
 assert.match(main, /MYRIAD_PROCESS_ROLE: web/)
 assert.match(main, /federation-worker:/)
@@ -67,6 +67,8 @@ assert.doesNotMatch(main, /DOCKER_GUARD_ALLOWED_IMAGES: \\\$\{BACKEND_IMAGE/)
 assert.doesNotMatch(main, /await Promise\.all\(\s*\[\s*fetchDockerHubTags/)
 assert.doesNotMatch(main, /优先四仓共同/)
 assert.match(main, /each take that image's own latest versioned tag/)
+assert.match(main, /githubReleases/)
+assert.match(main, /GitHub Release 确认正式版本/)
 // Image identity is baked into runtime ENV. Compose must not overlay
 // MYRIAD_TAG / PROXY_TAG / UPDATER_TAG as MYRIAD_VERSION.
 assert.doesNotMatch(main, /MYRIAD_VERSION:\s*\\\$\{(?:MYRIAD_TAG|PROXY_TAG|UPDATER_TAG)\}/)
@@ -329,5 +331,37 @@ assert.match(generatedStandard.env, /^MALLOC_ARENA_MAX=4$/m)
 assert.match(generatedStandard.compose, /MALLOC_ARENA_MAX: \$\{MALLOC_ARENA_MAX:-4\}/)
 assert.match(generate({ limitPreset: 'small' }).env, /^MALLOC_ARENA_MAX=2$/m)
 assert.match(generate({ limitPreset: 'large' }).env, /^MALLOC_ARENA_MAX=8$/m)
+
+function loadReleaseHelpers() {
+  const semverStart = main.indexOf('function parseVersionTag')
+  const semverEnd = main.indexOf('function pickLatestVersionedTag')
+  const start = main.indexOf('function extractGithubReleases')
+  const end = main.indexOf('async function fetchGithubReleases')
+  assert.ok(semverStart > 0 && semverEnd > semverStart && start > 0 && end > start)
+  return new Function(
+    main.slice(semverStart, semverEnd) + '\n' + main.slice(start, end) +
+    '; return { extractGithubReleases, parseReleaseImages, pickConfirmedGithubRelease };'
+  )()
+}
+
+const releases = loadReleaseHelpers()
+const sampleBody = [
+  '- backend: `docker.io/somekawahitomi/myriad-backend:v0.5.6` (`sha256:' + 'a'.repeat(64) + '`)',
+  '- frontend: `docker.io/somekawahitomi/myriad-frontend:v0.5.6` (`sha256:' + 'b'.repeat(64) + '`)',
+  '- proxy: `docker.io/somekawahitomi/myriad-proxy:v0.5.6` (`sha256:' + 'c'.repeat(64) + '`)',
+  '- updater: `docker.io/somekawahitomi/myriad-updater:v0.5.6` (`sha256:' + 'd'.repeat(64) + '`)'
+].join('\n')
+const confirmed = releases.pickConfirmedGithubRelease([
+  { draft: true, tag_name: 'v9.0.0', body: '' },
+  { draft: false, prerelease: false, tag_name: 'v0.5.5', body: '' },
+  { draft: false, prerelease: false, tag_name: 'v0.5.6', body: sampleBody }
+])
+assert.equal(confirmed.myriadTag, 'v0.5.6')
+assert.equal(confirmed.proxyTag, 'v0.5.6')
+assert.equal(confirmed.updaterTag, 'v0.5.6')
+assert.equal(confirmed.updaterDigest, 'd'.repeat(64))
+assert.equal(confirmed.versionAligned, true)
+assert.deepEqual(releases.extractGithubReleases({ data: [{ tag_name: 'v0.5.6' }] }).length, 1)
+assert.deepEqual(releases.extractGithubReleases({ results: [{ name: 'v1.2.4' }] }), [])
 
 console.log('config-generator security-smoke: ok')

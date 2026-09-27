@@ -553,7 +553,12 @@ var I18N_FALLBACK = {
   "error.dbHostStep": "请填写外置数据库的主机地址",
   "error.dbPasswordStep": "请填写外置数据库密码",
   "tags.loading": "正在获取最新版本…",
-  "tags.loadingHub": "正在从 Docker Hub 获取最新 versioned tag…",
+  "tags.loadingHub": "正在用 GitHub Release 确认版本，并查询 Docker Hub…",
+  "tags.githubConfirmed": "GitHub Release 已确认",
+  "tags.githubOnly": "Docker Hub 不可达，已按 GitHub Release 确认",
+  "tags.sourcesEmpty": "GitHub Release 与 Docker Hub 都没有可用的 versioned tag（vX.Y.Z）{detail}",
+  "tags.githubHttp": "GitHub HTTP {status}",
+  "tags.githubUnavailable": "当前环境无法请求 GitHub",
   "tags.aligned": "各仓独立最新",
   "tags.mismatch": "backend 与 frontend tag 不一致",
   "tags.partialFail": "部分仓库失败：{detail}",
@@ -782,9 +787,14 @@ function applyDoneResultChrome() {
 function applyResolvedTagStatus(resolved) {
   if (!resolved) return;
   var alignNote = resolved.versionAligned ? t('tags.aligned') : t('tags.mismatch');
-  var failNote = (resolved.failures && resolved.failures.length)
+  var sourceNote = '';
+  if (resolved.githubConfirmed) {
+    sourceNote = ' · ' + (resolved.hubConfirmed ? t('tags.githubConfirmed') : t('tags.githubOnly'));
+  }
+  var showHubFailures = resolved.failures && resolved.failures.length && !resolved.githubConfirmed;
+  var failNote = sourceNote + (showHubFailures
     ? ' · ' + t('tags.partialFail', { detail: resolved.failures.join('; ') })
-    : '';
+    : '');
   setTagStatus(
     t('tags.resolved', {
       myriad: resolved.myriadTag,
@@ -793,7 +803,7 @@ function applyResolvedTagStatus(resolved) {
       align: alignNote,
       fail: failNote
     }),
-    resolved.failures && resolved.failures.length ? 'error' : 'ok'
+    showHubFailures ? 'error' : 'ok'
   );
 }
 
@@ -2328,6 +2338,79 @@ async function fetchDockerHubTags(repo) {
   throw new Error(t('tags.hubUnavailable'));
 }
 
+function extractGithubReleases(data) {
+  var payload = data;
+  if (payload && payload.data && (Array.isArray(payload.data) || payload.data.tag_name)) {
+    payload = payload.data;
+  }
+  if (Array.isArray(payload)) return payload;
+  return [];
+}
+
+function parseReleaseImages(body) {
+  var images = {};
+  var re = /- (backend|frontend|proxy|updater): `([^`]+)`(?: \(`(sha256:[a-fA-F0-9]{64})`\))?/g;
+  var match;
+  while ((match = re.exec(String(body || '')))) {
+    var ref = match[2];
+    var tagMatch = ref.match(/:([^:@]+)$/);
+    var tag = tagMatch ? tagMatch[1] : '';
+    if (!parseVersionTag(tag)) continue;
+    images[match[1]] = {
+      tag: tag,
+      digest: match[3] ? match[3].slice('sha256:'.length).toLowerCase() : null
+    };
+  }
+  return images;
+}
+
+function pickConfirmedGithubRelease(releases) {
+  var parsed = [];
+  var i;
+  for (i = 0; i < releases.length; i++) {
+    var rel = releases[i];
+    if (!rel || rel.draft) continue;
+    var tag = parseVersionTag(rel.tag_name);
+    if (!tag) continue;
+    parsed.push({ release: rel, parsed: tag });
+  }
+  if (!parsed.length) return null;
+  parsed.sort(function (a, b) { return compareSemver(b.parsed, a.parsed); });
+  var best = parsed[0];
+  var images = parseReleaseImages(best.release.body);
+  var backendTag = images.backend && images.backend.tag;
+  var frontendTag = images.frontend && images.frontend.tag;
+  var myriadTag = (backendTag && frontendTag && backendTag === frontendTag)
+    ? backendTag
+    : (backendTag || frontendTag || best.parsed.raw);
+  return {
+    tag: best.parsed.raw,
+    myriadTag: myriadTag,
+    proxyTag: (images.proxy && images.proxy.tag) || best.parsed.raw,
+    updaterTag: (images.updater && images.updater.tag) || best.parsed.raw,
+    updaterDigest: (images.updater && images.updater.digest) || '',
+    versionAligned: !(backendTag && frontendTag && backendTag !== frontendTag)
+  };
+}
+
+async function fetchGithubReleases() {
+  // 列表接口直接返回 JSON，不跟随 release asset 的 302。
+  if (typeof Tapp !== 'undefined' && typeof Tapp.api === 'function') {
+    return extractGithubReleases(await Tapp.api('githubReleases', {}));
+  }
+  if (typeof fetch === 'function') {
+    var resp = await fetch('https://api.github.com/repos/Myriad-You/Myriad/releases?per_page=20', {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'Myriad-Config-Generator (https://github.com/Myriad-You/tapp-store)'
+      }
+    });
+    if (!resp.ok) throw new Error(t('tags.githubHttp', { status: resp.status }));
+    return extractGithubReleases(await resp.json());
+  }
+  throw new Error(t('tags.githubUnavailable'));
+}
+
 function setTagStatus(message, kind) {
   var el = document.getElementById('tag-status');
   if (!el) return;
@@ -2375,56 +2458,90 @@ function applyResolvedTags(resolved, inputs, channelSelect, opts) {
   }
 }
 
+function hubListsContain(list, tag) {
+  if (!tag || !list) return false;
+  for (var i = 0; i < list.length; i++) {
+    if (list[i] === tag) return true;
+  }
+  return false;
+}
+
 async function resolveLatestImageTags() {
-  // allSettled：单个仓库失败不拖垮整次解析
+  // GitHub Release 确认正式版本。服务区经常连不上 Docker Hub，不能让 Hub 失败拖垮确认。
   var settled = await Promise.allSettled([
     fetchDockerHubTags(DOCKER_REPOS.backend),
     fetchDockerHubTags(DOCKER_REPOS.frontend),
     fetchDockerHubTags(DOCKER_REPOS.proxy),
-    fetchDockerHubTags(DOCKER_REPOS.updater)
+    fetchDockerHubTags(DOCKER_REPOS.updater),
+    fetchGithubReleases()
   ]);
-  var names = ['backend', 'frontend', 'proxy', 'updater'];
-  var lists = settled.map(function (r) {
-    return r.status === 'fulfilled' && Array.isArray(r.value) ? r.value : [];
-  });
+  var names = ['backend', 'frontend', 'proxy', 'updater', 'github'];
   var failures = [];
-  for (var i = 0; i < settled.length; i++) {
+  var i;
+  for (i = 0; i < settled.length; i++) {
     if (settled[i].status === 'rejected') {
       var reason = settled[i].reason;
       failures.push(names[i] + ': ' + ((reason && reason.message) ? reason.message : String(reason)));
     }
   }
-  var backendTags = lists[0];
-  var frontendTags = lists[1];
-  var proxyTags = lists[2];
-  var updaterTags = lists[3];
+  function listAt(index) {
+    var row = settled[index];
+    return row.status === 'fulfilled' && Array.isArray(row.value) ? row.value : [];
+  }
+  var backendTags = listAt(0);
+  var frontendTags = listAt(1);
+  var proxyTags = listAt(2);
+  var updaterTags = listAt(3);
+  var confirmed = pickConfirmedGithubRelease(listAt(4));
 
   // MYRIAD_TAG is shared by backend + frontend. PROXY_TAG and UPDATER_TAG
   // each take that image's own latest versioned tag — do not pin all four together.
   var businessCommon = pickLatestCommonVersionedTag([backendTags, frontendTags]);
-  var myriadTag = businessCommon || pickLatestVersionedTag(backendTags) || pickLatestVersionedTag(frontendTags);
-  var proxyTag = pickLatestVersionedTag(proxyTags) || '';
-  var updaterTag = pickLatestVersionedTag(updaterTags) || '';
+  var hubMyriad = businessCommon || pickLatestVersionedTag(backendTags) || pickLatestVersionedTag(frontendTags) || '';
+  var hubProxy = pickLatestVersionedTag(proxyTags) || '';
+  var hubUpdater = pickLatestVersionedTag(updaterTags) || '';
 
-  if (!myriadTag && !proxyTag && !updaterTag) {
+  if (confirmed) {
+    var myriadTag = confirmed.myriadTag || hubMyriad;
+    var proxyTag = confirmed.proxyTag || hubProxy || confirmed.tag;
+    var updaterTag = confirmed.updaterTag || hubUpdater || confirmed.tag;
+    return {
+      myriadTag: myriadTag,
+      proxyTag: proxyTag,
+      updaterTag: updaterTag,
+      updaterDigest: confirmed.updaterDigest || '',
+      githubConfirmed: true,
+      hubConfirmed: hubListsContain(backendTags, myriadTag) || hubListsContain(frontendTags, myriadTag),
+      backendCount: backendTags.length,
+      frontendCount: frontendTags.length,
+      proxyCount: proxyTags.length,
+      updaterCount: updaterTags.length,
+      failures: failures,
+      versionAligned: confirmed.versionAligned,
+      commonTag: confirmed.tag
+    };
+  }
+
+  if (!hubMyriad && !hubProxy && !hubUpdater) {
     var detail = failures.length ? '（' + failures.join('; ') + '）' : '';
-    throw new Error(t('tags.hubEmpty', { detail: detail }));
+    throw new Error(t('tags.sourcesEmpty', { detail: detail }));
   }
 
   var backendLatest = pickLatestVersionedTag(backendTags);
   var frontendLatest = pickLatestVersionedTag(frontendTags);
-  var aligned = !(backendLatest && frontendLatest && backendLatest !== frontendLatest);
-
   return {
-    myriadTag: myriadTag || '',
-    proxyTag: proxyTag || '',
-    updaterTag: updaterTag || '',
+    myriadTag: hubMyriad,
+    proxyTag: hubProxy,
+    updaterTag: hubUpdater,
+    updaterDigest: '',
+    githubConfirmed: false,
+    hubConfirmed: true,
     backendCount: backendTags.length,
     frontendCount: frontendTags.length,
     proxyCount: proxyTags.length,
     updaterCount: updaterTags.length,
     failures: failures,
-    versionAligned: aligned,
+    versionAligned: !(backendLatest && frontendLatest && backendLatest !== frontendLatest),
     commonTag: businessCommon || ''
   };
 }
@@ -2447,6 +2564,9 @@ async function refreshLatestTags(inputs, channelSelect, opts) {
     try {
       var resolved = await resolveLatestImageTags();
       tagFetchState.lastResolved = resolved;
+      tagFetchState.confirmedDigest = (resolved.updaterDigest && resolved.updaterTag)
+        ? { tag: resolved.updaterTag, digest: resolved.updaterDigest }
+        : null;
       // 手动点「刷新」时强制覆盖；自动拉取只填空/自动字段
       applyResolvedTags(resolved, inputs, channelSelect, { force: !!opts.force });
       applyResolvedTagStatus(resolved);
@@ -3623,6 +3743,7 @@ function initPage() {
   function markTagManual(input) {
     if (!input) return;
     input.dataset.autoFilled = 'false';
+    if (input.id === 'updater-tag') tagFetchState.confirmedDigest = null;
   }
 
   [myriadTagInput, proxyTagInput, updaterTagInput].forEach(function(input) {
@@ -3945,6 +4066,10 @@ function initPage() {
       state.myriadDigest = myriadRef.digest;
       state.proxyDigest = proxyRef.digest;
       state.updaterDigest = updaterRef.digest;
+      if (!state.updaterDigest && tagFetchState.confirmedDigest &&
+          tagFetchState.confirmedDigest.tag === state.updaterTag) {
+        state.updaterDigest = tagFetchState.confirmedDigest.digest;
+      }
       if (!state.updaterDigest) {
         try {
           var resolvedUpdaterDigest = await resolveUpdaterDigest(state.updaterTag);
