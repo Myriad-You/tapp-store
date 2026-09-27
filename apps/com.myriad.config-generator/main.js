@@ -4457,8 +4457,8 @@ function generateConfigs() {
       '# POSTGRES_USER=' + state.dbUser + '\n';
   }
 
-  deployMkdir = 'cd ' + state.composeHostRoot + '\n' + deployMkdir;
-  deployMkdir += '\n' + Storage.preparation(upgradeSession.legacy ? upgradeSession.legacy.storage : Storage.layout(), state.composeHostRoot, upgradeSession.legacy ? upgradeSession.legacy.project : 'myriad');
+  deployMkdir = 'cd ' + state.composeHostRoot + ' || exit 1\n' +
+    Storage.preparation(upgradeSession.legacy ? upgradeSession.legacy.storage : Storage.layout(), state.composeHostRoot, upgradeSession.legacy ? upgradeSession.legacy.project : 'myriad') + '\n' + deployMkdir;
 
   var extraNetworkName = isExternal ? (state.dbExtraNetwork || '').trim() : '';
   var backendExtraNetworkRef = extraNetworkName ? ', myriad-backend-ext' : '';

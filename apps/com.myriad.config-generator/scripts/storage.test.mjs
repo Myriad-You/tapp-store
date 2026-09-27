@@ -105,3 +105,13 @@ test('persisted handoff selectors cannot bypass the selected updater compatibili
     assert.throws(()=>engine.inspectLegacy(g.compose,g.env+'\n'+key+'=old:secret-needle\n'),e=>/handoff-only/.test(e.message)&&!e.message.includes('secret-needle'));
   }
 });
+
+test('both host command blocks validate physical storage before other directory writes',()=>{
+  const notes=generate().notes;
+  const blocks=[...notes.matchAll(/```(?:sh|bash)\n([\s\S]*?)```/g)].map(m=>m[1]).filter(b=>b.includes('# BEGIN MYRIAD STORAGE PREPARATION'));
+  assert.equal(blocks.length,2);
+  for(const block of blocks) {
+    assert.ok(block.indexOf('# END MYRIAD STORAGE PREPARATION') < block.indexOf('chown -R 70:70'));
+    assert.match(block,/^cd \S+ \|\| exit 1/m);
+  }
+});
