@@ -1,7 +1,7 @@
 {
   "id": "io.github.xingjianya-86.bat-toolbox",
   "name": "银河球棒侠",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "米游社扫码绑定后展示星穹铁道账号资料、开拓力委托、角色简表、混沌回忆/虚构叙事/末日幻影战绩，并提供 2x2 / 4x2 / 4x4 桌面小组件",
   "locales": {
     "en-US": {
