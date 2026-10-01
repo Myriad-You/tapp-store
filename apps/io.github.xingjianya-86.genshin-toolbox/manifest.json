@@ -1,7 +1,7 @@
 {
   "id": "io.github.xingjianya-86.genshin-toolbox",
   "name": "应急食品",
-  "version": "1.6.6",
+  "version": "1.6.7",
   "description": "米游社扫码绑定后展示原神账号资料、树脂委托、角色简表、深境螺旋与幻想真境剧诗战绩，并提供 2x2 / 4x2 / 4x4 桌面小组件",
   "locales": {
     "en-US": {

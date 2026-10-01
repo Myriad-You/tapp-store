@@ -19,13 +19,14 @@ const ABYSS_TTL = 30 * 60 * 1000;
 const CONFIG_KEY = "genshin.config.v1";
 const WIDGET_DEBUG_KEY = "genshin.widget.v1";
 const OBC_KEY = "genshin.obc.v1";
-const ASSET_BATCH = 30;
+const ASSET_BATCH = 120;
 const DEVICE_KEY = "genshin.device.v1";
 const DEVICE_RETRY = 60 * 60 * 1000;
 const ASSETS_KEY = "genshin.assets.v1";
 const ASSET_SIZE = 48;
 const ASSET_MAX_BYTES = 50 * 1024;
-const ASSET_TOTAL_BYTES = 4 * 1024 * 1024;
+const ASSET_SHARD_COUNT = 4;
+const ASSET_SHARD_MAX_BYTES = 900 * 1024;
 const ASSET_RETRY = 7 * 24 * 60 * 60 * 1000;
 const DEFAULT_DEVICE_PROFILE = {
   deviceModel: "PHK110",
@@ -730,26 +731,62 @@ function formatMonthDay(value) {
 
 let assetMemory = null;
 
-async function getAssetMap() {
-  try {
-    const raw = await Tapp.shared.get(ASSETS_KEY);
-    if (raw && typeof raw === "object" && raw.items && typeof raw.items === "object") {
-      if (!raw.failed || typeof raw.failed !== "object") raw.failed = {};
-      return raw;
-    }
-  } catch (err) {
-    /* ignore */
+function assetShardIndex(url) {
+  let hash = 0;
+  for (let i = 0; i < url.length; i++) {
+    hash = (hash * 31 + url.charCodeAt(i)) >>> 0;
   }
-  return { items: {}, failed: {}, updatedAt: 0 };
+  return hash % ASSET_SHARD_COUNT;
+}
+
+function assetShardKey(index) {
+  return ASSETS_KEY + "." + index;
+}
+
+async function getAssetMap() {
+  const merged = { items: {}, failed: {}, updatedAt: 0 };
+  const keys = [ASSETS_KEY];
+  for (let i = 0; i < ASSET_SHARD_COUNT; i++) keys.push(assetShardKey(i));
+  for (const key of keys) {
+    try {
+      const raw = await Tapp.shared.get(key);
+      if (!raw || typeof raw !== "object" || !raw.items || typeof raw.items !== "object") continue;
+      Object.assign(merged.items, raw.items);
+      if (raw.failed && typeof raw.failed === "object") Object.assign(merged.failed, raw.failed);
+      if (typeof raw.updatedAt === "number" && raw.updatedAt > merged.updatedAt) {
+        merged.updatedAt = raw.updatedAt;
+      }
+    } catch (err) {
+      /* ignore */
+    }
+  }
+  return merged;
 }
 
 async function setAssetMap(map) {
-  try {
-    await Tapp.shared.set(ASSETS_KEY, map);
-    assetMemory = map;
-  } catch (err) {
-    /* ignore */
+  const shards = [];
+  for (let i = 0; i < ASSET_SHARD_COUNT; i++) {
+    shards.push({ items: {}, failed: {}, updatedAt: map.updatedAt || 0 });
   }
+  Object.keys(map.items).forEach(function (url) {
+    shards[assetShardIndex(url)].items[url] = map.items[url];
+  });
+  Object.keys(map.failed).forEach(function (url) {
+    shards[assetShardIndex(url)].failed[url] = map.failed[url];
+  });
+  for (let i = 0; i < ASSET_SHARD_COUNT; i++) {
+    try {
+      await Tapp.shared.set(assetShardKey(i), shards[i]);
+    } catch (err) {
+      /* 单分片超限时保留其余分片 */
+    }
+  }
+  try {
+    await Tapp.shared.remove(ASSETS_KEY);
+  } catch (err) {
+    /* 旧单桶残留由 getAssetMap 继续合并读取 */
+  }
+  assetMemory = map;
 }
 
 async function loadAssets(force) {
@@ -872,22 +909,26 @@ function loadImageDataUrl(url) {
 }
 
 async function cacheAssets(cache, limit) {
+  if ((await getRole()) !== "admin") return false;
   const map = await getAssetMap();
   const urls = collectAssetUrls(cache);
   const now = Date.now();
-  let total = 0;
-  let processed = 0;
+  const shardBytes = [];
+  for (let i = 0; i < ASSET_SHARD_COUNT; i++) shardBytes.push(0);
   Object.keys(map.items).forEach(function (key) {
-    total += map.items[key] && map.items[key].data ? map.items[key].data.length : 0;
+    const item = map.items[key];
+    if (item && item.data) shardBytes[assetShardIndex(key)] += item.data.length;
   });
+  let processed = 0;
   let changed = false;
   for (let i = 0; i < urls.length; i++) {
     const url = urls[i];
     if (map.items[url]) continue;
     const failedAt = map.failed[url] || 0;
     if (failedAt && now - failedAt < ASSET_RETRY) continue;
-    if (total >= ASSET_TOTAL_BYTES) break;
     if (limit && processed >= limit) break;
+    const shard = assetShardIndex(url);
+    if (shardBytes[shard] >= ASSET_SHARD_MAX_BYTES) continue;
     processed++;
     const data = await loadImageDataUrl(url);
     if (!data || data.length > ASSET_MAX_BYTES) {
@@ -895,8 +936,9 @@ async function cacheAssets(cache, limit) {
       changed = true;
       continue;
     }
+    if (shardBytes[shard] + data.length > ASSET_SHARD_MAX_BYTES) continue;
     map.items[url] = { data: data, at: now };
-    total += data.length;
+    shardBytes[shard] += data.length;
     changed = true;
     await sleep(120);
   }
@@ -914,7 +956,7 @@ async function cacheAssets(cache, limit) {
   } else {
     assetMemory = map;
   }
-  return map;
+  return changed;
 }
 
 function probeImage(url) {
@@ -1133,11 +1175,14 @@ function scheduleAssetCache(cache) {
   if (assetCacheRunning) return;
   assetCacheRunning = true;
   setTimeout(function () {
-    cacheAssets(cache, ASSET_BATCH).catch(function () {
-      /* ignore */
-    }).then(function () {
-      assetCacheRunning = false;
-    });
+    cacheAssets(cache, ASSET_BATCH)
+      .catch(function () {
+        return false;
+      })
+      .then(function (changed) {
+        assetCacheRunning = false;
+        if (changed && cache) scheduleAssetCache(cache);
+      });
   }, 0);
 }
 
