@@ -1,0 +1,121 @@
+/* 手账笔记 · 商店预览样式（仅预览页，非运行时） */
+
+:root {
+  --tapp-primary: #f59e0b;
+  --text-primary: #f3f4f6;
+  --text-secondary: #b0b6be;
+  --text-tertiary: #8b949e;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  color: var(--text-primary);
+  background:
+    radial-gradient(1000px 520px at 12% -8%, rgba(245, 158, 11, 0.16), transparent 62%),
+    radial-gradient(860px 460px at 92% 108%, rgba(245, 158, 11, 0.1), transparent 60%),
+    #0d1117;
+}
+
+.pv-stage {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 44px;
+  padding: 72px 64px;
+}
+
+.pv-head {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.pv-logo {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pv-headings h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.pv-sub {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-left: 8px;
+}
+
+.pv-headings p {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--text-tertiary);
+}
+
+.pv-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 56px;
+  flex-wrap: wrap;
+}
+
+.pv-cell {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.pv-cell .jn-root {
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.42),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.pv-cell .jn-2x2 {
+  width: 200px;
+  height: 200px;
+}
+
+.pv-cell .jn-4x2 {
+  width: 400px;
+  height: 200px;
+}
+
+.pv-cell .jn-4x4 {
+  width: 400px;
+  height: 400px;
+}
+
+.pv-cell figcaption {
+  font-size: 13px;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.pv-foot {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  font-size: 13px;
+  color: var(--text-tertiary);
+}

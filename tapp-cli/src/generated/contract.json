@@ -1749,7 +1749,11 @@
       "ui:notification": "basic",
       "ui:openUrl": "basic",
       "ui:theme": "basic",
-      "widget:register": "privileged"
+      "widget:register": "privileged",
+      "phantasi:read": "basic",
+      "phantasi:write": "basic",
+      "phantasi:commentWrite": "elevated",
+      "phantasi:manage": "privileged"
     },
     "actions": {
       "lifecycle.ready": "public",
@@ -2020,7 +2024,32 @@
       "federation.getTransfer": "federation:files",
       "federation.downloadTransfer": "federation:files",
       "federation.uploadChunk": "federation:files",
-      "federation.cancelTransfer": "federation:files"
+      "federation.cancelTransfer": "federation:files",
+      "phantasiList.list": "phantasi:read",
+      "phantasiList.get": "phantasi:read",
+      "phantasiList.sources": "phantasi:read",
+      "phantasiList.categories": "phantasi:read",
+      "phantasiList.stats": "phantasi:read",
+      "phantasiList.exportOpml": "phantasi:read",
+      "phantasiList.getComments": "phantasi:read",
+      "phantasiList.getReplies": "phantasi:read",
+      "phantasiList.discover": "phantasi:manage",
+      "phantasiList.addSource": "phantasi:manage",
+      "phantasiList.updateSource": "phantasi:manage",
+      "phantasiList.deleteSource": "phantasi:manage",
+      "phantasiList.refreshSource": "phantasi:manage",
+      "phantasiList.importOpml": "phantasi:manage",
+      "phantasiList.createCategory": "phantasi:manage",
+      "phantasiList.deleteCategory": "phantasi:manage",
+      "phantasiList.markRead": "phantasi:write",
+      "phantasiList.markUnread": "phantasi:write",
+      "phantasiList.markAllRead": "phantasi:write",
+      "phantasiList.star": "phantasi:write",
+      "phantasiList.unstar": "phantasi:write",
+      "phantasiList.createComment": "phantasi:commentWrite",
+      "phantasiList.updateComment": "phantasi:commentWrite",
+      "phantasiList.deleteComment": "phantasi:commentWrite",
+      "phantasiList.createReply": "phantasi:commentWrite"
     }
   },
   "capabilities": {
