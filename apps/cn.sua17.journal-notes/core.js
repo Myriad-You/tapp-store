@@ -221,11 +221,23 @@ async function fillContents(api, notes, maxChars) {
   await Promise.all(workers)
 }
 
-async function writeStatus(ok, error) {
+// 识别“未登录 / 未授权”类失败：游客模式下 phantasiList 会被登录校验拒绝。
+// 这类失败重试无意义，交由 Widget 展示“需要登录”状态。
+function classifySyncError(error) {
+  var msg = String((error && (error.message || error.error)) || error || '')
+  var extra = error && (error.status || error.code || error.statusCode)
+  var s = msg + ' ' + extra
+  return /(401|403|unauthorized|forbidden|unauthenticated|not[\s-]?authenticated|credential|session|log[\s-]?in|sign[\s-]?in|\bauth\b|未登录|登录|登陆|授权|认证|会话|令牌|权限不足)/i.test(s)
+    ? 'auth'
+    : 'error'
+}
+
+async function writeStatus(ok, error, code) {
   try {
     await Tapp.storage.set(STATUS_KEY, {
       lastSyncAt: Date.now(),
       ok: !!ok,
+      code: ok ? '' : (code || 'error'),
       error: ok ? '' : truncate(String((error && error.message) || error || ''), 200),
     })
   } catch (e) {
@@ -266,7 +278,7 @@ async function syncNotes() {
     await writeStatus(true)
   } catch (error) {
     console.warn('[journal-notes] sync failed', error)
-    await writeStatus(false, error)
+    await writeStatus(false, error, classifySyncError(error))
   } finally {
     syncState.running = false
     if (syncState.pending) {

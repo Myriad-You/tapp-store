@@ -29,6 +29,8 @@ var I18N = {
     updated: function (time) { return '更新于 ' + time },
     expandHint: '点击展开全文',
     minRead: function (n) { return n + ' 分钟阅读' },
+    authTitle: '需要登录',
+    authHint: '游客模式无法同步手账，登录 Myriad 后点重试',
   },
   'en-US': {
     title: 'Journal',
@@ -44,6 +46,8 @@ var I18N = {
     updated: function (time) { return 'Updated ' + time },
     expandHint: 'Tap to read',
     minRead: function (n) { return n + ' min read' },
+    authTitle: 'Sign in required',
+    authHint: 'Guest mode cannot sync — sign in to Myriad, then retry',
   },
   'ja-JP': {
     title: 'ジャーナル',
@@ -59,6 +63,8 @@ var I18N = {
     updated: function (time) { return time + ' 更新' },
     expandHint: 'タップで読む',
     minRead: function (n) { return n + '分で読めます' },
+    authTitle: 'ログインが必要です',
+    authHint: 'ゲストモードでは同期できません。Myriad にログインして再試行',
   },
 }
 
@@ -264,10 +270,13 @@ function buildState(ctx, kind) {
   root.innerHTML = ''
   root.appendChild(buildHead(ctx, null))
   var body = el('main', 'jn-body jn-state')
-  var icon = el('span', 'jn-state-icon', kind === 'error' ? '⚠️' : '📖')
-  body.appendChild(icon)
-  if (kind === 'error') {
-    body.appendChild(el('span', 'jn-state-title', tr(ctx.locale, 'errorTitle')))
+  var iconChar = kind === 'error' ? '⚠️' : kind === 'auth' ? '🔒' : '📖'
+  body.appendChild(el('span', 'jn-state-icon', iconChar))
+  if (kind === 'error' || kind === 'auth') {
+    body.appendChild(
+      el('span', 'jn-state-title', tr(ctx.locale, kind === 'auth' ? 'authTitle' : 'errorTitle')),
+    )
+    if (kind === 'auth') body.appendChild(el('span', 'jn-state-hint', tr(ctx.locale, 'authHint')))
     var retry = el('button', 'jn-state-btn', tr(ctx.locale, 'retry'))
     retry.setAttribute('type', 'button')
     retry.setAttribute('data-jn-retry', '1')
@@ -477,14 +486,17 @@ function paint(ctx) {
   var notes = payloadNotes(ctx.payload)
   var status = ctx.status && typeof ctx.status === 'object' ? ctx.status : null
   var hadPayload = !!ctx.payload
+  var isAuth = !!(status && status.ok === false && status.code === 'auth')
 
   if (!hadPayload) {
-    if (status && status.ok === false) buildState(ctx, 'error')
+    if (isAuth) buildState(ctx, 'auth')
+    else if (status && status.ok === false) buildState(ctx, 'error')
     else buildSkeleton(ctx)
     return
   }
   if (!notes.length) {
-    if (status && status.ok === false) buildState(ctx, 'error')
+    if (isAuth) buildState(ctx, 'auth')
+    else if (status && status.ok === false) buildState(ctx, 'error')
     else buildState(ctx, 'empty')
     return
   }
