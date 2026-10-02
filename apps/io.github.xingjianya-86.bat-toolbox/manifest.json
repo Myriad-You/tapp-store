@@ -1,7 +1,7 @@
 {
   "id": "io.github.xingjianya-86.bat-toolbox",
   "name": "银河球棒侠",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "米游社扫码绑定后展示星穹铁道账号资料、开拓力委托、角色简表、混沌回忆/虚构叙事/末日幻影战绩，并提供 2x2 / 4x2 / 4x4 桌面小组件",
   "locales": {
     "en-US": {
@@ -38,6 +38,11 @@
       "id": "sr-wiki",
       "url": "https://bbs.mihoyo.com/sr/wiki/content/",
       "match": "prefix"
+    },
+    {
+      "id": "self",
+      "url": "/",
+      "match": "same-origin"
     }
   ],
   "iconSvg": "<svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><rect width='24' height='24' rx='7' fill='#2b3357'/><path d='M4 15.2c3.6 0 5.2-2.6 7.2-5.2 1.6-2.1 3-3.6 5.4-3.6 2.1 0 3.4 1.2 3.4 2.7 0 1.4-1 2.4-2.6 2.4-.8 0-1.4-.2-2-.5-.5 1.3-2.4 3.9-5.2 5.6-2.2 1.4-4.4 2-6.2 2z' fill='#ffcf4d'/><circle cx='17.4' cy='10.4' r='1.2' fill='#2b3357'/></svg>",
