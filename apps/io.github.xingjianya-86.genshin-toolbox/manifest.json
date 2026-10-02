@@ -1,7 +1,7 @@
 {
   "id": "io.github.xingjianya-86.genshin-toolbox",
   "name": "应急食品",
-  "version": "1.6.7",
+  "version": "1.6.8",
   "description": "米游社扫码绑定后展示原神账号资料、树脂委托、角色简表、深境螺旋与幻想真境剧诗战绩，并提供 2x2 / 4x2 / 4x4 桌面小组件",
   "locales": {
     "en-US": {
@@ -35,6 +35,11 @@
       "id": "obc-character",
       "url": "https://baike.mihoyo.com/ys/obc/content/",
       "match": "prefix"
+    },
+    {
+      "id": "self",
+      "url": "/",
+      "match": "same-origin"
     }
   ],
   "iconSvg": "<svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><rect width='24' height='24' rx='7' fill='#3b4a6b'/><path d='M12 3.6l2.2 4.9 5.3.6-4 3.6 1.1 5.3L12 15.4l-4.6 2.6 1.1-5.3-4-3.6 5.3-.6z' fill='#ffe08a' stroke='#ffd166' stroke-width='0.8' stroke-linejoin='round'/><circle cx='12' cy='12.4' r='2.1' fill='#3b4a6b'/></svg>",
