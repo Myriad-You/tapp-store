@@ -124,6 +124,22 @@
   min-width: 0;
 }
 
+.jn-badge-ro {
+  flex: none;
+  max-width: 40%;
+  padding: calc(2px * var(--jn-scale)) calc(7px * var(--jn-scale));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--jn-text-3) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--jn-text-3) 26%, transparent);
+  color: var(--jn-text-3);
+  font-size: calc(9px * var(--jn-font));
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .jn-count {
   flex: none;
   font-size: calc(10px * var(--jn-font));
@@ -668,6 +684,19 @@
 .jn-state-hint {
   font-size: calc(10.5px * var(--jn-font));
   color: var(--jn-text-3);
+}
+
+.jn-state-detail {
+  font-size: calc(9.5px * var(--jn-font));
+  color: var(--jn-text-3);
+  opacity: 0.85;
+  max-width: calc(100% - 16px);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-all;
+  line-height: 1.35;
 }
 
 .jn-state-btn {
