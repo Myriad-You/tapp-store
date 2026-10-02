@@ -124,6 +124,22 @@
   min-width: 0;
 }
 
+.jn-badge-ro {
+  flex: none;
+  max-width: 40%;
+  padding: calc(2px * var(--jn-scale)) calc(7px * var(--jn-scale));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--jn-text-3) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--jn-text-3) 26%, transparent);
+  color: var(--jn-text-3);
+  font-size: calc(9px * var(--jn-font));
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .jn-count {
   flex: none;
   font-size: calc(10px * var(--jn-font));

@@ -15,9 +15,10 @@
 - **三种尺寸**：2×2 双条速览 · 4×2 封面分区 · 4×4 缩略图笔记墙
 - **缩略图**：封面/正文首图同源化后展示；CSP 不放行的外链自动降级为按笔记生成的渐变占位，永不破图
 - **阅读状态**：未读高亮圆点与加粗、星标 ★ 角标、浮层内显示阅读时长
-- **点击展开**：在小组件内以浮层阅读笔记全文（带封面头图）
+- **点击外开**：点击笔记直接在浏览器新标签打开原文（`sua17.cn` 白名单内），未命中白名单回退小组件内浮层
+- **仅管理员同步**：admin 账号才触发同步刷新；游客显示「需要登录」，普通账号只读，双方都只读缓存（带「只读缓存」角标）
 - **headless 后台同步**：安装后常驻同步，页面不开也保持最新
-- **事件驱动刷新**：headless 写入 storage 后宿主自动刷新可见小组件
+- **事件驱动刷新**：headless 写入 storage 后宿主自动刷新可见小组件；无数据变化不写入、不重挂载，不再频繁闪骨架
 - **可配置**：最大笔记数、同步间隔、是否同步正文
 - **主题适配**：跟随宿主明暗主题、字体缩放与主题色
 - **多语言**：简体中文、英文、日文
@@ -35,17 +36,20 @@ headless core (core.js)
   │   走 /api/proxy/image、其余外链原样保留交渲染层降级
   ├─ Tapp.storage.set('journal.notes.payload', …)
   ├─ Tapp.scheduler 按 syncInterval 周期同步
-  └─ 监听 storage ping，小组件可见且数据过旧时触发即时同步
+  ├─ 监听 storage ping，管理员可见且数据过旧时触发即时同步
+  └─ 角色门槛：仅 admin 同步；diag 标记（loaded/ready/sync-start）供超时定位
 
 Widget (widget/index.js)
   ├─ 幂等 render：读 storage 缓存 → 按 size 组装 DOM（textContent 防注入）
+  ├─ 角色分流：admin 正常渲染/同步；游客→需要登录；普通账号→只读 + 角标
   ├─ 缩略图渲染：同源/data: 才挂 <img>（懒加载 + 淡入），失败即移除，
   │   底层为 --jn-hue 渐变 + 首字占位
-  ├─ storage.onChanged 局部重绘
-  └─ 点击条目 → 全文浮层（z-30，带封面头图）
+  ├─ storage.onChanged 局部重绘；ping 新鲜度 = max(数据, 同步, ping)
+  └─ 点击条目 → ui.openUrl 新标签打开原文（白名单），未命中回退全文浮层
 ```
 
-同步状态记录在 `journal.notes.status`，失败时小组件展示错误态与重试按钮。
+同步状态记录在 `journal.notes.status`，失败时小组件展示错误态与原始错误详情；
+headless 无诊断产出时超时详情显示 `core: <阶段>` / `storage unavailable`。
 
 ## 目录
 
@@ -71,6 +75,7 @@ cn.sua17.journal-notes/
 | `storage:read`      | 小组件读取同步缓存与安装级设置                   |
 | `storage:write`     | headless 写入笔记缓存；小组件写入同步 ping        |
 | `scheduler:register`| 注册周期同步任务                                  |
+| `ui:openUrl`        | 点击笔记时在浏览器新标签打开白名单内原文（openUrls: `sua17.cn` / `www.sua17.cn`，origin 匹配） |
 
 ## 安装级默认设置
 
@@ -81,6 +86,13 @@ cn.sua17.journal-notes/
 | `fetchContent`  | toggle | true   | 同步正文，用于浮层阅读全文      |
 
 ## 更新日志
+
+### v1.1.0
+
+- **仅管理员同步**：admin 账号才 ping/同步；游客未登录显示 🔒 需要登录（不再转圈后报超时），普通账号只读提示，有缓存时只读渲染并带「只读缓存」角标
+- **修复刷新风暴**：ping 新鲜度改为 max(数据更新, 最近同步, 最近 ping)（最多 30 分钟一次）；无数据变化不再写 status → 宿主不再重挂载闪骨架
+- **点击外开**：命中 `openUrls` 白名单（`sua17.cn`）时新标签打开原文，未命中回退浮层
+- **超时诊断**：挂狗仅在完全无产出时触发、真实状态不再被 timeout 覆盖；超时详情显示 `core: loaded/ready/sync-start` 与 storage 可用性，core 同步中额外宽限 40 秒
 
 ### v1.0.2
 

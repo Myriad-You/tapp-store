@@ -10,6 +10,7 @@
 var PAYLOAD_KEY = 'journal.notes.payload'
 var STATUS_KEY = 'journal.notes.status'
 var PING_KEY = 'journal.notes.ping'
+var DIAG_KEY = 'journal.notes.diag'
 var SYNC_TASK_ID = 'journal-notes-sync'
 var PAGE_SIZE = 100
 var MAX_PAGES = 5
@@ -48,6 +49,50 @@ function getJournalApi() {
   var api = /** @type {any} */ (Tapp).phantasiList
   if (api && typeof api.list === 'function') return api
   return null
+}
+
+// 只有 headless / page 上下文参与同步与诊断标记（Widget 沙箱执行同一份 core 入口但不干活）。
+function inSyncContext() {
+  try {
+    var mode = typeof window !== 'undefined' ? window._TAPP_MODE : undefined
+    return mode === 'core' || mode === 'page'
+  } catch (e) {
+    return false
+  }
+}
+
+// 诊断标记：Widget 超时时读取，用于定位 headless 死在哪一步（loaded/ready/sync-start）。
+function diag(stage, extra) {
+  if (!inSyncContext()) return
+  try {
+    var record = { stage: stage, at: Date.now() }
+    if (extra) {
+      for (var key in extra) {
+        if (Object.prototype.hasOwnProperty.call(extra, key)) record[key] = extra[key]
+      }
+    }
+    var result = Tapp.storage.set(DIAG_KEY, record)
+    if (result && typeof result.catch === 'function') result.catch(function () {})
+  } catch (e) {}
+}
+
+// 仅 admin 账号同步刷新；guest / 普通 user 只读缓存（Widget 直接展示对应状态）。
+async function currentRole() {
+  try {
+    var user = /** @type {any} */ (Tapp).user
+    if (user && typeof user.getRole === 'function') {
+      var role = await user.getRole()
+      return typeof role === 'string' ? role : 'unknown'
+    }
+  } catch (e) {
+    console.warn('[journal-notes] getRole failed', e)
+  }
+  return 'unknown'
+}
+
+function roleAllowsSync(role) {
+  // 拿不到角色时放行（保持旧行为，后端仍会校验登录）
+  return role !== 'guest' && role !== 'user'
 }
 
 function clamp(value, min, max) {
@@ -264,6 +309,17 @@ function classifySyncError(error) {
 
 async function writeStatus(ok, error, code) {
   try {
+    if (ok) {
+      // 成功且此前已是成功态 → 跳过写入：任何 storage 写都会让宿主重挂载可见卡片（闪骨架），
+      // 无数据变化时不应产生可见刷新。
+      var prev = null
+      try {
+        prev = await Tapp.storage.get(STATUS_KEY)
+      } catch (e) {
+        prev = null
+      }
+      if (prev && typeof prev === 'object' && prev.ok === true) return
+    }
     await Tapp.storage.set(STATUS_KEY, {
       lastSyncAt: Date.now(),
       ok: !!ok,
@@ -275,14 +331,34 @@ async function writeStatus(ok, error, code) {
   }
 }
 
+// headless 重启后用缓存播种，避免首跑把相同 payload 再写一遍触发重挂载。
+function seedPayloadJson() {
+  try {
+    var result = Tapp.storage.get(PAYLOAD_KEY)
+    if (result && typeof result.then === 'function') {
+      result.then(function (payload) {
+        if (payload && Array.isArray(payload.notes)) {
+          syncState.lastPayloadJson = JSON.stringify({ notes: payload.notes })
+        }
+      }).catch(function () {})
+    }
+  } catch (e) {}
+}
+
 async function syncNotes() {
   var api = getJournalApi()
   if (!api) return
+  var role = await currentRole()
+  if (!roleAllowsSync(role)) {
+    diag('skip-role', { role: role })
+    return
+  }
   if (syncState.running) {
     syncState.pending = true
     return
   }
   syncState.running = true
+  diag('sync-start', { role: role })
   try {
     var settings = await readSettings()
     var maxNotes = clamp(settings.maxNotes || 20, 1, 100)
@@ -364,9 +440,13 @@ function listenForWidgetPings() {
   }
 }
 
+diag('loaded')
+
 Tapp.lifecycle.onReady(function () {
   // 只有具备 phantasiList 接口的沙箱（headless / page）才执行同步。
   if (!getJournalApi()) return
+  diag('ready', { mode: typeof window !== 'undefined' ? String(window._TAPP_MODE || '') : '' })
+  seedPayloadJson()
   syncNotes()
   schedulePeriodicSync()
   listenForWidgetPings()

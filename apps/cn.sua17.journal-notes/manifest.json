@@ -1,7 +1,7 @@
 {
   "id": "cn.sua17.journal-notes",
   "name": "手账笔记",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "minSystemVersion": "0.5.0",
   "description": "在主页小组件里速览 Myriad 手账（Phantasi）最新笔记：2×2 双条速览、4×2 横向分区、4×4 笔记墙，支持点击展开全文。headless 后台同步，桌面无开页也能保持最新。",
   "locales": {
@@ -26,7 +26,20 @@
     "phantasi:read",
     "storage:read",
     "storage:write",
-    "scheduler:register"
+    "scheduler:register",
+    "ui:openUrl"
+  ],
+  "openUrls": [
+    {
+      "id": "site",
+      "url": "https://sua17.cn",
+      "match": "origin"
+    },
+    {
+      "id": "site-www",
+      "url": "https://www.sua17.cn",
+      "match": "origin"
+    }
   ],
   "backgroundRequirements": [
     "scheduler",
