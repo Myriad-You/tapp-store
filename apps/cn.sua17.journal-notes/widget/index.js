@@ -277,6 +277,11 @@ function buildState(ctx, kind) {
       el('span', 'jn-state-title', tr(ctx.locale, kind === 'auth' ? 'authTitle' : 'errorTitle')),
     )
     if (kind === 'auth') body.appendChild(el('span', 'jn-state-hint', tr(ctx.locale, 'authHint')))
+    else if (ctx.status && ctx.status.error) {
+      var detail = String(ctx.status.error)
+      if (detail.length > 160) detail = detail.slice(0, 159) + '…'
+      body.appendChild(el('span', 'jn-state-detail', detail))
+    }
     var retry = el('button', 'jn-state-btn', tr(ctx.locale, 'retry'))
     retry.setAttribute('type', 'button')
     retry.setAttribute('data-jn-retry', '1')

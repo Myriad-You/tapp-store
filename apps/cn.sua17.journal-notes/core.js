@@ -221,13 +221,43 @@ async function fillContents(api, notes, maxChars) {
   await Promise.all(workers)
 }
 
+// 把 SDK 可能抛出的各种错误形态拍平成一行可读文本（供分类识别与界面展示）。
+function errorText(error) {
+  if (error == null) return ''
+  if (typeof error === 'string') return error
+  var parts = []
+  var msg = error.message || error.error || error.msg
+  if (typeof msg === 'string' && msg) parts.push(msg)
+  var code = error.code != null ? error.code : error.status != null ? error.status : error.statusCode
+  var resp = error.response
+  var respStatus = resp ? resp.status != null ? resp.status : resp.statusCode : null
+  var data = resp && resp.data != null ? resp.data : error.data
+  if (code != null) parts.push(String(code))
+  if (respStatus != null && String(respStatus) !== String(code)) parts.push(String(respStatus))
+  if (data != null) {
+    var dataText = ''
+    if (typeof data === 'string') dataText = data
+    else
+      try {
+        dataText = JSON.stringify(data)
+      } catch (e) {
+        dataText = ''
+      }
+    if (dataText) parts.push(dataText)
+  }
+  if (parts.length) return parts.join(' ')
+  try {
+    var json = JSON.stringify(error)
+    if (json && json !== '{}') return json
+  } catch (e) {}
+  return String(error)
+}
+
 // 识别“未登录 / 未授权”类失败：游客模式下 phantasiList 会被登录校验拒绝。
 // 这类失败重试无意义，交由 Widget 展示“需要登录”状态。
 function classifySyncError(error) {
-  var msg = String((error && (error.message || error.error)) || error || '')
-  var extra = error && (error.status || error.code || error.statusCode)
-  var s = msg + ' ' + extra
-  return /(401|403|unauthorized|forbidden|unauthenticated|not[\s-]?authenticated|credential|session|log[\s-]?in|sign[\s-]?in|\bauth\b|未登录|登录|登陆|授权|认证|会话|令牌|权限不足)/i.test(s)
+  var s = errorText(error)
+  return /(401|403|unauthorized|forbidden|unauthenticated|not[\s-]?authenticated|credential|session|token|jwt|log(?:ged)?[\s-]?in|sign[\s-]?in|\bauth\b|guest|未登录|登录|登陆|授权|认证|会话|令牌|凭证|权限不足|游客)/i.test(s)
     ? 'auth'
     : 'error'
 }
@@ -238,7 +268,7 @@ async function writeStatus(ok, error, code) {
       lastSyncAt: Date.now(),
       ok: !!ok,
       code: ok ? '' : (code || 'error'),
-      error: ok ? '' : truncate(String((error && error.message) || error || ''), 200),
+      error: ok ? '' : truncate(errorText(error), 300),
     })
   } catch (e) {
     console.warn('[journal-notes] status write failed', e)

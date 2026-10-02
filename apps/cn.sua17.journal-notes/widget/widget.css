@@ -670,6 +670,19 @@
   color: var(--jn-text-3);
 }
 
+.jn-state-detail {
+  font-size: calc(9.5px * var(--jn-font));
+  color: var(--jn-text-3);
+  opacity: 0.85;
+  max-width: calc(100% - 16px);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-all;
+  line-height: 1.35;
+}
+
 .jn-state-btn {
   margin-top: calc(3px * var(--jn-scale));
   padding: calc(4px * var(--jn-scale)) calc(14px * var(--jn-scale));
