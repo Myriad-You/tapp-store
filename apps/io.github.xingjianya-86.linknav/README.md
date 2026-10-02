@@ -16,6 +16,7 @@
 Myriad 沙箱禁止 `window.open` 与顶层导航，外链只能通过 `Tapp.ui.openUrl` 打开 **Manifest `openUrls` 白名单**里声明的站点（本版本约 28 个常见站点，`match: "origin"`，可覆盖该域名下的任意路径）。
 
 - 命中白名单：直接打开，也可以在表单里看到「可以直接打开～」提示。
+- 本站链接：manifest 额外声明 `{ "id": "self", "url": "/", "match": "same-origin" }`，宿主相对自身 origin 解析，任何自托管域名都直达本站页面（需宿主支持 `same-origin`）。
 - 未命中白名单：卡片提供「搜索」与「复制」；点击卡片会用已声明的搜索引擎（Bing → Baidu → Google）搜索该网址，搜索打开失败时自动复制链接兜底，不会静默失败。
 - 想**直达**新站点的管理员需要提交一个版本更新，把域名加进 `manifest.json` 的 `openUrls`（上限 32 条）；只求“能点开”的话，搜索兜底无需改 Manifest。
 
