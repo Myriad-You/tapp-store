@@ -514,21 +514,6 @@ function openNote(ctx, note) {
   openOverlay(ctx, note)
 }
 
-// srcdoc 沙箱是不透明源，location.origin 不可用；从 referrer（宿主页面地址）取本站 origin。
-function siteOrigin() {
-  try {
-    if (document.referrer) {
-      var origin = new URL(document.referrer).origin
-      if (origin && origin !== 'null') return origin
-    }
-  } catch (e) {}
-  try {
-    var loc = window.location.origin
-    if (loc && loc !== 'null' && loc.indexOf('http') === 0) return loc
-  } catch (e) {}
-  return ''
-}
-
 function parseQuery(raw) {
   var query = null
   var pairs = String(raw || '').split('&')
@@ -547,59 +532,99 @@ function parseQuery(raw) {
   return query
 }
 
-async function openOriginal(link) {
-  var origin = siteOrigin()
-  if (!origin) return false
-  var entries = null
-  try {
-    if (!Tapp.ui || typeof Tapp.ui.listOpenUrls !== 'function') return false
-    entries = await Tapp.ui.listOpenUrls()
-  } catch (e) {
-    return false
-  }
-  if (!Array.isArray(entries) || !entries.length) return false
-  var hit = null
+// 宿主 openUrl 用声明的 id 重建完整 URL，沙箱拿不到也不需要宿主 origin：
+// - 相对链接（本站手账）用 manifest 的 same-origin 声明，宿主相对自身 origin 解析，
+//   同一份包在任何自托管域名下都能新标签打开原文。
+// - 绝对链接按 origin/prefix/exact 命中已声明的外部 entry。
+function sameOriginEntry(entries) {
   for (var i = 0; i < entries.length; i++) {
     var entry = entries[i]
-    if (!entry || !entry.url) continue
-    try {
-      if (new URL(entry.url).origin === origin) {
-        hit = entry
-        break
-      }
-    } catch (e) {}
+    if (entry && entry.id && entry.match === 'same-origin') return entry
   }
-  if (!hit) return false
+  return null
+}
 
-  var target = { id: hit.id }
-  var path = link
-  if (path.charAt(0) === '/') {
-    var qIndex = path.indexOf('?')
-    var query = qIndex >= 0 ? parseQuery(path.slice(qIndex + 1)) : null
-    if (qIndex >= 0) path = path.slice(0, qIndex)
-    target.path = path.replace(/^\/+/, '')
-    if (query) target.query = query
-  } else if (/^https?:\/\//i.test(path)) {
-    var url = null
+function absoluteEntry(entries, target) {
+  for (var i = 0; i < entries.length; i++) {
+    var entry = entries[i]
+    if (!entry || !entry.id || typeof entry.url !== 'string') continue
+    if (entry.match === 'same-origin') continue
+    var base = null
     try {
-      url = new URL(path)
+      base = new URL(entry.url)
     } catch (e) {
-      return false
+      continue
     }
-    if (url.origin !== origin) return false
-    target.path = url.pathname.replace(/^\/+/, '')
-    var uQuery = url.search ? parseQuery(url.search.slice(1)) : null
-    if (uQuery) target.query = uQuery
-  } else {
-    return false
+    if (target.origin !== base.origin) continue
+    if (!entry.match || entry.match === 'exact') {
+      if (target.href.split('#')[0] === base.href.split('#')[0]) {
+        return { id: entry.id }
+      }
+      continue
+    }
+    var path = target.pathname.replace(/^\/+/, '')
+    if (entry.match === 'prefix') {
+      var basePath = base.pathname.replace(/\/$/, '')
+      if (path !== basePath && path.indexOf(basePath + '/') !== 0) continue
+    }
+    var result = { id: entry.id }
+    if (path) result.path = path
+    if (target.search) {
+      var query = parseQuery(target.search.slice(1))
+      if (query) result.query = query
+    }
+    return result
   }
+  return null
+}
 
+async function callOpenUrl(target) {
   try {
     await Tapp.ui.openUrl(target)
     return true
   } catch (e) {
     return false
   }
+}
+
+async function openOriginal(link) {
+  if (typeof link !== 'string' || !link) return false
+  if (!Tapp.ui || typeof Tapp.ui.listOpenUrls !== 'function') return false
+  var entries = null
+  try {
+    entries = await Tapp.ui.listOpenUrls()
+  } catch (e) {
+    return false
+  }
+  if (!Array.isArray(entries) || !entries.length) return false
+
+  if (link.charAt(0) === '/') {
+    var self = sameOriginEntry(entries)
+    if (!self) return false
+    var qIndex = link.indexOf('?')
+    var target = { id: self.id }
+    var path = qIndex >= 0 ? link.slice(0, qIndex) : link
+    if (path && path !== '/') target.path = path
+    if (qIndex >= 0) {
+      var query = parseQuery(link.slice(qIndex + 1))
+      if (query) target.query = query
+    }
+    return callOpenUrl(target)
+  }
+
+  if (/^https?:\/\//i.test(link)) {
+    var url = null
+    try {
+      url = new URL(link)
+    } catch (e) {
+      return false
+    }
+    var absolute = absoluteEntry(entries, url)
+    if (!absolute) return false
+    return callOpenUrl(absolute)
+  }
+
+  return false
 }
 
 // --------------------------------------------
