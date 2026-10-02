@@ -1,0 +1,339 @@
+/// <reference path="./types/tapp-sdk.d.ts" />
+'use strict'
+
+// ============================================
+// 手账笔记 · headless 同步核心
+// 运行于 headless core：拉取 Phantasi 笔记 → 写入 Tapp.storage，
+// 可见 Widget 幂等读取渲染。Widget 沙箱内 phantasiList 不可用，本文件自行守卫。
+// ============================================
+
+var PAYLOAD_KEY = 'journal.notes.payload'
+var STATUS_KEY = 'journal.notes.status'
+var PING_KEY = 'journal.notes.ping'
+var SYNC_TASK_ID = 'journal-notes-sync'
+var PAGE_SIZE = 100
+var MAX_PAGES = 5
+var TITLE_MAX_CHARS = 120
+var SUMMARY_MAX_CHARS = 240
+var CONTENT_MAX_CHARS = 2500
+var DATA_THUMB_MAX_CHARS = 4096
+var PING_MIN_INTERVAL_MS = 30000
+
+// 平台自有的媒体路径：转成站内相对地址，Widget 沙箱 CSP 才放行（仅同源 / data:）
+var SITE_MEDIA_PATH =
+  /^\/(?:media\/(?:assets|federation)\/|api\/media\/\d+\/content$|api\/(?:phantasi|brew)\/image-cache\/|api\/proxy\/image(?:\/|$))/
+// 防盗链 CDN：走同源 /api/proxy/image（与 shared/image_proxy_hosts.json 对齐）
+var PROXY_HOST_MARKERS = [
+  'hdslb.com',
+  'bilibili.com',
+  'bgm.tv',
+  'bangumi.tv',
+  'chii.in',
+  'steamstatic.com',
+  'music.126.net',
+  'y.gtimg.cn',
+  'twimg.com',
+  'myanimelist.net',
+]
+var PROXY_AKAMAI_AND = 'steam'
+
+var syncState = {
+  running: false,
+  pending: false,
+  lastPayloadJson: '',
+  lastPingAt: 0,
+}
+
+function getJournalApi() {
+  var api = /** @type {any} */ (Tapp).phantasiList
+  if (api && typeof api.list === 'function') return api
+  return null
+}
+
+function clamp(value, min, max) {
+  var n = Number(value)
+  if (!isFinite(n)) return min
+  return Math.min(max, Math.max(min, n))
+}
+
+function truncate(text, max) {
+  var s = typeof text === 'string' ? text : ''
+  if (s.length <= max) return s
+  return s.slice(0, max - 1) + '…'
+}
+
+function isNoteLink(link) {
+  return typeof link === 'string' && link.charAt(0) === '/' && link.charAt(1) !== '/'
+}
+
+function hostMatchesDomain(host, domain) {
+  var h = String(host || '').toLowerCase().replace(/\.$/, '')
+  var d = String(domain || '').toLowerCase().replace(/\.$/, '')
+  if (!h || !d) return false
+  if (h === d) return true
+  return h.length > d.length && h.slice(-(d.length + 1)) === '.' + d
+}
+
+function needsImageProxy(url, host) {
+  for (var i = 0; i < PROXY_HOST_MARKERS.length; i++) {
+    if (hostMatchesDomain(host, PROXY_HOST_MARKERS[i])) return true
+  }
+  var lower = url.toLowerCase()
+  return (
+    hostMatchesDomain(host, 'akamaihd.net') &&
+    (host.indexOf(PROXY_AKAMAI_AND) >= 0 || lower.indexOf(PROXY_AKAMAI_AND) >= 0)
+  )
+}
+
+// 规范化缩略图地址，尽量变成 Widget CSP 可放行的形式（同源相对路径 / data:）。
+// 其余外部绝对地址原样保留，渲染层放行失败时用渐变占位兜底。
+function resolveThumb(raw) {
+  var u = typeof raw === 'string' ? raw.trim() : ''
+  if (!u) return ''
+  if (u.slice(0, 5) === 'data:') return u.length <= DATA_THUMB_MAX_CHARS ? u : ''
+  if (u.slice(0, 2) === '//') u = 'https:' + u
+  else if (u.slice(0, 7) === 'http://') u = 'https://' + u.slice(7)
+  if (u.charAt(0) === '/') return u
+  var m = /^https?:\/\/([^\/?#]+)([^?#]*)(\?[^#]*)?(#.*)?$/i.exec(u)
+  if (!m) return /^[A-Za-z0-9_][^:]*$/.test(u) ? '/' + u : ''
+  var pathname = m[2] || '/'
+  var search = m[3] || ''
+  var hash = m[4] || ''
+  var host = m[1]
+    .replace(/^[^@]*@/, '')
+    .replace(/:\d+$/, '')
+    .toLowerCase()
+    .replace(/\.$/, '')
+  if (SITE_MEDIA_PATH.test(pathname)) return pathname + search + hash
+  if (needsImageProxy(u, host)) return '/api/proxy/image?url=' + encodeURIComponent(u)
+  return u
+}
+
+function firstImageSrc(html) {
+  var m = /<img[^>]*?\ssrc\s*=\s*["']([^"']+)["']/i.exec(String(html || ''))
+  return m ? m[1] : ''
+}
+
+function toPlainText(html) {
+  if (!html) return ''
+  var text = String(html)
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|li|h[1-6]|tr|blockquote|pre)>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+  text = text.replace(/[ \t\u00a0]+/g, ' ')
+  text = text.replace(/[ \t]*\n[ \t]*/g, '\n')
+  text = text.replace(/\n{3,}/g, '\n\n')
+  return text.trim()
+}
+
+function normalizeTime(value) {
+  var n = Number(value)
+  if (!isFinite(n) || n <= 0) return 0
+  // 秒级时间戳转毫秒
+  return n < 1e12 ? Math.round(n * 1000) : Math.round(n)
+}
+
+function toNote(item) {
+  var readingTime = Number(item.reading_time)
+  return {
+    id: String(item.id),
+    title: truncate(item.title || '', TITLE_MAX_CHARS),
+    link: typeof item.link === 'string' ? item.link : '',
+    summary: truncate(toPlainText(item.summary || ''), SUMMARY_MAX_CHARS),
+    published_at: normalizeTime(item.published_at),
+    author: truncate(item.author || '', 60),
+    source_name: truncate(item.source_name || '', 60),
+    image: resolveThumb(item.image),
+    is_read: item.is_read === true,
+    is_starred: item.is_starred === true,
+    reading_time: isFinite(readingTime) && readingTime > 0 ? Math.round(readingTime) : 0,
+    content: '',
+    contentReady: false,
+  }
+}
+
+async function readSettings() {
+  try {
+    return (await Tapp.settings.getAll()) || {}
+  } catch (error) {
+    console.warn('[journal-notes] settings unavailable', error)
+    return {}
+  }
+}
+
+async function collectNotes(api, maxNotes) {
+  var notes = []
+  var seen = {}
+  for (var page = 1; page <= MAX_PAGES && notes.length < maxNotes; page++) {
+    var res = await api.list({ limit: PAGE_SIZE, page: page, filter: 'all' })
+    var items = (res && res.items) || []
+    if (!items.length) break
+    for (var i = 0; i < items.length && notes.length < maxNotes; i++) {
+      var item = items[i]
+      if (!item || item.id == null || seen[item.id]) continue
+      if (!isNoteLink(item.link)) continue
+      seen[item.id] = true
+      notes.push(toNote(item))
+    }
+    if (items.length < PAGE_SIZE) break
+  }
+  return notes
+}
+
+async function fillContents(api, notes, maxChars) {
+  var index = 0
+  async function worker() {
+    while (index < notes.length) {
+      var note = notes[index]
+      index += 1
+      if (!note) continue
+      try {
+        var detail = await api.get(note.id)
+        if (detail) {
+          if (!note.image) {
+            if (detail.image) note.image = resolveThumb(detail.image)
+            if (!note.image && detail.content) note.image = resolveThumb(firstImageSrc(detail.content))
+          }
+          if (detail.content) {
+            note.content = truncate(toPlainText(detail.content), maxChars)
+            note.contentReady = true
+          } else if (detail.summary) {
+            note.content = truncate(toPlainText(detail.summary), maxChars)
+            note.contentReady = true
+          }
+        }
+      } catch (error) {
+        console.warn('[journal-notes] get failed', note.id, error)
+      }
+    }
+  }
+  var workers = []
+  var poolSize = Math.min(3, Math.max(1, notes.length))
+  for (var w = 0; w < poolSize; w++) workers.push(worker())
+  await Promise.all(workers)
+}
+
+async function writeStatus(ok, error) {
+  try {
+    await Tapp.storage.set(STATUS_KEY, {
+      lastSyncAt: Date.now(),
+      ok: !!ok,
+      error: ok ? '' : truncate(String((error && error.message) || error || ''), 200),
+    })
+  } catch (e) {
+    console.warn('[journal-notes] status write failed', e)
+  }
+}
+
+async function syncNotes() {
+  var api = getJournalApi()
+  if (!api) return
+  if (syncState.running) {
+    syncState.pending = true
+    return
+  }
+  syncState.running = true
+  try {
+    var settings = await readSettings()
+    var maxNotes = clamp(settings.maxNotes || 20, 1, 100)
+    var fetchContent = settings.fetchContent !== false
+    var contentBudget = clamp(settings.contentBudget || CONTENT_MAX_CHARS, 400, 8000)
+
+    var notes = await collectNotes(api, maxNotes)
+    if (fetchContent && notes.length) {
+      await fillContents(api, notes, contentBudget)
+    }
+
+    var payload = {
+      v: 1,
+      updatedAt: Date.now(),
+      total: notes.length,
+      notes: notes,
+    }
+    var json = JSON.stringify({ notes: notes })
+    if (json !== syncState.lastPayloadJson) {
+      syncState.lastPayloadJson = json
+      await Tapp.storage.set(PAYLOAD_KEY, payload)
+    }
+    await writeStatus(true)
+  } catch (error) {
+    console.warn('[journal-notes] sync failed', error)
+    await writeStatus(false, error)
+  } finally {
+    syncState.running = false
+    if (syncState.pending) {
+      syncState.pending = false
+      syncNotes()
+    }
+  }
+}
+
+function schedulePeriodicSync() {
+  var scheduler = /** @type {any} */ (Tapp).scheduler
+  if (!scheduler || typeof scheduler.register !== 'function') return
+  readSettings().then(function (settings) {
+    var minutes = clamp(settings.syncInterval || 15, 5, 720)
+    Promise.resolve(
+      scheduler.register({
+        taskId: SYNC_TASK_ID,
+        name: '手账笔记同步',
+        scheduleType: 'interval',
+        schedule: { interval: minutes * 60000 },
+        executionTarget: 'frontend',
+      }),
+    )
+      .catch(function (error) {
+        console.warn('[journal-notes] scheduler register failed', error)
+      })
+      .then(function () {
+        if (typeof scheduler.onTask === 'function') {
+          try {
+            scheduler.onTask(SYNC_TASK_ID, function () {
+              syncNotes()
+            })
+          } catch (error) {
+            console.warn('[journal-notes] onTask failed', error)
+          }
+        }
+      })
+  })
+}
+
+function listenForWidgetPings() {
+  if (typeof Tapp.storage.onChanged !== 'function') return
+  try {
+    Tapp.storage.onChanged(function (event) {
+      if (!event || event.key !== PING_KEY) return
+      var now = Date.now()
+      if (now - syncState.lastPingAt < PING_MIN_INTERVAL_MS) return
+      syncState.lastPingAt = now
+      syncNotes()
+    })
+  } catch (error) {
+    console.warn('[journal-notes] onChanged failed', error)
+  }
+}
+
+Tapp.lifecycle.onReady(function () {
+  // 只有具备 phantasiList 接口的沙箱（headless / page）才执行同步。
+  if (!getJournalApi()) return
+  syncNotes()
+  schedulePeriodicSync()
+  listenForWidgetPings()
+})
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    PAYLOAD_KEY: PAYLOAD_KEY,
+    STATUS_KEY: STATUS_KEY,
+    PING_KEY: PING_KEY,
+  }
+}

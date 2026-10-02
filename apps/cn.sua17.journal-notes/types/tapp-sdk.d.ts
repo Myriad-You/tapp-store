@@ -1,0 +1,566 @@
+/**
+ * Myriad Tapp sandbox SDK (window.Tapp).
+ * Generated from the runtime permission catalog. Call sites still need
+ * matching Manifest permissions and a handler in the current sandbox profile.
+ *
+ * Headless-denied Bridge actions: component.list, component.registerAgent, component.registerTheme, component.unregister, dynamicContent.get, dynamicContent.remove, dynamicContent.set, dynamicContent.update, file.download, model3d.awaitTask, model3d.createTask, model3d.getMetadata, model3d.getTask, model3d.getUrl, model3d.status, model3d.upload, shortcut.list, shortcut.register, shortcut.unregister, tappList.export, tappList.get, tappList.getInstallPackage, tappList.getRecent, tappList.install, tappList.list, tappList.resolveStoreSource, tappList.start, tappList.stop, tappList.uninstall, ui.confirm, ui.exitFullscreen, ui.isFullscreen, ui.listOpenUrls, ui.openUrl, ui.requestFullscreen, ui.setTitle, ui.toggleFullscreen, widget.listRegistered, widget.register, widget.unregister, widget.updateConfig
+ *
+ * Do not edit by hand — run: npm run sync-contract
+ */
+
+export interface TappAIImageInput {
+  prompt: string
+  width?: number | string
+  height?: number | string
+  /**
+   * Ordered PNG/JPEG/WebP base64 data URLs or /api/brew/image-cache/ paths.
+   * At most 4 images, at most 10 MiB of decoded image data in total.
+   */
+  referenceImages?: string[]
+}
+
+export interface TappAISearchInput {
+  query: string
+  searchType?: 'rss_source' | 'api_docs' | 'general'
+  maxResults?: number
+  searchPrompt?: string
+}
+
+export interface TappAIGenerateInput {
+  prompt: string
+}
+
+export interface TappAIAnalyzeInput {
+  data: unknown
+  instruction?: string
+}
+
+export interface TappAIChatMessage {
+  role: 'system' | 'user' | 'assistant'
+  content: string
+}
+
+export interface TappAIChatInput {
+  messages: TappAIChatMessage[]
+}
+
+export type TappAITaskRequest = {
+  version: 2
+  context?: Array<
+    | { type: 'platform'; platform: string; selector: string }
+    | { type: 'report'; reportId: number }
+    | { type: 'profile'; fields: Array<'id' | 'username' | 'role'> }
+    | { type: 'custom'; value: unknown }
+  >
+  output?: { format: 'text' | 'json' | 'image'; schema?: Record<string, unknown> }
+  delivery?: 'result' | 'stream'
+  idempotencyKey?: string
+} & (
+  | { operation: 'image'; input: string | TappAIImageInput }
+  | { operation: 'search'; input: string | TappAISearchInput }
+  | { operation: 'generate'; input: string | TappAIGenerateInput }
+  | { operation: 'analyze'; input: TappAIAnalyzeInput }
+  | { operation: 'chat'; input: TappAIChatInput }
+)
+
+export type TappAITaskStatus =
+  | 'queued'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+
+export type TappAITaskEventKind =
+  | 'snapshot'
+  | 'state'
+  | 'delta'
+  | 'progress'
+  | 'result'
+  | 'error'
+  | 'cancelled'
+  | 'resync'
+
+export interface TappAIUsageSnapshot {
+  calls: {
+    limit: number | null
+    used: number
+    remaining: number | null
+    resetsAt: string
+  }
+  tokens: {
+    limit: number | null
+    used: number
+    remaining: number | null
+    resetsAt: string
+  }
+  cooldown: {
+    requiredSeconds: number
+    remainingSeconds: number
+  }
+  restricted: boolean
+  restrictionReason?: 'daily_calls' | 'daily_tokens' | 'cooldown'
+  unlimited: boolean
+  role: 'guest' | 'user' | 'admin'
+}
+
+export interface TappAITaskSnapshot {
+  taskId: string
+  status: TappAITaskStatus
+  operation: 'generate' | 'analyze' | 'chat' | 'image' | 'search'
+  delivery: 'result' | 'stream'
+  createdAt: string
+  updatedAt: string
+  result?: {
+    format: 'text' | 'json' | 'image'
+    value: unknown
+    contextProvenance: unknown[]
+  }
+  error?: { code: string; message: string }
+  usage: TappAIUsageSnapshot
+}
+
+export interface TappSdk {
+  lifecycle: {
+    onReady(callback: () => void | Promise<void>): void
+    onDestroy(callback: () => void): void
+    onPause(callback: () => void): void
+    onResume(callback: () => void): void
+    getInfo(): { id: string; version: string; name: string; permissions: string[]; sandboxed: true }
+  }
+
+  i18n: {
+    t(key: string, params?: Record<string, unknown>): string
+    getLocale(): string
+    getAll(): Record<string, unknown>
+  }
+
+  storage: {
+    get(key: string): Promise<unknown>
+    set(key: string, value: unknown): Promise<unknown>
+    remove(key: string): Promise<unknown>
+    keys(): Promise<string[]>
+    getAll(): Promise<Record<string, unknown>>
+    clear(): Promise<unknown>
+    usage(): Promise<unknown>
+    onChanged(callback: (event: { key?: string; operation?: string }) => void): () => void
+  }
+
+  settings: {
+    get(key: string): Promise<unknown>
+    set(key: string, value: unknown): Promise<unknown>
+    getAll(): Promise<Record<string, unknown>>
+    onChanged(callback: (event: { key?: string; operation?: string }) => void): () => void
+  }
+
+  ui: {
+    setTitle(title: string): Promise<unknown>
+    getTheme(): Promise<unknown>
+    onThemeChange(callback: (theme: unknown) => void): () => void
+    getPrimaryColor(): Promise<unknown>
+    onPrimaryColorChange(callback: (color: unknown) => void): () => void
+    getLocale(): Promise<unknown>
+    onLocaleChange(callback: (locale: unknown) => void): () => void
+    showNotification(options: unknown): Promise<unknown>
+    confirm(message: string): Promise<boolean>
+    /**
+     * Open a host browser tab for a Manifest `openUrls` allowlisted id only.
+     * Pass `{ id, path?, query? }` — never a free-form absolute URL.
+     * Requires permission `ui:openUrl`.
+     */
+    openUrl(request: {
+      id: string
+      path?: string
+      query?: Record<string, string>
+    } | string): Promise<unknown>
+    /** List install-time openUrls declarations for this Tapp. */
+    listOpenUrls(): Promise<
+      Array<{ id: string; url: string; match: 'exact' | 'prefix' | 'origin' }>
+    >
+    requestFullscreen(): Promise<unknown>
+    exitFullscreen(): Promise<unknown>
+    fullscreen: {
+      request(): Promise<unknown>
+      exit(): Promise<unknown>
+      toggle(): Promise<unknown>
+      isFullscreen(): Promise<boolean>
+    }
+  }
+
+  api: {
+    (name: string, params?: unknown): Promise<unknown>
+    list(): Promise<unknown>
+  }
+
+  assets: {
+    list(): Promise<unknown>
+    get(path: string): Promise<unknown>
+    getUrl(path: string): Promise<{ url: string; mimeType?: string; size?: number; path?: string }>
+    getArrayBuffer(path: string): Promise<{ path: string; mimeType?: string; size?: number; buffer: ArrayBuffer }>
+    getUrlMap(): Promise<Record<string, string>>
+    resolve(path: string): Promise<{ url: string; mimeType?: string; size?: number; path?: string }>
+    rewriteUrl(url: string): string
+    revoke(url: string): void
+    revokeAll(): void
+  }
+
+  dataExchange: {
+    request(request: unknown): Promise<unknown>
+    provide(exportId: string, handler: (request: unknown) => unknown | Promise<unknown>): Promise<() => void>
+  }
+
+  event: {
+    publish(request: unknown): Promise<unknown>
+    on(topic: string, callback: (event: unknown) => void): () => void
+  }
+
+  agent: {
+    onInteraction(
+      type: string,
+      callback: (interaction: {
+        type: string
+        interactionId: string
+        accept(): Promise<unknown>
+        submitResult(result: unknown): Promise<unknown>
+        reject(reason?: unknown): Promise<unknown>
+        requestIntent(request: unknown): Promise<unknown>
+        [key: string]: unknown
+      }) => void,
+    ): () => void
+  }
+
+  media: {
+    play(): Promise<unknown>
+    pause(): Promise<unknown>
+    next(): Promise<unknown>
+    prev(): Promise<unknown>
+    seek(position: unknown): Promise<unknown>
+    setVolume(volume: unknown): Promise<unknown>
+    setMode(mode: unknown): Promise<unknown>
+    mute(): Promise<unknown>
+    unmute(): Promise<unknown>
+    getStatus(): Promise<unknown>
+    getPlaylist(): Promise<unknown>
+    getSpectrum(): Promise<unknown>
+    getLyrics(options?: unknown): Promise<unknown>
+    getBeatGrid(): Promise<unknown>
+    playTrack(id: unknown, index?: unknown): Promise<unknown>
+    jumpToIndex(index: unknown): Promise<unknown>
+    loadNeteasePlaylist(playlistId: unknown): Promise<unknown>
+    getSkipVip(): Promise<unknown>
+    setSkipVip(value: unknown): Promise<unknown>
+    onStateChange(callback: (state: unknown) => void): () => void
+    onProgress(callback: (progress: unknown) => void): () => void
+  }
+
+  ai: {
+    tasks: {
+      create(request: TappAITaskRequest): Promise<TappAITaskSnapshot>
+      get(taskId: string): Promise<TappAITaskSnapshot>
+      cancel(taskId: string): Promise<{ success: boolean; taskId: string }>
+      usage(): Promise<TappAIUsageSnapshot>
+      subscribe(
+        taskId: string,
+        callback: (event: { event: TappAITaskEventKind; data: unknown }) => void,
+      ): Promise<() => void>
+    }
+  }
+
+  scheduler: {
+    register(options: unknown): Promise<unknown>
+    unregister(taskId: string): Promise<unknown>
+    list(): Promise<unknown>
+    get(taskId: string): Promise<unknown>
+    enable(taskId: string): Promise<unknown>
+    disable(taskId: string): Promise<unknown>
+    trigger(taskId: string): Promise<unknown>
+    onTask(
+      taskId: string,
+      callback: (payload: unknown, event: unknown) => unknown | Promise<unknown>,
+    ): () => void
+  }
+
+  widgets: Record<
+    string,
+    {
+      render(
+        container: HTMLElement,
+        props: {
+          size?: string
+          theme?: string
+          settings?: Record<string, unknown>
+          [key: string]: unknown
+        },
+      ): void | Promise<void>
+    }
+  >
+
+  pages: Record<
+    string,
+    {
+      render(container: HTMLElement): void | Promise<void>
+    }
+  >
+
+  dom: {
+    setAttribute(element: Element, name: string, value: string): void
+    [key: string]: unknown
+  }
+
+  analytics: {
+    getSummary(...args: unknown[]): Promise<unknown> // permission: analytics:read
+    getVisitorCard(...args: unknown[]): Promise<unknown> // permission: analytics:read
+  }
+  animation: {
+    getConfig(...args: unknown[]): Promise<unknown>
+    getLevel(...args: unknown[]): Promise<unknown>
+    getStaggerDelay(...args: unknown[]): Promise<unknown>
+    shouldAnimate(...args: unknown[]): Promise<unknown>
+  }
+  background: {
+    has(...args: unknown[]): Promise<unknown>
+    list(...args: unknown[]): Promise<unknown>
+    release(...args: unknown[]): Promise<unknown> // permission: event:subscribe
+    require(...args: unknown[]): Promise<unknown> // permission: event:subscribe
+  }
+  brewList: {
+    addSource(...args: unknown[]): Promise<unknown> // permission: brew:manage
+    categories(...args: unknown[]): Promise<unknown> // permission: brew:read
+    createCategory(...args: unknown[]): Promise<unknown> // permission: brew:manage
+    createComment(...args: unknown[]): Promise<unknown> // permission: brew:commentWrite
+    createReply(...args: unknown[]): Promise<unknown> // permission: brew:commentWrite
+    deleteCategory(...args: unknown[]): Promise<unknown> // permission: brew:manage
+    deleteComment(...args: unknown[]): Promise<unknown> // permission: brew:commentWrite
+    deleteSource(...args: unknown[]): Promise<unknown> // permission: brew:manage
+    discover(...args: unknown[]): Promise<unknown> // permission: brew:manage
+    exportOpml(...args: unknown[]): Promise<unknown> // permission: brew:read
+    get(...args: unknown[]): Promise<unknown> // permission: brew:read
+    getComments(...args: unknown[]): Promise<unknown> // permission: brew:read
+    getReplies(...args: unknown[]): Promise<unknown> // permission: brew:read
+    importOpml(...args: unknown[]): Promise<unknown> // permission: brew:manage
+    list(...args: unknown[]): Promise<unknown> // permission: brew:read
+    markAllRead(...args: unknown[]): Promise<unknown> // permission: brew:write
+    markRead(...args: unknown[]): Promise<unknown> // permission: brew:write
+    markUnread(...args: unknown[]): Promise<unknown> // permission: brew:write
+    refreshSource(...args: unknown[]): Promise<unknown> // permission: brew:manage
+    sources(...args: unknown[]): Promise<unknown> // permission: brew:read
+    star(...args: unknown[]): Promise<unknown> // permission: brew:write
+    stats(...args: unknown[]): Promise<unknown> // permission: brew:read
+    unstar(...args: unknown[]): Promise<unknown> // permission: brew:write
+    updateComment(...args: unknown[]): Promise<unknown> // permission: brew:commentWrite
+    updateSource(...args: unknown[]): Promise<unknown> // permission: brew:manage
+  }
+  component: {
+    list(...args: unknown[]): Promise<unknown>
+    registerAgent(...args: unknown[]): Promise<unknown> // permission: component:agent
+    registerTheme(...args: unknown[]): Promise<unknown> // permission: component:theme
+    unregister(...args: unknown[]): Promise<unknown>
+  }
+  context: {
+    getApp(...args: unknown[]): Promise<unknown>
+    getGeo(...args: unknown[]): Promise<unknown>
+    getNavigation(...args: unknown[]): Promise<unknown>
+    getPlayer(...args: unknown[]): Promise<unknown>
+    getSystem(...args: unknown[]): Promise<unknown>
+    getUser(...args: unknown[]): Promise<unknown>
+  }
+  data: {
+    transform(...args: unknown[]): Promise<unknown>
+  }
+  dynamicContent: {
+    get(...args: unknown[]): Promise<unknown>
+    remove(...args: unknown[]): Promise<unknown> // permission: ui:notification
+    set(...args: unknown[]): Promise<unknown> // permission: ui:notification
+    update(...args: unknown[]): Promise<unknown> // permission: ui:notification
+  }
+  federation: {
+    acceptChannel(...args: unknown[]): Promise<unknown> // permission: federation:channel
+    acceptRoomInvite(...args: unknown[]): Promise<unknown> // permission: federation:room
+    addPeer(...args: unknown[]): Promise<unknown> // permission: federation:ring
+    addRoomSticker(...args: unknown[]): Promise<unknown> // permission: federation:room
+    announce(...args: unknown[]): Promise<unknown> // permission: federation:interact
+    bookmark(...args: unknown[]): Promise<unknown> // permission: federation:interact
+    cancelAllPendingDelivery(...args: unknown[]): Promise<unknown> // permission: federation:post
+    cancelDelivery(...args: unknown[]): Promise<unknown> // permission: federation:post
+    cancelTransfer(...args: unknown[]): Promise<unknown> // permission: federation:files
+    closeChannel(...args: unknown[]): Promise<unknown> // permission: federation:channel
+    composeExternalShare(...args: unknown[]): Promise<unknown> // permission: federation:read
+    createChannel(...args: unknown[]): Promise<unknown> // permission: federation:channel
+    createNote(...args: unknown[]): Promise<unknown> // permission: federation:post
+    createRing(...args: unknown[]): Promise<unknown> // permission: federation:ring
+    createRoom(...args: unknown[]): Promise<unknown> // permission: federation:room
+    deleteChannel(...args: unknown[]): Promise<unknown> // permission: federation:channel
+    deleteRoom(...args: unknown[]): Promise<unknown> // permission: federation:room
+    dismissDelivery(...args: unknown[]): Promise<unknown> // permission: federation:post
+    downloadTransfer(...args: unknown[]): Promise<unknown> // permission: federation:files
+    follow(...args: unknown[]): Promise<unknown> // permission: federation:interact
+    getBookmarks(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getChannel(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getChannels(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getDeliveryStats(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getExternalShareStatus(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getFeed(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getFollowers(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getFollowing(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getIdentity(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getInstances(...args: unknown[]): Promise<unknown> // permission: federation:trust
+    getMessages(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getObject(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getPublished(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getRing(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getRingPeers(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getRings(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getRoom(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getRoomMembers(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getRoomMessages(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getRooms(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getRoomsFeed(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getTimeline(...args: unknown[]): Promise<unknown> // permission: federation:read
+    getTransfer(...args: unknown[]): Promise<unknown> // permission: federation:files
+    getTrustPolicy(...args: unknown[]): Promise<unknown> // permission: federation:trust
+    initiateChannelE2e(...args: unknown[]): Promise<unknown> // permission: federation:channel
+    initiateRoomE2e(...args: unknown[]): Promise<unknown> // permission: federation:room
+    initiateRoomTransfer(...args: unknown[]): Promise<unknown> // permission: federation:files
+    initiateTransfer(...args: unknown[]): Promise<unknown> // permission: federation:files
+    inviteMember(...args: unknown[]): Promise<unknown> // permission: federation:room
+    joinRoom(...args: unknown[]): Promise<unknown> // permission: federation:room
+    leaveRing(...args: unknown[]): Promise<unknown> // permission: federation:ring
+    leaveRoom(...args: unknown[]): Promise<unknown> // permission: federation:room
+    like(...args: unknown[]): Promise<unknown> // permission: federation:interact
+    listDelivery(...args: unknown[]): Promise<unknown> // permission: federation:read
+    listRoomFiles(...args: unknown[]): Promise<unknown> // permission: federation:files
+    listRoomTransfers(...args: unknown[]): Promise<unknown> // permission: federation:files
+    listTransfers(...args: unknown[]): Promise<unknown> // permission: federation:files
+    pinRoomMessage(...args: unknown[]): Promise<unknown> // permission: federation:room
+    publish(...args: unknown[]): Promise<unknown> // permission: federation:post
+    purgeDeadDelivery(...args: unknown[]): Promise<unknown> // permission: federation:post
+    rejectRoomInvite(...args: unknown[]): Promise<unknown> // permission: federation:room
+    removeMember(...args: unknown[]): Promise<unknown> // permission: federation:room
+    removePeer(...args: unknown[]): Promise<unknown> // permission: federation:ring
+    removeRoomSticker(...args: unknown[]): Promise<unknown> // permission: federation:room
+    retryAllDeadDelivery(...args: unknown[]): Promise<unknown> // permission: federation:post
+    retryDelivery(...args: unknown[]): Promise<unknown> // permission: federation:post
+    rotateKeys(...args: unknown[]): Promise<unknown> // permission: federation:post
+    sendMessage(...args: unknown[]): Promise<unknown> // permission: federation:message
+    sendRoomMessage(...args: unknown[]): Promise<unknown> // permission: federation:message
+    setMemberRole(...args: unknown[]): Promise<unknown> // permission: federation:room
+    subscribeChannel(...args: unknown[]): Promise<unknown> // permission: federation:message
+    subscribeRoom(...args: unknown[]): Promise<unknown> // permission: federation:message
+    toggleInstanceBlock(...args: unknown[]): Promise<unknown> // permission: federation:trust
+    transferRoomOwnership(...args: unknown[]): Promise<unknown> // permission: federation:room
+    triggerSync(...args: unknown[]): Promise<unknown> // permission: federation:ring
+    unannounce(...args: unknown[]): Promise<unknown> // permission: federation:interact
+    unbookmark(...args: unknown[]): Promise<unknown> // permission: federation:interact
+    unfollow(...args: unknown[]): Promise<unknown> // permission: federation:interact
+    unlike(...args: unknown[]): Promise<unknown> // permission: federation:interact
+    unpublish(...args: unknown[]): Promise<unknown> // permission: federation:post
+    unsubscribeChannel(...args: unknown[]): Promise<unknown> // permission: federation:message
+    unsubscribeRoom(...args: unknown[]): Promise<unknown> // permission: federation:message
+    updateInstanceTrust(...args: unknown[]): Promise<unknown> // permission: federation:trust
+    updateRoom(...args: unknown[]): Promise<unknown> // permission: federation:room
+    updateTrustPolicy(...args: unknown[]): Promise<unknown> // permission: federation:trust
+    uploadChunk(...args: unknown[]): Promise<unknown> // permission: federation:files
+    uploadMedia(...args: unknown[]): Promise<unknown> // permission: federation:post
+  }
+  file: {
+    download(...args: unknown[]): Promise<unknown>
+  }
+  game: {
+    create(...args: unknown[]): Promise<unknown> // permission: game:session
+    join(...args: unknown[]): Promise<unknown> // permission: game:session
+    leave(...args: unknown[]): Promise<unknown> // permission: game:session
+    sendIntent(...args: unknown[]): Promise<unknown> // permission: game:session
+    sendState(...args: unknown[]): Promise<unknown> // permission: game:session
+    shareId(...args: unknown[]): Promise<unknown> // permission: game:session
+  }
+  model3d: {
+    awaitTask(...args: unknown[]): Promise<unknown> // permission: 3d:generate
+    createTask(...args: unknown[]): Promise<unknown> // permission: 3d:generate
+    getMetadata(...args: unknown[]): Promise<unknown>
+    getTask(...args: unknown[]): Promise<unknown> // permission: 3d:generate
+    getUrl(...args: unknown[]): Promise<unknown>
+    status(...args: unknown[]): Promise<unknown> // permission: 3d:generate
+    upload(...args: unknown[]): Promise<unknown> // permission: 3d:generate
+  }
+  persona: {
+    get(...args: unknown[]): Promise<unknown>
+  }
+  platform: {
+    addItem(...args: unknown[]): Promise<unknown> // permission: platform:write
+    addItems(...args: unknown[]): Promise<unknown> // permission: platform:write
+    getData(...args: unknown[]): Promise<unknown> // permission: platform:read
+    getDistribution(...args: unknown[]): Promise<unknown> // permission: platform:read
+    getStats(...args: unknown[]): Promise<unknown> // permission: platform:read
+    listEnabled(...args: unknown[]): Promise<unknown> // permission: platform:read
+    registerPlatform(...args: unknown[]): Promise<unknown> // permission: platform:register
+  }
+  report: {
+    create(...args: unknown[]): Promise<unknown> // permission: report:write
+    delete(...args: unknown[]): Promise<unknown> // permission: report:write
+    get(...args: unknown[]): Promise<unknown> // permission: report:read
+    getPlatformReport(...args: unknown[]): Promise<unknown> // permission: report:read
+    getReport(...args: unknown[]): Promise<unknown> // permission: report:read
+    list(...args: unknown[]): Promise<unknown> // permission: report:read
+    listReports(...args: unknown[]): Promise<unknown> // permission: report:read
+    update(...args: unknown[]): Promise<unknown> // permission: report:write
+  }
+  shared: {
+    clear(...args: unknown[]): Promise<unknown> // permission: storage:write
+    get(...args: unknown[]): Promise<unknown> // permission: storage:read
+    getAll(...args: unknown[]): Promise<unknown> // permission: storage:read
+    keys(...args: unknown[]): Promise<unknown> // permission: storage:read
+    remove(...args: unknown[]): Promise<unknown> // permission: storage:write
+    set(...args: unknown[]): Promise<unknown> // permission: storage:write
+    usage(...args: unknown[]): Promise<unknown> // permission: storage:read
+  }
+  shortcut: {
+    list(...args: unknown[]): Promise<unknown>
+    register(...args: unknown[]): Promise<unknown> // permission: shortcut:register
+    unregister(...args: unknown[]): Promise<unknown> // permission: shortcut:register
+  }
+  speech: {
+    asr(...args: unknown[]): Promise<unknown> // permission: speech:asr
+    getStatus(...args: unknown[]): Promise<unknown> // permission: speech:tts
+    getVoices(...args: unknown[]): Promise<unknown> // permission: speech:tts
+    tts(...args: unknown[]): Promise<unknown> // permission: speech:tts
+  }
+  tappList: {
+    export(...args: unknown[]): Promise<unknown> // permission: tappList:manage
+    get(...args: unknown[]): Promise<unknown> // permission: tappList:read
+    getInstallPackage(...args: unknown[]): Promise<unknown> // permission: tappList:read
+    getRecent(...args: unknown[]): Promise<unknown> // permission: tappList:read
+    install(...args: unknown[]): Promise<unknown> // permission: tappList:manage
+    list(...args: unknown[]): Promise<unknown> // permission: tappList:read
+    resolveStoreSource(...args: unknown[]): Promise<unknown> // permission: tappList:read
+    start(...args: unknown[]): Promise<unknown> // permission: tappList:manage
+    stop(...args: unknown[]): Promise<unknown> // permission: tappList:manage
+    uninstall(...args: unknown[]): Promise<unknown> // permission: tappList:manage
+  }
+  user: {
+    canUsePermissionLevel(...args: unknown[]): Promise<unknown>
+    getAllowedPermissionLevels(...args: unknown[]): Promise<unknown>
+    getRole(...args: unknown[]): Promise<unknown>
+    isAdmin(...args: unknown[]): Promise<unknown>
+    isGuest(...args: unknown[]): Promise<unknown>
+    isLoggedIn(...args: unknown[]): Promise<unknown>
+  }
+  widget: {
+    invalidate(...args: unknown[]): Promise<unknown>
+    invalidateTarget(...args: unknown[]): Promise<unknown> // permission: storage:write
+    listRegistered(...args: unknown[]): Promise<unknown> // permission: widget:register
+    register(...args: unknown[]): Promise<unknown> // permission: widget:register
+    unregister(...args: unknown[]): Promise<unknown> // permission: widget:register
+    updateConfig(...args: unknown[]): Promise<unknown> // permission: widget:register
+    instanceSettings: {
+      update(...args: unknown[]): Promise<unknown>
+    }
+  }
+}
+
+declare global {
+  const Tapp: TappSdk
+  interface Window {
+    Tapp: TappSdk
+  }
+}
+
+export {}

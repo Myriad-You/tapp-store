@@ -1,0 +1,92 @@
+{
+  "id": "cn.sua17.journal-notes",
+  "name": "手账笔记",
+  "version": "1.0.0",
+  "minSystemVersion": "0.5.0",
+  "description": "在主页小组件里速览 Myriad 手账（Phantasi）最新笔记：2×2 双条速览、4×2 横向分区、4×4 笔记墙，支持点击展开全文。headless 后台同步，桌面无开页也能保持最新。",
+  "locales": {
+    "en-US": {
+      "name": "Journal Notes",
+      "description": "Browse your latest Myriad journal (Phantasi) notes from home screen widgets: 2x2 quick glance, 4x2 split view, 4x4 note wall, tap to expand full text. Headless background sync keeps everything fresh."
+    },
+    "ja-JP": {
+      "name": "ジャーナルノート",
+      "description": "Myriad ジャーナル（Phantasi）の最新ノートをホーム画面ウィジェットで表示。2x2・4x2・4x4 対応、タップで全文表示。ヘッドレス同期で常に最新。"
+    }
+  },
+  "category": "productivity",
+  "author": {
+    "name": "sua17"
+  },
+  "repository": "https://github.com/xingjianya-86/journal-notes-tapp",
+  "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M4 5.5A2.5 2.5 0 0 1 6.5 3H19a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6.5A2.5 2.5 0 0 0 4 21.5z' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><path d='M8 7h8M8 11h6' stroke='currentColor' stroke-width='2' stroke-linecap='round'/></svg>",
+  "themeColor": "#F59E0B",
+  "permissions": [
+    "widget:register",
+    "phantasi:read",
+    "storage:read",
+    "storage:write",
+    "scheduler:register"
+  ],
+  "backgroundRequirements": [
+    "scheduler",
+    "sync"
+  ],
+  "core": {
+    "entry": "core.js",
+    "styles": "styles.css"
+  },
+  "widgets": [
+    {
+      "id": "journal-notes",
+      "name": "手账笔记",
+      "description": "速览最新手账笔记，支持 2×2 / 4×2 / 4×4 三种尺寸",
+      "icon": "📖",
+      "category": "productivity",
+      "defaultSize": "2x2",
+      "sizes": [
+        "2x2",
+        "4x2",
+        "4x4"
+      ],
+      "entry": "widget/index.js",
+      "styles": "widget/widget.css",
+      "templates": {
+        "2x2": "templates/widget-2x2.html",
+        "4x2": "templates/widget-4x2.html",
+        "4x4": "templates/widget-4x4.html"
+      },
+      "refreshPolicy": {
+        "mode": "event",
+        "refreshOnVisible": true
+      }
+    }
+  ],
+  "settings": [
+    {
+      "key": "maxNotes",
+      "label": "最大笔记数",
+      "type": "number",
+      "description": "同步并保留的最大笔记数量",
+      "defaultValue": 20,
+      "min": 5,
+      "max": 60
+    },
+    {
+      "key": "syncInterval",
+      "label": "同步间隔（分钟）",
+      "type": "number",
+      "description": "后台自动同步的间隔时间",
+      "defaultValue": 15,
+      "min": 5,
+      "max": 720
+    },
+    {
+      "key": "fetchContent",
+      "label": "同步全文",
+      "type": "toggle",
+      "description": "同步每篇笔记的正文，用于小组件内点击展开阅读",
+      "defaultValue": true
+    }
+  ]
+}

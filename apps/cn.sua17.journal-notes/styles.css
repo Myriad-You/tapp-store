@@ -1,0 +1,9 @@
+/* 手账笔记 · core 共享样式（page/headless 容器基础重置） */
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  font: 14px/1.5 system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
