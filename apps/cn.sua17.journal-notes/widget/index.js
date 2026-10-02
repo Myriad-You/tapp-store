@@ -696,6 +696,23 @@ async function load(ctx) {
         console.warn('[journal-notes] role read failed', error)
       }
     }
+
+    // 非 admin：读安装级共享区（admin 发布，访客可读），不碰 subject 隔离的私有 storage
+    if (ctx.role === 'guest' || ctx.role === 'user') {
+      var shared = null
+      try {
+        shared = await Tapp.shared.get(PAYLOAD_KEY)
+      } catch (error) {
+        console.warn('[journal-notes] shared read failed', error)
+      }
+      if (ctx.seq !== seq) return
+      ctx.payload =
+        shared && typeof shared === 'object' && Array.isArray(shared.notes) ? shared : null
+      ctx.status = null
+      paint(ctx)
+      return
+    }
+
     var payload = await Tapp.storage.get(PAYLOAD_KEY)
     var status = await Tapp.storage.get(STATUS_KEY)
     if (ctx.seq !== seq) return
