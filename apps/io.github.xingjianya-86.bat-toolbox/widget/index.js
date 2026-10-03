@@ -154,11 +154,17 @@ function latestNodeTime(floor) {
 
 function appendTeamAvatars(container, avatars, limit) {
   (avatars || []).slice(0, limit).forEach(function (member) {
+    const wrap = ui.el("span", "gtw-team-member");
     const img = document.createElement("img");
     img.className = "gtw-team-avatar";
     img.alt = "";
-    img.src = core.resolveAsset((member && (member.icon || member.image)) || "");
-    container.appendChild(img);
+    img.decoding = "async";
+    const name = member && member.name ? member.name : "";
+    const fallback = ui.el("span", "gtw-team-avatar-fallback", name.charAt(0) || "?");
+    wrap.appendChild(img);
+    wrap.appendChild(fallback);
+    ui.setImage(img, fallback, (member && (member.icon || member.image)) || "", name.charAt(0) || "?", "");
+    container.appendChild(wrap);
   });
 }
 
