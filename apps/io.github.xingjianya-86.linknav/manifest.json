@@ -1,7 +1,7 @@
 {
   "id": "io.github.xingjianya-86.linknav",
   "name": "链接小窝",
-  "version": "1.3.1",
+  "version": "2.0.0",
   "description": "收集与分享网址的萌系导航页：管理员维护共享链接目录并按角色分层可见，人人可收藏，桌面小组件快捷直达",
   "locales": {
     "en-US": {
@@ -60,6 +60,7 @@
     }
   ],
   "openUrls": [
+    { "id": "self", "url": "/", "match": "same-origin" },
     { "id": "github", "url": "https://github.com", "match": "origin" },
     { "id": "gitlab", "url": "https://gitlab.com", "match": "origin" },
     { "id": "gitee", "url": "https://gitee.com", "match": "origin" },
