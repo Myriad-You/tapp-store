@@ -15,8 +15,8 @@
 - **三种尺寸**：2×2 双条速览 · 4×2 封面分区 · 4×4 缩略图笔记墙
 - **缩略图**：封面/正文首图同源化后展示；CSP 不放行的外链自动降级为按笔记生成的渐变占位，永不破图
 - **阅读状态**：未读高亮圆点与加粗、星标 ★ 角标、浮层内显示阅读时长
-- **点击外开**：点击笔记直接在浏览器新标签打开原文（`sua17.cn` 白名单内），未命中白名单回退小组件内浮层
-- **仅管理员同步**：admin 账号才触发同步刷新；游客显示「需要登录」，普通账号只读，双方都只读缓存（带「只读缓存」角标）
+- **点击外开**：点击笔记直接在浏览器新标签打开本站原文。manifest 用 `openUrls: [{ id: "self", url: "/", match: "same-origin" }]` 声明，由宿主相对**自身 origin** 解析，因此在任何自托管域名下都能打开你自己的文章，不写死作者域名；宿主不支持或未命中时回退小组件内浮层
+- **仅管理员同步**：admin 账号才触发同步刷新；同步结果同时发布到安装级共享区（`Tapp.shared`），**游客/普通账号直接读到 admin 的数据**（只读缓存角标），未发布时游客显示「需要登录」
 - **headless 后台同步**：安装后常驻同步，页面不开也保持最新
 - **事件驱动刷新**：headless 写入 storage 后宿主自动刷新可见小组件；无数据变化不写入、不重挂载，不再频繁闪骨架
 - **可配置**：最大笔记数、同步间隔、是否同步正文
@@ -35,17 +35,19 @@ headless core (core.js)
   ├─ 缩略图规范化：平台媒体路径转同源相对地址、防盗链 CDN
   │   走 /api/proxy/image、其余外链原样保留交渲染层降级
   ├─ Tapp.storage.set('journal.notes.payload', …)
+  ├─ Tapp.shared.set 同步发布（内容有变化才写；游客可读，仅 owner/admin 可写）
   ├─ Tapp.scheduler 按 syncInterval 周期同步
   ├─ 监听 storage ping，管理员可见且数据过旧时触发即时同步
   └─ 角色门槛：仅 admin 同步；diag 标记（loaded/ready/sync-start）供超时定位
 
 Widget (widget/index.js)
   ├─ 幂等 render：读 storage 缓存 → 按 size 组装 DOM（textContent 防注入）
-  ├─ 角色分流：admin 正常渲染/同步；游客→需要登录；普通账号→只读 + 角标
+  ├─ 角色分流：admin 读私有 storage（同步/ping/挂狗齐全）；
+  │   游客/普通账号读 Tapp.shared（admin 发布的同一份数据）+「只读缓存」角标
   ├─ 缩略图渲染：同源/data: 才挂 <img>（懒加载 + 淡入），失败即移除，
   │   底层为 --jn-hue 渐变 + 首字占位
   ├─ storage.onChanged 局部重绘；ping 新鲜度 = max(数据, 同步, ping)
-  └─ 点击条目 → ui.openUrl 新标签打开原文（白名单），未命中回退全文浮层
+  └─ 点击条目 → ui.openUrl 新标签打开本站原文（same-origin 声明），未命中回退全文浮层
 ```
 
 同步状态记录在 `journal.notes.status`，失败时小组件展示错误态与原始错误详情；
@@ -72,10 +74,10 @@ cn.sua17.journal-notes/
 | ------------------- | ------------------------------------------------- |
 | `widget:register`   | manifest 声明主页小组件（安装校验必填）          |
 | `phantasi:read`     | 读取手账（Phantasi）笔记列表与正文（需 Myriad ≥ 0.5.0，旧名 `brew:read` 已退役） |
-| `storage:read`      | 小组件读取同步缓存与安装级设置                   |
-| `storage:write`     | headless 写入笔记缓存；小组件写入同步 ping        |
+| `storage:read`      | 小组件读取同步缓存与安装级设置；共享区读取（游客开放） |
+| `storage:write`     | headless 写入笔记缓存与共享区发布；小组件写入同步 ping |
 | `scheduler:register`| 注册周期同步任务                                  |
-| `ui:openUrl`        | 点击笔记时在浏览器新标签打开白名单内原文（openUrls: `sua17.cn` / `www.sua17.cn`，origin 匹配） |
+| `ui:openUrl`        | 点击笔记时在浏览器新标签打开本站原文（openUrls: `{ id: "self", url: "/", match: "same-origin" }`，相对宿主自身 origin 解析，需宿主支持 `same-origin` 匹配；旧宿主自动回退浮层） |
 
 ## 安装级默认设置
 
@@ -86,6 +88,17 @@ cn.sua17.journal-notes/
 | `fetchContent`  | toggle | true   | 同步正文，用于浮层阅读全文      |
 
 ## 更新日志
+
+### v1.2.0
+
+- **公开可用外开**：`openUrls` 改用 `{ id: "self", url: "/", match: "same-origin" }`，由宿主相对自身 origin 解析原文链接，任何自托管域名都能新标签打开自己的手账文章，不再写死 `sua17.cn`
+- **修复外开失效**：移除依赖 `document.referrer` / `window.location.origin` 的 `siteOrigin()`（Widget 为 `srcdoc` 不透明源且 `referrerpolicy="no-referrer"`，二者恒为空，导致点击永远回退浮层）；改为直接按声明解析
+- 无 `same-origin` 宿主或未命中声明时仍回退小组件内浮层
+
+### v1.1.1
+
+- **游客可见 admin 数据**：headless 把笔记 payload 发布到安装级共享区（`Tapp.shared`，写仅 owner/admin、读对所有访客开放），游客/普通账号直接只读渲染同一份数据 +「只读缓存」角标；admin 发布时广播实时刷新访客卡片
+- 注意：共享区内容**全站访客均可读**，请确认手账内容适合公开
 
 ### v1.1.0
 
