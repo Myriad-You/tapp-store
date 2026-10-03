@@ -373,12 +373,34 @@
   color: var(--gt-ink-soft);
 }
 
-.gtw-team-avatar {
+.gtw-team-member {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
   width: calc(20px * var(--gtw-scale));
   height: calc(20px * var(--gtw-scale));
   border-radius: 50%;
-  object-fit: cover;
+  background: rgba(var(--gt-accent-rgb), 0.2);
   border: calc(1px * var(--gtw-scale)) solid rgba(255, 255, 255, 0.85);
+  overflow: hidden;
+}
+
+.gtw-team-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: none;
+}
+
+.gtw-team-avatar-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: calc(9px * var(--gtw-scale));
+  font-weight: 800;
+  color: var(--gt-accent);
 }
 
 /* 剧诗轮次行（4x4） */
