@@ -49,9 +49,11 @@ DS 签名（`salt&t&r&b&q`）在 `core.js` 内用纯 JS 计算，盐值与 `x-rp
 | `network:fetch` | 调用声明式 API（米游社） |
 | `storage:read` / `storage:write` | 共享缓存与私有 Cookie |
 | `ui:notification` / `ui:confirm` / `ui:theme` | 提示、确认与主题 |
-| `ui:openUrl` | 打开开拓者笔记角色页 |
+| `ui:openUrl` | 打开开拓者笔记角色页（`sr-wiki` 用 `prefix`；`self` 用 `same-origin`，需 Myriad ≥ 0.6.2） |
 | `widget:register` | 声明式 Widget 注册 |
 | `scheduler:register` | 注册 6 小时定时刷新任务 |
+
+> Manifest 声明 `minSystemVersion: "0.6.2"`：`openUrls[].match: "same-origin"` 由 Myriad#607 引入，旧宿主会因未知 `match` 判整包校验失败，发商店必须用它挡住旧实例。
 
 ## 风险与说明
 
