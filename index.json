@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.84",
+  "version": "1.0.85",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-10-06T01:42:15.978Z",
+  "updated_at": "2026-10-06T01:43:14.715Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -3026,7 +3026,7 @@
     {
       "id": "cn.sua17.journal-notes",
       "name": "手账笔记",
-      "version": "1.1.0",
+      "version": "2.0.0",
       "description": "在主页小组件里速览 Myriad 手账（Phantasi）最新笔记：2×2 双条速览、4×2 横向分区、4×4 笔记墙，支持点击展开全文。headless 后台同步，桌面无开页也能保持最新。",
       "long_description": "在主页小组件里速览 Myriad 手账（Phantasi）的最新笔记。支持 2×2 双条速览、4×2 横向分区与 4×4 笔记墙三种尺寸，点击任意条目即可在小组件内展开全文阅读。数据同步由 headless 后台完成：安装后常驻同步，按设定间隔自动刷新，桌面无需打开任何页面也能保持最新；小组件本身只读取本地缓存，渲染幂等、开销极低。可配置最大笔记数、同步间隔与是否同步正文。跟随宿主明暗主题与字体缩放，内置简体中文、英语、日语。",
       "locales": {
@@ -3104,13 +3104,13 @@
           "widget/index.js": "apps/cn.sua17.journal-notes/widget/index.js"
         }
       },
-      "size": 70967,
+      "size": 75897,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-10-02T03:35:15.608Z",
-      "updated_at": "2026-10-02T09:33:52.808Z"
+      "updated_at": "2026-10-06T01:43:14.715Z"
     }
   ],
   "last_updated": "2026-08-04T09:47:35Z"
