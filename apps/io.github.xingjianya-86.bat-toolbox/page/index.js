@@ -836,8 +836,6 @@ Tapp.lifecycle.onReady(async function () {
   bindStaticText();
   bindEvents();
   await loadState();
+  await core.loadAssets();
   renderAll();
-  if (state.role === "admin" && core.isCacheStale(state.cache)) {
-    doRefresh(false);
-  }
 });
