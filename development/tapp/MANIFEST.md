@@ -78,14 +78,15 @@ Page/Widget 模板必须是 `.html`；代码与模板类声明资源必须是安
 | 字段 | 类型 | 必填 | 说明 |
 | ---- | ---- | ---- | ---- |
 | `id` | string | ✅ | 稳定 id，供 SDK 引用（1–64，字母数字与 `._-`） |
-| `url` | string | ✅ | 基址：**HTTPS**；仅 `localhost` / `127.0.0.1` / `::1` 允许 `http`；禁止凭据与 `#fragment` |
-| `match` | string | ❌ | `exact`（默认）/ `prefix` / `origin` |
+| `url` | string | ✅ | 基址：**HTTPS**；仅 `localhost` / `127.0.0.1` / `::1` 允许 `http`；禁止凭据与 `#fragment`。`match: same-origin` 时改为**根相对路径**（如 `/journal`） |
+| `match` | string | ❌ | `exact`（默认）/ `prefix` / `origin` / `same-origin` |
 
 匹配规则：
 
 - **`exact`**：只能打开声明的完整 URL；不允许 `path` / `query`
 - **`prefix`**：同 origin，路径须落在声明 path 前缀下（可带 `path` / `query`）
 - **`origin`**：同 origin 任意 path/query（自由度最高，商店审核应更严）
+- **`same-origin`**：`url` 是根相对路径，运行时相对**宿主自身 origin** 解析（可带 `path` / `query`）。同一份包在任何自托管域名下都能深链本站页面，不写死作者域名；解析结果必须留在宿主 origin，逃逸到其它 origin 一律拒绝。该匹配自 Myriad v0.6.2（Myriad#607）起提供；使用它的包必须声明 `minSystemVersion` ≥ `"0.6.2"`，否则旧宿主会因未知 `match` 整包校验失败
 
 ```json
 {
@@ -99,6 +100,11 @@ Page/Widget 模板必须是 `.html`；代码与模板类声明资源必须是安
     {
       "id": "status",
       "url": "https://status.example.com/health"
+    },
+    {
+      "id": "self",
+      "url": "/",
+      "match": "same-origin"
     }
   ]
 }
@@ -111,6 +117,10 @@ await Tapp.ui.openUrl({ id: "docs", path: "install" });
 
 await Tapp.ui.openUrl({ id: "status" });
 // → https://status.example.com/health
+
+// same-origin：在任何自托管域名下都解析到当前站点
+await Tapp.ui.openUrl({ id: "self", path: "/journal/notes/1" });
+// → https://<当前站点域名>/journal/notes/1
 
 // 未声明 id 或逃出 prefix → 失败
 await Tapp.ui.openUrl({ id: "docs", path: "../evil" }); // reject
@@ -190,6 +200,8 @@ Page、Widget 和 headless core 是运行形态，由 `page`、`widgets` 和
 `minSystemVersion` 使用语义版本。直接安装、商店安装和更新都会由后端与当前 Myriad
 包版本比较；当前版本过低或字段格式无效时会拒绝写入，避免出现“安装成功但运行时才
 发现 API 不兼容”。最低版本只写在包内 Manifest；商店 index 不重复维护第二份版本来源。
+当包依赖较新的 runtime 能力时必须抬高该字段：例如 `openUrls[].match: "same-origin"`
+需要 Myriad ≥ 0.6.2（Myriad#607），旧宿主不识别该取值，会把整包校验判为失败。
 
 ### 所有权、可见性与同 ID 并存
 
