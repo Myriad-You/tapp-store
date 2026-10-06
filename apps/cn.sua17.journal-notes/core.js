@@ -11,6 +11,9 @@ var PAYLOAD_KEY = 'journal.notes.payload'
 var STATUS_KEY = 'journal.notes.status'
 var PING_KEY = 'journal.notes.ping'
 var DIAG_KEY = 'journal.notes.diag'
+// 安装级共享区使用同名 key：命名空间独立，但同名让 Widget 的 onChanged 监听天然覆盖
+// 游客读 shared、admin 读 storage 两条路径。
+var SHARED_KEY = 'journal.notes.payload'
 var SYNC_TASK_ID = 'journal-notes-sync'
 var PAGE_SIZE = 100
 var MAX_PAGES = 5
@@ -42,6 +45,7 @@ var syncState = {
   running: false,
   pending: false,
   lastPayloadJson: '',
+  sharedJson: null,
   lastPingAt: 0,
 }
 
@@ -345,6 +349,43 @@ function seedPayloadJson() {
   } catch (e) {}
 }
 
+// 读一次共享区当前内容做播种：升级后立刻补齐发布，且避免每次会话启动都重复写。
+function primeSharedJson() {
+  try {
+    var result = Tapp.shared.get(SHARED_KEY)
+    if (result && typeof result.then === 'function') {
+      result.then(function (value) {
+        if (value && Array.isArray(value.notes)) {
+          syncState.sharedJson = JSON.stringify({ notes: value.notes })
+        }
+      }).catch(function () {})
+    }
+  } catch (e) {}
+}
+
+// 发布到安装级共享区：写仅 owner/admin，读对所有访客（optional_auth）开放，
+// 游客/普通账号的 Widget 读这一份看到 admin 的数据。
+function publishShared(payload, json) {
+  try {
+    var result = Tapp.shared.set(SHARED_KEY, payload)
+    if (result && typeof result.then === 'function') {
+      result
+        .then(function () {
+          syncState.sharedJson = json
+        })
+        .catch(function (error) {
+          syncState.sharedJson = null
+          console.warn('[journal-notes] shared publish failed', error)
+        })
+    } else {
+      syncState.sharedJson = json
+    }
+  } catch (error) {
+    syncState.sharedJson = null
+    console.warn('[journal-notes] shared publish failed', error)
+  }
+}
+
 async function syncNotes() {
   var api = getJournalApi()
   if (!api) return
@@ -381,6 +422,8 @@ async function syncNotes() {
       syncState.lastPayloadJson = json
       await Tapp.storage.set(PAYLOAD_KEY, payload)
     }
+    // 同步发布安装级共享区（内容有变化才写，避免无谓重挂载）
+    if (json !== syncState.sharedJson) publishShared(payload, json)
     await writeStatus(true)
   } catch (error) {
     console.warn('[journal-notes] sync failed', error)
@@ -447,6 +490,7 @@ Tapp.lifecycle.onReady(function () {
   if (!getJournalApi()) return
   diag('ready', { mode: typeof window !== 'undefined' ? String(window._TAPP_MODE || '') : '' })
   seedPayloadJson()
+  primeSharedJson()
   syncNotes()
   schedulePeriodicSync()
   listenForWidgetPings()
