@@ -20,7 +20,7 @@ Myriad 上的萌系网址导航 Tapp：管理员维护共享链接目录并按�
 Myriad 沙箱禁止 `window.open` 与顶层导航，外链只能通过 `Tapp.ui.openUrl` 打开 Manifest `openUrls` 白名单内的站点：
 
 - **命中白名单**：一键直达（本版本约 28 个常见站点，`match: "origin"`，覆盖该域名下任意路径）。
-- **本站链接**：manifest 额外声明 `{ "id": "self", "url": "/", "match": "same-origin" }`，由宿主相对自身 origin 解析，任何自托管域名都直达本站页面（需宿主支持 `same-origin`）。
+- **本站链接**：manifest 额外声明 `{ "id": "self", "url": "/", "match": "same-origin" }`，由宿主相对自身 origin 解析，任何自托管域名都直达本站页面（需宿主支持 `same-origin`，Myriad ≥ 0.6.2）。
 - **未命中白名单**：提供「搜索打开」——用已声明的搜索引擎（Bing → Baidu → Google）搜索该网址，另有一键复制；都不会静默失败。
 - 想让新站点**直达**：把域名加进 `manifest.json` 的 `openUrls`（上限 32 条）并发布新版本；只求“能点开”则无需改动。
 
@@ -35,6 +35,7 @@ Myriad 沙箱禁止 `window.open` 与顶层导航，外链只能通过 `Tapp.ui.
 
 ## 安装
 
+- 需要 Myriad ≥ 0.6.2：Manifest 声明 `minSystemVersion: "0.6.2"`；`same-origin` 外链匹配由 Myriad#607 引入，旧宿主会把未知 `match` 判为整包校验失败。
 - Myriad 商店安装（收录合并后可见）：`io.github.xingjianya-86.linknav`。
 - 本地安装：用 Myriad tapp-cli 打包后上传 `.tapp`：
 
