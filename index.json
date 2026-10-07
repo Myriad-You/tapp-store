@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.87",
+  "version": "1.0.88",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-10-06T01:44:20.796Z",
+  "updated_at": "2026-10-07T05:02:13.334Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -527,7 +527,7 @@
     {
       "id": "com.myriad.aro",
       "name": "Aro",
-      "version": "1.0.0",
+      "version": "1.2.1",
       "description": "社交中心，统一管理消息、时间线与个人资料",
       "long_description": "Aro 是 Myriad 官方社交中心，把联邦私信与群聊、时间线和个人资料收在同一处。信使支持 Channel / Room、端到端加密、群共享与本机贴纸包、表情、附件（图片、文件、Tapp、Brew、资料库与报告）、@ 提及、置顶与转发，以及后台轮询新消息通知。时间线可发帖、引用转发、收藏与关注。设置页可查看出站投递队列（取消 / 重试）并轮换联邦签名密钥。聊天记录可在本机导出或导入 JSON 备份。界面支持中英日与宿主明暗主题。",
       "locales": {
@@ -597,6 +597,7 @@
         "storage:read",
         "storage:write",
         "ui:notification",
+        "ui:openUrl",
         "federation:read",
         "federation:interact",
         "federation:post",
@@ -670,13 +671,13 @@
           "page/views.js": "apps/com.myriad.aro/page/views.js"
         }
       },
-      "size": 1189334,
+      "size": 1192068,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-01T00:00:00Z",
-      "updated_at": "2026-09-17T12:46:49.488Z"
+      "updated_at": "2026-10-07T05:02:13.306Z"
     },
     {
       "id": "cn.wyyzxzyg.cdn-cache",
