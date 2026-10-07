@@ -358,6 +358,7 @@
   "publicGroup": "公开",
   "quoteLabel": "回复",
   "quoteOpenExternal": "打开链接",
+  "quoteOpenLinkFailed": "无法打开链接",
   "quoteOpenHint": "查看",
   "quoteOpenOriginal": "查看原文",
   "quoteRepostFail": "转发失败",

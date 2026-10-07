@@ -2858,8 +2858,8 @@ button.aro-select-trigger.create-input{
 .quote-view-text{white-space:pre-wrap;word-break:break-word;font-size:14.5px;line-height:1.5;color:var(--text-primary,#1a1a1a)}
 .quote-view-muted{opacity:.7}
 .quote-view-nested-label{font-size:11px;font-weight:600;color:var(--text-secondary,#8b98a5);margin-top:4px}
-.quote-view-link-row{margin-top:4px}
-.quote-view-link{font-size:12.5px;font-weight:600;color:var(--tapp-primary,#6366f1);text-decoration:none}
+.quote-view-link-row{margin-top:4px;display:flex;gap:12px}
+.quote-view-link{border:0;background:none;padding:0;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--tapp-primary,#6366f1);text-decoration:none}
 .quote-view-link:hover{text-decoration:underline}
 .quote-view-source{font-size:10.5px;opacity:.5;margin-top:6px}
 .dark .quote-view-name{color:rgba(255,255,255,.92)}

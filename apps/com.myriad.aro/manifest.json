@@ -1,7 +1,7 @@
 {
   "id": "com.myriad.aro",
   "name": "Aro",
-  "version": "1.0.0",
+  "version": "1.2.1",
   "description": "社交中心，统一管理消息、时间线与个人资料",
   "locales": {
     "en-US": {
@@ -27,6 +27,7 @@
     "storage:read",
     "storage:write",
     "ui:notification",
+    "ui:openUrl",
     "federation:read",
     "federation:interact",
     "federation:post",
@@ -44,7 +45,7 @@
   ],
   "iconSvg": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M2 12h20\"/><path d=\"M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z\"/></svg>",
   "themeColor": "#6366f1",
-  "minSystemVersion": "0.4.15",
+  "minSystemVersion": "0.6.2",
   "backgroundRequirements": [
     "notification"
   ],
@@ -65,5 +66,12 @@
       "defaultValue": true
     }
   ],
-  "category": "social"
+  "category": "social",
+  "openUrls": [
+    {
+      "id": "site",
+      "url": "/",
+      "match": "same-origin"
+    }
+  ]
 }
