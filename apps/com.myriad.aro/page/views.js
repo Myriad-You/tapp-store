@@ -1284,6 +1284,7 @@ async function openQuotedPostDetail(objectId, snapshot, opts) {
   if (bodyEl) {
     bodyEl.innerHTML = renderQuoteViewDetailHtml(object, actor, source);
     bindQuotedObjectClicks(bodyEl);
+    bindQuoteDetailLinks(bodyEl);
   }
 }
 
@@ -1328,6 +1329,52 @@ function bindQuotedObjectClicks(root) {
   });
 }
 
+function quoteDetailUrl(object) {
+  var candidates = Array.isArray(object.url) ? object.url : [object.url];
+  candidates = candidates.concat([quotedObjectId(object)]);
+  for (var i = 0; i < candidates.length; i++) {
+    var value = candidates[i];
+    if (value && typeof value === 'object') value = value.href;
+    if (typeof value !== 'string') continue;
+    try {
+      var url = new URL(value);
+      if (/^https?:$/.test(url.protocol) && !url.username && !url.password) return url.href;
+    } catch (e) { /* invalid URL */ }
+  }
+  return '';
+}
+
+function quoteDetailOpenRequest(url) {
+  try {
+    // srcdoc inherits the host's base URL even with an opaque sandbox origin.
+    // The host independently enforces the same-origin declaration.
+    var target = new URL(url);
+    var host = new URL(document.baseURI);
+    if (!/^https?:$/.test(host.protocol) || target.origin !== host.origin
+      || target.username || target.password) return null;
+    return { id: 'site', path: target.pathname + target.search };
+  } catch (e) { return null; }
+}
+
+function bindQuoteDetailLinks(root) {
+  root.querySelectorAll('[data-quote-copy-link]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      copyTextToClipboard(button.getAttribute('data-quote-copy-link'));
+    });
+  });
+  root.querySelectorAll('[data-quote-open-link]').forEach(function (button) {
+    button.addEventListener('click', async function () {
+      var request = quoteDetailOpenRequest(button.getAttribute('data-quote-open-link'));
+      if (!request) return;
+      try {
+        await Tapp.ui.openUrl(request);
+      } catch (error) {
+        notifyError(lang.quoteOpenLinkFailed || 'Could not open link', error);
+      }
+    });
+  });
+}
+
 function renderQuoteViewDetailHtml(object, actor, source) {
   var author = '';
   if (actor) {
@@ -1362,11 +1409,15 @@ function renderQuoteViewDetailHtml(object, actor, source) {
       + esc(lang.quoteRepostQuoted || 'Quoted post') + '</div>';
     h += renderQuotedObjectHtml(nested, 0, { interactive: true, full: true });
   }
-  var oid = quotedObjectId(object);
-  if (oid && /^https?:\/\//i.test(oid)) {
-    h += '<div class="quote-view-link-row">'
-      + '<a class="quote-view-link" href="' + esc(oid) + '" target="_blank" rel="noopener noreferrer">'
-      + esc(lang.quoteOpenExternal || 'Open link') + '</a></div>';
+  var link = quoteDetailUrl(object);
+  if (link) {
+    h += '<div class="quote-view-link-row">';
+    if (quoteDetailOpenRequest(link)) {
+      h += '<button type="button" class="quote-view-link" data-quote-open-link="' + esc(link) + '">'
+        + esc(lang.quoteOpenExternal || 'Open link') + '</button>';
+    }
+    h += '<button type="button" class="quote-view-link" data-quote-copy-link="' + esc(link) + '">'
+      + esc(lang.shareCopyLink || 'Copy link') + '</button></div>';
   }
   if (source && source !== 'api') {
     h += '<div class="quote-view-source">'

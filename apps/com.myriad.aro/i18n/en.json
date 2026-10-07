@@ -358,6 +358,7 @@
   "publicGroup": "Public",
   "quoteLabel": "Replying to",
   "quoteOpenExternal": "Open link",
+  "quoteOpenLinkFailed": "Could not open link",
   "quoteOpenHint": "View",
   "quoteOpenOriginal": "View original",
   "quoteRepostFail": "Couldn't quote repost",

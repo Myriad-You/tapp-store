@@ -358,6 +358,7 @@
   "publicGroup": "公開",
   "quoteLabel": "返信先",
   "quoteOpenExternal": "リンクを開く",
+  "quoteOpenLinkFailed": "リンクを開けませんでした",
   "quoteOpenHint": "表示",
   "quoteOpenOriginal": "元の投稿を見る",
   "quoteRepostFail": "引用リポストに失敗しました",

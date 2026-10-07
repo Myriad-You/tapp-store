@@ -2,7 +2,7 @@
 
 社交中心：消息（Channel/Room）、时间线与个人资料。
 
-> 官方社交 Tapp（version 1.0.0，需 Myriad ≥ v0.3.36）。设置页含出站投递队列与联邦签名密钥轮换（需宿主 `federation.rotateKeys`）。
+> 官方社交 Tapp（version 1.2.1，需 Myriad ≥ v0.6.2）。设置页含出站投递队列与联邦签名密钥轮换（需宿主 `federation.rotateKeys`）。
 
 ## 功能
 
@@ -18,7 +18,7 @@
 
 ## 权限
 
-`storage:read`, `storage:write`, `ui:notification`,
+`storage:read`, `storage:write`, `ui:notification`, `ui:openUrl`,
 `federation:read|interact|post|channel|room|message|files`,
 `platform:read`, `report:read`, `tappList:read|manage`, `phantasi:read`,
 `media:control`, `network:fetch`
@@ -30,7 +30,14 @@
 > `network:fetch`：宿主沙箱将远端 `https` 图/媒体挂在此权限上（头像、封面、联邦附件直链）。
 > 为 **elevated**；已安装实例更新时需重新授权该权限（否则只保留旧 granted 交集）。
 
+本站详情链接经宿主 `ui:openUrl` 打开，只声明本站同源路径；外站链接提供「复制链接」。
+更新安装时需批准新增的声明权限，运行时仍只按授予权限开放。链接优先取对象的网页 `url`，没有时取对象 `id`。
+
 ## Changelog
+
+### 1.2.1
+
+- 详情链接改走宿主同源白名单，不再使用沙箱内失效的弹窗链接；远端链接可复制。
 
 ### 1.2.0
 
