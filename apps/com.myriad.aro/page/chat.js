@@ -1633,7 +1633,7 @@ function renderTappDetailView(body, tappId, name, desc, remoteVer, installed, lo
 
 function openReportDetail(reportId, card) {
   // Prefer live message payload (#120 snapshot fields), then data-* attrs, then DOM text.
-  // getReport is user-scoped — recipients rely on the snapshot only.
+  // platform.get is user-scoped — recipients rely on the snapshot only.
   var payloadSnap = shareCardPayload(card);
   var titleNode = card && card.querySelector ? card.querySelector('.msg-share-title') : null;
   var descNode = card && card.querySelector ? card.querySelector('.msg-share-desc') : null;
@@ -1682,8 +1682,8 @@ function openReportDetail(reportId, card) {
 
   // Owner path: enrich with sectioned HTML from catalog (complementary to #120 plain snapshot).
   if (!reportId) return;
-  if (!Tapp.report || typeof Tapp.report.getReport !== 'function') return;
-  Tapp.report.getReport(reportId).then(function (detail) {
+  if (!Tapp.report || !Tapp.report.platform || typeof Tapp.report.platform.get !== 'function') return;
+  Tapp.report.platform.get(reportId).then(function (detail) {
     if (!detail) {
       if (!snapSummary && !snapPreview && !snapPlatform) {
         body.innerHTML = '<div class="picker-empty">' + esc(lang.reportUnavailable || lang.pickerEmpty) + '</div>';

@@ -1,12 +1,12 @@
 # Aro
 
-社交中心：消息（Channel/Room）、时间线、环网与个人资料。
+社交中心：消息（Channel/Room）、时间线与个人资料。
 
-> 官方社交 Tapp（version 1.1.1，需 Myriad ≥ v0.3.36）。设置页含出站投递队列与联邦签名密钥轮换（需宿主 `federation.rotateKeys`）。
+> 官方社交 Tapp（version 1.2.1，需 Myriad ≥ v0.6.2）。设置页含出站投递队列与联邦签名密钥轮换（需宿主 `federation.rotateKeys`）。
 
 ## 功能
 
-- 联邦消息 / 房间 / 关注 / 时间线 / 环网
+- 联邦消息 / 房间 / 关注 / 时间线
 - **首页 = 群邻时间线**：本实例加入的每个群聊里，出现过的每个实例的每个用户的公开帖，
   按实例算而不是按成员算（需宿主 `federation.getRoomsFeed`，Myriad ≥ v0.3.38）；
   **订阅** 页是原来的首页，即关注对象的时间线
@@ -18,19 +18,33 @@
 
 ## 权限
 
-`storage:read`, `storage:write`, `ui:notification`,
-`federation:read|interact|post|channel|room|ring|message|files`,
-`platform:read`, `report:read`, `tappList:read|manage`, `brew:read`,
+`storage:read`, `storage:write`, `ui:notification`, `ui:openUrl`,
+`federation:read|interact|post|channel|room|message|files`,
+`platform:read`, `report:read`, `tappList:read|manage`, `phantasi:read`,
 `media:control`, `network:fetch`
 
 > 联邦写权限按动作域拆分：发帖与投递队列走 `federation:post`，关注/点赞/收藏/转发走
-> `federation:interact`，私聊通道走 `federation:channel`，群组与群贴纸走 `federation:room`，
-> 环网走 `federation:ring`。其中 `post` / `channel` / `room` 为 **elevated**，普通用户需站长下放。
+> `federation:interact`，私聊通道走 `federation:channel`，群组与群贴纸走 `federation:room`。
+> 其中 `post` / `channel` / `room` 为 **elevated**，普通用户需站长下放。
 >
 > `network:fetch`：宿主沙箱将远端 `https` 图/媒体挂在此权限上（头像、封面、联邦附件直链）。
 > 为 **elevated**；已安装实例更新时需重新授权该权限（否则只保留旧 granted 交集）。
 
+本站详情链接经宿主 `ui:openUrl` 打开，只声明本站同源路径；外站链接提供「复制链接」。
+更新安装时需批准新增的声明权限，运行时仍只按授予权限开放。链接优先取对象的网页 `url`，没有时取对象 `id`。
+
 ## Changelog
+
+### 1.2.1
+
+- 详情链接改走宿主同源白名单，不再使用沙箱内失效的弹窗链接；远端链接可复制。
+
+### 1.2.0
+
+- 移除**环网**：顶部导航的环网页签、环网视图与创建环网对话框、`page/ringsUi.js`
+  以及相关的状态、文案与样式全部删除。安装不再声明 `federation:ring`；宿主的环网
+  能力本身不变，其它 Tapp 仍可声明该权限。
+- `?view=rings` 启动参数不再有对应视图，落回默认页。
 
 ### 1.1.1
 
@@ -175,7 +189,7 @@ page/index.js        # page 层入口：按依赖顺序 require 同层文件，�
 page/scope.js        # 层内共享作用域（把跨文件的名字挂回沙箱全局）
 page/*.js            # UI 真源，由 page/index.js 的 require 闭包拉入
 i18n/{zh,en,ja}.json
-manifest.json        # version 1.1.1
+manifest.json        # version 1.0.0
 ```
 
 层入口由 manifest 的 `core.entry` / `page.entry` 声明；层内其余文件不进 manifest，

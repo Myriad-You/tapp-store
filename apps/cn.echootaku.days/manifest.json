@@ -1,7 +1,7 @@
 {
   "id": "cn.echootaku.days",
   "name": "朝夕",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "minSystemVersion": "0.3.23",
   "description": "记录值得期待与纪念的日子，在主页随时查看最近倒数。",
   "locales": {
@@ -26,8 +26,17 @@
     "storage:write",
     "ui:notification",
     "ui:confirm",
-    "widget:register"
+    "widget:register",
+    "scheduler:register",
+    "ai:generate"
   ],
+  "ai": {
+    "protocolVersion": 2,
+    "operations": ["generate"],
+    "modelTier": "standard",
+    "contextSources": ["custom"],
+    "outputFormats": ["json"]
+  },
   "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><rect x='3' y='4.5' width='18' height='16' rx='3' stroke='currentColor' stroke-width='1.8'/><path d='M7.5 2.5v4M16.5 2.5v4M3 9h18' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/><path d='M8 13h3v3H8zM14 13h2' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>",
   "themeColor": "#D97757",
   "widgets": [
@@ -179,6 +188,7 @@
         "mode": "event",
         "refreshOnVisible": true
       },
+      "entry": "widget.js",
       "styles": "widget.css"
     }
   ],

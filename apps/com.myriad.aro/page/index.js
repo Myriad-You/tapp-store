@@ -19,7 +19,6 @@ require('./createUi.js');
 require('./api.js');
 require('./feedUi.js');
 require('./feedCompose.js');
-require('./ringsUi.js');
 require('./views.js');
 require('./events.js');
 
@@ -155,7 +154,6 @@ async function init() {
     }
   } catch (e3) { /* ignore */ }
   renderFederationIdentity();
-  applyAdminControls();
   applyRoleControls();
 
   // Seal any leftover fixed overlays before binding (reinstall / hot reload / partial dismiss).
@@ -177,7 +175,7 @@ async function init() {
 
   // Handle launch params
   var launchParams = window._TAPP_LAUNCH_PARAMS || {};
-  if (!state.isGuest && launchParams.view && ['messages', 'feed', 'rings'].indexOf(launchParams.view) !== -1) {
+  if (!state.isGuest && launchParams.view && ['messages', 'feed'].indexOf(launchParams.view) !== -1) {
     switchView(launchParams.view);
   } else if (launchParams.view === 'timeline' || launchParams.view === 'profile') {
     switchView('feed');
@@ -209,7 +207,6 @@ async function init() {
     renderMembers();
     renderFederationIdentity();
     if (state.currentView === 'feed') { renderFeedContent(); }
-    else if (state.currentView === 'rings') { renderRingsSidebar(); if (state.activeRingId) renderRingDetail(); }
   });
   if (typeof getPageDisposables === 'function') {
     getPageDisposables().add(typeof unsubLocale === 'function' ? unsubLocale : function () {});

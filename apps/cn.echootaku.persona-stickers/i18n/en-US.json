@@ -1,0 +1,125 @@
+{
+  "app": {
+    "eyebrow": "PERSONA STICKER LAB",
+    "title": "Persona Sticker Lab",
+    "subtitle": "Create stickers made for your Agent~",
+    "privacy": "The persona portrait and optional cue image are sent only with this governed image task."
+  },
+  "persona": {
+    "title": "Your Agent persona",
+    "loading": "Loading",
+    "ready": "Ready",
+    "disabled": "Not enabled",
+    "noPortrait": "No portrait",
+    "unavailable": "Unavailable",
+    "loadingDetail": "Reading the public persona card…",
+    "disabledDetail": "No Agent persona is currently enabled.",
+    "noPortraitDetail": "The Agent persona does not have a usable portrait yet.",
+    "unavailableDetail": "The Agent persona cannot be read right now.",
+    "requiredTitle": "Prepare an Agent persona first",
+    "requiredDetail": "Create an Agent persona and generate its portrait in Myriad, then reopen this app.",
+    "context": "Mood: {mood} · Status: {activity}",
+    "help": "The Agent portrait always defines the generated character's identity and appearance."
+  },
+  "mood": { "floor": "low", "sad": "sad", "tense": "tense", "calm": "calm", "excited": "excited" },
+  "activity": { "idle": "idle", "working": "working", "thinking": "thinking", "talking": "talking" },
+  "composer": {
+    "title": "Choose an expression cue",
+    "subtitle": "Pick one of three modes. Each task creates one standalone PNG sticker."
+  },
+  "mode": {
+    "legend": "Expression cue mode",
+    "emoji": "Emoji",
+    "emojiDetail": "Express an emotion with one symbol",
+    "kaomoji": "Kaomoji",
+    "kaomojiDetail": "Describe the face with characters",
+    "image": "Expression image",
+    "imageDetail": "Follow one existing reaction image"
+  },
+  "cue": { "customPriority": "A custom value takes priority when filled" },
+  "prompt": {
+    "title": "Additional prompt (high priority)",
+    "priority": "Takes priority for action, expression, props, framing, and emotional intensity",
+    "placeholder": "For example: crouching with both hands on the head, tears spraying sideways like fountains, extremely exaggerated motion.",
+    "boundary": "Optional. It cannot override the Agent identity or the fixed single-image, one-character, and no-text rules."
+  },
+  "emoji": {
+    "title": "Choose an Emoji",
+    "joy": "Happy",
+    "cry": "Crying",
+    "determined": "Determined",
+    "shy": "Shy",
+    "think": "Thinking",
+    "celebrate": "Celebrating",
+    "custom": "Custom Emoji (optional)",
+    "placeholder": "For example: 🥺"
+  },
+  "kaomoji": {
+    "title": "Choose a kaomoji",
+    "joy": "Delighted",
+    "sad": "Upset",
+    "shock": "Shocked",
+    "wave": "Greeting",
+    "custom": "Custom kaomoji (optional)",
+    "placeholder": "For example: (๑•̀ㅂ•́)و✧"
+  },
+  "image": {
+    "title": "Upload one expression image",
+    "formats": "PNG, JPEG, or WebP; up to 10 MiB",
+    "choose": "Choose one expression reference",
+    "hint": "It supplies only the expression, pose, and composition. The Agent persona still defines the character.",
+    "previewAlt": "Uploaded expression reference",
+    "remove": "Remove reference",
+    "localSize": "Local image · {size}"
+  },
+  "output": {
+    "title": "Output: standalone PNG sticker",
+    "detail": "1024 × 1024, one character, no text or watermark."
+  },
+  "action": {
+    "generate": "Generate one sticker",
+    "cancel": "Cancel task",
+    "dismiss": "Dismiss status",
+    "preview": "View full size",
+    "downloadPng": "Download PNG",
+    "closePreview": "Close full-size preview"
+  },
+  "status": {
+    "creating": "Creating the AI image task",
+    "creatingDetail": "The persona portrait and expression cue are being submitted through Myriad's governed Task API.",
+    "waiting": "Task created, waiting for the image",
+    "waitingDetail": "The client waits up to 315 seconds. You can cancel this task.",
+    "failed": "Generation did not finish",
+    "cancelled": "Task cancelled",
+    "success": "Single sticker generated",
+    "successDetail": "One standalone PNG sticker is ready to preview in this session."
+  },
+  "result": {
+    "title": "Your Agent's new expression is ready",
+    "alt": "Generated Agent PNG sticker",
+    "cacheBadge": "Temporary Myriad cache",
+    "cacheBoundary": "The result is a temporary host PNG cache entry. View it full size or download it now.",
+    "previewTitle": "Full-size sticker preview",
+    "previewAlt": "Full-size generated Agent PNG sticker",
+    "downloadBoundary": "Myriad reads the current cache and saves the actual PNG. Download it while the cache is still available.",
+    "downloadStarted": "The PNG was handed to Myriad for download."
+  },
+  "errors": {
+    "provider": "The image provider did not complete the task. The app will not silently discard the persona or cue image and retry as text-to-image.",
+    "permission": "The ai:image permission is not granted. Allow image generation in Myriad's Tapp permissions.",
+    "persona": "Create an Agent persona and generate a usable portrait in Myriad first.",
+    "expressionCue": "Choose or enter an Emoji or kaomoji.",
+    "expressionImage": "Expression image mode requires one uploaded reference.",
+    "timeout": "The client wait timed out. The app attempted to cancel the remote task.",
+    "cancelled": "The task was cancelled and produced no result.",
+    "reference": "The reference must be a PNG, JPEG, or WebP whose content matches its MIME type.",
+    "referenceLimit": "Choose exactly one expression reference no larger than 10 MiB after decoding.",
+    "inputLimit": "The prompt or task input exceeds the current AI Task limit. Shorten the custom value.",
+    "apiUnavailable": "Tapp.ai.tasks image generation is unavailable in this sandbox.",
+    "fileApiUnavailable": "The browser does not expose a usable FileReader.",
+    "downloadUnavailable": "This installation does not expose the host PNG download bridge. Update Myriad and try again.",
+    "fileRead": "The local image could not be read or the read was cancelled. Choose it again.",
+    "resultInvalid": "The task did not return a safe Myriad PNG image-cache path, so it cannot be previewed.",
+    "unknown": "The operation failed. Check the error code in the Myriad console before retrying."
+  }
+}

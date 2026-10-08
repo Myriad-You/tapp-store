@@ -120,7 +120,7 @@ assert.match(index, /async function init\s*\(/)
 for (const mod of [
   'i18n', 'state', 'helpers', 'shareUi', 'mentionUi', 'attachments', 'msgUi',
   'chat', 'members', 'history', 'files', 'msgSync', 'e2eUi', 'roomUi',
-  'createUi', 'api', 'feedUi', 'feedCompose', 'ringsUi', 'views', 'events',
+  'createUi', 'api', 'feedUi', 'feedCompose', 'views', 'events',
 ]) {
   assert.match(index, new RegExp(`require\\('\\./${mod}\\.js'\\)`), `page/index.js must require ${mod}.js`)
 }

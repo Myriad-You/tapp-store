@@ -6,29 +6,53 @@
     "next": "下一步",
     "prev": "上一步",
     "cancel": "取消",
-    "unknown": "未知"
+    "confirm": "确定",
+    "unknown": "未知",
+    "copy": "复制",
+    "copied": "已复制",
+    "copyFail": "复制失败"
   },
   "home": {
     "refresh": "刷新数据",
     "refreshTime": "更新于",
+    "playerList": "玩家列表",
+    "noPlayerData": "No Player Data",
     "loading": "加载中",
     "enroll": "入职日",
-    "loadFail": "资源加载失败",
+    "loadFail": "资源加载失败"
+  },
+  "addPlayer": {
+    "title": "添加玩家",
     "errorModule": "skland 模块未加载",
     "errorNoBinding": "未找到明日方舟绑定账号，请检查 Token 是否有效",
     "step1": {
-      "title": "步骤 1 · 获取森空岛 Token",
-      "guidePrefix": "在已登录的",
-      "guideLink": "森空岛官网",
-      "guideSuffix": "控制台执行以下命令，把结果复制到下方输入框（格式：cred,token）",
-      "copyHint": "点击复制",
-      "copied": "已复制 · 粘贴到森空岛官网控制台执行",
-      "errorFormat": "请输入格式为 cred,token 的值"
+      "title": "步骤 1 · 登录",
+      "phone": "手机号",
+      "password": "密码",
+      "login": "登录并绑定",
+      "errorEmpty": "请输入手机号和密码"
     },
     "step2": {
       "title": "步骤 2 · 选择账号",
       "empty": "无可用账号"
+    },
+    "notice": {
+      "code": "CAUTION",
+      "title": "注意",
+      "message": "鹰角网络通行证账号登录凭证是用于鹰角网络账号系统校验您登录的唯一凭证，是鹰角网络所有 API 交互的身份标识基础。泄露登录凭证属于极度危险操作，为了您的账号安全，请勿将此凭证以任何形式告知他人！"
     }
+  },
+  "playerList": {
+    "title": "玩家列表",
+    "add": "添加玩家",
+    "view": "查看",
+    "delete": "删除",
+    "deleteTitle": "删除玩家",
+    "deleteConfirm": "确定删除该玩家？此操作不可撤销。",
+    "showPublic": "公开",
+    "default": "默认展示",
+    "empty": "暂无玩家",
+    "updated": "更新于"
   },
   "collection": {
     "title": "我的方舟",
@@ -57,11 +81,12 @@
     "sortGain": "获取时间",
     "sortName": "角色名称",
     "empty": "暂无干员数据",
-    "skinTodoPrefix": "时装资产 · TODO（",
-    "skinTodoSuffix": " 个皮肤）"
+    "noSkins": "暂无时装"
   },
   "widget": {
-    "empty": "暂无玩家数据，请在应用页面绑定账号"
+    "empty": "暂无玩家数据，请在应用页面绑定账号",
+    "noAccess": "无权访问该玩家",
+    "notFound": "账户不存在"
   },
   "footer": {
     "copyright": "Tapp 所涉及的公司名称、商标、产品等均为其各自所有者的资产，仅供识别。Tapp 内使用的游戏图片、动画、音频、文本原文，仅用于更好地表现游戏资料，其版权属于 Arknights / 上海鹰角网络科技有限公司"
@@ -82,6 +107,8 @@
     "tabCampaign": "剿灭",
     "tabTower": "保全派驻",
     "noActivity": "暂无活动",
+    "inProgress": "进行中",
+    "completed": "已完成",
     "noRogue": "暂无集成战略",
     "noCampaign": "暂无剿灭",
     "noTower": "暂无保全派驻",

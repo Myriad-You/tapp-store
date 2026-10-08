@@ -1,7 +1,7 @@
 {
   "id": "com.myriad.three-lab",
   "name": "Three 实验室",
-  "version": "1.0.2",
+  "version": "1.0.0",
   "minSystemVersion": "0.3.29",
   "description": "官方 Three.js 示例：包内贴图与 GLB、pause 停帧、销毁时释放 WebGL",
   "locales": {

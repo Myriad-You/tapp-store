@@ -1,8 +1,12 @@
+var Storage = require('./storage.js');
+var UpgradeEngine = require('./upgrade.js');
+var PlatformGuides = require('./platform.js');
+
 // Myriad Config Generator — 生产 compose / .env / Nginx
 //
 // 部署方式（用户可选）：
 // - 1Panel / 宝塔 / aaPanel：面板编排 + 上传现有 Nginx
-// - Portainer / Dockge：Stacks/项目粘贴 YAML，外层仍要 Nginx/Caddy/NPM
+// - 所有平台都以 Docker 主机上的固定 Compose / .env 文件为准。
 // - Coolify / Dokploy / NPM：平台或 NPM 自带反代，不生成 Nginx
 // - Caddy：生成 Caddyfile（自动 HTTPS）
 // - 通用/CLI：标准 Linux 路径，docker compose 命令行部署
@@ -334,7 +338,7 @@ var I18N_FALLBACK = {
   "wizard.advanced": "高级",
   "wizard.progress": "{done} / {total}",
   "welcome.title": "准备安装配置",
-  "welcome.lead": "选择部署方式并填写站点域名。部分方式须先创建站点并完成证书配置。密钥与镜像版本将自动填入。",
+  "welcome.lead": "选择部署方式并填写站点域名。产物是官方三进程拓扑（web + federation-worker + persona-worker）。部分方式须先创建站点并完成证书配置。密钥与镜像版本将自动填入。",
   "welcome.feature.panel": "选择方式",
   "welcome.feature.domain": "填写域名",
   "welcome.feature.site": "准备站点",
@@ -343,21 +347,21 @@ var I18N_FALLBACK = {
   "panel.title": "选择部署方式",
   "panel.lead": "请选择当前使用的面板、编排界面或外层反代。若直接使用 Docker，请选择「命令行」。",
   "panel.group": "部署方式",
-  "panel.1panel.desc": "在编排中粘贴 YAML，在环境变量中粘贴 .env",
-  "panel.baota.desc": "可粘贴编排，或将文件置于网站目录",
+  "panel.1panel.desc": "在 Docker 主机固定目录保存 Compose、.env 和 Guard 策略，再按部署说明接入面板。",
+  "panel.baota.desc": "在 Docker 主机固定目录保存 Compose、.env 和 Guard 策略，再按部署说明接入面板。",
   "panel.generic.desc": "使用 docker compose 在命令行启动",
-  "panel.1panel.wizardHint": "生成后，请将 YAML 粘贴至编排，将 .env 粘贴至环境变量。",
-  "panel.baota.wizardHint": "生成后，可粘贴编排，或将两个文件置于同一目录。",
+  "panel.1panel.wizardHint": "在 Docker 主机固定目录保存 Compose、.env 和 Guard 策略，再按部署说明接入面板。",
+  "panel.baota.wizardHint": "在 Docker 主机固定目录保存 Compose、.env 和 Guard 策略，再按部署说明接入面板。",
   "panel.generic.wizardHint": "生成后，请将两个文件置于同一目录，并执行 docker compose up -d。",
-  "panel.1panel.envBadge": "1Panel 环境变量 · 请勿公开",
-  "panel.baota.envBadge": "与 compose 同目录 · .env 文件",
-  "panel.generic.envBadge": "与 compose 同目录 · .env 文件",
+  "panel.1panel.envBadge": "实体 .env 文件 · 保密",
+  "panel.baota.envBadge": "实体 .env 文件 · 保密",
+  "panel.generic.envBadge": "实体 .env 文件 · 保密",
   "panel.1panel.envCopy": "复制到 1Panel",
   "panel.baota.envCopy": "复制 .env",
   "panel.generic.envCopy": "复制 .env",
-  "panel.1panel.composeBadge": "1Panel 编排 · 粘贴 YAML",
-  "panel.baota.composeBadge": "粘贴 YAML 或目录部署",
-  "panel.generic.composeBadge": "docker compose · CLI",
+  "panel.1panel.composeBadge": "固定主机目录中的 Compose",
+  "panel.baota.composeBadge": "固定主机目录中的 Compose",
+  "panel.generic.composeBadge": "固定主机目录中的 Compose",
   "panel.baota.label": "宝塔面板",
   "panel.baota.short": "宝塔",
   "panel.generic.label": "通用 / CLI",
@@ -366,17 +370,17 @@ var I18N_FALLBACK = {
   "panel.1panel.siteStep2": "申请并启用 SSL",
   "panel.1panel.siteStep3": "将站点配置文件拖放到下方",
   "panel.1panel.siteConfPath": "亦可在服务器网站目录或 OpenResty conf.d 中查找 {domain}.conf",
-  "panel.1panel.resultsIntro": "请将 docker-compose.yml 粘贴至「容器 / 编排」，将 .env 粘贴至「环境变量」。网站须整站反代至本机端口。",
+  "panel.1panel.resultsIntro": "先保存全部文件，再按 DEPLOY.md 中所选平台的步骤部署。",
   "panel.baota.siteStep1": "打开宝塔 → 网站，添加 {domain}",
   "panel.baota.siteStep2": "在站点设置中申请 SSL",
   "panel.baota.siteStep3": "将站点配置文件拖放到下方",
   "panel.baota.siteConfPath": "常见路径：/www/server/panel/vhost/nginx/{domain}.conf",
-  "panel.baota.resultsIntro": "可通过「创建编排」粘贴 YAML，或将 compose 与 .env 置于同一目录。使用内置数据库时，请先阅读部署说明中的目录权限要求。",
+  "panel.baota.resultsIntro": "先保存全部文件，再按 DEPLOY.md 中所选平台的步骤部署。",
   "panel.generic.siteStep1": "先为 {domain} 签发证书",
   "panel.generic.siteStep2": "确认 HTTPS 可正常访问",
   "panel.generic.siteStep3": "将现有 Nginx 配置拖放到下方",
   "panel.generic.siteConfPath": "常见路径：/etc/nginx/sites-available/{domain} 或 /etc/nginx/conf.d/{domain}.conf",
-  "panel.generic.resultsIntro": "请将 docker-compose.yml 与 .env 置于同一目录，执行 docker compose up -d，再由外层 Nginx 整站反代。",
+  "panel.generic.resultsIntro": "先保存全部文件，再按 DEPLOY.md 中所选平台的步骤部署。",
   "domain.title": "站点域名",
   "domain.lead": "站点将通过此地址访问 Myriad。无需填写 https://。",
   "domain.main": "主域名",
@@ -401,21 +405,21 @@ var I18N_FALLBACK = {
   "db.bundledDesc": "随编排一并部署，无需另行建库",
   "db.external": "外置",
   "db.externalDesc": "填写现有数据库的连接信息",
-  "db.bundledHint": "数据库名、用户与密码将自动写入，无需另行记录。",
+  "db.bundledHint": "数据库名、用户与密码将自动写入。同时生成互不相同的 worker 库口令，不复用管理员密码。",
   "db.host": "主机",
   "db.port": "端口",
   "db.name": "数据库名",
   "db.user": "用户名",
   "db.sslmode": "sslmode",
   "db.sslUnset": "不设置",
-  "db.extraNetwork": "附加 Docker 子网",
-  "db.extraNetworkHint": "仅当数据库与 Myriad 不在同一 Docker 网络时需要。1Panel 常见值为 1panel-network。",
+  "db.extraNetwork": "外部数据库共享网（可选）",
+  "db.extraNetworkHint": "外部数据库共享网（可选）",
   "db.password": "数据库密码",
   "db.passwordPlaceholder": "请填写外置数据库的实际密码",
   "db.genPassword": "生成随机密码",
   "db.hostPlaceholder": "host.docker.internal 或 IP",
   "limits.title": "资源配置",
-  "limits.lead": "请按服务器可用资源选择限额。不确定时请使用推荐档。",
+  "limits.lead": "请按服务器可用资源选择限额。不确定时请使用推荐档。federation-worker / persona-worker 使用官方固定限额，不随此档改。",
   "limits.group": "资源档",
   "limits.small": "小型",
   "limits.smallDesc": "约 1–2 GB",
@@ -424,14 +428,14 @@ var I18N_FALLBACK = {
   "limits.large": "宽裕",
   "limits.largeDesc": "4 GB 以上",
   "limits.custom": "自定义限额",
-  "limits.hintSmall": "小型档：数据库 0.5 核 / 512M，后端 1 核 / 1G，前端 0.5 核 / 256M。已自动启用内存节约。",
-  "limits.hintStandard": "推荐档：数据库 1 核 / 1G，后端 2 核 / 2G，前端 1 核 / 512M。",
-  "limits.hintLarge": "宽裕档：数据库 2 核 / 2G，后端 2 核 / 2G，前端 1 核 / 1G。",
+  "limits.hintSmall": "小型档：数据库 0.5 核 / 512M，后端 1 核 / 1G，前端 0.5 核 / 256M。glibc arena 2。已自动启用内存节约。",
+  "limits.hintStandard": "推荐档：数据库 1 核 / 1G，后端 2 核 / 2G，前端 1 核 / 512M。glibc arena 4。",
+  "limits.hintLarge": "宽裕档：数据库 2 核 / 2G，后端 2 核 / 2G，前端 1 核 / 1G。glibc arena 8。",
   "limits.hintCustom": "请分别填写各服务的 CPU 与内存。内存格式如 512M、2G。",
   "limits.db": "数据库",
   "limits.dbDesc": "供内置 PostgreSQL 使用。选择外置时不会生成该容器。",
   "limits.backend": "后端",
-  "limits.backendDesc": "API 与后台任务。",
+  "limits.backendDesc": "web 进程。federation-worker 固定 0.5 核 / 512M，persona-worker 固定 1 核 / 1G。",
   "limits.frontend": "前端",
   "limits.frontendDesc": "站点页面。",
   "limits.cpu": "CPU（核）",
@@ -489,11 +493,15 @@ var I18N_FALLBACK = {
   "guide.generic.proxyTitle": "接入外层反代",
   "guide.generic.proxyBody": "将生成的 {domain}.conf 放入 Nginx，整站反代至 {bind}。请勿仅反代 /api。",
   "guide.baota.pasteTitle": "将编排粘贴至宝塔",
-  "guide.baota.pasteBody": "打开宝塔 → Docker → 容器编排 → 创建编排，粘贴 docker-compose.yml，并将 .env 置于同一目录。",
+  "guide.baota.pasteBody": "在 Docker 主机固定目录保存 Compose、.env 和 Guard 策略，再按部署说明接入面板。",
   "guide.baota.overwriteTitle": "覆盖站点配置",
   "guide.baota.overwriteBody": "打开宝塔网站 → 设置 → 配置文件，用生成的 {domain}.conf 覆盖。反代目标为 {bind}，且必须为整站 /。",
   "guide.1panel.pasteTitle": "将编排粘贴至 1Panel",
-  "guide.1panel.pasteBody": "打开 1Panel → 容器 → 编排 → 创建。YAML 粘贴 docker-compose.yml，环境变量粘贴 .env 全文。",
+  "guide.1panel.pasteBody": "在 Docker 主机固定目录保存 Compose、.env 和 Guard 策略，再按部署说明接入面板。",
+  "guide.1panel.guardTitle": "安装宿主 Guard 策略",
+  "guide.1panel.guardBody": "在 Docker 主机固定目录保存 Compose、.env 和 Guard 策略，再按部署说明接入面板。",
+  "done.badgeGuard": "由 Guard 自动写入",
+  "error.needUpdaterDigest": "Guard 必须钉死 updater 镜像 digest。请填写 vX.Y.Z@sha256:<64hex>，或等 Docker Hub 解析完成后再生成。",
   "guide.1panel.overwriteTitle": "覆盖站点配置",
   "guide.1panel.overwriteBody": "打开 1Panel 网站 → 配置文件，用生成的 {domain}.conf 覆盖。目标为 http://{bind}，且必须整站反代。",
   "guide.openTitle": "打开站点并创建所有者",
@@ -508,8 +516,8 @@ var I18N_FALLBACK = {
   "notify.downloadOk": "文件已下载：{filename}",
   "notify.downloadStarted": "已开始下载：{filename}",
   "notify.generated": "配置已生成。请先复制安装暗号，创建所有者时须填写。",
-  "notify.tagsAligned": "已更新为 Docker Hub 共同 versioned tag",
-  "notify.tagsMixed": "已更新 tag（proxy / updater 可能与应用版本不同）",
+  "notify.tagsAligned": "已更新为各镜像最新 versioned tag",
+  "notify.tagsMixed": "已更新 tag（backend 与 frontend 版本不一致）",
   "notify.tagsFailed": "获取最新版本失败：{message}",
   "error.needMainDomain": "请填写主域名",
   "error.badMainDomain": "主域名格式无效",
@@ -519,7 +527,7 @@ var I18N_FALLBACK = {
   "error.badDbHost": "请填写有效的数据库主机（IP / 主机名 / host.docker.internal）",
   "error.badDbPort": "数据库端口无效",
   "error.badSslmode": "sslmode 无效",
-  "error.badExtraNetwork": "附加子网不是合法的 Docker 网络名",
+  "error.badExtraNetwork": "外部数据库共享网络名不合法：需以字母或数字开头，只能包含字母、数字、_、.、-。",
   "error.needDbPassword": "请填写外置数据库密码",
   "error.badHttpBind": "HTTP 监听地址无效",
   "error.badHttpPort": "HTTP 端口无效",
@@ -528,16 +536,12 @@ var I18N_FALLBACK = {
   "error.badCpu": "CPU 数量必须是大于 0 的数字",
   "error.badMemory": "内存须为 16M–256G（如 512M、2G）；禁止 0M 与超大值",
   "error.needTags": "请填写完整的镜像 tag",
-  "error.badTag": "tag 须为 versioned（vX.Y.Z / vX.Y.Z-rc.N），可选 @sha256:<64hex>；禁止 latest",
+  "error.badTag": "请填写版本标签 vX.Y.Z / vX.Y.Z-rc.N；仅 updater 可附加 @sha256:<64hex>，禁止 latest。",
   "error.netEmpty": "{key} 不能为空",
   "error.netInvalid": "{key} 不是合法的 Docker 网络名",
   "error.netDuplicate": "{prev} 与 {key} 使用了相同的 Docker 网络名「{value}」，请改为互不相同",
   "error.netExtraClash": "{key} 与附加 Docker 子网使用了相同的网络名「{value}」，两者必须不同",
   "error.generateFailed": "生成失败",
-  "error.needUpdaterDigest": "Guard 必须钉死 updater 镜像 digest。请填写 vX.Y.Z@sha256:<64hex>，或等 Docker Hub 解析完成后再生成。",
-  "done.badgeGuard": "由 Guard 自动写入",
-  "guide.1panel.guardTitle": "安装宿主 Guard 策略",
-  "guide.1panel.guardBody": "无需手工安装。Guard 首次启动会写入 ./guard-policy/docker-guard.env。",
   "error.uploadTooLarge": "Nginx 配置不能超过 {max}KB（当前 {current}KB）",
   "error.uploadType": "请上传 .conf 文本文件",
   "error.uploadNotText": "无法以文本读取该文件",
@@ -550,11 +554,16 @@ var I18N_FALLBACK = {
   "error.dbHostStep": "请填写外置数据库的主机地址",
   "error.dbPasswordStep": "请填写外置数据库密码",
   "tags.loading": "正在获取最新版本…",
-  "tags.loadingHub": "正在从 Docker Hub 获取最新 versioned tag…",
-  "tags.aligned": "四组件同版本",
-  "tags.mismatch": "组件 tag 可能不一致，请确认兼容",
+  "tags.loadingHub": "正在用 GitHub Release 确认版本，并查询 Docker Hub…",
+  "tags.githubConfirmed": "GitHub Release 已确认",
+  "tags.githubOnly": "Docker Hub 不可达，已按 GitHub Release 确认",
+  "tags.sourcesEmpty": "GitHub Release 与 Docker Hub 都没有可用的 versioned tag（vX.Y.Z）{detail}",
+  "tags.githubHttp": "GitHub HTTP {status}",
+  "tags.githubUnavailable": "当前环境无法请求 GitHub",
+  "tags.aligned": "各仓独立最新",
+  "tags.mismatch": "backend 与 frontend tag 不一致",
   "tags.partialFail": "部分仓库失败：{detail}",
-  "tags.resolved": "已解析：MYRIAD={myriad} · PROXY={proxy} · UPDATER={updater} · {align}{fail}（禁止 :latest；生产可加 @sha256:…）",
+  "tags.resolved": "已解析：MYRIAD={myriad} · PROXY={proxy} · UPDATER={updater} · {align}{fail}（业务使用版本标签；Guard / updater 固定 digest）",
   "tags.failStatus": "获取失败：{message}。请手动填写 versioned tag。",
   "tags.hubEmpty": "Docker Hub 上未找到可用的 versioned tag（vX.Y.Z）{detail}",
   "tags.hubUnavailable": "当前环境无法请求 Docker Hub",
@@ -568,83 +577,84 @@ var I18N_FALLBACK = {
   "nginx.summary.nginxTRequired": "手写解析器不能替代 nginx -t；上线前请在目标机执行校验命令",
   "validation.envOk": "✓ .env 密钥白名单与再解析通过",
   "validation.proxyOk": "✓ PROXY_ALLOW_DIRECT_UPDATER=false（单次）",
-  "validation.digestPinned": "✓ 已 pin 部分镜像 digest",
-  "validation.mutableTag": "· 镜像为可变 tag（可选 vX.Y.Z@sha256:…）",
+  "validation.workersOk": "✓ federation-worker / persona-worker 与 proxy 上游已写入",
+  "validation.digestPinned": "✓ Guard / updater 已固定镜像 digest",
+  "validation.mutableTag": "✓ 业务使用可更新的版本标签；Guard / updater 固定 digest",
   "validation.nginxPrefix": "Nginx：",
-  "panel.aapanel.desc": "宝塔国际版。可粘贴编排，或将文件置于网站目录",
-  "panel.aapanel.wizardHint": "生成后，可粘贴编排，或将两个文件置于同一目录。",
-  "panel.aapanel.envBadge": "与 compose 同目录 · .env 文件",
+  "panel.aapanel.desc": "在 Docker 主机固定目录保存 Compose、.env 和 Guard 策略，再按部署说明接入面板。",
+  "panel.aapanel.wizardHint": "在 Docker 主机固定目录保存 Compose、.env 和 Guard 策略，再按部署说明接入面板。",
+  "panel.aapanel.envBadge": "实体 .env 文件 · 保密",
   "panel.aapanel.envCopy": "复制 .env",
-  "panel.aapanel.composeBadge": "aaPanel 编排 · 粘贴 YAML",
+  "panel.aapanel.composeBadge": "固定主机目录中的 Compose",
   "panel.aapanel.label": "aaPanel",
   "panel.aapanel.siteStep1": "打开 aaPanel → Website，添加 {domain}",
   "panel.aapanel.siteStep2": "在站点设置中申请 SSL",
   "panel.aapanel.siteStep3": "将站点配置文件拖放到下方",
   "panel.aapanel.siteConfPath": "常见路径：/www/server/panel/vhost/nginx/{domain}.conf",
-  "panel.aapanel.resultsIntro": "可通过 Compose 粘贴 YAML，或将 compose 与 .env 置于同一目录。使用内置数据库时，请先阅读部署说明中的目录权限要求。",
-  "panel.portainer.desc": "在 Stacks 中粘贴编排，.env 与项目同目录",
-  "panel.portainer.wizardHint": "生成后，在 Portainer 创建 Stack，并将 .env 放入同一目录。",
-  "panel.portainer.envBadge": "与 Stack 同目录 · .env 文件",
+  "panel.aapanel.resultsIntro": "先保存全部文件，再按 DEPLOY.md 中所选平台的步骤部署。",
+  "panel.portainer.desc": "在 Docker 主机固定目录保存 Compose、.env 和 Guard 策略，再按部署说明接入面板。",
+  "panel.portainer.wizardHint": "在 Docker 主机固定目录保存 Compose、.env 和 Guard 策略，再按部署说明接入面板。",
+  "panel.portainer.envBadge": "实体 .env 文件 · 保密",
   "panel.portainer.envCopy": "复制 .env",
-  "panel.portainer.composeBadge": "Portainer Stack · 粘贴 YAML",
+  "panel.portainer.composeBadge": "固定主机目录中的 Compose",
   "panel.portainer.label": "Portainer",
   "panel.portainer.siteStep1": "先启动 Stack，再为 {domain} 准备外层反代",
   "panel.portainer.siteStep2": "申请并启用 SSL",
   "panel.portainer.siteStep3": "若使用 Nginx，将现有 .conf 拖放到下方",
   "panel.portainer.siteConfPath": "常见路径：/etc/nginx/sites-available/{domain} 或 /etc/nginx/conf.d/{domain}.conf",
-  "panel.portainer.resultsIntro": "请在 Portainer → Stacks 中粘贴 docker-compose.yml，并将 .env 置于同一目录。外层须整站反代至本机端口。",
-  "panel.dockge.desc": "在 Dockge 中创建 compose 项目，与 .env 同目录",
-  "panel.dockge.wizardHint": "生成后，在 Dockge 创建项目，并将两个文件置于同一目录。",
-  "panel.dockge.envBadge": "与 compose 同目录 · .env 文件",
+  "panel.portainer.resultsIntro": "先保存全部文件，再按 DEPLOY.md 中所选平台的步骤部署。",
+  "panel.dockge.desc": "在 Docker 主机固定目录保存 Compose、.env 和 Guard 策略，再按部署说明接入面板。",
+  "panel.dockge.wizardHint": "在 Docker 主机固定目录保存 Compose、.env 和 Guard 策略，再按部署说明接入面板。",
+  "panel.dockge.envBadge": "实体 .env 文件 · 保密",
   "panel.dockge.envCopy": "复制 .env",
-  "panel.dockge.composeBadge": "Dockge · 粘贴 YAML",
+  "panel.dockge.composeBadge": "固定主机目录中的 Compose",
   "panel.dockge.label": "Dockge",
   "panel.dockge.siteStep1": "先启动 compose 项目，再为 {domain} 准备外层反代",
   "panel.dockge.siteStep2": "申请并启用 SSL",
   "panel.dockge.siteStep3": "若使用 Nginx，将现有 .conf 拖放到下方",
   "panel.dockge.siteConfPath": "常见路径：/etc/nginx/sites-available/{domain} 或 /etc/nginx/conf.d/{domain}.conf",
-  "panel.dockge.resultsIntro": "请在 Dockge 中创建 compose 项目，将 docker-compose.yml 与 .env 置于同一目录。外层须整站反代。",
-  "panel.coolify.desc": "以 Docker Compose 部署，域名与证书在 Coolify 中配置",
-  "panel.coolify.wizardHint": "生成后，在 Coolify 创建 Compose 服务，并在其中绑定域名。",
-  "panel.coolify.envBadge": "Coolify 环境变量 · 请勿公开",
+  "panel.dockge.resultsIntro": "先保存全部文件，再按 DEPLOY.md 中所选平台的步骤部署。",
+  "panel.coolify.desc": "保留主机 Compose 编排，使用平台 Traefik 反代",
+  "panel.coolify.wizardHint": "保留主机 Compose 编排，使用平台 Traefik 反代",
+  "panel.coolify.envBadge": "实体 .env 文件 · 保密",
   "panel.coolify.envCopy": "复制 .env",
-  "panel.coolify.composeBadge": "Coolify Compose · 粘贴 YAML",
+  "panel.coolify.composeBadge": "固定主机目录中的 Compose",
   "panel.coolify.label": "Coolify",
-  "panel.coolify.siteStep1": "在 Coolify 创建 Docker Compose 服务",
-  "panel.coolify.siteStep2": "为 {domain} 添加域名并启用 HTTPS",
-  "panel.coolify.siteStep3": "确认整站转发与 WebSocket 已开启",
-  "panel.coolify.resultsIntro": "请在 Coolify 中粘贴 docker-compose.yml 并配置环境变量。域名、证书与反代由 Coolify 处理，必须整站转发。",
-  "panel.dokploy.desc": "以 Compose 部署，在 Domains 中绑定站点并签发证书",
-  "panel.dokploy.wizardHint": "生成后，在 Dokploy 创建 Compose 应用，并在 Domains 中绑定站点。",
-  "panel.dokploy.envBadge": "Dokploy 环境变量 · 请勿公开",
+  "panel.coolify.siteStep1": "按生成说明在主机固定目录启动 Myriad",
+  "panel.coolify.siteStep2": "让平台反代接入业务网，导入生成的动态路由",
+  "panel.coolify.siteStep3": "检查域名、HTTPS 和 WebSocket，不让平台改写 Myriad 编排",
+  "panel.coolify.resultsIntro": "先保存全部文件，再按 DEPLOY.md 中所选平台的步骤部署。",
+  "panel.dokploy.desc": "保留主机 Compose 编排，使用平台 Traefik 反代",
+  "panel.dokploy.wizardHint": "保留主机 Compose 编排，使用平台 Traefik 反代",
+  "panel.dokploy.envBadge": "实体 .env 文件 · 保密",
   "panel.dokploy.envCopy": "复制 .env",
-  "panel.dokploy.composeBadge": "Dokploy Compose · 粘贴 YAML",
+  "panel.dokploy.composeBadge": "固定主机目录中的 Compose",
   "panel.dokploy.label": "Dokploy",
-  "panel.dokploy.siteStep1": "在 Dokploy 创建 Compose 应用",
-  "panel.dokploy.siteStep2": "为 {domain} 添加域名并启用证书",
-  "panel.dokploy.siteStep3": "确认整站转发与 WebSocket 已开启",
-  "panel.dokploy.resultsIntro": "请在 Dokploy 中粘贴 docker-compose.yml 并配置环境变量。请在 Domains 中绑定站点，且必须整站转发。",
+  "panel.dokploy.siteStep1": "按生成说明在主机固定目录启动 Myriad",
+  "panel.dokploy.siteStep2": "让平台反代接入业务网，导入生成的动态路由",
+  "panel.dokploy.siteStep3": "检查域名、HTTPS 和 WebSocket，不让平台改写 Myriad 编排",
+  "panel.dokploy.resultsIntro": "先保存全部文件，再按 DEPLOY.md 中所选平台的步骤部署。",
   "panel.npm.desc": "用 compose 启动后，在 Nginx Proxy Manager 中新建 Proxy Host",
   "panel.npm.wizardHint": "生成后，先启动编排，再在 NPM 中将域名整站转发到本机端口。",
-  "panel.npm.envBadge": "与 compose 同目录 · .env 文件",
+  "panel.npm.envBadge": "实体 .env 文件 · 保密",
   "panel.npm.envCopy": "复制 .env",
-  "panel.npm.composeBadge": "docker compose · NPM 反代",
+  "panel.npm.composeBadge": "固定主机目录中的 Compose",
   "panel.npm.label": "Nginx Proxy Manager",
   "panel.npm.siteStep1": "先启动 docker compose",
-  "panel.npm.siteStep2": "在 NPM 中为 {domain} 新建 Proxy Host，指向本机端口",
+  "panel.npm.siteStep2": "创建 {domain} 的 Proxy Host，指向业务网内的 myriad-proxy:80",
   "panel.npm.siteStep3": "启用 SSL、Force SSL 与 WebSocket，且必须整站转发",
-  "panel.npm.resultsIntro": "请先启动 docker-compose.yml 与 .env，再在 Nginx Proxy Manager 中新建 Proxy Host，整站转发至本机端口并开启 WebSocket。",
+  "panel.npm.resultsIntro": "先保存全部文件，再按 DEPLOY.md 中所选平台的步骤部署。",
   "panel.caddy.desc": "用 compose 启动，外层使用 Caddy 自动 HTTPS",
   "panel.caddy.wizardHint": "生成后，将两个文件置于同一目录启动，再使用生成的 Caddyfile。",
-  "panel.caddy.envBadge": "与 compose 同目录 · .env 文件",
+  "panel.caddy.envBadge": "实体 .env 文件 · 保密",
   "panel.caddy.envCopy": "复制 .env",
-  "panel.caddy.composeBadge": "docker compose · Caddy",
+  "panel.caddy.composeBadge": "固定主机目录中的 Compose",
   "panel.caddy.label": "Caddy",
   "panel.caddy.siteStep1": "先启动 docker compose",
   "panel.caddy.siteStep2": "将生成的 Caddyfile 交给 Caddy",
   "panel.caddy.siteStep3": "确认 80/443 由 Caddy 监听",
   "panel.caddy.siteConfPath": "常见路径：/etc/caddy/Caddyfile",
-  "panel.caddy.resultsIntro": "请将 docker-compose.yml 与 .env 置于同一目录并启动，再使用生成的 Caddyfile 做整站反代与自动 HTTPS。",
+  "panel.caddy.resultsIntro": "先保存全部文件，再按 DEPLOY.md 中所选平台的步骤部署。",
   "site.titlePlatform": "在平台中绑定域名",
   "site.leadPlatform": "此类平台自带反代与证书。请在平台中添加域名，并确保整站转发到 Myriad，而不是仅转发 /api。",
   "site.hintPlatform": "无需上传 Nginx 配置。域名、证书与反代在所选平台中完成。",
@@ -656,23 +666,23 @@ var I18N_FALLBACK = {
   "site.hintCaddy": "无需上传 Nginx 配置。生成结果中将包含 Caddyfile。",
   "guide.overview.domain": "绑定域名",
   "guide.aapanel.pasteTitle": "将编排粘贴至 aaPanel",
-  "guide.aapanel.pasteBody": "打开 aaPanel → Docker → Compose，创建编排并粘贴 docker-compose.yml，将 .env 置于同一目录。",
+  "guide.aapanel.pasteBody": "在 Docker 主机固定目录保存 Compose、.env 和 Guard 策略，再按部署说明接入面板。",
   "guide.aapanel.overwriteTitle": "覆盖站点配置",
   "guide.aapanel.overwriteBody": "打开 Website → 配置文件，用生成的 {domain}.conf 覆盖。反代目标为 {bind}，且必须为整站 /。",
   "guide.portainer.pasteTitle": "在 Portainer 中创建 Stack",
-  "guide.portainer.pasteBody": "打开 Portainer → Stacks → Add stack，粘贴 docker-compose.yml，并将 .env 放到该 Stack 工作目录。",
+  "guide.portainer.pasteBody": "在 Docker 主机固定目录保存 Compose、.env 和 Guard 策略，再按部署说明接入面板。",
   "guide.portainer.proxyTitle": "接入外层反代",
   "guide.portainer.proxyBody": "将生成的 {domain}.conf 放入 Nginx，或使用 Caddy / NPM，整站反代至 {bind}。请勿仅反代 /api。",
   "guide.dockge.pasteTitle": "在 Dockge 中创建项目",
-  "guide.dockge.pasteBody": "打开 Dockge，新建 compose 项目，粘贴 docker-compose.yml，并将 .env 置于同一目录。",
+  "guide.dockge.pasteBody": "在 Docker 主机固定目录保存 Compose、.env 和 Guard 策略，再按部署说明接入面板。",
   "guide.dockge.proxyTitle": "接入外层反代",
   "guide.dockge.proxyBody": "将生成的 {domain}.conf 放入 Nginx，或使用 Caddy / NPM，整站反代至 {bind}。请勿仅反代 /api。",
   "guide.coolify.pasteTitle": "在 Coolify 中创建 Compose 服务",
-  "guide.coolify.pasteBody": "新建 Docker Compose 服务，粘贴 docker-compose.yml，并写入 .env 中的环境变量。",
+  "guide.coolify.pasteBody": "在 Docker 主机固定目录保存 Compose、.env 和 Guard 策略，再按部署说明接入面板。",
   "guide.coolify.domainTitle": "绑定域名与证书",
   "guide.coolify.domainBody": "为 {domain} 添加域名并启用 HTTPS。必须整站转发到 {bind}，并开启 WebSocket。请勿仅转发 /api。",
   "guide.dokploy.pasteTitle": "在 Dokploy 中创建 Compose 应用",
-  "guide.dokploy.pasteBody": "新建 Compose 应用，粘贴 docker-compose.yml，并配置环境变量。",
+  "guide.dokploy.pasteBody": "在 Docker 主机固定目录保存 Compose、.env 和 Guard 策略，再按部署说明接入面板。",
   "guide.dokploy.domainTitle": "绑定域名与证书",
   "guide.dokploy.domainBody": "在 Domains 中添加 {domain} 并启用证书。必须整站转发到 {bind}，并开启 WebSocket。",
   "guide.npm.placeTitle": "将文件置于同一目录并启动",
@@ -687,7 +697,39 @@ var I18N_FALLBACK = {
   "nginx.summary.caddy": "已生成 Caddyfile（自动 HTTPS，整站 reverse_proxy）",
   "nginx.summary.platformProxy": "反代与证书由所选平台处理，未生成 Nginx 配置",
   "validation.caddyPrefix": "Caddy：",
-  "validation.proxyPrefix": "反代："
+  "validation.proxyPrefix": "反代：",
+  "upgrade.start": "升级已有编排",
+  "upgrade.title": "升级已有编排",
+  "upgrade.lead": "导入旧 Compose 和 .env，保留密钥与数据位置。文件只在当前页面处理，不会上传。",
+  "upgrade.compose": "旧 docker-compose.yml",
+  "upgrade.env": "旧 .env（含密钥）",
+  "upgrade.composePlaceholder": "粘贴旧 Compose，或选择文件",
+  "upgrade.envPlaceholder": "粘贴旧 .env，或选择文件",
+  "upgrade.inspect": "读取并检查",
+  "upgrade.continue": "使用这些设置继续",
+  "upgrade.active": "正在升级：原数据库和密钥将保留，不会重新安装。",
+  "upgrade.preserved": "将保留",
+  "upgrade.added": "将补充",
+  "upgrade.warnings": "需要注意",
+  "upgrade.tooLarge": "单个文件不能超过 1 MB。",
+  "upgrade.badFile": "无法读取配置，请检查文件格式。",
+  "upgrade.inspected": "已读取。请核对下面的结果，再继续选择部署方式和目标版本。",
+  "upgrade.resultTitle": "升级核对",
+  "upgrade.resultLead": "先备份数据库与原文件，再按 DEPLOY.md 替换配置；不要删除数据卷。",
+  "upgrade.envValidated": "✓ 原配置已解析；已有密钥保留并安全转义",
+  "upgrade.generated": "升级配置已生成，请先查看升级核对和 DEPLOY.md。",
+  "upgrade.verifyBody": "依次检查 backend 和两个 worker 的健康状态，再确认旧数据可见。已有站点无需重新创建所有者。",
+  "deployment.root": "Docker 主机上的部署目录",
+  "deployment.rootHint": "在这个实际目录保存 Compose 与 .env；仅填写面板环境变量不够。升级时必须填写原来的目录。",
+  "deployment.save": "保存生成文件",
+  "deployment.saveBody": "把文件保存到 {root}，docker-guard.env 放进其 guard-policy 子目录。不要把含密钥的文件提交到公开仓库。",
+  "deployment.follow": "按平台说明部署",
+  "deployment.followBody": "DEPLOY.md 包含所选平台的目录、启动和反代步骤。容器反代使用 myriad-proxy:80，不能填写容器自己的 127.0.0.1。",
+  "deployment.verify": "检查站点与三个进程",
+  "deployment.verifyBody": "检查 backend、federation-worker 和 persona-worker，再打开域名检查 HTTPS。首次安装按提示创建所有者。",
+  "error.badComposeRoot": "请输入原 Docker 主机上的绝对部署目录，如 /opt/myriad；不能含空格、.. 或控制字符。",
+  "error.storageUpdater": "目录存储要求 updater/Guard 稳定版 v0.5.8 或更新版本。请等待兼容版本发布并选择该版本；旧命名卷升级会保留原卷。",
+  "error.businessDigest": "业务和 proxy 版本请填写版本标签，不要附加 digest；更新器需要切换这些标签。Guard 和 updater 会单独锁定 digest。"
 };
 
 function interpolateI18n(raw, params) {
@@ -747,9 +789,14 @@ function applyDoneResultChrome() {
 function applyResolvedTagStatus(resolved) {
   if (!resolved) return;
   var alignNote = resolved.versionAligned ? t('tags.aligned') : t('tags.mismatch');
-  var failNote = (resolved.failures && resolved.failures.length)
+  var sourceNote = '';
+  if (resolved.githubConfirmed) {
+    sourceNote = ' · ' + (resolved.hubConfirmed ? t('tags.githubConfirmed') : t('tags.githubOnly'));
+  }
+  var showHubFailures = resolved.failures && resolved.failures.length && !resolved.githubConfirmed;
+  var failNote = sourceNote + (showHubFailures
     ? ' · ' + t('tags.partialFail', { detail: resolved.failures.join('; ') })
-    : '';
+    : '');
   setTagStatus(
     t('tags.resolved', {
       myriad: resolved.myriadTag,
@@ -758,7 +805,7 @@ function applyResolvedTagStatus(resolved) {
       align: alignNote,
       fail: failNote
     }),
-    resolved.failures && resolved.failures.length ? 'error' : 'ok'
+    showHubFailures ? 'error' : 'ok'
   );
 }
 
@@ -810,39 +857,28 @@ function refreshDynamicI18n() {
 
 
 function buildDoneGuide(panelId, ctx) {
+  var files = ['compose', 'env', 'guard', 'deploy'];
   var profile = getPanelProfile(panelId);
-  var external = !!ctx.external;
-  var domain = ctx.domain || t('guide.fallbackDomain');
-  var port = ctx.httpPort || DEFAULT_HTTP_PORT;
-  var bind = (ctx.httpBind || '127.0.0.1') + ':' + port;
-  var extra = ctx.extraDomain || '';
-  var pgCmd = 'mkdir -p pgdata state backups && chown -R 70:70 pgdata && chmod 700 pgdata && chmod 600 .env';
-  var cliCmd = external
-    ? 'mkdir -p state backups && chmod 600 .env && docker compose pull && docker compose up -d'
-    : pgCmd + ' && docker compose pull && docker compose up -d';
-
-  var overview = (profile.guideOverview || []).map(function (key) { return t(key); });
-  var steps = (profile.guideSteps || []).map(function (spec) {
-    var files = (spec.files || []).slice();
-    if (spec.extraFiles && extra) files = files.concat(spec.extraFiles);
-    var step = {
-      title: t(spec.titleKey),
-      body: t(spec.bodyKey, { domain: domain, bind: bind })
-    };
-    if (files.length) step.files = files;
-    if (spec.command === 'cli') step.command = cliCmd;
-    return step;
-  });
-
-  steps.push({
-    title: t('guide.openTitle'),
-    body: t('guide.openBody')
-  });
-
-  return { overview: overview, steps: steps };
+  if (profile.proxyFiles === 'nginx') {
+    files.push('nginx');
+    if (ctx.extraDomain) files.push('nginx-extra');
+  }
+  if (profile.proxyFiles === 'caddy') files.push('caddy');
+  if (panelId === 'coolify' || panelId === 'dokploy') files.push('traefik');
+  return {
+    overview: [t('deployment.save'), t('deployment.follow'), t('deployment.verify')],
+    steps: [
+      { title: t('deployment.save'), body: t('deployment.saveBody', { root: state.composeHostRoot }), files: files },
+      { title: t('deployment.follow'), body: t('deployment.followBody') },
+      { title: t('deployment.verify'), body: t(upgradeSession.legacy ? 'upgrade.verifyBody' : 'deployment.verifyBody') }
+    ]
+  };
 }
 
 var GUIDE_FILE_ACTIONS = {
+  guard: { target: 'guard-env', filename: 'docker-guard.env', label: 'docker-guard.env' },
+  deploy: { target: 'deploy-notes', filename: 'DEPLOY.md', label: 'DEPLOY.md' },
+  traefik: { target: 'traefik', filename: 'myriad-traefik.yml', label: 'myriad-traefik.yml' },
   compose: { target: 'docker-compose', filename: 'docker-compose.yml', label: 'docker-compose.yml' },
   env: { target: 'env', filename: '.env', label: '.env' },
   nginx: { target: 'main-nginx', filename: '', labelKey: 'guide.file.nginx' },
@@ -974,178 +1010,13 @@ function buildPgdataPermissionSection(isExternal) {
 }
 
 function buildPanelDeploySection(panelId, mainDomain, httpBind, httpPort, isExternal) {
-  var bind = httpBind + ':' + httpPort;
-  var pgSection = buildPgdataPermissionSection(isExternal);
-  if (panelId === 'baota') {
-    return [
-      '## 宝塔面板',
-      '',
-      '### 依据（公开案例 / 官方帖，请对照你的面板版本）',
-      '',
-      '- **站点路径**：宝塔 Nginx 站点 conf 默认 `root /www/wwwroot/<域名>`、',
-      '  `access_log /www/wwwlogs/<域名>.log`（论坛站点 conf 示例普遍如此）。',
-      '- **Compose 两种用法**（宝塔开发教程 [thread-140412](https://www.bt.cn/bbs/thread-140412-1-1.html)）：',
-      '  1) **容器编排 → 创建编排**：直接粘贴 `docker-compose.yml` 内容；',
-      '  2) 或在服务器上放好 yml 后终端 `docker compose up -d`，再在面板里管理。',
-      '- **.env**：应用商店类编排常在面板里改 `.env` 端口变量',
-      '  （[thread-141215](https://www.bt.cn/bbs/thread-141215-1-1.html)：`HOST_IP=127.0.0.1` 仅本机、`0.0.0.0` 对外）。',
-      '  社区亦有「模板/路径不对导致 .env 未加载」案例（thread-124845）；',
-      '  若变量未生效，可把关键项写进 yml 的 `environment`，或确认 `.env` 与 compose 同目录。',
-      '- **数据库权限**：全球 Docker+Postgres bind mount 通病（wrong ownership / Permission denied），',
-      '  非宝塔独有；宝塔「文件」用 root 建目录时更容易踩。见下方专节（alpine **uid 70** 已实测）。',
-      '',
-      '### 推荐步骤',
-      '',
-      '**方式 A — 粘贴编排（接近 1Panel）**',
-      '1. Docker → 容器编排 → 创建编排，粘贴生成的 `docker-compose.yml`',
-      '2. 将 `.env` 放到编排工作目录（或按面板提示编辑 env）；`chmod 600 .env`',
-      '3. 内置库：先按下方「数据库目录权限」准备 `pgdata`，再启动',
-      '',
-      '**方式 B — 目录 + 终端**',
-      '1. 任意目录写入 `docker-compose.yml` + `.env`（路径自定）',
-      '2. 处理 `pgdata` 权限后：`docker compose pull && docker compose up -d`',
-      '3. 在宝塔容器编排页管理该项目',
-      '',
-      '**网站反代**',
-      '1. 网站 → 添加站点（域名 `' + mainDomain + '`）',
-      '2. 反向代理目标 `http://127.0.0.1:' + httpPort + '`，代理目录 **`/`（整站）**，勿只代理 `/api`',
-      '3. 开启 WebSocket；SSL 用宝塔申请时保留 SSL 段，ACME webroot 与站点根一致',
-      '4. 或覆盖站点 conf 为生成的 Nginx（路径默认 `/www/wwwroot` + `/www/wwwlogs`）',
-      '',
-      'Myriad proxy 监听：`' + bind + '`（反代到本机时 `HTTP_BIND_ADDRESS=127.0.0.1` 即可）',
-      '',
-      pgSection
-    ].join('\n');
-  }
-  if (panelId === 'aapanel') {
-    return [
-      '## aaPanel',
-      '',
-      'aaPanel 为宝塔国际版，站点路径与宝塔相近（`/www/wwwroot`、`/www/wwwlogs`）。',
-      '',
-      '1. Docker → Compose → Add / Create，粘贴 `docker-compose.yml`',
-      '2. 将 `.env` 放到同一工作目录；`chmod 600 .env`',
-      '3. 内置库：先按下方「数据库目录权限」准备 `pgdata`，再启动',
-      '4. Website 添加 `' + mainDomain + '`，反向代理到 `http://' + bind + '`，必须整站 `/`',
-      '5. 或用生成的 Nginx 覆盖站点配置',
-      '',
-      pgSection
-    ].join('\n');
-  }
-  if (panelId === 'portainer') {
-    return [
-      '## Portainer',
-      '',
-      '1. Stacks → Add stack，粘贴 `docker-compose.yml`',
-      '2. 将 `.env` 放到该 stack 工作目录（或在 UI 中填写同等环境变量）',
-      '3. 内置库须先在该目录准备 `pgdata` 权限（见下方）',
-      '4. 外层 Nginx / Caddy / NPM 整站反代到 `' + bind + '`，请勿仅反代 `/api`',
-      '',
-      pgSection
-    ].join('\n');
-  }
-  if (panelId === 'dockge') {
-    return [
-      '## Dockge',
-      '',
-      '1. 新建 compose 项目，粘贴 `docker-compose.yml`',
-      '2. 将 `.env` 与 compose 放在同一目录',
-      '3. 内置库须先准备 `pgdata` 权限（见下方）',
-      '4. 外层反代整站指向 `' + bind + '`',
-      '',
-      pgSection
-    ].join('\n');
-  }
-  if (panelId === 'coolify') {
-    return [
-      '## Coolify',
-      '',
-      '1. 新建 Docker Compose 服务，粘贴 `docker-compose.yml`，并配置 `.env`',
-      '2. 在 Coolify 中为 `' + mainDomain + '` 添加域名并启用 HTTPS',
-      '3. 必须整站转发（含 `/.well-known/webfinger`、`/inbox`、`/users/`、`/api/*` 与 WebSocket）',
-      '4. 目标为 Myriad proxy：`' + bind + '`（若 Coolify 与 compose 同机，常用 `http://127.0.0.1:' + httpPort + '`）',
-      '',
-      pgSection
-    ].join('\n');
-  }
-  if (panelId === 'dokploy') {
-    return [
-      '## Dokploy',
-      '',
-      '1. 新建 Compose 应用，粘贴 `docker-compose.yml`，并配置 `.env`',
-      '2. 在 Domains 中添加 `' + mainDomain + '` 并启用证书',
-      '3. 必须整站转发，并开启 WebSocket',
-      '4. 目标为 `' + bind + '`',
-      '',
-      pgSection
-    ].join('\n');
-  }
-  if (panelId === 'npm') {
-    return [
-      '## Nginx Proxy Manager',
-      '',
-      '1. 先用命令行或编排界面启动 Myriad（`docker-compose.yml` + `.env`）',
-      '2. NPM → Hosts → Proxy Hosts → Add：',
-      '   - Domain Names：`' + mainDomain + '`',
-      '   - Scheme：`http`',
-      '   - Forward Hostname / IP：`' + httpBind + '`',
-      '   - Forward Port：`' + httpPort + '`',
-      '   - Websockets Support：开启',
-      '   - SSL：申请证书并 Force SSL',
-      '3. **不要**只转发 `/api`。联邦路径必须到达 Myriad proxy。',
-      '4. 若 NPM 与 Myriad 不在同一 Docker 网络，转发主机请改用可达地址，而不是盲目使用 `127.0.0.1`',
-      '',
-      pgSection
-    ].join('\n');
-  }
-  if (panelId === 'caddy') {
-    return [
-      '## Caddy',
-      '',
-      '1. 将 `docker-compose.yml` 与 `.env` 放到同一目录并启动',
-      '2. 使用生成的 `Caddyfile`（自动 HTTPS）',
-      '3. 确认 80/443 由 Caddy 监听；Myriad proxy 仅本机 `' + bind + '`',
-      '4. `reverse_proxy` 已覆盖整站与 WebSocket，请勿只反代 `/api`',
-      '',
-      '```bash',
-      'caddy validate --config Caddyfile',
-      '```',
-      '',
-      pgSection
-    ].join('\n');
-  }
-  if (panelId === 'generic') {
-    return [
-      '## 通用 / CLI',
-      '',
-      '```bash',
-      'mkdir -p /opt/myriad && cd /opt/myriad',
-      '# 放入 docker-compose.yml 与 .env',
-      isExternal
-        ? 'mkdir -p state backups && chmod 600 .env'
-        : 'mkdir -p pgdata state backups && chown -R 70:70 pgdata && chmod 700 pgdata && chmod 600 .env',
-      'docker compose pull && docker compose up -d',
-      '```',
-      '',
-      '外层 Nginx/Caddy 整站反代到 `' + bind + '`（见生成的站点 conf）。',
-      '',
-      pgSection
-    ].join('\n');
-  }
-  // 1panel default
-  return [
-    '## 1Panel',
-    '',
-    '1. **容器 → 编排 → 创建**：粘贴 `docker-compose.yml`',
-    '2. **环境变量**：粘贴 `.env` 全文（勿公开、勿提交）',
-    '3. 若为内置 Postgres：在编排工作目录准备 `pgdata` 并修正属主（见下方权限专节），再启动',
-    '4. **网站** 创建反向代理或导入生成的 Nginx 配置，目标 `http://' + bind + '`，必须 **整站** 反代',
-    '5. 申请 SSL 后确认 `/.well-known/acme-challenge/` 仍为本地目录，其余 `.well-known` 走 proxy',
-    '',
-    '站点路径约定（1Panel 默认）：`/www/sites/' + mainDomain + '/…`',
-    '',
-    pgSection
-  ].join('\n');
+  return PlatformGuides.buildPlatformGuide(panelId, {
+    domain: mainDomain, httpBind: httpBind, httpPort: httpPort,
+    composeHostRoot: state.composeHostRoot || '/opt/myriad',
+    netMyriad: state.netMyriad || 'myriad-net', external: isExternal,
+    storage: upgradeSession.legacy ? upgradeSession.legacy.storage : Storage.layout(),
+    project: upgradeSession.legacy ? upgradeSession.legacy.project : 'myriad'
+  });
 }
 
 // Bundled Postgres service (MYRIAD_DB_MODE=bundled). Omitted entirely for external mode.
@@ -1183,7 +1054,7 @@ var POSTGRES_SERVICE_TEMPLATE = `  postgres:
       TZ: Asia/Shanghai
     volumes:
       # bind only（updater 快照）；勿改 volume
-      - ./pgdata:/var/lib/postgresql
+      - \${MYRIAD_COMPOSE_HOST_ROOT:-.}/pgdata:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \${POSTGRES_USER} -d \${POSTGRES_DB}"]
       interval: 10s
@@ -1202,7 +1073,7 @@ var POSTGRES_SERVICE_TEMPLATE = `  postgres:
 `;
 
 var DOCKER_COMPOSE_TEMPLATE = `# Myriad
-# nets: myriad-net | myriad-admin-net | myriad-docker-guard-net(internal)
+# nets: myriad-net | myriad-admin-net | myriad-docker-guard-net(internal){{EXTRA_NETWORK_HEADER}}
 # MYRIAD_DB_MODE={{MYRIAD_DB_MODE}}
 # {{COMPOSE_START_HINT}}
 
@@ -1214,8 +1085,14 @@ services:
     environment:
       MYRIAD_VOLUME_INIT_ONLY: "true"
     volumes:
-      - backend_cache:/app/cache
-      - backend_data:/app/data
+      - type: bind
+        source: ./cache
+        target: /app/cache
+        bind: { create_host_path: false }
+      - type: bind
+        source: ./data
+        target: /app/data
+        bind: { create_host_path: false }
     network_mode: none
     restart: "no"
     security_opt: [no-new-privileges:true]
@@ -1237,12 +1114,13 @@ services:
           cpus: '0.5'
           memory: 512M
     environment:
+      MYRIAD_PROCESS_ROLE: web
       DATABASE_URL: \${DATABASE_URL}
       SERVER_HOST: 0.0.0.0
       SERVER_PORT: 1103
       DATA_DIR: /app/data
       CACHE_DIR: /app/cache
-      JWT_SECRET: \${JWT_SECRET}
+{{BACKEND_WORKER_PASSWORD_LINES}}      JWT_SECRET: \${JWT_SECRET}
       MYRIAD_SETUP_SECRET: \${MYRIAD_SETUP_SECRET:?Set MYRIAD_SETUP_SECRET in .env}
       ANALYTICS_SALT: \${ANALYTICS_SALT:-}
       TAPP_STORE_STATS_URL: \${TAPP_STORE_STATS_URL:-https://stats.store.myriad.you}
@@ -1256,6 +1134,7 @@ services:
       BASE_URL: \${BASE_URL:-}
       RUST_LOG: \${RUST_LOG:-info}
       TZ: Asia/Shanghai
+      MALLOC_ARENA_MAX: \${MALLOC_ARENA_MAX:-{{MALLOC_ARENA_MAX}}}
       MYRIAD_MEMORY_PROFILE: \${MYRIAD_MEMORY_PROFILE:-default}
       MYRIAD_UPDATER_URL: http://updater-gateway:1104
       UPDATER_GATEWAY_SECRET: \${UPDATER_GATEWAY_SECRET}
@@ -1268,14 +1147,142 @@ services:
       retries: 3
       start_period: 60s
     volumes:
-      - backend_cache:/app/cache
-      - backend_data:/app/data
-    networks: [myriad-net, myriad-admin-net{{BACKEND_EXTRA_NETWORK_REF}}]
+      - type: bind
+        source: ./cache
+        target: /app/cache
+        bind: { create_host_path: false }
+      - type: bind
+        source: ./data
+        target: /app/data
+        bind: { create_host_path: false }
+{{DB_EXTRA_HOSTS}}    networks: [myriad-net, myriad-admin-net{{BACKEND_EXTRA_NETWORK_REF}}]
     restart: unless-stopped
     security_opt: [no-new-privileges:true]
     read_only: false
     tmpfs: [/tmp]
-    # uid 1000；backend-volume-init 会先修复 volume 写权限
+    # uid 1000；backend-volume-init 会先修复数据与缓存的写权限
+    logging:
+      driver: "json-file"
+      options: { max-size: "10m", max-file: "3" }
+
+  federation-worker:
+    image: \${BACKEND_IMAGE:-docker.io/somekawahitomi/myriad-backend}:\${MYRIAD_TAG}
+    container_name: myriad-federation-worker
+    command: ["/app/myriad-federation-worker"]
+    user: "1000:1000"
+    deploy:
+      resources:
+        limits: { cpus: '0.5', memory: 512M, pids: 64 }
+        reservations: { cpus: '0.1', memory: 64M }
+    pids_limit: 64
+    environment:
+      MYRIAD_PROCESS_ROLE: federation-worker
+      DATABASE_URL: {{FEDERATION_WORKER_DATABASE_URL}}
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 1103
+      DATA_DIR: /app/data
+      CACHE_DIR: /tmp/cache
+      JWT_SECRET: \${JWT_SECRET}
+      CORS_ORIGINS: \${CORS_ORIGINS:-http://localhost}
+      ENVIRONMENT: \${ENVIRONMENT:-production}
+      FRONTEND_URL: \${FRONTEND_URL:-}
+      BASE_URL: \${BASE_URL:-}
+      TRUST_PROXY_HEADERS: "true"
+      TRUST_PROXY_PEERS: \${TRUST_PROXY_PEERS:-127.0.0.0/8,::1,172.17.0.0/16,172.28.0.0/16}
+      RUST_LOG: \${RUST_LOG:-info}
+    depends_on:
+      backend: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "/usr/bin/wget", "--spider", "-q", "http://localhost:1103/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    volumes:
+      - type: bind
+        source: ./data
+        target: /app/data
+        read_only: true
+        bind: { create_host_path: false }
+      - type: bind
+        source: ./data/federation
+        target: /app/data/federation
+        bind: { create_host_path: false }
+      - type: bind
+        source: ./data/federation_media
+        target: /app/data/federation_media
+        bind: { create_host_path: false }
+      - type: bind
+        source: ./data/media
+        target: /app/data/media
+        bind: { create_host_path: false }
+      - type: bind
+        source: ./cache/images
+        target: /tmp/cache/images
+        bind: { create_host_path: false }
+{{DB_EXTRA_HOSTS}}    networks: [myriad-net{{BACKEND_EXTRA_NETWORK_REF}}]
+    # Geographic disablement exits 0; do not loop an idle worker.
+    restart: on-failure
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    read_only: true
+    tmpfs: ["/tmp:size=32m,mode=1777"]
+    logging:
+      driver: "json-file"
+      options: { max-size: "10m", max-file: "3" }
+
+  persona-worker:
+    image: \${BACKEND_IMAGE:-docker.io/somekawahitomi/myriad-backend}:\${MYRIAD_TAG}
+    container_name: myriad-persona-worker
+    command: ["/app/myriad-persona-worker"]
+    user: "1000:1000"
+    deploy:
+      resources:
+        limits: { cpus: '1.0', memory: 1G, pids: 64 }
+        reservations: { cpus: '0.1', memory: 64M }
+    pids_limit: 64
+    environment:
+      MYRIAD_PROCESS_ROLE: persona-worker
+      DATABASE_URL: {{PERSONA_WORKER_DATABASE_URL}}
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 1103
+      DATA_DIR: /app/data
+      CACHE_DIR: /app/cache
+      JWT_SECRET: \${JWT_SECRET}
+      CORS_ORIGINS: \${CORS_ORIGINS:-http://localhost}
+      ENVIRONMENT: \${ENVIRONMENT:-production}
+      FRONTEND_URL: \${FRONTEND_URL:-}
+      BASE_URL: \${BASE_URL:-}
+      TRUST_PROXY_HEADERS: "true"
+      TRUST_PROXY_PEERS: \${TRUST_PROXY_PEERS:-127.0.0.0/8,::1,172.17.0.0/16,172.28.0.0/16}
+      PERSONA_WEB_UPSTREAM: http://backend:1103
+      MYRIAD_MCP_GATEWAY_URL: \${MYRIAD_MCP_GATEWAY_URL:-}
+      MYRIAD_MCP_GATEWAY_TOKEN: \${MYRIAD_MCP_GATEWAY_TOKEN:-}
+      RUST_LOG: \${RUST_LOG:-info}
+    depends_on:
+      backend: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "/usr/bin/wget", "--spider", "-q", "http://localhost:1103/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    volumes:
+      - type: bind
+        source: ./data
+        target: /app/data
+        bind: { create_host_path: false }
+      - type: bind
+        source: ./cache
+        target: /app/cache
+        bind: { create_host_path: false }
+{{DB_EXTRA_HOSTS}}    networks: [myriad-net{{BACKEND_EXTRA_NETWORK_REF}}]
+    stop_grace_period: 45s
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    read_only: true
+    tmpfs: ["/tmp:size=32m,mode=1777"]
     logging:
       driver: "json-file"
       options: { max-size: "10m", max-file: "3" }
@@ -1294,10 +1301,12 @@ services:
     environment:
       NODE_ENV: production
       TZ: Asia/Shanghai
+      # Operator-only; never taken from the request. Same public fields as SEO.
+      BRANDING_METADATA_URL: http://backend:1103/api/config/metadata
     depends_on:
       backend: { condition: service_healthy }
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:1102"]
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:1102"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -1311,10 +1320,10 @@ services:
       driver: "json-file"
       options: { max-size: "10m", max-file: "3" }
 
-  # proxy: only public host port. Routes SPA, /api, health, and federation public paths
-  # (/.well-known/webfinger|nodeinfo, /nodeinfo/2.1, /inbox, /users/*). Outer TLS
-  # must whole-site reverse-proxy here — not /api-only. Preserve public Host for
-  # ActivityPub HTTP Signatures. Bind stays HTTP_BIND_ADDRESS:HTTP_PORT (1Panel-friendly).
+  # proxy: only public host port. SPA → frontend; persona prefixes → persona-worker;
+  # federation HTTP/WS + AP/media → federation-worker; remaining /api, health, SEO → backend.
+  # Outer TLS must whole-site reverse-proxy here — not /api-only. Preserve public Host
+  # for ActivityPub HTTP Signatures. Bind stays HTTP_BIND_ADDRESS:HTTP_PORT (1Panel-friendly).
   proxy:
     image: \${PROXY_IMAGE:-docker.io/somekawahitomi/myriad-proxy}:\${PROXY_TAG}
     container_name: myriad-proxy
@@ -1323,13 +1332,15 @@ services:
     environment:
       PROXY_STATE_FILE: /state/maintenance.json
       PROXY_BACKEND_UPSTREAM: http://backend:1103
+      PROXY_FEDERATION_UPSTREAM: http://federation-worker:1103
+      PROXY_PERSONA_UPSTREAM: http://persona-worker:1103
       PROXY_FRONTEND_UPSTREAM: http://frontend:1102
       PROXY_UPDATER_UPSTREAM: http://updater:1101
       PROXY_TRUSTED_UPSTREAMS: \${PROXY_TRUSTED_UPSTREAMS:-}
       PROXY_ALLOW_DIRECT_UPDATER: \${PROXY_ALLOW_DIRECT_UPDATER:-false}
       TZ: Asia/Shanghai
     volumes:
-      - ./state:/state:ro
+      - \${MYRIAD_COMPOSE_HOST_ROOT:-.}/state:/state:ro
     networks: [myriad-net, myriad-admin-net]
     restart: unless-stopped
     security_opt: [no-new-privileges:true]
@@ -1341,7 +1352,9 @@ services:
 
   docker-guard:
     # Writes ./guard-policy/docker-guard.env on first start.
-    image: \${DOCKER_GUARD_IMAGE:?Set DOCKER_GUARD_IMAGE in .env to an exact repo@sha256 digest}
+    # Trusted handoffs select the exact digest via process-only MYRIAD_TCB_GUARD_IMAGE;
+    # an ordinary host rebuild falls back to UPDATER_TAG.
+    image: \${MYRIAD_TCB_GUARD_IMAGE:-\${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG:?Set UPDATER_TAG to a release or dev tag}}
     container_name: myriad-docker-guard
     entrypoint: ["/bin/sh", "-c"]
     command:
@@ -1354,9 +1367,9 @@ services:
       MYRIAD_DOCKER_NETWORK: \${GUARD_MYRIAD_DOCKER_NETWORK:-myriad-net}
       MYRIAD_ADMIN_NETWORK: \${GUARD_MYRIAD_ADMIN_NETWORK:-myriad-admin-net}
       MYRIAD_DOCKER_GUARD_NETWORK: \${GUARD_MYRIAD_DOCKER_GUARD_NETWORK:-myriad-docker-guard-net}
-      DOCKER_GUARD_COMPOSE_DIR: /host/compose
+{{GUARD_EXTRA_NETWORK_LINE}}      DOCKER_GUARD_COMPOSE_DIR: /host/compose
       DOCKER_GUARD_STATE_DIR: /host/state
-      DOCKER_GUARD_EXPECTED_IMAGE: \${DOCKER_GUARD_IMAGE}
+      DOCKER_GUARD_EXPECTED_IMAGE: \${MYRIAD_TCB_GUARD_IMAGE:-\${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG:?Set UPDATER_TAG to a release or dev tag}}
       DOCKER_GUARD_HOST_POLICY_PATH: /guard-policy/docker-guard.env
       DOCKER_GUARD_SELF_UPDATE_TOKEN: \${GUARD_SELF_UPDATE_TOKEN:?Host Guard self-update token is required}
       RUST_LOG: \${DOCKER_GUARD_LOG:-info}
@@ -1388,7 +1401,7 @@ services:
       options: { max-size: "10m", max-file: "3" }
 
   updater:
-    image: \${UPDATER_IMAGE_REF:-\${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG}}
+    image: \${MYRIAD_TCB_UPDATER_IMAGE:-\${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG:?Set UPDATER_TAG to a release or dev tag}}
     container_name: myriad-updater
     environment:
       UPDATE_TOKEN: \${UPDATE_TOKEN}
@@ -1409,15 +1422,18 @@ services:
       COMPOSE_PROJECT_NAME: \${COMPOSE_PROJECT_NAME:-myriad}
       MYRIAD_DOCKER_NETWORK: \${MYRIAD_DOCKER_NETWORK:-myriad-net}
       # Identity is baked into the image (Dockerfile ENV). Do not overlay
-      # UPDATER_TAG here: the digest pin in UPDATER_IMAGE_REF is what runs.
+      # UPDATER_TAG as MYRIAD_VERSION; it only selects the deployment image.
       TZ: Asia/Shanghai
     volumes:
-      # v0.3.37 writes .env via sibling .bak/.tmp. A file bind over a read-only
-      # deploy root returns EROFS at SwapTag. Keep the root writable; Guard
-      # policy stays a separate read-only directory mount.
+      # The deployment root is writable: the updater rewrites compose.yml in
+      # place during an update (and backs it up first). Guard still vets the
+      # resulting compose before it is applied.
       - type: bind
         source: \${MYRIAD_COMPOSE_HOST_ROOT:-.}
         target: /host/compose
+      - type: bind
+        source: \${MYRIAD_COMPOSE_HOST_ROOT:-.}/.env
+        target: /host/compose/.env
       - type: bind
         source: \${MYRIAD_COMPOSE_HOST_ROOT:-.}/state
         target: /host/compose/state
@@ -1441,7 +1457,7 @@ services:
       options: { max-size: "10m", max-file: "3" }
 
   updater-gateway:
-    image: \${UPDATER_IMAGE_REF:-\${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG}}
+    image: \${MYRIAD_TCB_GATEWAY_IMAGE:-\${UPDATER_IMAGE:-docker.io/somekawahitomi/myriad-updater}:\${UPDATER_TAG:?Set UPDATER_TAG to a release or dev tag}}
     container_name: myriad-updater-gateway
     entrypoint: ["/usr/bin/tini", "--", "/usr/local/bin/myriad-updater-gateway"]
     environment:
@@ -1467,10 +1483,6 @@ services:
       driver: "json-file"
       options: { max-size: "10m", max-file: "3" }
 
-volumes:
-  backend_cache: { driver: local }
-  backend_data: { driver: local }
-
 networks:
   myriad-net:
     name: \${MYRIAD_DOCKER_NETWORK:-myriad-net}
@@ -1493,6 +1505,7 @@ var ENV_TEMPLATE = `# Myriad .env — chmod 600，勿提交 Git
 MYRIAD_TAG={{MYRIAD_TAG}}
 # PROXY_TAG is separate from MYRIAD_TAG — bump when proxy gains AP routing / federation fixes
 PROXY_TAG={{PROXY_TAG}}
+# Shared deployment target for Guard, updater and updater-gateway.
 UPDATER_TAG={{UPDATER_TAG}}
 BACKEND_IMAGE=docker.io/somekawahitomi/myriad-backend
 FRONTEND_IMAGE=docker.io/somekawahitomi/myriad-frontend
@@ -1505,6 +1518,7 @@ MYRIAD_DOCKER_GUARD_NETWORK={{MYRIAD_DOCKER_GUARD_NETWORK}}
 {{BACKEND_EXTRA_NETWORK_LINE}}
 MYRIAD_COMPOSE_HOST_ROOT={{MYRIAD_COMPOSE_HOST_ROOT}}
 MYRIAD_GUARD_ENV_FILE={{MYRIAD_GUARD_ENV_FILE}}
+# Digest records for verification/recovery; never override the deployment tag.
 DOCKER_GUARD_IMAGE={{DOCKER_GUARD_IMAGE}}
 UPDATER_IMAGE_REF={{UPDATER_IMAGE_REF}}
 GUARD_SELF_UPDATE_TOKEN={{GUARD_SELF_UPDATE_TOKEN}}
@@ -1525,8 +1539,8 @@ CHECK_INTERVAL_SECS=3600
 
 HTTP_BIND_ADDRESS={{HTTP_BIND_ADDRESS}}
 HTTP_PORT={{HTTP_PORT}}
-# PROXY_TRUSTED_UPSTREAMS: empty trusts private/loopback peers only (outer panel/Nginx).
-# Never set 0.0.0.0/0 (would trust forged X-Forwarded-* from anyone).
+# PROXY_TRUSTED_UPSTREAMS: empty trusts no forwarded headers (outer panel/Nginx
+# must be listed explicitly). Never set 0.0.0.0/0.
 # PROXY_TRUSTED_UPSTREAMS=
 # TRUST_PROXY_PEERS=127.0.0.0/8,::1,172.17.0.0/16,172.28.0.0/16
 PROXY_ALLOW_DIRECT_UPDATER=false
@@ -1539,7 +1553,11 @@ MYRIAD_MEMORY_PROFILE={{MYRIAD_MEMORY_PROFILE}}
 # MYRIAD_DB_MODE=bundled|external — external: no compose postgres; updater skips pgdata snapshots
 MYRIAD_DB_MODE={{MYRIAD_DB_MODE}}
 {{POSTGRES_ENV_BLOCK}}DATABASE_URL={{DATABASE_URL}}
-JWT_SECRET={{JWT_SECRET}}
+# Worker logins: distinct URL-safe secrets. Web provisions reserved roles after
+# migrations. Workers never receive POSTGRES_PASSWORD.
+PERSONA_DB_PASSWORD={{PERSONA_DB_PASSWORD}}
+FEDERATION_DB_PASSWORD={{FEDERATION_DB_PASSWORD}}
+{{WORKER_DATABASE_URL_BLOCK}}JWT_SECRET={{JWT_SECRET}}
 # First-owner claim passphrase. The setup wizard asks for this when creating the site owner.
 MYRIAD_SETUP_SECRET={{MYRIAD_SETUP_SECRET}}
 # Visitor-hash salt (openssl rand -hex 32). Auto-filled; do not reuse JWT_SECRET.
@@ -1551,10 +1569,15 @@ CORS_ORIGINS={{CORS_ORIGINS}}
 # BASE_URL / FRONTEND_URL = public HTTPS origin (required for federation Actor URLs)
 BASE_URL=https://{{MAIN_DOMAIN}}
 FRONTEND_URL=https://{{MAIN_DOMAIN}}
+# 站点公网 origin 仍写 BASE_URL（改域名时适配 FRONTEND_URL / CORS_ORIGINS）。
+# AI / 平台密钥 / 出站 HTTP 代理 / Gemini·GitHub API 镜像走 /config → 高级，落库。
+# 不写入 PROXY_ENABLED / PROXY_URL / PROXY_BYPASS / GEMINI_BASE_URL / GITHUB_API_BASE_URL。
+# 升级时旧 .env 若仍有这些键，backend 会忽略。管理台保存不再双写它们。
+MALLOC_ARENA_MAX={{MALLOC_ARENA_MAX}}
 # RUST_LOG=info
 `;
 
-	var GUARD_ENV_TEMPLATE = `# Preview. Guard writes ./guard-policy/docker-guard.env on first start.
+	var GUARD_ENV_TEMPLATE = `# Save as guard-policy/docker-guard.env alongside docker-compose.yml and .env.
 DOCKER_GUARD_IMAGE={{DOCKER_GUARD_IMAGE}}
 GUARD_SELF_UPDATE_TOKEN={{GUARD_SELF_UPDATE_TOKEN}}
 GUARD_COMPOSE_PROJECT_NAME=myriad
@@ -1566,7 +1589,9 @@ MYRIAD_GUARD_ENV_FILE={{MYRIAD_GUARD_ENV_FILE}}
 
 // Whole-site reverse proxy to Myriad proxy (NOT /api-only). Federation paths that
 // MUST reach proxy: /.well-known/webfinger, /.well-known/nodeinfo, /nodeinfo/2.1,
-// /inbox, /users/, plus /api/* (federation WS under /api/federation/*/ws).
+// /inbox, /users/, /media/federation/, /activities/ /notes/ /reports/ /tapps/
+// /library/ /phantasi/articles/, plus /api/* (federation WS under
+// /api/federation/*/ws).
 var DEFAULT_NGINX_TEMPLATE = `server {
     listen 80;
     server_name {{MAIN_DOMAIN}};
@@ -1583,7 +1608,8 @@ var DEFAULT_NGINX_TEMPLATE = `server {
 
     # Whole-site → Myriad proxy (SPA + /api + federation). Do NOT proxy only /api.
     # Must reach proxy: /.well-known/webfinger, /.well-known/nodeinfo, /nodeinfo/2.1,
-    # /inbox, /users/, /api/* (incl. WS /api/federation/*/ws). Preserve Host for HTTP Signatures.
+    # /inbox, /users/, /media/federation/, /phantasi/articles/, /api/* (incl. WS).
+    # Preserve Host for HTTP Signatures.
     location / {
         proxy_pass http://127.0.0.1:{{HTTP_PORT}};
 
@@ -1598,10 +1624,10 @@ var DEFAULT_NGINX_TEMPLATE = `server {
 
         proxy_connect_timeout 300s;
         proxy_send_timeout 300s;
-        proxy_read_timeout 300s;
+        proxy_read_timeout 3600s;
 
         proxy_buffering off;
-        client_max_body_size 50M;
+        client_max_body_size 130M;
     }
 
     location = /healthz {
@@ -1634,7 +1660,8 @@ var DEFAULT_EXTRA_NGINX_TEMPLATE = `server {
 
     # Whole-site → Myriad proxy (SPA + /api + federation). Do NOT proxy only /api.
     # Must reach proxy: /.well-known/webfinger, /.well-known/nodeinfo, /nodeinfo/2.1,
-    # /inbox, /users/, /api/* (incl. WS /api/federation/*/ws). Preserve Host for HTTP Signatures.
+    # /inbox, /users/, /media/federation/, /phantasi/articles/, /api/* (incl. WS).
+    # Preserve Host for HTTP Signatures.
     location / {
         proxy_pass http://127.0.0.1:{{HTTP_PORT}};
 
@@ -1649,10 +1676,10 @@ var DEFAULT_EXTRA_NGINX_TEMPLATE = `server {
 
         proxy_connect_timeout 300s;
         proxy_send_timeout 300s;
-        proxy_read_timeout 300s;
+        proxy_read_timeout 3600s;
 
         proxy_buffering off;
-        client_max_body_size 50M;
+        client_max_body_size 130M;
     }
 
     # Block dangerous extensions under .well-known; do NOT block webfinger/nodeinfo.
@@ -1674,7 +1701,7 @@ var CADDYFILE_TEMPLATE = `{{MAIN_DOMAIN}} {
 var DEPLOY_NOTES_TEMPLATE = `# Myriad 部署
 
 同目录：\`docker-compose.yml\` + \`.env\`（\`chmod 600\`，勿提交）。
-宿主策略由 Guard 在首次启动时写入 \`./guard-policy/docker-guard.env\`，无需手工安装。
+将生成的 \`docker-guard.env\` 放到部署目录的 \`guard-policy/docker-guard.env\`；与 \`.env\` 保持一致。
 
 面板适配：\`{{PANEL_LABEL}}\` · 数据库模式：\`MYRIAD_DB_MODE={{MYRIAD_DB_MODE}}\`（bundled=内置 Postgres；external=外置）。
 
@@ -1687,17 +1714,23 @@ var DEPLOY_NOTES_TEMPLATE = `# Myriad 部署
 | myriad-docker-guard-net (internal) | updater, docker-guard |
 
 \`backend-volume-init\` 使用 \`network_mode: none\`；仅 proxy 开宿主端口。
+\`federation-worker\` / \`persona-worker\` 与 backend 同一镜像，固定限额；挂业务网络；使用 Docker 外置数据库时，与 backend 一起加入附加数据库网络（Compose 内键名为 \`myriad-backend-ext\`，实际 Docker 名称可自定义）。worker 不加入管理网络。
 
 ## 联邦 / Federation
 
 - \`BASE_URL\` / \`FRONTEND_URL\` = 公网 HTTPS 源站（如 \`https://{{MAIN_DOMAIN}}\`），用于 Actor URL；联邦必填。
 - 外层 Nginx/Caddy 必须 **整站** 反代到 Myriad proxy（\`HTTP_BIND_ADDRESS:HTTP_PORT\`），**请勿仅反代 /api**。
-- 以下路径必须到达 proxy（再由 proxy 转 backend）：
+- proxy 再分：persona 前缀 → \`persona-worker\`；联邦 HTTP/WS / AP / 媒体 → \`federation-worker\`；其余 \`/api\`、health、SEO → web。
+- Journal SEO 壳（\`/journal\`、\`/journal/notes\`、\`/journal/articles/*\`）同样走整站反代。\`/journal/friends\` 与 \`/journal/topics/*\` 是 crawler 的 noindex 壳。已无独立 \`/journal/feeds/:id\`。
+- 关闸时 \`federation-worker\` 以退出码 0 结束（\`restart: on-failure\` 不空转）。生产公网对已退出 worker 是 proxy **502**，不是 web 404。
+- 以下路径必须到达 proxy：
   - \`/.well-known/webfinger\`
   - \`/.well-known/nodeinfo\`
   - \`/nodeinfo/2.1\`
   - \`/inbox\`
   - \`/users/\`
+  - \`/media/federation/\`
+  - \`/activities/\` \`/notes/\` \`/reports/\` \`/tapps/\` \`/library/\` \`/phantasi/articles/\`（对象解引用前缀）
   - \`/api/*\`（含联邦 WebSocket \`/api/federation/*/ws\`）
 - ACME：\`/.well-known/acme-challenge/\` 由外层 Nginx 本地提供；其余 \`.well-known\` 仍走 proxy。
 - 冒烟（期望 JSON，不是 HTML）：
@@ -1707,6 +1740,15 @@ curl -sS "https://{{MAIN_DOMAIN}}/.well-known/webfinger?resource=acct:USER@{{MAI
 curl -sS "https://{{MAIN_DOMAIN}}/.well-known/nodeinfo" | head -c 200
 \`\`\`
 
+## 配置归属
+
+编排只写进程基础设施：数据库连接、JWT、公网 origin / CORS、镜像 tag、安装暗号、worker 库口令。
+YouTube / OpenXBL / PSN、出站 HTTP 代理（\`PROXY_ENABLED\` / \`PROXY_URL\` / \`PROXY_BYPASS\`）、Gemini / GitHub API 镜像走 \`/config\` → 高级，落库。
+生成器不写入这些键。升级时若旧 \`.env\` 仍有它们，backend 会忽略。
+管理台保存只双写 \`BASE_URL\`（改公网 origin 时同时改 \`FRONTEND_URL\` / \`CORS_ORIGINS\`）。
+\`PUBLIC_API_URL\` 是前端构建戳，运行时镜像不读。
+
+{{DEPLOY_WORKER_DB_SECTION}}
 {{PANEL_DEPLOY_SECTION}}
 
 ## 启动（命令行等价）
@@ -1718,11 +1760,11 @@ docker compose --env-file .env pull
 docker compose --env-file .env up -d
 \`\`\`
 
-\`backend-volume-init\` 会在 backend 启动前修复持久卷权限；无需手工 chown。
+\`backend-volume-init\` 会在 backend 启动前修复数据与缓存的属主和写权限；无需手工 chown。
 
 首次打开站点会进入安装向导。创建所有者时必须填写 **安装暗号**（\`.env\` 里的 \`MYRIAD_SETUP_SECRET\`）。也可以打开 \`https://{{MAIN_DOMAIN}}/#setup_secret=…\`，向导会自动填入。能读到这份配置或链接的人才能当站长。
 
-可选：\`scripts/docker/deploy.sh up\`（含环境初始化与部署检查）。
+若在 Myriad 仓库目录部署：\`bash scripts/extra/deploy.sh up\`。面板部署请按上方所选平台的说明使用同一物理目录。
 
 ## HTTPS
 
@@ -1734,7 +1776,7 @@ https://{{MAIN_DOMAIN}} → \`{{HTTP_BIND_ADDRESS}}:{{HTTP_PORT}}\`（整站反�
 
 proxy 有 AP 路由变更时需单独 bump \`PROXY_TAG\`（与 \`MYRIAD_TAG\` 独立）。
 
-v0.3.29+ 的 Guard 不再读取 \`DOCKER_GUARD_ALLOWED_IMAGES\`。生成的 \`.env\` 已含 digest 钉死的 \`DOCKER_GUARD_IMAGE\` 与 \`GUARD_SELF_UPDATE_TOKEN\`；Guard 首次启动会自己写入 \`./guard-policy/docker-guard.env\`。
+v0.3.29+ 的 Guard 不再读取 \`DOCKER_GUARD_ALLOWED_IMAGES\`。生成的 \`.env\` 已含用于核验与恢复的 \`DOCKER_GUARD_IMAGE\` 摘要记录与 \`GUARD_SELF_UPDATE_TOKEN\`；将生成的策略文件保存为 \`guard-policy/docker-guard.env\` 后启动。
 
 {{DEPLOY_DATA_SECTION}}
 
@@ -1750,7 +1792,7 @@ docker exec myriad-updater myriad-rescue exit-maintenance --force
 ## 版本
 
 MYRIAD_TAG={{MYRIAD_TAG}} · PROXY_TAG={{PROXY_TAG}} · UPDATER_TAG={{UPDATER_TAG}}  
-禁止 \`:latest\`。TCB 以 \`.env\` 的 \`UPDATER_IMAGE_REF\` digest 为准，不要把 \`UPDATER_TAG\` 当成正在运行的更新器。生成器会写入完整 image 引用。
+禁止 \`:latest\`。Guard、updater、updater-gateway 共用 \`UPDATER_IMAGE:UPDATER_TAG\` 作为部署目标；修改 tag 后重建三个容器即可切换版本。摘要记录仅用于核验与恢复，不覆盖部署目标；实际版本以镜像内置版本为准。
 
 ## 生成后自检（务必）
 
@@ -1829,7 +1871,7 @@ function generateHex(bytes) {
 var DOTENV_TOKEN_RE = /^[A-Za-z0-9_-]{32,512}$/;
 var NGINX_UPLOAD_MAX_BYTES = 512 * 1024;
 var PG_VERSION_MIN = 18;
-var PG_VERSION_MAX = 20;
+var PG_VERSION_MAX = 18;
 var MEM_MIN_BYTES = 16 * 1024 * 1024;       // 16MiB
 var MEM_MAX_BYTES = 256 * 1024 * 1024 * 1024; // 256GiB
 var EXPECTED_ENV_KEYS_BASE = [
@@ -1837,7 +1879,8 @@ var EXPECTED_ENV_KEYS_BASE = [
   'COMPOSE_PROJECT_NAME', 'UPDATE_TOKEN', 'UPDATER_GATEWAY_SECRET', 'CHANNEL',
   'UPDATE_MODE', 'MYRIAD_GITHUB_REPO', 'CHECK_INTERVAL_SECS',
   'HTTP_BIND_ADDRESS', 'HTTP_PORT', 'PROXY_ALLOW_DIRECT_UPDATER',
-  'COSIGN_VERIFY', 'MYRIAD_MEMORY_PROFILE', 'MYRIAD_DB_MODE', 'DATABASE_URL', 'JWT_SECRET',
+  'COSIGN_VERIFY', 'MYRIAD_MEMORY_PROFILE', 'MALLOC_ARENA_MAX', 'MYRIAD_DB_MODE', 'DATABASE_URL',
+  'PERSONA_DB_PASSWORD', 'FEDERATION_DB_PASSWORD', 'JWT_SECRET',
   'MYRIAD_SETUP_SECRET', 'ANALYTICS_SALT', 'TAPP_STORE_STATS_URL',
   'TAPP_STORE_STATS_ENABLED', 'CORS_ORIGINS', 'BASE_URL', 'FRONTEND_URL',
   'MYRIAD_COMPOSE_HOST_ROOT', 'MYRIAD_GUARD_ENV_FILE', 'DOCKER_GUARD_IMAGE',
@@ -1919,6 +1962,9 @@ function validateGeneratedEnv(envText, secrets, opts) {
   if (parsed.map.MYRIAD_MEMORY_PROFILE !== 'saver' && parsed.map.MYRIAD_MEMORY_PROFILE !== 'default') {
     throw new Error('MYRIAD_MEMORY_PROFILE 必须是 saver 或 default');
   }
+  if (parsed.map.MALLOC_ARENA_MAX !== '2' && parsed.map.MALLOC_ARENA_MAX !== '4' && parsed.map.MALLOC_ARENA_MAX !== '8') {
+    throw new Error('MALLOC_ARENA_MAX 必须是 2、4 或 8');
+  }
   if (!GUARD_IMAGE_RE.test(parsed.map.DOCKER_GUARD_IMAGE || '')) {
     throw new Error('DOCKER_GUARD_IMAGE 必须是 docker.io/somekawahitomi/myriad-updater@sha256:<64hex>');
   }
@@ -1936,6 +1982,23 @@ function validateGeneratedEnv(envText, secrets, opts) {
     throw new Error('ANALYTICS_SALT 写入 .env 后与输入不一致');
   }
   requireSafeDotenvToken(parsed.map.ANALYTICS_SALT, 'ANALYTICS_SALT');
+  if (secrets.PERSONA_DB_PASSWORD && parsed.map.PERSONA_DB_PASSWORD !== secrets.PERSONA_DB_PASSWORD) {
+    throw new Error('PERSONA_DB_PASSWORD 写入 .env 后与输入不一致');
+  }
+  requireSafeDotenvToken(parsed.map.PERSONA_DB_PASSWORD, 'PERSONA_DB_PASSWORD');
+  if (secrets.FEDERATION_DB_PASSWORD && parsed.map.FEDERATION_DB_PASSWORD !== secrets.FEDERATION_DB_PASSWORD) {
+    throw new Error('FEDERATION_DB_PASSWORD 写入 .env 后与输入不一致');
+  }
+  requireSafeDotenvToken(parsed.map.FEDERATION_DB_PASSWORD, 'FEDERATION_DB_PASSWORD');
+  if (parsed.map.PERSONA_DB_PASSWORD === parsed.map.FEDERATION_DB_PASSWORD) {
+    throw new Error('PERSONA_DB_PASSWORD 与 FEDERATION_DB_PASSWORD 必须不同');
+  }
+  if (opts.bundled && parsed.map.POSTGRES_PASSWORD) {
+    if (parsed.map.PERSONA_DB_PASSWORD === parsed.map.POSTGRES_PASSWORD ||
+        parsed.map.FEDERATION_DB_PASSWORD === parsed.map.POSTGRES_PASSWORD) {
+      throw new Error('worker 数据库密码不能复用 POSTGRES_PASSWORD');
+    }
+  }
   if (parsed.map.TAPP_STORE_STATS_ENABLED !== 'true' && parsed.map.TAPP_STORE_STATS_ENABLED !== 'false') {
     throw new Error('TAPP_STORE_STATS_ENABLED 必须是 true 或 false');
   }
@@ -1946,6 +2009,8 @@ function validateGeneratedEnv(envText, secrets, opts) {
   var expected = EXPECTED_ENV_KEYS_BASE.slice();
   if (opts.bundled) {
     expected = expected.concat(['POSTGRES_DB', 'POSTGRES_USER', 'POSTGRES_PASSWORD']);
+  } else {
+    expected = expected.concat(['PERSONA_DATABASE_URL', 'FEDERATION_DATABASE_URL']);
   }
   for (var j = 0; j < expected.length; j++) {
     if (!Object.prototype.hasOwnProperty.call(parsed.map, expected[j])) {
@@ -1959,6 +2024,43 @@ function validateGeneratedEnv(envText, secrets, opts) {
     }
   }
   return parsed;
+}
+
+function assertGeneratedComposeContract(composeText) {
+  var text = String(composeText || '');
+  if (!/^\s+federation-worker:/m.test(text) || !/^\s+persona-worker:/m.test(text)) {
+    throw new Error('compose 缺少 federation-worker / persona-worker');
+  }
+  if (!/MYRIAD_PROCESS_ROLE: web/.test(text)) {
+    throw new Error('backend 必须设置 MYRIAD_PROCESS_ROLE=web');
+  }
+  if (!/PROXY_FEDERATION_UPSTREAM: http:\/\/federation-worker:1103/.test(text) ||
+      !/PROXY_PERSONA_UPSTREAM: http:\/\/persona-worker:1103/.test(text)) {
+    throw new Error('proxy 必须指向 federation-worker / persona-worker');
+  }
+  if (!/PERSONA_WEB_UPSTREAM: http:\/\/backend:1103/.test(text)) {
+    throw new Error('persona-worker 必须设置 PERSONA_WEB_UPSTREAM');
+  }
+  if (/brew\/articles/.test(text)) {
+    throw new Error('对象解引用路径必须是 /phantasi/articles/，不是 /brew/articles/');
+  }
+  ['MYRIAD_TCB_GUARD_IMAGE', 'MYRIAD_TCB_UPDATER_IMAGE', 'MYRIAD_TCB_GATEWAY_IMAGE'].forEach(function (key) {
+    if (text.indexOf('${' + key + ':-') === -1) {
+      throw new Error('compose 缺少 ' + key + ' 选择器；TCB 自更新需要它来选精确 digest');
+    }
+  });
+  var external = /networks: \[myriad-net, myriad-admin-net, myriad-backend-ext\]/.test(text);
+  if (external && !/MYRIAD_BACKEND_EXTRA_NETWORK: \$\{MYRIAD_BACKEND_EXTRA_NETWORK:-myriad-backend-ext\}/.test(text)) {
+    throw new Error('docker-guard 必须透传 MYRIAD_BACKEND_EXTRA_NETWORK，否则 Guard 会拒绝外部库网络');
+  }
+  ['federation-worker', 'persona-worker'].forEach(function (name) {
+    var start = text.indexOf('  ' + name + ':\n');
+    // Locate the next service, not nested four-space fields.
+    var block = text.slice(start).split(/\n  [a-z][a-z0-9-]*:\n/)[0];
+    var networks = block.match(/networks: \[([^\]]+)\]/);
+    var expected = external ? 'myriad-net, myriad-backend-ext' : 'myriad-net';
+    if (!networks || networks[1] !== expected) throw new Error(name + ': database network does not match backend');
+  });
 }
 
 function parseMemoryToBytes(value) {
@@ -2258,6 +2360,79 @@ async function fetchDockerHubTags(repo) {
   throw new Error(t('tags.hubUnavailable'));
 }
 
+function extractGithubReleases(data) {
+  var payload = data;
+  if (payload && payload.data && (Array.isArray(payload.data) || payload.data.tag_name)) {
+    payload = payload.data;
+  }
+  if (Array.isArray(payload)) return payload;
+  return [];
+}
+
+function parseReleaseImages(body) {
+  var images = {};
+  var re = /- (backend|frontend|proxy|updater): `([^`]+)`(?: \(`(sha256:[a-fA-F0-9]{64})`\))?/g;
+  var match;
+  while ((match = re.exec(String(body || '')))) {
+    var ref = match[2];
+    var tagMatch = ref.match(/:([^:@]+)$/);
+    var tag = tagMatch ? tagMatch[1] : '';
+    if (!parseVersionTag(tag)) continue;
+    images[match[1]] = {
+      tag: tag,
+      digest: match[3] ? match[3].slice('sha256:'.length).toLowerCase() : null
+    };
+  }
+  return images;
+}
+
+function pickConfirmedGithubRelease(releases) {
+  var parsed = [];
+  var i;
+  for (i = 0; i < releases.length; i++) {
+    var rel = releases[i];
+    if (!rel || rel.draft) continue;
+    var tag = parseVersionTag(rel.tag_name);
+    if (!tag) continue;
+    parsed.push({ release: rel, parsed: tag });
+  }
+  if (!parsed.length) return null;
+  parsed.sort(function (a, b) { return compareSemver(b.parsed, a.parsed); });
+  var best = parsed[0];
+  var images = parseReleaseImages(best.release.body);
+  var backendTag = images.backend && images.backend.tag;
+  var frontendTag = images.frontend && images.frontend.tag;
+  var myriadTag = (backendTag && frontendTag && backendTag === frontendTag)
+    ? backendTag
+    : (backendTag || frontendTag || best.parsed.raw);
+  return {
+    tag: best.parsed.raw,
+    myriadTag: myriadTag,
+    proxyTag: (images.proxy && images.proxy.tag) || best.parsed.raw,
+    updaterTag: (images.updater && images.updater.tag) || best.parsed.raw,
+    updaterDigest: (images.updater && images.updater.digest) || '',
+    versionAligned: !(backendTag && frontendTag && backendTag !== frontendTag)
+  };
+}
+
+async function fetchGithubReleases() {
+  // 列表接口直接返回 JSON，不跟随 release asset 的 302。
+  if (typeof Tapp !== 'undefined' && typeof Tapp.api === 'function') {
+    return extractGithubReleases(await Tapp.api('githubReleases', {}));
+  }
+  if (typeof fetch === 'function') {
+    var resp = await fetch('https://api.github.com/repos/Myriad-You/Myriad/releases?per_page=20', {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'Myriad-Config-Generator (https://github.com/Myriad-You/tapp-store)'
+      }
+    });
+    if (!resp.ok) throw new Error(t('tags.githubHttp', { status: resp.status }));
+    return extractGithubReleases(await resp.json());
+  }
+  throw new Error(t('tags.githubUnavailable'));
+}
+
 function setTagStatus(message, kind) {
   var el = document.getElementById('tag-status');
   if (!el) return;
@@ -2305,58 +2480,91 @@ function applyResolvedTags(resolved, inputs, channelSelect, opts) {
   }
 }
 
+function hubListsContain(list, tag) {
+  if (!tag || !list) return false;
+  for (var i = 0; i < list.length; i++) {
+    if (list[i] === tag) return true;
+  }
+  return false;
+}
+
 async function resolveLatestImageTags() {
-  // allSettled：单个仓库失败不拖垮整次解析
+  // GitHub Release 确认正式版本。服务区经常连不上 Docker Hub，不能让 Hub 失败拖垮确认。
   var settled = await Promise.allSettled([
     fetchDockerHubTags(DOCKER_REPOS.backend),
     fetchDockerHubTags(DOCKER_REPOS.frontend),
     fetchDockerHubTags(DOCKER_REPOS.proxy),
-    fetchDockerHubTags(DOCKER_REPOS.updater)
+    fetchDockerHubTags(DOCKER_REPOS.updater),
+    fetchGithubReleases()
   ]);
-  var names = ['backend', 'frontend', 'proxy', 'updater'];
-  var lists = settled.map(function (r) {
-    return r.status === 'fulfilled' && Array.isArray(r.value) ? r.value : [];
-  });
+  var names = ['backend', 'frontend', 'proxy', 'updater', 'github'];
   var failures = [];
-  for (var i = 0; i < settled.length; i++) {
+  var i;
+  for (i = 0; i < settled.length; i++) {
     if (settled[i].status === 'rejected') {
       var reason = settled[i].reason;
       failures.push(names[i] + ': ' + ((reason && reason.message) ? reason.message : String(reason)));
     }
   }
-  var backendTags = lists[0];
-  var frontendTags = lists[1];
-  var proxyTags = lists[2];
-  var updaterTags = lists[3];
-
-  // 优先四仓共同 versioned tag（兼容矩阵最稳）
-  var allCommon = pickLatestCommonVersionedTag([backendTags, frontendTags, proxyTags, updaterTags]);
-  var myriadTag = allCommon || pickLatestCommonVersionedTag([backendTags, frontendTags]);
-  if (!myriadTag) {
-    myriadTag = pickLatestVersionedTag(backendTags) || pickLatestVersionedTag(frontendTags);
+  function listAt(index) {
+    var row = settled[index];
+    return row.status === 'fulfilled' && Array.isArray(row.value) ? row.value : [];
   }
-  // proxy/updater：有共同矩阵时对齐；否则各自最新，并标记可能不一致
-  var proxyTag = allCommon || pickLatestVersionedTag(proxyTags) || myriadTag;
-  var updaterTag = allCommon || pickLatestVersionedTag(updaterTags) || myriadTag;
+  var backendTags = listAt(0);
+  var frontendTags = listAt(1);
+  var proxyTags = listAt(2);
+  var updaterTags = listAt(3);
+  var confirmed = pickConfirmedGithubRelease(listAt(4));
 
-  if (!myriadTag && !proxyTag && !updaterTag) {
+  // MYRIAD_TAG is shared by backend + frontend. PROXY_TAG and UPDATER_TAG
+  // each take that image's own latest versioned tag — do not pin all four together.
+  var businessCommon = pickLatestCommonVersionedTag([backendTags, frontendTags]);
+  var hubMyriad = businessCommon || pickLatestVersionedTag(backendTags) || pickLatestVersionedTag(frontendTags) || '';
+  var hubProxy = pickLatestVersionedTag(proxyTags) || '';
+  var hubUpdater = pickLatestVersionedTag(updaterTags) || '';
+
+  if (confirmed) {
+    var myriadTag = confirmed.myriadTag || hubMyriad;
+    var proxyTag = confirmed.proxyTag || hubProxy || confirmed.tag;
+    var updaterTag = confirmed.updaterTag || hubUpdater || confirmed.tag;
+    return {
+      myriadTag: myriadTag,
+      proxyTag: proxyTag,
+      updaterTag: updaterTag,
+      updaterDigest: confirmed.updaterDigest || '',
+      githubConfirmed: true,
+      hubConfirmed: hubListsContain(backendTags, myriadTag) || hubListsContain(frontendTags, myriadTag),
+      backendCount: backendTags.length,
+      frontendCount: frontendTags.length,
+      proxyCount: proxyTags.length,
+      updaterCount: updaterTags.length,
+      failures: failures,
+      versionAligned: confirmed.versionAligned,
+      commonTag: confirmed.tag
+    };
+  }
+
+  if (!hubMyriad && !hubProxy && !hubUpdater) {
     var detail = failures.length ? '（' + failures.join('; ') + '）' : '';
-    throw new Error(t('tags.hubEmpty', { detail: detail }));
+    throw new Error(t('tags.sourcesEmpty', { detail: detail }));
   }
 
-  var aligned = !!(allCommon && proxyTag === myriadTag && updaterTag === myriadTag);
-
+  var backendLatest = pickLatestVersionedTag(backendTags);
+  var frontendLatest = pickLatestVersionedTag(frontendTags);
   return {
-    myriadTag: myriadTag || '',
-    proxyTag: proxyTag || '',
-    updaterTag: updaterTag || '',
+    myriadTag: hubMyriad,
+    proxyTag: hubProxy,
+    updaterTag: hubUpdater,
+    updaterDigest: '',
+    githubConfirmed: false,
+    hubConfirmed: true,
     backendCount: backendTags.length,
     frontendCount: frontendTags.length,
     proxyCount: proxyTags.length,
     updaterCount: updaterTags.length,
     failures: failures,
-    versionAligned: aligned,
-    commonTag: allCommon || ''
+    versionAligned: !(backendLatest && frontendLatest && backendLatest !== frontendLatest),
+    commonTag: businessCommon || ''
   };
 }
 
@@ -2378,6 +2586,9 @@ async function refreshLatestTags(inputs, channelSelect, opts) {
     try {
       var resolved = await resolveLatestImageTags();
       tagFetchState.lastResolved = resolved;
+      tagFetchState.confirmedDigest = (resolved.updaterDigest && resolved.updaterTag)
+        ? { tag: resolved.updaterTag, digest: resolved.updaterDigest }
+        : null;
       // 手动点「刷新」时强制覆盖；自动拉取只填空/自动字段
       applyResolvedTags(resolved, inputs, channelSelect, { force: !!opts.force });
       applyResolvedTagStatus(resolved);
@@ -2408,13 +2619,15 @@ async function refreshLatestTags(inputs, channelSelect, opts) {
 
 // Whole-site reverse proxy to Myriad proxy — never rewrite to /api-only.
 // Federation paths that MUST reach proxy: /.well-known/webfinger, /.well-known/nodeinfo,
-// /nodeinfo/2.1, /inbox, /users/, /api/* (WS under /api/federation/*/ws).
+// /nodeinfo/2.1, /inbox, /users/, /media/federation/, /phantasi/articles/, /api/*
+// (WS under /api/federation/*/ws).
 function buildNginxProxyLocation(httpPort, indent) {
   var childIndent = indent + '    ';
   return [
     indent + '# Whole-site → Myriad proxy (SPA + /api + federation). Do NOT proxy only /api.',
     indent + '# Must reach proxy: /.well-known/webfinger, /.well-known/nodeinfo, /nodeinfo/2.1,',
-    indent + '# /inbox, /users/, /api/* (incl. WS /api/federation/*/ws). Preserve Host for HTTP Signatures.',
+    indent + '# /inbox, /users/, /media/federation/, /phantasi/articles/, /api/* (incl. WS).',
+    indent + '# Preserve Host for HTTP Signatures.',
     indent + 'location / {',
     childIndent + 'proxy_pass http://127.0.0.1:' + httpPort + ';',
     '',
@@ -2429,9 +2642,9 @@ function buildNginxProxyLocation(httpPort, indent) {
     '',
     childIndent + 'proxy_connect_timeout 300s;',
     childIndent + 'proxy_send_timeout 300s;',
-    childIndent + 'proxy_read_timeout 300s;',
+    childIndent + 'proxy_read_timeout 3600s;',
     childIndent + 'proxy_buffering off;',
-    childIndent + 'client_max_body_size 50M;',
+    childIndent + 'client_max_body_size 130M;',
     indent + '}'
   ].join('\n');
 }
@@ -2688,6 +2901,12 @@ var SSLMODE_ALLOWED = {
   'verify-full': true
 };
 
+// Docker network names: alphanumeric start, then [A-Za-z0-9_.-]
+var DOCKER_NETWORK_NAME_RE = /^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/;
+function isValidDockerNetworkName(name) {
+  return typeof name === 'string' && DOCKER_NETWORK_NAME_RE.test(name);
+}
+
 // Build postgres:// URL with encoded user/password; optional sslmode query.
 function buildDatabaseUrl(opts) {
   var user = opts.user;
@@ -2720,6 +2939,8 @@ var state = {
   updaterGatewaySecret: '',
   setupSecret: '',
   analyticsSalt: '',
+  personaDbPassword: '',
+  federationDbPassword: '',
   nginxConfig: null,
   nginxFileName: '',
   extraNginxConfig: null,
@@ -2739,6 +2960,8 @@ var state = {
   dbCpuLimit: '1.0',
   dbMemLimit: '1G',
   memoryProfile: 'default',
+  limitPreset: 'standard',
+  mallocArenaMax: '4',
   // 运行时由 Docker Hub 解析填充，不在源码中写死版本
   myriadTag: '',
   proxyTag: '',
@@ -2756,7 +2979,8 @@ var state = {
   netMyriad: 'myriad-net',
   netAdmin: 'myriad-admin-net',
   netGuard: 'myriad-docker-guard-net',
-  dbExtraNetwork: ''
+  dbExtraNetwork: '',
+  composeHostRoot: '/opt/myriad'
 };
 
 // ========================================
@@ -2773,8 +2997,9 @@ var pageLifecycle = {
  * 向导：欢迎 → 面板 → 域名 → 站点 → 数据库 → 限额 → 完成；高级为限额页可选。
  * 主路径每次只问一件事。
  */
-var WIZARD_FLOW = ['welcome', 'panel', 'domain', 'site', 'database', 'limits', 'advanced', 'done'];
+var WIZARD_FLOW = ['welcome', 'upgrade', 'panel', 'domain', 'site', 'database', 'limits', 'advanced', 'done'];
 var WIZARD_META = {
+  upgrade: { index: 0, nameKey: 'upgrade.title', back: 'welcome', backLabelKey: 'wizard.welcome' },
   welcome: { index: 0, nameKey: 'wizard.welcome', back: '', backLabelKey: '' },
   panel: { index: 1, nameKey: 'wizard.panel', back: 'welcome', backLabelKey: 'wizard.welcome' },
   domain: { index: 2, nameKey: 'wizard.domain', back: 'panel', backLabelKey: 'wizard.panel' },
@@ -2794,23 +3019,31 @@ var LIMIT_PRESETS = {
     dbCpu: '0.5', dbMem: '512M',
     backendCpu: '1.0', backendMem: '1G',
     frontendCpu: '0.5', frontendMem: '256M',
-    memorySaver: true
+    memorySaver: true,
+    mallocArenaMax: '2'
   },
   standard: {
     hintKey: 'limits.hintStandard',
     dbCpu: '1.0', dbMem: '1G',
     backendCpu: '2.0', backendMem: '2G',
     frontendCpu: '1.0', frontendMem: '512M',
-    memorySaver: false
+    memorySaver: false,
+    mallocArenaMax: '4'
   },
   large: {
     hintKey: 'limits.hintLarge',
     dbCpu: '2.0', dbMem: '2G',
     backendCpu: '2.0', backendMem: '2G',
     frontendCpu: '1.0', frontendMem: '1G',
-    memorySaver: false
+    memorySaver: false,
+    mallocArenaMax: '8'
   }
 };
+
+function resolveMallocArenaMax(preset) {
+  var spec = LIMIT_PRESETS[preset];
+  return (spec && spec.mallocArenaMax) || '4';
+}
 
 function wizardPane(step) {
   return document.querySelector('.cg-ob__pane[data-step="' + step + '"]');
@@ -3064,6 +3297,7 @@ function wizardNextFrom(step) {
 }
 
 function disposePage() {
+  clearUpgradeSession();
   unbindTopBarDense();
   var list = pageLifecycle.unsubs.slice();
   pageLifecycle.unsubs = [];
@@ -3071,6 +3305,192 @@ function disposePage() {
   for (var i = 0; i < list.length; i++) {
     try { list[i](); } catch (e) { /* ignore */ }
   }
+}
+
+var upgradeSession = { legacy: null, report: null };
+var upgradeReadRevision = 0;
+var UPGRADE_FIELD_IDS = {
+  mainDomain: 'main-domain', extraDomain: 'extra-domain', dbPassword: 'db-password',
+  jwtSecret: 'jwt-secret', updateToken: 'update-token', updaterGatewaySecret: 'updater-gateway-secret',
+  setupSecret: 'setup-secret', dbName: 'db-name', dbUser: 'db-user', dbHost: 'db-host', dbPort: 'db-port',
+  dbSslmode: 'db-sslmode', dbVersion: 'db-version', httpBindAddress: 'http-bind-address', httpPort: 'http-port',
+  netMyriad: 'net-myriad', netAdmin: 'net-admin', netGuard: 'net-guard', dbExtraNetwork: 'db-extra-network',
+  composeHostRoot: 'compose-host-root', backendCpuLimit: 'backend-cpu-limit', backendMemLimit: 'backend-mem-limit',
+  frontendCpuLimit: 'frontend-cpu-limit', frontendMemLimit: 'frontend-mem-limit', dbCpuLimit: 'db-cpu-limit', dbMemLimit: 'db-mem-limit'
+};
+var UPGRADE_LOCKED_FIELDS = ['db-password', 'jwt-secret', 'update-token', 'updater-gateway-secret', 'setup-secret',
+  'db-name', 'db-user', 'db-host', 'db-port', 'db-sslmode', 'db-version', 'db-extra-network',
+  'net-myriad', 'net-admin', 'net-guard'];
+
+function generationInputSecret(value) {
+  // Legacy values are restored exactly by upgradeGenerated, which safely quotes dotenv.
+  return upgradeSession.legacy && value && !isSafeDotenvToken(value) ? generateUpdateToken() : value;
+}
+
+function renderUpgradeReport(id, report) {
+  var host = document.getElementById(id);
+  if (!host) return;
+  host.textContent = '';
+  if (!report) return;
+  ['preserved', 'added', 'warnings'].forEach(function (kind) {
+    if (!report[kind] || !report[kind].length) return;
+    var heading = document.createElement('h3');
+    heading.textContent = t('upgrade.' + kind);
+    host.appendChild(heading);
+    var list = document.createElement('ul');
+    report[kind].forEach(function (item) {
+      var row = document.createElement('li');
+      row.textContent = String(item);
+      list.appendChild(row);
+    });
+    host.appendChild(list);
+  });
+}
+
+function invalidateUpgradeInspection() {
+  upgradeReadRevision++;
+  upgradeSession.active = true;
+  ['btn-generate-all', 'btn-generate-advanced'].forEach(function (id) {
+    var button = document.getElementById(id); if (button) button.disabled = true;
+  });
+  Object.keys(UPGRADE_FIELD_IDS).forEach(function (key) {
+    var input = document.getElementById(UPGRADE_FIELD_IDS[key]);
+    if (!input) return;
+    input.value = input.defaultValue || (input.tagName === 'SELECT' ? input.options[0].value : '');
+    state[key] = input.type === 'number' ? Number(input.value) : input.value;
+  });
+  ['analyticsSalt', 'personaDbPassword', 'federationDbPassword', 'guardSelfUpdateToken'].forEach(function (key) { state[key] = ''; });
+  document.querySelectorAll('input[name="db-mode"]').forEach(function (radio) {
+    radio.checked = radio.defaultChecked;
+    if (radio.checked) radio.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  ['result-docker-compose', 'result-env', 'result-guard-env', 'result-deploy-notes', 'setup-secret-reminder-value', 'setup-secret-link-value'].forEach(function (id) {
+    var output = document.getElementById(id); if (output) output.textContent = '';
+  });
+  upgradeSession.legacy = null;
+  upgradeSession.report = null;
+  UPGRADE_LOCKED_FIELDS.concat(['compose-host-root']).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) { el.readOnly = false; el.disabled = false; }
+  });
+  document.querySelectorAll('input[name="db-mode"]').forEach(function (el) { el.disabled = false; });
+  var regen = document.getElementById('gen-db-password');
+  if (regen) regen.disabled = false;
+  ['upgrade-active', 'btn-continue-upgrade'].forEach(function (id) {
+    var el = document.getElementById(id); if (el) el.hidden = true;
+  });
+  renderUpgradeReport('upgrade-report', null);
+  renderUpgradeReport('upgrade-result-report', null);
+  var resultSection = document.getElementById('upgrade-result-section');
+  if (resultSection) resultSection.hidden = true;
+}
+
+function clearUpgradeSession() {
+  invalidateUpgradeInspection();
+  upgradeSession.active = false;
+  ['btn-generate-all', 'btn-generate-advanced'].forEach(function (id) {
+    var button = document.getElementById(id); if (button) button.disabled = false;
+  });
+  upgradeSession.legacy = null;
+  upgradeSession.report = null;
+  ['upgrade-compose', 'upgrade-env', 'upgrade-compose-file', 'upgrade-env-file'].forEach(function (id) {
+    var input = document.getElementById(id);
+    if (input) input.value = '';
+  });
+  UPGRADE_LOCKED_FIELDS.forEach(function (id) {
+    var input = document.getElementById(id);
+    if (input) { input.readOnly = false; input.disabled = false; }
+  });
+  document.querySelectorAll('input[name="db-mode"]').forEach(function (el) { el.disabled = false; });
+  var regen = document.getElementById('gen-db-password');
+  if (regen) regen.disabled = false;
+  ['upgrade-status', 'upgrade-report', 'upgrade-result-report'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = '';
+  });
+  var banner = document.getElementById('upgrade-active');
+  if (banner) banner.hidden = true;
+}
+
+function initUpgradeUi() {
+  var start = document.getElementById('btn-start-upgrade');
+  if (start) pageListen(start, 'click', function () {
+    invalidateUpgradeInspection();
+    goWizard('upgrade', 'forward');
+  });
+  var fresh = document.getElementById('btn-start-new');
+  if (fresh) pageListen(fresh, 'click', function () {
+    clearUpgradeSession();
+    refreshCustomSelects();
+  });
+  ['compose', 'env'].forEach(function (kind) {
+    var input = document.getElementById('upgrade-' + kind);
+    if (input) pageListen(input, 'input', invalidateUpgradeInspection);
+    var file = document.getElementById('upgrade-' + kind + '-file');
+    if (file) pageListen(file, 'change', async function () {
+      var chosen = file.files && file.files[0];
+      if (!chosen) return;
+      invalidateUpgradeInspection();
+      var revision = upgradeReadRevision;
+      var status = document.getElementById('upgrade-status');
+      try {
+        if (chosen.size > 1024 * 1024) throw new Error(t('upgrade.tooLarge'));
+        var text = await chosen.text();
+        if (revision !== upgradeReadRevision || file.files[0] !== chosen) return;
+        if (text.indexOf('\0') !== -1) throw new Error(t('upgrade.badFile'));
+        document.getElementById('upgrade-' + kind).value = text;
+        if (status) status.textContent = '';
+      } catch (error) { if (status) status.textContent = error.message; }
+    });
+  });
+  var inspect = document.getElementById('btn-inspect-upgrade');
+  if (inspect) pageListen(inspect, 'click', function () {
+    var status = document.getElementById('upgrade-status');
+    try {
+      invalidateUpgradeInspection();
+      var legacy = UpgradeEngine.inspectLegacy(
+        document.getElementById('upgrade-compose').value,
+        document.getElementById('upgrade-env').value
+      );
+      upgradeSession.legacy = legacy;
+      upgradeSession.report = legacy.report;
+      ['btn-generate-all', 'btn-generate-advanced'].forEach(function (id) {
+        var button = document.getElementById(id); if (button) button.disabled = false;
+      });
+      var originalRoot = document.getElementById('compose-host-root');
+      if (originalRoot) originalRoot.readOnly = !!legacy.statePatch.composeHostRoot;
+      Object.keys(legacy.statePatch).forEach(function (key) {
+        state[key] = legacy.statePatch[key];
+        var el = document.getElementById(UPGRADE_FIELD_IDS[key] || '');
+        if (el) el.value = String(legacy.statePatch[key]);
+      });
+      document.querySelectorAll('input[name="db-mode"]').forEach(function (el) {
+        el.checked = el.value === legacy.statePatch.dbMode;
+        if (el.checked) el.dispatchEvent(new Event('change', { bubbles: true }));
+        el.disabled = true;
+      });
+      UPGRADE_LOCKED_FIELDS.forEach(function (id) {
+        var input = document.getElementById(id);
+        if (input) { input.readOnly = true; if (input.tagName === 'SELECT') input.disabled = true; }
+      });
+      var regen = document.getElementById('gen-db-password');
+      if (regen) regen.disabled = true;
+      var banner = document.getElementById('upgrade-active');
+      if (banner) banner.hidden = false;
+      renderUpgradeReport('upgrade-report', legacy.report);
+      refreshCustomSelects();
+      if (status) status.textContent = t('upgrade.inspected');
+      var next = document.getElementById('btn-continue-upgrade');
+      if (next) next.hidden = false;
+    } catch (error) {
+      upgradeSession.legacy = null;
+      if (status) status.textContent = error.message || t('upgrade.badFile');
+      var next = document.getElementById('btn-continue-upgrade');
+      if (next) next.hidden = true;
+    }
+  });
+  var next = document.getElementById('btn-continue-upgrade');
+  if (next) pageListen(next, 'click', function () { if (upgradeSession.legacy) goWizard('panel', 'forward'); });
 }
 
 function initPage() {
@@ -3150,6 +3570,7 @@ function initPage() {
     });
   }
 
+  initUpgradeUi();
   applyStaticI18n();
   if (typeof Tapp !== 'undefined' && Tapp.ui && typeof Tapp.ui.onLocaleChange === 'function') {
     var offLocale = Tapp.ui.onLocaleChange(function () {
@@ -3282,6 +3703,7 @@ function initPage() {
   }
 
   function syncLimitPresetUi(mode) {
+    state.limitPreset = mode;
     var customFields = document.getElementById('limit-custom-fields');
     var hint = document.getElementById('limit-preset-hint');
     var customBtn = document.getElementById('limit-preset-custom');
@@ -3343,6 +3765,7 @@ function initPage() {
   function markTagManual(input) {
     if (!input) return;
     input.dataset.autoFilled = 'false';
+    if (input.id === 'updater-tag') tagFetchState.confirmedDigest = null;
   }
 
   [myriadTagInput, proxyTagInput, updaterTagInput].forEach(function(input) {
@@ -3420,17 +3843,23 @@ function initPage() {
 
   async function runGenerateAll() {
     if (!generateAllBtn || generateAllBtn.disabled) return;
+    if (upgradeSession.active && !upgradeSession.legacy) return;
+    var generationLegacy = upgradeSession.legacy;
+    var generationRevision = upgradeReadRevision;
+    function generationIsCurrent() {
+      return generationLegacy === upgradeSession.legacy && generationRevision === upgradeReadRevision;
+    }
     generateAllBtn.disabled = true;
     if (generateAdvancedBtn) generateAdvancedBtn.disabled = true;
 
     try {
       var mainDomain = normalizeDomain(mainDomainInput.value);
       var extraDomain = normalizeDomain(extraDomainInput.value || '');
-      var dbPassword = dbPasswordInput.value.trim();
-      var jwtSecret = jwtSecretInput.value.trim();
-      var updateToken = updateTokenInput.value.trim();
-      var gatewaySecret = gatewaySecretInput ? gatewaySecretInput.value.trim() : '';
-      var setupSecret = setupSecretInput ? setupSecretInput.value.trim() : '';
+      var dbPassword = generationInputSecret(dbPasswordInput.value.trim());
+      var jwtSecret = generationInputSecret(jwtSecretInput.value.trim());
+      var updateToken = generationInputSecret(updateTokenInput.value.trim());
+      var gatewaySecret = generationInputSecret(gatewaySecretInput ? gatewaySecretInput.value.trim() : '');
+      var setupSecret = generationInputSecret(setupSecretInput ? setupSecretInput.value.trim() : '');
       var dbName = dbNameInput.value.trim();
       var dbUser = dbUserInput.value.trim();
       var dbMode = getSelectedDbMode();
@@ -3491,7 +3920,7 @@ function initPage() {
         }
         // 附加外部子网可选：非空时须为合法 Docker 网络名
         var dbExtraNetwork = (dbExtraNetworkInput && dbExtraNetworkInput.value.trim()) || '';
-        if (dbExtraNetwork && !/^[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(dbExtraNetwork)) {
+        if (dbExtraNetwork && !isValidDockerNetworkName(dbExtraNetwork)) {
           showNotification(t('error.badExtraNetwork'), 'error');
           if (dbExtraNetworkInput) dbExtraNetworkInput.focus();
           return;
@@ -3545,6 +3974,8 @@ function initPage() {
         return;
       }
 
+      var rootInput = document.getElementById('compose-host-root');
+      state.composeHostRoot = rootInput ? rootInput.value.trim() : state.composeHostRoot;
       state.mainDomain = mainDomain;
       state.extraDomain = extraDomain;
       state.dbPassword = dbPassword;
@@ -3576,7 +4007,7 @@ function initPage() {
 
       state.dbVersion = (dbVersionSelect && dbVersionSelect.value) ? dbVersionSelect.value.trim() : '18';
       if (!isExternal) {
-        if (!isValidPgMajor(state.dbVersion)) {
+        if (!upgradeSession.legacy && !isValidPgMajor(state.dbVersion)) {
           showNotification(
             t('error.badPgVersion', { min: PG_VERSION_MIN, max: PG_VERSION_MAX }),
             'error'
@@ -3592,6 +4023,7 @@ function initPage() {
       var updaterTag = (updaterTagInput.value || '').trim();
       if (!myriadTag || !proxyTag || !updaterTag) {
         var resolved = await refreshLatestTags(tagInputs, channelSelect, { notify: false, force: false });
+        if (!generationIsCurrent()) return;
         if (!resolved && (!myriadTag || !proxyTag || !updaterTag)) {
           showNotification(t('error.emptyTags'), 'error');
           myriadTagInput.focus();
@@ -3616,6 +4048,7 @@ function initPage() {
       state.frontendMemLimit = frontendMemLimitInput.value.trim() || '512M';
       var memorySaverEl = document.getElementById('memory-saver');
       state.memoryProfile = (memorySaverEl && memorySaverEl.checked) ? 'saver' : 'default';
+      state.limitPreset = getSelectedLimitPreset();
 
       var cpuValues = isExternal
         ? [state.backendCpuLimit, state.frontendCpuLimit]
@@ -3648,12 +4081,22 @@ function initPage() {
       state.myriadTag = myriadRef.tag;
       state.proxyTag = proxyRef.tag;
       state.updaterTag = updaterRef.tag;
+      if (myriadRef.digest || proxyRef.digest) {
+        showNotification(t('error.businessDigest'), 'error');
+        return;
+      }
       state.myriadDigest = myriadRef.digest;
       state.proxyDigest = proxyRef.digest;
       state.updaterDigest = updaterRef.digest;
+      if (!state.updaterDigest && tagFetchState.confirmedDigest &&
+          tagFetchState.confirmedDigest.tag === state.updaterTag) {
+        state.updaterDigest = tagFetchState.confirmedDigest.digest;
+      }
       if (!state.updaterDigest) {
         try {
-          state.updaterDigest = await resolveUpdaterDigest(state.updaterTag);
+          var resolvedUpdaterDigest = await resolveUpdaterDigest(state.updaterTag);
+          if (!generationIsCurrent()) return;
+          state.updaterDigest = resolvedUpdaterDigest;
         } catch (digestErr) {
           showNotification((digestErr && digestErr.message) ? digestErr.message : t('error.needUpdaterDigest'), 'error');
           return;
@@ -3714,14 +4157,16 @@ function initPage() {
       state.netAdmin = netAdmin;
       state.netGuard = netGuard;
 
+      if (!generationIsCurrent()) return;
       try {
         generateConfigs();
       } catch (err) {
         showNotification((err && err.message) ? err.message : t('error.generateFailed'), 'error');
       }
     } finally {
-      generateAllBtn.disabled = false;
-      if (generateAdvancedBtn) generateAdvancedBtn.disabled = false;
+      var awaitingInspection = upgradeSession.active && !upgradeSession.legacy;
+      generateAllBtn.disabled = awaitingInspection;
+      if (generateAdvancedBtn) generateAdvancedBtn.disabled = awaitingInspection;
     }
   }
 
@@ -3923,6 +4368,16 @@ function applyPlaceholders(template, map) {
 }
 
 function generateConfigs() {
+  state.mallocArenaMax = resolveMallocArenaMax(state.limitPreset);
+  if ((!upgradeSession.legacy || upgradeSession.legacy.storage.kind === 'bind') && !Storage.supportsBind(state.updaterTag)) throw new Error(t('error.storageUpdater'));
+  if (!upgradeSession.legacy && state.dbMode !== 'external' && !isValidPgMajor(state.dbVersion)) {
+    throw new Error(t('error.badPgVersion', { min: PG_VERSION_MIN, max: PG_VERSION_MAX }));
+  }
+  if (!/^\/(?:[A-Za-z0-9_-][A-Za-z0-9_.-]*\/)*[A-Za-z0-9_-][A-Za-z0-9_.-]*$/.test(state.composeHostRoot || '')) {
+    throw new Error(t('error.badComposeRoot'));
+  }
+  if (state.myriadDigest || state.proxyDigest) throw new Error(t('error.businessDigest'));
+  if (state.dbExtraNetwork && !isValidDockerNetworkName(state.dbExtraNetwork)) throw new Error(t('error.badExtraNetwork'));
   var corsOrigins = buildCorsOrigins(state.mainDomain, state.extraDomain);
   var isExternal = state.dbMode === 'external';
   var panelId = state.panelId || '1panel';
@@ -3958,9 +4413,8 @@ function generateConfigs() {
   var backendDependsOn = '      backend-volume-init: { condition: service_completed_successfully }\n';
   var updaterPgdataLine = '';
   var updaterPgdataVolume = '';
-  var composeStartHint = 'mkdir -p state backups && docker compose --env-file .env up -d';
   var postgresEnvBlock = '';
-  var deployNetMembers = 'proxy, frontend, backend';
+  var deployNetMembers = 'proxy, frontend, backend, federation-worker, persona-worker';
   var deployMkdir = 'mkdir -p state backups guard-policy';
   var deployDataSection =
     '## 数据\n\n' +
@@ -3979,13 +4433,11 @@ function generateConfigs() {
       '      backend-volume-init: { condition: service_completed_successfully }\n';
     updaterPgdataLine = '      UPDATER_PGDATA: /host/compose/pgdata\n';
     updaterPgdataVolume = '      - type: bind\n        source: ${MYRIAD_COMPOSE_HOST_ROOT:-.}/pgdata\n        target: /host/compose/pgdata\n';
-    composeStartHint =
-      'mkdir -p pgdata state backups && chown -R 70:70 pgdata && chmod 700 pgdata && docker compose --env-file .env up -d';
     postgresEnvBlock =
       'POSTGRES_DB=' + state.dbName + '\n' +
       'POSTGRES_USER=' + state.dbUser + '\n' +
       'POSTGRES_PASSWORD=' + state.dbPassword + '\n';
-    deployNetMembers = 'proxy, frontend, backend, postgres';
+    deployNetMembers = 'proxy, frontend, backend, federation-worker, persona-worker, postgres';
     // alpine postgres 镜像系统用户 uid 70；面板文件管理创建目录常为 root → 必须 chown
     deployMkdir =
       'mkdir -p pgdata state backups guard-policy\n' +
@@ -4005,17 +4457,109 @@ function generateConfigs() {
       '# POSTGRES_USER=' + state.dbUser + '\n';
   }
 
+  deployMkdir = 'cd ' + state.composeHostRoot + ' || exit 1\n' +
+    Storage.preparation(upgradeSession.legacy ? upgradeSession.legacy.storage : Storage.layout(), state.composeHostRoot, upgradeSession.legacy ? upgradeSession.legacy.project : 'myriad') + '\n' + deployMkdir;
+
   var extraNetworkName = isExternal ? (state.dbExtraNetwork || '').trim() : '';
   var backendExtraNetworkRef = extraNetworkName ? ', myriad-backend-ext' : '';
   var extraNetworkDecl = extraNetworkName
-    ? '  myriad-backend-ext:\n    external: true\n    name: ${MYRIAD_BACKEND_EXTRA_NETWORK}\n'
+    ? '  # External database shared network (external DB mode only).\n' +
+      '  # Pre-create it on the host and attach the database container; backend and both\n' +
+      '  # workers join it and no other service may. The real Docker name is\n' +
+      '  # MYRIAD_BACKEND_EXTRA_NETWORK in .env; Guard accepts it for those three services.\n' +
+      '  myriad-backend-ext:\n    external: true\n    name: ${MYRIAD_BACKEND_EXTRA_NETWORK}\n'
     : '';
   var backendExtraNetworkLine = extraNetworkName
     ? 'MYRIAD_BACKEND_EXTRA_NETWORK=' + extraNetworkName + '\n'
     : '';
+  var extraNetworkHeader = extraNetworkName ? ' | myriad-backend-ext(external DB)' : '';
+  var guardExtraNetworkLine = extraNetworkName
+    ? '      # External DB: Guard must see the same network name or it rejects the\n' +
+      '      # backend/worker attachment. Defaults to myriad-backend-ext when unset.\n' +
+      '      MYRIAD_BACKEND_EXTRA_NETWORK: ${MYRIAD_BACKEND_EXTRA_NETWORK:-myriad-backend-ext}\n'
+    : '';
 
+  var deployWorkerDbSection;
+  if (isExternal) {
+    deployWorkerDbSection =
+      '## Worker 数据库\n\n' +
+      '外置模式写入 `PERSONA_DATABASE_URL` / `FEDERATION_DATABASE_URL`（同一库，独立登录 `myriad_persona` / `myriad_federation`）。\n' +
+      '新装默认由 web 预置 worker 角色：backend 的两项 `*_DB_PASSWORD` 均非空。数据库管理登录必须有权执行角色创建/修改、角色参数、GRANT/REVOKE 和默认权限；仅能连接数据库或执行普通迁移不够。\n' +
+      '托管库不允许上述操作时，请 DBA 按 Myriad worker 策略预置独立角色；将 backend 的 `PERSONA_DB_PASSWORD` 与 `FEDERATION_DB_PASSWORD` 同时清空，并把两个 `*_DATABASE_URL` 改成实际预置角色连接。角色权限、连接数和资源限制必须通过 worker 启动检查。升级时保留旧部署的角色管理方式。\n' +
+      (extraNetworkName ? 'backend 和两个 worker 均接入附加网络 `myriad-backend-ext`（实际 Docker 名称 `' + extraNetworkName + '`）。先创建该网络并将数据库容器接入；旧版 updater/Guard 需先升级。\n' : '三个进程均须能访问数据库地址。使用 host.docker.internal 时均已写入 host-gateway 映射。\n');
+  } else {
+    deployWorkerDbSection =
+      '## Worker 数据库\n\n' +
+      '自动写入互不相同的 `PERSONA_DB_PASSWORD` / `FEDERATION_DB_PASSWORD`，且不复用 `POSTGRES_PASSWORD`。\n' +
+      'web 启动后预置 `myriad_persona` / `myriad_federation`。worker 进程拿不到管理员库口令。\n';
+  }
+
+  ['analyticsSalt', 'personaDbPassword', 'federationDbPassword', 'guardSelfUpdateToken'].forEach(function (key) {
+    if (upgradeSession.legacy && state[key] && !isSafeDotenvToken(state[key])) state[key] = generateUpdateToken();
+  });
   if (!state.analyticsSalt) {
     state.analyticsSalt = generateHex(32);
+  }
+  if (!state.personaDbPassword) {
+    state.personaDbPassword = generateUpdateToken();
+  }
+  if (!state.federationDbPassword) {
+    state.federationDbPassword = generateUpdateToken();
+  }
+  if (state.personaDbPassword === state.federationDbPassword) {
+    state.federationDbPassword = generateUpdateToken();
+  }
+  if (!isExternal && state.dbPassword) {
+    if (state.personaDbPassword === state.dbPassword) {
+      state.personaDbPassword = generateUpdateToken();
+    }
+    if (state.federationDbPassword === state.dbPassword ||
+        state.federationDbPassword === state.personaDbPassword) {
+      state.federationDbPassword = generateUpdateToken();
+    }
+  }
+  requireSafeDotenvToken(state.personaDbPassword, 'PERSONA_DB_PASSWORD');
+  requireSafeDotenvToken(state.federationDbPassword, 'FEDERATION_DB_PASSWORD');
+
+  var backendWorkerPasswordLines;
+  var federationWorkerDatabaseUrl;
+  var personaWorkerDatabaseUrl;
+  var workerDatabaseUrlBlock = '';
+  if (isExternal) {
+    backendWorkerPasswordLines =
+      '      PERSONA_DB_PASSWORD: ${PERSONA_DB_PASSWORD:-}\n' +
+      '      FEDERATION_DB_PASSWORD: ${FEDERATION_DB_PASSWORD:-}\n';
+    federationWorkerDatabaseUrl =
+      '${FEDERATION_DATABASE_URL:?Set an independently provisioned worker role URL}';
+    personaWorkerDatabaseUrl =
+      '${PERSONA_DATABASE_URL:?Set an independently provisioned worker role URL}';
+    workerDatabaseUrlBlock =
+      'PERSONA_DATABASE_URL=' + buildDatabaseUrl({
+        user: 'myriad_persona',
+        password: state.personaDbPassword,
+        host: state.dbHost,
+        port: state.dbPort,
+        database: state.dbName,
+        sslmode: state.dbSslmode
+      }) + '\n' +
+      'FEDERATION_DATABASE_URL=' + buildDatabaseUrl({
+        user: 'myriad_federation',
+        password: state.federationDbPassword,
+        host: state.dbHost,
+        port: state.dbPort,
+        database: state.dbName,
+        sslmode: state.dbSslmode
+      }) + '\n';
+  } else {
+    backendWorkerPasswordLines =
+      '      PERSONA_DB_PASSWORD: ${PERSONA_DB_PASSWORD:?Run deploy.sh to generate worker DB passwords}\n' +
+      '      FEDERATION_DB_PASSWORD: ${FEDERATION_DB_PASSWORD:?Run deploy.sh to generate worker DB passwords}\n';
+    federationWorkerDatabaseUrl =
+      'postgres://myriad_federation:${FEDERATION_DB_PASSWORD:?Run deploy.sh to generate worker DB passwords}@postgres:5432/' +
+      state.dbName;
+    personaWorkerDatabaseUrl =
+      'postgres://myriad_persona:${PERSONA_DB_PASSWORD:?Run deploy.sh to generate worker DB passwords}@postgres:5432/' +
+      state.dbName;
   }
   if (!state.updaterDigest) {
     throw new Error(t('error.needUpdaterDigest'));
@@ -4028,15 +4572,20 @@ function generateConfigs() {
 
   var map = {
     MYRIAD_DB_MODE: isExternal ? 'external' : 'bundled',
-    COMPOSE_START_HINT: composeStartHint,
+    COMPOSE_START_HINT: 'Prepare storage using DEPLOY.md before docker compose --env-file .env up -d',
     POSTGRES_SERVICE: postgresService,
     BACKEND_DEPENDS_ON: backendDependsOn,
+    BACKEND_WORKER_PASSWORD_LINES: backendWorkerPasswordLines,
+    FEDERATION_WORKER_DATABASE_URL: federationWorkerDatabaseUrl,
+    PERSONA_WORKER_DATABASE_URL: personaWorkerDatabaseUrl,
+    WORKER_DATABASE_URL_BLOCK: workerDatabaseUrlBlock,
     UPDATER_PGDATA_LINE: updaterPgdataLine,
     UPDATER_PGDATA_VOLUME: updaterPgdataVolume,
     POSTGRES_ENV_BLOCK: postgresEnvBlock,
     DEPLOY_NET_MEMBERS: deployNetMembers,
     DEPLOY_MKDIR: deployMkdir,
     DEPLOY_DATA_SECTION: deployDataSection,
+    DEPLOY_WORKER_DB_SECTION: deployWorkerDbSection,
     DB_VERSION: state.dbVersion,
     POSTGRES_DB: state.dbName,
     POSTGRES_USER: state.dbUser,
@@ -4053,6 +4602,8 @@ function generateConfigs() {
     UPDATER_GATEWAY_SECRET: state.updaterGatewaySecret,
     MYRIAD_SETUP_SECRET: state.setupSecret,
     ANALYTICS_SALT: state.analyticsSalt,
+    PERSONA_DB_PASSWORD: state.personaDbPassword,
+    FEDERATION_DB_PASSWORD: state.federationDbPassword,
     MAIN_DOMAIN: state.mainDomain,
     EXTRA_DOMAIN: state.extraDomain || '',
     CORS_ORIGINS: corsOrigins,
@@ -4061,13 +4612,16 @@ function generateConfigs() {
     MYRIAD_DOCKER_NETWORK: state.netMyriad || 'myriad-net',
     MYRIAD_ADMIN_NETWORK: state.netAdmin || 'myriad-admin-net',
     MYRIAD_DOCKER_GUARD_NETWORK: state.netGuard || 'myriad-docker-guard-net',
-    MYRIAD_COMPOSE_HOST_ROOT: '.',
+    MYRIAD_COMPOSE_HOST_ROOT: state.composeHostRoot || '/opt/myriad',
     MYRIAD_GUARD_ENV_FILE: 'guard-policy/docker-guard.env',
     DOCKER_GUARD_IMAGE: guardImage,
     UPDATER_IMAGE_REF: guardImage,
     GUARD_SELF_UPDATE_TOKEN: guardToken,
+    DB_EXTRA_HOSTS: isExternal && state.dbHost === 'host.docker.internal' ? '    extra_hosts:\n      - \"host.docker.internal:host-gateway\"\n' : '',
     BACKEND_EXTRA_NETWORK_REF: backendExtraNetworkRef,
     EXTRA_NETWORK_DECL: extraNetworkDecl,
+    EXTRA_NETWORK_HEADER: extraNetworkHeader,
+    GUARD_EXTRA_NETWORK_LINE: guardExtraNetworkLine,
     BACKEND_EXTRA_NETWORK_LINE: backendExtraNetworkLine,
     MYRIAD_TAG: state.myriadTag,
     PROXY_TAG: state.proxyTag,
@@ -4075,6 +4629,7 @@ function generateConfigs() {
     CHANNEL: state.channel,
     COSIGN_VERIFY: state.cosignVerify,
     MYRIAD_MEMORY_PROFILE: state.memoryProfile === 'saver' ? 'saver' : 'default',
+    MALLOC_ARENA_MAX: state.mallocArenaMax || '4',
     COSIGN_INSECURE_HINT: cosignInsecureHint,
     PANEL_LABEL: t(panel.label),
     PANEL_DEPLOY_SECTION: buildPanelDeploySection(
@@ -4100,40 +4655,10 @@ function generateConfigs() {
   };
 
   var dockerCompose = applyPlaceholders(DOCKER_COMPOSE_TEMPLATE, map);
+  assertGeneratedComposeContract(dockerCompose);
   var envFile = applyPlaceholders(ENV_TEMPLATE, map);
   var guardEnv = applyPlaceholders(GUARD_ENV_TEMPLATE, map);
   var deployNotes = applyPlaceholders(DEPLOY_NOTES_TEMPLATE, map);
-
-  // 可选 digest pin：将 image: ${X_IMAGE:-repo}:tag 换成完整 @sha256 引用
-  function pinComposeImage(composeText, envVar, repoDefault, tag, digest) {
-    if (!digest) return composeText;
-    var full = buildImageRef(repoDefault, tag, digest);
-    // 匹配 compose 模板中的 ${ENV:-default}:${TAGVAR}
-    var re = new RegExp(
-      'image:\\s*\\$\\{' + envVar + ':-[^}]+\\}:\\$\\{' +
-      (envVar === 'BACKEND_IMAGE' || envVar === 'FRONTEND_IMAGE' ? 'MYRIAD_TAG' :
-        envVar === 'PROXY_IMAGE' ? 'PROXY_TAG' : 'UPDATER_TAG') +
-      '\\}',
-      'g'
-    );
-    return composeText.replace(re, 'image: ' + full);
-  }
-  dockerCompose = pinComposeImage(
-    dockerCompose, 'BACKEND_IMAGE',
-    'docker.io/somekawahitomi/myriad-backend', state.myriadTag, state.myriadDigest
-  );
-  dockerCompose = pinComposeImage(
-    dockerCompose, 'FRONTEND_IMAGE',
-    'docker.io/somekawahitomi/myriad-frontend', state.myriadTag, state.myriadDigest
-  );
-  dockerCompose = pinComposeImage(
-    dockerCompose, 'PROXY_IMAGE',
-    'docker.io/somekawahitomi/myriad-proxy', state.proxyTag, state.proxyDigest
-  );
-  dockerCompose = pinComposeImage(
-    dockerCompose, 'UPDATER_IMAGE',
-    'docker.io/somekawahitomi/myriad-updater', state.updaterTag, state.updaterDigest
-  );
 
   // .env 自检：密钥白名单 + 键集合 + 无注入行
   validateGeneratedEnv(envFile, {
@@ -4143,6 +4668,8 @@ function generateConfigs() {
     MYRIAD_SETUP_SECRET: state.setupSecret,
     ANALYTICS_SALT: state.analyticsSalt,
     GUARD_SELF_UPDATE_TOKEN: guardToken,
+    PERSONA_DB_PASSWORD: state.personaDbPassword,
+    FEDERATION_DB_PASSWORD: state.federationDbPassword,
     POSTGRES_PASSWORD: isExternal ? undefined : state.dbPassword
   }, { bundled: !isExternal });
 
@@ -4206,12 +4733,41 @@ function generateConfigs() {
     '',
     '## 生成校验摘要',
     '',
-    '- .env：密钥已通过 `[A-Za-z0-9_-]{32,512}` 白名单；再解析后键集合完整',
+    upgradeSession.legacy ? '- .env：旧凭据按原值保留并安全引用；请按升级报告核对差异。' : '- .env：新装密钥通过白名单与一致性校验。',
     '- Compose：请执行 `docker compose --env-file .env config`',
     verifyProxyLine,
     '- 命令：`' + verifyCommand + '`——手写解析器不能替代'
   ].join('\n');
   deployNotes = deployNotes + verifyBlock;
+
+  if (upgradeSession.legacy) {
+    var migrated = UpgradeEngine.upgradeGenerated({
+      compose: dockerCompose, env: envFile, guardEnv: guardEnv, deploy: deployNotes
+    }, upgradeSession.legacy);
+    dockerCompose = migrated.compose;
+    envFile = migrated.env;
+    guardEnv = migrated.guardEnv;
+    deployNotes = migrated.deploy;
+    upgradeSession.report = migrated.report;
+    // The migration engine preserves these exact values, including legacy encoding.
+    ['jwtSecret', 'updateToken', 'updaterGatewaySecret', 'setupSecret', 'analyticsSalt',
+      'personaDbPassword', 'federationDbPassword', 'guardSelfUpdateToken', 'dbPassword'].forEach(function (key) {
+      if (upgradeSession.legacy.statePatch[key]) state[key] = upgradeSession.legacy.statePatch[key];
+    });
+    renderUpgradeReport('upgrade-result-report', migrated.report);
+  }
+  var upgradeResult = document.getElementById('upgrade-result-section');
+  if (upgradeResult) upgradeResult.hidden = !upgradeSession.legacy;
+  var traefik = PlatformGuides.buildTraefikConfig(panelId, {
+    domain: state.mainDomain, extraDomain: state.extraDomain, httpBind: state.httpBindAddress, httpPort: state.httpPort,
+    composeHostRoot: state.composeHostRoot, netMyriad: state.netMyriad, external: isExternal
+  });
+  var traefikCard = document.getElementById('card-traefik');
+  if (traefikCard) traefikCard.hidden = !traefik;
+  var traefikOutput = document.getElementById('result-traefik');
+  if (traefikOutput) traefikOutput.textContent = traefik ? traefik.content : '';
+  var traefikName = document.getElementById('name-traefik');
+  if (traefikName) traefikName.textContent = traefik ? traefik.filename : '';
 
   document.getElementById('result-docker-compose').textContent = dockerCompose;
   document.getElementById('result-env').textContent = envFile;
@@ -4225,8 +4781,9 @@ function generateConfigs() {
   var validationEl = document.getElementById('result-validation');
   if (validationEl) {
     validationEl.textContent = [
-      t('validation.envOk'),
+      t(upgradeSession.legacy ? 'upgrade.envValidated' : 'validation.envOk'),
       t('validation.proxyOk'),
+      t('validation.workersOk'),
       state.myriadDigest || state.proxyDigest || state.updaterDigest
         ? t('validation.digestPinned')
         : t('validation.mutableTag'),
@@ -4253,7 +4810,8 @@ function generateConfigs() {
 
   var reminder = document.getElementById('setup-secret-reminder');
   var reminderValue = document.getElementById('setup-secret-reminder-value');
-  if (reminder && reminderValue && state.setupSecret) {
+  if (reminder) reminder.hidden = !!upgradeSession.legacy;
+  if (!upgradeSession.legacy && reminder && reminderValue && state.setupSecret) {
     reminderValue.textContent = state.setupSecret;
     reminder.hidden = false;
     var linkValue = document.getElementById('setup-secret-link-value');
@@ -4274,7 +4832,7 @@ function generateConfigs() {
   wizardDoneFrom = wizardStep === 'advanced' ? 'advanced' : 'limits';
   goWizard('done', 'forward');
 
-  showNotification(t('notify.generated'), 'success');
+  showNotification(t(upgradeSession.legacy ? 'upgrade.generated' : 'notify.generated'), 'success');
 }
 
 // ========================================

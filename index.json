@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.53",
+  "version": "1.0.88",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-09-06T11:32:56.291Z",
+  "updated_at": "2026-10-07T05:02:13.334Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -14,7 +14,7 @@
     {
       "id": "com.myriad.music-player",
       "name": "音乐播放器",
-      "version": "1.0.1",
+      "version": "1.0.0",
       "description": "控制系统音乐播放，查看歌词与播放列表",
       "long_description": "对接系统播放器，显示封面、进度与播放控制；支持同步歌词、列表搜索，以及顺序、循环、单曲和随机模式。",
       "locales": {
@@ -125,12 +125,12 @@
       "featured": true,
       "verified": true,
       "created_at": "2025-12-10T00:00:00Z",
-      "updated_at": "2026-08-19T11:09:38.469Z"
+      "updated_at": "2026-09-17T12:46:49.459Z"
     },
     {
       "id": "com.myriad.quick-notes",
       "name": "便携便签",
-      "version": "1.0.1",
+      "version": "1.0.0",
       "description": "快速记录想法，支持搜索与主页小组件",
       "long_description": "在页面中编写、搜索和整理便签，并通过 4×2 / 4×4 小组件在主页速览或速记。支持置顶、颜色、排序、导出导入与可选时间戳；便签保存在当前用户的私有存储中。跟随宿主明暗主题，内置中英日三语。",
       "locales": {
@@ -248,19 +248,19 @@
       "featured": true,
       "verified": true,
       "created_at": "2025-12-04T00:00:00Z",
-      "updated_at": "2026-08-19T11:09:38.471Z"
+      "updated_at": "2026-09-17T12:46:49.464Z"
     },
     {
       "id": "com.myriad.config-generator",
       "name": "Myriad 安装配置生成",
-      "version": "1.0.5",
-      "description": "分步生成 Compose、.env 与反代配置，覆盖常见面板、编排界面与外层反代",
-      "long_description": "按欢迎、部署方式、域名、站点、数据库、限额的步骤，生成官方生产拓扑所需的 docker-compose、.env、反代配置与部署说明。可选 1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy 或命令行。Nginx 类方式请先创建站点并完成 SSL，再上传现有 conf；平台反代与 Caddy 不要求上传。密钥与镜像版本将自动填入，高级选项默认收起。密钥经白名单校验，并对 .env 再解析以防止注入。",
+      "version": "1.0.6",
+      "description": "生成新安装配置或导入旧 Compose 与 .env 升级，提供十种平台的部署与反代指南",
+      "long_description": "生成 Myriad 新安装配置，或导入旧 Compose 与 .env 生成升级产物。提供十种平台的固定宿主目录部署与整站反代指南：1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy 和 CLI。容器反代通过业务网络访问 myriad-proxy:80；Coolify / Dokploy 提供独立 Traefik 动态配置。外置 Docker 数据库使用实际名称可自定义的附加网络（Compose 键名 myriad-backend-ext），web 与两个 worker 同时接入，worker 保持独立登录与管理网络隔离。升级要求原项目名，保留受支持的数据身份与密钥；内置 PostgreSQL 须为 18+，未知服务或自定义挂载拒绝自动迁移。工具只生成文件，不修改服务器；实际网络、证书和数据库权限需在部署时验证。 新装使用部署目录内 data/cache，要求 updater/Guard 稳定版 v0.5.8+；升级保留原命名卷或目录，提供启动前的存储校验与准备命令，不自动迁移数据。",
       "locales": {
         "en-US": {
           "name": "Myriad Install Config Generator",
-          "description": "Generate Compose, .env, and reverse-proxy files for common panels, compose UIs, and outer proxies",
-          "long_description": "A step wizard (welcome, method, domain, site, database, limits) generates official production docker-compose, .env, reverse-proxy files, and deploy notes. Choose 1Panel, Baota, aaPanel, Portainer, Dockge, Coolify, Dokploy, Nginx Proxy Manager, Caddy, or the CLI. Nginx-based methods still expect an existing site and SSL upload; platform proxies and Caddy do not. Secrets and image tags are filled in automatically; advanced options stay collapsed. Secrets are allowlisted and the .env is parsed again to block injection.",
+          "description": "Generate fresh installs or upgrade existing Compose and .env files, with deployment and proxy guides for ten platforms",
+          "long_description": "Generate a fresh Myriad deployment or import existing Compose and .env files for an upgrade. Includes physical host-directory and full-site proxy guides for ten platforms: 1Panel, Baota, aaPanel, Portainer, Dockge, Coolify, Dokploy, Nginx Proxy Manager, Caddy, and CLI. Container proxies reach myriad-proxy:80 through the business network; Coolify and Dokploy receive separate Traefik dynamic configuration. External Docker databases use an attach network with a customizable actual name (Compose key myriad-backend-ext) shared by web and both workers, with independent worker logins and isolated management networks. Upgrades require the original project name and preserve supported data identity and secrets. Bundled PostgreSQL must be 18+; unknown services and custom mounts require manual migration. Generates files only; runtime networking, certificates, and database privileges still require verification. Fresh installs use deployment-local data/cache and require stable updater/Guard v0.5.8+. Upgrades preserve existing named volumes or directories; host preparation validates storage without implicit migration.",
           "preview": {
             "version": 1,
             "type": "snapshot",
@@ -283,8 +283,8 @@
         },
         "ja-JP": {
           "name": "Myriad インストール設定ジェネレーター",
-          "description": "一般的なパネル、編成 UI、外側リバースプロキシ向けに Compose・.env・リバースプロキシ設定を手順に沿って生成",
-          "long_description": "ようこそ、デプロイ方法、ドメイン、サイト、データベース、上限の手順で、公式本番トポロジの docker-compose、.env、リバースプロキシ設定、デプロイ手順を生成します。1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy、または CLI を選べます。Nginx 系は先にサイト作成と SSL、既存 conf のアップロードが必要です。プラットフォーム側のリバースプロキシと Caddy では不要です。シークレットとイメージタグは自動入力され、詳細設定は折りたたまれます。シークレットはホワイトリストで検証し、.env を再パースしてインジェクションを防ぎます。",
+          "description": "新規設定の生成と既存 Compose・.env のアップグレード。10 環境向けのデプロイ・プロキシ手順を提供",
+          "long_description": "Myriad の新規設定を生成するか、既存の Compose と .env を読み込んでアップグレード設定を作成します。1Panel、宝塔、aaPanel、Portainer、Dockge、Coolify、Dokploy、Nginx Proxy Manager、Caddy、CLI の 10 環境向けに、実ホスト上の配置先とサイト全体のプロキシ手順を提供。コンテナ側プロキシは業務ネットワーク経由で myriad-proxy:80 に接続し、Coolify / Dokploy 用には Traefik 動的設定を生成します。外部 Docker DB は実際の名前をカスタマイズできる追加ネットワーク（Compose 上のキーは myriad-backend-ext）に web と両 worker を接続し、worker の独立ログインと管理ネットワーク隔離を維持します。アップグレードには元のプロジェクト名が必要です。対応するデータ識別情報と秘密情報を保持し、内蔵 PostgreSQL は 18 以上が必要です。未知のサービスや独自マウントは自動移行を拒否します。サーバーは変更せず、ネットワーク・証明書・DB 権限は実環境での確認が必要です。 新規設定は配置先の data/cache を使用し、updater/Guard 安定版 v0.5.8 以降が必要です。既存ボリュームやディレクトリを保持し、起動前の保存先検証と準備手順を提供します。自動でデータ移行は行いません。",
           "preview": {
             "version": 1,
             "type": "snapshot",
@@ -316,6 +316,7 @@
       "category": "developer",
       "tags": [
         "配置",
+        "升级",
         "部署",
         "Docker",
         "Nginx",
@@ -365,20 +366,26 @@
           "en-US": "apps/com.myriad.config-generator/i18n/en-US.json",
           "ja-JP": "apps/com.myriad.config-generator/i18n/ja-JP.json",
           "zh-CN": "apps/com.myriad.config-generator/i18n/zh-CN.json"
+        },
+        "modules": {
+          "platform.js": "apps/com.myriad.config-generator/platform.js",
+          "storage.js": "apps/com.myriad.config-generator/storage.js",
+          "upgrade.js": "apps/com.myriad.config-generator/upgrade.js",
+          "vendor/js-yaml.js": "apps/com.myriad.config-generator/vendor/js-yaml.js"
         }
       },
-      "size": 387869,
+      "size": 603362,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-14T00:00:00Z",
-      "updated_at": "2026-08-22T03:32:38.207Z"
+      "updated_at": "2026-09-27T05:39:52.323Z"
     },
     {
       "id": "com.myriad.doudizhu",
       "name": "斗地主",
-      "version": "1.0.1",
+      "version": "1.0.0",
       "description": "三人单机斗地主：经典牌桌与若泉绮羽㥹銯麏主题、完整规则、智能提示与本地 AI",
       "long_description": "从零重写的三人单机斗地主。使用标准 54 张扑克牌，支持随机发牌、叫地主与抢地主、完整牌型校验、连续两家不出后重新领出、默认 20 秒回合倒计时、自动托管、三档本地 AI、提示、倍率、春天与反春天、断局续玩和本地战绩。默认使用经典绿色牌桌，并可在 Tapp 内切换若泉绮羽㥹銯麏主题；主题覆盖人物卡面、卡背、大厅、牌桌、按钮与回合提示，同时保留高对比点数和花色。提供 1×1、2×2 与 4×2 今日战绩小组件，并优先显示当前 Myriad 用户名与头像。个人游戏偏好和玩家数据均按主体隔离；支持中英日三语和宿主明暗主题，无联网权限，不读取其他玩家隐藏手牌。",
       "locales": {
@@ -509,24 +516,24 @@
           "page/theme.js": "apps/com.myriad.doudizhu/page/theme.js"
         }
       },
-      "size": 2359893,
+      "size": 2359892,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2026-07-20T00:00:00Z",
-      "updated_at": "2026-08-19T11:09:38.472Z"
+      "updated_at": "2026-09-17T12:46:49.475Z"
     },
     {
       "id": "com.myriad.aro",
       "name": "Aro",
-      "version": "1.1.1",
-      "description": "社交中心，统一管理消息、时间线、环网与个人资料",
-      "long_description": "Aro 是 Myriad 官方社交中心，把联邦私信与群聊、时间线、环网和个人资料收在同一处。信使支持 Channel / Room、端到端加密、群共享与本机贴纸包、表情、附件（图片、文件、Tapp、Brew、资料库与报告）、@ 提及、置顶与转发，以及后台轮询新消息通知。时间线可发帖、引用转发、收藏与关注；环网用于实例目录、Brew 推荐、资料交换和 Tapp 商店等节点协作。设置页可查看出站投递队列（取消 / 重试）并轮换联邦签名密钥。聊天记录可在本机导出或导入 JSON 备份。界面支持中英日与宿主明暗主题。",
+      "version": "1.2.1",
+      "description": "社交中心，统一管理消息、时间线与个人资料",
+      "long_description": "Aro 是 Myriad 官方社交中心，把联邦私信与群聊、时间线和个人资料收在同一处。信使支持 Channel / Room、端到端加密、群共享与本机贴纸包、表情、附件（图片、文件、Tapp、Brew、资料库与报告）、@ 提及、置顶与转发，以及后台轮询新消息通知。时间线可发帖、引用转发、收藏与关注。设置页可查看出站投递队列（取消 / 重试）并轮换联邦签名密钥。聊天记录可在本机导出或导入 JSON 备份。界面支持中英日与宿主明暗主题。",
       "locales": {
         "en-US": {
-          "description": "Social hub for messages, timeline, ring network and profile in one place",
-          "long_description": "Aro is the official Myriad social hub: federated direct messages and group rooms, a timeline, the ring network, and your profile in one place. Messenger covers Channel / Room chats, end-to-end encryption, shared and personal sticker packs, emoji, attachments (images, files, Tapps, Brew, library, and reports), @mentions, pins, forwards, and background new-message notifications. The timeline supports posts, quote-reposts, bookmarks, and follows; rings connect instance directories, Brew picks, library exchange, and Tapp store peers. Settings show the outbound delivery queue (cancel / retry) and can rotate federation signing keys. Chat history can be exported or imported as a local JSON backup. The UI follows Chinese, English, and Japanese, plus the host light/dark theme.",
+          "description": "Social hub for messages, timeline and profile in one place",
+          "long_description": "Aro is the official Myriad social hub: federated direct messages and group rooms, a timeline, and your profile in one place. Messenger covers Channel / Room chats, end-to-end encryption, shared and personal sticker packs, emoji, attachments (images, files, Tapps, Brew, library, and reports), @mentions, pins, forwards, and background new-message notifications. The timeline supports posts, quote-reposts, bookmarks, and follows. Settings show the outbound delivery queue (cancel / retry) and can rotate federation signing keys. Chat history can be exported or imported as a local JSON backup. The UI follows Chinese, English, and Japanese, plus the host light/dark theme.",
           "preview": {
             "version": 1,
             "type": "snapshot",
@@ -548,8 +555,8 @@
           }
         },
         "ja-JP": {
-          "description": "メッセージ・タイムライン・リングネット・プロフィールをまとめるソーシャルハブ",
-          "long_description": "Aro は Myriad 公式のソーシャルハブです。連邦のダイレクトメッセージとグループ、タイムライン、リングネット、プロフィールをひとつにまとめます。メッセンジャーは Channel / Room、エンドツーエンド暗号化、グループ共有と端末内のステッカーパック、絵文字、添付（画像・ファイル・Tapp・Brew・ライブラリ・レポート）、@メンション、ピン留め、転送、バックグラウンドの新着通知に対応します。タイムラインでは投稿、引用リポスト、ブックマーク、フォローができ、リングはインスタンス一覧、Brew おすすめ、資料交換、Tapp ストアなどのノード連携に使います。設定では送信キューの確認（キャンセル / 再試行）と連邦署名鍵のローテーションができます。チャット履歴は端末上の JSON バックアップとして書き出し・読み込みできます。UI は中・英・日とホストのライト / ダークテーマに追従します。",
+          "description": "メッセージ・タイムライン・プロフィールをまとめるソーシャルハブ",
+          "long_description": "Aro は Myriad 公式のソーシャルハブです。連邦のダイレクトメッセージとグループ、タイムライン、プロフィールをひとつにまとめます。メッセンジャーは Channel / Room、エンドツーエンド暗号化、グループ共有と端末内のステッカーパック、絵文字、添付（画像・ファイル・Tapp・Brew・ライブラリ・レポート）、@メンション、ピン留め、転送、バックグラウンドの新着通知に対応します。タイムラインでは投稿、引用リポスト、ブックマーク、フォローができます。設定では送信キューの確認（キャンセル / 再試行）と連邦署名鍵のローテーションができます。チャット履歴は端末上の JSON バックアップとして書き出し・読み込みできます。UI は中・英・日とホストのライト / ダークテーマに追従します。",
           "preview": {
             "version": 1,
             "type": "snapshot",
@@ -584,26 +591,25 @@
         "消息",
         "联邦",
         "时间线",
-        "环网",
         "官方"
       ],
       "permissions": [
         "storage:read",
         "storage:write",
         "ui:notification",
+        "ui:openUrl",
         "federation:read",
         "federation:interact",
         "federation:post",
         "federation:channel",
         "federation:room",
-        "federation:ring",
         "federation:message",
         "federation:files",
         "platform:read",
         "report:read",
         "tappList:read",
         "tappList:manage",
-        "brew:read",
+        "phantasi:read",
         "media:control",
         "network:fetch"
       ],
@@ -658,7 +664,6 @@
           "page/mentionUi.js": "apps/com.myriad.aro/page/mentionUi.js",
           "page/msgSync.js": "apps/com.myriad.aro/page/msgSync.js",
           "page/msgUi.js": "apps/com.myriad.aro/page/msgUi.js",
-          "page/ringsUi.js": "apps/com.myriad.aro/page/ringsUi.js",
           "page/roomUi.js": "apps/com.myriad.aro/page/roomUi.js",
           "page/scope.js": "apps/com.myriad.aro/page/scope.js",
           "page/shareUi.js": "apps/com.myriad.aro/page/shareUi.js",
@@ -666,13 +671,13 @@
           "page/views.js": "apps/com.myriad.aro/page/views.js"
         }
       },
-      "size": 1229181,
+      "size": 1192068,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2025-12-01T00:00:00Z",
-      "updated_at": "2026-08-21T08:49:45.650Z"
+      "updated_at": "2026-10-07T05:02:13.306Z"
     },
     {
       "id": "cn.wyyzxzyg.cdn-cache",
@@ -884,7 +889,7 @@
     {
       "id": "cn.xciy.rocom.merchant",
       "name": "洛克王国情报台",
-      "version": "1.4.3",
+      "version": "1.4.4",
       "description": "查看远行商人、活动日历、最新公告与精灵图鉴。",
       "long_description": "洛克王国情报台用于快速查看远行商人当前轮次、换货倒计时、在售商品、关注清单命中、活动行程、官方公告与精灵图鉴搜索。提供页面视图与 2x2 / 4x2 / 4x4 小组件，适合放在桌面持续关注商人刷新。",
       "locales": {
@@ -950,18 +955,18 @@
           }
         }
       },
-      "size": 142541,
+      "size": 142540,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-02T05:39:55Z",
-      "updated_at": "2026-08-19T11:09:38.475Z"
+      "updated_at": "2026-09-11T02:30:24.171Z"
     },
     {
       "id": "cn.xciy.xingchen.widgets",
       "name": "星辰小组件",
-      "version": "0.9.2",
+      "version": "0.9.3",
       "description": "GitHub 数据卡片、照片墙、纪念日、世界时钟、系统访客统计与个人信息小组件合集。",
       "long_description": "提供 GitHub Stats Extended 卡片、全幅多尺寸照片墙、Myriad 内置站点分析累计访问量/独立访客，以及邮箱、QQ、微信、Telegram、GitHub、Gitee、哔哩哔哩和自定义个人信息展示。支持多种桌面尺寸与独立配色设置。",
       "locales": {
@@ -1032,28 +1037,66 @@
           }
         }
       },
-      "size": 204450,
+      "size": 204445,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-04T02:07:42Z",
-      "updated_at": "2026-08-19T11:09:38.475Z"
+      "updated_at": "2026-09-11T02:30:24.172Z"
     },
     {
       "id": "cn.echootaku.days",
       "name": "朝夕",
-      "version": "0.3.2",
+      "version": "0.4.0",
       "description": "记录值得期待与纪念的日子，在主页随时查看最近倒数。",
-      "long_description": "用朝夕记录生日、纪念日、旅行、考试和其他重要时刻。支持置顶、快捷日期、临近标识、每年重复、自定义分类与颜色、搜索筛选，以及 2x2、4x2、4x4 三种主页小组件。主题工作室默认跟随 Myriad 主色，提供实时预览、三种 Glass 布局、精细分区、圆角和主题码；小组件可选择 Glass/纯色材质、日子范围和显示密度。所有数据仅保存在当前用户的私有存储中。",
+      "long_description": "用朝夕记录生日、纪念日、旅行、考试和其他重要时刻。支持卡片、月历和时间线视图，置顶、快捷日期、每年重复、自定义分类、搜索筛选、版本化 JSON 备份，以及 2x2、4x2、4x4 三种主页小组件。可使用 Myriad 后台任务发送提前提醒，也可由管理员配置的 Myriad AI 把自然语言转换为待确认草稿。主题工作室提供实时预览、Glass 布局、圆角和主题码。除主动调用平台 AI 外，日期数据仅保存在当前用户的私有存储中。",
       "locales": {
         "en-US": {
           "name": "Days",
-          "description": "Keep meaningful dates close and see the next countdown at a glance."
+          "description": "Keep meaningful dates close and see the next countdown at a glance.",
+          "long_description": "Use Days to track birthdays, anniversaries, trips, exams, and other important moments. Switch between card, calendar, and timeline views; pin events, use quick dates, repeat yearly, create custom categories, search and filter, and export versioned JSON backups. Myriad background tasks can send advance reminders, while administrator-configured Myriad AI can turn natural language into a draft for review. Theme Studio provides live previews, Glass layouts, corner controls, and shareable theme codes. Apart from content explicitly sent to platform AI, date data stays in the current user's private storage.",
+          "preview": {
+            "version": 1,
+            "type": "snapshot",
+            "html": "apps/cn.echootaku.days/preview.en-US.html",
+            "styles": [
+              "apps/cn.echootaku.days/preview.css"
+            ],
+            "viewport": {
+              "width": 1280,
+              "height": 720
+            },
+            "fit": "cover",
+            "focus": {
+              "x": 0.5,
+              "y": 0.48
+            },
+            "theme": "light"
+          }
         },
         "ja-JP": {
           "name": "日々",
-          "description": "大切な日を記録し、次のカウントダウンをいつでも確認できます。"
+          "description": "大切な日を記録し、次のカウントダウンをいつでも確認できます。",
+          "long_description": "朝夕で誕生日、記念日、旅行、試験などの大切な日を記録できます。カード・カレンダー・タイムライン表示、固定、クイック日付、毎年の繰り返し、カスタム分類、検索・絞り込み、バージョン付き JSON バックアップに対応しています。Myriad のバックグラウンドタスクで事前通知を送り、管理者が設定した Myriad AI で自然言語から確認用の下書きを作成できます。テーマスタジオではリアルタイムプレビュー、Glass レイアウト、角丸、テーマコードを利用できます。プラットフォーム AI を明示的に使用した場合を除き、日付データは現在のユーザーのプライベートストレージだけに保存されます。",
+          "preview": {
+            "version": 1,
+            "type": "snapshot",
+            "html": "apps/cn.echootaku.days/preview.ja-JP.html",
+            "styles": [
+              "apps/cn.echootaku.days/preview.css"
+            ],
+            "viewport": {
+              "width": 1280,
+              "height": 720
+            },
+            "fit": "cover",
+            "focus": {
+              "x": 0.5,
+              "y": 0.48
+            },
+            "theme": "light"
+          }
         }
       },
       "author": {
@@ -1072,14 +1115,19 @@
         "小组件",
         "主题",
         "Glass",
-        "效率"
+        "效率",
+        "日历",
+        "提醒",
+        "AI"
       ],
       "permissions": [
         "storage:read",
         "storage:write",
         "ui:notification",
         "ui:confirm",
-        "widget:register"
+        "widget:register",
+        "scheduler:register",
+        "ai:generate"
       ],
       "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><rect x='3' y='4.5' width='18' height='16' rx='3' stroke='currentColor' stroke-width='1.8'/><path d='M7.5 2.5v4M16.5 2.5v4M3 9h18' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/><path d='M8 13h3v3H8zM14 13h2' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>",
       "theme_color": "#D97757",
@@ -1120,15 +1168,18 @@
           "en-US": "apps/cn.echootaku.days/i18n/en-US.json",
           "ja-JP": "apps/cn.echootaku.days/i18n/ja-JP.json",
           "zh-CN": "apps/cn.echootaku.days/i18n/zh-CN.json"
+        },
+        "modules": {
+          "widget.js": "apps/cn.echootaku.days/widget.js"
         }
       },
-      "size": 144495,
+      "size": 202954,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-04T05:52:10Z",
-      "updated_at": "2026-08-19T11:09:38.476Z"
+      "updated_at": "2026-09-07T23:36:14.563Z"
     },
     {
       "id": "org.smcresearchhk.math",
@@ -1263,7 +1314,7 @@
     {
       "id": "cn.echootaku.github-workbench",
       "name": "GitHub 工作台",
-      "version": "0.1.3",
+      "version": "0.1.4",
       "description": "集中查看待审 PR、分配给我的 Issue、失败 Actions 与仓库发布动态。",
       "long_description": "面向程序员的只读 GitHub 工作台：集中查看请求你审阅的 Pull Request、分配给你的 Issue，以及所选仓库最近失败的 GitHub Actions 和 Releases。支持 2x2、4x2、4x4 桌面小组件。GitHub Token 使用 Myriad 安装级只写凭据保存，沙箱无法读取；所有 GitHub API 均限制为安装 owner / 管理员调用。首版不提供合并、评论、关闭 Issue 或重跑工作流等写操作。",
       "locales": {
@@ -1343,13 +1394,13 @@
           "zh-CN": "apps/cn.echootaku.github-workbench/i18n/zh-CN.json"
         }
       },
-      "size": 55439,
+      "size": 55443,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-10T22:16:30.796Z",
-      "updated_at": "2026-08-19T11:09:38.477Z"
+      "updated_at": "2026-09-11T02:30:24.176Z"
     },
     {
       "id": "cn.echootaku.gomoku",
@@ -1504,7 +1555,7 @@
     {
       "id": "com.myriad.three-lab",
       "name": "Three 实验室",
-      "version": "1.0.2",
+      "version": "1.0.0",
       "description": "官方 Three.js 示例：包内贴图与 GLB、pause 停帧、销毁时释放 WebGL",
       "long_description": "演示如何在 Tapp Page 里使用 Three.js：库打成由 page.entry 依赖图加载的 IIFE，先 getUrlMap 再用 rewriteUrl 接到 LoadingManager。棋盘贴图和立方体 GLB 都走包内路径。离开页面会暂停 rAF，销毁时释放渲染器。不是宿主内置引擎，也不走 CDN。",
       "locales": {
@@ -1614,13 +1665,13 @@
           "page/scene.js": "apps/com.myriad.three-lab/page/scene.js"
         }
       },
-      "size": 12460,
+      "size": 12463,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": true,
       "created_at": "2026-08-14T09:55:45.239Z",
-      "updated_at": "2026-08-19T11:26:32.406Z"
+      "updated_at": "2026-09-17T12:46:49.543Z"
     },
     {
       "id": "top.360nenz.metro-guide",
@@ -1692,7 +1743,7 @@
     {
       "id": "cn.echootaku.sponsors",
       "name": "赞助者名单",
-      "version": "0.1.18",
+      "version": "0.1.19",
       "description": "聚合多个赞助平台的支持者，在一个私密仪表盘中查看。",
       "long_description": "面向创作者的私密赞助者聚合仪表盘。提供深空观测站与传统名册双视图：每位支持者是一颗具有自然色温的恒星，同币种内累计赞助越高越明亮，当前支持金额决定大小；可缩放星图、调整景深并查看支持者的观测档案。2×2、4×2 与 4×4 小组件采用天文台观测日志设计，只读已同步的私有快照，在主页展示赞助者数量、分币种月度支持、代表星体和静态星图。通过 Myriad 只写凭据与声明式网络 API 接入 GitHub Sponsors、Patreon 和爱发电；各平台可独立隐藏并停止同步，已有快照不会因此删除。",
       "locales": {
@@ -1769,13 +1820,13 @@
           "zh-CN": "apps/cn.echootaku.sponsors/i18n/zh-CN.json"
         }
       },
-      "size": 3657504,
+      "size": 3657725,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-21T07:37:43.563Z",
-      "updated_at": "2026-08-21T07:37:43.563Z"
+      "updated_at": "2026-09-11T02:30:24.179Z"
     },
     {
       "id": "cn.echootaku.echo-stage",
@@ -2011,7 +2062,7 @@
     {
       "id": "cn.astelysin.signature-board",
       "name": "共享签名板",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "description": "让 Myriad 访客在共享画布上签名、涂鸦并浏览公开历史。",
       "long_description": "一块由所有访客共同留下痕迹的横向共享签名板。已加入专用 Myriad Federation Room 的成员可以绘制并手动提交签名或画作；访客可查看管理员发布的公开快照。应用提供不可改写的追加式作品历史、举报与隐藏审核、成员封禁、手动画板归档，以及 2x2 / 4x2 主页预览小组件。",
       "locales": {
@@ -2097,13 +2148,13 @@
           "widget/entry.js": "apps/cn.astelysin.signature-board/widget/entry.js"
         }
       },
-      "size": 142828,
+      "size": 142851,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-28T05:48:02.704Z",
-      "updated_at": "2026-08-28T05:48:02.704Z"
+      "updated_at": "2026-09-11T02:30:24.182Z"
     },
     {
       "id": "cn.astelysin.protein-viewer",
@@ -2191,7 +2242,7 @@
           "page/viewer.js": "apps/cn.astelysin.protein-viewer/page/viewer.js"
         }
       },
-      "size": 105246,
+      "size": 105294,
       "downloads": 0,
       "rating": 0,
       "featured": false,
@@ -2202,7 +2253,7 @@
     {
       "id": "ink.kei.arknights",
       "name": "Arknights",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "description": "明日方舟玩家个人信息展示",
       "long_description": "明日方舟玩家个人信息展示：绑定森空岛账号后展示博士等级、助战干员、干员收藏、时装、蚀刻章，以及集成战略 / 剿灭 / 保全派驻等游戏数据。内置干员与时装图鉴（职业 / 稀有度筛选），并提供 4x2 / 4x4 主页小组件。玩家数据以共享快照展示，绑定与刷新由房间管理员维护，其他用户只读。跟随宿主亮暗主题，内置简体中文 / English。",
       "locales": {
@@ -2217,8 +2268,8 @@
       },
       "license": "MIT",
       "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/ink.kei.arknights",
-      "repository": "https://github.com/Myriad-You/tapp-store",
-      "category": "data",
+      "repository": "https://github.com/leaphy-dev/Myriad-Tapp-Arknights",
+      "category": "utility",
       "tags": [
         "明日方舟",
         "森空岛",
@@ -2237,11 +2288,33 @@
         "ui:openUrl",
         "widget:register"
       ],
+      "icon": "♜",
       "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/ink.kei.arknights/preview.html",
+        "styles": [
+          "apps/ink.kei.arknights/page/styles.css",
+          "apps/ink.kei.arknights/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "theme": "dark"
+      },
       "download": {
         "manifest": "apps/ink.kei.arknights/manifest.json",
         "code": "apps/ink.kei.arknights/core.js",
         "readme": "apps/ink.kei.arknights/README.md",
+        "styles": "apps/ink.kei.arknights/core.css",
+        "widget_styles": "apps/ink.kei.arknights/widget/styles.css",
         "page_styles": "apps/ink.kei.arknights/page/styles.css",
         "page_template": "apps/ink.kei.arknights/page/template.html",
         "i18n": {
@@ -2249,23 +2322,796 @@
           "zh-CN": "apps/ink.kei.arknights/i18n/zh-CN.json"
         },
         "modules": {
-          "page/assets.js": "apps/ink.kei.arknights/page/assets.js",
-          "page/collection.js": "apps/ink.kei.arknights/page/collection.js",
-          "page/crypto.js": "apps/ink.kei.arknights/page/crypto.js",
-          "page/debug.js": "apps/ink.kei.arknights/page/debug.js",
-          "page/home.js": "apps/ink.kei.arknights/page/home.js",
+          "page/api-crypto.js": "apps/ink.kei.arknights/page/api-crypto.js",
+          "page/api-skland.js": "apps/ink.kei.arknights/page/api-skland.js",
           "page/index.js": "apps/ink.kei.arknights/page/index.js",
-          "page/skland.js": "apps/ink.kei.arknights/page/skland.js",
+          "page/ui-assets.js": "apps/ink.kei.arknights/page/ui-assets.js",
+          "page/ui-dialog.js": "apps/ink.kei.arknights/page/ui-dialog.js",
+          "page/view-add-player.js": "apps/ink.kei.arknights/page/view-add-player.js",
+          "page/view-collection.js": "apps/ink.kei.arknights/page/view-collection.js",
+          "page/view-debug.js": "apps/ink.kei.arknights/page/view-debug.js",
+          "page/view-home.js": "apps/ink.kei.arknights/page/view-home.js",
+          "page/view-player-list.js": "apps/ink.kei.arknights/page/view-player-list.js",
           "widget/player-summary.js": "apps/ink.kei.arknights/widget/player-summary.js"
         }
       },
-      "size": 961768,
+      "size": 1036982,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-09-06T11:32:56.291Z",
-      "updated_at": "2026-09-06T11:32:56.291Z"
+      "updated_at": "2026-09-12T05:32:49.795Z"
+    },
+    {
+      "id": "cn.wyyzxzyg.daily-brief",
+      "name": "今日简报",
+      "version": "1.0.0",
+      "description": "汇总 Brew 阅读内容，快速生成一份清晰、可回看的今日简报。",
+      "long_description": "今日简报把分散在 Brew 中的阅读内容整理成一页专注视图。访客可以浏览站点公开简报并切换栏目；登录用户可使用站长下放的增强权限；安装设置、公共组件管理等控制面操作仅限管理员。需要进一步提炼时，可让 Myriad AI 根据当前条目生成简短的今日重点。没有 Brew 数据时会显示明确的引导，不会伪造内容。",
+      "locales": {
+        "en-US": {
+          "name": "Daily Brief",
+          "description": "Turn your Brew reading queue into a focused daily briefing.",
+          "long_description": "Daily Brief turns your Brew reading queue into a calm, focused overview. Filter unread or starred stories, keep the latest snapshot on your dashboard, and ask Myriad AI for a concise summary when you need it."
+        },
+        "ja-JP": {
+          "name": "今日のブリーフ",
+          "description": "Brew の記事を集約し、今日の要点をひと目で確認できます。",
+          "long_description": "今日のブリーフは Brew の記事を落ち着いた一覧にまとめます。未読・お気に入りを切り替え、最新のスナップショットをウィジェットで確認し、必要なときだけ AI で要点を整理できます。"
+        }
+      },
+      "author": {
+        "name": "我願一直向著陽光.℡",
+        "url": "https://github.com/zgzyh"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.wyyzxzyg.daily-brief",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "productivity",
+      "tags": [
+        "简报",
+        "Brew",
+        "阅读",
+        "AI",
+        "小组件"
+      ],
+      "permissions": [
+        "brew:read",
+        "storage:read",
+        "storage:write",
+        "ui:theme",
+        "ai:generate",
+        "widget:register"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z' stroke='currentColor' stroke-width='1.8'/><path d='M7 8h10M7 12h7M7 16h5' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/><path d='m16 15 1.4 1.4L20 13.8' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>",
+      "theme_color": "#F4B860",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.wyyzxzyg.daily-brief/preview.html",
+        "styles": [
+          "apps/cn.wyyzxzyg.daily-brief/page.css",
+          "apps/cn.wyyzxzyg.daily-brief/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "theme": "dark"
+      },
+      "download": {
+        "manifest": "apps/cn.wyyzxzyg.daily-brief/manifest.json",
+        "code": "apps/cn.wyyzxzyg.daily-brief/main.js",
+        "readme": "apps/cn.wyyzxzyg.daily-brief/README.md",
+        "widget_styles": "apps/cn.wyyzxzyg.daily-brief/widget.css",
+        "page_styles": "apps/cn.wyyzxzyg.daily-brief/page.css",
+        "page_template": "apps/cn.wyyzxzyg.daily-brief/page.html",
+        "widget_templates": {
+          "daily-brief": {
+            "2x2": "apps/cn.wyyzxzyg.daily-brief/templates/widget-2x2.html",
+            "4x2": "apps/cn.wyyzxzyg.daily-brief/templates/widget-4x2.html",
+            "4x4": "apps/cn.wyyzxzyg.daily-brief/templates/widget-4x4.html"
+          }
+        }
+      },
+      "size": 36824,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-09-07T03:43:32.212Z",
+      "updated_at": "2026-09-07T03:43:32.212Z"
+    },
+    {
+      "id": "cn.echootaku.persona-stickers",
+      "name": "人设表情工坊",
+      "version": "0.3.3",
+      "description": "使用用户 Agent 人设，通过 Emoji、颜文字或单张参考图生成独立 PNG 表情图片",
+      "long_description": "人设表情工坊以用户已启用且已生成图片的 Agent 人设作为角色身份基准。用户可在 Emoji、颜文字和图片表情三种方式中任选一种：前两种直接提供情绪提示；图片表情模式只允许上传单张 PNG、JPEG 或 WebP，用来参考表情、姿势和构图，不替换 Agent 的身份与外观。还可填写一段高优先级补充提示词，在固定身份和输出规则内优先控制动作、表情、道具、构图与情绪强度。每次通过受治理的 Myriad AI 图片任务生成单张 1024×1024 的独立 PNG 表情图片。若尚无人设图，应用会先提示用户在 Myriad 中创建并生成人设。本地参考图只保留在当前页面内存，不写入 Storage；结果可在宿主缓存有效期内查看大图，并由 Myriad 宿主读取当前缓存、下载为真实 PNG。",
+      "locales": {
+        "en-US": {
+          "name": "Persona Sticker Lab",
+          "description": "Turn your Agent Persona into a standalone PNG expression using an Emoji, kaomoji, or one image reference",
+          "long_description": "Persona Sticker Lab uses the user's enabled Agent persona with a generated portrait as the character identity anchor. Choose exactly one cue mode: Emoji, kaomoji, or an expression image. The first two provide a direct emotional cue; image mode accepts exactly one PNG, JPEG, or WebP to guide only the expression, pose, and composition without replacing the Agent's identity or appearance. An optional high-priority prompt can direct the action, expression, props, framing, and emotional intensity while preserving the fixed identity and output rules. Each governed Myriad AI image task creates one standalone 1024×1024 PNG sticker. If no usable persona portrait exists, the app directs the user to create and generate one in Myriad first. A local cue image stays only in current-page memory and is never written to Storage. Results can be viewed full size while the host cache remains available, and Myriad can read the current cache and download the actual PNG."
+        },
+        "ja-JP": {
+          "name": "ペルソナスタンプ工房",
+          "description": "Agent ペルソナと Emoji・顔文字・1枚の参考画像から、単体PNG表情画像を生成します",
+          "long_description": "ペルソナスタンプ工房は、有効で画像が生成済みのユーザー Agent ペルソナをキャラクター本人の基準にします。Emoji、顔文字、表情画像から一つだけ選択します。前二つは感情を直接指示し、表情画像モードでは PNG・JPEG・WebP を一枚だけ受け付け、表情・ポーズ・構図だけを参考にして Agent の本人性や外見を置き換えません。任意の高優先度プロンプトで、固定された本人性と出力ルールを保ちながら、動き、表情、小物、構図、感情の強さを優先して指定できます。管理された Myriad AI 画像タスクごとに、独立した 1024×1024 PNG スタンプを一枚生成します。利用可能なペルソナ画像がない場合は、先に Myriad で作成・生成するよう案内します。ローカル参考画像は現在のページメモリだけに保持され、Storage には書き込みません。結果はホストキャッシュが有効な間拡大表示でき、Myriad ホストが現在のキャッシュを読み取って実際の PNG としてダウンロードできます。"
+        }
+      },
+      "author": {
+        "name": "EchoOtaku",
+        "url": "https://github.com/EchoOtaku"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.echootaku.persona-stickers",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "ai",
+      "tags": [
+        "AI 生图",
+        "人设",
+        "表情包",
+        "贴纸",
+        "角色一致性"
+      ],
+      "permissions": [
+        "ai:image"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><rect x='4' y='3.5' width='15' height='15' rx='4' stroke='currentColor' stroke-width='1.7'/><path d='M8.2 10.3h.01M14.8 10.3h.01M8.5 14c1 .8 2.1 1.2 3.3 1.2 1.3 0 2.4-.4 3.4-1.2' stroke='currentColor' stroke-width='1.7' stroke-linecap='round'/><path d='m15.5 18.5 3.7 2-.7-4.2' stroke='currentColor' stroke-width='1.7' stroke-linejoin='round'/></svg>",
+      "theme_color": "#6558D9",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.echootaku.persona-stickers/preview.html",
+        "styles": [
+          "apps/cn.echootaku.persona-stickers/page.css",
+          "apps/cn.echootaku.persona-stickers/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.52,
+          "y": 0.48
+        },
+        "theme": "light"
+      },
+      "download": {
+        "manifest": "apps/cn.echootaku.persona-stickers/manifest.json",
+        "code": "apps/cn.echootaku.persona-stickers/core.js",
+        "readme": "apps/cn.echootaku.persona-stickers/README.md",
+        "page_styles": "apps/cn.echootaku.persona-stickers/page.css",
+        "page_template": "apps/cn.echootaku.persona-stickers/page.html",
+        "i18n": {
+          "en-US": "apps/cn.echootaku.persona-stickers/i18n/en-US.json",
+          "ja-JP": "apps/cn.echootaku.persona-stickers/i18n/ja-JP.json",
+          "zh-CN": "apps/cn.echootaku.persona-stickers/i18n/zh-CN.json"
+        },
+        "modules": {
+          "page/app-controller.js": "apps/cn.echootaku.persona-stickers/page/app-controller.js",
+          "page/dom-app.js": "apps/cn.echootaku.persona-stickers/page/dom-app.js",
+          "page/domain.js": "apps/cn.echootaku.persona-stickers/page/domain.js",
+          "page/file-reader.js": "apps/cn.echootaku.persona-stickers/page/file-reader.js",
+          "page/index.js": "apps/cn.echootaku.persona-stickers/page/index.js",
+          "page/lifecycle.js": "apps/cn.echootaku.persona-stickers/page/lifecycle.js",
+          "page/modal-accessibility.js": "apps/cn.echootaku.persona-stickers/page/modal-accessibility.js",
+          "page/task-runner.js": "apps/cn.echootaku.persona-stickers/page/task-runner.js"
+        }
+      },
+      "size": 106114,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-09-07T09:04:13.485Z",
+      "updated_at": "2026-09-07T09:04:13.485Z"
+    },
+    {
+      "id": "cn.echootaku.wiki",
+      "name": "Wiki",
+      "version": "0.1.6",
+      "description": "由管理员维护、面向所有访客只读开放的轻量知识库。",
+      "long_description": "Wiki 是一款安装级共享知识库：普通用户与公开访客始终只读，installation owner 与当前管理员可创建、编辑、发布和删除文章。正文使用安全 Markdown 渲染，原始 HTML 不执行；发布记录采用不可变共享事件，整库恢复通过批次提交标记一次生效。管理员草稿按用户保存在私有存储，支持约 1 秒自动保存、Markdown/JSON 导入导出、容量预警与发布临时空间预留。远程图片和视频只接受 HTTPS，权限不可用或加载失败时正文仍可阅读。",
+      "locales": {
+        "en-US": {
+          "name": "Wiki",
+          "description": "A lightweight, admin-maintained knowledge base that every visitor can read.",
+          "long_description": "Wiki is an installation-wide shared knowledge base. Regular users and public guests are always read-only, while the installation owner and current administrators can create, edit, publish, and delete articles. Content uses a safe Markdown renderer with raw HTML disabled. Published revisions are immutable shared events, and full restores become visible through one batch commit marker. Per-admin private drafts autosave after about one second. Markdown and JSON import/export, quota warnings, publish reserve space, and HTTPS-only remote media are included.",
+          "preview": {
+            "version": 1,
+            "type": "snapshot",
+            "html": "apps/cn.echootaku.wiki/preview.en-US.html",
+            "styles": [
+              "apps/cn.echootaku.wiki/preview.css"
+            ],
+            "viewport": {
+              "width": 1440,
+              "height": 900
+            },
+            "fit": "cover",
+            "focus": {
+              "x": 0.52,
+              "y": 0.47
+            },
+            "theme": "dark"
+          }
+        },
+        "ja-JP": {
+          "name": "Wiki",
+          "description": "管理者が編集し、すべての訪問者が閲覧できる軽量ナレッジベース。",
+          "long_description": "Wiki はインストール単位で共有するナレッジベースです。一般ユーザーと公開ゲストは常に閲覧専用で、installation owner と現在の管理者だけが記事の作成、編集、公開、削除を行えます。生 HTML を実行しない安全な Markdown 描画、変更不可能な共有イベントによる公開履歴、単一のバッチ確定マーカーで反映する全体復元、管理者ごとの約 1 秒自動保存、Markdown/JSON の入出力、容量警告、HTTPS 限定の外部メディアに対応します。",
+          "preview": {
+            "version": 1,
+            "type": "snapshot",
+            "html": "apps/cn.echootaku.wiki/preview.ja-JP.html",
+            "styles": [
+              "apps/cn.echootaku.wiki/preview.css"
+            ],
+            "viewport": {
+              "width": 1440,
+              "height": 900
+            },
+            "fit": "cover",
+            "focus": {
+              "x": 0.52,
+              "y": 0.47
+            },
+            "theme": "dark"
+          }
+        }
+      },
+      "author": {
+        "name": "EchoOtaku",
+        "url": "https://echootaku.cn"
+      },
+      "license": "MIT",
+      "homepage": "https://echootaku.cn",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "productivity",
+      "tags": [
+        "知识库",
+        "Wiki",
+        "Markdown",
+        "文档",
+        "共享",
+        "多语言"
+      ],
+      "permissions": [
+        "storage:read",
+        "storage:write",
+        "ui:confirm",
+        "ui:notification",
+        "network:fetch"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M4 4.5A2.5 2.5 0 0 1 6.5 2H11c1.3 0 2.4.7 3 1.7A3.5 3.5 0 0 1 17 2h.5A2.5 2.5 0 0 1 20 4.5V19a2 2 0 0 1-2 2h-1c-1.7 0-2.7.3-3 1-.3-.7-1.3-1-3-1H6a2 2 0 0 1-2-2V4.5z' stroke='currentColor' stroke-width='1.7' stroke-linejoin='round'/><path d='M14 4v18M7.5 7H11M7.5 11H11M17 7h.5' stroke='currentColor' stroke-width='1.7' stroke-linecap='round'/></svg>",
+      "theme_color": "#5B7C70",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.echootaku.wiki/preview.html",
+        "styles": [
+          "apps/cn.echootaku.wiki/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.52,
+          "y": 0.47
+        },
+        "theme": "dark"
+      },
+      "download": {
+        "manifest": "apps/cn.echootaku.wiki/manifest.json",
+        "code": "apps/cn.echootaku.wiki/core.js",
+        "readme": "apps/cn.echootaku.wiki/README.md",
+        "page_styles": "apps/cn.echootaku.wiki/page.css",
+        "page_template": "apps/cn.echootaku.wiki/page.html",
+        "i18n": {
+          "zh": "apps/cn.echootaku.wiki/i18n/zh.json",
+          "en": "apps/cn.echootaku.wiki/i18n/en.json",
+          "ja": "apps/cn.echootaku.wiki/i18n/ja.json"
+        },
+        "modules": {
+          "page/clipboard.js": "apps/cn.echootaku.wiki/page/clipboard.js",
+          "page/domain.js": "apps/cn.echootaku.wiki/page/domain.js",
+          "page/draft-saver.js": "apps/cn.echootaku.wiki/page/draft-saver.js",
+          "page/index.js": "apps/cn.echootaku.wiki/page/index.js",
+          "page/markdown.js": "apps/cn.echootaku.wiki/page/markdown.js",
+          "page/presentation.js": "apps/cn.echootaku.wiki/page/presentation.js",
+          "page/renderer.js": "apps/cn.echootaku.wiki/page/renderer.js",
+          "page/repository.js": "apps/cn.echootaku.wiki/page/repository.js"
+        }
+      },
+      "size": 130760,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-09-07T23:36:14.579Z",
+      "updated_at": "2026-09-07T23:36:14.579Z"
+    },
+    {
+      "id": "cn.echootaku.footprint-earth",
+      "name": "足迹地球",
+      "version": "0.1.0",
+      "description": "用标准国家与地区代码记录 Owner 足迹，并展示满足隐私阈值的访客聚合。",
+      "long_description": "一个强调隐私边界的共享足迹地球。Owner 可按标准国家或一级行政区代码公开居住与旅行经历；已加入专用 Federation Room 的成员只能提交代码化访客足迹。管理员从不可改写的事件历史生成 k≥3 的桶化公共投影，匿名访客与可交互小组件只读取该投影，不接触 Actor、消息 ID、精确时间、任意坐标、城市或自由文本。包含审核员授权、隐藏/恢复、举报、封禁、容量警告与批次轮换。",
+      "locales": {
+        "en-US": {
+          "name": "Footprint Earth",
+          "description": "Publish code-only owner footprints and privacy-thresholded visitor aggregates",
+          "long_description": "A privacy-bounded shared footprint globe. Owners publish residence and travel at standard country or first-level region granularity; Room members submit code-only visitor footprints. Administrators publish k≥3 bucketed aggregates, while guests and the interactive widget never receive actor IDs, message IDs, precise timestamps, arbitrary coordinates, cities, or free text."
+        },
+        "ja-JP": {
+          "name": "足あと地球",
+          "description": "標準地域コードだけで Owner の足あととプライバシー集計を表示",
+          "long_description": "プライバシー境界を明確にした共有足あと地球です。Owner は標準の国・第一行政区コードで居住と旅行を公開し、Room メンバーはコード化された訪問先だけを投稿します。管理者が k≥3 の区間集計を公開し、ゲストとインタラクティブウィジェットには Actor、メッセージ ID、正確な時刻、任意座標、都市、自由文を渡しません。"
+        }
+      },
+      "author": {
+        "name": "EchoOtaku",
+        "url": "https://github.com/EchoOtaku"
+      },
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.echootaku.footprint-earth",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "social",
+      "tags": [
+        "足迹",
+        "地球",
+        "旅行",
+        "社交",
+        "隐私",
+        "联邦",
+        "Room",
+        "小组件",
+        "多语言"
+      ],
+      "permissions": [
+        "storage:read",
+        "storage:write",
+        "ui:confirm",
+        "widget:register",
+        "federation:read",
+        "federation:room",
+        "federation:message"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='12' cy='12' r='8.5' stroke='currentColor' stroke-width='1.7'/><path d='M3.8 12h16.4M12 3.5c2.3 2.4 3.5 5.2 3.5 8.5S14.3 18.1 12 20.5C9.7 18.1 8.5 15.3 8.5 12S9.7 5.9 12 3.5Z' stroke='currentColor' stroke-width='1.4'/><circle cx='16.8' cy='7.4' r='2.2' fill='#ea580c' stroke='white' stroke-width='1'/></svg>",
+      "theme_color": "#246b7c",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.echootaku.footprint-earth/preview.html",
+        "styles": [
+          "apps/cn.echootaku.footprint-earth/page.css",
+          "apps/cn.echootaku.footprint-earth/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.48
+        },
+        "theme": "light"
+      },
+      "download": {
+        "manifest": "apps/cn.echootaku.footprint-earth/manifest.json",
+        "code": "apps/cn.echootaku.footprint-earth/main.js",
+        "readme": "apps/cn.echootaku.footprint-earth/README.md",
+        "widget_styles": "apps/cn.echootaku.footprint-earth/widget.css",
+        "page_styles": "apps/cn.echootaku.footprint-earth/page.css",
+        "page_template": "apps/cn.echootaku.footprint-earth/page.html",
+        "widget_templates": {
+          "footprint-globe": {
+            "2x2": "apps/cn.echootaku.footprint-earth/templates/widget-2x2.html",
+            "4x2": "apps/cn.echootaku.footprint-earth/templates/widget-4x2.html",
+            "4x4": "apps/cn.echootaku.footprint-earth/templates/widget-4x4.html"
+          }
+        },
+        "i18n": {
+          "en-US": "apps/cn.echootaku.footprint-earth/i18n/en-US.json",
+          "ja-JP": "apps/cn.echootaku.footprint-earth/i18n/ja-JP.json",
+          "zh-CN": "apps/cn.echootaku.footprint-earth/i18n/zh-CN.json"
+        },
+        "modules": {
+          "page/entry.js": "apps/cn.echootaku.footprint-earth/page/entry.js",
+          "page/runtime.js": "apps/cn.echootaku.footprint-earth/page/runtime.js",
+          "page/view.js": "apps/cn.echootaku.footprint-earth/page/view.js",
+          "widget/entry.js": "apps/cn.echootaku.footprint-earth/widget/entry.js"
+        }
+      },
+      "size": 565348,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-09-07T23:38:42.151Z",
+      "updated_at": "2026-09-07T23:38:42.151Z"
+    },
+    {
+      "id": "io.github.xingjianya-86.linknav",
+      "name": "链接小窝",
+      "version": "2.0.0",
+      "description": "收集与分享网址的萌系导航页：管理员维护共享链接目录并按角色分层可见，人人可收藏，桌面小组件快捷直达",
+      "long_description": "链接小窝是一个把网址收藏与分享做成萌系贴纸风的导航页。管理员在小窝里录入链接，并给每条链接设置可见范围——所有人（含游客）、登录用户或仅管理员，前端会按当前角色自动隐藏无权查看的内容；其中「仅管理员」的链接保存在安装级私有数据里，不会进入访客可读的共享数据。\n\n每位登录用户都可以点卡片上的小星星收藏自己喜欢的链接，收藏保存在自己的私有空间，互不可见。桌面小组件会展示置顶链接，点击即可直达。图标支持上传本地图片压缩后缓存进应用数据，也支持管理员在浏览器里自动获取 favicon；缓存后的图标对所有访客可见、离线可用。站长还可以批量导入（JSON / URL 列表 / 书签 HTML / CSV）与导出（完整 JSON / URL 文本 / CSV / 收藏），备份和迁移都很方便。\n\n出于 Myriad 沙箱的安全限制，应用只能打开 Manifest 中声明的站点白名单（首批约 28 个常见站点，命中域名后自动打开）；白名单之外的链接可以「搜索打开」——用已声明的搜索引擎打开该网址，也可以一键复制后手动打开，不会静默失败。\n\n界面支持浅色 / 深色主题，文案提供简体中文、English 和日本語，动效会跟随系统「减少动态效果」设置自动收敛。应用默认离线可用：联网仅用于管理员在浏览器里获取 favicon（需 network:fetch 授权；未授权时自动隐藏该按钮，仍可手动上传）。图标缓存后访客离线也能正常显示，链接数据只保存在你的 Myriad 实例中。",
+      "locales": {
+        "en-US": {
+          "name": "LinkNav",
+          "description": "A kawaii link nest: admins curate a shared link directory with role-based visibility, everyone keeps personal favorites, plus a dashboard widget for quick access",
+          "long_description": "LinkNav turns a link collection into a soft sticker-style homepage. Admins feed links into the nest and set each link's audience — everyone (including guests), signed-in users, or admins only. The frontend filters by the current role, and admin-only links live in installation-scoped private data so they are never exposed to visitor-readable shared data.\n\nEvery signed-in user can tap the little star to keep personal favorites, stored in their own private space. A dashboard widget shows pinned links for one-tap access. Icons can be uploaded and cached locally in app data, or fetched automatically in the admin's browser; cached icons are visible to every visitor and work offline. Admins can also batch import (JSON / URL list / bookmarks HTML / CSV) and export (full JSON / URL text / CSV / favorites) for easy backup and migration.\n\nBecause the Myriad sandbox only allows opening URLs declared in the manifest allowlist (about 28 popular sites in this release), links outside the allowlist offer a Search action (opens the URL in a declared search engine) plus Copy, so nothing fails silently.\n\nThe UI adapts to light and dark themes, speaks Simplified Chinese, English and Japanese, and respects the system reduced-motion preference. The app is offline-first: networking is used only when an admin fetches a favicon in the browser (requires the network:fetch grant; without it the fetch button is hidden and manual upload still works). Cached icons keep working offline, and link data is stored only inside your Myriad instance."
+        },
+        "ja-JP": {
+          "name": "リンクの小部屋",
+          "description": "みんなで集めるかわいいリンク集。管理者が共有リンクをロール別に公開し、お気に入りとウィジェットで素早くアクセス",
+          "long_description": "「リンクの小部屋」は、リンク集をやわらかいステッカー風のホームページに変えるアプリです。管理者がリンクを登録し、公開範囲を「全員（ゲスト含む）」「ログインユーザー」「管理者のみ」から選べます。画面は現在のロールに合わせて自動で絞り込み、「管理者のみ」のリンクはインストール単位のプライベートデータに保存されるため、訪問者が読める共有データには出ません。\n\nログインユーザーはカードの星を押すだけでお気に入りを保存でき、お気に入りは自分のプライベート領域にだけ保存されます。ダッシュボードウィジェットにはピン留めリンクが表示され、ワンタップで開けます。アイコンはローカル画像を圧縮してアプリ内データに保存でき、管理者のブラウザで favicon を自動取得もできます。キャッシュ済みアイコンは全員に表示され、オフラインでも使えます。管理者は一括インポート（JSON / URL リスト / ブックマーク HTML / CSV）とエクスポート（完全な JSON / URL テキスト / CSV / お気に入り）もでき、バックアップや移行が簡単です。\n\nMyriad のサンドボックスは Manifest で宣言した許可リスト（本バージョンでは主要 28 サイト）しか開けないため、リスト外のリンクは「検索で開く」と「コピー」を表示します。検索は宣言済みの検索エンジンで URL を開きます。\n\nライト / ダークテーマ、簡体字中国語・英語・日本語に対応し、システムの「視差効果を減らす」設定にも従います。アプリはオフライン優先です。ネットワークを使うのは、管理者がブラウザで favicon を取得するときだけです（network:fetch の許可が必要。未許可の場合は取得ボタンが自動的に非表示になり、手動アップロードは引き続き利用できます）。キャッシュ済みアイコンはオフラインでも表示され、リンクデータはあなたの Myriad インスタンス内だけに保存されます。"
+        }
+      },
+      "author": {
+        "name": "xingjianya-86",
+        "url": "https://github.com/xingjianya-86"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/io.github.xingjianya-86.linknav",
+      "repository": "https://github.com/Myriad-You/tapp-store/tree/main/apps/io.github.xingjianya-86.linknav",
+      "category": "social",
+      "tags": [
+        "导航",
+        "网址",
+        "收藏",
+        "分享",
+        "链接",
+        "效率",
+        "社交",
+        "协作",
+        "萌系"
+      ],
+      "permissions": [
+        "storage:read",
+        "storage:write",
+        "network:fetch",
+        "ui:openUrl",
+        "ui:notification",
+        "ui:confirm",
+        "ui:theme",
+        "widget:register"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><rect width='24' height='24' rx='7' fill='#ffd3e0'/><path d='M12 4.4l2 4 4.4.6-3.2 3.1.8 4.4-4-2.1-4 2.1.8-4.4-3.2-3.1 4.4-.6z' fill='#fff' stroke='#f48fb1' stroke-width='1' stroke-linejoin='round'/><path d='M9.3 17.4c.7 1 1.6 1.5 2.7 1.5s2-.5 2.7-1.5' fill='none' stroke='#f48fb1' stroke-width='1.1' stroke-linecap='round'/></svg>",
+      "theme_color": "#ffb7ce",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/io.github.xingjianya-86.linknav/preview.html",
+        "styles": [
+          "apps/io.github.xingjianya-86.linknav/page.css",
+          "apps/io.github.xingjianya-86.linknav/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.4
+        },
+        "theme": "light"
+      },
+      "download": {
+        "manifest": "apps/io.github.xingjianya-86.linknav/manifest.json",
+        "code": "apps/io.github.xingjianya-86.linknav/core.js",
+        "readme": "apps/io.github.xingjianya-86.linknav/README.md",
+        "widget_styles": "apps/io.github.xingjianya-86.linknav/widget.css",
+        "page_styles": "apps/io.github.xingjianya-86.linknav/page.css",
+        "page_template": "apps/io.github.xingjianya-86.linknav/page.html",
+        "widget_templates": {
+          "quick-links": {
+            "2x2": "apps/io.github.xingjianya-86.linknav/widget-2x2.html",
+            "4x2": "apps/io.github.xingjianya-86.linknav/widget-4x2.html"
+          }
+        },
+        "i18n": {
+          "en-US": "apps/io.github.xingjianya-86.linknav/i18n/en-US.json",
+          "ja-JP": "apps/io.github.xingjianya-86.linknav/i18n/ja-JP.json",
+          "zh-CN": "apps/io.github.xingjianya-86.linknav/i18n/zh-CN.json"
+        },
+        "modules": {
+          "page/index.js": "apps/io.github.xingjianya-86.linknav/page/index.js",
+          "widget/index.js": "apps/io.github.xingjianya-86.linknav/widget/index.js"
+        }
+      },
+      "size": 182521,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-09-17T23:49:32.230Z",
+      "updated_at": "2026-10-06T01:44:20.792Z"
+    },
+    {
+      "id": "io.github.xingjianya-86.genshin-toolbox",
+      "name": "应急食品",
+      "version": "2.0.0",
+      "description": "米游社扫码绑定后展示原神账号资料、树脂委托、角色简表、深境螺旋与幻想真境剧诗战绩，并提供 2x2 / 4x2 / 4x4 桌面小组件",
+      "long_description": "应急食品是一个把米游社原神战绩搬进 Myriad 的数据面板 Tapp。站长用米游社 App 扫码绑定（或手动粘贴 Cookie）后，页面会展示原粹树脂与恢复时间、每日委托、洞天宝钱、探索与成就统计，以及角色简表（点击头像直达观测枢角色词条）。深渊区块支持深境螺旋本期 / 上期与幻想真境剧诗，逐间展示上下半队伍与通关时间，并汇总总星数。\n\n桌面小组件提供 2x2 / 4x2 / 4x4 三种尺寸：2x2 显示树脂、委托与宝钱；4x2 横排状态并展示前 8 名角色；4x4 额外显示回满时间、探索成就与前 12 名角色。角色头像点击即可跳转观测枢。\n\n数据全部来自米游社公开接口：扫码登录会自动补齐 ltoken 与 cookie_token，机器码 / 设备指纹在站长设置里配置；头像与角色图会压缩成 48px 缓存到本地（增量、限总量），离线也能显示。所有设置与凭据只保存在安装级私有数据里，仅站长可读。应用内置风控冷却（命中风控码后自动暂停请求并逐级延长冷却）、6 小时定时刷新与调试面板，支持简体中文、English、日本語以及浅色 / 深色主题。",
+      "locales": {
+        "en-US": {
+          "name": "Emergency Food",
+          "description": "Bind your miHoYo account by QR login to show Genshin profile, resin & commissions, characters, Spiral Abyss and Imaginarium Theater records, with 2x2 / 4x2 / 4x4 dashboard widgets",
+          "long_description": "Emergency Food brings your miHoYo Genshin Impact records into Myriad. After the admin binds an account with QR login (or pastes a Cookie), the page shows Original Resin and its recovery time, daily commissions, Realm Currency, exploration and achievement stats, plus a character list whose avatars open the official wiki entry. The Abyss section covers Spiral Abyss (current / previous) and the Imaginarium Theater with per-chamber first/second half teams and clear times, plus total stars.\n\nDashboard widgets come in 2x2 / 4x2 / 4x4: 2x2 shows Resin, commissions and Realm Currency; 4x2 adds an inline status row and the top 8 characters; 4x4 also shows full-recovery times, exploration stats and the top 12 characters. Tapping a character opens the wiki.\n\nAll data comes from miHoYo public APIs. QR login fills in ltoken and cookie_token automatically, device info is configurable in admin settings, and avatars/character art are compressed to 48px and cached locally (incremental, size-capped) so they still render offline. Settings and credentials live only in installation-scoped private data readable by admins. The app ships risk-control cooldown, a 6-hour scheduled refresh and a debug panel, and speaks Simplified Chinese, English and Japanese with light / dark themes."
+        },
+        "ja-JP": {
+          "name": "緊急食料",
+          "description": "miHoYo アカウントを QR ログインで連携し、原神のプロフィール・樹脂・キャラ・深境螺旋・幻想真境劇詩の記録を表示。2x2 / 4x2 / 4x4 ウィジェット対応",
+          "long_description": "「緊急食料」は、miHoYo の原神の戦績を Myriad に持ち込むデータパネル Tapp です。管理者が miHoYo アプリで QR 連携（または Cookie を貼り付け）すると、ページに原石（樹脂）と回復時間、デイリー依頼、洞天宝銭、探索・実績の統計、キャラクター一覧（アイコンをタップで観測枢の該当ページを開きます）を表示します。深境螺旋（今期 / 前期）と幻想真境劇詩のブロックでは、各間の前半 / 後半チームとクリア時間、合計星数を表示します。\n\nダッシュボードウィジェットは 2x2 / 4x2 / 4x4 の 3 サイズ。2x2 は樹脂・依頼・宝銭、4x2 は横並びの状態と上位 8 キャラ、4x4 は全回復時間・探索実績・上位 12 キャラを表示します。キャラのアイコンをタップすると観測枢が開きます。\n\nデータはすべて miHoYo の公開 API から取得します。QR ログインで ltoken と cookie_token を自動補完し、端末情報は管理者設定で指定できます。アイコンとキャラ画像は 48px に圧縮してローカルにキャッシュ（差分・容量上限あり）するため、オフラインでも表示できます。設定と認証情報はインストール単位のプライベートデータにのみ保存され、管理者だけが閲覧できます。リスク管理のクールダウン、6 時間ごとの自動更新、デバッグパネルを備え、簡体字中国語・英語・日本語とライト / ダークテーマに対応します。"
+        }
+      },
+      "author": {
+        "name": "xingjianya-86",
+        "url": "https://github.com/xingjianya-86"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/io.github.xingjianya-86.genshin-toolbox",
+      "repository": "https://github.com/xingjianya-86/genshin-toolbox",
+      "category": "game",
+      "tags": [
+        "原神",
+        "米游社",
+        "树脂",
+        "委托",
+        "深渊",
+        "幻想真境剧诗",
+        "角色",
+        "小组件",
+        "游戏",
+        "Genshin"
+      ],
+      "permissions": [
+        "network:fetch",
+        "storage:read",
+        "storage:write",
+        "ui:notification",
+        "ui:confirm",
+        "ui:theme",
+        "ui:openUrl",
+        "widget:register",
+        "scheduler:register"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><rect width='24' height='24' rx='7' fill='#3b4a6b'/><path d='M12 3.6l2.2 4.9 5.3.6-4 3.6 1.1 5.3L12 15.4l-4.6 2.6 1.1-5.3-4-3.6 5.3-.6z' fill='#ffe08a' stroke='#ffd166' stroke-width='0.8' stroke-linejoin='round'/><circle cx='12' cy='12.4' r='2.1' fill='#3b4a6b'/></svg>",
+      "theme_color": "#ffd166",
+      "screenshots": [],
+      "download": {
+        "manifest": "apps/io.github.xingjianya-86.genshin-toolbox/manifest.json",
+        "code": "apps/io.github.xingjianya-86.genshin-toolbox/core.js",
+        "readme": "apps/io.github.xingjianya-86.genshin-toolbox/README.md",
+        "styles": "apps/io.github.xingjianya-86.genshin-toolbox/styles.css",
+        "widget_styles": "apps/io.github.xingjianya-86.genshin-toolbox/widget.css",
+        "page_styles": "apps/io.github.xingjianya-86.genshin-toolbox/page.css",
+        "page_template": "apps/io.github.xingjianya-86.genshin-toolbox/page.html",
+        "widget_templates": {
+          "genshin": {
+            "2x2": "apps/io.github.xingjianya-86.genshin-toolbox/widget-genshin-2x2.html",
+            "4x2": "apps/io.github.xingjianya-86.genshin-toolbox/widget-genshin-4x2.html",
+            "4x4": "apps/io.github.xingjianya-86.genshin-toolbox/widget-genshin-4x4.html"
+          },
+          "abyss": {
+            "2x2": "apps/io.github.xingjianya-86.genshin-toolbox/widget-abyss-2x2.html",
+            "4x2": "apps/io.github.xingjianya-86.genshin-toolbox/widget-abyss-4x2.html",
+            "4x4": "apps/io.github.xingjianya-86.genshin-toolbox/widget-abyss-4x4.html"
+          }
+        },
+        "i18n": {
+          "en-US": "apps/io.github.xingjianya-86.genshin-toolbox/i18n/en-US.json",
+          "ja-JP": "apps/io.github.xingjianya-86.genshin-toolbox/i18n/ja-JP.json",
+          "zh-CN": "apps/io.github.xingjianya-86.genshin-toolbox/i18n/zh-CN.json"
+        },
+        "modules": {
+          "page/index.js": "apps/io.github.xingjianya-86.genshin-toolbox/page/index.js",
+          "page/qrcode.js": "apps/io.github.xingjianya-86.genshin-toolbox/page/qrcode.js",
+          "widget/index.js": "apps/io.github.xingjianya-86.genshin-toolbox/widget/index.js"
+        }
+      },
+      "size": 235921,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-09-19T11:39:01.894Z",
+      "updated_at": "2026-10-06T01:42:15.976Z"
+    },
+    {
+      "id": "io.github.xingjianya-86.bat-toolbox",
+      "name": "银河球棒侠",
+      "version": "2.0.0",
+      "description": "米游社扫码绑定后展示星穹铁道账号资料、开拓力委托、角色简表、混沌回忆/虚构叙事/末日幻影战绩，并提供 2x2 / 4x2 / 4x4 桌面小组件",
+      "long_description": "银河球棒侠是一个把米游社星穹铁道战绩搬进 Myriad 的数据面板 Tapp。站长扫码绑定（或手动粘贴 Cookie）后，页面展示开拓力与回满时间、后备开拓力、每日实训、委托、历战余响、差分宇宙拟合值与探索成就，以及角色简表（点击头像直达开拓者笔记）。终局区块包含混沌回忆（本期 / 上期）、虚构叙事与末日幻影三个页签，自动定位最后一关（星启模式），展示每个节点的上下半队伍、得分与通关日期。\n\n桌面小组件提供 2x2 / 4x2 / 4x4 三种尺寸：日常组件 2x2 显示开拓力、实训与委托，4x2 横排状态并展示前 8 名角色，4x4 额外显示回满时间、后备开拓力、探索成就与前 12 名角色；战绩组件 2x2 汇总三个模式的星数，4x2 / 4x4 展示最后一关的通关记录与队伍头像。\n\n数据来自米游社公开接口，DS 签名在应用内计算；扫码登录自动补齐 ltoken 与 cookie_token，机器码 / 设备指纹可在站长设置配置。素材会压缩成 48px 缓存到本地（增量、限总量），离线可用；设置与凭据只保存在安装级私有数据，仅站长可读。应用内置风控冷却、6 小时定时刷新与调试面板，支持简体中文、English、日本語与浅色 / 深色主题。",
+      "locales": {
+        "en-US": {
+          "name": "Galactic Batter",
+          "description": "Bind your miHoYo account by QR login to show Honkai: Star Rail profile, stamina & assignments, characters, Memory of Chaos / Pure Fiction / Apocalyptic Shadow records, with 2x2 / 4x2 / 4x4 dashboard widgets",
+          "long_description": "Galactic Batter brings your miHoYo Honkai: Star Rail records into Myriad. After the admin binds an account with QR login (or pastes a Cookie), the page shows Trailblaze Power and its full-recovery time, Reserved Trailblaze Power, Daily Training, assignments, Echo of War, Divergent Universe extrapolation and exploration stats, plus a character list whose avatars open the official wiki entry. The endgame section has three tabs — Memory of Chaos (current / previous), Pure Fiction and Apocalyptic Shadow — and automatically focuses the final stage (Starward mode), showing each node's first/second half teams, score and clear date.\n\nDashboard widgets come in 2x2 / 4x2 / 4x4. The daily widget shows Trailblaze Power, Training and assignments in 2x2, adds an inline status row and the top 8 characters in 4x2, and full-recovery times, Reserved Power, exploration stats and the top 12 characters in 4x4. The endgame widget summarises stars for all three modes in 2x2 and shows the final stage's clear record and team avatars in 4x2 / 4x4.\n\nAll data comes from miHoYo public APIs with the DS signature computed inside the app. QR login fills in ltoken and cookie_token automatically and device info is configurable in admin settings. Images are compressed to 48px and cached locally (incremental, size-capped) for offline use, and settings/credentials live only in installation-scoped private data readable by admins. The app ships risk-control cooldown, a 6-hour scheduled refresh and a debug panel, and speaks Simplified Chinese, English and Japanese with light / dark themes."
+        },
+        "ja-JP": {
+          "name": "銀河バットマン",
+          "description": "miHoYo アカウントを QR ログインで連携し、スターレイルのプロフィール・開拓力・キャラ・混沌の記憶・虚構叙事・末日の幻影の記録を表示。2x2 / 4x2 / 4x4 ウィジェット対応",
+          "long_description": "「銀河バットマン」は、miHoYo のスターレイルの戦績を Myriad に持ち込むデータパネル Tapp です。管理者が QR 連携（または Cookie を貼り付け）すると、ページに開拓力と全回復時間、予備開拓力、デイリー訓練、依頼、歴戦余韻、差分宇宙のフィッティング値と探索実績、キャラクター一覧（アイコンをタップで開拓者ノートの該当ページを開きます）を表示します。終局セクションは混沌の記憶（今期 / 前期）・虚構叙事・末日の幻影の 3 タブで、最終ステージ（星啓モード）を自動で特定し、各ノードの前半 / 後半チーム、スコア、クリア日を表示します。\n\nダッシュボードウィジェットは 2x2 / 4x2 / 4x4 の 3 サイズ。デイリーウィジェットは 2x2 で開拓力・訓練・依頼、4x2 で横並びの状態と上位 8 キャラ、4x4 で全回復時間・予備開拓力・探索実績・上位 12 キャラを表示します。戦績ウィジェットは 2x2 で 3 モードの星数を、4x2 / 4x4 で最終ステージのクリア記録とチームアイコンを表示します。\n\nデータは miHoYo の公開 API から取得し、DS 署名はアプリ内で計算します。QR ログインで ltoken と cookie_token を自動補完し、端末情報は管理者設定で指定できます。画像は 48px に圧縮してローカルにキャッシュ（差分・容量上限あり）し、オフラインでも表示できます。設定と認証情報はインストール単位のプライベートデータにのみ保存され、管理者だけが閲覧できます。リスク管理のクールダウン、6 時間ごとの自動更新、デバッグパネルを備え、簡体字中国語・英語・日本語とライト / ダークテーマに対応します。"
+        }
+      },
+      "author": {
+        "name": "xingjianya-86",
+        "url": "https://github.com/xingjianya-86"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/io.github.xingjianya-86.bat-toolbox",
+      "repository": "https://github.com/xingjianya-86/bat-toolbox",
+      "category": "game",
+      "tags": [
+        "星穹铁道",
+        "米游社",
+        "开拓力",
+        "混沌回忆",
+        "虚构叙事",
+        "末日幻影",
+        "星启",
+        "角色",
+        "小组件",
+        "游戏"
+      ],
+      "permissions": [
+        "network:fetch",
+        "storage:read",
+        "storage:write",
+        "ui:notification",
+        "ui:confirm",
+        "ui:theme",
+        "ui:openUrl",
+        "widget:register",
+        "scheduler:register"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><rect width='24' height='24' rx='7' fill='#2b3357'/><path d='M4 15.2c3.6 0 5.2-2.6 7.2-5.2 1.6-2.1 3-3.6 5.4-3.6 2.1 0 3.4 1.2 3.4 2.7 0 1.4-1 2.4-2.6 2.4-.8 0-1.4-.2-2-.5-.5 1.3-2.4 3.9-5.2 5.6-2.2 1.4-4.4 2-6.2 2z' fill='#ffcf4d'/><circle cx='17.4' cy='10.4' r='1.2' fill='#2b3357'/></svg>",
+      "theme_color": "#ffcf4d",
+      "screenshots": [],
+      "download": {
+        "manifest": "apps/io.github.xingjianya-86.bat-toolbox/manifest.json",
+        "code": "apps/io.github.xingjianya-86.bat-toolbox/core.js",
+        "readme": "apps/io.github.xingjianya-86.bat-toolbox/README.md",
+        "styles": "apps/io.github.xingjianya-86.bat-toolbox/styles.css",
+        "widget_styles": "apps/io.github.xingjianya-86.bat-toolbox/widget.css",
+        "page_styles": "apps/io.github.xingjianya-86.bat-toolbox/page.css",
+        "page_template": "apps/io.github.xingjianya-86.bat-toolbox/page.html",
+        "widget_templates": {
+          "starrail": {
+            "2x2": "apps/io.github.xingjianya-86.bat-toolbox/widget-starrail-2x2.html",
+            "4x2": "apps/io.github.xingjianya-86.bat-toolbox/widget-starrail-4x2.html",
+            "4x4": "apps/io.github.xingjianya-86.bat-toolbox/widget-starrail-4x4.html"
+          },
+          "endgame": {
+            "2x2": "apps/io.github.xingjianya-86.bat-toolbox/widget-endgame-2x2.html",
+            "4x2": "apps/io.github.xingjianya-86.bat-toolbox/widget-endgame-4x2.html",
+            "4x4": "apps/io.github.xingjianya-86.bat-toolbox/widget-endgame-4x4.html"
+          }
+        },
+        "i18n": {
+          "en-US": "apps/io.github.xingjianya-86.bat-toolbox/i18n/en-US.json",
+          "ja-JP": "apps/io.github.xingjianya-86.bat-toolbox/i18n/ja-JP.json",
+          "zh-CN": "apps/io.github.xingjianya-86.bat-toolbox/i18n/zh-CN.json"
+        },
+        "modules": {
+          "page/index.js": "apps/io.github.xingjianya-86.bat-toolbox/page/index.js",
+          "page/qrcode.js": "apps/io.github.xingjianya-86.bat-toolbox/page/qrcode.js",
+          "widget/index.js": "apps/io.github.xingjianya-86.bat-toolbox/widget/index.js"
+        }
+      },
+      "size": 250574,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-09-19T11:39:32.511Z",
+      "updated_at": "2026-10-06T01:43:55.887Z"
+    },
+    {
+      "id": "cn.sua17.journal-notes",
+      "name": "手账笔记",
+      "version": "2.0.0",
+      "description": "在主页小组件里速览 Myriad 手账（Phantasi）最新笔记：2×2 双条速览、4×2 横向分区、4×4 笔记墙，支持点击展开全文。headless 后台同步，桌面无开页也能保持最新。",
+      "long_description": "在主页小组件里速览 Myriad 手账（Phantasi）的最新笔记。支持 2×2 双条速览、4×2 横向分区与 4×4 笔记墙三种尺寸，点击任意条目即可在小组件内展开全文阅读。数据同步由 headless 后台完成：安装后常驻同步，按设定间隔自动刷新，桌面无需打开任何页面也能保持最新；小组件本身只读取本地缓存，渲染幂等、开销极低。可配置最大笔记数、同步间隔与是否同步正文。跟随宿主明暗主题与字体缩放，内置简体中文、英语、日语。",
+      "locales": {
+        "en-US": {
+          "name": "Journal Notes",
+          "description": "Browse your latest Myriad journal (Phantasi) notes from home screen widgets: 2x2 quick glance, 4x2 split view, 4x4 note wall, tap to expand full text. Headless background sync keeps everything fresh.",
+          "long_description": "Glance at your latest Myriad journal (Phantasi) notes from home screen widgets. Three sizes are supported: 2x2 quick glance, 4x2 split view, and 4x4 note wall; tap any entry to expand the full text right inside the widget. Sync runs in a headless background layer: it starts right after install and refreshes on your chosen interval, so everything stays fresh even when no page is open — the widget itself only reads a local cache and renders idempotently. Configurable note limit, sync interval, and full-text syncing. Follows the host light/dark theme and font scaling, with Simplified Chinese, English, and Japanese built in."
+        },
+        "ja-JP": {
+          "name": "ジャーナルノート",
+          "description": "Myriad ジャーナル（Phantasi）の最新ノートをホーム画面ウィジェットで表示。2x2・4x2・4x4 対応、タップで全文表示。ヘッドレス同期で常に最新。",
+          "long_description": "ホーム画面ウィジェットで Myriad ジャーナル（Phantasi）の最新ノートを表示します。2x2 のクイック表示、4x2 の分割表示、4x4 のノートウォールの 3 サイズに対応し、項目をタップするとウィジェット内で全文を展開できます。同期はヘッドレスのバックグラウンド層で実行され、インストール直後から指定間隔で自動更新。ページを開いていなくても常に最新の状態を保ち、ウィジェットはローカルキャッシュを読み取るだけの軽量・冪等レンダリングです。最大件数・同期間隔・本文同期の有無を設定可能。ホストのライト/ダークテーマとフォントスケールに追従し、中国語・英語・日本語を内蔵しています。"
+        }
+      },
+      "author": {
+        "name": "sua17"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.sua17.journal-notes",
+      "repository": "https://github.com/Myriad-You/tapp-store",
+      "category": "productivity",
+      "tags": [
+        "笔记",
+        "手账",
+        "小组件",
+        "Phantasi",
+        "订阅",
+        "多语言"
+      ],
+      "permissions": [
+        "widget:register",
+        "phantasi:read",
+        "storage:read",
+        "storage:write",
+        "scheduler:register",
+        "ui:openUrl"
+      ],
+      "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M4 5.5A2.5 2.5 0 0 1 6.5 3H19a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6.5A2.5 2.5 0 0 0 4 21.5z' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><path d='M8 7h8M8 11h6' stroke='currentColor' stroke-width='2' stroke-linecap='round'/></svg>",
+      "theme_color": "#F59E0B",
+      "screenshots": [],
+      "preview": {
+        "version": 1,
+        "type": "snapshot",
+        "html": "apps/cn.sua17.journal-notes/preview.html",
+        "styles": [
+          "apps/cn.sua17.journal-notes/styles.css",
+          "apps/cn.sua17.journal-notes/widget/widget.css",
+          "apps/cn.sua17.journal-notes/preview.css"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.46
+        },
+        "theme": "dark"
+      },
+      "download": {
+        "manifest": "apps/cn.sua17.journal-notes/manifest.json",
+        "code": "apps/cn.sua17.journal-notes/core.js",
+        "readme": "apps/cn.sua17.journal-notes/README.md",
+        "styles": "apps/cn.sua17.journal-notes/styles.css",
+        "widget_styles": "apps/cn.sua17.journal-notes/widget/widget.css",
+        "widget_templates": {
+          "journal-notes": {
+            "2x2": "apps/cn.sua17.journal-notes/templates/widget-2x2.html",
+            "4x2": "apps/cn.sua17.journal-notes/templates/widget-4x2.html",
+            "4x4": "apps/cn.sua17.journal-notes/templates/widget-4x4.html"
+          }
+        },
+        "modules": {
+          "widget/index.js": "apps/cn.sua17.journal-notes/widget/index.js"
+        }
+      },
+      "size": 75897,
+      "downloads": 0,
+      "rating": 0,
+      "featured": false,
+      "verified": false,
+      "created_at": "2026-10-02T03:35:15.608Z",
+      "updated_at": "2026-10-06T01:43:14.715Z"
     }
   ],
   "last_updated": "2026-08-04T09:47:35Z"

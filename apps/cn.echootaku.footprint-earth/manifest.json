@@ -1,0 +1,46 @@
+{
+  "id": "cn.echootaku.footprint-earth",
+  "name": "足迹地球",
+  "version": "0.1.0",
+  "description": "用标准国家与地区代码记录 Owner 足迹，并展示满足隐私阈值的访客聚合。",
+  "author": { "name": "EchoOtaku", "url": "https://github.com/EchoOtaku" },
+  "category": "social",
+  "minSystemVersion": "0.3.36",
+  "themeColor": "#246b7c",
+  "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='12' cy='12' r='8.5' stroke='currentColor' stroke-width='1.7'/><path d='M3.8 12h16.4M12 3.5c2.3 2.4 3.5 5.2 3.5 8.5S14.3 18.1 12 20.5C9.7 18.1 8.5 15.3 8.5 12S9.7 5.9 12 3.5Z' stroke='currentColor' stroke-width='1.4'/><circle cx='16.8' cy='7.4' r='2.2' fill='#ea580c' stroke='white' stroke-width='1'/></svg>",
+  "permissions": [
+    "storage:read",
+    "storage:write",
+    "ui:confirm",
+    "widget:register",
+    "federation:read",
+    "federation:room",
+    "federation:message"
+  ],
+  "core": { "entry": "main.js" },
+  "page": { "entry": "page/entry.js", "template": "page.html", "styles": "page.css" },
+  "assets": ["assets/world-110m.json", "assets/admin1-50m.json"],
+  "widgets": [
+    {
+      "id": "footprint-globe",
+      "name": "足迹地球",
+      "description": "可拖动旋转的 Owner 足迹与隐私聚合地球。",
+      "icon": "◎",
+      "category": "social",
+      "defaultSize": "4x2",
+      "sizes": ["2x2", "4x2", "4x4"],
+      "entry": "widget/entry.js",
+      "templates": {
+        "2x2": "templates/widget-2x2.html",
+        "4x2": "templates/widget-4x2.html",
+        "4x4": "templates/widget-4x4.html"
+      },
+      "styles": "widget.css",
+      "refreshPolicy": { "mode": "event", "refreshOnVisible": true }
+    }
+  ],
+  "locales": {
+    "en-US": { "name": "Footprint Earth", "description": "Publish code-only owner footprints and privacy-thresholded visitor aggregates" },
+    "ja-JP": { "name": "足あと地球", "description": "標準地域コードだけで Owner の足あととプライバシー集計を表示" }
+  }
+}

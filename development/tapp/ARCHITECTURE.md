@@ -24,6 +24,8 @@ Tapp 不是把第三方脚本直接加载到 Myriad 页面中，而是：
 4. Tapp 只能通过 `postMessage` Bridge 调用宿主 SDK；
 5. Bridge 做前端权限预检，后端再次做身份、所有权、权限、速率、输入和出站安全校验。
 
+只通过这条 Bridge 说话的 Tapp 是独立作品，许可由作者自选；见根目录 `LICENSE` 的 AGPL 第 7 条附加许可。契约与 CLI 为 Apache-2.0。
+
 宿主写入 `srcdoc` 的 Manifest 元数据、Widget props、i18n 和启动参数必须使用 inline-script
 序列化器；Tapp JavaScript 源码必须转义 HTML 的 `</script` 终止序列。直接把字符串插入
 `<script>` 会让合法名称、设置值或代码静默截断整个沙箱。
@@ -161,8 +163,9 @@ Manifest 会经历 Rust 结构的反序列化和再序列化。因此新增 Mani
 - **主体私有 Storage**：`Tapp.storage` 的 `user_id` 是 Runtime Grant subject（持久用户或
   **签名游客 session**）。打开管理员公开安装时，每个 subject 读写自己的
   `user_id + tapp_id` 空间（游客为负 id 命名空间），不会读取站点 owner 数据。
-  Manifest 声明的安装级设置、以及安装级共享数据（`Tapp.shared`）继续存放在安装
-  owner 命名空间；owner 或管理员可写，能打开该安装的运行者（含游客）可读。宿主内部键
+  Manifest 声明的安装级设置、安装级共享数据（`Tapp.shared`）以及安装级私有数据
+  （`Tapp.private`）继续存放在安装 owner 命名空间。settings / shared：owner 或管理员可写，
+  能打开该安装的运行者（含游客）可读。private：仅 owner 或管理员可读可写。宿主内部键
   不会出现在通用 storage API 中。
 - 管理员控制面权限不等于普通用户私有安装的运行时访问权。代码、资源、Manifest、授权和
   Runtime Grant 只能解析到规范公开 owner 或当前主体自己的 owner，不能从其他用户同 ID
@@ -237,10 +240,10 @@ SDK 的 `lifecycle.onDestroy` 同时监听 `pagehide` 与 `beforeunload`，并�
 单个生命周期回调抛错不能阻断其他回调。宿主资源释放仍由 iframe 外部 cleanup 负责，不能把
 授权撤销或服务端取消只寄托在浏览器卸载回调上。
 
-**Storage、Settings 与 Shared 分离**：
+**Storage、Settings、Shared 与 Private 分离**：
 
 - 私有 `Tapp.storage` 经 Runtime Grant 挂在 **subject** 命名空间（持久用户或签名游客）；
-  `_settings.`、`_shared.` 等为宿主保留前缀，storage API 不可访问。`storage:read` /
+  `_settings.`、`_shared.`、`_private.` 等为宿主保留前缀，storage API 不可访问。`storage:read` /
   `platform:read` 均为 **guest-safe basic**（与 [REST_API · Widget 与存储](REST_API.md#widget-与存储) 一致）：
   签名游客可获 Grant 与负 id 下持久 storage、以及平台公开缓存读；无签名 session 则无。
 - 安装级 `Tapp.settings` 走专用 REST：`GET` 在 **optional_auth** 上（游客打开公开安装可读
@@ -248,8 +251,13 @@ SDK 的 `lifecycle.onDestroy` 同时监听 `pagehide` 与 `beforeunload`，并�
   并校验类型/选项/数值范围。详情页宿主设置**编辑器**仍是控制面：访客不展示写 UI。
 - 安装级 `Tapp.shared` 与 settings 同一隔离，但语义是数据仓库：自由 KV、无 Manifest 声明，
   给公开部署展示站长数据。`GET` 同样 optional_auth；写仅 owner/管理员。
-- 三者都不能互相伪装：settings / shared 路由不能当任意 storage 用，storage 也不能读写
-  `_settings.*` 或 `_shared.*`。
+- 安装级 `Tapp.private` 也落在 owner 命名空间，但是自由 KV 且读写都要求 owner/管理员会话，
+  不接受 Runtime Grant。游客与普通登录用户 401/403。明文进入沙箱，不是应用凭据。
+- 四者都不能互相伪装：settings / shared / private 路由不能当任意 storage 用，storage 也不能读写
+  `_settings.*`、`_shared.*` 或 `_private.*`。
+- 四种 KV 写入成功后向同 Tapp 其他活着的沙箱广播 `onChanged`（写者不回声）。storage /
+  shared 额外 remount 可见 Widget；settings / private 只广播。详情页宿主编辑器的 settings 落盘
+  也走同一条 `onChanged`，不经过 `Tapp.settings.set`。
 
 storage 批量读取使用 `storage.getAll` 对应的单次数据库查询，不能退回 `keys + N 次 get`。
 
@@ -489,8 +497,10 @@ sequenceDiagram
   加载，并取消旧路由的迟到状态写回。
 - Manifest、最终权限和用户角色使用独立运行契约指纹；同 ID 更新声明或授权后必须重建 SDK、
   Bridge 与订阅 handler，不能因代码内容未变而继续运行旧权限面。
-- Widget 默认由 storage 变更或显式 `invalidate` 事件驱动刷新；可选 interval 仅在页面与
-  Widget 可见时计时。Page、Widget、headless core 间的同 Tapp storage 变更由宿主广播。
+- Widget 默认由 storage / shared 变更或显式 `invalidate` 驱动刷新（会重建 iframe）；
+  `Tapp.settings` 变更只广播 `onChanged`，不重建 iframe。可选 interval 仅在页面与
+  Widget 可见时额外计时。Page / headless 的定向 `invalidate({ widgetId })` 需要授予的
+  `storage:write`，并受 15s / 2 次/分限制。
 - Manifest 顶层 `settings` 是 Tapp 全局设置；`widgets[].settings` 保存到 Dashboard
   布局中的实例 `config`，同类 Widget 的多个实例互不覆盖。
 - Manifest Widget 是安装控制面注册：安装/更新时后端按 Manifest 完整 upsert，并删除旧

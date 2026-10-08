@@ -645,7 +645,7 @@ function dismissTransientUi(opts) {
   } catch (e4) { /* ignore */ }
   // Force-hide fixed/absolute overlays that may still paint over the app
   try {
-    ['create-dialog', 'edit-room-dialog', 'ring-create-dialog', 'feed-follow-dialog',
+    ['create-dialog', 'edit-room-dialog', 'feed-follow-dialog',
       'feed-compose-dialog', 'quote-repost-dialog', 'quote-view-dialog', 'feed-share-dialog',
       'chat-history-overlay', 'room-files-overlay'
     ].forEach(function (id) {
@@ -1606,23 +1606,6 @@ function notifyError(title, error) {
   } catch (e) {}
 }
 
-function requireAdminAction() {
-  if (state.isAdmin) return true;
-  notifyError(lang.adminRequired);
-  return false;
-}
-
-/** 本地化环网类型标签；未知类型原样返回 */
-function ringTypeLabel(type) {
-  var map = {
-    'brew-recommend': lang.ringTypeBrewRecommend,
-    'tapp-store': lang.ringTypeTappStore,
-    'library-exchange': lang.ringTypeLibraryExchange,
-    'instance-directory': lang.ringTypeInstanceDirectory,
-  };
-  return map[type] || type || '';
-}
-
 // ==================== Custom select (aro-select) ====================
 // Lightweight listbox replacing native <select> for dark/iframe-friendly UI.
 // Reuses manage-dropdown / manage-item visual language.
@@ -1940,12 +1923,6 @@ function initAroSelect(rootOrId, opts) {
   return api;
 }
 
-/** Init ring-create selects if present in DOM. */
-function initRingCreateSelects() {
-  initAroSelect('ring-type-select');
-  initAroSelect('ring-brew-category-select');
-}
-
 /** 本地化成员角色标签 */
 function roleLabel(role) {
   var map = { owner: lang.roleOwner, admin: lang.roleAdmin, member: lang.roleMember };
@@ -2069,29 +2046,11 @@ function setAdminElementVisible(selector, visible) {
   });
 }
 
-function applyAdminControls() {
-  var visible = !!state.isAdmin;
-  setAdminElementVisible('#ring-create-open-btn', visible);
-  setAdminElementVisible('#ring-sync-btn', visible);
-  setAdminElementVisible('#ring-peer-bar', visible);
-  setAdminElementVisible('.ring-peer-remove-btn', visible);
-  var manageBtn = $('ring-manage-btn');
-  var manageWrap = manageBtn ? manageBtn.closest('.manage-wrap') : null;
-  if (manageWrap) manageWrap.style.display = visible ? '' : 'none';
-  if (!visible) {
-    var createDialog = $('ring-create-dialog');
-    if (createDialog) createDialog.style.display = 'none';
-    var dropdown = $('ring-manage-dropdown');
-    if (dropdown) dropdown.classList.remove('open');
-  }
-}
-
 function applyRoleControls() {
   var privateOnly = !state.isGuest;
   // 访客只有「动态」一个视图，整条顶部导航都没有意义，直接隐藏
   setAdminElementVisible('#aro-nav', privateOnly);
   setAdminElementVisible('#nav-messages', privateOnly);
-  setAdminElementVisible('#nav-rings', privateOnly);
   // 订阅 = 关注关系的时间线，访客没有关注关系，这一栏对访客无意义
   setAdminElementVisible('.feed-nav-item[data-sub="subscribed"]', privateOnly);
   setAdminElementVisible('.feed-nav-item[data-sub="following"]', privateOnly);
@@ -2132,13 +2091,13 @@ function applyRoleControls() {
  *
  * Repro (before this soft-guest fix, local preview logged-in):
  *   - Host getRole returns 'guest' because tappInstance.userRole is unset
- *   - #145 still treated that as resolved=true → Messages/Rings/create/+ all gone
+ *   - #145 still treated that as resolved=true → Messages/create/+ all gone
  * After:
  *   - Same login + soft-guest getRole → getUser promotes to member
  *   - True guest (context role guest / no identity) still locked
  *
  * Manual test (local preview, logged-in non-admin):
- *   - Open Aro: #aro-nav shows Messages + Rings
+ *   - Open Aro: #aro-nav shows Messages
  *   - Feed has Following / Followers / Published tabs (not timeline-only)
  *   - Messenger opens; compose + is available on timeline/following
  *   - DevTools: force getRole to 'guest' while getUser has id/username → still member
@@ -2247,10 +2206,9 @@ async function loadUserRole() {
   if (resolved) {
     console.info('[Aro] role resolved', state.userRole);
   } else {
-    console.warn('[Aro] remaining guest — messenger/rings locked');
+    console.warn('[Aro] remaining guest — messenger locked');
   }
 
-  applyAdminControls();
   applyRoleControls();
 }
 
@@ -2668,9 +2626,7 @@ function isFeedPostTab(sub) {
 function applyLabels() {
   var el;
   el = $('nav-messages-label'); if (el) el.textContent = lang.navMessages;
-  el = $('nav-rings-label'); if (el) el.textContent = lang.navRings;
   el = $('nav-feed-label'); if (el && !el.textContent) el.textContent = lang.navFeed || lang.feedTimeline;
-  // Messenger sidebar (not ring sidebar)
   el = document.querySelector('#view-messages .sidebar-title'); if (el) el.textContent = lang.title || 'Messenger';
   el = document.querySelector('#view-messages .empty-text'); if (el) el.textContent = lang.selectHint || 'Pick a conversation to start messaging';
   el = $('empty-start-btn'); if (el) el.textContent = lang.startChat || lang.create || 'New chat';
@@ -2755,7 +2711,6 @@ function applyLabels() {
   el = $('refresh-feed-btn'); if (el) { el.setAttribute('title', lang.refresh); el.setAttribute('aria-label', lang.refresh); }
   el = $('refresh-feed-mobile-btn'); if (el) { el.setAttribute('title', lang.refresh); el.setAttribute('aria-label', lang.refresh); }
   applySearchInputLabel('conv-search', lang.searchConversations || lang.pickerSearchPlaceholder);
-  applySearchInputLabel('ring-search', lang.searchRings || lang.pickerSearchPlaceholder);
   applySearchInputLabel('feed-search', lang.searchFeed || lang.pickerSearchPlaceholder);
   applySearchInputLabel('member-search', lang.searchMembers || lang.pickerSearchPlaceholder);
   applySearchInputLabel('invite-contact-search', lang.searchContacts || lang.pickerSearchPlaceholder);
@@ -2771,35 +2726,6 @@ function applyLabels() {
     setFeedProfileExpanded(card, card.classList.contains('feed-profile-expanded'));
   });
   if (typeof updateFeedHeader === 'function') updateFeedHeader();
-  el = $('ring-sidebar-title'); if (el) el.textContent = lang.navRings || 'Rings';
-  el = $('ring-select-hint'); if (el) el.textContent = lang.selectRing || lang.emptyRings || 'Select a ring';
-  el = $('ring-create-title'); if (el) el.textContent = lang.createRingTitle;
-  el = $('ring-create-open-btn'); if (el) { el.setAttribute('title', lang.create); el.setAttribute('aria-label', lang.create); }
-  el = $('ring-name-input'); if (el) el.placeholder = lang.ringNamePlaceholder;
-  el = $('create-ring-btn'); if (el) el.textContent = lang.createRingBtn;
-  el = $('ring-peer-input'); if (el) el.placeholder = lang.addPeerPlaceholder;
-  el = $('ring-add-peer-btn'); if (el) el.textContent = lang.addPeerBtn;
-  el = $('ring-sync-label'); if (el) el.textContent = lang.syncBtn;
-  el = $('ring-sync-btn'); if (el) el.setAttribute('title', lang.syncBtn);
-  el = $('ring-leave-label'); if (el) el.textContent = lang.leaveBtn;
-  el = $('ring-id-label'); if (el) el.textContent = lang.ringId || 'Ring ID';
-  el = $('ring-id-copy');
-  if (el) {
-    el.setAttribute('title', lang.copy || 'Copy');
-    el.setAttribute('aria-label', (lang.copy || 'Copy') + ' ' + (lang.ringId || 'Ring ID'));
-  }
-  el = $('ring-type-opt-brew'); if (el) el.textContent = lang.ringTypeBrewRecommend;
-  el = $('ring-type-opt-tapp'); if (el) el.textContent = lang.ringTypeTappStore;
-  el = $('ring-type-opt-library'); if (el) el.textContent = lang.ringTypeLibraryExchange;
-  el = $('ring-type-opt-instance'); if (el) el.textContent = lang.ringTypeInstanceDirectory;
-  if (typeof refreshAroSelectLabel === 'function') refreshAroSelectLabel('ring-type-select');
-  el = $('ring-brew-category-label'); if (el) el.textContent = lang.ringBrewCategoryLabel || 'Brew category (optional)';
-  el = $('ring-brew-category-all'); if (el) el.textContent = lang.ringBrewCategoryAll || 'All my categories';
-  if (typeof refreshAroSelectLabel === 'function') refreshAroSelectLabel('ring-brew-category-select');
-  el = $('ring-brew-category-input'); if (el) el.placeholder = lang.ringBrewCategoryPlaceholder || 'Or type a category name';
-  document.querySelectorAll('[data-i18n-empty-peers]').forEach(function (node) {
-    node.textContent = lang.emptyPeers;
-  });
   updateSendState();
 }
 
@@ -2847,7 +2773,6 @@ function applyDialogLabels() {
 share.value({
   activateShareCard: activateShareCard,
   activeMemberCountFromList: activeMemberCountFromList,
-  applyAdminControls: applyAdminControls,
   applyDialogLabels: applyDialogLabels,
   applyLabels: applyLabels,
   applyRoleControls: applyRoleControls,
@@ -2889,7 +2814,6 @@ share.value({
   getPageDisposables: getPageDisposables,
   getPayloadText: getPayloadText,
   initAroSelect: initAroSelect,
-  initRingCreateSelects: initRingCreateSelects,
   isChannelComposerLocked: isChannelComposerLocked,
   isE2eCiphertextEnvelope: isE2eCiphertextEnvelope,
   isE2eKeyExchangeMessage: isE2eKeyExchangeMessage,
@@ -2917,8 +2841,6 @@ share.value({
   relTimeStr: relTimeStr,
   renderFederationIdentity: renderFederationIdentity,
   renderFeedProfileUser: renderFeedProfileUser,
-  requireAdminAction: requireAdminAction,
-  ringTypeLabel: ringTypeLabel,
   roleLabel: roleLabel,
   safeExternalHref: safeExternalHref,
   safeIconUrl: safeIconUrl,

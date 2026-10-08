@@ -476,33 +476,6 @@ function checkShowAroOverlay() {
     }
   }
 
-  // Ring-create bindings live in views.js.
-  const events = read('page/views.js');
-  if (events) {
-    const cleanEv = stripComments(events);
-    let ringOk = false;
-    let from = 0;
-    while (from < cleanEv.length) {
-      const i = cleanEv.indexOf('ring-create-dialog', from);
-      if (i === -1) break;
-      const window = cleanEv.slice(Math.max(0, i - 80), Math.min(cleanEv.length, i + 350));
-      // Open path: showAroOverlay or display flex with triad — not aroDismiss-only close
-      if (/\bshowAroOverlay\s*\(/.test(window) || hasOverlayOpenTriad(window)) {
-        ringOk = true;
-        break;
-      }
-      from = i + 20;
-    }
-    if (ringOk) {
-      pass('7-ring-create-open', 'uses showAroOverlay or full open triad');
-    } else {
-      fail(
-        '7-ring-create-open',
-        'ring-create open path must call showAroOverlay OR pointerEvents auto + clear hidden + display flex',
-      );
-    }
-  }
-
   // showCreateDialog lives in its dedicated Page module.
   const api = read('page/createUi.js');
   if (api) {

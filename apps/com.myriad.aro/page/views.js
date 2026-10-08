@@ -1284,6 +1284,7 @@ async function openQuotedPostDetail(objectId, snapshot, opts) {
   if (bodyEl) {
     bodyEl.innerHTML = renderQuoteViewDetailHtml(object, actor, source);
     bindQuotedObjectClicks(bodyEl);
+    bindQuoteDetailLinks(bodyEl);
   }
 }
 
@@ -1328,6 +1329,52 @@ function bindQuotedObjectClicks(root) {
   });
 }
 
+function quoteDetailUrl(object) {
+  var candidates = Array.isArray(object.url) ? object.url : [object.url];
+  candidates = candidates.concat([quotedObjectId(object)]);
+  for (var i = 0; i < candidates.length; i++) {
+    var value = candidates[i];
+    if (value && typeof value === 'object') value = value.href;
+    if (typeof value !== 'string') continue;
+    try {
+      var url = new URL(value);
+      if (/^https?:$/.test(url.protocol) && !url.username && !url.password) return url.href;
+    } catch (e) { /* invalid URL */ }
+  }
+  return '';
+}
+
+function quoteDetailOpenRequest(url) {
+  try {
+    // srcdoc inherits the host's base URL even with an opaque sandbox origin.
+    // The host independently enforces the same-origin declaration.
+    var target = new URL(url);
+    var host = new URL(document.baseURI);
+    if (!/^https?:$/.test(host.protocol) || target.origin !== host.origin
+      || target.username || target.password) return null;
+    return { id: 'site', path: target.pathname + target.search };
+  } catch (e) { return null; }
+}
+
+function bindQuoteDetailLinks(root) {
+  root.querySelectorAll('[data-quote-copy-link]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      copyTextToClipboard(button.getAttribute('data-quote-copy-link'));
+    });
+  });
+  root.querySelectorAll('[data-quote-open-link]').forEach(function (button) {
+    button.addEventListener('click', async function () {
+      var request = quoteDetailOpenRequest(button.getAttribute('data-quote-open-link'));
+      if (!request) return;
+      try {
+        await Tapp.ui.openUrl(request);
+      } catch (error) {
+        notifyError(lang.quoteOpenLinkFailed || 'Could not open link', error);
+      }
+    });
+  });
+}
+
 function renderQuoteViewDetailHtml(object, actor, source) {
   var author = '';
   if (actor) {
@@ -1362,11 +1409,15 @@ function renderQuoteViewDetailHtml(object, actor, source) {
       + esc(lang.quoteRepostQuoted || 'Quoted post') + '</div>';
     h += renderQuotedObjectHtml(nested, 0, { interactive: true, full: true });
   }
-  var oid = quotedObjectId(object);
-  if (oid && /^https?:\/\//i.test(oid)) {
-    h += '<div class="quote-view-link-row">'
-      + '<a class="quote-view-link" href="' + esc(oid) + '" target="_blank" rel="noopener noreferrer">'
-      + esc(lang.quoteOpenExternal || 'Open link') + '</a></div>';
+  var link = quoteDetailUrl(object);
+  if (link) {
+    h += '<div class="quote-view-link-row">';
+    if (quoteDetailOpenRequest(link)) {
+      h += '<button type="button" class="quote-view-link" data-quote-open-link="' + esc(link) + '">'
+        + esc(lang.quoteOpenExternal || 'Open link') + '</button>';
+    }
+    h += '<button type="button" class="quote-view-link" data-quote-copy-link="' + esc(link) + '">'
+      + esc(lang.shareCopyLink || 'Copy link') + '</button></div>';
   }
   if (source && source !== 'api') {
     h += '<div class="quote-view-source">'
@@ -2228,85 +2279,11 @@ async function doFollow() {
 
 // → feedCompose.js
 
-// → ringsUi.js
-
 // ==================== Event Binding ====================
 function bindEvents() {
   // Aro nav
   document.querySelectorAll('.aro-nav-item').forEach(function (btn) {
     btn.addEventListener('click', function () { switchView(btn.dataset.view); });
-  });
-
-  // Ring create dialog
-  var ringCreateOpenBtn = $('ring-create-open-btn');
-  if (ringCreateOpenBtn) ringCreateOpenBtn.addEventListener('click', function () {
-    if (!requireAdminAction()) return;
-    var d = $('ring-create-dialog');
-    if (d) {
-      showAroOverlay(d);
-    }
-    if (typeof updateRingCreateCategoryVisibility === 'function') updateRingCreateCategoryVisibility();
-  });
-  if (typeof initRingCreateSelects === 'function') initRingCreateSelects();
-  else if (typeof initAroSelect === 'function') {
-    initAroSelect('ring-type-select');
-    initAroSelect('ring-brew-category-select');
-  }
-  var ringTypeSelect = $('ring-type-select');
-  if (ringTypeSelect) ringTypeSelect.addEventListener('change', function () {
-    if (typeof updateRingCreateCategoryVisibility === 'function') updateRingCreateCategoryVisibility();
-  });
-  var ringCreateClose = $('ring-create-close');
-  if (ringCreateClose) ringCreateClose.addEventListener('click', function () {
-    var d = $('ring-create-dialog');
-    if (d) aroDismiss(d, { ms: 170 });
-  });
-  var ringCreateOverlay = $('ring-create-dialog');
-  if (ringCreateOverlay) ringCreateOverlay.addEventListener('click', function (e) {
-    if (e.target === ringCreateOverlay) aroDismiss(ringCreateOverlay, { ms: 170 });
-  });
-
-  // Ring create submit
-  var createRingBtn = $('create-ring-btn');
-  if (createRingBtn) createRingBtn.addEventListener('click', doCreateRing);
-  var ringNameInput = $('ring-name-input');
-  if (ringNameInput) ringNameInput.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') { e.preventDefault(); doCreateRing(); }
-  });
-
-  // Ring detail inline panel events
-  var ringBackBtn = $('ring-back-btn');
-  if (ringBackBtn) ringBackBtn.addEventListener('click', hideRingDetail);
-  var ringIdCopyBtn = $('ring-id-copy');
-  if (ringIdCopyBtn) ringIdCopyBtn.addEventListener('click', copyRingId);
-  var ringSyncBtn = $('ring-sync-btn');
-  if (ringSyncBtn) ringSyncBtn.addEventListener('click', doTriggerSync);
-  var ringManageBtn = $('ring-manage-btn');
-  if (ringManageBtn) ringManageBtn.addEventListener('click', function (e) {
-    e.stopPropagation();
-    var dd = $('ring-manage-dropdown');
-    if (dd) dd.classList.toggle('open');
-  });
-  var ringLeaveBtn2 = $('ring-leave-btn');
-  if (ringLeaveBtn2) ringLeaveBtn2.addEventListener('click', async function () {
-    var dd = $('ring-manage-dropdown'); if (dd) dd.classList.remove('open');
-    if (state.activeRingId && (await aroConfirm(lang.leaveRingConfirm, true))) {
-      doLeaveRing(state.activeRingId);
-    }
-  });
-  // Close ring manage menu on outside click
-  pageListen(document, 'click', function (e) {
-    var dd = $('ring-manage-dropdown');
-    if (!dd || !dd.classList.contains('open')) return;
-    var wrap = dd.closest('.manage-wrap') || dd.parentElement;
-    if (wrap && wrap.contains(e.target)) return;
-    dd.classList.remove('open');
-  });
-  var ringAddPeerBtn = $('ring-add-peer-btn');
-  if (ringAddPeerBtn) ringAddPeerBtn.addEventListener('click', doAddPeer);
-  var ringPeerInput = $('ring-peer-input');
-  if (ringPeerInput) ringPeerInput.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') { e.preventDefault(); doAddPeer(); }
   });
 
   // Feed: refresh, tabs, follow, stat clicks
@@ -2790,9 +2767,6 @@ function bindEvents() {
   // List search (client-side filter)
   bindListSearch('conv-search', 'conv', function () {
     if (typeof renderConvList === 'function') renderConvList();
-  });
-  bindListSearch('ring-search', 'ring', function () {
-    if (typeof renderRingsSidebar === 'function') renderRingsSidebar();
   });
   bindListSearch('feed-search', 'feed', function () {
     if (typeof renderFeedContent === 'function') renderFeedContent();

@@ -1953,7 +1953,7 @@ async function doRejectRoomInvite() {
 
 async function doLeaveRoom() {
   if (!state.activeId || state.activeKind !== 'room') return;
-  if (!(await aroConfirm(lang.leaveConfirm || lang.leaveRingConfirm || 'Leave this group?', true))) return;
+  if (!(await aroConfirm(lang.leaveConfirm || 'Leave this group?', true))) return;
   try {
     await unsubscribeRealtime();
     await Tapp.federation.leaveRoom(state.activeId);
@@ -1986,7 +1986,7 @@ function switchView(view) {
     dismissTransientUi({ keepChat: view === 'messages' });
   }
 
-  var views = ['messages', 'feed', 'rings'];
+  var views = ['messages', 'feed'];
   views.forEach(function (v) {
     var el = $('view-' + v);
     if (!el) return;
@@ -2021,15 +2021,13 @@ function switchView(view) {
     if (typeof closeFeedPlusMenu === 'function') closeFeedPlusMenu();
     if (typeof closeFollowDialog === 'function') closeFollowDialog();
   }
-  // Load data for the view (rings always; feed only if not already loaded for sub-tab).
+  // Load data for the view (feed only if not already loaded for sub-tab).
   if (view === 'feed') {
     var sub = state.feedSubTab || 'timeline';
     var already = state.feedLoaded && state.feedLoaded[sub];
     if (!already || (typeof loadFeed === 'function' && state.feedError)) {
       if (typeof loadFeed === 'function') loadFeed();
     }
-  } else if (view === 'rings') {
-    if (typeof loadRings === 'function') loadRings();
   }
 }
 

@@ -126,8 +126,8 @@ async function start() {
   })
 
   fullscreenButton?.addEventListener('click', () => {
-    if (typeof Tapp?.ui?.requestFullscreen === 'function') {
-      Tapp.ui.requestFullscreen()
+    if (typeof Tapp?.ui?.fullscreen?.request === 'function') {
+      Tapp.ui.fullscreen.request()
     }
   })
 

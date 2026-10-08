@@ -1,0 +1,25 @@
+{
+  "long_description": "在主页小组件里速览 Myriad 手账（Phantasi）的最新笔记。支持 2×2 双条速览、4×2 横向分区与 4×4 笔记墙三种尺寸，点击任意条目即可在小组件内展开全文阅读。数据同步由 headless 后台完成：安装后常驻同步，按设定间隔自动刷新，桌面无需打开任何页面也能保持最新；小组件本身只读取本地缓存，渲染幂等、开销极低。可配置最大笔记数、同步间隔与是否同步正文。跟随宿主明暗主题与字体缩放，内置简体中文、英语、日语。",
+  "tags": ["笔记", "手账", "小组件", "Phantasi", "订阅", "多语言"],
+  "license": "MIT",
+  "repository": "https://github.com/Myriad-You/tapp-store",
+  "securityReview": true,
+  "preview": {
+    "version": 1,
+    "type": "snapshot",
+    "html": "preview.html",
+    "styles": ["styles.css", "widget/widget.css", "preview.css"],
+    "viewport": { "width": 1440, "height": 900 },
+    "fit": "cover",
+    "focus": { "x": 0.5, "y": 0.46 },
+    "theme": "dark"
+  },
+  "locales": {
+    "en-US": {
+      "long_description": "Glance at your latest Myriad journal (Phantasi) notes from home screen widgets. Three sizes are supported: 2x2 quick glance, 4x2 split view, and 4x4 note wall; tap any entry to expand the full text right inside the widget. Sync runs in a headless background layer: it starts right after install and refreshes on your chosen interval, so everything stays fresh even when no page is open — the widget itself only reads a local cache and renders idempotently. Configurable note limit, sync interval, and full-text syncing. Follows the host light/dark theme and font scaling, with Simplified Chinese, English, and Japanese built in."
+    },
+    "ja-JP": {
+      "long_description": "ホーム画面ウィジェットで Myriad ジャーナル（Phantasi）の最新ノートを表示します。2x2 のクイック表示、4x2 の分割表示、4x4 のノートウォールの 3 サイズに対応し、項目をタップするとウィジェット内で全文を展開できます。同期はヘッドレスのバックグラウンド層で実行され、インストール直後から指定間隔で自動更新。ページを開いていなくても常に最新の状態を保ち、ウィジェットはローカルキャッシュを読み取るだけの軽量・冪等レンダリングです。最大件数・同期間隔・本文同期の有無を設定可能。ホストのライト/ダークテーマとフォントスケールに追従し、中国語・英語・日本語を内蔵しています。"
+    }
+  }
+}

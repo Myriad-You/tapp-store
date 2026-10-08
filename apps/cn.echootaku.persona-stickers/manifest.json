@@ -1,0 +1,40 @@
+{
+  "id": "cn.echootaku.persona-stickers",
+  "name": "人设表情工坊",
+  "version": "0.3.3",
+  "description": "使用用户 Agent 人设，通过 Emoji、颜文字或单张参考图生成独立 PNG 表情图片",
+  "locales": {
+    "en-US": {
+      "name": "Persona Sticker Lab",
+      "description": "Turn your Agent Persona into a standalone PNG expression using an Emoji, kaomoji, or one image reference"
+    },
+    "ja-JP": {
+      "name": "ペルソナスタンプ工房",
+      "description": "Agent ペルソナと Emoji・顔文字・1枚の参考画像から、単体PNG表情画像を生成します"
+    }
+  },
+  "category": "ai",
+  "author": {
+    "name": "EchoOtaku",
+    "url": "https://github.com/EchoOtaku"
+  },
+  "repository": "https://github.com/Myriad-You/tapp-store",
+  "permissions": ["ai:image"],
+  "ai": {
+    "protocolVersion": 2,
+    "operations": ["image"],
+    "modelTier": "standard",
+    "contextSources": [],
+    "outputFormats": ["image"]
+  },
+  "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><rect x='4' y='3.5' width='15' height='15' rx='4' stroke='currentColor' stroke-width='1.7'/><path d='M8.2 10.3h.01M14.8 10.3h.01M8.5 14c1 .8 2.1 1.2 3.3 1.2 1.3 0 2.4-.4 3.4-1.2' stroke='currentColor' stroke-width='1.7' stroke-linecap='round'/><path d='m15.5 18.5 3.7 2-.7-4.2' stroke='currentColor' stroke-width='1.7' stroke-linejoin='round'/></svg>",
+  "themeColor": "#6558D9",
+  "core": {
+    "entry": "core.js"
+  },
+  "page": {
+    "entry": "page/index.js",
+    "template": "page.html",
+    "styles": "page.css"
+  }
+}

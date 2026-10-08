@@ -6,29 +6,53 @@
     "next": "Next",
     "prev": "Previous",
     "cancel": "Cancel",
-    "unknown": "Unknown"
+    "confirm": "Confirm",
+    "unknown": "Unknown",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyFail": "Copy failed"
   },
   "home": {
     "refresh": "Refresh",
     "refreshTime": "UPDATED",
+    "playerList": "Players",
+    "noPlayerData": "No Player Data",
     "loading": "Loading",
     "enroll": "Enlisted",
-    "loadFail": "Failed to load assets",
+    "loadFail": "Failed to load assets"
+  },
+  "addPlayer": {
+    "title": "Add player",
     "errorModule": "skland module not loaded",
     "errorNoBinding": "No Arknights account bound. Check that your token is valid.",
     "step1": {
-      "title": "Step 1 · Get Skland token",
-      "guidePrefix": "Run the command below in the logged-in ",
-      "guideLink": "Skland",
-      "guideSuffix": " console, then paste the result into the field below (format: cred,token).",
-      "copyHint": "Click to copy",
-      "copied": "Copied · Paste it into the Skland console",
-      "errorFormat": "Please enter a value in the format cred,token"
+      "title": "Step 1 · Sign in",
+      "phone": "Phone",
+      "password": "Password",
+      "login": "Sign in & bind",
+      "errorEmpty": "Enter your phone and password"
     },
     "step2": {
       "title": "Step 2 · Select account",
       "empty": "No accounts available"
+    },
+    "notice": {
+      "code": "CAUTION",
+      "title": "Caution",
+      "message": "Your Hypergryph account credential is the sole credential used by the Hypergryph account system to verify your sign-in, and the identity basis for all Hypergryph API interactions. Leaking a login credential is extremely dangerous. For your account security, never share this credential with anyone in any form."
     }
+  },
+  "playerList": {
+    "title": "Player List",
+    "add": "Add player",
+    "view": "View",
+    "delete": "Delete",
+    "deleteTitle": "Delete player",
+    "deleteConfirm": "Delete this player? This cannot be undone.",
+    "showPublic": "Public",
+    "default": "Default",
+    "empty": "No players",
+    "updated": "Updated"
   },
   "collection": {
     "title": "My Arknights",
@@ -57,11 +81,12 @@
     "sortGain": "Obtained",
     "sortName": "Name",
     "empty": "No operator data",
-    "skinTodoPrefix": "Skin assets · TODO (",
-    "skinTodoSuffix": " skins)"
+    "noSkins": "No skins"
   },
   "widget": {
-    "empty": "No player data. Bind an account in the app."
+    "empty": "No player data. Bind an account in the app.",
+    "noAccess": "No access to this player",
+    "notFound": "Player not found"
   },
   "footer": {
     "copyright": "All company names, trademarks, and products mentioned are the property of their respective owners and are used for identification only. Game images, animations, audio, and original text used in this Tapp are provided solely to better present game data; their copyright belongs to Arknights / Shanghai Hypergryph Network Technology Co., Ltd."
@@ -82,6 +107,8 @@
     "tabCampaign": "Annihilation",
     "tabTower": "Stationing",
     "noActivity": "No activities",
+    "inProgress": "In progress",
+    "completed": "Completed",
     "noRogue": "No roguelike",
     "noCampaign": "No annihilation",
     "noTower": "No stationing",

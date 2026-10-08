@@ -78,14 +78,15 @@ Page/Widget 模板必须是 `.html`；代码与模板类声明资源必须是安
 | 字段 | 类型 | 必填 | 说明 |
 | ---- | ---- | ---- | ---- |
 | `id` | string | ✅ | 稳定 id，供 SDK 引用（1–64，字母数字与 `._-`） |
-| `url` | string | ✅ | 基址：**HTTPS**；仅 `localhost` / `127.0.0.1` / `::1` 允许 `http`；禁止凭据与 `#fragment` |
-| `match` | string | ❌ | `exact`（默认）/ `prefix` / `origin` |
+| `url` | string | ✅ | 基址：**HTTPS**；仅 `localhost` / `127.0.0.1` / `::1` 允许 `http`；禁止凭据与 `#fragment`。`match: same-origin` 时改为**根相对路径**（如 `/journal`） |
+| `match` | string | ❌ | `exact`（默认）/ `prefix` / `origin` / `same-origin` |
 
 匹配规则：
 
 - **`exact`**：只能打开声明的完整 URL；不允许 `path` / `query`
 - **`prefix`**：同 origin，路径须落在声明 path 前缀下（可带 `path` / `query`）
 - **`origin`**：同 origin 任意 path/query（自由度最高，商店审核应更严）
+- **`same-origin`**：`url` 是根相对路径，运行时相对**宿主自身 origin** 解析（可带 `path` / `query`）。同一份包在任何自托管域名下都能深链本站页面，不写死作者域名；解析结果必须留在宿主 origin，逃逸到其它 origin 一律拒绝。该匹配自 Myriad v0.6.2（Myriad#607）起提供；使用它的包必须声明 `minSystemVersion` ≥ `"0.6.2"`，否则旧宿主会因未知 `match` 整包校验失败
 
 ```json
 {
@@ -99,6 +100,11 @@ Page/Widget 模板必须是 `.html`；代码与模板类声明资源必须是安
     {
       "id": "status",
       "url": "https://status.example.com/health"
+    },
+    {
+      "id": "self",
+      "url": "/",
+      "match": "same-origin"
     }
   ]
 }
@@ -111,6 +117,10 @@ await Tapp.ui.openUrl({ id: "docs", path: "install" });
 
 await Tapp.ui.openUrl({ id: "status" });
 // → https://status.example.com/health
+
+// same-origin：在任何自托管域名下都解析到当前站点
+await Tapp.ui.openUrl({ id: "self", path: "/journal/notes/1" });
+// → https://<当前站点域名>/journal/notes/1
 
 // 未声明 id 或逃出 prefix → 失败
 await Tapp.ui.openUrl({ id: "docs", path: "../evil" }); // reject
@@ -168,7 +178,9 @@ Manifest 采用严格字段校验：未声明字段、拼写错误以及已经�
 | `utility`      | 无法归入上述用途的通用工具 |
 
 Page、Widget 和 headless core 是运行形态，由 `page`、`widgets` 和
-`backgroundRequirements` 表达，不得填入 `category`。`demo` 和 `test`
+`backgroundRequirements` 表达，不得填入 `category`。每张 Widget 另有独立的
+`widgets[].category`：同一套稳定 ID，字段分开声明，见 [Widget 分类](#widget-分类)。
+`demo` 和 `test`
 属于发布阶段，应使用商店标签表达。宿主会把旧值 `tools`、`games`、
 `development`、`music`、`visualization` 等规范为上述 ID；新包应直接使用规范值。
 界面仅翻译显示名称，Manifest 和商店索引不存储本地化分类文本。
@@ -188,6 +200,8 @@ Page、Widget 和 headless core 是运行形态，由 `page`、`widgets` 和
 `minSystemVersion` 使用语义版本。直接安装、商店安装和更新都会由后端与当前 Myriad
 包版本比较；当前版本过低或字段格式无效时会拒绝写入，避免出现“安装成功但运行时才
 发现 API 不兼容”。最低版本只写在包内 Manifest；商店 index 不重复维护第二份版本来源。
+当包依赖较新的 runtime 能力时必须抬高该字段：例如 `openUrls[].match: "same-origin"`
+需要 Myriad ≥ 0.6.2（Myriad#607），旧宿主不识别该取值，会把整包校验判为失败。
 
 ### 所有权、可见性与同 ID 并存
 
@@ -338,31 +352,57 @@ Page、Core 与其余获授能力仍可正常使用。
 | `icon`          | string   | ❌   | Widget 图标（emoji 或 URL）                                    |
 | `defaultSize`   | string   | ✅   | 默认尺寸（如 "2x2"）                                           |
 | `sizes`         | string[] | ✅   | 支持的尺寸列表                                                 |
-| `category`      | string   | ❌   | Widget 分类（stats, activity, visualization, utility, custom） |
+| `category`      | string   | ❌   | Widget 自己的分类，不是顶层应用用途；见 [Widget 分类](#widget-分类) |
 | `templates`     | object   | ❌   | HTML 模板（按尺寸覆盖）                                        |
 | `settings`      | object[] | ❌   | 每个 Dashboard 实例独立的设置声明                              |
 | `refreshPolicy` | object   | ❌   | 宿主管理的刷新策略                                             |
 
 单个 Tapp 最多声明或动态注册 64 个 Widget；每个 Widget 最多声明 10 个尺寸，且
 `defaultSize` 必须包含在 `sizes` 中。超出限制会在安装或注册时被后端拒绝。
-Widget `category` 只接受表中列出的五个稳定 ID；旧值 `tool` 会规范为 `utility`，
-其他未知值会在 Manifest 解析或动态注册时被拒绝。旧数据库记录仍可读取，但不会再写入
-新的非规范分类。
+`widgets[].category` 的取值与小组件库归片见 [Widget 分类](#widget-分类)。
 顶层 `settings` 是整个 Tapp 共用的全局设置；`widgets[].settings` 则属于单个 Dashboard
 Widget 实例，因此同一种 Widget 添加两次时可以采用不同配置。实例设置会由 Dashboard
 设置面板保存并通过 `props.config`、`Tapp.widget.getInstanceSettings()` 提供给沙箱。
 
 `refreshPolicy.mode` 默认为事件驱动语义：同一 Tapp 的其他运行实例发生
-`Tapp.storage` 变更时，宿主会通知并刷新可见 Widget（**跨沙箱首选路径**）。
-当前 **Widget 沙箱**还可用 `Tapp.widget.invalidate()` 对本实例显式 re-render；
-Page / headless **没有**该方法——共用 core 里调用会抛错。确实需要轮询时可设为
+`Tapp.storage` / `Tapp.shared` 变更时，宿主会通知并刷新可见 Widget（兼容垫，与 `mode`
+无关）。`Tapp.settings.set` 只广播 `onChanged`，不拆 iframe。Widget 沙箱可用
+`Tapp.widget.invalidate(reason)` 刷自己；Page / headless 可用
+`Tapp.widget.invalidate(reason, { target: { widgetId } })` 定向刷一张
+（需授予的 `storage:write`，15s / 2 次/分，没有 `all`）。确实需要轮询时可设为
 `interval` 并提供 `intervalSeconds`（15–86400 秒）；计时器仅在页面和 Widget 可见
-且 Tapp 运行时工作。`refreshOnVisible` 默认为 `true`。后台同步应使用
-scheduler/headless core，而不是依赖 Widget 的可见计时器。
+且 Tapp 运行时工作，是额外节拍而不是关掉 storage 刷新。`refreshOnVisible` 默认为
+`true`。后台同步应使用 scheduler/headless core，而不是依赖 Widget 的可见计时器。
 
 模板按 `Widget ID + 尺寸` 隔离。同一个 Tapp 的多个 Widget 可以各自声明不同的 `2x2`
 模板，不会互相覆盖。商店索引中的 `download.widget_templates` 也必须使用
 `{ "widgetId": { "2x2": "path/to/template.html" } }` 结构。
+
+### Widget 分类
+
+`widgets[].category` 与顶层 `category` 是两处独立声明，使用**同一套**用途稳定 ID
+（见 [应用分类](#应用分类)）。一张 Widget 不必跟应用用途相同：`media` 应用也可以
+有一张 `utility` 卡片。小组件库没有单独的「第三方」桶；Tapp Widget 与内置件共用
+同一排主题筛片，库侧只读本字段，按 `tapp:<ID>` 原样归片，不看顶层
+`manifest.category`，也不按 `tappId` 分桶。
+
+| ID             | 用途                       | 库筛片           |
+| -------------- | -------------------------- | ---------------- |
+| `ai`           | AI 应用                    | `tapp:ai`        |
+| `data`         | 数据处理、管理与展示       | `tapp:data`      |
+| `developer`    | 开发、调试与部署工具       | `tapp:developer` |
+| `game`         | 游戏                       | `tapp:game`      |
+| `media`        | 音频、视频与其他媒体体验   | `tapp:media`     |
+| `productivity` | 笔记、任务与效率工具       | `tapp:productivity` |
+| `social`       | 社交、消息与协作           | `tapp:social`    |
+| `utility`      | 无法归入上述用途的通用工具 | `tapp:utility`   |
+
+**限制**
+
+- 可选。不写则库侧按 `utility`。
+- 只能写上表八个小写规范 ID。其它值在 Manifest 解析或 `Tapp.widget.register`
+  时被拒绝。
+- 界面只翻译显示名称；Manifest 和注册载荷不存本地化分类文本。
 
 ### templates 配置说明
 
@@ -532,9 +572,10 @@ const allSettings = await Tapp.settings.getAll();
 
 Manifest 设置属于安装级配置：安装 owner 或管理员可修改；能打开该安装的运行者（含游客打开
 **公开**安装）可通过 `Tapp.settings.get` / `getAll` 读取已保存值，未保存则用上表
-`defaultValue`。`Tapp.storage` 是当前登录用户的私有空间，不能使用 `_settings.` / `_shared.`
+`defaultValue`。`Tapp.storage` 是当前登录用户的私有空间，不能使用 `_settings.` / `_shared.` / `_private.`
 等宿主保留前缀访问安装级数据。要给访客看的站长数据用 `Tapp.shared`，不要塞进 settings。
-公开安装请勿把密钥写入 settings 或 shared。
+站长之间共用且游客不可见的非密数据用 `Tapp.private`。公开安装请勿把密钥写入 settings、
+shared 或 private。
 
 ### 安装级 API 凭据 (`credentials`)
 

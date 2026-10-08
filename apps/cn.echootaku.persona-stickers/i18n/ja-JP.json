@@ -1,0 +1,125 @@
+{
+  "app": {
+    "eyebrow": "PERSONA STICKER LAB",
+    "title": "ペルソナスタンプ工房",
+    "subtitle": "あなたのAgentだけのスタンプを作ろう〜",
+    "privacy": "ペルソナ画像と任意の参考画像は、今回の管理対象画像タスクにだけ送信されます。"
+  },
+  "persona": {
+    "title": "あなたの Agent ペルソナ",
+    "loading": "読込中",
+    "ready": "準備完了",
+    "disabled": "未設定",
+    "noPortrait": "画像なし",
+    "unavailable": "利用不可",
+    "loadingDetail": "公開ペルソナカードを読み込んでいます…",
+    "disabledDetail": "有効な Agent ペルソナがありません。",
+    "noPortraitDetail": "Agent ペルソナには利用可能な画像がまだありません。",
+    "unavailableDetail": "現在 Agent ペルソナを読み込めません。",
+    "requiredTitle": "先に Agent ペルソナを準備してください",
+    "requiredDetail": "Myriad で Agent ペルソナを作成して画像を生成し、このアプリを開き直してください。",
+    "context": "気分：{mood} · 状態：{activity}",
+    "help": "Agent の画像が、生成されるキャラクターの本人性と外見を常に決定します。"
+  },
+  "mood": { "floor": "低調", "sad": "悲しい", "tense": "緊張", "calm": "穏やか", "excited": "高揚" },
+  "activity": { "idle": "待機中", "working": "作業中", "thinking": "思考中", "talking": "会話中" },
+  "composer": {
+    "title": "表情の指示を選ぶ",
+    "subtitle": "三つの方法から一つを選び、毎回一枚の独立した PNG スタンプを生成します。"
+  },
+  "mode": {
+    "legend": "表情指示の方法",
+    "emoji": "Emoji",
+    "emojiDetail": "一つの記号で感情を表す",
+    "kaomoji": "顔文字",
+    "kaomojiDetail": "文字で表情を伝える",
+    "image": "表情画像",
+    "imageDetail": "既存の表情画像を一枚参考にする"
+  },
+  "cue": { "customPriority": "入力したカスタム値が優先されます" },
+  "prompt": {
+    "title": "追加プロンプト（高優先度）",
+    "priority": "動き、表情、小物、構図、感情の強さに優先して反映します",
+    "placeholder": "例：両手で頭を抱えてしゃがみ、噴水のような涙を左右へ飛ばす、とても大げさな動き。",
+    "boundary": "任意入力です。Agent の本人性、単一画像、1キャラクター、文字なしの固定条件は上書きできません。"
+  },
+  "emoji": {
+    "title": "Emoji を選ぶ",
+    "joy": "嬉しい",
+    "cry": "大泣き",
+    "determined": "本気",
+    "shy": "照れ",
+    "think": "考える",
+    "celebrate": "お祝い",
+    "custom": "カスタム Emoji（任意）",
+    "placeholder": "例：🥺"
+  },
+  "kaomoji": {
+    "title": "顔文字を選ぶ",
+    "joy": "大喜び",
+    "sad": "しょんぼり",
+    "shock": "びっくり",
+    "wave": "あいさつ",
+    "custom": "カスタム顔文字（任意）",
+    "placeholder": "例：(๑•̀ㅂ•́)و✧"
+  },
+  "image": {
+    "title": "表情画像を一枚アップロード",
+    "formats": "PNG、JPEG、WebP／最大 10 MiB",
+    "choose": "表情の参考画像を一枚選ぶ",
+    "hint": "表情、ポーズ、構図だけを参照します。キャラクターは Agent ペルソナが決めます。",
+    "previewAlt": "アップロードした表情の参考画像",
+    "remove": "参考画像を削除",
+    "localSize": "ローカル画像 · {size}"
+  },
+  "output": {
+    "title": "出力：独立した PNG スタンプ",
+    "detail": "1024 × 1024、1キャラクター、文字・透かしなし。"
+  },
+  "action": {
+    "generate": "スタンプを一枚生成",
+    "cancel": "タスクをキャンセル",
+    "dismiss": "状態を閉じる",
+    "preview": "大きく表示",
+    "downloadPng": "PNG をダウンロード",
+    "closePreview": "拡大プレビューを閉じる"
+  },
+  "status": {
+    "creating": "AI 画像タスクを作成中",
+    "creatingDetail": "ペルソナ画像と表情指示を Myriad の管理対象 Task API へ送信しています。",
+    "waiting": "タスク作成済み、画像を待っています",
+    "waitingDetail": "クライアントは最大315秒待機します。現在のタスクはキャンセルできます。",
+    "failed": "生成が完了しませんでした",
+    "cancelled": "タスクをキャンセルしました",
+    "success": "一枚のスタンプを生成しました",
+    "successDetail": "独立した PNG スタンプを、このセッションでプレビューできます。"
+  },
+  "result": {
+    "title": "Agent の新しい表情が完成しました",
+    "alt": "生成された Agent の PNG スタンプ",
+    "cacheBadge": "Myriad 一時キャッシュ",
+    "cacheBoundary": "結果はホストの一時 PNG キャッシュです。アプリ内で拡大表示するか、すぐにダウンロードできます。",
+    "previewTitle": "スタンプの拡大プレビュー",
+    "previewAlt": "生成された Agent PNG スタンプの拡大表示",
+    "downloadBoundary": "Myriad ホストが現在のキャッシュを読み取り、実際の PNG として保存します。キャッシュが有効な間にダウンロードしてください。",
+    "downloadStarted": "PNG を Myriad のダウンロード処理へ渡しました。"
+  },
+  "errors": {
+    "provider": "画像プロバイダーがタスクを完了できませんでした。ペルソナ画像や参考画像を捨て、文章だけの生成へ無断で切り替えることはありません。",
+    "permission": "ai:image 権限がありません。Myriad の Tapp 権限設定で画像生成を許可してください。",
+    "persona": "先に Myriad で Agent ペルソナを作成し、利用可能な画像を生成してください。",
+    "expressionCue": "Emoji または顔文字を選択・入力してください。",
+    "expressionImage": "表情画像モードでは参考画像を一枚アップロードしてください。",
+    "timeout": "クライアントの待機時間を超えました。リモートタスクのキャンセルを試みました。",
+    "cancelled": "タスクはキャンセルされ、結果は生成されませんでした。",
+    "reference": "参考画像は内容と MIME が一致する PNG、JPEG、WebP である必要があります。",
+    "referenceLimit": "表情の参考画像は一枚だけ選び、デコード後 10 MiB 以下にしてください。",
+    "inputLimit": "プロンプトまたはタスク入力が上限を超えています。カスタム値を短くしてください。",
+    "apiUnavailable": "このサンドボックスでは Tapp.ai.tasks の画像生成を利用できません。",
+    "fileApiUnavailable": "ブラウザーで利用可能な FileReader がありません。",
+    "downloadUnavailable": "このインストールではホストの PNG ダウンロード機能を利用できません。Myriad を更新してもう一度お試しください。",
+    "fileRead": "ローカル画像を読み込めないか、読み込みがキャンセルされました。もう一度選択してください。",
+    "resultInvalid": "安全な Myriad PNG 画像キャッシュパスが返されなかったため、プレビューできません。",
+    "unknown": "操作に失敗しました。再試行前に Myriad コンソールでエラーコードを確認してください。"
+  }
+}

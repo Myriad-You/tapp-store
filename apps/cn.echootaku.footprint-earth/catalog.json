@@ -1,0 +1,21 @@
+{
+  "long_description": "一个强调隐私边界的共享足迹地球。Owner 可按标准国家或一级行政区代码公开居住与旅行经历；已加入专用 Federation Room 的成员只能提交代码化访客足迹。管理员从不可改写的事件历史生成 k≥3 的桶化公共投影，匿名访客与可交互小组件只读取该投影，不接触 Actor、消息 ID、精确时间、任意坐标、城市或自由文本。包含审核员授权、隐藏/恢复、举报、封禁、容量警告与批次轮换。",
+  "tags": ["足迹", "地球", "旅行", "社交", "隐私", "联邦", "Room", "小组件", "多语言"],
+  "featured": false,
+  "verified": false,
+  "securityReview": true,
+  "preview": {
+    "version": 1,
+    "type": "snapshot",
+    "html": "preview.html",
+    "styles": ["page.css", "preview.css"],
+    "viewport": { "width": 1440, "height": 900 },
+    "fit": "cover",
+    "focus": { "x": 0.5, "y": 0.48 },
+    "theme": "light"
+  },
+  "locales": {
+    "en-US": { "long_description": "A privacy-bounded shared footprint globe. Owners publish residence and travel at standard country or first-level region granularity; Room members submit code-only visitor footprints. Administrators publish k≥3 bucketed aggregates, while guests and the interactive widget never receive actor IDs, message IDs, precise timestamps, arbitrary coordinates, cities, or free text." },
+    "ja-JP": { "long_description": "プライバシー境界を明確にした共有足あと地球です。Owner は標準の国・第一行政区コードで居住と旅行を公開し、Room メンバーはコード化された訪問先だけを投稿します。管理者が k≥3 の区間集計を公開し、ゲストとインタラクティブウィジェットには Actor、メッセージ ID、正確な時刻、任意座標、都市、自由文を渡しません。" }
+  }
+}

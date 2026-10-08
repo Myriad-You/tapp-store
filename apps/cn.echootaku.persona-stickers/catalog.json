@@ -1,0 +1,27 @@
+{
+  "long_description": "人设表情工坊以用户已启用且已生成图片的 Agent 人设作为角色身份基准。用户可在 Emoji、颜文字和图片表情三种方式中任选一种：前两种直接提供情绪提示；图片表情模式只允许上传单张 PNG、JPEG 或 WebP，用来参考表情、姿势和构图，不替换 Agent 的身份与外观。还可填写一段高优先级补充提示词，在固定身份和输出规则内优先控制动作、表情、道具、构图与情绪强度。每次通过受治理的 Myriad AI 图片任务生成单张 1024×1024 的独立 PNG 表情图片。若尚无人设图，应用会先提示用户在 Myriad 中创建并生成人设。本地参考图只保留在当前页面内存，不写入 Storage；结果可在宿主缓存有效期内查看大图，并由 Myriad 宿主读取当前缓存、下载为真实 PNG。",
+  "tags": ["AI 生图", "人设", "表情包", "贴纸", "角色一致性"],
+  "featured": false,
+  "verified": false,
+  "license": "MIT",
+  "homepage": "https://github.com/Myriad-You/tapp-store/tree/main/apps/cn.echootaku.persona-stickers",
+  "repository": "https://github.com/Myriad-You/tapp-store",
+  "preview": {
+    "version": 1,
+    "type": "snapshot",
+    "html": "preview.html",
+    "styles": ["page.css", "preview.css"],
+    "viewport": { "width": 1440, "height": 900 },
+    "fit": "cover",
+    "focus": { "x": 0.52, "y": 0.48 },
+    "theme": "light"
+  },
+  "locales": {
+    "en-US": {
+      "long_description": "Persona Sticker Lab uses the user's enabled Agent persona with a generated portrait as the character identity anchor. Choose exactly one cue mode: Emoji, kaomoji, or an expression image. The first two provide a direct emotional cue; image mode accepts exactly one PNG, JPEG, or WebP to guide only the expression, pose, and composition without replacing the Agent's identity or appearance. An optional high-priority prompt can direct the action, expression, props, framing, and emotional intensity while preserving the fixed identity and output rules. Each governed Myriad AI image task creates one standalone 1024×1024 PNG sticker. If no usable persona portrait exists, the app directs the user to create and generate one in Myriad first. A local cue image stays only in current-page memory and is never written to Storage. Results can be viewed full size while the host cache remains available, and Myriad can read the current cache and download the actual PNG."
+    },
+    "ja-JP": {
+      "long_description": "ペルソナスタンプ工房は、有効で画像が生成済みのユーザー Agent ペルソナをキャラクター本人の基準にします。Emoji、顔文字、表情画像から一つだけ選択します。前二つは感情を直接指示し、表情画像モードでは PNG・JPEG・WebP を一枚だけ受け付け、表情・ポーズ・構図だけを参考にして Agent の本人性や外見を置き換えません。任意の高優先度プロンプトで、固定された本人性と出力ルールを保ちながら、動き、表情、小物、構図、感情の強さを優先して指定できます。管理された Myriad AI 画像タスクごとに、独立した 1024×1024 PNG スタンプを一枚生成します。利用可能なペルソナ画像がない場合は、先に Myriad で作成・生成するよう案内します。ローカル参考画像は現在のページメモリだけに保持され、Storage には書き込みません。結果はホストキャッシュが有効な間拡大表示でき、Myriad ホストが現在のキャッシュを読み取って実際の PNG としてダウンロードできます。"
+    }
+  }
+}

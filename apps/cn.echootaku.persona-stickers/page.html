@@ -1,0 +1,211 @@
+<div class="studio-backdrop" aria-hidden="true">
+  <span class="paper-shape paper-shape-a"></span>
+  <span class="paper-shape paper-shape-b"></span>
+  <span class="paper-dots"></span>
+</div>
+
+<main class="studio-page" data-page-root>
+  <div data-page-content>
+  <header class="studio-hero">
+    <div class="brand-lockup">
+      <div class="brand-stamp" aria-hidden="true"><span>☺</span><i></i></div>
+      <div>
+        <p class="eyebrow" data-i18n="app.eyebrow">PERSONA STICKER LAB</p>
+        <h1 data-i18n="app.title">人设表情工坊</h1>
+        <p class="hero-copy" data-i18n="app.subtitle">制作属于你 Agent 的表情包~</p>
+      </div>
+    </div>
+    <div class="privacy-note">
+      <span class="privacy-dot" aria-hidden="true"></span>
+      <span data-i18n="app.privacy">人设图与可选参考图只随本次受治理的图片任务提交。</span>
+    </div>
+  </header>
+
+  <div class="studio-layout">
+    <aside class="context-column">
+      <section class="panel persona-panel" aria-labelledby="persona-heading">
+        <div class="panel-heading">
+          <div>
+            <p class="section-index">01</p>
+            <h2 id="persona-heading" data-i18n="persona.title">你的 Agent 人设</h2>
+          </div>
+          <span class="status-chip" data-persona-status data-tone="loading">读取中</span>
+        </div>
+        <div class="persona-card">
+          <div class="persona-portrait" data-persona-portrait aria-hidden="true"><span>AG</span></div>
+          <div class="persona-copy">
+            <strong data-persona-name>Agent</strong>
+            <span data-persona-detail>正在读取公开人设名片…</span>
+          </div>
+        </div>
+        <p class="helper-text" data-persona-help data-i18n="persona.help">Agent 人设图始终决定生成角色的身份与外观。</p>
+      </section>
+    </aside>
+
+    <section class="panel composer-panel" data-composer aria-labelledby="composer-heading">
+      <div class="panel-heading composer-heading">
+        <div>
+          <p class="section-index">02</p>
+          <h2 id="composer-heading" data-i18n="composer.title">选择表情提示</h2>
+          <p class="helper-text" data-i18n="composer.subtitle">三种方式任选其一，每次只生成一张独立 PNG 表情。</p>
+        </div>
+      </div>
+
+      <section class="persona-gate" data-persona-gate role="status" aria-live="polite" hidden>
+        <span aria-hidden="true">◌</span>
+        <div>
+          <strong data-i18n="persona.requiredTitle">请先准备 Agent 人设</strong>
+          <p data-i18n="persona.requiredDetail">请先在 Myriad 中创建并生成 Agent 人设图，然后重新打开本应用。</p>
+        </div>
+      </section>
+
+      <fieldset class="mode-switcher">
+        <legend class="sr-only" data-i18n="mode.legend">表情提示方式</legend>
+        <label class="mode-card">
+          <input type="radio" name="expression-mode" value="emoji" checked>
+          <span class="mode-icon" aria-hidden="true">😄</span>
+          <strong data-i18n="mode.emoji">Emoji</strong>
+          <small data-i18n="mode.emojiDetail">用一个图形表达情绪</small>
+        </label>
+        <label class="mode-card">
+          <input type="radio" name="expression-mode" value="kaomoji">
+          <span class="mode-icon kaomoji" aria-hidden="true">(≧▽≦)</span>
+          <strong data-i18n="mode.kaomoji">颜文字</strong>
+          <small data-i18n="mode.kaomojiDetail">用字符描述神态</small>
+        </label>
+        <label class="mode-card">
+          <input type="radio" name="expression-mode" value="image">
+          <span class="mode-icon" aria-hidden="true">▧</span>
+          <strong data-i18n="mode.image">图片表情</strong>
+          <small data-i18n="mode.imageDetail">参考一张现成表情图</small>
+        </label>
+      </fieldset>
+
+      <div class="mode-panel" data-mode-panel="emoji">
+        <div class="mode-panel-heading">
+          <h3 data-i18n="emoji.title">选择 Emoji</h3>
+          <span data-i18n="cue.customPriority">填写自定义内容时将优先使用它</span>
+        </div>
+        <div class="cue-grid emoji-grid">
+          <label><input type="radio" name="emoji-preset" value="😀" checked><span>😀</span><small data-i18n="emoji.joy">开心</small></label>
+          <label><input type="radio" name="emoji-preset" value="😭"><span>😭</span><small data-i18n="emoji.cry">大哭</small></label>
+          <label><input type="radio" name="emoji-preset" value="😤"><span>😤</span><small data-i18n="emoji.determined">较真</small></label>
+          <label><input type="radio" name="emoji-preset" value="😳"><span>😳</span><small data-i18n="emoji.shy">害羞</small></label>
+          <label><input type="radio" name="emoji-preset" value="🤔"><span>🤔</span><small data-i18n="emoji.think">思考</small></label>
+          <label><input type="radio" name="emoji-preset" value="🥳"><span>🥳</span><small data-i18n="emoji.celebrate">庆祝</small></label>
+        </div>
+        <label class="cue-input">
+          <span data-i18n="emoji.custom">自定义 Emoji（可选）</span>
+          <input data-custom-cue="emoji" maxlength="32" type="text" inputmode="text" data-i18n-placeholder="emoji.placeholder" placeholder="例如：🥺">
+        </label>
+      </div>
+
+      <div class="mode-panel" data-mode-panel="kaomoji" hidden>
+        <div class="mode-panel-heading">
+          <h3 data-i18n="kaomoji.title">选择颜文字</h3>
+          <span data-i18n="cue.customPriority">填写自定义内容时将优先使用它</span>
+        </div>
+        <div class="cue-grid kaomoji-grid">
+          <label><input type="radio" name="kaomoji-preset" value="(≧▽≦)" checked><span>(≧▽≦)</span><small data-i18n="kaomoji.joy">雀跃</small></label>
+          <label><input type="radio" name="kaomoji-preset" value="(╥﹏╥)"><span>(╥﹏╥)</span><small data-i18n="kaomoji.sad">委屈</small></label>
+          <label><input type="radio" name="kaomoji-preset" value="(⊙o⊙)"><span>(⊙o⊙)</span><small data-i18n="kaomoji.shock">震惊</small></label>
+          <label><input type="radio" name="kaomoji-preset" value="(￣▽￣)ノ"><span>(￣▽￣)ノ</span><small data-i18n="kaomoji.wave">招呼</small></label>
+        </div>
+        <label class="cue-input">
+          <span data-i18n="kaomoji.custom">自定义颜文字（可选）</span>
+          <input data-custom-cue="kaomoji" maxlength="120" type="text" data-i18n-placeholder="kaomoji.placeholder" placeholder="例如：(๑•̀ㅂ•́)و✧">
+        </label>
+      </div>
+
+      <div class="mode-panel image-mode" data-mode-panel="image" hidden>
+        <div class="mode-panel-heading">
+          <h3 data-i18n="image.title">上传一张图片表情</h3>
+          <span data-i18n="image.formats">PNG、JPEG 或 WebP，最多 10 MiB</span>
+        </div>
+        <label class="file-picker">
+          <input data-file-input type="file" accept="image/png,image/jpeg,image/webp">
+          <span class="file-picker-icon" aria-hidden="true">＋</span>
+          <strong data-i18n="image.choose">选择一张表情参考图</strong>
+          <small data-i18n="image.hint">它只提供表情、姿势和构图，Agent 人设仍决定角色。</small>
+        </label>
+        <article class="expression-preview" data-expression-preview hidden>
+          <img data-expression-image alt="上传的表情参考图" data-i18n-alt="image.previewAlt">
+          <div>
+            <strong data-expression-name></strong>
+            <small data-expression-meta></small>
+          </div>
+          <button type="button" class="icon-button" data-action="remove-expression" data-i18n-aria-label="image.remove" aria-label="移除参考图">×</button>
+        </article>
+      </div>
+
+      <label class="priority-prompt">
+        <span class="priority-prompt-heading">
+          <strong data-i18n="prompt.title">补充提示词（高优先级）</strong>
+          <small data-i18n="prompt.priority">会优先影响动作、表情、道具、构图与情绪强度</small>
+        </span>
+        <textarea data-user-prompt maxlength="800" rows="3" data-i18n-placeholder="prompt.placeholder" placeholder="例如：双手抱头蹲下，眼泪像喷泉一样向两侧飞出，动作非常夸张。"></textarea>
+        <small data-i18n="prompt.boundary">可选填写；不会覆盖 Agent 身份、单张成图、单角色和无文字等固定要求。</small>
+      </label>
+
+      <div class="generation-bar">
+        <p><strong data-i18n="output.title">输出：独立 PNG 表情</strong><small data-i18n="output.detail">1024 × 1024，单角色，无文字与水印。</small></p>
+        <button class="generate-button" type="button" data-action="generate">
+          <span class="spark" aria-hidden="true">✦</span>
+          <span data-i18n="action.generate">生成一张表情</span>
+        </button>
+      </div>
+
+      <section class="feedback" data-feedback hidden>
+        <div class="feedback-copy" role="status" aria-live="polite" aria-atomic="true">
+          <strong data-feedback-title></strong>
+          <span data-feedback-message></span>
+        </div>
+        <button class="cancel-button" type="button" data-action="cancel" hidden data-i18n="action.cancel">取消任务</button>
+        <button class="icon-button" type="button" data-action="dismiss-error" hidden data-i18n-aria-label="action.dismiss" aria-label="关闭">×</button>
+      </section>
+
+      <section class="result-panel" data-result hidden aria-labelledby="result-heading">
+        <button type="button" class="result-image-wrap" data-action="open-preview" aria-haspopup="dialog" data-i18n-aria-label="action.preview">
+          <img data-result-image alt="生成的 Agent PNG 表情" data-i18n-alt="result.alt">
+          <span class="cache-badge" data-i18n="result.cacheBadge">Myriad 临时缓存</span>
+          <span class="result-zoom-hint" aria-hidden="true">⌕</span>
+        </button>
+        <div class="result-copy">
+          <p class="section-index">03</p>
+          <h2 id="result-heading" data-i18n="result.title">Agent 的新表情完成了</h2>
+          <p data-i18n="result.cacheBoundary">结果是宿主 PNG 临时缓存，可在应用内查看大图或立即下载。</p>
+          <div class="result-actions">
+            <button type="button" class="secondary-action" data-action="open-preview" data-i18n="action.preview">查看大图</button>
+            <button type="button" class="primary-action" data-action="download-png" data-i18n="action.downloadPng">下载 PNG</button>
+          </div>
+          <p class="download-boundary" data-i18n="result.downloadBoundary">下载由 Myriad 宿主读取当前缓存并保存为真实 PNG；请在缓存有效时完成下载。</p>
+          <span class="download-status" data-download-status role="status" aria-live="polite" hidden></span>
+        </div>
+      </section>
+    </section>
+  </div>
+  </div>
+
+  <section class="result-viewer" data-result-viewer role="dialog" aria-modal="true" aria-labelledby="result-viewer-title" aria-hidden="true" hidden>
+    <div class="result-viewer-backdrop" data-action="close-preview"></div>
+    <div class="result-viewer-card">
+      <header class="result-viewer-toolbar">
+        <div>
+          <p class="section-index">PREVIEW</p>
+          <h2 id="result-viewer-title" data-i18n="result.previewTitle">表情大图预览</h2>
+        </div>
+        <div class="result-viewer-actions">
+          <button type="button" class="viewer-download" data-action="download-png" data-i18n="action.downloadPng">下载 PNG</button>
+          <button type="button" class="viewer-close" data-action="close-preview" data-preview-close data-i18n-aria-label="action.closePreview" aria-label="关闭大图预览">×</button>
+        </div>
+      </header>
+      <div class="result-viewer-stage">
+        <img data-result-viewer-image alt="生成的 Agent PNG 表情大图" data-i18n-alt="result.previewAlt">
+      </div>
+      <div class="result-viewer-footer">
+        <p data-i18n="result.downloadBoundary">下载由 Myriad 宿主读取当前缓存并保存为真实 PNG；请在缓存有效时完成下载。</p>
+        <span class="download-status" data-download-status role="status" aria-live="polite" hidden></span>
+      </div>
+    </div>
+  </section>
+</main>

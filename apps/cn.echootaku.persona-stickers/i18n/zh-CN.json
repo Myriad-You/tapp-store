@@ -1,0 +1,125 @@
+{
+  "app": {
+    "eyebrow": "PERSONA STICKER LAB",
+    "title": "人设表情工坊",
+    "subtitle": "制作属于你 Agent 的表情包~",
+    "privacy": "人设图与可选参考图只随本次受治理的图片任务提交。"
+  },
+  "persona": {
+    "title": "你的 Agent 人设",
+    "loading": "读取中",
+    "ready": "已就绪",
+    "disabled": "未启用",
+    "noPortrait": "缺少人设图",
+    "unavailable": "不可用",
+    "loadingDetail": "正在读取公开人设名片…",
+    "disabledDetail": "当前没有启用的 Agent 人设。",
+    "noPortraitDetail": "Agent 人设尚未生成可用的人设图。",
+    "unavailableDetail": "当前无法读取 Agent 人设。",
+    "requiredTitle": "请先准备 Agent 人设",
+    "requiredDetail": "请先在 Myriad 中创建并生成 Agent 人设图，然后重新打开本应用。",
+    "context": "心情：{mood} · 状态：{activity}",
+    "help": "Agent 人设图始终决定生成角色的身份与外观。"
+  },
+  "mood": { "floor": "低落", "sad": "难过", "tense": "紧张", "calm": "平静", "excited": "兴奋" },
+  "activity": { "idle": "空闲", "working": "工作中", "thinking": "思考中", "talking": "交谈中" },
+  "composer": {
+    "title": "选择表情提示",
+    "subtitle": "三种方式任选其一，每次只生成一张独立 PNG 表情。"
+  },
+  "mode": {
+    "legend": "表情提示方式",
+    "emoji": "Emoji",
+    "emojiDetail": "用一个图形表达情绪",
+    "kaomoji": "颜文字",
+    "kaomojiDetail": "用字符描述神态",
+    "image": "图片表情",
+    "imageDetail": "参考一张现成表情图"
+  },
+  "cue": { "customPriority": "填写自定义内容时将优先使用它" },
+  "prompt": {
+    "title": "补充提示词（高优先级）",
+    "priority": "会优先影响动作、表情、道具、构图与情绪强度",
+    "placeholder": "例如：双手抱头蹲下，眼泪像喷泉一样向两侧飞出，动作非常夸张。",
+    "boundary": "可选填写；不会覆盖 Agent 身份、单张成图、单角色和无文字等固定要求。"
+  },
+  "emoji": {
+    "title": "选择 Emoji",
+    "joy": "开心",
+    "cry": "大哭",
+    "determined": "较真",
+    "shy": "害羞",
+    "think": "思考",
+    "celebrate": "庆祝",
+    "custom": "自定义 Emoji（可选）",
+    "placeholder": "例如：🥺"
+  },
+  "kaomoji": {
+    "title": "选择颜文字",
+    "joy": "雀跃",
+    "sad": "委屈",
+    "shock": "震惊",
+    "wave": "招呼",
+    "custom": "自定义颜文字（可选）",
+    "placeholder": "例如：(๑•̀ㅂ•́)و✧"
+  },
+  "image": {
+    "title": "上传一张图片表情",
+    "formats": "PNG、JPEG 或 WebP，最多 10 MiB",
+    "choose": "选择一张表情参考图",
+    "hint": "它只提供表情、姿势和构图，Agent 人设仍决定角色。",
+    "previewAlt": "上传的表情参考图",
+    "remove": "移除参考图",
+    "localSize": "本地图片 · {size}"
+  },
+  "output": {
+    "title": "输出：独立 PNG 表情",
+    "detail": "1024 × 1024，单角色，无文字与水印。"
+  },
+  "action": {
+    "generate": "生成一张表情",
+    "cancel": "取消任务",
+    "dismiss": "关闭状态提示",
+    "preview": "查看大图",
+    "downloadPng": "下载 PNG",
+    "closePreview": "关闭大图预览"
+  },
+  "status": {
+    "creating": "正在创建 AI 图片任务",
+    "creatingDetail": "人设图与表情提示正在通过受治理的 Myriad Task API 提交。",
+    "waiting": "任务已创建，等待生成结果",
+    "waitingDetail": "客户端最多等待 315 秒；你可以取消当前任务。",
+    "failed": "生成没有完成",
+    "cancelled": "任务已取消",
+    "success": "单张表情已生成",
+    "successDetail": "已生成一张独立 PNG 表情，可在本次会话中预览。"
+  },
+  "result": {
+    "title": "Agent 的新表情完成了",
+    "alt": "生成的 Agent PNG 表情",
+    "cacheBadge": "Myriad 临时缓存",
+    "cacheBoundary": "结果是宿主 PNG 临时缓存，可在应用内查看大图或立即下载。",
+    "previewTitle": "表情大图预览",
+    "previewAlt": "生成的 Agent PNG 表情大图",
+    "downloadBoundary": "下载由 Myriad 宿主读取当前缓存并保存为真实 PNG；请在缓存有效时完成下载。",
+    "downloadStarted": "PNG 已交给 Myriad 下载。"
+  },
+  "errors": {
+    "provider": "图片供应商未完成任务。应用不会丢弃人设图或参考图后静默改为文生图。",
+    "permission": "未授予 ai:image 权限；请在 Myriad 的 Tapp 权限配置中允许图片生成。",
+    "persona": "请先在 Myriad 中创建并生成可用的 Agent 人设图。",
+    "expressionCue": "请选择或填写一个 Emoji 或颜文字。",
+    "expressionImage": "图片表情模式必须上传一张参考图。",
+    "timeout": "客户端等待超时，应用已尝试取消远端任务。",
+    "cancelled": "任务已取消，没有生成结果。",
+    "reference": "参考图必须是内容与 MIME 匹配的 PNG、JPEG 或 WebP 图片。",
+    "referenceLimit": "每次只能选择一张表情参考图，且解码后不得超过 10 MiB。",
+    "inputLimit": "提示词或任务输入超过当前 AI Task 限制，请缩短自定义内容。",
+    "apiUnavailable": "当前沙箱没有可用的 Tapp.ai.tasks 图片任务 API。",
+    "fileApiUnavailable": "当前浏览器没有可用的本地 FileReader。",
+    "downloadUnavailable": "当前安装未提供宿主 PNG 下载接口，请更新 Myriad 后重试。",
+    "fileRead": "本地图片读取失败或已取消，请重新选择文件。",
+    "resultInvalid": "任务没有返回安全的 Myriad PNG 图片缓存路径，无法预览。",
+    "unknown": "操作失败，请查看 Myriad 控制台中的错误码后重试。"
+  }
+}

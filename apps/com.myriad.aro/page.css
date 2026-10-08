@@ -35,28 +35,6 @@ body.dark{background:#0a0a0a;color:rgba(255,255,255,.92)}
 .aro-view{display:none;flex:1 1 0%;min-height:0;min-width:0;width:100%;overflow:hidden;pointer-events:none}
 .aro-view-active{display:flex;flex-direction:column;flex:1 1 0%;min-height:0;width:100%;max-width:none;overflow:hidden;pointer-events:auto;touch-action:manipulation}
 
-/* ===== Panel Layout (sidebar+content, for rings) ===== */
-.aro-panel-layout{display:flex;flex:1;min-height:0;overflow:hidden}
-.panel-main{flex:1;min-width:0;display:flex;flex-direction:column;position:relative;overflow:hidden}
-.panel-detail{flex:1;min-height:0;display:flex;flex-direction:column}
-.panel-detail-header{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(128,128,128,.06);flex-shrink:0}
-.panel-detail-body{flex:1;overflow-y:auto;padding:16px}
-
-/* ===== Ring header icon ===== */
-.ring-hdr-icon{width:32px;height:32px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(var(--tapp-primary-rgb,128,128,128),.08)}
-.ring-action-sync{display:flex;align-items:center;gap:4px;background:rgba(var(--tapp-primary-rgb,100,100,255),.08);color:var(--tapp-primary,#6366f1);border:none;border-radius:10px;padding:4px 10px;font-size:11px;font-weight:500;cursor:pointer;transition:background .15s}
-.ring-action-sync:hover{background:rgba(var(--tapp-primary-rgb,100,100,255),.16)}
-.ring-sync-bar{font-size:11px;padding:8px 14px;border-bottom:1px solid rgba(128,128,128,.06);display:flex;align-items:center;gap:6px}
-.ring-sync-bar.ring-sync-ok{color:#22c55e;background:rgba(34,197,94,.04)}
-.ring-sync-bar.ring-sync-err{color:#ef4444;background:rgba(239,68,68,.04)}
-/* Ring ID row — always show id under header for cross-instance sharing */
-.ring-id-bar{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid rgba(128,128,128,.06);flex-shrink:0;background:rgba(128,128,128,.03);min-width:0}
-.ring-id-label{font-size:10px;font-weight:600;letter-spacing:.02em;color:var(--text-secondary,#536471);flex-shrink:0;text-transform:uppercase}
-.ring-id-value{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:11px;line-height:1.35;padding:6px 9px;border-radius:9px;background:rgba(128,128,128,.06);color:var(--text-primary,#0f1419)}
-.ring-id-copy{width:28px;height:28px;border:none;border-radius:9px;background:rgba(var(--tapp-primary-rgb,100,100,255),.08);color:var(--tapp-primary,#6366f1);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .15s}
-.ring-id-copy:hover{background:rgba(var(--tapp-primary-rgb,100,100,255),.14)}
-.ring-id-copy:disabled{opacity:.45;cursor:default}
-
 /* ===== Feed Layout (X-style sidebar + content) =====
    Two columns only: [sidebar | main]. Main fills remaining width after sidebar
    (no border-right phantom third column). Content stretches naturally inside main. */
@@ -1159,12 +1137,8 @@ body.dark{background:#0a0a0a;color:rgba(255,255,255,.92)}
 .invite-pop-send:disabled{opacity:.4;cursor:not-allowed}
 .dark .invite-popover{background:var(--bg-primary,#1a1a1a);border-color:rgba(255,255,255,.08);box-shadow:0 8px 24px rgba(0,0,0,.35)}
 .dark .invite-pop-contact-name{color:rgba(255,255,255,.9)}
-.invite-bar{display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid rgba(128,128,128,.06);flex-shrink:0}
 .invite-input{flex:1;padding:5px 8px;border:1px solid rgba(128,128,128,.15);border-radius:6px;background:rgba(128,128,128,.04);color:var(--text-primary,#fff);font-size:12px;outline:none}
 .invite-input:focus{border-color:rgba(var(--tapp-primary-rgb,100,100,255),.5)}
-.invite-btn{padding:5px 10px;border:none;border-radius:6px;background:var(--tapp-primary,#6366f1);color:#fff;font-size:12px;cursor:pointer;white-space:nowrap}
-.invite-btn:hover{opacity:.85}
-.invite-btn:disabled{opacity:.5;cursor:not-allowed}
 
 /* ===== Conversation Items ===== */
 .conv-item{position:relative;display:flex;align-items:center;gap:10px;width:100%;min-height:56px;padding:10px 12px 10px 14px;border:none;border-radius:12px;background:transparent;cursor:pointer;text-align:left;transition:background .12s;overflow:hidden}
@@ -2319,17 +2293,7 @@ button.msg-file-card:hover .msg-file-action{color:rgb(var(--acc));background:rgb
 .dark .edit-label{color:rgba(255,255,255,.45)}
 .dark .quote-preview{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.06)}
 .dark .quote-preview-text{color:rgba(255,255,255,.5)}
-.dark .invite-bar{border-color:rgba(255,255,255,.06)}
 .dark .invite-input{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.9)}
-.dark .panel-detail-header{border-color:rgba(255,255,255,.06)}
-.dark .ring-hdr-icon{background:rgba(var(--tapp-primary-rgb,128,128,128),.15);color:var(--tapp-primary,#818cf8)}
-.dark .ring-action-sync{background:rgba(var(--tapp-primary-rgb,100,100,255),.15)}
-.dark .ring-sync-bar{border-color:rgba(255,255,255,.04)}
-.dark .ring-sync-bar.ring-sync-ok{background:rgba(34,197,94,.08)}
-.dark .ring-sync-bar.ring-sync-err{background:rgba(239,68,68,.08)}
-.dark .ring-id-bar{border-color:rgba(255,255,255,.06);background:rgba(255,255,255,.03)}
-.dark .ring-id-label{color:rgba(255,255,255,.45)}
-.dark .ring-id-value{background:rgba(255,255,255,.06);color:rgba(255,255,255,.68)}
 .dark .conv-avatar{color:var(--tapp-primary,#818cf8)}
 .dark .member-avatar{color:var(--tapp-primary,#818cf8)}
 
@@ -2347,10 +2311,6 @@ button.msg-file-card:hover .msg-file-action{color:rgb(var(--acc));background:rgb
   .dark .member-panel{background:var(--bg-primary,#1a1a1a)}
   .member-panel.member-open-mobile{display:flex!important;pointer-events:auto!important}
   .member-back-btn{display:flex}
-  .aro-panel-layout .sidebar{width:100%}
-  .aro-panel-layout .sidebar-hidden-mobile{display:none!important}
-  .aro-panel-layout .panel-main{display:none}
-  .aro-panel-layout .panel-main-show-mobile{display:flex!important}
 }
 @media(min-width:769px) and (max-width:1024px){
   .member-panel{width:0;border-left:none;overflow:hidden}
@@ -2477,15 +2437,7 @@ button.aro-select-trigger.create-input{
   .member-kick{opacity:.85}
 }
 
-/* Ring list reuses conv-item; type subtitle class */
-.conv-subtitle{font-size:12px;color:var(--text-secondary,#888);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dark .conv-subtitle{color:rgba(255,255,255,.5)}
-.panel-detail-header{min-height:56px;padding:12px 14px;background:rgba(255,255,255,.4)}
-.dark .panel-detail-header{background:rgba(10,10,10,.35)}
-.ring-action-sync{min-height:32px;padding:6px 12px;font-size:12px;font-weight:600}
-.invite-bar{padding:10px 12px;gap:8px;align-items:center}
 .invite-input{height:36px;border-radius:10px;padding:0 12px;font-size:13px}
-.invite-btn{height:36px;padding:0 14px;border-radius:10px;font-weight:600}
 
 /* Composer disabled locked look */
 .msg-input:disabled{opacity:.55;cursor:not-allowed}
@@ -2546,7 +2498,7 @@ button.aro-select-trigger.create-input{
 @keyframes aroSheetOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(10px)}}
 @keyframes aroScaleOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.98)}}
 
-/* View switch: messages / feed / rings */
+/* View switch: messages / feed */
 .aro-view.aro-view-active.aro-view-enter{
   animation:aroViewIn var(--aro-dur-view) var(--aro-ease) both;
 }
@@ -2555,8 +2507,6 @@ button.aro-select-trigger.create-input{
 .chat-container.aro-panel-enter{animation:aroSlideInRight var(--aro-dur-view) var(--aro-ease) both}
 .empty-state.aro-panel-enter{animation:aroFadeIn var(--aro-dur) var(--aro-ease) both}
 .sidebar.aro-panel-enter{animation:aroSlideInLeft var(--aro-dur-view) var(--aro-ease) both}
-.panel-main.aro-panel-enter,
-.panel-detail.aro-panel-enter{animation:aroSlideInRight var(--aro-dur-view) var(--aro-ease) both}
 
 /* Active conv highlight settles without layout jump */
 .conv-item{transition:background .12s ease,box-shadow .12s ease}
@@ -2739,14 +2689,14 @@ button.aro-select-trigger.create-input{
 
 /* Press feedback — lists & chrome (100–150ms) */
 .conv-item,.feed-nav-item,.aro-nav-item,.feed-item-action,.manage-item,.msg-ctx-item,
-.create-btn,.create-submit,.action-btn,.pending-invite-btn,.ring-action-sync,.feed-empty-retry,.confirm-btn,
+.create-btn,.create-submit,.action-btn,.pending-invite-btn,.feed-empty-retry,.confirm-btn,
 .picker-footer-btn,.picker-item,.attach-menu-item,.feed-plus-item,.invite-pop-contact,
 .member-item,.forward-item{
   transition:background .12s,color .12s,opacity .12s,transform .1s,border-color .12s,filter .12s;
 }
 .conv-item:active,.feed-nav-item:active,.aro-nav-item:active,.feed-item-action:active,
 .manage-item:active,.msg-ctx-item:active,.create-btn:active,.create-submit:active:not(:disabled),
-.action-btn:active,.pending-invite-btn:active,.ring-action-sync:active,.feed-empty-retry:active,.confirm-btn:active,
+.action-btn:active,.pending-invite-btn:active,.feed-empty-retry:active,.confirm-btn:active,
 .picker-footer-btn:active,.picker-item:active,.attach-menu-item:active,.feed-plus-item:active,
 .invite-pop-contact:active,.forward-item:active{
   transform:scale(.97);
@@ -2807,7 +2757,7 @@ button.aro-select-trigger.create-input{
   .msg-media:hover .msg-image{transform:none}
   .conv-item:active,.feed-nav-item:active,.aro-nav-item:active,.feed-item-action:active,
   .manage-item:active,.msg-ctx-item:active,.create-btn:active,.create-submit:active:not(:disabled),
-  .action-btn:active,.ring-action-sync:active,.feed-empty-retry:active,.confirm-btn:active,
+  .action-btn:active,.feed-empty-retry:active,.confirm-btn:active,
   .picker-footer-btn:active,.picker-item:active,.attach-menu-item:active,.feed-plus-item:active,
   .invite-pop-contact:active,.forward-item:active,
   .feed-plus-btn:active,.feed-compose-publish:active:not(:disabled),.feed-compose-cancel:active:not(:disabled),
@@ -2908,8 +2858,8 @@ button.aro-select-trigger.create-input{
 .quote-view-text{white-space:pre-wrap;word-break:break-word;font-size:14.5px;line-height:1.5;color:var(--text-primary,#1a1a1a)}
 .quote-view-muted{opacity:.7}
 .quote-view-nested-label{font-size:11px;font-weight:600;color:var(--text-secondary,#8b98a5);margin-top:4px}
-.quote-view-link-row{margin-top:4px}
-.quote-view-link{font-size:12.5px;font-weight:600;color:var(--tapp-primary,#6366f1);text-decoration:none}
+.quote-view-link-row{margin-top:4px;display:flex;gap:12px}
+.quote-view-link{border:0;background:none;padding:0;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--tapp-primary,#6366f1);text-decoration:none}
 .quote-view-link:hover{text-decoration:underline}
 .quote-view-source{font-size:10.5px;opacity:.5;margin-top:6px}
 .dark .quote-view-name{color:rgba(255,255,255,.92)}
@@ -2938,7 +2888,7 @@ button.aro-select-trigger.create-input{
 .chat-actions .action-btn{max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .forward-item span,.forward-item-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mention-item-name,.mention-item-sub{max-width:100%}
-.edit-room-id-value,.ring-id-value{max-width:100%}
+.edit-room-id-value{max-width:100%}
 .feed-item{min-width:0;max-width:100%;box-sizing:border-box}
 .feed-item-body{max-width:100%}
 .feed-item-text,.feed-item-quoted-text{overflow-wrap:anywhere;word-break:break-word}

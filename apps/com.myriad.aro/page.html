@@ -17,10 +17,6 @@
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
       <span id="nav-messages-label">信使</span>
     </button>
-    <button class="aro-nav-item" data-view="rings" id="nav-rings">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M0 15L24 9"/></svg>
-      <span id="nav-rings-label">环网</span>
-    </button>
   </nav>
 
   <!-- ====== 信使视图 ====== -->
@@ -384,115 +380,6 @@
           <button type="button" id="feed-empty-retry" class="feed-empty-retry">重试</button>
         </div>
       </main>
-    </div>
-  </div>
-
-  <!-- ====== 环网视图 ====== -->
-  <div id="view-rings" class="aro-view">
-    <div class="aro-panel-layout">
-      <!-- 左侧：环网列表 -->
-      <aside id="ring-sidebar" class="sidebar">
-        <div class="sidebar-header">
-          <h2 id="ring-sidebar-title" class="sidebar-title">环网</h2>
-          <button id="ring-create-open-btn" class="create-btn" title="新建">+</button>
-        </div>
-        <div class="aro-search-bar">
-          <span class="aro-search-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span>
-          <input id="ring-search" class="aro-search-input" type="search" autocomplete="off" enterkeyhint="search" placeholder="搜索环网…" />
-        </div>
-        <div id="ring-list" class="conv-list"></div>
-      </aside>
-      <!-- 右侧：环网详情 -->
-      <main class="panel-main">
-        <div id="ring-empty-state" class="empty-state">
-          <div class="empty-icon"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M0 15L24 9"/></svg></div>
-          <p class="empty-text" id="ring-select-hint">选择一个环网查看详情</p>
-        </div>
-        <div id="ring-detail" class="panel-detail" style="display:none">
-          <div class="panel-detail-header">
-            <button id="ring-back-btn" class="back-btn">←</button>
-            <div id="ring-detail-icon" class="ring-hdr-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M0 15L24 9"/></svg></div>
-            <div class="chat-header-info">
-              <div id="ring-detail-name" class="chat-name"></div>
-              <div id="ring-detail-meta" class="chat-meta"></div>
-            </div>
-            <div class="chat-actions">
-              <button id="ring-sync-btn" class="action-btn ring-action-sync" title="同步">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                <span id="ring-sync-label">同步</span>
-              </button>
-              <div class="manage-wrap">
-                <button id="ring-manage-btn" class="aro-icon-btn manage-btn">⋯</button>
-                <div id="ring-manage-dropdown" class="manage-dropdown">
-                  <button id="ring-leave-btn" class="manage-item manage-item-danger">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-                    <span id="ring-leave-label">退出环网</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- Ring ID (always visible for cross-instance join) -->
-          <div class="ring-id-bar" id="ring-id-bar">
-            <span class="ring-id-label" id="ring-id-label">Ring ID</span>
-            <code class="ring-id-value" id="ring-id-value" title=""></code>
-            <button type="button" class="ring-id-copy" id="ring-id-copy" title="Copy" aria-label="Copy">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-            </button>
-          </div>
-          <!-- 同步状态 -->
-          <div id="ring-sync-status" class="ring-sync-bar" style="display:none"></div>
-          <!-- 添加节点 -->
-          <div class="invite-bar" id="ring-peer-bar">
-            <input id="ring-peer-input" class="invite-input" type="text" placeholder="Actor URL 或 @user@domain" />
-            <button id="ring-add-peer-btn" class="invite-btn">添加</button>
-          </div>
-          <!-- 节点列表 -->
-          <div id="ring-peers-list" class="member-list"></div>
-          <div id="ring-peers-empty" class="conv-empty" style="display:none">
-            <span data-i18n-empty-peers>暂无节点</span>
-          </div>
-        </div>
-      </main>
-    </div>
-  </div>
-
-  <!-- 创建环网对话框 -->
-  <div id="ring-create-dialog" class="create-overlay" style="display:none">
-    <div class="create-dialog">
-      <div class="create-dialog-header">
-        <h3 id="ring-create-title" class="create-dialog-title">创建环网</h3>
-        <button id="ring-create-close" class="create-dialog-close">✕</button>
-      </div>
-      <div class="create-form">
-        <input id="ring-name-input" class="create-input" type="text" placeholder="环网名称" />
-        <div id="ring-type-select" class="aro-select" data-value="brew-recommend" role="combobox" aria-haspopup="listbox" aria-expanded="false">
-          <button type="button" class="aro-select-trigger create-input" id="ring-type-select-trigger" aria-haspopup="listbox" aria-expanded="false">
-            <span class="aro-select-value" data-aro-select-label>Brew 推荐</span>
-            <span class="aro-select-chevron" aria-hidden="true">▾</span>
-          </button>
-          <div class="aro-select-menu manage-dropdown" role="listbox" hidden>
-            <button type="button" class="aro-select-option manage-item" role="option" id="ring-type-opt-brew" data-value="brew-recommend" aria-selected="true">Brew 推荐</button>
-            <button type="button" class="aro-select-option manage-item" role="option" id="ring-type-opt-tapp" data-value="tapp-store" aria-selected="false">Tapp 商店</button>
-            <button type="button" class="aro-select-option manage-item" role="option" id="ring-type-opt-library" data-value="library-exchange" aria-selected="false">资料交换</button>
-            <button type="button" class="aro-select-option manage-item" role="option" id="ring-type-opt-instance" data-value="instance-directory" aria-selected="false">实例目录</button>
-          </div>
-        </div>
-        <div id="ring-brew-category-wrap" style="display:none;flex-direction:column;gap:6px">
-          <label id="ring-brew-category-label" for="ring-brew-category-select-trigger" style="font-size:12px;opacity:.8">Brew category (optional)</label>
-          <div id="ring-brew-category-select" class="aro-select" data-value="" role="combobox" aria-haspopup="listbox" aria-expanded="false">
-            <button type="button" class="aro-select-trigger create-input" id="ring-brew-category-select-trigger" aria-haspopup="listbox" aria-expanded="false">
-              <span class="aro-select-value" data-aro-select-label>All my categories</span>
-              <span class="aro-select-chevron" aria-hidden="true">▾</span>
-            </button>
-            <div class="aro-select-menu manage-dropdown" role="listbox" hidden>
-              <button type="button" class="aro-select-option manage-item" role="option" id="ring-brew-category-all" data-value="" aria-selected="true">All my categories</button>
-            </div>
-          </div>
-          <input id="ring-brew-category-input" class="create-input" type="text" placeholder="Or type a category name" style="display:none" />
-        </div>
-        <button id="create-ring-btn" class="create-submit">创建</button>
-      </div>
     </div>
   </div>
 

@@ -15,9 +15,9 @@
 | 全屏、`allow-pointer-lock`、pause/resume | 默认放开 `allow-same-origin` |
 
 开发者可直接使用浏览器原生 API（`canvas.getContext('2d'|'webgl2')`、Web Audio、
-`requestAnimationFrame`）。宿主 **不** 提供自研 WebGL 引擎封装，也 **不** 内置
-Three.js。需要 Three / 自研引擎时，把库放进包内 `page/`（IIFE）并 require，当作普通
-guest 依赖。
+`requestAnimationFrame`）。宿主 **不** 提供自研 WebGL 引擎封装。需要 Three 时优先
+声明 `runtimeModules: ["three"]`（仅 `game` / `developer`），由宿主注入钉死的
+r170 + `GLTFLoader`；也可以把自研引擎打成 IIFE 放进 `page/` 再 `require`。不要走 CDN。
 
 ## 包内资源 `manifest.assets`
 
@@ -116,6 +116,7 @@ CDN / `unpkg` / `jsdelivr` / `esm.sh` 加载，也不要把 `three` 打进 Myria
 宿主会把钉死的 Three r170 + `GLTFLoader` 当作带 nonce 的脚本注入沙箱（全局 `THREE` /
 `GLTFLoader`）。未声明 `runtimeModules` 的 Tapp 行为不变，CSP 也不变。站点 Tripo
 生成的 GLB 用 `Tapp.model3d.getUrl(assetId)` 拿沙箱 blob，不要 `load('/api/...')`。
+`Tapp.model3d` 只在 Page；Widget / headless 没有这个对象。
 
 仓库里的权威文件是 `frontend/public/tapp-runtime/three.0.170.iife.js`（SHA-256
 `0ca6ee7e41840a8b95d416f7f38b204126838f277f248a1761acdb7662f2b60d`）。

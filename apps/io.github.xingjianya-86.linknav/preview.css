@@ -1,0 +1,14 @@
+/* 商店静态预览：仅用于详情页快照，不含任何脚本与远程资源。 */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(180deg, #fff7fa 0%, #fdf4ff 55%, #f7fbff 100%);
+}
+
+.ln-preview {
+  --tapp-primary: #f48fb1;
+  --tapp-primary-rgb: 244, 143, 177;
+  min-height: 900px;
+}

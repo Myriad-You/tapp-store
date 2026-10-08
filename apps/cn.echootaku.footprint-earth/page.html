@@ -1,0 +1,120 @@
+<main class="footprint-app" data-mode="booting">
+  <header class="topbar glass-panel">
+    <div class="brand" data-i18n-aria="app.name" aria-label="足迹地球">
+      <span class="brand-orbit" aria-hidden="true"><i></i></span>
+      <span><strong data-i18n="app.name">足迹地球</strong><small data-i18n="app.tagline">把相遇留在世界上，不留下坐标</small></span>
+    </div>
+    <div class="topbar-meta">
+      <span class="privacy-pill"><i aria-hidden="true">◇</i><span data-i18n="privacy.codeOnly">仅标准地区代码</span></span>
+      <span class="connection-pill" data-connection><i></i><span data-i18n="status.loading">正在读取</span></span>
+      <button class="quiet-button governance-only" type="button" data-action="toggle-admin" hidden><span data-i18n="admin.open">管理</span></button>
+    </div>
+  </header>
+
+  <section class="hero-grid" id="globe">
+    <section class="globe-panel glass-panel" aria-labelledby="globe-title">
+      <header class="panel-heading globe-heading">
+        <div><span class="eyebrow" data-i18n="globe.eyebrow">SHARED PLANET</span><h1 id="globe-title" data-i18n="globe.title">我们曾在这些地方相遇</h1></div>
+        <div class="globe-tools" data-i18n-aria="globe.toolsAria" aria-label="地球视图工具">
+          <button type="button" data-action="zoom-out" data-i18n-aria="globe.zoomOut" aria-label="缩小">−</button>
+          <button type="button" data-action="reset-view" data-i18n="globe.reset">复位</button>
+          <button type="button" data-action="zoom-in" data-i18n-aria="globe.zoomIn" aria-label="放大">＋</button>
+        </div>
+      </header>
+      <div class="globe-stage">
+        <canvas class="globe-canvas" data-globe tabindex="0" data-i18n-aria="page.canvasAria" aria-label="可拖动旋转、可点击选择国家或地区的地球"></canvas>
+        <div class="globe-caption" aria-live="polite">
+          <strong data-selection-name data-i18n="selection.none">拖动地球，点击选择</strong>
+          <span data-selection-code>ISO / GB 2260</span>
+        </div>
+        <div class="legend" data-i18n-aria="globe.legendAria" aria-label="足迹图例">
+          <span><i class="legend-dot is-resident"></i><span data-i18n="legend.resident">居住</span></span>
+          <span><i class="legend-dot is-travel"></i><span data-i18n="legend.travel">旅行</span></span>
+          <span><i class="legend-dot is-visitor"></i><span data-i18n="legend.visitor">访客聚合</span></span>
+        </div>
+        <p class="drag-hint"><span aria-hidden="true">↔</span> <span data-i18n="globe.drag">拖动旋转 · 滚轮缩放</span></p>
+      </div>
+    </section>
+
+    <aside class="side-panel glass-panel" data-i18n-aria="selection.controlsAria" aria-label="足迹控制区">
+      <header class="panel-heading compact">
+        <div><span class="eyebrow" data-i18n="selection.eyebrow">PLACE</span><h2 data-i18n="selection.title">选择一个地区</h2></div>
+        <span class="role-chip" data-role>Guest</span>
+      </header>
+
+      <div class="location-form">
+        <label><span data-i18n="selection.country">国家或地区</span><select data-country></select></label>
+        <label><span data-i18n="selection.region">一级行政区（可选）</span><select data-region><option value="" data-i18n="selection.countryLevel">仅国家层级</option></select></label>
+      </div>
+
+      <section class="mode-card guest-only" data-guest-card>
+        <span class="mode-icon" aria-hidden="true">◌</span>
+        <div><h3 data-i18n="guest.title">公开视图</h3><p data-i18n="guest.copy">你看到的是 Owner 主动公开的足迹，以及至少 3 位不同成员组成的桶化聚合。</p></div>
+      </section>
+
+      <section class="mode-card member-only" data-member-card hidden>
+        <span class="mode-icon is-active" aria-hidden="true">＋</span>
+        <div><h3 data-i18n="member.title">留下访客足迹</h3><p data-i18n="member.copy">每批次最多 8 个不同地点，相邻有效投稿至少间隔 60 秒。</p></div>
+        <button class="primary-button" type="button" data-action="join-room" data-i18n="member.join">加入专用 Room</button>
+        <button class="primary-button" type="button" data-action="submit" disabled><span data-i18n="member.submit">提交所选地区</span></button>
+      </section>
+
+      <section class="owner-editor admin-only" data-owner-editor hidden>
+        <header><div><span class="eyebrow" data-i18n="owner.eyebrow">OWNER</span><h3 data-i18n="owner.title">编辑我的公开足迹</h3></div></header>
+        <div class="segmented" role="radiogroup" data-i18n-aria="owner.statusAria" aria-label="足迹状态">
+          <label><input type="radio" name="owner-status" value="resident" checked><span data-i18n="legend.resident">居住</span></label>
+          <label><input type="radio" name="owner-status" value="travel"><span data-i18n="legend.travel">旅行</span></label>
+        </div>
+        <div class="button-row"><button class="primary-button" type="button" data-action="save-owner" disabled data-i18n="owner.save">保存所选地区</button><button class="quiet-button" type="button" data-action="remove-owner" disabled data-i18n="owner.remove">移除</button></div>
+      </section>
+
+      <section class="room-feed member-only" data-room-feed hidden>
+        <header><div><span class="eyebrow" data-i18n="member.feedEyebrow">ROOM REVIEW</span><h3 data-i18n="member.feedTitle">最近的可见投稿</h3></div></header>
+        <p class="microcopy" data-i18n="member.feedCopy">这里只显示地区与日期，不向普通成员展示投稿 Actor。</p>
+        <div class="feed-list" data-feed-list><p class="empty-state" data-i18n="member.feedEmpty">当前批次暂无可见投稿。</p></div>
+      </section>
+
+      <section class="privacy-note">
+        <strong><span aria-hidden="true">⌁</span> <span data-i18n="privacy.title">隐私边界</span></strong>
+        <p data-i18n="privacy.copy">应用不采集任意坐标、城市、自由文本或设备位置。点击只会转换成包内白名单代码。</p>
+      </section>
+    </aside>
+  </section>
+
+  <section class="insight-grid">
+    <article class="insight-card glass-panel">
+      <header><div><span class="eyebrow" data-i18n="public.eyebrow">PUBLIC PROJECTION</span><h2 data-i18n="public.title">访客足迹概览</h2></div><time data-published>—</time></header>
+      <div class="metric"><strong data-contributors>—</strong><span data-i18n="public.contributors">公开贡献者范围</span></div>
+      <div class="place-list" data-public-list><p class="empty-state" data-i18n="public.empty">尚未发布满足隐私阈值的聚合。</p></div>
+    </article>
+    <article class="insight-card glass-panel">
+      <header><div><span class="eyebrow" data-i18n="owner.eyebrow">OWNER</span><h2 data-i18n="owner.publicTitle">Owner 公开足迹</h2></div><span data-owner-count>0</span></header>
+      <div class="place-list" data-owner-list><p class="empty-state" data-i18n="owner.empty">Owner 尚未公开足迹。</p></div>
+    </article>
+    <article class="insight-card glass-panel diagnostics-card">
+      <header><div><span class="eyebrow" data-i18n="diagnostics.eyebrow">BOUNDARIES</span><h2 data-i18n="diagnostics.title">容量与可信度</h2></div></header>
+      <dl>
+        <div><dt data-i18n="diagnostics.history">历史读取</dt><dd data-history>—</dd></div>
+        <div><dt data-i18n="diagnostics.accepted">有效投稿</dt><dd data-accepted>—</dd></div>
+        <div><dt data-i18n="diagnostics.suppressed">低样本隐藏</dt><dd data-suppressed>—</dd></div>
+        <div><dt data-i18n="diagnostics.limit">每人上限</dt><dd>8</dd></div>
+      </dl>
+    </article>
+  </section>
+
+  <section class="admin-drawer" data-admin-drawer role="dialog" aria-modal="true" data-i18n-aria="admin.title" aria-label="足迹地球管理台" hidden>
+    <div class="admin-scrim" data-action="close-admin"></div>
+    <div class="admin-sheet glass-panel">
+      <header class="admin-header"><div><span class="eyebrow" data-i18n="admin.eyebrow">GOVERNANCE</span><h2 data-i18n="admin.title">足迹地球管理台</h2><p data-campaign>—</p></div><button class="icon-button" type="button" data-action="close-admin" data-i18n-aria="admin.close" aria-label="关闭">×</button></header>
+      <div class="admin-grid">
+        <section class="admin-card admin-only"><header><h3 data-i18n="admin.publishTitle">公开投影</h3><span data-history-badge>—</span></header><p data-i18n="admin.publishCopy">只有完整读取历史后，才能发布满足 k=3 的匿名桶化投影。</p><div class="button-row"><button class="primary-button" type="button" data-action="publish" data-i18n="admin.publish">发布聚合</button><button class="quiet-button" type="button" data-action="reload" data-i18n="admin.reload">重读历史</button></div></section>
+        <section class="admin-card admin-only"><header><h3 data-i18n="admin.campaignTitle">活动批次</h3></header><p data-i18n="admin.campaignCopy">轮换会创建新的公开 Room；旧事件不会删除，但不会进入新批次。</p><button class="danger-button" type="button" data-action="new-campaign"><span data-i18n="admin.newCampaign">创建或轮换批次</span></button></section>
+        <section class="admin-card room-owner-only" hidden><header><h3 data-i18n="admin.moderators">审核员授权</h3></header><label><span data-i18n="admin.actor">Actor URL</span><input type="url" data-moderator-actor autocomplete="off" placeholder="https://example/@member"></label><div class="button-row"><button class="quiet-button" type="button" data-action="grant" data-i18n="admin.grant">授权</button><button class="quiet-button" type="button" data-action="revoke" data-i18n="admin.revoke">撤销</button></div><p class="microcopy" data-i18n="admin.grantOwnerOnly">只有服务端 Room owner 的 Actor 授权事件才会生效。</p></section>
+      </div>
+      <section class="admin-wide"><header><div><span class="eyebrow" data-i18n="admin.auditEyebrow">APPEND-ONLY AUDIT</span><h3 data-i18n="admin.auditTitle">投稿与审核</h3></div><span data-audit-count>0</span></header><div class="admin-list" data-audit-list><p class="empty-state" data-i18n="admin.auditEmpty">当前批次暂无有效投稿。</p></div></section>
+      <section class="admin-wide"><header><div><span class="eyebrow" data-i18n="admin.membersEyebrow">MEMBERS</span><h3 data-i18n="admin.membersTitle">成员治理</h3></div><span data-member-count>0</span></header><div class="admin-list" data-member-list><p class="empty-state" data-i18n="admin.membersEmpty">成员列表为空或暂不可用。</p></div></section>
+    </div>
+  </section>
+
+  <div class="toast-region" aria-live="polite" data-toast-region></div>
+</main>
