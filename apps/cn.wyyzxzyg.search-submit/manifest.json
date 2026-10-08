@@ -1,9 +1,9 @@
 {
   "id": "cn.wyyzxzyg.search-submit",
   "name": "搜索引擎收录提交",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "minSystemVersion": "0.3.27",
-  "description": "仅管理员可用的百度主动推送与 IndexNow URL 提交工具",
+  "description": "仅管理员可用的百度主动推送与 IndexNow URL 提交工具，支持定时提交与笔记/商店源更新后自动提交",
   "category": "developer",
   "author": {
     "name": "我願一直向著陽光.℡",
@@ -16,7 +16,12 @@
     "ui:confirm",
     "ui:theme",
     "ui:openUrl",
-    "network:fetch"
+    "network:fetch",
+    "phantasi:read",
+    "scheduler:register"
+  ],
+  "backgroundRequirements": [
+    "scheduler"
   ],
   "iconSvg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='11' cy='11' r='6' stroke='currentColor' stroke-width='2'/><path d='m16 16 4 4M8 11h6M11 8v6' stroke='currentColor' stroke-width='2'/></svg>",
   "themeColor": "#2563eb",
@@ -29,6 +34,11 @@
     {
       "id": "indexnow-key",
       "url": "https://www.indexnow.org/faq",
+      "match": "exact"
+    },
+    {
+      "id": "sitemap-guide",
+      "url": "https://www.sitemaps.org/protocol.html",
       "match": "exact"
     }
   ],
@@ -75,6 +85,16 @@
         "urlList": "{{params.urls}}"
       },
       "description": "IndexNow 自定义密钥地址"
+    },
+    "fetchScanSource": {
+      "type": "http",
+      "access": "manager",
+      "endpoint": "{{params.url}}",
+      "method": "GET",
+      "headers": {
+        "Accept": "application/json, application/xml, text/xml, text/plain;q=0.9, */*;q=0.8"
+      },
+      "description": "拉取自动发现来源（站点地图 / RSS / 商店 index.json）"
     }
   },
   "core": {

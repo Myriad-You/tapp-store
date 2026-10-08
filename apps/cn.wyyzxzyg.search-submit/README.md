@@ -18,6 +18,11 @@
 - 仅管理员可访问配置和提交界面
 - 点击直接打开百度 Token 获取页面与 IndexNow Key 指南
 - 跳转失败时自动复制官方地址
+- **定时提交**：按间隔或每天固定时间自动冲刷待提交队列（`Tapp.scheduler`，headless core 常驻）
+- **待提交队列**：手动攒下 URL，到点自动送出；也可让自动发现只收集不提交
+- **笔记自动提交**：读取 Myriad 手账（Phantasi，`Tapp.phantasiList`）新发布的笔记链接并自动推送
+- **来源自动扫描**：解析 sitemap.xml / sitemapindex / robots.txt / RSS / Atom / OPML / 商店 index.json
+- **增量去重**：只提交首次出现的 URL；首次运行只建立基线，不会全量推送
 
 ## 使用说明
 
@@ -30,7 +35,88 @@
 
 主动提交不代表搜索引擎一定收录。凭证保存在当前管理员的私有 Tapp 存储中。
 
+## 定时提交
+
+在「03 定时提交」中启用定时任务并保存配置：
+
+| 触发方式 | 说明 |
+| --- | --- |
+| 按间隔 | 每 N 分钟执行一次（5–1440，默认 360） |
+| 按每天固定时间 | 每天 `HH:MM` 执行一次（本地时区） |
+
+任务以 `executionTarget: "frontend"` 注册，并声明 `backgroundRequirements: ["scheduler"]`，
+因此页面关闭后仍由 headless core 执行。每次触发会先冲刷待提交队列，再执行一次自动发现。
+
+调度回调执行前会重新确认管理员身份；非管理员直接跳过，不读取配置也不出站。
+
+## 自动发现新增链接
+
+在「04 自动发现新增链接」中开启后可配置：
+
+- **扫描 Myriad 手账**：读取 `Tapp.phantasiList.list()` 的笔记 `link`（站点相对路径），拼成绝对 URL。
+  宿主未提供 `phantasiList`、未授予 `phantasi:read` 或读取失败时只记日志，不影响其它来源。
+- **扫描自定义来源**：每行一个 URL，最多 10 个，每轮最多实际抓取 10 次。
+  来源地址必须是 HTTPS 且不含空白或花括号。通用提取器按**根元素语义**区分
+  「要提交的页面」与「还要继续抓的子 sitemap」：
+  - `<urlset>` 的 `<loc>` → 页面
+  - `<sitemapindex>` 的 `<loc>`、`robots.txt` 的 `Sitemap:` 指令 → 子 sitemap，**继续抓取，不会当成页面提交**
+  - RSS 2.0 的 `<link>` 文本、Atom 条目的 `<link href>` / `<id>` / `<guid>` → 页面（跳过 `rel=self|next|prev|first|last` 导航链接）
+  - OPML 的 `url=` 属性、JSON 目录按 `url` / `link` / `permalink` / `href` / `loc` / `homepage` / `website` / `site_url` / `canonical` 递归取值 → 页面
+
+  因此商店 `index.json` 更新后新增的应用主页也会被收集。
+- **发现到新链接时**：`直接提交` 或 `加入待提交队列`。
+
+所有候选 URL 都会经过与手动提交相同的过滤：必须是 HTTPS、必须同站点，
+IndexNow 自定义 Key 文件时还必须落在 Key 授权目录内。HTML 实体（`&amp;`）会先解码。
+
+**首次运行只建立基线**（记录当前全部候选 URL 而不提交），之后每轮只推送首次出现的 URL。
+基线只做一次：用一次性标记记录，即使首轮扫到 0 条，之后真正出现的内容也会被正常提交，
+不会反复重建基线把内容吞掉。想重来可用「清空去重记录」；**修改站点地址也会自动重置基线与去重记录**。
+
+去重记录同时按条数（1500）与序列化字节（480 KiB）裁剪，
+以避开宿主 `Tapp.storage` 单值 1 MiB 的硬上限。
+
+## 定时与自动发现的边界
+
+- 定时任务与自动发现都只在**管理员**上下文执行；调度回调每次触发都会重新确认身份。
+- 单个来源抓取失败只记入日志，不影响其它来源，也不中断整轮流程。
+- 队列里过不了校验（非 HTTPS / 非本站 / 超出 Key 目录）的条目会在冲刷时被移除并记日志，
+  不会每轮静默重试。
+- `自动发现` 关闭时，定时任务仍会正常冲刷待提交队列。
+
+## 权限说明
+
+| 权限 | 用途 |
+| --- | --- |
+| `storage:read` / `storage:write` | 配置、日志、待提交队列与去重记录 |
+| `phantasi:read` | 读取 Myriad 手账笔记列表以发现新发布内容 |
+| `scheduler:register` | 注册定时提交任务 |
+| `network:fetch` | 百度 / IndexNow 推送，以及拉取自定义扫描来源 |
+| `ui:notification` / `ui:confirm` / `ui:theme` / `ui:openUrl` | 通知、确认、主题与官方页面跳转 |
+
+`fetchScanSource` 声明为 `access: "manager"` 的 `GET` API，仅管理员可用。
+宿主在请求前会解析并钉扎全部公网 DNS 地址，禁止自动重定向、URL 内嵌凭据与
+`Host`/`Connection` 等路由头，响应体上限 2 MiB。
+
+> **注意**：`fetchScanSource` 的 `endpoint` 是整条 URL 模板 `"{{params.url}}"`，
+> 由沙箱传入原始（未编码）地址，与 `baiduSubmit` 对 query 值做 `encodeURIComponent` 的写法不同——
+> 宿主按字面量注入模板值。沙箱侧因此额外用 `validateSourceUrl` 挡住花括号、空白、
+> 非 HTTPS 与内嵌凭据，防止破坏模板解析或请求结构。
+
 ## 更新日志
+
+### v1.1.0
+
+- 新增定时提交：按间隔 / 每天固定时间在 headless core 中自动执行
+- 新增待提交队列，手动与自动发现共用
+- 新增自动发现：Myriad 手账新笔记 + sitemap / robots.txt / RSS / 商店 index.json
+- 新增增量去重记录与首次运行基线（基线只做一次，改站点自动重置）
+- 扫描按根元素语义区分页面与子 sitemap，不再把 sitemap 地址当页面提交
+- RSS/Atom 解析覆盖 `<link>` 文本、条目 `<id>`，并跳过导航类 `rel` 链接
+- URL 去重改为按归一化结果，避免 `example.com` 与 `example.com/` 重复提交
+- 队列中的无效 URL 会被剔除并记录，不再每轮静默重试
+- 去重记录按条数与字节双重裁剪，避开 storage 单值 1 MiB 上限
+- 提交逻辑抽出为共用实现，手动、定时、自动三条路径行为一致
 
 ### v1.0.0 (2026-08-06)
 
