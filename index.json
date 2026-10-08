@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.88",
+  "version": "1.0.89",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-10-07T05:02:13.334Z",
+  "updated_at": "2026-10-08T09:37:26.808Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -682,17 +682,19 @@
     {
       "id": "cn.wyyzxzyg.cdn-cache",
       "name": "CDN 缓存刷新",
-      "version": "1.1.2",
-      "description": "仅管理员可操作的 Cloudflare、EdgeOne、阿里云 CDN 与 AWS CloudFront 缓存刷新工具",
-      "long_description": "面向站点管理员的 CDN 缓存刷新工具：支持 Cloudflare、腾讯云 EdgeOne、阿里云 CDN 与 AWS CloudFront。CloudFront 使用 raw XML 与 SigV4；所有出站 API 仅允许管理员调用。可按 URL 精确刷新或清理全站缓存，并保留本地操作日志。",
+      "version": "1.2.0",
+      "description": "仅管理员可操作的 Cloudflare、EdgeOne、阿里云 CDN 与 AWS CloudFront 缓存刷新工具，支持定期提交与手帐新文章 / 订阅源更新后的自动刷新",
+      "long_description": "面向站点管理员的 CDN 缓存刷新工具：支持 Cloudflare、腾讯云 EdgeOne、阿里云 CDN 与 AWS CloudFront。CloudFront 使用 raw XML 与 SigV4，EdgeOne 使用 TC3-HMAC-SHA256，阿里云使用 RPC HMAC-SHA1；所有出站 API 都声明为 manager，仅管理员可调用。\n\n除了手动按 URL 精确刷新与清理全站缓存，本版本新增两条自动化链路。**定期提交**按设定的分钟间隔在后台提交缓存刷新，可选「清理全站缓存」「刷新固定 URL 列表」或「只提交攒下的队列」。**内容变更自动提交**常驻核对手帐（Phantasi）订阅源：发现新文章时把对应的**站内阅读页** `/journal/articles/{id}` 交给当前 CDN 服务商刷新，订阅源本身增删时刷新站点首页与固定附加地址，两项都可单独关闭。\n\n订阅源文章的 `link` 是原文站外地址，不属于本站缓存，因此默认模板指向站内阅读页而不是原文；需要按原文刷新时可以自行把模板改成 `{link}`。宿主目前不提供「本站自己发布的笔记」的只读接口，也没有内容发布事件，所以插件用增量核对而不是事件推送。\n\n两条链路都跑在 headless 共享层里，桌面没有打开任何页面也会按时执行；页面只是配置与观测入口。变更探测只在本地记录已见内容的 ID 与时间戳，首次运行只建立基线、不补刷历史内容（可显式打开补刷）；未开启自动提交时核对完全不写状态。刷新日志区分「手动」与「自动」，自动记录只写时间、原因、命中数量和 URL，不写任何 Token、SecretId、SecretKey 或 AccessKey。\n\n所有凭证与自动化设置都只保存在当前登录用户的 Tapp 私有存储中，不会写入安装包、商店索引或日志；管理员页面门禁、声明式 API 的 manager 访问控制与 elevated Runtime Grant 共同生效。跟随 Myriad 明暗主题，内置简体中文、英语、日语。",
       "locales": {
         "en-US": {
           "name": "CDN Cache Purge",
-          "description": "Purge Cloudflare, EdgeOne, Alibaba Cloud CDN, and AWS CloudFront caches"
+          "description": "Purge Cloudflare, EdgeOne, Alibaba Cloud CDN, and AWS CloudFront caches, with scheduled purges and automatic purges when Journal articles or feed sources update",
+          "long_description": "A CDN cache purge tool for site administrators, covering Cloudflare, Tencent Cloud EdgeOne, Alibaba Cloud CDN, and AWS CloudFront. CloudFront uses raw XML with SigV4, EdgeOne uses TC3-HMAC-SHA256, and Alibaba Cloud uses RPC HMAC-SHA1; every outbound API is declared as manager-only, so only administrators can invoke it.\n\nBeyond manual per-URL purges and full-site purges, this release adds two automation paths. **Scheduled purges** submit cache refreshes in the background on your chosen minute interval, and can purge the whole site, refresh a fixed URL list, or just drain the queue. **Content-change purges** keep watching Journal (Phantasi) feed sources: when a new article appears, its in-site reader page `/journal/articles/{id}` is handed to the active CDN provider, and when the source list itself changes the site homepage and fixed extra URLs are refreshed. Each path can be toggled independently.\n\nAn article's `link` is the original off-site address, which is not part of this site's cache, so the default template targets the in-site reader page rather than the original URL; set the template to `{link}` if you really want to purge the original. The host exposes no read-only API for notes published on your own site and publishes no content events, so the plugin uses incremental polling rather than a push event.\n\nBoth paths run in the headless shared layer, so they keep firing even when no page is open; the page is just the configuration and observability surface. Change detection only records seen content IDs and timestamps locally, so the first run merely establishes a baseline instead of purging history (an explicit opt-in can backfill); while automation is off, a check writes no state at all. Purge logs separate manual from automatic entries, and automatic entries store only time, reason, hit count and URLs — never a token or secret.\n\nCredentials and automation settings live only in the signed-in user's private Tapp storage, and never reach the package, the store index, or the logs. The admin page gate, the manager access control on declared APIs, and the elevated runtime grant all apply. Follows the Myriad light/dark theme with Simplified Chinese, English, and Japanese built in."
         },
         "ja-JP": {
           "name": "CDN キャッシュ更新",
-          "description": "Cloudflare、EdgeOne、Alibaba Cloud CDN、AWS CloudFront のキャッシュを更新"
+          "description": "Cloudflare、EdgeOne、Alibaba Cloud CDN、AWS CloudFront のキャッシュを更新。定期実行と、手帳の新着記事・フィード更新時の自動更新に対応",
+          "long_description": "サイト管理者向けの CDN キャッシュ更新ツールです。Cloudflare、Tencent Cloud EdgeOne、Alibaba Cloud CDN、AWS CloudFront に対応します。CloudFront は raw XML と SigV4、EdgeOne は TC3-HMAC-SHA256、Alibaba Cloud は RPC HMAC-SHA1 を使用し、すべての外部 API は manager 限定で宣言されているため管理者だけが呼び出せます。\n\n手動での URL 単位の更新と全サイトのキャッシュ削除に加えて、本バージョンでは 2 つの自動化を追加しました。**定期実行**は指定した間隔でバックグラウンドからキャッシュ更新を送信し、「全サイトの削除」「固定 URL リストの更新」「溜まったキューの送信のみ」を選べます。**コンテンツ変更時の自動更新**は手帳（Phantasi）のフィードを常時監視し、新しい記事が現れたらサイト内の閲覧ページ `/journal/articles/{id}` を現在の CDN プロバイダに渡します。フィード自体が増減した場合はトップページと固定 URL を更新します。どちらも個別に無効化できます。\n\n記事の `link` は配信元サイトの URL であり当サイトのキャッシュではないため、既定のテンプレートは元 URL ではなくサイト内の閲覧ページを指します。元 URL を更新したい場合はテンプレートを `{link}` に変更してください。ホストは自サイトのノートを一覧する読み取り専用 API もコンテンツ公開イベントも提供していないため、イベント購読ではなく差分ポーリングで検出します。\n\nどちらも headless 共有層で動作するため、ページを開いていなくても時間どおりに実行されます。ページは設定と状態確認のための入口です。変更検出は確認済みコンテンツの ID と時刻をローカルに記録するだけで、初回はベースラインの作成のみを行い履歴を削除しません（明示的に有効化すれば補完できます）。自動更新が無効な間は状態を一切書き込みません。更新ログは「手動」と「自動」を分けて表示し、自動の記録には時刻・理由・件数・URL のみを保存してトークンやシークレットは書き込みません。\n\n認証情報と自動化設定はログイン中ユーザーの Tapp プライベートストレージにのみ保存され、パッケージ・ストアインデックス・ログには残りません。管理者ページのゲート、宣言 API の manager アクセス制御、elevated ランタイムグラントが同時に適用されます。Myriad のライト / ダークテーマに追従し、簡体字中国語・英語・日本語を内蔵しています。"
         }
       },
       "author": {
@@ -712,7 +714,9 @@
         "AWS",
         "CloudFront",
         "运维",
-        "开发者"
+        "开发者",
+        "定时任务",
+        "自动化"
       ],
       "permissions": [
         "storage:read",
@@ -720,7 +724,9 @@
         "ui:notification",
         "ui:confirm",
         "ui:theme",
-        "network:fetch"
+        "network:fetch",
+        "scheduler:register",
+        "phantasi:read"
       ],
       "icon_svg": "<svg viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M20 17.5A4.5 4.5 0 0017 9.64 6 6 0 005.2 8.3 4.5 4.5 0 006.5 17H20z\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/><path d=\"M9 13h6M12 10l3 3-3 3\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>",
       "theme_color": "#f97316",
@@ -735,7 +741,7 @@
         ],
         "viewport": {
           "width": 1440,
-          "height": 900
+          "height": 1240
         },
         "fit": "cover",
         "focus": {
@@ -746,18 +752,22 @@
       },
       "download": {
         "manifest": "apps/cn.wyyzxzyg.cdn-cache/manifest.json",
-        "code": "apps/cn.wyyzxzyg.cdn-cache/main.js",
+        "code": "apps/cn.wyyzxzyg.cdn-cache/core.js",
         "readme": "apps/cn.wyyzxzyg.cdn-cache/README.md",
         "page_styles": "apps/cn.wyyzxzyg.cdn-cache/page.css",
-        "page_template": "apps/cn.wyyzxzyg.cdn-cache/page.html"
+        "page_template": "apps/cn.wyyzxzyg.cdn-cache/page.html",
+        "modules": {
+          "page/index.js": "apps/cn.wyyzxzyg.cdn-cache/page/index.js",
+          "page/ui.js": "apps/cn.wyyzxzyg.cdn-cache/page/ui.js"
+        }
       },
-      "size": 38302,
+      "size": 114457,
       "downloads": 0,
       "rating": 0,
       "featured": true,
       "verified": true,
       "created_at": "2026-08-01T00:00:00Z",
-      "updated_at": "2026-08-19T11:09:38.474Z"
+      "updated_at": "2026-10-08T09:37:26.782Z"
     },
     {
       "id": "cn.wyyzxzyg.minecraft-hub",
