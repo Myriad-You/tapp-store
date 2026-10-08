@@ -1,17 +1,17 @@
 {
   "id": "cn.wyyzxzyg.cdn-cache",
   "name": "CDN 缓存刷新",
-  "version": "1.1.2",
-  "minSystemVersion": "0.3.23",
-  "description": "仅管理员可操作的 Cloudflare、EdgeOne、阿里云 CDN 与 AWS CloudFront 缓存刷新工具",
+  "version": "1.2.0",
+  "minSystemVersion": "0.6.2",
+  "description": "仅管理员可操作的 Cloudflare、EdgeOne、阿里云 CDN 与 AWS CloudFront 缓存刷新工具，支持定期提交与手帐新文章 / 订阅源更新后的自动刷新",
   "locales": {
     "en-US": {
       "name": "CDN Cache Purge",
-      "description": "Purge Cloudflare, EdgeOne, Alibaba Cloud CDN, and AWS CloudFront caches"
+      "description": "Purge Cloudflare, EdgeOne, Alibaba Cloud CDN, and AWS CloudFront caches, with scheduled purges and automatic purges when Journal articles or feed sources update"
     },
     "ja-JP": {
       "name": "CDN キャッシュ更新",
-      "description": "Cloudflare、EdgeOne、Alibaba Cloud CDN、AWS CloudFront のキャッシュを更新"
+      "description": "Cloudflare、EdgeOne、Alibaba Cloud CDN、AWS CloudFront のキャッシュを更新。定期実行と、手帳の新着記事・フィード更新時の自動更新に対応"
     }
   },
   "category": "developer",
@@ -25,7 +25,12 @@
     "ui:notification",
     "ui:confirm",
     "ui:theme",
-    "network:fetch"
+    "network:fetch",
+    "scheduler:register",
+    "phantasi:read"
+  ],
+  "backgroundRequirements": [
+    "scheduler"
   ],
   "iconSvg": "<svg viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M20 17.5A4.5 4.5 0 0017 9.64 6 6 0 005.2 8.3 4.5 4.5 0 006.5 17H20z\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/><path d=\"M9 13h6M12 10l3 3-3 3\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>",
   "themeColor": "#f97316",
@@ -112,9 +117,10 @@
     }
   },
   "core": {
-    "entry": "main.js"
+    "entry": "core.js"
   },
   "page": {
+    "entry": "page/index.js",
     "template": "page.html",
     "styles": "page.css"
   }

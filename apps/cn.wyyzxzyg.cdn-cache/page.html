@@ -44,8 +44,67 @@
     </article>
   </section>
 
+  <section class="panel auto-panel">
+    <div class="panel-head"><div><span class="step">03</span><h2>定期提交与自动刷新</h2></div><span id="auto-status" class="muted">仅当前用户可用</span></div>
+
+    <div class="auto-status">
+      <div class="status-card"><span class="status-label">自动提交</span><span class="status-value" id="auto-state">未开启</span></div>
+      <div class="status-card"><span class="status-label">最近核对</span><span class="status-value" id="auto-last-check">尚未运行</span></div>
+      <div class="status-card"><span class="status-label">最近提交</span><span class="status-value" id="auto-last-submit">尚未运行</span></div>
+      <div class="status-card"><span class="status-label">监听内容</span><span class="status-value" id="auto-monitor">未选择监听内容</span></div>
+      <div class="status-card"><span class="status-label">待提交队列</span><span class="status-value" id="auto-queue">队列为空</span></div>
+      <div class="status-card"><span class="status-label">定时任务</span><span class="status-value" id="auto-scheduler">—</span></div>
+    </div>
+
+    <div class="auto-section">
+      <h3>内容变更自动提交</h3>
+      <p class="hint">后台常驻核对「手帐」（Phantasi）订阅源的新文章与源本身的变化，只把「新增」内容对应的站内地址加入队列，再按当前 CDN 服务商提交。凭证与设置只留在当前登录用户，前台关闭后仍由 headless core 继续执行。</p>
+      <div class="toggle-grid">
+        <label class="toggle-row"><input type="checkbox" id="auto-enabled"> 开启内容变更自动提交</label>
+        <label><span>核对间隔（分钟）</span><input id="auto-interval" type="number" min="1" max="1440" step="1" value="5"></label>
+      </div>
+      <div class="toggle-grid">
+        <label class="toggle-row"><input type="checkbox" id="auto-articles"> 手帐订阅源出现新文章时刷新</label>
+        <label class="toggle-row"><input type="checkbox" id="auto-source-change"> 订阅源本身变更时刷新</label>
+        <label class="toggle-row"><input type="checkbox" id="auto-homepage"> 同时刷新站点首页</label>
+      </div>
+      <label><span>文章路径模板</span><input id="auto-article-template" autocomplete="off" value="/journal/articles/{id}" placeholder="/journal/articles/{id}"></label>
+      <p class="hint">默认指向站内阅读页 <code>/journal/articles/{id}</code>——订阅源文章在宿主里的正文地址就是它，可用占位符 <code>{id}</code>、<code>{link}</code>、<code>{title}</code>、<code>{date}</code>、<code>{source}</code>。原文 <code>{link}</code> 是站外地址，通常不属于本站缓存，会被自动过滤。</p>
+      <div class="pair">
+        <label><span>单次最多提交 URL 数</span><input id="auto-max-urls" type="number" min="1" max="500" step="1" value="80"></label>
+        <div class="fields">
+          <p class="hint" id="auto-capability">正在检测可用的内容接口…</p>
+          <label class="toggle-row"><input type="checkbox" id="auto-purge-on-start"> 首次运行时补刷已存在的手帐文章</label>
+        </div>
+      </div>
+      <label><span>始终一起刷新的地址（每行一个，可写 / 开头的路径）</span><textarea id="auto-wildcard" rows="3" placeholder="/&#10;/index.json"></textarea></label>
+    </div>
+
+    <div class="auto-section">
+      <h3>定期提交缓存刷新</h3>
+      <p class="hint">无需内容变更也会提交：可定时清理全站缓存、定时刷新固定 URL 列表，或仅把上面攒下的队列提交掉。</p>
+      <div class="toggle-grid">
+        <label class="toggle-row"><input type="checkbox" id="periodic-enabled"> 开启定期提交</label>
+        <label><span>提交间隔（分钟）</span><input id="periodic-interval" type="number" min="1" max="10080" step="1" value="60"></label>
+      </div>
+      <label><span>提交内容</span><select id="periodic-scope"><option value="queue">仅提交上面攒下的队列</option><option value="all">清理全站缓存</option><option value="list">定时刷新固定 URL 列表</option></select></label>
+      <label id="periodic-urls-field" hidden><span>固定 URL 列表（每行一个）</span><textarea id="periodic-urls" rows="3" placeholder="/&#10;/index.json"></textarea></label>
+      <p class="hint" id="auto-plan">未注册任何定时任务</p>
+      <p class="hint">最近一次自动提交原因：<span id="auto-last-reason">—</span></p>
+    </div>
+
+    <div class="actions auto-actions">
+      <button id="auto-save-btn" class="button primary" type="button">保存自动提交设置</button>
+      <button id="auto-check-btn" class="button ghost" type="button">立即核对一次</button>
+      <button id="auto-flush-btn" class="button ghost" type="button">立即提交队列</button>
+      <button id="auto-all-btn" class="button danger-solid" type="button">立即清理全站</button>
+      <button id="auto-reset-btn" class="button ghost" type="button">重置变更基线</button>
+    </div>
+    <p class="hint" id="auto-check-result">等待操作</p>
+  </section>
+
   <section class="panel logs-panel">
-    <div class="panel-head"><div><span class="step">03</span><h2>刷新日志</h2></div><button id="clear-logs-btn" class="button ghost" type="button">清空日志</button></div>
+    <div class="panel-head"><div><span class="step">04</span><h2>刷新日志</h2></div><button id="clear-logs-btn" class="button ghost" type="button">清空日志</button></div>
     <div id="logs" class="logs" aria-live="polite"></div>
   </section>
 </main>

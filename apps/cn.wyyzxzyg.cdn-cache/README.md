@@ -1,121 +1,89 @@
 # CDN 缓存刷新
 
-集中管理 Cloudflare、腾讯云 EdgeOne、阿里云 CDN 与 AWS CloudFront 的缓存刷新任务。
+## 简介
 
-作者：**我願一直向著陽光.℡**
+面向站点管理员的 CDN 缓存刷新工具，支持 Cloudflare、腾讯云 EdgeOne、阿里云 CDN 和 AWS CloudFront。可手动刷新指定 URL 或清理全站缓存，也可定期提交任务，或在「手帐」（Phantasi）内容源出现新文章、订阅源本身变化后自动刷新。凭证保存在当前用户的 Tapp 私有存储中。
 
-## 版本
+## 使用说明
 
-`1.1.0`
+### 配置与手动刷新
 
-## 功能
+1. 选择 CDN 服务商，填写站点 HTTPS 地址及对应凭证，然后点击“保存配置”。
+   - Cloudflare：Zone ID、API Token。
+   - EdgeOne：Zone ID、SecretId、SecretKey。
+   - 阿里云 CDN：AccessKey ID、AccessKey Secret。
+   - AWS CloudFront：Distribution ID、Access Key ID、Secret Access Key。
+2. 每行输入一个完整 URL，点击“刷新这些 URL”；如需清理整站，点击“清理全站缓存”并确认。
+3. 在刷新日志中查看任务提交结果。CDN 实际生效时间由服务商决定。
 
-- **多 CDN 支持**：在同一页面切换 Cloudflare、EdgeOne、阿里云 CDN 与 AWS CloudFront
-- **精确刷新**：按行输入完整 URL，批量提交缓存刷新任务
-- **全站清理**：二次确认后清理站点全部缓存
-- **角色隔离**：管理员使用运维控制台；游客和普通用户只看到只读状态页
-- **配置隔离**：只显示当前服务商所需配置，凭证保存在当前用户私有存储
-- **安全日志**：记录任务结果，不记录 Token、SecretId、SecretKey 或 AccessKey
-- **重复保护**：5 秒内阻止相同刷新请求重复提交
-- **通知兜底**：同时调用宿主通知桥与页面内 Toast，桥接失败时仍显示操作结果
-- **主题适配**：跟随 Myriad 深色与浅色主题
+### 定期提交
 
-## 服务商配置
+在“定期提交与自动刷新”面板开启定期提交，设置间隔与提交范围：清理全站、刷新固定 URL 列表，或仅提交待处理队列。固定列表支持完整 URL 和以 `/` 开头的站内路径。最后点击“保存自动提交设置”。
 
-| 服务商 | 必填配置 | 全站清理方式 |
-| ------ | -------- | ------------ |
-| Cloudflare | Zone ID、API Token、站点地址 | `purge_everything` |
-| 腾讯云 EdgeOne | Zone ID、SecretId、SecretKey、站点地址 | `purge_all` |
-| 阿里云 CDN | AccessKey ID、AccessKey Secret、站点地址 | 根目录 `Directory` 刷新 |
-| AWS CloudFront | Distribution ID、Access Key ID、Secret Access Key、站点地址 | `/*` Invalidation |
+### 内容变更自动刷新
 
-### Cloudflare
+在同一面板开启内容变更自动提交，设置核对间隔，并选择监听「手帐订阅源出现新文章」或「订阅源本身变更」。可设置文章路径模板、同时刷新首页、固定附加地址和单次 URL 上限，然后保存设置。
 
-创建仅包含目标 Zone 且拥有 `Zone / Cache Purge / Purge` 权限的 API Token。不要使用 Global API Key。
+数据来自 `Tapp.phantasiList`（需要 `phantasi:read`）：
 
-### 腾讯云 EdgeOne
+- `phantasiList.list()` 返回订阅源里的**文章**，其 `link` 是原文站外地址；文章在宿主里的正文页是站内阅读页 `/journal/articles/{id}`，所以默认模板就是它。
+- `phantasiList.sources()` 只返回源元数据（id / name / url / item_count…），不含条目，因此「源变更」不产出文章地址，改为刷新站点首页与固定附加地址。
+- 宿主目前**没有**列出「本站自己发布的笔记」的只读 Tapp API，也没有内容发布事件，所以两条链路共用同一次 `list()` 结果，不会重复计数。
 
-使用仅具备目标站点 `CreatePurgeTask` 权限的 CAM 子用户密钥。插件将同一个 payload 对象用于 TC3 哈希与 Myriad 声明式 JSON 出站，并以宿主实际的 `application/json` 参与签名；提交前还会把 URL 规范化为 ASCII。
+首次核对默认只建立基线，不刷新已有内容；需要补刷时开启“首次运行时补刷”。未开启自动提交时，核对不会写任何状态（避免之后才开启时把安装以来的内容一次性刷掉）。面板也提供“立即核对一次”“立即提交队列”“立即清理全站”和“重置变更基线”。
 
-### 阿里云 CDN
-
-使用仅具备 `cdn:RefreshObjectCaches` 权限的 RAM 用户 AccessKey。按 URL 刷新使用 `File` 类型。
-
-### AWS CloudFront
-
-使用仅允许目标 Distribution 执行 `cloudfront:CreateInvalidation` 的 IAM 用户凭证。CloudFront 的 SigV4 服务区域固定为 `us-east-1`；插件以同一份 XML 计算 SHA-256 与签名，并通过 `bodyMode: "raw"` 原样发送。按 URL 刷新时只提交 URL 的路径和查询参数，全站清理使用 `/*`。
-
-## 使用方法
-
-1. 选择 CDN 服务商。
-2. 填写当前服务商所需凭证与站点地址。
-3. 点击“保存配置”。
-4. 每行输入一个需要刷新的完整 URL，然后点击“刷新这些 URL”。
-5. 如需清理全部缓存，点击“清理全站缓存”并确认操作。
-6. 在刷新日志中查看提交结果。
-
-## 权限说明
+## 权限
 
 | 权限 | 用途 |
-| ---- | ---- |
-| `network:fetch` | 通过 Myriad 声明式 API 请求 CDN 官方接口 |
-| `storage:read` / `storage:write` | 保存当前用户的配置、日志与防重复状态 |
-| `ui:confirm` | 全站清理、清空日志和清除密钥前二次确认 |
-| `ui:notification` | 显示成功、警告与错误消息 |
-| `ui:theme` | 适配 Myriad 明暗主题 |
+| --- | --- |
+| `storage:read` / `storage:write` | 保存凭证、设置、队列与日志（仅当前登录用户） |
+| `ui:notification` / `ui:confirm` / `ui:theme` | 结果提示、危险操作二次确认、跟随主题 |
+| `network:fetch` | 调用四家 CDN 的刷新接口 |
+| `scheduler:register` | 注册定期提交与内容变更核对任务（需要管理员登录） |
+| `phantasi:read` | 读取手帐订阅源文章与源列表 |
 
-## 安全
-
-- CDN 凭证仅保存在当前登录用户的 Tapp 私有存储中。
-- 凭证不会写入安装包、商店索引或刷新日志。
-- 错误信息会隐藏 Bearer Token 和常见 AccessKey 标识。
-- 建议为每个服务商创建遵循最小权限原则的独立子账号或 Token。
-- 不建议使用主账号密钥、Cloudflare Global API Key 或拥有管理全部资源权限的凭证。
+`manifest.json` 的 `backgroundRequirements: ["scheduler"]` 会让宿主常驻执行 `core.js`，前台关闭后定时任务仍然工作。
 
 ## 架构
 
-```text
-com.myriad.cdn-cache/
-├── manifest.json  # 应用信息、权限和 CDN API 声明
-├── main.js        # 配置、TC3/RPC/SigV4 签名、刷新与日志逻辑
-├── page.html      # 页面模板
-├── page.css       # 页面样式与服务商配置互斥显示
-└── README.md      # 使用说明
+```
+core.js        # 共享层 / headless 入口：配置、签名、提交、变更探测、调度注册（自启动）
+page/index.js  # Page 入口
+page/ui.js     # Page 界面层（管理员控制台、自动化面板）
+tests/         # engine.test.mjs（共享层）、ui.test.mjs（jsdom 界面冒烟）
 ```
 
 ## 限制
 
-- 当前版本仅提供手动刷新。Myriad 尚未向 Tapp 开放文章、页面或评论变更事件，暂时无法实现内容更新后自动刷新。
+- 当前宿主没有内容发布类事件（`system.*` 只有 theme、network、locale、visibility、navigation 五个环境主题），插件靠**增量核对**判断更新，不是事件推送。
+- 定时任务由宿主推送执行；若站点没有任何打开的标签页，该次执行会被记为 `no_audience` 跳过且不补跑。
+- 待提交队列上限 2000 条，按 FIFO 排队；队列满时先丢弃等待最久的旧条目，新探测到的内容不会被丢。
+- 单次提交条数受各 CDN 套餐上限约束，插件按服务商取保守上限分批提交。
 - 插件提交的是异步 CDN 刷新任务；实际生效时间取决于服务商。
 - 全站清理可能造成大量请求回源，请谨慎使用。
 
-## 管理员访问控制
-
-- 页面启动时通过 `Tapp.user.getRole()` 与 `Tapp.user.isAdmin()` 双重确认管理员身份。
-- 非管理员不会读取配置与日志，也不会绑定任何运维按钮。
-- 保存凭证、清除凭证、提交刷新和清空日志前会再次实时校验管理员身份。
-- 角色查询失败时默认拒绝访问，避免降级为开放模式。
-- 管理员页面门禁与声明式 API 的 `manager` 访问控制共同生效；出站请求还需要 elevated `network:fetch` Runtime Grant 与有效 CDN 凭证。
-- 所有 CDN API 均声明为 `access: "manager"`，普通登录用户无法直接调用；仍不应向普通用户提供站点 CDN 凭证。
-
 ## 更新日志
 
-### v1.1.0 (2026-08-02)
+### v1.2.0
 
-- 新增 AWS CloudFront 按路径与全站缓存失效
-- 使用 `bodyMode: "raw"` 原样发送 CloudFront XML，确保 SigV4 payload hash 与线上字节一致
-- 所有 CDN 声明式 API 收紧为 `access: "manager"`
-- AWS 凭证配置仅在选择 CloudFront 时显示
+- 新增定期提交、内容变更自动刷新及后台任务支持。
+- 支持文章路径模板、固定附加地址、队列及自动刷新日志。
+- 内容变更探测统一走 `phantasiList`（宿主已硬切 Phantasi，`brew:*` / `Tapp.brewList` 会让安装校验 fail-closed）。
+- 默认刷新站内阅读页 `/journal/articles/{id}`，避免站外原文地址被校验丢弃后只剩首页。
+- 未开启自动提交时核对不再写状态，保证「首次开启只建立基线」。
+- 启动核对加跨沙箱租约，避免 Page 与 headless 重复提交同一批 URL。
+- `minSystemVersion` 提升到 0.6.2（`phantasi:read` 自 0.6.0 起提供）。
+- 修复 RSS 源变化未触发刷新、条目读取、调度间隔更新、管理员启动门禁和失败响应判断。
+- 清除凭证时同步关闭自动刷新与定期提交。
 
-### v1.0.0 (2026-08-01)
+### v1.1.2
 
-- 重构 EdgeOne TC3：同一 payload 对象参与签名与声明式出站，Content-Type 对齐为 `application/json`
-- URL 在 EdgeOne 签名前规范化为 ASCII，避免非 ASCII JSON 转义差异
-- 刷新操作始终读取当前表单配置，避免误用旧的已保存配置
-- 明确管理员 UI 门禁、Runtime Grant 与 CDN 凭证的安全边界
-- 增加管理员与非管理员双界面
-- 游客和普通用户只显示安全的只读状态页
-- 支持 Cloudflare、腾讯云 EdgeOne 与阿里云 CDN
-- 支持按 URL 刷新和全站缓存清理
-- 支持 EdgeOne TC3-HMAC-SHA256 与阿里云 RPC HMAC-SHA1 签名
-- 增加私有配置、刷新日志、二次确认与 5 秒重复请求保护
+- 恢复商店展示文案来源，修正索引对齐。
+
+### v1.1.0
+
+- 新增 AWS CloudFront 刷新；收紧 CDN 接口的管理员访问控制。
+
+### v1.0.0
+
+- 支持 Cloudflare、EdgeOne 和阿里云 CDN 的指定 URL 刷新与全站清理。
