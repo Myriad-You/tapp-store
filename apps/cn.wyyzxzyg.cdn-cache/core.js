@@ -5,7 +5,7 @@
  * 不依赖可见 DOM 的内容：
  *   · 配置归一化与校验（含商户凭证字段）
  *   · 四家 CDN 的签名与提交（Cloudflare / EdgeOne TC3 / 阿里云 RPC / CloudFront SigV4）
- *   · 「Myriad 发布笔记 / 更新源」变更探测与自动提交
+ *   · 「手帐内容源出现新文章 / 源本身变更」变更探测与自动提交
  *   · 定时任务注册（Tapp.scheduler）与后台常驻循环
  *
  * Page 层（page/index.js）require 本文件拿到同一套配置与提交逻辑，页面不存在时
@@ -28,10 +28,30 @@ var engine = (function () {
   var MAX_DEDUPE = 60;
   var MAX_SEEN = 400;
   var MAX_ITEMS = 120;
-  var BATCH_URLS = 300;
+  /**
+   * 按 URL 清除的单次批量上限，按服务商拆分。
+   *
+   * 这里取的都是「非企业套餐也安全」的保守默认值：Cloudflare 免费 / Pro / Business
+   * 单次最多 30 条；EdgeOne `purge_url` 与阿里云 `RefreshObjectCaches` 的非企业配额
+   * 也明显低于企业档；CloudFront `CreateInvalidation` 单次上限 3000 条路径。
+   * 数值可按实际套餐调整；未列出的服务商走 BATCH_URLS_FALLBACK。
+   * 整批超出上限会被服务商拒绝，而失败批次留在队首会一直卡住后面的 URL
+   * （队列是 FIFO），因此这里宁可取小。
+   */
+  var BATCH_URLS_BY_PROVIDER = { cloudflare: 30, edgeone: 200, aliyun: 1000, aws: 3000 };
+  var BATCH_URLS_FALLBACK = 30;
   var BATCH_PATHS = 3000;
   var DEDUPE_MS = 5000;
   var BACKFILL_MS = 6 * 60 * 60 * 1000;
+  /**
+   * 启动租约。Page 与 headless 两种沙箱都会执行 core 并各自 bootstrap，
+   * 而 `runtime.running` 只在单个沙箱内有效——两边会读到同一份队列和记录，
+   * 把同一批 URL 提交两次，AUTO_KEY / 队列的读-改-写也会互相覆盖。
+   * 定时任务回调由宿主保证只在最后挂载的 runtime 执行，因此只有「启动时立即核对」
+   * 需要这把跨沙箱的锁；租约很短，过期后另一个沙箱会正常接手。
+   */
+  var LEASE_KEY = 'cdn-cache.lease.v1';
+  var LEASE_MS = 8000;
 
   var PROVIDERS = ['cloudflare', 'edgeone', 'aliyun', 'aws'];
   var PROVIDER_LABELS = {
@@ -44,21 +64,31 @@ var engine = (function () {
   var AUTO_TASK_ID = 'cdn-cache-auto-refresh';
   var SWEEP_TASK_ID = 'cdn-cache-periodic-purge';
 
+  /**
+   * 站内文章阅读页模板。宿主把内容源文章渲染在 `/journal/articles/{id}`
+   * （见 Myriad UPGRADE_NOTES「阅读器：用户地址是 /journal/articles/{id}」），
+   * 而 `phantasiList.list()` 返回的 `link` 是原文站外地址——站外地址不在本站
+   * 缓存里，提交给 CDN 只会被服务商拒绝或白白浪费配额，因此默认刷新站内阅读页。
+   */
+  var DEFAULT_ARTICLE_PATH = '/journal/articles/{id}';
+  // 旧版本用 {link}（站外原文地址）做默认模板，迁移时按这个值识别并改写。
+  var LEGACY_LINK_TEMPLATE = '{link}';
+
   var DEFAULT_AUTO = {
     enabled: false,
     intervalMinutes: 5,
-    onNotes: true,
-    onSourceItems: true,
+    // 内容源文章（手帐文章）变更后刷新：这是宿主目前唯一可读的内容接口。
+    onArticles: true,
+    // 订阅源本身增删/改名时刷新站点首页与固定附加地址。
     onSourceChange: true,
-    notePathTemplate: '{link}',
-    itemPathTemplate: '{link}',
+    articlePathTemplate: DEFAULT_ARTICLE_PATH,
     includeHomepage: true,
     wildcard: [],
     maxUrls: 80,
     purgeOnStart: false,
     periodicEnabled: false,
     periodicMinutes: 60,
-    periodicScope: 'manual',
+    periodicScope: 'queue',
     periodicManualUrls: '',
     lastCheckAt: 0,
     lastSubmitAt: 0,
@@ -214,14 +244,21 @@ var engine = (function () {
   function normalizeAuto(value) {
     value = isObject(value) ? value : {};
     var allowed = ['queue', 'all', 'list'];
+    // 旧字段名迁移：onNotes / onSourceItems 合并为 onArticles；
+    // notePathTemplate / itemPathTemplate 合并为 articlePathTemplate。
+    // 旧默认值 {link} 指向站外原文，会破坏站内 origin 校验，因此自动改写为新默认。
+    var legacyOn = value.onNotes !== false || value.onSourceItems !== false;
+    var articleTemplate = clean(value.articlePathTemplate);
+    if (!articleTemplate) {
+      var legacyTemplate = clean(value.notePathTemplate) || clean(value.itemPathTemplate);
+      articleTemplate = legacyTemplate && legacyTemplate !== LEGACY_LINK_TEMPLATE ? legacyTemplate : DEFAULT_ARTICLE_PATH;
+    }
     return {
       enabled: value.enabled === true,
       intervalMinutes: clamp(value.intervalMinutes == null ? DEFAULT_AUTO.intervalMinutes : value.intervalMinutes, 1, 1440),
-      onNotes: value.onNotes !== false,
-      onSourceItems: value.onSourceItems !== false,
+      onArticles: value.onArticles === false ? false : value.onArticles === true ? true : legacyOn,
       onSourceChange: value.onSourceChange !== false,
-      notePathTemplate: clean(value.notePathTemplate) || DEFAULT_AUTO.notePathTemplate,
-      itemPathTemplate: clean(value.itemPathTemplate) || DEFAULT_AUTO.itemPathTemplate,
+      articlePathTemplate: articleTemplate,
       includeHomepage: value.includeHomepage !== false,
       wildcard: normalizeWildcards(value.wildcard, clean(value.siteUrl)),
       maxUrls: clamp(value.maxUrls == null ? DEFAULT_AUTO.maxUrls : value.maxUrls, 1, 500),
@@ -319,11 +356,9 @@ var engine = (function () {
       return Tapp.storage.set(AUTO_KEY, {
         enabled: normalized.enabled,
         intervalMinutes: normalized.intervalMinutes,
-        onNotes: normalized.onNotes,
-        onSourceItems: normalized.onSourceItems,
+        onArticles: normalized.onArticles,
         onSourceChange: normalized.onSourceChange,
-        notePathTemplate: normalized.notePathTemplate,
-        itemPathTemplate: normalized.itemPathTemplate,
+        articlePathTemplate: normalized.articlePathTemplate,
         includeHomepage: normalized.includeHomepage,
         wildcard: normalized.wildcard,
         maxUrls: normalized.maxUrls,
@@ -814,7 +849,11 @@ var engine = (function () {
     return '';
   }
 
-  function noteEntry(raw) {
+  /**
+   * 把 `phantasiList.list()` 的条目归一化。
+   * `link` 是原文站外地址，`id` 用来生成站内阅读页地址（/journal/articles/{id}）。
+   */
+  function articleEntry(raw) {
     if (!isObject(raw)) return null;
     var id = raw.id != null ? String(raw.id) : '';
     if (!id) return null;
@@ -825,75 +864,52 @@ var engine = (function () {
       id: id,
       link: pickUrl(candidates),
       title: clean(raw.title || raw.name || ''),
+      source_name: clean(raw.source_name || (isObject(raw.source) ? raw.source.name : '')),
       published_at: raw.published_at != null ? raw.published_at : raw.publishedAt != null ? raw.publishedAt : raw.created_at,
       updated_at: raw.updated_at != null ? raw.updated_at : raw.updatedAt,
     };
   }
 
-  function itemEntry(raw) {
-    if (!isObject(raw)) return null;
-    var id = raw.id != null ? String(raw.id) : '';
-    if (!id) return null;
-    return {
-      id: id,
-      link: pickUrl([raw.link, raw.url, raw.permalink]),
-      title: clean(raw.title || raw.name || ''),
-      published_at: raw.published_at != null ? raw.published_at : raw.publishedAt != null ? raw.publishedAt : raw.created_at,
-      source_id: raw.source_id != null ? String(raw.source_id) : raw.sourceId != null ? String(raw.sourceId) : '',
-    };
-  }
-
-  function readNotes() {
+  /**
+   * 读取手帐内容源与文章。
+   *
+   * 重要：`phantasiList.list()` 返回的是**订阅源里的文章**，`link` 是原文站外地址；
+   * 它并不是「本站自己发布的笔记」，宿主目前也没有提供列出站内笔记的只读 Tapp API
+   * （沙箱契约里与 note 相关的只有 `federation.createNote`，是写入操作）。
+   * `phantasiList.sources()` 只返回源元数据（id/name/url/item_count…），不含 items。
+   * 因此「新文章」与「源变更」共用这一次 list() 结果，不重复请求也不重复计数。
+   */
+  function readPhantasi() {
     var api = Tapp.phantasiList;
-    if (!api || typeof api.list !== 'function') return Promise.resolve({ available: false, items: [] });
-    return Promise.resolve(api.list({ limit: MAX_ITEMS, page: 1, filter: 'all' }))
-      .then(function (result) {
-        var raw = isObject(result) && Array.isArray(result.items) ? result.items : [];
-        return { available: true, items: raw.map(noteEntry).filter(Boolean) };
-      })
-      .catch(function (error) {
-        return { available: false, items: [], error: safeError(error) };
-      });
-  }
-
-  function readSources() {
-    // 宿主当前的内容源命名空间是 phantasiList（`phantasi:read`）；
-    // `Tapp.brewList` 只是旧版别名，仅作兼容回退。
-    var api = Tapp.brewList || Tapp.phantasiList;
-    if (!api || typeof api.sources !== 'function') {
-      return Promise.resolve({ available: false, sources: [], items: [] });
+    if (!api || typeof api.list !== 'function') {
+      return Promise.resolve({ available: false, sourcesAvailable: false, articles: [], sources: [] });
     }
-    return Promise.resolve(api.sources())
+    var articles = api.list({ limit: MAX_ITEMS, page: 1, filter: 'all' })
       .then(function (result) {
-        var sources = [];
-        if (Array.isArray(result)) sources = result;
-        else if (isObject(result) && Array.isArray(result.sources)) sources = result.sources;
-        else if (isObject(result) && Array.isArray(result.items)) sources = result.items;
-        var items = [];
-        for (var i = 0; i < sources.length; i++) {
-          var source = sources[i];
-          if (!isObject(source) || !Array.isArray(source.items)) continue;
-          for (var j = 0; j < source.items.length; j++) {
-            var item = itemEntry(source.items[j]);
-            if (item) {
-              if (!item.source_id) item.source_id = source.id != null ? String(source.id) : '';
-              item.source_name = clean(source.name || source.title || source.url || '');
-              items.push(item);
-            }
-          }
-        }
-        // 文档中的 brewList.sources() 只返回源元数据，条目由 list() 提供。
-        if (items.length || typeof api.list !== 'function' || api === Tapp.phantasiList) {
-          return { available: true, sources: sources, items: items };
-        }
-        return Promise.resolve(api.list({ limit: MAX_ITEMS, page: 1 })).then(function (listed) {
-          var raw = Array.isArray(listed) ? listed : isObject(listed) && Array.isArray(listed.items) ? listed.items : [];
-          return { available: true, sources: sources, items: raw.map(itemEntry).filter(Boolean) };
-        });
+        var raw = isObject(result) && Array.isArray(result.items) ? result.items : Array.isArray(result) ? result : [];
+        return { available: true, articles: raw.map(articleEntry).filter(Boolean) };
       })
       .catch(function (error) {
-        return { available: false, sources: [], items: [], error: safeError(error) };
+        return { available: false, articles: [], error: safeError(error) };
       });
+    var sources = typeof api.sources === 'function'
+      ? Promise.resolve(api.sources())
+          .then(function (result) {
+            var list = Array.isArray(result) ? result : isObject(result) && Array.isArray(result.sources) ? result.sources : isObject(result) && Array.isArray(result.items) ? result.items : [];
+            return { available: true, sources: list.filter(isObject) };
+          })
+          .catch(function (error) {
+            return { available: false, sources: [], error: safeError(error) };
+          })
+      : Promise.resolve({ available: false, sources: [] });
+    return Promise.all([articles, sources]).then(function (values) {
+      return {
+        available: values[0].available,
+        articles: values[0].articles,
+        sourcesAvailable: values[1].available,
+        sources: values[1].sources,
+      };
+    });
   }
 
   function resolveTargets(auto, entries, template, siteUrl) {
@@ -966,6 +982,11 @@ var engine = (function () {
     return auto.purgeOnStart ? '首次运行（按设置补刷启动前内容）' : '首次运行（已记录基线，不补刷历史内容）';
   }
 
+  /** 取某个服务商的按 URL 批量上限；未知服务商退回保守默认值。 */
+  function batchLimit(provider) {
+    return BATCH_URLS_BY_PROVIDER[provider] || BATCH_URLS_FALLBACK;
+  }
+
   function flushPending(config) {
     if (runtime.running) {
       runtime.pending = true;
@@ -976,8 +997,10 @@ var engine = (function () {
       .then(function (queue) {
         if (!queue.paths.length) return null;
         // 队首最旧、队尾最新：从队首取一批先提交（FIFO），新探测到的内容留在队尾。
-        var urls = queue.paths.slice(0, BATCH_URLS);
-        var rest = queue.paths.slice(BATCH_URLS);
+        // 批量上限按服务商取（非企业套餐也安全），出队与剩余必须用同一个上限。
+        var limit = batchLimit(config && config.provider);
+        var urls = queue.paths.slice(0, limit);
+        var rest = queue.paths.slice(limit);
         var label = clean(queue.from) || '自动提交';
         return purge(config, urls, false, { dedupe: false })
           .then(function (result) {
@@ -1070,13 +1093,22 @@ var engine = (function () {
     if (!urls.length) {
       return Promise.resolve({ ok: false, reason: reason, detail: '自定义 URL 列表为空', count: 0 });
     }
-    return purge(config, urls.slice(0, BATCH_URLS), false, { dedupe: false })
+    // 超出服务商单次上限的部分本轮不会提交，因此 count 必须报实际提交条数，
+    // 并在 detail 里说明被跳过的内容，避免日志谎报提交条数。
+    var limit = batchLimit(config && config.provider);
+    var batch = urls.slice(0, limit);
+    var truncated = urls.length - batch.length;
+    var detail = batch.join(' · ');
+    if (truncated > 0) {
+      detail += (detail ? ' ｜ ' : '') + '已提交 ' + batch.length + ' / ' + urls.length + ' 条，超出服务商单次上限的部分已跳过';
+    }
+    return purge(config, batch, false, { dedupe: false })
       .then(function (result) {
-        if (result && result.skipped) return { ok: false, reason: reason, detail: '与最近一次提交重复，已跳过', count: urls.length };
-        return { ok: true, reason: reason, detail: urls.join(' · '), count: urls.length };
+        if (result && result.skipped) return { ok: false, reason: reason, detail: '与最近一次提交重复，已跳过', count: batch.length };
+        return { ok: true, reason: reason, detail: detail, count: batch.length };
       })
       .catch(function (error) {
-        return { ok: false, reason: reason, detail: safeError(error), count: urls.length };
+        return { ok: false, reason: reason, detail: safeError(error), count: batch.length };
       })
       .then(function (result) {
         return addAutoLog(result).then(prime).then(function () {
@@ -1099,8 +1131,20 @@ var engine = (function () {
         var config = normalizeConfig(snapshot.config);
         cache.config = config;
         var record = snapshot.record;
+        // v1.2.0 把「笔记」与「RSS 条目」两条链路合并成一条「手帐文章」链路，
+        // noteIds / itemIds 两个键现在都保存文章 ID；取并集是为了让升级前的
+        // 旧记录仍被认作「已知」，不会把已见文章重复当成新增。
         var noteIds = Array.isArray(record.noteIds) ? record.noteIds : [];
         var itemIds = Array.isArray(record.itemIds) ? record.itemIds : [];
+        var knownArticleIds = [];
+        var seenKnown = {};
+        var allKnown = noteIds.concat(itemIds);
+        for (var ki = 0; ki < allKnown.length; ki++) {
+          if (allKnown[ki] && !seenKnown[allKnown[ki]]) {
+            seenKnown[allKnown[ki]] = true;
+            knownArticleIds.push(allKnown[ki]);
+          }
+        }
         var previousSourceIds = clean(record.sourceIds);
         var nextSourceIds = previousSourceIds;
         record.noteIds = noteIds;
@@ -1112,8 +1156,20 @@ var engine = (function () {
         var reason = acknowledged;
         var paths = [];
         var jobs = [];
-        var notesAvailable = true;
+        var articlesAvailable = true;
         var sourcesAvailable = true;
+
+        /**
+         * 自动提交没开启时不能写任何状态。
+         *
+         * 否则每次启动（含 bootstrap 的立即核对）都会把 lastCheckAt / acceptedAt 提前写上，
+         * 管理员过几天才打开自动提交时 initializing 已经是 false、快照是空的，
+         * freshEntries 会把安装以来发布的全部文章当成新增一次性刷掉——这与
+         * 「首次运行只建立基线、不补刷历史内容」的承诺相反。
+         */
+        if (!auto.enabled) {
+          return { checked: false, reason: '', paths: [], count: 0, articlesAvailable: articlesAvailable, sourcesAvailable: sourcesAvailable };
+        }
 
         function finish(extraReasons) {
           for (var i = 0; i < extraReasons.length; i++) {
@@ -1191,7 +1247,7 @@ var engine = (function () {
                 reason: reason,
                 paths: unique,
                 count: unique.length,
-                notesAvailable: notesAvailable,
+                articlesAvailable: articlesAvailable,
                 sourcesAvailable: sourcesAvailable,
               };
               if (!options.dryRun && unique.length) {
@@ -1203,63 +1259,43 @@ var engine = (function () {
             });
         }
 
-        if (auto.enabled && auto.onNotes) {
-          jobs.push(readNotes().then(function (notes) {
-            if (!notes.available) {
-              notesAvailable = false;
-              return '';
+        if (auto.enabled && (auto.onArticles || auto.onSourceChange)) {
+          jobs.push(readPhantasi().then(function (data) {
+            if (!data.available) articlesAvailable = false;
+            if (!data.sourcesAvailable) sourcesAvailable = false;
+            if (!data.available) return '手帐文章接口不可用';
+            var reasons = [];
+            // 1) 新文章：把新增文章映射到站内阅读页
+            if (auto.onArticles) {
+              var fresh = initializing
+                ? (auto.purgeOnStart ? data.articles.slice(0, clamp(auto.maxUrls, 1, 500)) : [])
+                : freshEntries(data.articles, knownArticleIds, acceptedAt).slice(0, clamp(auto.maxUrls, 1, 500));
+              if (fresh.length) {
+                paths = paths.concat(resolveTargets(auto, fresh, auto.articlePathTemplate, config.siteUrl));
+                reasons.push('手帐新文章 +' + fresh.length);
+              }
             }
-            if (initializing) {
-              if (auto.purgeOnStart) paths = paths.concat(resolveTargets(auto, notes.items, auto.notePathTemplate, config.siteUrl));
-              record.noteIds = idsOf(notes.items);
-              return '';
-            }
-            var fresh = freshEntries(notes.items, noteIds, acceptedAt);
-            // 每轮都回写当前快照，否则第二轮会重复提交同一批内容。
-            record.noteIds = idsOf(notes.items);
-            fresh = fresh.slice(0, clamp(auto.maxUrls, 1, 500));
-            if (fresh.length) {
-              paths = paths.concat(resolveTargets(auto, fresh, auto.notePathTemplate, config.siteUrl));
-              return 'Myriad 笔记 +' + fresh.length;
-            }
-            return '';
-          }).catch(function (error) {
-            notesAvailable = false;
-            return '笔记探测失败：' + safeError(error);
-          }));
-        }
-
-        if (auto.enabled && (auto.onSourceItems || auto.onSourceChange)) {
-          jobs.push(readSources().then(function (sources) {
-            if (!sources.available) {
-              sourcesAvailable = false;
-              return '';
-            }
-            var sourceIds = sources.sources.map(function (source) {
+            // 每轮都回写快照，否则下一轮会把同一批文章再提交一遍。
+            // noteIds / itemIds 是 v1.2.0 遗留的两个键，现在都保存文章 ID，
+            // 读取时取并集，升级后不会把旧记录里的已见文章重新当成新增。
+            var snapshot = idsOf(data.articles);
+            record.noteIds = snapshot;
+            record.itemIds = snapshot;
+            // 2) 源本身变更：没有对应站内条目地址，刷新站点首页与固定附加地址
+            var sourceIds = data.sources.map(function (source) {
               return [source.id, source.url, source.name || source.title, source.updated_at || source.updatedAt]
                 .map(clean).join('|');
             }).sort().join(',');
-            nextSourceIds = sourceIds;
-            var reasons = [];
-            if (auto.onSourceChange && !initializing && previousSourceIds !== sourceIds) {
-              reasons.push('RSS 源列表已变更');
-              // 源列表变化没有对应的站内条目 URL；刷新站点首页及固定附加地址。
+            if (data.sourcesAvailable) nextSourceIds = sourceIds;
+            if (auto.onSourceChange && data.sourcesAvailable && !initializing && previousSourceIds !== sourceIds) {
+              reasons.push('订阅源列表已变更');
               paths.push(config.siteUrl + '/');
               paths = paths.concat(auto.wildcard);
             }
-            if (auto.onSourceItems) {
-              var freshItems = initializing ? (auto.purgeOnStart ? sources.items : []) : freshEntries(sources.items, itemIds, acceptedAt);
-              freshItems = freshItems.slice(0, clamp(auto.maxUrls, 1, 500));
-              if (freshItems.length) {
-                paths = paths.concat(resolveTargets(auto, freshItems, auto.itemPathTemplate, config.siteUrl));
-                reasons.push('RSS 新条目 +' + freshItems.length);
-              }
-            }
-            record.itemIds = idsOf(sources.items);
             return reasons.join(' · ');
           }).catch(function (error) {
-            sourcesAvailable = false;
-            return 'RSS 源探测失败：' + safeError(error);
+            articlesAvailable = false;
+            return '手帐内容探测失败：' + safeError(error);
           }));
         }
 
@@ -1305,6 +1341,26 @@ var engine = (function () {
     return Promise.resolve(Tapp.scheduler.unregister(taskId)).catch(function () {
       return null;
     });
+  }
+
+  /**
+   * 尝试取得一次性启动租约。两个沙箱同时启动时只有一个能拿到，
+   * 另一个直接跳过启动核对（定时任务回调不受影响）。
+   * 存储失败时返回 true：宁可多做一次核对，也不要让后台链路整个不动。
+   */
+  function acquireStartupLease() {
+    var now = Date.now();
+    return Promise.resolve(Tapp.storage.get(LEASE_KEY))
+      .then(function (saved) {
+        var until = isObject(saved) ? Number(saved.until) || 0 : 0;
+        if (until > now) return false;
+        return Promise.resolve(Tapp.storage.set(LEASE_KEY, { until: now + LEASE_MS })).then(function () {
+          return true;
+        });
+      })
+      .catch(function () {
+        return true;
+      });
   }
 
   function runSweep() {
@@ -1409,6 +1465,9 @@ var engine = (function () {
   /**
    * 注册 onTask 回调并做一次立即核对。core 在 headless 下也要调用，
    * 因此不能依赖 Page 层的 DOM 或 onReady UI 分支。
+   *
+   * 启动核对会先抢一次跨沙箱租约：Page 与 headless 同时 bootstrap 时只有一个
+   * 沙箱执行，避免同一批 URL 被提交两遍、以及 AUTO_KEY / 队列的读-改-写互相覆盖。
    */
   function bootstrap() {
     var tasks = [];
@@ -1428,7 +1487,10 @@ var engine = (function () {
     tasks.push(
       isAdmin().then(function (admin) {
         if (!admin) return null;
-        return evaluate({});
+        return acquireStartupLease().then(function (acquired) {
+          if (!acquired) return null;
+          return evaluate({});
+        });
       }).catch(function (error) {
         console.warn('[CDN Cache] 首次核对失败', error);
         return null;
@@ -1448,6 +1510,8 @@ var engine = (function () {
     QUEUE_KEY: QUEUE_KEY,
     RECORD_KEY: RECORD_KEY,
     DEDUPE_KEY: DEDUPE_KEY,
+    LEASE_KEY: LEASE_KEY,
+    DEFAULT_ARTICLE_PATH: DEFAULT_ARTICLE_PATH,
     MAX_LOGS: MAX_LOGS,
     MAX_AUTO_LOGS: MAX_AUTO_LOGS,
     DEDUPE_MS: DEDUPE_MS,
@@ -1480,6 +1544,7 @@ var engine = (function () {
     apisFor: apisFor,
     buildRequest: buildRequest,
     flushPending: flushPending,
+    batchLimit: batchLimit,
     submitAll: submitAll,
     submitList: submitList,
     runSweep: runSweep,
@@ -1487,6 +1552,7 @@ var engine = (function () {
     resetBaseline: resetBaseline,
     syncScheduler: syncScheduler,
     schedulerAvailable: schedulerAvailable,
+    acquireStartupLease: acquireStartupLease,
     bootstrap: bootstrap,
     state: cache,
     runtime: runtime,

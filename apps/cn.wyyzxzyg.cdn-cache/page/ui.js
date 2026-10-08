@@ -251,11 +251,9 @@ function createUi(core) {
         siteUrl: core.normalizeConfig(readInputs()).siteUrl,
         enabled: checked('auto-enabled'),
         intervalMinutes: value('auto-interval'),
-        onNotes: checked('auto-notes'),
-        onSourceItems: checked('auto-source-items'),
+        onArticles: checked('auto-articles'),
         onSourceChange: checked('auto-source-change'),
-        notePathTemplate: value('auto-note-template'),
-        itemPathTemplate: value('auto-item-template'),
+        articlePathTemplate: value('auto-article-template'),
         includeHomepage: checked('auto-homepage'),
         wildcard: value('auto-wildcard'),
         maxUrls: value('auto-max-urls'),
@@ -272,11 +270,9 @@ function createUi(core) {
     if (!auto) return;
     if ($('auto-enabled')) $('auto-enabled').checked = auto.enabled;
     if ($('auto-interval')) $('auto-interval').value = auto.intervalMinutes;
-    if ($('auto-notes')) $('auto-notes').checked = auto.onNotes;
-    if ($('auto-source-items')) $('auto-source-items').checked = auto.onSourceItems;
+    if ($('auto-articles')) $('auto-articles').checked = auto.onArticles;
     if ($('auto-source-change')) $('auto-source-change').checked = auto.onSourceChange;
-    if ($('auto-note-template')) $('auto-note-template').value = auto.notePathTemplate;
-    if ($('auto-item-template')) $('auto-item-template').value = auto.itemPathTemplate;
+    if ($('auto-article-template')) $('auto-article-template').value = auto.articlePathTemplate;
     if ($('auto-homepage')) $('auto-homepage').checked = auto.includeHomepage;
     if ($('auto-wildcard')) $('auto-wildcard').value = (auto.wildcard || []).join('\n');
     if ($('auto-max-urls')) $('auto-max-urls').value = auto.maxUrls;
@@ -291,15 +287,14 @@ function createUi(core) {
   function renderPeriodicScope() {
     var scope = value('periodic-scope');
     var box = $('periodic-urls-field');
-    if (box) box.hidden = scope !== 'manual';
+    if (box) box.hidden = scope !== 'list';
   }
 
   function renderAutomation(schedulerInfo) {
     var auto = state.auto || core.normalizeAuto(null);
     var monitored = [];
-    if (auto.onNotes) monitored.push('Myriad 笔记');
-    if (auto.onSourceItems) monitored.push('RSS 新条目');
-    if (auto.onSourceChange) monitored.push('RSS 源变更');
+    if (auto.onArticles) monitored.push('手帐新文章');
+    if (auto.onSourceChange) monitored.push('订阅源变更');
     text('auto-state', auto.enabled ? '已开启' : auto.periodicEnabled ? '仅定期提交' : '已关闭');
     text('auto-monitor', monitored.length ? monitored.join(' · ') : '未选择监听内容');
     text('auto-last-check', relative(auto.lastCheckAt));
@@ -323,8 +318,8 @@ function createUi(core) {
   function capabilityNotes() {
     var notes = [];
     if (!core.schedulerAvailable()) notes.push('当前宿主不支持 Tapp.scheduler');
-    if (!Tapp.phantasiList) notes.push('当前宿主没有 phantasiList 接口，无法监听笔记');
-    if (!Tapp.phantasiList && !Tapp.brewList) notes.push('当前宿主没有内容源接口，无法监听 RSS 源');
+    if (!Tapp.phantasiList) notes.push('当前宿主没有 phantasiList 接口，无法监听手帐内容');
+    else if (typeof Tapp.phantasiList.sources !== 'function') notes.push('phantasiList 缺少 sources()，订阅源变更监听不可用');
     return notes;
   }
 
@@ -408,12 +403,16 @@ function createUi(core) {
     try {
       var result = await core.evaluate({ log: true });
       await refreshState({ fill: false });
-      var message = result && result.count ? '发现 ' + result.count + ' 个需刷新路径并已入队' : '未发现需要刷新的内容变更';
+      var message = result && result.checked === false
+        ? '自动提交未开启，本次只读取状态'
+        : result && result.count
+          ? '发现 ' + result.count + ' 个需刷新路径并已入队'
+          : '未发现需要刷新的内容变更';
       text('auto-check-result', message + (result && result.reason ? '（' + result.reason + '）' : ''));
       await notify(message, result && result.count ? 'success' : 'info');
       var notes = [];
-      if (result && result.notesAvailable === false) notes.push('笔记接口不可用');
-      if (result && result.sourcesAvailable === false) notes.push('RSS 源接口不可用');
+      if (result && result.articlesAvailable === false) notes.push('phantasiList 文章接口不可用');
+      if (result && result.sourcesAvailable === false) notes.push('phantasiList 订阅源接口不可用');
       if (notes.length) await notify(notes.join('；'), 'warning');
     } catch (error) {
       text('auto-check-result', '核对失败');
@@ -462,7 +461,7 @@ function createUi(core) {
 
   async function resetAutomation() {
     if (!(await requireAdmin())) return;
-    if (!(await Tapp.ui.confirm('重置变更基线？下次核对会把当前已有笔记与条目视为「已知」，之后只提交新增内容。'))) return;
+    if (!(await Tapp.ui.confirm('重置变更基线？下次核对会把当前已有手帐文章与订阅源视为「已知」，之后只提交新增内容。'))) return;
     try {
       await core.resetBaseline();
       await refreshState({ fill: false });
@@ -626,7 +625,7 @@ function createUi(core) {
     bind();
     var notes = capabilityNotes();
     if (notes.length) text('auto-capability', notes.join('；'));
-    else text('auto-capability', '笔记与 RSS 源接口可用');
+    else text('auto-capability', 'phantasiList 文章与订阅源接口可用');
     // 定时任务状态要主动读一次，否则面板只会显示兜底文案
     try {
       state.schedulerInfo = await core.syncScheduler();

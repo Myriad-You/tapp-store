@@ -133,7 +133,7 @@ test('管理员界面挂载后显示控制台与自动化面板', async () => {
   assert.equal(window.document.getElementById('admin-ui').hidden, false)
   assert.equal(window.document.getElementById('public-ui').hidden, true)
   assert.equal(window.document.getElementById('auto-state').textContent, '已关闭')
-  assert.equal(window.document.getElementById('auto-capability').textContent, '笔记与 RSS 源接口可用')
+  assert.equal(window.document.getElementById('auto-capability').textContent, 'phantasiList 文章与订阅源接口可用')
   assert.equal(window.document.getElementById('auto-plan').textContent, '未注册任何定时任务')
 })
 
@@ -229,12 +229,12 @@ test('始终一起刷新的地址会展开为绝对 URL 并随变更提交', asy
     JSON.stringify([
       'https://myriad.example/',
       'https://myriad.example/index.json',
-      'https://myriad.example/notes/n1'
+      'https://myriad.example/journal/articles/n1'
     ])
   )
 })
 
-test('立即核对一次会抽取新增笔记并写入队列', async () => {
+test('立即核对一次会抽取新增手帐文章并写入队列', async () => {
   const { window, storage, notes, apiCalls } = await boot()
   window.document.getElementById('zone-id').value = 'zone-1'
   window.document.getElementById('cf-token').value = 'token-1'
@@ -246,7 +246,7 @@ test('立即核对一次会抽取新增笔记并写入队列', async () => {
   const baselineAt = storage.get('cdn-cache.record.v1').acceptedAt
   notes.push({
     id: 'n1',
-    link: 'https://myriad.example/notes/n1',
+    link: 'https://offsite.test/original/n1',
     title: 'hi',
     published_at: new Date(baselineAt + 60000).toISOString()
   })
@@ -254,10 +254,10 @@ test('立即核对一次会抽取新增笔记并写入队列', async () => {
   await settle(40)
 
   const enriched = apiCalls.filter((call) => call.name === 'cloudflarePurgeUrls')
-  assert.equal(enriched.length, 1, '应立即核对并提交新增链接')
+  assert.equal(enriched.length, 1, '应立即核对并提交新增文章的站内阅读页')
   assert.equal(
     JSON.stringify(enriched[0].params.files.slice().sort()),
-    JSON.stringify(['https://myriad.example/', 'https://myriad.example/notes/n1'])
+    JSON.stringify(['https://myriad.example/', 'https://myriad.example/journal/articles/n1'])
   )
   assert.match(window.document.getElementById('auto-check-result').textContent, /发现 2 个需刷新路径并已入队/)
   assert.equal(storage.has('cdn-cache.queue.v1'), true)

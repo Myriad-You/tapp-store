@@ -2,16 +2,16 @@
   "id": "cn.wyyzxzyg.cdn-cache",
   "name": "CDN 缓存刷新",
   "version": "1.2.0",
-  "minSystemVersion": "0.3.23",
-  "description": "仅管理员可操作的 Cloudflare、EdgeOne、阿里云 CDN 与 AWS CloudFront 缓存刷新工具，支持定期提交与 Myriad 笔记 / RSS 源更新后的自动刷新",
+  "minSystemVersion": "0.6.2",
+  "description": "仅管理员可操作的 Cloudflare、EdgeOne、阿里云 CDN 与 AWS CloudFront 缓存刷新工具，支持定期提交与手帐新文章 / 订阅源更新后的自动刷新",
   "locales": {
     "en-US": {
       "name": "CDN Cache Purge",
-      "description": "Purge Cloudflare, EdgeOne, Alibaba Cloud CDN, and AWS CloudFront caches, with scheduled purges and automatic purges when Myriad notes or feed sources update"
+      "description": "Purge Cloudflare, EdgeOne, Alibaba Cloud CDN, and AWS CloudFront caches, with scheduled purges and automatic purges when Journal articles or feed sources update"
     },
     "ja-JP": {
       "name": "CDN キャッシュ更新",
-      "description": "Cloudflare、EdgeOne、Alibaba Cloud CDN、AWS CloudFront のキャッシュを更新。定期実行と、Myriad ノート・フィード更新時の自動更新に対応"
+      "description": "Cloudflare、EdgeOne、Alibaba Cloud CDN、AWS CloudFront のキャッシュを更新。定期実行と、手帳の新着記事・フィード更新時の自動更新に対応"
     }
   },
   "category": "developer",
@@ -27,8 +27,7 @@
     "ui:theme",
     "network:fetch",
     "scheduler:register",
-    "phantasi:read",
-    "brew:read"
+    "phantasi:read"
   ],
   "backgroundRequirements": [
     "scheduler"
