@@ -132,8 +132,28 @@ test('normalizeAuto 迁移 legacy notesEnabled 并保留模板', async () => {
   assert.equal(custom.articlesEnabled, true)
   assert.equal(custom.articlePathTemplate, '/notes/{id}')
 
+  // 无旧配置默认关闭：订阅源文章阅读页推给搜索引擎可能被视为转载/重复内容
   const fresh = engine.normalizeAuto({ enabled: true })
-  assert.equal(fresh.articlesEnabled, true)
+  assert.equal(fresh.articlesEnabled, false)
+  // 显式打开时保留
+  assert.equal(engine.normalizeAuto({ articlesEnabled: true }).articlesEnabled, true)
+})
+
+test('configError 校验文章地址模板必须以 / 或 https:// 开头', async () => {
+  const { engine } = await loadEngine()
+  assert.equal(engine.configError(config({ auto: { ...config().auto, articlePathTemplate: '/journal/articles/{id}' } })), '')
+  assert.equal(engine.configError(config({ auto: { ...config().auto, articlePathTemplate: 'https://example.com/read/{id}' } })), '')
+  // 不以 / 开头的相对路径会在 new URL 时失败并被静默丢弃
+  assert.match(
+    engine.configError(config({ auto: { ...config().auto, articlePathTemplate: 'journal/articles/{id}' } })),
+    /\/ 或 https:\/\//,
+  )
+  assert.match(
+    engine.configError(config({ auto: { ...config().auto, articlePathTemplate: 'http://example.com/read/{id}' } })),
+    /\/ 或 https:\/\//,
+  )
+  // 校验不拦默认配置
+  assert.equal(engine.configError(config()), '')
 })
 
 test('configError 校验 HTTPS 与必填凭证', async () => {

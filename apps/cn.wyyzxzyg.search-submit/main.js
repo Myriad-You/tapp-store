@@ -167,10 +167,12 @@ var SearchSubmitCore = (function () {
     raw = raw && typeof raw === 'object' ? raw : {};
     var mode = raw.mode === 'collect' ? 'collect' : 'submit';
     // 旧键 notesEnabled 兼容迁移到 articlesEnabled。
-    var legacyNotes = raw.notesEnabled !== undefined ? raw.notesEnabled : true;
+    // 无旧配置时默认关闭：订阅源文章在本站的阅读页主动推给搜索引擎可能被视为
+    // 转载/重复内容，且 /journal/articles/{id} 可能需登录或不对公网开放，推送无意义。
+    var legacyNotes = raw.notesEnabled !== undefined ? raw.notesEnabled !== false : null;
     return {
       enabled: raw.enabled === true,
-      articlesEnabled: raw.articlesEnabled !== undefined ? raw.articlesEnabled !== false : legacyNotes !== false,
+      articlesEnabled: raw.articlesEnabled !== undefined ? raw.articlesEnabled !== false : legacyNotes !== null ? legacyNotes : false,
       articlePathTemplate: clean(raw.articlePathTemplate) || DEFAULT_ARTICLE_PATH,
       mode: mode,
       sourcesEnabled: raw.sourcesEnabled === true,
@@ -225,6 +227,10 @@ var SearchSubmitCore = (function () {
         }
       }
     }
+    // 文章地址模板必须能解析成站内绝对地址：以 / 开头（相对站内路径）或 https:// 开头的绝对 URL，
+    // 否则 fillArticleTemplate 拼出的地址会在 new URL 时被静默丢弃。
+    var template = config.auto && config.auto.articlePathTemplate;
+    if (template && !/^(?:\/|https:\/\/)/.test(template)) return '文章地址模板需以 / 或 https:// 开头';
     return '';
   }
 
