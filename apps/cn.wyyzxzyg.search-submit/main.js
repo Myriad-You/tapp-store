@@ -4,12 +4,12 @@
  * 三条提交路径共用同一段提交实现（submitToProvider）：
  *   1. 手动提交：页面里粘贴 URL 后点「提交这些 URL」。
  *   2. 定时提交：Tapp.scheduler 周期任务，冲刷待提交队列。
- *   3. 自动发现：扫描 Myriad 手账笔记与自定义来源，只把「新增」URL 提交出去。
+ *   3. 自动发现：扫描 Myriad 手账订阅源文章与自定义来源，只把「新增」URL 提交出去。
  *
  * core 同时运行在 headless 与 Page 沙箱，因此调度注册放在 bootstrap()，
  * 不依赖 DOM；页面专属的绑定放在 init()。
  */
-(function () {
+var SearchSubmitCore = (function () {
   'use strict';
 
   var CK = 'search-submit.config.v1';
@@ -166,9 +166,12 @@
   function normalizeAuto(raw) {
     raw = raw && typeof raw === 'object' ? raw : {};
     var mode = raw.mode === 'collect' ? 'collect' : 'submit';
+    // 旧键 notesEnabled 兼容迁移到 articlesEnabled。
+    var legacyNotes = raw.notesEnabled !== undefined ? raw.notesEnabled : true;
     return {
       enabled: raw.enabled === true,
-      notesEnabled: raw.notesEnabled !== false,
+      articlesEnabled: raw.articlesEnabled !== undefined ? raw.articlesEnabled !== false : legacyNotes !== false,
+      articlePathTemplate: clean(raw.articlePathTemplate) || DEFAULT_ARTICLE_PATH,
       mode: mode,
       sourcesEnabled: raw.sourcesEnabled === true,
       sources: normalizeSourceList(raw.sources),
@@ -632,7 +635,7 @@
     return { urls: collectUrls(urls, config), errors: errors };
   }
 
-  /* ------------------------------------------- 自动发现：Myriad 手账笔记 */
+  /* ----------------------------------- 自动发现：Myriad 手账订阅源文章 */
 
   function journalApi() {
     var api = Tapp.phantasiList;
@@ -640,7 +643,26 @@
   }
 
   /**
-   * 读取本站手账（Phantasi）笔记的公开链接。新发布的笔记在这里第一次出现。
+   * 站内文章阅读页模板。宿主把内容源文章渲染在 `/journal/articles/{id}`
+   * （见 Myriad UPGRADE_NOTES「阅读器：用户地址是 /journal/articles/{id}」）。
+   * 注意：`phantasiList.list()` 返回的是**订阅源里的文章**，`link` 是原文站外
+   * 地址；它并不是「本站自己发布的笔记」，宿主目前也没有列出站内笔记的只读
+   * Tapp API。所以默认用 `id` 拼站内阅读页地址，站外原文会被 origin 过滤丢弃。
+   */
+  var DEFAULT_ARTICLE_PATH = '/journal/articles/{id}';
+
+  /** 模板占位符：{id}/{link}/{url}/{title}/{date}/{source}；link/url 原样，其余 encodeURIComponent。 */
+  function fillArticleTemplate(template, item) {
+    var text = clean(template) || DEFAULT_ARTICLE_PATH;
+    return text.replace(/\{(link|url|id|title|date|source)\}/g, function (match, key) {
+      var value = item && item[key] != null ? String(item[key]) : '';
+      return key === 'link' || key === 'url' ? value : encodeURIComponent(value);
+    });
+  }
+
+  /**
+   * 读取手账订阅源文章，生成「站内阅读页 URL」。
+   * 模板字段缺失时跳过该条（不会拿空串去拼 URL）。
    */
   async function discoverFromNotes(config) {
     var api = journalApi();
@@ -653,10 +675,10 @@
         if (!items.length) break;
         for (var i = 0; i < items.length; i++) {
           var item = items[i];
-          if (!item) continue;
-          var link = clean(item.link);
-          if (!link) continue;
-          urls.push(link.indexOf('//') === 0 ? 'https:' + link : link);
+          if (!item || item.id == null) continue;
+          var candidate = fillArticleTemplate(config.auto.articlePathTemplate, item);
+          if (!candidate) continue;
+          urls.push(candidate);
         }
         if (items.length < NOTE_PAGE_SIZE) break;
       }
@@ -686,10 +708,10 @@
       var discovered = [];
       var warnings = [];
 
-      if (config.auto.enabled && config.auto.notesEnabled) {
+      if (config.auto.enabled && config.auto.articlesEnabled) {
         var notes = await discoverFromNotes(config);
         for (var n = 0; n < notes.urls.length; n++) discovered.push(notes.urls[n]);
-        if (notes.error) warnings.push('笔记：' + notes.error);
+        if (notes.error) warnings.push('手账文章：' + notes.error);
       }
 
       if (config.auto.enabled && config.auto.sourcesEnabled && config.auto.sources.length) {
@@ -989,7 +1011,8 @@
 
   function fillAuto(config) {
     $('auto-enabled').checked = config.auto.enabled;
-    $('auto-notes').checked = config.auto.notesEnabled;
+    $('auto-notes').checked = config.auto.articlesEnabled;
+    $('article-path-template').value = config.auto.articlePathTemplate;
     $('auto-mode').value = config.auto.mode;
     $('auto-sources-enabled').checked = config.auto.sourcesEnabled;
     $('auto-sources').value = config.auto.sources.join('\n');
@@ -1023,7 +1046,8 @@
       },
       auto: {
         enabled: $('auto-enabled').checked,
-        notesEnabled: $('auto-notes').checked,
+        articlesEnabled: $('auto-notes').checked,
+        articlePathTemplate: $('article-path-template').value,
         mode: $('auto-mode').value,
         sourcesEnabled: $('auto-sources-enabled').checked,
         sources: String($('auto-sources').value || '').split(/\r?\n/).map(clean).filter(Boolean),
@@ -1295,4 +1319,26 @@
       bootstrapped.then(init);
     });
   }
+
+  return {
+    DEFAULT_ARTICLE_PATH: DEFAULT_ARTICLE_PATH,
+    TASK_ID: TASK_ID,
+    SEEN_LIMIT: SEEN_LIMIT,
+    normalizeConfig: normalizeConfig,
+    normalizeAuto: normalizeAuto,
+    configError: configError,
+    normalizeCandidate: normalizeCandidate,
+    collectUrls: collectUrls,
+    parseTextarea: parseTextarea,
+    keyScope: keyScope,
+    fillArticleTemplate: fillArticleTemplate,
+    discoverFromNotes: discoverFromNotes,
+    runAutomation: runAutomation,
+    flushQueue: flushQueue,
+    saveSeen: saveSeen,
+    bootstrap: bootstrap,
+  };
 })();
+
+if (typeof window !== 'undefined') window.SearchSubmitCore = SearchSubmitCore;
+if (typeof module !== 'undefined' && module.exports) module.exports = SearchSubmitCore;

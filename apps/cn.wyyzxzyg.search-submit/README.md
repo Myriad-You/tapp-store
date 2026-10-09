@@ -20,7 +20,8 @@
 - 跳转失败时自动复制官方地址
 - **定时提交**：按间隔或每天固定时间自动冲刷待提交队列（`Tapp.scheduler`，headless core 常驻）
 - **待提交队列**：手动攒下 URL，到点自动送出；也可让自动发现只收集不提交
-- **笔记自动提交**：读取 Myriad 手账（Phantasi，`Tapp.phantasiList`）新发布的笔记链接并自动推送
+- **手账文章自动提交**：读取 Myriad 手账（Phantasi，`Tapp.phantasiList`）订阅源文章，
+  按站内阅读页地址模板生成 URL 并自动推送（默认 `/journal/articles/{id}`，模板可配置）
 - **来源自动扫描**：解析 sitemap.xml / sitemapindex / robots.txt / RSS / Atom / OPML / 商店 index.json
 - **增量去重**：只提交首次出现的 URL；首次运行只建立基线，不会全量推送
 
@@ -53,7 +54,12 @@
 
 在「04 自动发现新增链接」中开启后可配置：
 
-- **扫描 Myriad 手账**：读取 `Tapp.phantasiList.list()` 的笔记 `link`（站点相对路径），拼成绝对 URL。
+- **扫描 Myriad 手账订阅源文章**：`phantasiList.list()` 返回的 `link` 是**原文站外地址**
+  （它来自订阅源，不是本站自己发布的笔记；宿主没有列出站内笔记的只读 Tapp API）。
+  因此用「站内文章地址模板」从 `id` 生成站内阅读页地址后提交。
+  模板占位符：`{id}`、`{link}`、`{url}`、`{title}`、`{date}`、`{source}`；
+  `link`/`url` 原样替换，其余做 `encodeURIComponent`。默认 `/journal/articles/{id}`。
+  最终 URL 仍经过同站点过滤，站外原文（`{link}`）会被丢弃，不会提交给搜索引擎。
   宿主未提供 `phantasiList`、未授予 `phantasi:read` 或读取失败时只记日志，不影响其它来源。
 - **扫描自定义来源**：每行一个 URL，最多 10 个，每轮最多实际抓取 10 次。
   来源地址必须是 HTTPS 且不含空白或花括号。通用提取器按**根元素语义**区分
@@ -89,7 +95,7 @@ IndexNow 自定义 Key 文件时还必须落在 Key 授权目录内。HTML 实�
 | 权限 | 用途 |
 | --- | --- |
 | `storage:read` / `storage:write` | 配置、日志、待提交队列与去重记录 |
-| `phantasi:read` | 读取 Myriad 手账笔记列表以发现新发布内容 |
+| `phantasi:read` | 读取 Myriad 手账订阅源文章列表以发现新内容 |
 | `scheduler:register` | 注册定时提交任务 |
 | `network:fetch` | 百度 / IndexNow 推送，以及拉取自定义扫描来源 |
 | `ui:notification` / `ui:confirm` / `ui:theme` / `ui:openUrl` | 通知、确认、主题与官方页面跳转 |
@@ -102,6 +108,25 @@ IndexNow 自定义 Key 文件时还必须落在 Key 授权目录内。HTML 实�
 > 由沙箱传入原始（未编码）地址，与 `baiduSubmit` 对 query 值做 `encodeURIComponent` 的写法不同——
 > 宿主按字面量注入模板值。沙箱侧因此额外用 `validateSourceUrl` 挡住花括号、空白、
 > 非 HTTPS 与内嵌凭据，防止破坏模板解析或请求结构。
+>
+> 它本质上是**管理员可控的任意公网 HTTPS GET**（`access: "manager"`，仅安装 owner /
+> 当前管理员可调用；宿主侧有 SSRF 防护：解析并钉扎公网 DNS、禁自动重定向、无 URL 内嵌
+> 凭据、响应体上限 2 MiB）。管理员自行填写的来源地址默认仍过滤为**本站同站点** URL 才会
+> 提交，但抓取本身可以指向任何公网地址，请只配置可信来源。
+
+## 系统版本
+
+`phantasi:read`（`Tapp.phantasiList`）与 `scheduler:register` 依赖 0.6.x 宿主，
+`minSystemVersion` 声明为 `0.6.2`，旧宿主不会安装本版本。
+
+## 本地校验
+
+```bash
+node scripts/validate-app.mjs --app cn.wyyzxzyg.search-submit
+node scripts/validate-previews.mjs --app cn.wyyzxzyg.search-submit
+node tapp-cli/bin/myriad-tapp.mjs check apps/cn.wyyzxzyg.search-submit --json
+node --test apps/cn.wyyzxzyg.search-submit/tests
+```
 
 ## 更新日志
 
@@ -109,14 +134,17 @@ IndexNow 自定义 Key 文件时还必须落在 Key 授权目录内。HTML 实�
 
 - 新增定时提交：按间隔 / 每天固定时间在 headless core 中自动执行
 - 新增待提交队列，手动与自动发现共用
-- 新增自动发现：Myriad 手账新笔记 + sitemap / robots.txt / RSS / 商店 index.json
+- 新增自动发现：Myriad 手账订阅源文章（默认按 `/journal/articles/{id}` 拼站内阅读页，模板可配置）
+  + sitemap / robots.txt / RSS / 商店 index.json
 - 新增增量去重记录与首次运行基线（基线只做一次，改站点自动重置）
 - 扫描按根元素语义区分页面与子 sitemap，不再把 sitemap 地址当页面提交
 - RSS/Atom 解析覆盖 `<link>` 文本、条目 `<id>`，并跳过导航类 `rel` 链接
 - URL 去重改为按归一化结果，避免 `example.com` 与 `example.com/` 重复提交
 - 队列中的无效 URL 会被剔除并记录，不再每轮静默重试
 - 去重记录按条数与字节双重裁剪，避开 storage 单值 1 MiB 上限
+- minSystemVersion 提升至 0.6.2（phantasi:read / scheduler 依赖 0.6.x 宿主）
 - 提交逻辑抽出为共用实现，手动、定时、自动三条路径行为一致
+- 新增 tests/ 引擎级自动化测试（node --test）
 
 ### v1.0.0 (2026-08-06)
 

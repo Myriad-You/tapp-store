@@ -2,8 +2,8 @@
   "id": "cn.wyyzxzyg.search-submit",
   "name": "搜索引擎收录提交",
   "version": "1.1.0",
-  "minSystemVersion": "0.3.27",
-  "description": "仅管理员可用的百度主动推送与 IndexNow URL 提交工具，支持定时提交与笔记/商店源更新后自动提交",
+  "minSystemVersion": "0.6.2",
+  "description": "仅管理员可用的百度主动推送与 IndexNow URL 提交工具，支持定时提交与手账订阅源文章/商店源更新后自动提交",
   "category": "developer",
   "author": {
     "name": "我願一直向著陽光.℡",
@@ -33,7 +33,7 @@
     },
     {
       "id": "indexnow-key",
-      "url": "https://www.indexnow.org/faq",
+      "url": "https://www.indexnow.org/faq#how-do-i-generate-an-indexnow-api-key",
       "match": "exact"
     },
     {
