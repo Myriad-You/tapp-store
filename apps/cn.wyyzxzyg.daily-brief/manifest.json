@@ -1,17 +1,17 @@
 {
   "id": "cn.wyyzxzyg.daily-brief",
   "name": "今日简报",
-  "version": "1.0.0",
-  "minSystemVersion": "0.4.0",
-  "description": "汇总 Brew 阅读内容，快速生成一份清晰、可回看的今日简报。",
+  "version": "1.1.0",
+  "minSystemVersion": "0.6.2",
+  "description": "汇总 Phantasi 阅读内容，快速生成一份清晰、可回看的今日简报。",
   "locales": {
     "en-US": {
       "name": "Daily Brief",
-      "description": "Turn your Brew reading queue into a focused daily briefing."
+      "description": "Turn your Phantasi reading queue into a focused daily briefing."
     },
     "ja-JP": {
       "name": "今日のブリーフ",
-      "description": "Brew の記事を集約し、今日の要点をひと目で確認できます。"
+      "description": "Phantasi の記事を集約し、今日の要点をひと目で確認できます。"
     }
   },
   "category": "productivity",
@@ -20,7 +20,7 @@
     "url": "https://github.com/zgzyh"
   },
   "permissions": [
-    "brew:read",
+    "phantasi:read",
     "storage:read",
     "storage:write",
     "ui:theme",
@@ -40,7 +40,7 @@
     {
       "id": "daily-brief",
       "name": "今日简报",
-      "description": "在主页查看 Brew 未读数量与今日重点。",
+      "description": "在主页查看 Phantasi 未读数量与今日重点。",
       "icon": "newspaper",
       "defaultSize": "4x2",
       "sizes": ["2x2", "4x2", "4x4"],
@@ -82,6 +82,12 @@
     }
   ],
   "settings": [
+    {
+      "key": "showSubscriptions",
+      "label": "展示订阅文章",
+      "type": "toggle",
+      "defaultValue": true
+    },
     {
       "key": "maxItems",
       "label": "简报条目上限",
