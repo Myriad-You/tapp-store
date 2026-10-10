@@ -33,10 +33,6 @@ h1 { max-width: 760px; margin: 0; font-family: Georgia, "Noto Serif SC", serif; 
 .filter-tabs { display: flex; gap: 5px; padding: 4px; border-radius: 999px; background: var(--accent-soft); }
 .filter-tabs button { padding: 7px 14px; color: var(--muted); border: 0; border-radius: 999px; background: transparent; cursor: pointer; }
 .filter-tabs button.active { color: #22180b; background: var(--accent); font-weight: 700; }
-.content-toggles { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin: 0 0 16px; color: var(--muted); font-size: 12px; }
-.content-toggles[hidden] { display: none; }
-.content-toggles label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
-.content-toggles input { accent-color: var(--accent); }
 .status-text { color: var(--muted); font-size: 12px; }
 .access-status { display:flex; align-items:center; gap:8px; }
 .role-badge { padding:5px 8px; border:1px solid var(--line); border-radius:999px; color:var(--muted); background:var(--card); font-size:10px; font-weight:750; }
