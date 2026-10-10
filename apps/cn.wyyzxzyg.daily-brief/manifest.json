@@ -89,12 +89,6 @@
       "defaultValue": true
     },
     {
-      "key": "showNotes",
-      "label": "展示笔记",
-      "type": "toggle",
-      "defaultValue": true
-    },
-    {
       "key": "maxItems",
       "label": "简报条目上限",
       "type": "number",

@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.89",
+  "version": "1.0.91",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-10-08T09:37:26.808Z",
+  "updated_at": "2026-10-10T11:17:40.916Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -2356,19 +2356,19 @@
     {
       "id": "cn.wyyzxzyg.daily-brief",
       "name": "今日简报",
-      "version": "1.0.0",
-      "description": "汇总 Brew 阅读内容，快速生成一份清晰、可回看的今日简报。",
-      "long_description": "今日简报把分散在 Brew 中的阅读内容整理成一页专注视图。访客可以浏览站点公开简报并切换栏目；登录用户可使用站长下放的增强权限；安装设置、公共组件管理等控制面操作仅限管理员。需要进一步提炼时，可让 Myriad AI 根据当前条目生成简短的今日重点。没有 Brew 数据时会显示明确的引导，不会伪造内容。",
+      "version": "1.1.0",
+      "description": "汇总 Phantasi 阅读内容，快速生成一份清晰、可回看的今日简报。",
+      "long_description": "今日简报把分散在 Phantasi 中的阅读内容整理成一页专注视图。访客可以浏览站点公开简报并切换栏目；登录用户可使用站长下放的增强权限；安装设置、公共组件管理等控制面操作仅限管理员。需要进一步提炼时，可让 Myriad AI 根据当前条目生成简短的今日重点。没有 Phantasi 数据时会显示明确的引导，不会伪造内容。",
       "locales": {
         "en-US": {
           "name": "Daily Brief",
-          "description": "Turn your Brew reading queue into a focused daily briefing.",
-          "long_description": "Daily Brief turns your Brew reading queue into a calm, focused overview. Filter unread or starred stories, keep the latest snapshot on your dashboard, and ask Myriad AI for a concise summary when you need it."
+          "description": "Turn your Phantasi reading queue into a focused daily briefing.",
+          "long_description": "Daily Brief turns your Phantasi reading queue into a calm, focused overview. Filter unread or starred stories, keep the latest snapshot on your dashboard, and ask Myriad AI for a concise summary when you need it."
         },
         "ja-JP": {
           "name": "今日のブリーフ",
-          "description": "Brew の記事を集約し、今日の要点をひと目で確認できます。",
-          "long_description": "今日のブリーフは Brew の記事を落ち着いた一覧にまとめます。未読・お気に入りを切り替え、最新のスナップショットをウィジェットで確認し、必要なときだけ AI で要点を整理できます。"
+          "description": "Phantasi の記事を集約し、今日の要点をひと目で確認できます。",
+          "long_description": "今日のブリーフは Phantasi の記事を落ち着いた一覧にまとめます。未読・お気に入りを切り替え、最新のスナップショットをウィジェットで確認し、必要なときだけ AI で要点を整理できます。"
         }
       },
       "author": {
@@ -2381,13 +2381,13 @@
       "category": "productivity",
       "tags": [
         "简报",
-        "Brew",
+        "Phantasi",
         "阅读",
         "AI",
         "小组件"
       ],
       "permissions": [
-        "brew:read",
+        "phantasi:read",
         "storage:read",
         "storage:write",
         "ui:theme",
@@ -2427,13 +2427,13 @@
           }
         }
       },
-      "size": 36824,
+      "size": 40633,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-09-07T03:43:32.212Z",
-      "updated_at": "2026-09-07T03:43:32.212Z"
+      "updated_at": "2026-10-10T11:15:04.251Z"
     },
     {
       "id": "cn.echootaku.persona-stickers",

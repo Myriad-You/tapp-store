@@ -2,7 +2,7 @@
   'use strict';
 
   var CACHE_KEY = 'latestBrief';
-  var state = { items: [], totalSources: 0, updatedAt: 0, filter: 'unread', role: 'guest', settings: { maxItems: 12, defaultFilter: 'unread' }, display: { showSubscriptions: true, showNotes: true }, loading: false };
+  var state = { items: [], totalSources: 0, updatedAt: 0, filter: 'unread', role: 'guest', settings: { maxItems: 12, defaultFilter: 'unread' }, display: { showSubscriptions: true }, loading: false };
 
   function hasPermission(permission) {
     try {
@@ -38,8 +38,7 @@
       url: text(raw.url || raw.link || raw.external_url, ''),
       publishedAt: raw.published_at || raw.publishedAt || raw.created_at || raw.createdAt || null,
       unread: raw.unread === true || raw.is_read === false || raw.read === false,
-      starred: raw.starred === true || raw.is_starred === true || raw.favorite === true,
-      kind: raw.kind === 'note' || (raw.kind !== 'subscription' && /^\/(?!\/)/.test(text(raw.link || raw.url, ''))) ? 'note' : 'subscription'
+      starred: raw.starred === true || raw.is_starred === true || raw.favorite === true
     };
   }
 
@@ -70,7 +69,6 @@
         state.settings.maxItems = Math.max(4, Math.min(30, Number(settings.maxItems) || 12));
         if (/^(unread|starred|all)$/.test(settings.defaultFilter)) state.settings.defaultFilter = settings.defaultFilter;
         state.display.showSubscriptions = settings.showSubscriptions !== false;
-        state.display.showNotes = settings.showNotes !== false;
       }
     } catch (error) {}
     state.filter = state.settings.defaultFilter;
@@ -108,10 +106,8 @@
   }
 
   function queryFor(filter) {
-    var query = { limit: 100 };
-    if (filter === 'unread') query.unread = true;
-    if (filter === 'starred') query.starred = true;
-    return query;
+    // 宿主 phantasiList.list 读取 filter: 'all' | 'unread' | 'starred' 和 limit（映射为 per_page）。
+    return { limit: 100, filter: filter };
   }
 
   async function fetchItems(filter) {
@@ -135,31 +131,39 @@
 
   function filteredItems() {
     return state.items.filter(function (item) {
-      if (item.kind === 'note' ? !state.display.showNotes : !state.display.showSubscriptions) return false;
+      if (!state.display.showSubscriptions) return false;
       if (state.filter === 'unread') return item.unread;
       if (state.filter === 'starred') return item.starred;
       return true;
     }).slice(0, state.settings.maxItems);
   }
 
-  async function saveSnapshot(items, resetSummary) {
-    var snapshot = { items: items, filter: 'all', totalSources: state.totalSources, updatedAt: Date.now(), display: state.display, summary: '' };
+  function publicItems() {
+    // 发布到 Tapp.shared 的条目：按展示开关过滤并按 maxItems 截断，
+    // 保证访客/普通用户通过 shared.get 只能拿到管理员可见的筛选结果。
+    return state.items.filter(function (item) {
+      if (!state.display.showSubscriptions) return false;
+      return true;
+    }).slice(0, state.settings.maxItems);
+  }
+
+  async function saveSnapshot(resetSummary) {
+    var snapshot = { items: publicItems(), filter: 'all', totalSources: state.totalSources, updatedAt: Date.now(), display: state.display, summary: '' };
     try {
       var old = await Tapp.shared.get(CACHE_KEY);
       if (!resetSummary && old && old.summary) snapshot.summary = old.summary;
     } catch (error) {}
-    try {
-      if (state.role === 'admin' && hasPermission('storage:write')) {
-        await Tapp.shared.set(CACHE_KEY, snapshot);
-      }
-    } catch (error) {}
+    if (state.role === 'admin' && hasPermission('storage:write')) {
+      // 写失败向上抛，调用方（开关 change handler）负责回滚与提示。
+      await Tapp.shared.set(CACHE_KEY, snapshot);
+    }
   }
 
   async function loadPublicSnapshot() {
     var snapshot = await Tapp.shared.get(CACHE_KEY);
     if (!snapshot || !Array.isArray(snapshot.items)) throw new Error('管理员尚未发布公开简报，请稍后再试。');
     state.items = snapshot.items.map(normalizeItem);
-    state.display = { showSubscriptions: !snapshot.display || snapshot.display.showSubscriptions !== false, showNotes: !snapshot.display || snapshot.display.showNotes !== false };
+    state.display = { showSubscriptions: !snapshot.display || snapshot.display.showSubscriptions !== false };
     state.totalSources = Number(snapshot.totalSources) || 0;
     state.updatedAt = Number(snapshot.updatedAt) || 0;
   }
@@ -174,7 +178,7 @@
         state.items = result[0];
         state.totalSources = result[1];
         state.updatedAt = Date.now();
-        await saveSnapshot(state.items);
+        await saveSnapshot();
       } else {
         await loadPublicSnapshot();
       }
@@ -201,7 +205,7 @@
 
   function renderPage() {
     var items = filteredItems();
-    var unread = state.items.filter(function (item) { return item.unread && (item.kind === 'note' ? state.display.showNotes : state.display.showSubscriptions); }).length;
+    var unread = state.items.filter(function (item) { return item.unread && state.display.showSubscriptions; }).length;
     var sources = {};
     items.forEach(function (item) { sources[item.source] = true; });
     setNodeText(document.getElementById('itemCount'), String(items.length));
@@ -226,7 +230,7 @@
     if (!items.length) {
       var empty = make('div', 'empty-state');
       empty.appendChild(make('strong', '', state.filter === 'unread' ? '已经读完了' : '这里暂时是空的'));
-      empty.appendChild(make('p', '', !state.display.showSubscriptions && !state.display.showNotes ? '管理员已关闭订阅文章和笔记展示。' : '去 Phantasi 添加订阅或收藏文章，回来后刷新简报。'));
+      empty.appendChild(make('p', '', !state.display.showSubscriptions ? '管理员已关闭订阅文章展示。' : '去 Phantasi 添加订阅或收藏文章，回来后刷新简报。'));
       list.appendChild(empty);
       return;
     }
@@ -363,11 +367,14 @@
           try {
             await Tapp.settings.set(key, input.checked);
             state.display[key] = input.checked;
-            await saveSnapshot(state.items, true);
+            await saveSnapshot(true);
             setNodeText(document.getElementById('summaryText'), '展示内容已更新，可以重新生成对应的摘要。');
             renderPage();
           } catch (error) {
+            state.display[key] = previous;
             input.checked = previous;
+            // 尽力回滚已持久化的设置，保持设置与公开快照一致。
+            try { await Tapp.settings.set(key, previous); } catch (rollbackError) {}
             renderError('保存展示设置失败，请重试。');
           } finally {
             input.disabled = false;
@@ -420,9 +427,9 @@
     root.classList.toggle('is-compact', config.density === 'compact');
     var snapshot = null;
     try { snapshot = await Tapp.shared.get(CACHE_KEY); } catch (error) {}
-    var display = snapshot && snapshot.display ? snapshot.display : { showSubscriptions: true, showNotes: true };
+    var display = snapshot && snapshot.display ? snapshot.display : { showSubscriptions: true };
     var items = snapshot && Array.isArray(snapshot.items) ? snapshot.items.filter(function (item) {
-      return item.kind === 'note' ? display.showNotes !== false : display.showSubscriptions !== false;
+      return display.showSubscriptions !== false;
     }) : [];
     setNodeText(root.querySelector('[data-widget-date]'), new Date().toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }));
     setNodeText(root.querySelector('[data-widget-count]'), root.classList.contains('size-2x2') ? String(items.length) : items.length + ' 条');
