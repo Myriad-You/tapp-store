@@ -117,6 +117,7 @@
     "media:audio": "basic",
     "media:control": "basic",
     "media:read": "basic",
+    "media:remote": "basic",
     "network:fetch": "elevated",
     "platform:read": "basic",
     "platform:register": "privileged",
@@ -1630,6 +1631,16 @@
           "null"
         ]
       },
+      "remoteMedia": {
+        "description": "Hosts (`cdn.example.com` or `*.example.com`) the sandbox may load remote\nimages/media from. Paired with `media:remote`; the installer approves each host.",
+        "items": {
+          "type": "string"
+        },
+        "type": [
+          "array",
+          "null"
+        ]
+      },
       "page": {
         "anyOf": [
           {
@@ -1730,6 +1741,7 @@
       "media:audio": "basic",
       "media:control": "basic",
       "media:read": "basic",
+      "media:remote": "basic",
       "network:fetch": "elevated",
       "platform:read": "basic",
       "platform:register": "privileged",

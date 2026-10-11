@@ -1151,6 +1151,16 @@
         "null"
       ]
     },
+    "remoteMedia": {
+      "description": "Hosts (`cdn.example.com` or `*.example.com`) the sandbox may load remote\nimages/media from. Paired with `media:remote`; the installer approves each host.",
+      "items": {
+        "type": "string"
+      },
+      "type": [
+        "array",
+        "null"
+      ]
+    },
     "page": {
       "anyOf": [
         {
