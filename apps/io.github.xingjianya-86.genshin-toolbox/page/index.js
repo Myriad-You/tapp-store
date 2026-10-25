@@ -3,7 +3,9 @@
  */
 
 const core = require("../core.js");
-const qrcode = require("./qrcode.js");
+// qrcode.js（56KB）只有“扫码绑定”才用到：改为首次扫码时才加载，
+// 省掉每次开页的解析与执行成本。
+let qrcodeLib = null;
 const ui = core.ui;
 
 const t = ui.t;
@@ -23,6 +25,11 @@ const state = {
   settings: { uid: "", server: "cn_gf01" },
   auth: null,
   cache: null,
+  cacheSig: "",
+  abyssSig: "",
+  poetrySig: "",
+  charsSig: "",
+  adminSig: "",
   schedule: "1",
   tab: "spiral",
   qrRunning: false,
@@ -241,10 +248,19 @@ function renderCards() {
 
 function renderChars() {
   if (!refs.chars) return;
-  refs.chars.replaceChildren();
   const index = state.cache && state.cache.playerIndex ? state.cache.playerIndex : null;
   const avatars = index && Array.isArray(index.avatars) ? index.avatars : [];
+  // 签名守卫：角色简表只随 playerIndex 变（at 是整包数据时间戳，
+  // 加上数量与首位等级覆盖换人/升级场景），未变不重建 12 张卡。
+  const first = avatars[0];
+  const charSig = [(state.cache && state.cache.at) || 0, avatars.length, first ? first.id + ":" + first.level : "-"].join("|");
+  if (state.charsSig === charSig && refs.chars.childNodes.length) {
+    setText(refs.charCount, avatars.length ? t("app.chars.count", { count: avatars.length }) : "");
+    return;
+  }
+  state.charsSig = charSig;
   setText(refs.charCount, avatars.length ? t("app.chars.count", { count: avatars.length }) : "");
+  const frag = document.createDocumentFragment();
   sortAvatars(avatars, 12).forEach(function (avatar) {
     const card = charTile(avatar, {
       withLabels: true,
@@ -256,11 +272,12 @@ function renderChars() {
         core.openCharacter(avatar.name);
       });
     }
-    refs.chars.appendChild(card);
+    frag.appendChild(card);
   });
   if (!avatars.length) {
-    refs.chars.appendChild(el("p", "gt-empty", t("app.alert.noData")));
+    frag.appendChild(el("p", "gt-empty", t("app.alert.noData")));
   }
+  refs.chars.replaceChildren(frag);
 }
 
 function rankCard(label, rank) {
@@ -278,10 +295,18 @@ function rankCard(label, rank) {
 
 function renderAbyss() {
   if (!refs.abyss) return;
-  refs.abyss.replaceChildren();
   const abyss = pickAbyss(state.cache, state.schedule);
+  // 签名守卫：同一期同一档数据不重建（深渊 DOM 是全页最大子树，
+  // 含每层每间上下半队伍头像与 6 张排行卡）。
+  const sig = [state.schedule, state.cache && state.cache.abyssAt || 0, abyss && abyss.total_battle_times || 0].join("|");
+  if (state.abyssSig === sig && refs.abyss.childNodes.length) return;
+  state.abyssSig = sig;
+
+  // 先在 Fragment 里组装、最后一次交换：避免先清空造成的空白帧
+  const frag = document.createDocumentFragment();
   if (!abyss || typeof abyss.total_star !== "number") {
-    refs.abyss.appendChild(el("p", "gt-empty", t("app.abyss.empty")));
+    frag.appendChild(el("p", "gt-empty", t("app.abyss.empty")));
+    refs.abyss.replaceChildren(frag);
     return;
   }
 
@@ -292,7 +317,7 @@ function renderAbyss() {
     battles: abyss.total_battle_times || 0,
     wins: abyss.total_win_times || 0,
   })));
-  refs.abyss.appendChild(summary);
+  frag.appendChild(summary);
 
   const floors = Array.isArray(abyss.floors) ? abyss.floors.slice() : [];
   floors.sort(function (a, b) {
@@ -331,7 +356,7 @@ function renderAbyss() {
     } else {
       body.hidden = true;
     }
-    refs.abyss.appendChild(box);
+    frag.appendChild(box);
   });
 
   const ranks = el("div", "gt-ranks");
@@ -341,18 +366,24 @@ function renderAbyss() {
   ranks.appendChild(rankCard(t("app.abyss.rank.normalSkill"), abyss.normal_skill_rank));
   ranks.appendChild(rankCard(t("app.abyss.rank.energySkill"), abyss.energy_skill_rank));
   ranks.appendChild(rankCard(t("app.abyss.rank.reveal"), abyss.reveal_rank));
-  refs.abyss.appendChild(ranks);
+  frag.appendChild(ranks);
+  refs.abyss.replaceChildren(frag);
 }
 
 function renderPoetry() {
   if (!refs.poetry) return;
-  refs.poetry.replaceChildren();
   const item = pickPoetryItem(state.cache);
-  if (!item || !item.has_data || !item.stat) {
-    refs.poetry.appendChild(el("p", "gt-empty", t("app.poetry.empty")));
+  const stat = item && item.stat ? item.stat : null;
+  const sig = [state.cache && state.cache.abyssAt || 0, stat ? stat.medal_num + "/" + stat.max_round_id : "-"].join("|");
+  if (state.poetrySig === sig && refs.poetry.childNodes.length) return;
+  state.poetrySig = sig;
+
+  const frag = document.createDocumentFragment();
+  if (!item || !item.has_data || !stat) {
+    frag.appendChild(el("p", "gt-empty", t("app.poetry.empty")));
+    refs.poetry.replaceChildren(frag);
     return;
   }
-  const stat = item.stat;
   const summary = el("div", "gt-summary");
   summary.appendChild(el("span", "", t("app.poetry.summary", {
     difficulty: stat.difficulty_id,
@@ -361,7 +392,7 @@ function renderPoetry() {
     coins: stat.coin_num,
     rent: stat.rent_cnt,
   })));
-  refs.poetry.appendChild(summary);
+  frag.appendChild(summary);
 
   const rounds = item.detail && Array.isArray(item.detail.rounds_data) ? item.detail.rounds_data : [];
   rounds.forEach(function (round) {
@@ -380,8 +411,9 @@ function renderPoetry() {
     });
     row.appendChild(teams);
     row.appendChild(el("span", "gt-medal", round.is_get_medal ? "🏅" : "—"));
-    refs.poetry.appendChild(row);
+    frag.appendChild(row);
   });
+  refs.poetry.replaceChildren(frag);
 }
 
 function renderAlert() {
@@ -422,6 +454,19 @@ function renderAdmin() {
   if (refs.debug) refs.debug.hidden = state.role !== "admin";
   if (refs.refresh) refs.refresh.hidden = state.role !== "admin";
   if (refs.bind) refs.bind.hidden = state.role !== "admin";
+  // 签名守卫：parseDeviceInfo（JSON 解析设备信息）与 debugInfoText（含 Cookie 脱敏拼接）
+  // 是纯计算但不便宜，数据更新（onChanged / 刷新）不该每次都跑。
+  const auth = state.auth;
+  const adminSig = [
+    state.role,
+    state.settings.uid || "",
+    state.settings.server || "",
+    (state.settings.deviceInfo || "").length,
+    auth ? String(auth.cookie || "").length + ":" + (auth.uid || "") : "-",
+    state.cache ? state.cache.at || 0 : 0,
+  ].join("|");
+  if (state.adminSig === adminSig) return;
+  state.adminSig = adminSig;
   renderDebugInfo();
   if (state.role === "admin") {
     if (refs.configUid && document.activeElement !== refs.configUid) refs.configUid.value = state.settings.uid || "";
@@ -471,14 +516,24 @@ function renderTabs() {
 }
 
 function renderAll() {
+  // 手动刷新/初始化走这条路径：渲染完即同步签名，
+  // 否则随后的 onChanged 会因签名落后而多跑一轮重建。
+  state.cacheSig = cacheSignature(state.cache || {});
   renderProfile();
   renderCards();
   renderChars();
   renderTabs();
+  // 初次加载 / 手动刷新时两个面板都建好（含签名守卫），切 tab 即时显示；
+  // 后台数据更新（scheduleRerender）只重建激活中的那个面板。
   renderAbyss();
   renderPoetry();
   renderAlert();
   renderAdmin();
+}
+
+function renderActivePanel() {
+  if (state.tab === "poetry") renderPoetry();
+  else renderAbyss();
 }
 
 /* ---------- 调试 ---------- */
@@ -568,10 +623,18 @@ async function clearDebugCache() {
 /* ---------- 数据 ---------- */
 
 async function loadState() {
-  state.role = await core.getRole();
-  state.settings = await core.readSettings();
-  state.auth = await core.getAuth();
-  state.cache = await core.loadData();
+  // 四路读取并发（各自内部有 try/catch 兜底），首屏等待时间显著缩短
+  const results = await Promise.all([
+    core.getRole(),
+    core.readSettings(),
+    core.getAuth(),
+    core.loadData(),
+  ]);
+  state.role = results[0];
+  state.settings = results[1] || { uid: "", server: "cn_gf01" };
+  state.auth = results[2];
+  state.cache = results[3];
+  state.cacheSig = cacheSignature(state.cache || {});
 }
 
 function cooldownText(until) {
@@ -589,7 +652,9 @@ async function doRefresh(force) {
   if (refs.refresh) refs.refresh.disabled = true;
   toast(t("app.toast.refreshing"));
   try {
-    const res = await core.refresh(force !== false);
+    // 默认尊重 TTL（5 分钟数据 / 30 分钟深渊，core 内已实现短路）：
+    // 频繁强刷会放大米游社风控暴露面。按住 Shift 点击 = 强制重拉。
+    const res = await core.refresh(force === true);
     state.cache = res && res.cache ? res.cache : await core.loadData();
     renderAll();
     const riskUntil = (res && res.riskUntil) || (state.cache && state.cache.riskUntil);
@@ -614,7 +679,8 @@ async function doRefresh(force) {
 
 function drawQr(canvas, url) {
   if (!canvas) return;
-  const qr = qrcode(0, "M");
+  if (!qrcodeLib) qrcodeLib = require("./qrcode.js");
+  const qr = qrcodeLib(0, "M");
   qr.addData(url);
   qr.make();
   const count = qr.getModuleCount();
@@ -757,8 +823,9 @@ async function clearAuth() {
 /* ---------- 事件 ---------- */
 
 function bindEvents() {
-  if (refs.refresh) refs.refresh.addEventListener("click", function () {
-    doRefresh(true);
+  if (refs.refresh) refs.refresh.addEventListener("click", function (event) {
+    // 普通点击尊重 TTL；按住 Shift 点击 = 强制重拉（绕过 5/30 分钟缓存）
+    doRefresh(Boolean(event && event.shiftKey));
   });
   if (refs.bind) refs.bind.addEventListener("click", startBind);
   if (refs.saveSettings) refs.saveSettings.addEventListener("click", saveConfig);
@@ -772,17 +839,21 @@ function bindEvents() {
   if (refs.tabSpiral) refs.tabSpiral.addEventListener("click", function () {
     state.tab = "spiral";
     renderTabs();
+    renderActivePanel();
   });
   if (refs.tabPoetry) refs.tabPoetry.addEventListener("click", function () {
     state.tab = "poetry";
     renderTabs();
+    renderActivePanel();
   });
   if (refs.scheduleCurrent) refs.scheduleCurrent.addEventListener("click", function () {
+    if (state.schedule === "1") return;
     state.schedule = "1";
     renderTabs();
     renderAbyss();
   });
   if (refs.schedulePrevious) refs.schedulePrevious.addEventListener("click", function () {
+    if (state.schedule === "2") return;
     state.schedule = "2";
     renderTabs();
     renderAbyss();
@@ -802,17 +873,54 @@ function bindEvents() {
     });
   }
   try {
-    Tapp.shared.onChanged(function () {
-      core.loadData().then(function (cache) {
-        if (cache && (!state.cache || (cache.at || 0) >= (state.cache.at || 0))) {
-          state.cache = cache;
-          renderAll();
-        }
-      });
+    // 三道闸门：① 只认数据主键（图片分片 / OBC 映射等写入直接忽略）
+    //          ② 300ms 尾随防抖（素材缓存批量写会连发多个事件）
+    //          ③ 签名比对（数据没变不重绘）
+    // 之后只跑真正脏掉的渲染器，避免整页 ~300 节点全量重建。
+    Tapp.shared.onChanged(function (event) {
+      if (event && event.key && event.key !== core.CACHE_KEY) return;
+      scheduleRerender();
     });
   } catch (err) {
     /* ignore */
   }
+}
+
+let rerenderTimer = null;
+
+function scheduleRerender() {
+  if (rerenderTimer) clearTimeout(rerenderTimer);
+  rerenderTimer = setTimeout(function () {
+    rerenderTimer = null;
+    core.loadData().then(function (cache) {
+      if (!cache) return;
+      const sig = cacheSignature(cache);
+      if (state.cacheSig === sig) return;
+      state.cache = cache;
+      state.cacheSig = sig;
+      renderProfile();
+      renderCards();
+      renderChars();
+      renderTabs();
+      // 后台更新只重建用户正在看的那个面板（另一个 tab 的 DOM 保留旧内容，
+      // 切过去时 renderActivePanel 带签名守卫即时补齐）
+      renderActivePanel();
+      renderAlert();
+      renderAdmin();
+    });
+  }, 300);
+}
+
+// 数据签名：sections 内容以 at/abyssAt 为准（setCache 总是整体更新这两个时间戳），
+// 再带上错误与风控状态——这些都会影响界面。
+function cacheSignature(cache) {
+  let errors = "";
+  try {
+    errors = JSON.stringify(cache.errors || {});
+  } catch (err) {
+    errors = "?";
+  }
+  return [cache.at || 0, cache.abyssAt || 0, cache.uid || "", cache.riskUntil || 0, errors].join("|");
 }
 
 Tapp.lifecycle.onReady(async function () {
@@ -822,4 +930,9 @@ Tapp.lifecycle.onReady(async function () {
   await loadState();
   await core.loadAssets();
   renderAll();
+  // 6 小时兜底：定时任务可能因宿主未在线而错过，管理员打开页面时数据过旧就补一次
+  //（core.refresh(false) 内部仍受 5/30 分钟 TTL 与风控冷却保护，不会频繁打接口）
+  if (state.role === "admin" && core.isCacheStale(state.cache)) {
+    doRefresh(false);
+  }
 });

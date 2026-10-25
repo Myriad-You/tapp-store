@@ -18,6 +18,7 @@ const CACHE_TTL = 5 * 60 * 1000;
 const ABYSS_TTL = 30 * 60 * 1000;
 const CONFIG_KEY = "genshin.config.v1";
 const WIDGET_DEBUG_KEY = "genshin.widget.v1";
+const WIDGET_TAB_KEY = "genshin.widget.tab.v1";
 const OBC_KEY = "genshin.obc.v1";
 const ASSET_BATCH = 120;
 const DEVICE_KEY = "genshin.device.v1";
@@ -609,6 +610,34 @@ async function noteWidgetProps(widgetId, props) {
   }
 }
 
+// Widget tab 选择持久化：存安装级 private（写 private 不会重挂载可见卡片）。
+// 重挂载 = 新 iframe = 模块内存全丢，所以恢复必须 await private 读取。
+let widgetTabMem = {};
+
+function noteWidgetTab(widgetId, tab) {
+  widgetTabMem[widgetId] = tab;
+  try {
+    const result = Tapp.private.set(WIDGET_TAB_KEY + "." + widgetId, { tab: tab, at: Date.now() });
+    if (result && typeof result.catch === "function") result.catch(function () {});
+  } catch (err) {
+    /* ignore */
+  }
+}
+
+async function loadWidgetTab(widgetId) {
+  if (widgetTabMem[widgetId]) return widgetTabMem[widgetId];
+  try {
+    const value = await Tapp.private.get(WIDGET_TAB_KEY + "." + widgetId);
+    if (value && typeof value.tab === "string") {
+      widgetTabMem[widgetId] = value.tab;
+      return value.tab;
+    }
+  } catch (err) {
+    /* ignore */
+  }
+  return "";
+}
+
 async function readWidgetDebug() {
   try {
     const raw = await Tapp.private.get(WIDGET_DEBUG_KEY);
@@ -730,6 +759,8 @@ function formatMonthDay(value) {
 /* ---------- 素材本地化（增量缓存） ---------- */
 
 let assetMemory = null;
+// 旧单桶 key 只需清理一次（remove 也是 shared 写，会触发 onChanged / 重挂载）
+let legacyAssetsRemoved = false;
 
 function assetShardIndex(url) {
   let hash = 0;
@@ -774,17 +805,34 @@ async function setAssetMap(map) {
   Object.keys(map.failed).forEach(function (url) {
     shards[assetShardIndex(url)].failed[url] = map.failed[url];
   });
+  // 只写内容有变化的分片：每次 Tapp.shared 写都会触发 Page 的 onChanged
+  // 与 Widget 的重挂载，全量重写 4 分片是此前刷新风暴的主要来源。
   for (let i = 0; i < ASSET_SHARD_COUNT; i++) {
+    let raw = null;
+    try {
+      raw = await Tapp.shared.get(assetShardKey(i));
+    } catch (err) {
+      raw = null;
+    }
+    const same =
+      raw &&
+      typeof raw === "object" &&
+      JSON.stringify(raw.items || {}) === JSON.stringify(shards[i].items) &&
+      JSON.stringify(raw.failed || {}) === JSON.stringify(shards[i].failed);
+    if (same) continue;
     try {
       await Tapp.shared.set(assetShardKey(i), shards[i]);
     } catch (err) {
       /* 单分片超限时保留其余分片 */
     }
   }
-  try {
-    await Tapp.shared.remove(ASSETS_KEY);
-  } catch (err) {
-    /* 旧单桶残留由 getAssetMap 继续合并读取 */
+  if (!legacyAssetsRemoved) {
+    try {
+      await Tapp.shared.remove(ASSETS_KEY);
+      legacyAssetsRemoved = true;
+    } catch (err) {
+      /* 旧单桶残留由 getAssetMap 继续合并读取 */
+    }
   }
   assetMemory = map;
 }
@@ -1171,7 +1219,20 @@ async function refresh(force) {
 
 let assetCacheRunning = false;
 
+// 是否允许本沙箱执行素材缓存写入。widget 沙箱内禁止：
+// 每次 Tapp.shared 写都会让宿主重挂载所有可见卡片（闪骨架 + 状态丢失），
+// 素材缓存只该由 page / headless 单一 owner 执行。
+function canCacheAssets() {
+  try {
+    if (typeof window !== "undefined" && window._TAPP_MODE === "widget") return false;
+  } catch (err) {
+    /* ignore */
+  }
+  return true;
+}
+
 function scheduleAssetCache(cache) {
+  if (!canCacheAssets()) return;
   if (assetCacheRunning) return;
   assetCacheRunning = true;
   setTimeout(function () {
@@ -1628,25 +1689,49 @@ function el(tag, className, text) {
 }
 
 function setText(node, text) {
-  if (node) node.textContent = text == null ? "" : String(text);
+  if (!node) return;
+  const next = text == null ? "" : String(text);
+  // 同值跳过：每次 renderAll 都会对几十个节点调用 setText，
+  // 无谓的 textContent 写入会触发样式失效与重排。
+  if (node.textContent === next) return;
+  node.textContent = next;
 }
 
 function setImage(img, fallbackEl, url, fallbackText, color) {
   const src = url ? resolveAsset(url) : "";
   if (img) {
     if (src) {
-      if (fallbackEl) fallbackEl.hidden = true;
-      img.onerror = function () {
-        img.hidden = true;
-        if (fallbackEl) fallbackEl.hidden = false;
-      };
-      img.onload = function () {
+      // 同 src 且已成功加载 → 跳过：重设 data-URL src 会重新解码并闪烁
+      //（角色/头像 data-URL 每次 renderAll 高达数百张）。
+      if (img.dataset.gtSrc === src && img.dataset.gtState === "ok") {
         img.hidden = false;
         if (fallbackEl) fallbackEl.hidden = true;
-      };
-      img.src = src;
+      } else {
+        if (fallbackEl) fallbackEl.hidden = true;
+        img.onerror = function () {
+          img.hidden = true;
+          img.dataset.gtState = "err";
+          if (fallbackEl) fallbackEl.hidden = false;
+        };
+        img.onload = function () {
+          img.hidden = false;
+          img.dataset.gtState = "ok";
+          if (fallbackEl) fallbackEl.hidden = true;
+        };
+        img.dataset.gtSrc = src;
+        img.dataset.gtState = "loading";
+        img.hidden = true;
+        img.src = src;
+        // 缓存命中时 onload 可能已在赋值期间同步/提前触发，补一次状态修正
+        if (img.complete && img.naturalWidth > 0) {
+          img.hidden = false;
+          img.dataset.gtState = "ok";
+        }
+      }
     } else {
       img.hidden = true;
+      img.dataset.gtSrc = "";
+      img.dataset.gtState = "";
       if (fallbackEl) fallbackEl.hidden = false;
     }
   }
@@ -1809,6 +1894,8 @@ module.exports = {
   roleAvatar: roleAvatar,
   testAvatar: testAvatar,
   noteWidgetProps: noteWidgetProps,
+  noteWidgetTab: noteWidgetTab,
+  loadWidgetTab: loadWidgetTab,
   resolveCharacterLink: resolveCharacterLink,
   openCharacter: openCharacter,
   formatTimestamp: formatTimestamp,
