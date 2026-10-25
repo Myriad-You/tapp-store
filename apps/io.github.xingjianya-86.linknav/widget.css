@@ -5,8 +5,8 @@
   --lnw-accent-rgb: var(--tapp-primary-rgb, 244, 143, 177);
   --lnw-ink: #4b3950;
   --lnw-ink-soft: rgba(75, 57, 80, 0.6);
-  --lnw-scale: 1;
-  --lnw-font-scale: 1;
+  --lnw-scale: var(--tapp-scale, 1);
+  --lnw-font-scale: var(--tapp-font-scale, 1);
   position: relative;
   display: flex;
   flex-direction: column;

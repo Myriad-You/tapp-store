@@ -1146,6 +1146,11 @@ dialog.ln-io-dialog {
   box-shadow: var(--ln-shadow);
   transform: rotate(var(--ln-tilt));
   transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease;
+}
+
+/* 入场动画只给“新登场”的卡片（JS 挂 ln-enter）：复用节点重新插入时不重播，
+   否则搜索/筛选每敲一键 500 张卡都会整体淡入一次 */
+.ln-card.ln-enter {
   animation: ln-drop-in 0.42s cubic-bezier(0.22, 1.2, 0.36, 1) both;
 }
 
