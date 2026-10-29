@@ -1,4 +1,4 @@
-# Minecraft 服务器与 Wiki
+# Minecraft 工具箱
 
 普通玩家可直接使用的 Minecraft 工具 Tapp。
 
@@ -17,7 +17,20 @@
 - 直达基岩版独立服务端、创作者文档与官方示例
 - 搜索中文 Minecraft Wiki 并显示摘要
 - 点击搜索结果直接跳转到中文 Minecraft Wiki 条目
+- 查询 Java 玩家名称或 UUID，展示 Skin、Cape、头像和可旋转的 3D 模型
+- 查询 Bedrock Gamertag 或 XUID，并在 GeyserMC 已缓存时展示转换 Skin；网易玩家 UID 显示明确的暂不支持状态
+- 玩家最近查询最多 8 条，并对成功结果使用 5 分钟内存缓存
 - 支持深色模式与移动端
+
+## 玩家查询的数据来源与限制
+
+- Java：Mojang 的 `api.minecraftservices.com` 公开名称查询和 `sessionserver.mojang.com` 公开 Profile。Skin、Cape 来自 Profile 中的 `textures.minecraft.net` 地址。名称、UUID、Skin、Cape 和模型类型均以接口实际返回为准；不提供游戏时间、在线状态等未公开数据。
+- Bedrock：GeyserMC Global API 的 `/v2/xbox/xuid/{gamertag}` 与 `/v2/xbox/gamertag/{xuid}`。支持 Gamertag、十进制 XUID，以及可还原 XUID 的 Floodgate UUID（`00000000-0000-0000-xxxx-xxxxxxxxxxxx`）。普通 UUID（如 `da9c273c-8e43-464d-b1d0-4b44828f0b64`）不是 XUID，页面会说明区别并提供 Java 查询入口。额外查询 `/v2/skin/{xuid}`，仅在 GeyserMC 已缓存该玩家的转换 Skin 时展示贴图，不保证覆盖所有玩家，也不提供 Cape。这不是官方 Xbox 资料接口。
+- 网易：未确认符合免登录、免密钥且可在 TApp 中访问的可靠玩家资料接口，因此 UID 输入只显示暂不支持，不返回虚构资料。
+- 所有 JSON 请求经 Manifest 声明的 `Tapp.api` 发出，使用 `network:fetch`；远程图片单独申请 `media:remote`，并在 `remoteMedia` 中限定 `textures.minecraft.net` 与 `api.geysermc.org`。安装者须批准对应域名，宿主才会在 CSP 中允许其 HTTPS 图片。Java 图片若未批准则提供浏览器原图入口；Bedrock 提供复制贴图链接。头像裁剪还需要图片支持 CORS，Java 3D 模型还需要 WebGL。
+- 3D 使用宿主注入的 Three.js r170（MIT 许可证），未加载外部脚本，也没有自建后端。最近记录只存储在 TApp 本地存储；缓存 5 分钟后过期。
+
+测试：在玩家页用 `Notch` 或其 UUID 查询 Java，检查 Skin、头像、模型拖动/缩放和复制；用公开 Xbox Gamertag 或 XUID 测试 Bedrock；网易输入数字 UID 应显示暂不支持。服务器页和 Wiki 页仍按原有流程查询。
 
 ## 首页小组件
 
@@ -31,6 +44,16 @@
 服务器状态由 mcsrvstat.us v3 提供。Java 与基岩版版本列表通过无重定向的小型 JSON 接口分别获取，并提供私有缓存与内置目录兜底。Wiki 内容来自社区维护的中文 Minecraft Wiki。本插件与 Mojang Studios、Microsoft、Minecraft Wiki 及查询 API 服务方均无隶属关系。
 
 ## 更新日志
+
+### v1.2.0（2026-10-10）
+
+- 增加独立玩家页：Java 公开资料与 3D 模型、Bedrock 身份查询、网易限制说明
+- 增加玩家最近查询、短期缓存及分类错误状态
+- 支持将 Floodgate UUID 转换为 XUID；普通 UUID 提供 Java 查询入口
+- 检测页面图片 CSP，无法加载远程贴图时提供浏览器原图入口
+- 为远程 Skin/Cape 声明 `media:remote` 图片权限
+- 基岩版在 GeyserMC 已缓存转换 Skin 时展示贴图；无缓存时保留身份查询结果
+- 修复沙箱剪贴板权限拒绝导致的未处理错误，复制失败时提供手动复制文本框
 
 ### v1.1.0（2026-08-23）
 

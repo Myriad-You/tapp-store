@@ -1,18 +1,20 @@
 {
   "id":"cn.wyyzxzyg.minecraft-hub",
-  "name":"Minecraft 服务器与 Wiki",
-  "version":"1.1.0",
+  "name":"Minecraft 工具箱",
+  "version":"1.2.0",
   "minSystemVersion":"0.3.36",
-  "description":"面向玩家的 Java/基岩版服务器查询、最近记录与 Minecraft Wiki 搜索工具",
+  "description":"Java/基岩版服务器查询、Minecraft 玩家公开资料、游戏版本资源与 Wiki 搜索工具",
   "category":"game",
+  "runtimeModules":["three"],
   "core":{"entry":"core.js"},
   "author":{"name":"我願一直向著陽光.℡","url":"https://github.com/zgzyh"},
-  "permissions":["storage:read","storage:write","ui:notification","ui:theme","ui:openUrl","network:fetch","widget:register"],
+  "permissions":["storage:read","storage:write","ui:notification","ui:theme","ui:openUrl","network:fetch","media:remote","widget:register"],
+  "remoteMedia":["textures.minecraft.net","api.geysermc.org"],
   "settings":[],
   "iconSvg":"<svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><rect width='24' height='24' rx='5' fill='#57ad52'/><path d='M6.5 8.1 12 5.8l5.5 2.3v7.8L12 18.2l-5.5-2.3V8.1Z' fill='none' stroke='#fff' stroke-width='1.35' stroke-linejoin='round'/><path d='m6.8 8.25 5.2 2.2 5.2-2.2M12 10.45v7.35' fill='none' stroke='#fff' stroke-width='1.35' stroke-linejoin='round'/></svg>",
   "themeColor":"#55b943",
   "page":{"entry":"page/index.js","template":"page.html","styles":"page.css"},
-  "openUrls":[{"id":"minecraft-wiki","url":"https://zh.minecraft.wiki/w/","match":"prefix"},{"id":"java-download","url":"https://www.minecraft.net/zh-hans/download/server","match":"exact"},{"id":"bedrock-server","url":"https://www.minecraft.net/zh-hans/download/server/bedrock","match":"exact"},{"id":"bedrock-creator","url":"https://learn.microsoft.com/zh-cn/minecraft/creator/","match":"prefix"},{"id":"bedrock-samples","url":"https://github.com/Mojang/bedrock-samples","match":"exact"},{"id":"papermc","url":"https://papermc.io/downloads/paper","match":"exact"},{"id":"fabric","url":"https://fabricmc.net/use/server/","match":"exact"},{"id":"modrinth","url":"https://modrinth.com/","match":"exact"},{"id":"curseforge","url":"https://www.curseforge.com/minecraft","match":"exact"}],
+  "openUrls":[{"id":"minecraft-wiki","url":"https://zh.minecraft.wiki/w/","match":"prefix"},{"id":"minecraft-texture","url":"https://textures.minecraft.net/texture/","match":"prefix"},{"id":"java-download","url":"https://www.minecraft.net/zh-hans/download/server","match":"exact"},{"id":"bedrock-server","url":"https://www.minecraft.net/zh-hans/download/server/bedrock","match":"exact"},{"id":"bedrock-creator","url":"https://learn.microsoft.com/zh-cn/minecraft/creator/","match":"prefix"},{"id":"bedrock-samples","url":"https://github.com/Mojang/bedrock-samples","match":"exact"},{"id":"papermc","url":"https://papermc.io/downloads/paper","match":"exact"},{"id":"fabric","url":"https://fabricmc.net/use/server/","match":"exact"},{"id":"modrinth","url":"https://modrinth.com/","match":"exact"},{"id":"curseforge","url":"https://www.curseforge.com/minecraft","match":"exact"}],
   "widgets":[{"id":"server-status","name":"Minecraft 服务器状态","description":"在首页循环展示多台服务器的在线状态、人数、版本与 MOTD","icon":"server","entry":"widget/index.js","styles":"widget.css","defaultSize":"4x2","sizes":["4x2"],"refreshPolicy":{"mode":"interval","intervalSeconds":300,"refreshOnVisible":true},"category":"utility","templates":{"4x2":"widget-4x2.html"}}],
   "apis":{
     "javaStatus":{"type":"http","access":"public","endpoint":"https://api.mcsrvstat.us/3/{{params.address}}","method":"GET","headers":{"User-Agent":"Myriad-Minecraft-Hub/1.1.0 (https://github.com/zgzyh/tapp-store)"},"cacheTtl":5,"description":"查询 Java 版服务器"},
@@ -25,6 +27,11 @@
     "bedrockLatestVersions":{"type":"http","access":"public","endpoint":"https://mcjarfiles.com/api/get-versions/bedrock/latest/windows","method":"GET","headers":{"Accept":"application/json","User-Agent":"Myriad-Minecraft-Hub/1.1.0 (https://github.com/zgzyh/tapp-store)"},"cacheTtl":3600,"description":"获取基岩版正式版本列表"},
     "bedrockPreviewVersions":{"type":"http","access":"public","endpoint":"https://mcjarfiles.com/api/get-versions/bedrock/preview/windows","method":"GET","headers":{"Accept":"application/json","User-Agent":"Myriad-Minecraft-Hub/1.1.0 (https://github.com/zgzyh/tapp-store)"},"cacheTtl":3600,"description":"获取基岩版预览版本列表"},
     "bedrockLatestInfo":{"type":"http","access":"public","endpoint":"https://mcjarfiles.com/api/get-version-info/bedrock/latest/windows/{{params.version}}","method":"GET","headers":{"Accept":"application/json","User-Agent":"Myriad-Minecraft-Hub/1.1.0 (https://github.com/zgzyh/tapp-store)"},"cacheTtl":86400,"description":"获取基岩版正式版本详情"},
-    "bedrockPreviewInfo":{"type":"http","access":"public","endpoint":"https://mcjarfiles.com/api/get-version-info/bedrock/preview/windows/{{params.version}}","method":"GET","headers":{"Accept":"application/json","User-Agent":"Myriad-Minecraft-Hub/1.1.0 (https://github.com/zgzyh/tapp-store)"},"cacheTtl":86400,"description":"获取基岩版预览版本详情"}
+    "bedrockPreviewInfo":{"type":"http","access":"public","endpoint":"https://mcjarfiles.com/api/get-version-info/bedrock/preview/windows/{{params.version}}","method":"GET","headers":{"Accept":"application/json","User-Agent":"Myriad-Minecraft-Hub/1.1.0 (https://github.com/zgzyh/tapp-store)"},"cacheTtl":86400,"description":"获取基岩版预览版本详情"},
+    "javaPlayerByName":{"type":"http","access":"public","endpoint":"https://api.minecraftservices.com/minecraft/profile/lookup/name/{{params.name}}","method":"GET","headers":{"Accept":"application/json"},"cacheTtl":300,"description":"根据 Java 玩家名称查询 UUID"},
+    "javaPlayerProfile":{"type":"http","access":"public","endpoint":"https://sessionserver.mojang.com/session/minecraft/profile/{{params.uuid}}","method":"GET","headers":{"Accept":"application/json"},"cacheTtl":300,"description":"查询 Java 玩家名称及公开 Skin/Cape"},
+    "bedrockXuid":{"type":"http","access":"public","endpoint":"https://api.geysermc.org/v2/xbox/xuid/{{params.gamertag}}","method":"GET","headers":{"Accept":"application/json"},"cacheTtl":300,"description":"根据 Xbox Gamertag 查询 XUID"},
+    "bedrockGamertag":{"type":"http","access":"public","endpoint":"https://api.geysermc.org/v2/xbox/gamertag/{{params.xuid}}","method":"GET","headers":{"Accept":"application/json"},"cacheTtl":300,"description":"根据 XUID 查询 Xbox Gamertag"},
+    "bedrockSkin":{"type":"http","access":"public","endpoint":"https://api.geysermc.org/v2/skin/{{params.xuid}}","method":"GET","headers":{"Accept":"application/json"},"cacheTtl":300,"description":"查询 GeyserMC 最近缓存的基岩版转换 Skin"}
   }
 }
