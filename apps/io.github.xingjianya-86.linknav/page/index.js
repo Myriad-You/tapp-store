@@ -16,6 +16,9 @@ const state = {
   query: "",
   tag: "",
   view: "all",
+  dataFp: "",
+  chipsSig: "",
+  cardCache: new Map(),
   editingId: null,
   motion: true,
   iconDraft: "",
@@ -52,6 +55,8 @@ let toastTimer = 0;
 let moodTimer = 0;
 let reloadTimer = 0;
 let parseTimer = 0;
+let searchTimer = 0;
+let growTimer = 0;
 let parseFlashTimer = 0;
 
 function t(key, params) {
@@ -303,11 +308,30 @@ function visibleLinks() {
   const query = state.query.trim().toLowerCase();
   if (query) {
     links = links.filter(function (link) {
-      const haystack = [link.title, link.url, link.desc].concat(link.tags).join(" ").toLowerCase();
+      // 搜索索引在 reload 时一次性预构建（_hay），不再每键 500 次拼接 + toLowerCase
+      const haystack = link._hay || (link.title + " " + link.url + " " + (link.desc || "") + " " + link.tags.join(" "));
       return haystack.indexOf(query) >= 0;
     });
   }
   return links;
+}
+
+// 预构建搜索索引：reload 里调用一次（只读计算，不进热路径）。
+function indexLinks(links) {
+  links.forEach(function (link) {
+    link._hay = (link.title + " " + link.url + " " + (link.desc || "") + " " + link.tags.join(" ")).toLowerCase();
+  });
+}
+
+// openUrls 条目的 URL 解析结果按 rawUrl 记忆化：
+// createCard 对每张卡都要 resolveTarget（内部 new URL() × ~30 条 entry），500 条卡就是 15000 次解析。
+const targetMemo = new Map();
+
+function resolveTargetCached(rawUrl) {
+  if (targetMemo.has(rawUrl)) return targetMemo.get(rawUrl);
+  const target = core.resolveTarget(rawUrl, state.openUrls);
+  targetMemo.set(rawUrl, target);
+  return target;
 }
 
 function renderHeader() {
@@ -325,9 +349,16 @@ function renderHeader() {
   }
 }
 
+// chip 选中态只切 class（不重建 DOM，避免全 chip 重播入场动画 + 重新绑定监听）
+function setActiveChip() {
+  if (!refs.chips) return;
+  refs.chips.querySelectorAll(".ln-chip").forEach(function (chip) {
+    chip.classList.toggle("is-active", (chip.dataset.tag || "") === state.tag);
+  });
+}
+
 function renderChips() {
   if (!refs.chips) return;
-  refs.chips.replaceChildren();
   const counts = {};
   state.links.forEach(function (link) {
     link.tags.forEach(function (tag) {
@@ -337,14 +368,25 @@ function renderChips() {
   const tags = Object.keys(counts).sort(function (a, b) {
     return counts[b] - counts[a];
   });
+  const sig = tags
+    .map(function (tag) {
+      return tag + " " + counts[tag];
+    })
+    .join("|");
+  if (sig === state.chipsSig && refs.chips.childNodes.length) {
+    // 标签集合没变：只切选中态，不重建 DOM
+    setActiveChip();
+    return;
+  }
+  state.chipsSig = sig;
+  refs.chips.replaceChildren();
   if (!tags.length) return;
   const allChip = el("button", "ln-chip is-active", t("app.filter.all"));
   allChip.type = "button";
   allChip.dataset.tag = "";
-  if (state.tag) allChip.classList.remove("is-active");
   allChip.addEventListener("click", function () {
     state.tag = "";
-    renderChips();
+    setActiveChip();
     renderList();
   });
   refs.chips.appendChild(allChip);
@@ -352,14 +394,14 @@ function renderChips() {
     const chip = el("button", "ln-chip", tag + " " + counts[tag]);
     chip.type = "button";
     chip.dataset.tag = tag;
-    if (state.tag === tag) chip.classList.add("is-active");
     chip.addEventListener("click", function () {
       state.tag = state.tag === tag ? "" : tag;
-      renderChips();
+      setActiveChip();
       renderList();
     });
     refs.chips.appendChild(chip);
   });
+  setActiveChip();
 }
 
 function actionButton(className, action, label, aria) {
@@ -370,11 +412,18 @@ function actionButton(className, action, label, aria) {
   return button;
 }
 
-function createCard(link, index) {
+function createCard(link, index, entering) {
   const card = el("article", "ln-card");
   card.dataset.id = link.id;
   card.style.setProperty("--ln-tilt", (((index % 5) - 2) * 0.55).toFixed(2) + "deg");
-  card.style.animationDelay = Math.min(index, 12) * 32 + "ms";
+  // 入场动画与错峰延迟只给「新出现」的卡片：复用的既有卡片不带 ln-enter 类，
+  // 移动/重新插入不会重播 ln-drop-in（原实现 500 张卡每次筛选都整体闪一次）。
+  if (entering) {
+    card.classList.add("ln-enter");
+    card.style.animationDelay = Math.min(index, 12) * 32 + "ms";
+  } else {
+    card.style.animationDelay = "";
+  }
 
   const badges = el("div", "ln-card-badges");
   if (link.pinned) badges.appendChild(el("span", "ln-badge ln-badge-pin", t("app.pinned")));
@@ -418,7 +467,7 @@ function createCard(link, index) {
     fav.dataset.active = state.favoriteSet.has(link.id) ? "true" : "false";
     actions.appendChild(fav);
   }
-  const target = core.resolveTarget(link.url, state.openUrls) || link.target;
+  const target = resolveTargetCached(link.url) || link.target;
   const openable = !!target;
   const copy = actionButton("ln-mini", "copy", t("app.copy"));
   if (!openable) {
@@ -435,14 +484,76 @@ function createCard(link, index) {
   return card;
 }
 
+// 卡片签名：决定卡片 DOM 的全部输入。命中相同签名的既有卡片直接复用节点。
+function cardSignature(link) {
+  const openable = resolveTargetCached(link.url) || link.target ? 1 : 0;
+  return [
+    link.title,
+    link.url,
+    link.desc || "",
+    link.tags.join(","),
+    link.pinned ? 1 : 0,
+    link.audience || "",
+    link.icon || "",
+    link.iconData ? "d" + link.iconData.length : "",
+    state.role,
+    state.favoriteSet.has(link.id) ? 1 : 0,
+    openable,
+  ].join("\u0001");
+}
+
+let lastListKey = "";
+
 function renderList() {
   if (!refs.list) return;
   const links = visibleLinks();
-  refs.list.replaceChildren();
-  links.forEach(function (link, index) {
-    refs.list.appendChild(createCard(link, index));
-  });
 
+  // 签名只算一次：既做「同态跳过」判定，也供 keyed 复用比对。
+  const sigs = new Array(links.length);
+  const parts = new Array(links.length);
+  for (let i = 0; i < links.length; i++) {
+    sigs[i] = cardSignature(links[i]);
+    parts[i] = links[i].id + "\u0002" + sigs[i];
+  }
+  const listKey = parts.join("\n");
+  // 同态跳过：可见顺序与每张卡的签名都没变 → 不碰 DOM。
+  // 这是「筛选/搜索来回切换不闪动」的最后一道闸门。
+  if (listKey === lastListKey && refs.list.childNodes.length === links.length) {
+    renderListEmpty(links);
+    return;
+  }
+  lastListKey = listKey;
+
+  // keyed 复用：签名没变的卡片保留原节点（已解码的图标 <img> 一并保留），
+  // 只新建真正新增的卡片；入场动画只落在新卡上。
+  const frag = document.createDocumentFragment();
+  const seen = new Set();
+  links.forEach(function (link, index) {
+    const sig = sigs[index];
+    let entry = state.cardCache.get(link.id);
+    if (!entry || entry.sig !== sig) {
+      // 无既有节点 = 新登场（播入场动画）；有既有节点 = 内容变化（静默重建）
+      const card = createCard(link, index, !entry);
+      entry = { el: card, sig: sig };
+      state.cardCache.set(link.id, entry);
+    } else {
+      // 复用：摘掉入场类，重新插入不会重播 ln-drop-in
+      entry.el.classList.remove("ln-enter");
+      entry.el.style.animationDelay = "";
+    }
+    seen.add(link.id);
+    frag.appendChild(entry.el);
+  });
+  // 只清不再存在于数据集的卡片（被筛选掉的保留，切回时零成本复用）
+  state.cardCache.forEach(function (entry, id) {
+    if (!seen.has(id) && !findLink(id)) state.cardCache.delete(id);
+  });
+  refs.list.replaceChildren(frag);
+
+  renderListEmpty(links);
+}
+
+function renderListEmpty(links) {
   const isEmpty = links.length === 0;
   if (refs.empty) refs.empty.hidden = !isEmpty;
   if (isEmpty) {
@@ -469,11 +580,47 @@ function renderAll() {
   renderList();
 }
 
+// 数据指纹：links 与收藏任一实际变化才重绘。storage/shared 事件常由内容未变的写触发，
+// 也用于合并本地已显式 reload 过的自写事件。图标用「长度+首尾采样」参与指纹，
+// 图标键单独变更时由 bindDataSignals 先失效缓存再进来，采样足以识别变化。
+function dataFingerprint() {
+  const parts = [state.role, String(state.links.length), String(state.favoriteSet.size)];
+  for (let i = 0; i < state.links.length; i++) {
+    const link = state.links[i];
+    const icon = link.iconData
+      ? link.iconData.length + ":" + link.iconData.slice(0, 16) + ":" + link.iconData.slice(-16)
+      : link.icon || "";
+    parts.push(
+      [
+        link.id,
+        link.title,
+        link.url,
+        link.desc || "",
+        link.tags.join(","),
+        link.pinned ? 1 : 0,
+        link.audience || "",
+        link.order,
+        link.addedAt,
+        icon,
+      ].join("\u0001")
+    );
+  }
+  parts.push(Array.from(state.favoriteSet).sort().join(","));
+  return parts.join("\u0002");
+}
+
 async function reload(keepMood) {
-  state.links = await core.loadLinks(state.role);
+  const links = await core.loadLinks(state.role);
   const favorites = await core.loadFavorites();
-  state.favoriteSet = new Set(favorites);
-  renderAll();
+  const nextFav = new Set(favorites);
+  const prevFp = state.dataFp;
+  state.links = links;
+  state.favoriteSet = nextFav;
+  indexLinks(links);
+  const fp = dataFingerprint();
+  state.dataFp = fp;
+  // 指纹没变 → 数据真的一样：不重建任何 DOM（chip 卡片图标全部原样）。
+  if (fp !== prevFp) renderAll();
   if (keepMood) setMood("happy");
 }
 
@@ -551,7 +698,21 @@ async function handleFavorite(link) {
       state.favoriteSet.delete(link.id);
     }
     renderHeader();
-    renderList();
+    // 定点更新这一张卡的星标：不重建整张列表（500 张卡重建会重播入场动画 + 重解码图标）。
+    // 收藏视图下集合变了 → 该卡要消失/出现，这时才走整表重绘。
+    const entry = state.cardCache.get(link.id);
+    if (state.view === "fav" || !entry) {
+      renderList();
+    } else {
+      const star = entry.el.querySelector("[data-action='fav']");
+      if (star) {
+        star.textContent = added ? "★" : "☆";
+        star.dataset.active = added ? "true" : "false";
+      }
+      // 同步签名，否则下次 renderList 会因签名不符把这张卡当"内容变化"静默重建
+      entry.sig = cardSignature(link);
+      lastListKey = "";
+    }
     toast(added ? t("app.fav.added") : t("app.fav.removed"), added ? "happy" : "idle");
   } catch (err) {
     toast(t("app.fav.guestHint"), "sad");
@@ -1211,6 +1372,38 @@ function createImportRow(row) {
   return rowEl;
 }
 
+// 定点更新单行（图标抓取循环里每行只补这一处，不再整表重建：
+// 整表重建会把全部 checkbox/select/图标 img 重新创建并重播动画）
+function patchImportRow(row) {
+  if (!refs.ioList || !row) return;
+  const children = refs.ioList.children;
+  let rowEl = null;
+  for (let i = 0; i < children.length; i++) {
+    if (children[i].dataset && children[i].dataset.key === row.key) {
+      rowEl = children[i];
+      break;
+    }
+  }
+  if (!rowEl) return;
+  rowEl.classList.toggle("is-done", row.status === "imported" || row.status === "fetched");
+  rowEl.classList.toggle("is-duplicate", row.status === "duplicate" || row.status === "skipped");
+  const badge = rowEl.querySelector(".ln-io-badge");
+  if (badge) badge.textContent = importStatusLabel(row);
+  const main = rowEl.querySelector(".ln-io-row-main");
+  if (main) {
+    let msg = main.querySelector(".ln-io-row-msg");
+    if (row.message) {
+      if (!msg) {
+        msg = el("span", "ln-io-row-msg");
+        main.appendChild(msg);
+      }
+      msg.textContent = row.message;
+    } else if (msg) {
+      msg.remove();
+    }
+  }
+}
+
 function renderImportStatus() {
   if (!refs.ioStatus) return;
   let text = "";
@@ -1738,6 +1931,7 @@ async function runImport() {
     } catch (err) {
       iconFail += 1;
       iconJobs[i].row.message = t("app.icon.quota");
+      patchImportRow(iconJobs[i].row);
     }
     state.importDone += 1;
     renderImportStatus();
@@ -1760,7 +1954,7 @@ async function runImport() {
     const target = fetchRows[i].target;
     const domain = core.hostOf(row.url);
     row.message = t("app.icon.fetching");
-    renderImportList();
+    patchImportRow(row);
     try {
       const img = await loadCorsImage(FAVICON_SERVICE + encodeURIComponent(domain), 9000);
       const dataUri = toIconDataUriFromImage(img);
@@ -1775,7 +1969,8 @@ async function runImport() {
     }
     state.importDone += 1;
     renderImportStatus();
-    renderImportList();
+    // 定点补这一行的徽标与消息（原来每行整表重建两次，N 行 = 2N 次全量 DOM 重建）
+    patchImportRow(row);
   }
 
   await core.pruneIcons(
@@ -1833,7 +2028,12 @@ function bindIoEvents() {
   }
   if (refs.ioPaste) {
     refs.ioPaste.addEventListener("input", function () {
-      autoGrowPaste();
+      // autoGrow 每键都读 scrollHeight（强制布局），与解析共用一个 100ms 防抖窗口
+      if (growTimer) clearTimeout(growTimer);
+      growTimer = setTimeout(function () {
+        growTimer = 0;
+        autoGrowPaste();
+      }, 100);
       if (parseTimer) clearTimeout(parseTimer);
       const value = refs.ioPaste.value;
       parseTimer = setTimeout(function () {
@@ -1912,7 +2112,12 @@ function bindEvents() {
     refs.search.addEventListener("input", function () {
       state.query = refs.search.value;
       if (refs.searchClear) refs.searchClear.hidden = !state.query;
-      renderList();
+      // 120ms 尾随防抖：原实现每敲一键 = 全量过滤 + 重建全部卡片 + 重解码图标
+      if (searchTimer) clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        searchTimer = 0;
+        renderList();
+      }, 120);
     });
   }
   if (refs.viewAll) {
@@ -1973,6 +2178,10 @@ function bindEvents() {
       state.query = "";
       refs.search.value = "";
       refs.searchClear.hidden = true;
+      if (searchTimer) {
+        clearTimeout(searchTimer);
+        searchTimer = 0;
+      }
       renderList();
     } else if (action === "close-dialog") {
       closeDialog();
@@ -2058,24 +2267,37 @@ function bindDataSignals() {
   function scheduleReload() {
     if (reloadTimer) clearTimeout(reloadTimer);
     reloadTimer = setTimeout(function () {
+      reloadTimer = 0;
       reload(false).catch(function () {});
     }, 250);
   }
+
+  // 图标键单独变更时先让 core 的图标内存缓存失效，否则 reload 会拿旧 base64 渲染。
+  // （本沙箱自己的写不会触发自己的 onChanged——宿主按 source 过滤；
+  //  这里兜的是其它会话/窗口改图标的情况。）
+  function onSharedOrPrivateChanged(event) {
+    if (event && typeof event.key === "string" && event.key.indexOf(core.ICON_PREFIX) === 0) {
+      core.invalidateIconCache();
+    }
+    scheduleReload();
+  }
+
   try {
     Tapp.storage.onChanged(function (event) {
-      if (!event || !event.key || event.key === core.FAV_KEY) scheduleReload();
+      if (event && typeof event.key === "string" && event.key !== core.FAV_KEY) return;
+      scheduleReload();
     });
   } catch (err) {
     /* ignore */
   }
   try {
-    Tapp.shared.onChanged(scheduleReload);
+    Tapp.shared.onChanged(onSharedOrPrivateChanged);
   } catch (err) {
     /* ignore */
   }
   if (state.role === "admin") {
     try {
-      Tapp.private.onChanged(scheduleReload);
+      Tapp.private.onChanged(onSharedOrPrivateChanged);
     } catch (err) {
       /* ignore */
     }

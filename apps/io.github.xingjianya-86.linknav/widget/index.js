@@ -5,6 +5,10 @@
 
 const core = require("../core.js");
 
+// 渲染签名：数据 / 尺寸 / 角色 / 语言都没变就跳过（宿主重挂载后 ctx 全新，
+// 首帧必然渲染；同 iframe 内重复 render 才会被这道闸门拦下）。
+let lastRenderSig = "";
+
 function t(key, params) {
   try {
     return Tapp.i18n.t(key, params);
@@ -36,11 +40,15 @@ Tapp.widgets["quick-links"] = {
   render: async function (container, props) {
     const size = props && props.size ? props.size : "2x2";
     const limit = size === "4x2" ? 6 : 3;
-    const scale = (props && props.scale) || 1;
-    const fontScale = (props && props.fontScale) || 1;
+    const scale = (props && props.scale) || 0;
+    const fontScale = (props && props.fontScale) || 0;
     const root = container.querySelector("[data-widget-root]") || container;
-    root.style.setProperty("--lnw-scale", String(scale));
-    root.style.setProperty("--lnw-font-scale", String(fontScale));
+    // 宿主 render 之后才下发真实缩放（props.scale 在 render 时恒为 1）：
+    // 只有拿到非 1 的显式值才内联覆盖，否则交给 CSS 回落宿主 --tapp-* 变量。
+    if (scale && scale !== 1) root.style.setProperty("--lnw-scale", String(scale));
+    else root.style.removeProperty("--lnw-scale");
+    if (fontScale && fontScale !== 1) root.style.setProperty("--lnw-font-scale", String(fontScale));
+    else root.style.removeProperty("--lnw-font-scale");
 
     const titleEl = root.querySelector("[data-lnw-title]");
     if (titleEl) titleEl.textContent = t("widget.title");
@@ -51,11 +59,21 @@ Tapp.widgets["quick-links"] = {
 
     const role = await core.getRole();
     const openUrls = await core.listOpenUrls();
-    const links = await core.loadLinks(role);
-    const pinned = links.filter(function (link) {
-      return link.pinned;
-    });
-    const shown = (pinned.length ? pinned : links).slice(0, limit);
+    // 只读「要展示的那几条」的图标：原实现为显示 ≤6 条会 getAll 整个 4MB 图标库
+    const shown = await core.loadWidgetLinks(role, limit);
+
+    const sig = [
+      size,
+      role,
+      t("widget.title"),
+      shown
+        .map(function (link) {
+          return link.id + "\u0001" + link.title + "\u0001" + (link.iconData ? link.iconData.length : link.icon || "");
+        })
+        .join("\u0002"),
+    ].join("\u0000");
+    if (sig === lastRenderSig) return;
+    lastRenderSig = sig;
 
     listEl.replaceChildren();
     if (!shown.length) {
