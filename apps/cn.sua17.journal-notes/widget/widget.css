@@ -11,8 +11,11 @@
 }
 
 .jn-root {
-  --jn-font: 1;
-  --jn-scale: 1;
+  /* 宿主在 render 之后才把真实缩放发布到 documentElement 的 --tapp-* 变量上
+     （props.scale/fontScale 在 render 时恒为 1）：默认回落到宿主变量，
+     JS 侧只在拿到非 1 的显式值时才内联覆盖。 */
+  --jn-font: var(--tapp-font-scale, 1);
+  --jn-scale: var(--tapp-scale, 1);
   --jn-primary: var(--tapp-primary, #f59e0b);
   --jn-text: var(--text-primary, #1f2328);
   --jn-text-2: var(--text-secondary, #57606a);
@@ -610,7 +613,13 @@
   );
   background-size: 240% 100%;
   background-repeat: no-repeat;
-  animation: jn-shimmer 1.5s ease-in-out infinite;
+}
+
+/* 微光是持续 repaint：只在系统允许动态效果时播放（骨架出现频率高时省电明显） */
+@media (prefers-reduced-motion: no-preference) {
+  .jn-sk-block {
+    animation: jn-shimmer 1.5s ease-in-out infinite;
+  }
 }
 
 @keyframes jn-shimmer {
@@ -731,8 +740,7 @@
   flex-direction: column;
   padding: calc(11px * var(--jn-scale)) calc(12px * var(--jn-scale));
   background: var(--jn-overlay-bg);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  /* 底色已 92% 不透明，backdrop-filter 只在滚动时重复合成、代价高收益低，去掉 */
   opacity: 0;
   transform: translateY(6px);
   transition: opacity 0.18s ease, transform 0.18s ease;

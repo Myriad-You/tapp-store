@@ -193,6 +193,8 @@ function buildThumb(note, variant) {
     } catch (e) {
       return wrap
     }
+    // 已在缓存中可同步解码的图直接亮起，跳过 0.28s 淡入（避免每次重绘闪一下）
+    if (img.complete && img.naturalWidth > 0) img.classList.add('is-on')
     wrap.appendChild(img)
   }
   return wrap
@@ -228,8 +230,15 @@ function ensureRoot(container, size, theme, fontScale, scale, isEditMode, primar
     'jn-root jn-' + size +
     (theme === 'dark' ? ' jn-theme-dark' : ' jn-theme-light') +
     (isEditMode ? ' jn-edit' : '')
-  root.style.setProperty('--jn-font', String(fontScale || 1))
-  root.style.setProperty('--jn-scale', String(scale || 1))
+  // 宿主在 render 之后才下发真实缩放（props.scale/fontScale 恒为 1），
+  // 真值由 --tapp-scale / --tapp-font-scale 发布在 documentElement 上：
+  // 只有拿到非 1 的显式值才内联覆盖，否则交给 CSS 回落到宿主变量。
+  var fs = Number(fontScale)
+  if (isFinite(fs) && fs && fs !== 1) root.style.setProperty('--jn-font', String(fs))
+  else root.style.removeProperty('--jn-font')
+  var sc = Number(scale)
+  if (isFinite(sc) && sc && sc !== 1) root.style.setProperty('--jn-scale', String(sc))
+  else root.style.removeProperty('--jn-scale')
   if (typeof primaryColor === 'string' && primaryColor) {
     root.style.setProperty('--jn-primary', primaryColor)
   }
@@ -443,6 +452,7 @@ function render4x4(ctx, notes) {
 
 function closeOverlay(ctx) {
   ctx.openNoteId = null
+  ctx.overlaySig = ''
   var existing = ctx.root.querySelector('[data-jn-overlay]')
   if (existing && existing.parentNode) existing.parentNode.removeChild(existing)
 }
@@ -450,6 +460,7 @@ function closeOverlay(ctx) {
 function openOverlay(ctx, note) {
   closeOverlay(ctx)
   ctx.openNoteId = note.id
+  ctx.overlaySig = overlaySig(note)
   var overlay = el('div', 'jn-overlay')
   overlay.setAttribute('data-jn-overlay', '')
 
@@ -638,6 +649,19 @@ function paint(ctx) {
   var isAuth = !!(status && status.ok === false && status.code === 'auth')
   var role = ctx.role
 
+  // 签名守卫：绘制结果只取决于这些输入，完全没变就不碰 DOM
+  // （避免任何重绘触发缩略图重新解码 / 淡入重播 / 浮层重建）。
+  var sig = [
+    ctx.size,
+    ctx.locale,
+    role,
+    hadPayload ? ctx.payload.updatedAt : 0,
+    notes.length,
+    status && status.ok === false ? 'e:' + (status.code || '') + ':' + (status.error || '') : 'ok',
+  ].join('\u0000')
+  if (sig === ctx.paintSig) return
+  ctx.paintSig = sig
+
   // 非 admin：只读缓存（有缓存渲染缓存 + 角标；无缓存给对应提示），不触发任何同步
   if (role === 'guest' || role === 'user') {
     if (!notes.length) {
@@ -664,11 +688,59 @@ function paint(ctx) {
 }
 
 function renderNotes(ctx, notes, readOnly) {
+  // 重绘前摘下浮层（renderers 会清空 root）：打开的那篇内容没变就原样接回，
+  // 避免淡入重播与滚动位置丢失；变了或被删了才重建 / 关闭。
+  var savedOverlay = null
+  var savedScroll = 0
+  if (ctx.openNoteId != null) {
+    savedOverlay = ctx.root.querySelector('[data-jn-overlay]')
+    if (savedOverlay) {
+      var savedContent = savedOverlay.querySelector('.jn-ov-content')
+      savedScroll = savedContent ? savedContent.scrollTop : 0
+      if (savedOverlay.parentNode) savedOverlay.parentNode.removeChild(savedOverlay)
+    }
+  }
   if (ctx.size === '4x2') render4x2(ctx, notes)
   else if (ctx.size === '4x4') render4x4(ctx, notes)
   else render2x2(ctx, notes)
   if (readOnly) markReadOnly(ctx)
-  replayOverlay(ctx, notes)
+  if (savedOverlay) {
+    var match = null
+    for (var i = 0; i < notes.length; i++) {
+      if (String(notes[i].id) === String(ctx.openNoteId)) {
+        match = notes[i]
+        break
+      }
+    }
+    var sig = match ? overlaySig(match) : ''
+    if (match && sig === ctx.overlaySig) {
+      ctx.root.appendChild(savedOverlay)
+      var content = savedOverlay.querySelector('.jn-ov-content')
+      if (content) content.scrollTop = savedScroll
+    } else if (match) {
+      openOverlay(ctx, match)
+    } else {
+      closeOverlay(ctx)
+    }
+  } else {
+    replayOverlay(ctx, notes)
+  }
+}
+
+// 浮层内容签名：与上次打开时比对，未变则复用现有浮层节点。
+function overlaySig(note) {
+  return [
+    note.id,
+    noteTitle(note),
+    note.image || '',
+    note.summary || '',
+    note.content || '',
+    note.published_at || 0,
+    note.source_name || '',
+    note.author || '',
+    note.reading_time || 0,
+    note.is_starred ? 1 : 0,
+  ].join('\u0001')
 }
 
 function markReadOnly(ctx) {
@@ -707,42 +779,31 @@ function maybePing(ctx) {
 async function load(ctx) {
   var seq = ++ctx.seq
   try {
-    if (ctx.role === 'unknown') {
-      try {
-        var userApi = /** @type {any} */ (Tapp).user
-        if (userApi && typeof userApi.getRole === 'function') {
-          var role = await userApi.getRole()
-          if (ctx.seq !== seq) return
-          ctx.role =
-            role === 'admin' || role === 'user' || role === 'guest' ? role : 'unknown'
-        }
-      } catch (error) {
-        if (ctx.seq !== seq) return
-        console.warn('[journal-notes] role read failed', error)
-      }
-    }
+    // 角色与三路读取并发：宿主任何 storage 写都会重挂载，首个 paint 的等待时间
+    // 直接决定“闪骨架”的长短，少两跳 IPC 就是更短的空白期。
+    var results = await Promise.all([
+      ctx.role !== 'unknown'
+        ? Promise.resolve(ctx.role)
+        : readRoleSafe(ctx, seq),
+      readSafe(function () { return Tapp.shared.get(PAYLOAD_KEY) }),
+      readSafe(function () { return Tapp.storage.get(PAYLOAD_KEY) }),
+      readSafe(function () { return Tapp.storage.get(STATUS_KEY) }),
+    ])
+    if (ctx.seq !== seq) return
+    if (typeof results[0] === 'string') ctx.role = results[0]
+    var shared = results[1]
+    var payload = results[2]
+    var status = results[3]
 
     // 非 admin：读安装级共享区（admin 发布，访客可读），不碰 subject 隔离的私有 storage
     if (ctx.role === 'guest' || ctx.role === 'user') {
-      var shared = null
-      try {
-        shared = await Tapp.shared.get(PAYLOAD_KEY)
-      } catch (error) {
-        console.warn('[journal-notes] shared read failed', error)
-      }
-      if (ctx.seq !== seq) return
       ctx.payload =
         shared && typeof shared === 'object' && Array.isArray(shared.notes) ? shared : null
       ctx.status = null
-      paint(ctx)
-      return
+    } else {
+      ctx.payload = payload && typeof payload === 'object' ? payload : null
+      ctx.status = status && typeof status === 'object' ? status : null
     }
-
-    var payload = await Tapp.storage.get(PAYLOAD_KEY)
-    var status = await Tapp.storage.get(STATUS_KEY)
-    if (ctx.seq !== seq) return
-    ctx.payload = payload && typeof payload === 'object' ? payload : null
-    ctx.status = status && typeof status === 'object' ? status : null
     // payload 或 status 任一到达都说明链路活着：挂狗（超时兜底）立即作废，
     // 真实错误/登录状态绝不能被 timeout 覆盖。
     if (ctx.payload || ctx.status) {
@@ -760,6 +821,41 @@ async function load(ctx) {
     paint(ctx)
     armWatchdogFor(ctx)
   }
+}
+
+async function readRoleSafe(ctx, seq) {
+  try {
+    var userApi = /** @type {any} */ (Tapp).user
+    if (userApi && typeof userApi.getRole === 'function') {
+      var role = await userApi.getRole()
+      if (ctx.seq !== seq) return null
+      return role === 'admin' || role === 'user' || role === 'guest' ? role : 'unknown'
+    }
+  } catch (error) {
+    if (ctx.seq !== seq) return null
+    console.warn('[journal-notes] role read failed', error)
+  }
+  return null
+}
+
+function readSafe(fn) {
+  try {
+    var result = fn()
+    if (result && typeof result.then === 'function') {
+      return result.then(
+        function (value) {
+          return value
+        },
+        function (error) {
+          console.warn('[journal-notes] storage read failed', error)
+          return null
+        },
+      )
+    }
+  } catch (error) {
+    console.warn('[journal-notes] storage read failed', error)
+  }
+  return Promise.resolve(null)
 }
 
 function armWatchdogFor(ctx) {
@@ -869,6 +965,8 @@ Tapp.widgets['journal-notes'] = {
         status: null,
         role: 'unknown',
         openNoteId: null,
+        overlaySig: '',
+        paintSig: '',
         lastPingAt: 0,
         unsub: null,
         watchdog: null,
@@ -888,6 +986,22 @@ Tapp.widgets['journal-notes'] = {
       ctx.unsub = Tapp.storage.onChanged(function (event) {
         if (!event || (event.key !== PAYLOAD_KEY && event.key !== STATUS_KEY)) return
         load(ctx)
+      })
+    }
+
+    if (!ctx.destroyBound && Tapp.lifecycle && typeof Tapp.lifecycle.onDestroy === 'function') {
+      ctx.destroyBound = true
+      Tapp.lifecycle.onDestroy(function () {
+        if (ctx.unsub) {
+          try {
+            ctx.unsub()
+          } catch (e) {}
+          ctx.unsub = null
+        }
+        if (ctx.watchdog) {
+          clearTimeout(ctx.watchdog)
+          ctx.watchdog = null
+        }
       })
     }
 

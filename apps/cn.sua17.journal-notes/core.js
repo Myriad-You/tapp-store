@@ -22,6 +22,13 @@ var SUMMARY_MAX_CHARS = 240
 var CONTENT_MAX_CHARS = 2500
 var DATA_THUMB_MAX_CHARS = 4096
 var PING_MIN_INTERVAL_MS = 30000
+// 成功/失败状态的最小写入间隔：lastSyncAt 同时是卡片的“新鲜度”信号，
+// 但每次 storage 写都会让宿主重挂载可见卡片（闪骨架），所以最多每 30 分钟“心跳”一次。
+var STATUS_HEARTBEAT_MS = 30 * 60 * 1000
+// 响应 Widget ping 时的状态刷新下限：ping 意味着卡片认为数据过旧，
+// 此时把 lastSyncAt 刷回来（≥5 分钟一次），所有卡片新鲜度立刻恢复，
+// 不再形成 ping → 重挂载 → 兄弟卡片再 ping 的循环。
+var PING_RESPONSE_HEARTBEAT_MS = 5 * 60 * 1000
 
 // 平台自有的媒体路径：转成站内相对地址，Widget 沙箱 CSP 才放行（仅同源 / data:）
 var SITE_MEDIA_PATH =
@@ -47,6 +54,8 @@ var syncState = {
   lastPayloadJson: '',
   sharedJson: null,
   lastPingAt: 0,
+  lastDiagStage: '',
+  syncAttempted: false,
 }
 
 function getJournalApi() {
@@ -55,19 +64,24 @@ function getJournalApi() {
   return null
 }
 
-// 只有 headless / page 上下文参与同步与诊断标记（Widget 沙箱执行同一份 core 入口但不干活）。
-function inSyncContext() {
+// 诊断标记只由 headless core 写入：Widget 超时时读取，用于定位 headless 死在哪一步
+// （loaded/ready/sync-start/sync-failed）。page 沙箱虽然也执行同一份 core 入口，
+// 但页面打开时写 diag 会让可见卡片重挂载（闪骨架），诊断对页面毫无意义，不写。
+function inHeadlessContext() {
   try {
     var mode = typeof window !== 'undefined' ? window._TAPP_MODE : undefined
-    return mode === 'core' || mode === 'page'
+    return mode === 'core'
   } catch (e) {
     return false
   }
 }
 
-// 诊断标记：Widget 超时时读取，用于定位 headless 死在哪一步（loaded/ready/sync-start）。
+// 诊断标记：Widget 超时时读取，用于定位 headless 死在哪一步（loaded/ready/sync-failed）。
+// 任何 storage 写都会让宿主重挂载可见卡片（闪骨架），所以只在阶段真正变化时写入；
+// 无变化的重复阶段（每次同步的 sync-start、guest 安装的 skip-role）一律不写。
 function diag(stage, extra) {
-  if (!inSyncContext()) return
+  if (!inHeadlessContext()) return
+  if (stage === syncState.lastDiagStage) return
   try {
     var record = { stage: stage, at: Date.now() }
     if (extra) {
@@ -77,6 +91,7 @@ function diag(stage, extra) {
     }
     var result = Tapp.storage.set(DIAG_KEY, record)
     if (result && typeof result.catch === 'function') result.catch(function () {})
+    syncState.lastDiagStage = stage
   } catch (e) {}
 }
 
@@ -311,18 +326,30 @@ function classifySyncError(error) {
     : 'error'
 }
 
-async function writeStatus(ok, error, code) {
+async function writeStatus(ok, error, code, minInterval) {
   try {
+    var prev = null
+    try {
+      prev = await Tapp.storage.get(STATUS_KEY)
+    } catch (e) {
+      prev = null
+    }
+    var limit = Number(minInterval) > 0 ? Number(minInterval) : STATUS_HEARTBEAT_MS
     if (ok) {
-      // 成功且此前已是成功态 → 跳过写入：任何 storage 写都会让宿主重挂载可见卡片（闪骨架），
-      // 无数据变化时不应产生可见刷新。
-      var prev = null
-      try {
-        prev = await Tapp.storage.get(STATUS_KEY)
-      } catch (e) {
-        prev = null
+      // 成功且此前已是成功态、且距上次写入不足心跳间隔 → 跳过：
+      // 任何 storage 写都会让宿主重挂载可见卡片（闪骨架），无数据变化时不应产生可见刷新。
+      // lastSyncAt 每 30 分钟“心跳”一次即可维持卡片新鲜度（maybePing 的 max 信号）。
+      if (
+        prev &&
+        typeof prev === 'object' &&
+        prev.ok === true &&
+        Date.now() - Number(prev.lastSyncAt || 0) < limit
+      ) {
+        return
       }
-      if (prev && typeof prev === 'object' && prev.ok === true) return
+    } else if (prev && typeof prev === 'object' && prev.ok === false) {
+      // 同样的失败反复重写会让宿主无限重挂载（后端故障期间每 tick 重写同一错误）。
+      if (String(prev.code || '') === String(code || 'error') && prev.error) return
     }
     await Tapp.storage.set(STATUS_KEY, {
       lastSyncAt: Date.now(),
@@ -337,30 +364,52 @@ async function writeStatus(ok, error, code) {
 
 // headless 重启后用缓存播种，避免首跑把相同 payload 再写一遍触发重挂载。
 function seedPayloadJson() {
-  try {
-    var result = Tapp.storage.get(PAYLOAD_KEY)
-    if (result && typeof result.then === 'function') {
-      result.then(function (payload) {
-        if (payload && Array.isArray(payload.notes)) {
-          syncState.lastPayloadJson = JSON.stringify({ notes: payload.notes })
-        }
-      }).catch(function () {})
+  return new Promise(function (resolve) {
+    try {
+      var result = Tapp.storage.get(PAYLOAD_KEY)
+      if (result && typeof result.then === 'function') {
+        result
+          .then(function (payload) {
+            if (payload && Array.isArray(payload.notes)) {
+              syncState.lastPayloadJson = JSON.stringify({ notes: payload.notes })
+            }
+            resolve()
+          })
+          .catch(function () {
+            resolve()
+          })
+      } else {
+        resolve()
+      }
+    } catch (e) {
+      resolve()
     }
-  } catch (e) {}
+  })
 }
 
 // 读一次共享区当前内容做播种：升级后立刻补齐发布，且避免每次会话启动都重复写。
 function primeSharedJson() {
-  try {
-    var result = Tapp.shared.get(SHARED_KEY)
-    if (result && typeof result.then === 'function') {
-      result.then(function (value) {
-        if (value && Array.isArray(value.notes)) {
-          syncState.sharedJson = JSON.stringify({ notes: value.notes })
-        }
-      }).catch(function () {})
+  return new Promise(function (resolve) {
+    try {
+      var result = Tapp.shared.get(SHARED_KEY)
+      if (result && typeof result.then === 'function') {
+        result
+          .then(function (value) {
+            if (value && Array.isArray(value.notes)) {
+              syncState.sharedJson = JSON.stringify({ notes: value.notes })
+            }
+            resolve()
+          })
+          .catch(function () {
+            resolve()
+          })
+      } else {
+        resolve()
+      }
+    } catch (e) {
+      resolve()
     }
-  } catch (e) {}
+  })
 }
 
 // 发布到安装级共享区：写仅 owner/admin，读对所有访客（optional_auth）开放，
@@ -388,18 +437,20 @@ function publishShared(payload, json) {
 
 async function syncNotes() {
   var api = getJournalApi()
-  if (!api) return
+  if (!api) return false
   var role = await currentRole()
-  if (!roleAllowsSync(role)) {
-    diag('skip-role', { role: role })
-    return
-  }
+  if (!roleAllowsSync(role)) return false
   if (syncState.running) {
     syncState.pending = true
-    return
+    return false
   }
   syncState.running = true
-  diag('sync-start', { role: role })
+  // 首次同步（尚无任何 payload）时写一次 sync-start：Widget 挂狗据此宽限 40 秒，
+  // 避免“正在同步”被误报成超时。每会话只写一次，之后不再触碰 storage。
+  if (!syncState.lastPayloadJson && !syncState.syncAttempted) {
+    syncState.syncAttempted = true
+    diag('sync-start', { role: role })
+  }
   try {
     var settings = await readSettings()
     var maxNotes = clamp(settings.maxNotes || 20, 1, 100)
@@ -425,9 +476,12 @@ async function syncNotes() {
     // 同步发布安装级共享区（内容有变化才写，避免无谓重挂载）
     if (json !== syncState.sharedJson) publishShared(payload, json)
     await writeStatus(true)
+    return true
   } catch (error) {
     console.warn('[journal-notes] sync failed', error)
+    diag('sync-failed', { code: classifySyncError(error) })
     await writeStatus(false, error, classifySyncError(error))
+    return false
   } finally {
     syncState.running = false
     if (syncState.pending) {
@@ -477,6 +531,14 @@ function listenForWidgetPings() {
       if (now - syncState.lastPingAt < PING_MIN_INTERVAL_MS) return
       syncState.lastPingAt = now
       syncNotes()
+        .then(function (ok) {
+          if (ok !== true) return
+          // 同步成功后把 lastSyncAt 刷回来（≥5 分钟一次）：卡片的新鲜度取
+          // max(数据, 同步, ping)，只有 ping 在动会让兄弟卡片不断重挂载再 ping，
+          // 刷新状态即让所有卡片一起安静下来。
+          writeStatus(true, null, null, PING_RESPONSE_HEARTBEAT_MS)
+        })
+        .catch(function () {})
     })
   } catch (error) {
     console.warn('[journal-notes] onChanged failed', error)
@@ -489,9 +551,11 @@ Tapp.lifecycle.onReady(function () {
   // 只有具备 phantasiList 接口的沙箱（headless / page）才执行同步。
   if (!getJournalApi()) return
   diag('ready', { mode: typeof window !== 'undefined' ? String(window._TAPP_MODE || '') : '' })
-  seedPayloadJson()
-  primeSharedJson()
-  syncNotes()
+  // 先等播种完成再同步：否则首跑时 lastPayloadJson 还是空，
+  // 相同数据会被再写一遍 storage，触发可见卡片重挂载（闪骨架）。
+  Promise.all([seedPayloadJson(), primeSharedJson()]).then(function () {
+    syncNotes()
+  })
   schedulePeriodicSync()
   listenForWidgetPings()
 })
