@@ -155,7 +155,7 @@ Manifest 若声明了 `page.styles` / `page.template`，索引必须提供对应
 > 安装相关字段以 `apps/<id>/manifest.json` 为唯一权威；商店展示字段写 `catalog.json`。
 
 1. Fork 本仓库，从 `main` 开分支。
-2. **只**在一个 `apps/{id}/` 下添加或修改完整包文件（建议先用仓库内 CLI 或 Myriad [`@myriad-you/tapp-cli`](https://github.com/Myriad-You/Myriad/tree/preview/tools/tapp-cli) 本地 `check` / `pack`）。可附带文档或脚本，但不可夹带第二个 app。
+2. **只**在一个 `apps/{id}/` 下添加或修改完整包文件（建议先用 [`@myriad-you/tapp-cli`](https://github.com/Myriad-You/myriad-tapp/tree/main/tools/tapp-cli) 本地 `check` / `pack`，版本与 PR 检查一致）。可附带文档或脚本，但不可夹带第二个 app。
 3. 确保 `manifest.id` === 文件夹名；**semver bump**；`category` 使用稳定 ID（见下）。
 4. （可选）写 `apps/{id}/catalog.json` 维护商店文案 / tags / preview / `locales` / featured（**不要**改根 `index.json`）。
 5. 本地校验：
@@ -164,7 +164,7 @@ Manifest 若声明了 `page.styles` / `page.template`，索引必须提供对应
    node scripts/check-pr-scope.mjs              # 单 app、禁 index、version bump
    node scripts/sync-index.mjs validate --app <id>
    node scripts/validate-app.mjs --app <id>     # category / catalog / 敏感权限
-   node tapp-cli/bin/myriad-tapp.mjs check apps/<id> --json
+   npx --yes --package=@myriad-you/tapp-cli@0.2.0 myriad-tapp check apps/<id> --json
    node scripts/validate-previews.mjs --app <id>
    node scripts/sync-index.mjs report --app <id>  # 信息用；不必手改 index
    ```

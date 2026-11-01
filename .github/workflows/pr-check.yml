@@ -25,12 +25,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-          cache: npm
-          cache-dependency-path: tapp-cli/package-lock.json
-
-      - name: Install tapp-cli dependencies
-        working-directory: tapp-cli
-        run: npm ci
 
       - name: Enforce PR scope (index / one-app / version bump)
         id: scope
@@ -82,7 +76,8 @@ jobs:
         run: |
           set -euo pipefail
           app="${{ steps.app.outputs.app_id }}"
-          node tapp-cli/bin/myriad-tapp.mjs check "apps/$app" --json | tee /tmp/tapp-check.json
+          # The published CLI from Myriad-You/myriad-tapp; bump the pin deliberately.
+          npx --yes --package=@myriad-you/tapp-cli@0.2.0 myriad-tapp check "apps/$app" --json | tee /tmp/tapp-check.json
           node -e '
             const fs = require("fs");
             const report = JSON.parse(fs.readFileSync("/tmp/tapp-check.json", "utf8"));
