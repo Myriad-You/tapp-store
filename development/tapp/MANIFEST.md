@@ -133,7 +133,7 @@ await Tapp.ui.openUrl({ id: "docs", path: "../evil" }); // reject
 
 ### 远端图片与音视频（remoteMedia）
 
-沙箱 CSP 默认只放行 `data:` / `blob:` / 宿主同源的图片和音视频。要显示外部 CDN 上的头像、封面：
+沙箱 CSP 默认放行 `data:` / `blob:` / 宿主同源的图片，音视频默认只放行宿主同源，`blob:` / `data:` 音视频要授予 `media:audio`。要显示外部 CDN 上的头像、封面：
 
 1. 在 Manifest 声明 `permissions: ["media:remote"]` 与非空 `remoteMedia`；
 2. 安装者在安装或更新时**逐个批准**这些域名，没批准的域名不会生效；

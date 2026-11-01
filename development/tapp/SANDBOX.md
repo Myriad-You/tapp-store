@@ -63,7 +63,7 @@ font-src data: https://fonts.gstatic.com;
 connect-src blob: data:;
 frame-src 'none';
 object-src 'none';
-media-src 'none';   /* media:audio → blob: data:；远程音视频同 img-src，只放授予的 remoteMedia 域名 */
+media-src <host-origin>;   /* media:audio → + blob: data:；远程音视频同 img-src，只放授予的 remoteMedia 域名；无宿主 origin 也无远程域名时为 'none' */
 worker-src 'none';
 form-action 'none';
 base-uri 'none';
