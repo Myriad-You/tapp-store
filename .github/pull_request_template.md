@@ -23,7 +23,7 @@
 ```bash
 node scripts/check-pr-scope.mjs
 node scripts/validate-app.mjs --app <id>
-node tapp-cli/bin/myriad-tapp.mjs check apps/<id> --json
+npx --yes --package=@myriad-you/tapp-cli@0.2.0 myriad-tapp check apps/<id> --json
 node scripts/validate-previews.mjs --app <id>
 ```
 
