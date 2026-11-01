@@ -12,7 +12,7 @@
 
 ### 基础 URL
 
-浏览器同源调用 `/api/...`。开发环境由 Astro 把 `/api/*` 转发到后端；生产环境由
+浏览器同源调用 `/api/...`。开发环境由 Vite 开发代理把 `/api/*` 转发到后端；生产环境由
 Myriad proxy 转发，不要在 Tapp 中硬编码后端端口。
 
 ### 身份与 CSRF
@@ -126,10 +126,11 @@ interface TappResources {
 | 方法   | 路径                                 | 说明                                    |
 | ------ | ------------------------------------ | --------------------------------------- |
 | POST   | `/api/tapps/install`                 | direct/store 统一安装                   |
-| POST   | `/api/tapps/install-file`            | multipart 上传 `.tapp`，字段名 `file`   |
+| POST   | `/api/tapps/install-file`            | multipart 上传 `.tapp`，字段名 `file`；可选 `permissions` / `remoteMedia`（JSON 数组字符串） |
 | POST   | `/api/tapps/cleanup-temporary`       | 私有安装清理（见下「私有安装清理」）    |
 | PUT    | `/api/tapps/list-card-sizes`         | 写入**当前登录用户**个人列表布局        |
 | POST   | `/api/tapps/{tappId}/update`         | direct/store 更新，保留用户数据         |
+| PUT    | `/api/tapps/{tappId}/remote-media`   | 批准 `remoteMedia` 域名（见下）         |
 | POST   | `/api/tapps/{tappId}/start`          | 持久化 owner 自己的 running 状态        |
 | POST   | `/api/tapps/{tappId}/stop`           | 停止 owner 安装并撤销对应 Runtime Grant |
 | DELETE | `/api/tapps/{tappId}?keep_data=true` | 卸载；可选保留存储/设置/共享数据        |
@@ -233,6 +234,18 @@ PUT body 只写调用者个人行：`{ "sizes": { "<tappId>": "1x1"|"2x1" }, "or
 `permissions` 是用户同意的申请子集（批准权限的来源），不是当前授予权限；后端先与
 Manifest 声明权限求交集并保存为 `approved_permissions`，再按当前实时角色和动态下放
 配置生成**授予权限**。
+
+`remoteMedia`（可选，字符串数组）是安装者同意的远端图片域名，与 Manifest `remoteMedia` 求交集后
+保存为 `approved_remote_media`。和 `permissions` 不同，**缺省一个都不批准**：域名能收到 Tapp
+读到的访客数据，必须由人点名。更新时缺省保留仍在声明里的原批准，新增域名不生效；覆盖安装时
+传入的是本次同意的新增域名。409 冲突详情里的 `newRemoteMedia` 列出尚未批准的声明域名。
+
+`PUT /api/tapps/{tappId}/remote-media`，body `{ "hosts": ["cdn.example.com"] }`：把批准集替换为
+声明 ∩ `hosts`，返回 `{ "id", "approvedRemoteMedia" }`。身份与更新相同：管理员批公开安装，
+普通用户批自己的私有安装。
+
+`GET /api/tapps/{tappId}` 返回 `granted_remote_media`（声明 ∩ 批准，且授予集里有
+`media:remote` 时才非空），沙箱 CSP 只读它；`approved_remote_media` 只下发给管理员和私有安装本人。
 
 安装/更新资源先进入 staging，校验后原子替换在线目录；数据库失败恢复旧目录。卸载把文件
 移入隔离目录后，在一个事务中清理安装记录、Manifest/动态 Widget、调度任务及执行历史；
@@ -371,7 +384,7 @@ storage 路由要求 optional_auth + Runtime Grant。读取需要 `storage:read`
 `_shortcut:`、`_report:` 等宿主保留键。
 
 下列能力的真实后端路由仍要求**持久登录**主体，不会被签入访客 Grant：`report:read`、
-`ui:notification`、组件/快捷键注册、scheduler、语音服务、Brew 写入/评论，以及
+`ui:notification`、组件/快捷键注册、scheduler、语音服务、Phantasi 写入/评论，以及
 **privileged / admin-gated** `platform:write`（`POST …/platform/items*`；非仅「已登录」）。
 动态 Widget 注册与注销进一步限制为当前管理员。
 Manifest Widget 由安装/更新自动对账；动态 Widget 路由要求 `widget:register` 同时存在于
@@ -466,7 +479,7 @@ Manifest operation/model tier/context/output 声明，并将任务绑定 subject
 创建生图任务时使用 `version: 2`、`operation: "image"`、`output: { format: "image" }`。
 `input` 可为提示词字符串，或 `{ prompt, width?, height?, referenceImages? }`。
 `referenceImages` 是有序字符串数组：最多 4 张 PNG/JPEG/WebP，解码后合计 10 MiB；
-支持 base64 data URL 和 `/api/brew/image-cache/...` 路径，后端不抓取调用方提供的外部 URL。
+支持 base64 data URL 和 `/api/phantasi/image-cache/...` 路径，后端不抓取调用方提供的外部 URL。
 参考图在预留额度及注册任务前解析；原始参考图来源与顺序参与请求幂等哈希。
 生图任务的 `context` 必须为空，`delivery` 使用默认 `result`；进度仍可通过任务 SSE 订阅。
 
@@ -480,13 +493,14 @@ Manifest operation/model tier/context/output 声明，并将任务绑定 subject
 完整参数、上传转换和复用生成图片示例见 [AI API](API_REFERENCE.md#ai-api)。
 
 除按日聚合的配额计数外，每次受治理的 AI 调用（完成/失败/取消）都会追加一条
-`tapp_ai_cost_ledger` 流水：subject、安装 owner、Tapp、任务、来源（runtime 或
+`ai_cost_ledger` 流水：subject、安装 owner、Tapp、任务、来源（runtime 或
 scheduler）、operation、provider/model、输入/输出 token 估算与终态。同一账本也接收
-站内其它出账点（Agent、报告、Agent 人设、Playground、语音、图像等）；文字走
-`AiAnalyzer` 钩子，图像/语音走对应运行时钩子。未标明来源的调用记为 `internal`。
+站内其它出账点（Agent、报告、Agent 人设、Playground、语音、图像等）；这些调用不是
+Tapp 发起的，没有 `tapp_id`，靠来源区分。文字走 `AiAnalyzer` 钩子，图像/语音走对应
+运行时钩子。未标明来源的调用记为 `internal`。账本是平台设施，Tapp 只是调用方之一。
 受治理任务在 provider 调用外包一层 suppress，避免与任务级 `record_ai_cost` 重复。
 账本 append-only、不随每日重置，`GET /api/tapp/ai/v2/ledger` 供登录用户读取本人逐次
-流水与按 Tapp 汇总；管理端 `GET /api/analytics/ai-usage` 按日/用户/模型/来源聚合。
+流水（站内调用的 `tappId` 为 `null`）与按 Tapp 汇总；管理端 `GET /api/analytics/ai-usage` 按日/用户/模型/来源聚合。
 这两个端点是宿主 UI 能力，不进入沙箱 SDK。`cost_micro_usd` 列预留给后续接入定价源，
 当前为 NULL。
 
@@ -543,9 +557,9 @@ Interaction 的动作截止时间独立于终态保留时间；所有副本都�
 联邦写操作、消息、私有 Room 与文件等仍走各自 SDK/宿主路径，且对游客不可用；见
 [ARCHITECTURE 所有权与可见性](ARCHITECTURE.md#所有权与可见性) 与
 [API_REFERENCE Channel/Room](API_REFERENCE.md#channel--room--ring--trust--传输摘要)。
-Brew / 语音 / 联邦 REST 宿主代理路径已统一按 Grant 归因：带 `X-Tapp-Runtime-Grant` 的请求在服务端按路由强制 Tapp
+Phantasi / 语音 / 联邦 REST 宿主代理路径已统一按 Grant 归因：带 `X-Tapp-Runtime-Grant` 的请求在服务端按路由强制 Tapp
 权限并记录归因日志（共享 `host_attribution` 中间件；路由→权限表见
-`docs/development/tapp/fixtures/host_route_permissions.json`，**先改 fixture 再改映射**）。
+`tapp/docs/fixtures/host_route_permissions.json`，**先改 fixture 再改映射**）。
 `GET /api/federation/public/rooms/*` 与 `GET /api/federation/public/limits` **不**列入该表。联邦 E2E 密钥交换与 Channel/Room
 WebSocket 升级不能携带 Grant 头，因此 Tapp Bridge 先调用
 `POST /api/federation/channels/{channelId}/ws-ticket` 或
@@ -590,6 +604,8 @@ Tapp 通知进入 Myriad 的统一通知流，不存在独立的 Tapp-only toast
 | POST           | `/api/tapp/shortcuts/register`                                | `Tapp.shortcut.register` |
 | DELETE         | `/api/tapp/shortcuts/{tappId}/{shortcutId}`                   | `Tapp.shortcut.unregister` |
 | GET            | `/api/tapp/shortcuts`                                         | `Tapp.shortcut.list` |
+
+平台报告目录只返回 `id`、`platform`、`type`、`createdAt`、`summary`。完整报告通过 ID 或平台详情接口读取，正文、洞察、元数据和卡片数据统一放在 `content`，不再重复返回顶层 `card_visuals` / `cardVisuals` 等别名。SDK 的 `platform.get` 从 `content` 提取 `summary`，`platform.byPlatform` 从中提取摘要、洞察、元数据和卡片字段；直接调用 REST 的客户端应从 `content` 读取详情。
 
 这些路由都需要登录；具体能力还受 `report:*`、`component:*` 与 `shortcut:register` 等最终授权约束。
 
@@ -704,7 +720,7 @@ owner 可在 Tapp 详情里停用**该安装**的 `/tapi`（响应 403 `ROUTE_PA
 
 1. 后端路由注册、中间件和 handler 内授权；
 2. `frontend/src/tapp/services/TappApiService.ts` 的 Cookie、CSRF 和字段转换；
-3. sandbox handler 与 `permissionConfig.ts`；
+3. sandbox handler 与 `tapp/shared/tapp_sandbox_contract.json`（动作权限表）；
 4. `sdkGenerator.ts` 的公开方法；
 5. 本文和 [SDK API](API_REFERENCE.md)；
 6. Page、Widget、headless 三种宿主是否都应暴露该能力。

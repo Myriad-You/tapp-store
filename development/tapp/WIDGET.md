@@ -20,13 +20,14 @@
 ## Widget SDK 限制
 
 > ⚠️ **重要**：三种沙箱不是同一套 `window.Tapp`。Widget 是精简面；Page 是完整面；headless
-> （常驻）没有可见控制面。需要联邦、对局、Tapp / Brew 管理时用 Page（有授予权限时 headless
+> （常驻）没有可见控制面。需要联邦、对局、Tapp / Phantasi 管理时用 Page（有授予权限时 headless
 > 也可以用联邦和对局），不要假设 Widget 上有这些方法。
 
 | 分类 | Widget | Page | headless |
 | ---- | ------ | ---- | -------- |
 | **存储 / settings / shared** | ✅ `getAll`/`usage` | ✅ | ✅ |
 | **实例设置 / `invalidate`** | ✅ `getInstanceSettings` / `updateInstanceSettings` / `invalidate`（无 options 刷自己） | ✅ register 系列 + `invalidate({ widgetId })`（需 `storage:write`） | ✅ 仅 `invalidate({ widgetId })`（需 `storage:write`） |
+| **弹窗** | ✅ `Tapp.widget.openPopup(params)`（用户刚点过这张卡才放行）；弹窗层里 `Tapp.popups` / `Tapp.popup` | ❌ | ❌ |
 | **UI 主题 / 语言 / 通知** | ✅ | ✅ | ✅ |
 | **`Tapp.ui.openUrl` / `listOpenUrls`** | ✅ 需 `ui:openUrl` + `openUrls` | ✅ | ❌ 不可用 |
 | **fullscreen / title / confirm** | ❌ | ✅ | ❌ |
@@ -39,10 +40,14 @@
 | **媒体 / 语音 / 动画 / 调度 / 事件 / Data Exchange / Agent** | ✅ 按授予权限 | ✅ | ✅ |
 | **`Tapp.api(name, params)` / `Tapp.api.list()`** | ✅ | ✅ | ✅ |
 | **生命周期** | ✅ `onReady` / `onDestroy` / `onPause` / `onResume`（隐藏≠销毁） | ✅ | ✅ |
-| **`tappList` / `brewList` / `federation` / `game` / 组件 / 快捷键** | ❌ | ✅ | `tappList` / 组件 / 快捷键 ❌；`brewList` / `federation` / `game` ✅ |
+| **`tappList` / `phantasiList` / `federation` / `game` / 组件 / 快捷键** | ❌ | ✅ | `tappList` / 组件 / 快捷键 ❌；`phantasiList` / `federation` / `game` ✅ |
 
 Widget 不是纯静态展示层：共享层 `core` 可在其中使用事件、调度和数据交换。Widget 沙箱没有
-平台/报告写入、Tapp/Brew 管理、组件、快捷键、联邦或 `Tapp.game`。
+平台/报告写入、Tapp/Phantasi 管理、组件、快捷键、联邦或 `Tapp.game`。
+
+卡片放不下的内容放进**弹窗层**（`widgets[].popup`）：宿主在单独的沙箱里跑它，桌面从卡片位置
+展开，手机走底部面板（`stage` 尺寸全屏）。弹窗沿用这张卡的样式和授予权限，关掉只是暂存。
+用法见 [API Reference · 小组件弹窗](API_REFERENCE.md#小组件弹窗)。
 
 ---
 
@@ -81,7 +86,7 @@ Manifest 顶层 `settings` 由整个 Tapp 共享；`widgets[].settings` 则为�
 ## 宿主加载骨架（Widget Skeleton）
 
 Dashboard 上**所有第三方 Tapp 小组件**默认接入宿主通用骨架
-（`frontend/src/components/widgets/shared/WidgetSkeleton`），内置系统小组件也复用同一套。
+（Myriad 的 `frontend/src/components/widgets/shared/WidgetSkeleton`），内置系统小组件也复用同一套。
 
 ### 设计原则（最高效默认）
 
@@ -119,6 +124,8 @@ TappWidgetSandbox
 
 宿主内置小组件数据加载同理：内容先挂好，`WidgetSkeletonCover active={loading}` 盖在上面再淡出。
 
+声明 `manifest.page` 的运行中小组件，宿主在右上角提供进入应用页面的按钮（悬停或键盘聚焦时显示，触屏常显）。按钮只打开该小组件所属应用；编辑和预览状态不提供此入口，不增加沙箱权限。
+
 **未运行**的 Tapp 仍显示「启动 / 详情」Glass 卡，**不用**骨架冒充加载。
 
 ### 作者侧约定
@@ -129,7 +136,7 @@ TappWidgetSandbox
 4. 需要自定义宿主骨架形状时（仅内置小组件）：`WidgetSkeleton` 的 `preset` /
    `SkeletonBone` / `accent`；Tapp 作者无此 API，宿主已默认最优路径。
 
-实现参考：
+实现参考（Myriad 宿主仓库）：
 
 - `frontend/src/components/widgets/shared/WidgetSkeleton.tsx`（`TAPP_WIDGET_SKELETON`）
 - `frontend/src/hooks/useTappWidgets.ts`（Suspense 包装）

@@ -6,9 +6,9 @@
 | -- | -- |
 | 目录 URL（Myriad 预置官方源） | `https://raw.githubusercontent.com/Myriad-You/tapp-store/main/index.json` |
 | `base_url` | `https://raw.githubusercontent.com/Myriad-You/tapp-store/main` |
-| Myriad 权威文档 | [Tapp 商店](https://github.com/Myriad-You/Myriad/blob/preview/docs/development/tapp/STORE.md) · [Tapp 开发索引](https://github.com/Myriad-You/Myriad/blob/preview/docs/development/TAPP_DEVELOPMENT.md) |
+| 权威文档 | [Tapp 商店](https://github.com/Myriad-You/myriad-tapp/blob/main/docs/STORE.md)（myriad-tapp） · [Tapp 开发索引](https://github.com/Myriad-You/Myriad/blob/preview/docs/development/TAPP_DEVELOPMENT.md)（Myriad） |
 
-> **开发/运行时契约以 Myriad 主仓库为准。** 本仓库的 `development/` 为面向商店贡献者的镜像与摘要，可能滞后；冲突时以 Myriad `docs/development/tapp/` 为准。
+> **契约与作者文档以 [myriad-tapp](https://github.com/Myriad-You/myriad-tapp) 为准，宿主文档以 Myriad 主仓库为准。** 本仓库的 `development/` 与 `features/` 是面向商店贡献者的镜像，可能滞后；冲突时以 myriad-tapp `docs/` 和 Myriad `docs/development/tapp/` 为准。
 >
 > 新 3D 包请声明 `runtimeModules: ["three"]`，不要把 Three 打进商店包。新联机包用 `Tapp.game`（`game:session` + 联邦权限）。已上架的五子棋 / 斗地主仍走普通房间自定义 `message_type`，在未声明 `game` 时保持兼容。
 
@@ -18,7 +18,7 @@
 2. 管理员也可在 Tapp Store 设置中添加第三方目录 URL（须指向可公开 GET 的 `index.json`）。
 3. 用户在商店 UI 浏览列表（浏览器直连索引）；安装时优先由 **后端** 出站下载，失败或大包时回退为浏览器下载 + direct 安装。
 
-细节见 Myriad [STORE.md](https://github.com/Myriad-You/Myriad/blob/preview/docs/development/tapp/STORE.md)。
+细节见 myriad-tapp [STORE.md](https://github.com/Myriad-You/myriad-tapp/blob/main/docs/STORE.md)。
 
 ## 仓库结构
 
@@ -43,6 +43,7 @@ tapp-store/
 │   ├── validate-app.mjs    # category / 敏感权限 / catalog
 │   └── validate-previews.mjs
 ├── edge/                   # Cloudflare Workers：全网安装统计（可选部署）
+├── features/               # `.tapp` 文件格式镜像
 └── development/            # 贡献者文档镜像（见下）
 ```
 
@@ -274,11 +275,11 @@ Catalog Sync 使用 `GITHUB_TOKEN` 回写 `index.json`；若开启「禁止 bot 
 | 路径 | 说明 |
 | ---- | ---- |
 | [development/TAPP_DEVELOPMENT.md](./development/TAPP_DEVELOPMENT.md) | 文档索引与 Myriad 链接 |
-| [AI 生图与参考图](./development/tapp/API_REFERENCE.md#ai-api) | `input.referenceImages`、上传转换、限制与幂等；内置 CLI 提供对应 SDK 类型 |
-| [development/tapp/STORE.md](./development/tapp/STORE.md) | 商店协议全文（与 Myriad 同步） |
+| [AI 生图与参考图](./development/tapp/API_REFERENCE.md#ai-api) | `input.referenceImages`、上传转换、限制与幂等；CLI（`@myriad-you/tapp-cli`）生成对应 SDK 类型 |
+| [development/tapp/STORE.md](./development/tapp/STORE.md) | 商店协议全文（与 myriad-tapp 同步） |
 | [development/tapp/](./development/tapp/) | Manifest / SDK / 沙箱等镜像 |
 
-完整运行时与后端边界请读 Myriad 主仓库文档，不要仅依赖本镜像。
+完整契约与运行时请读 myriad-tapp，宿主后端边界请读 Myriad 主仓库文档，不要仅依赖本镜像。
 
 ## 许可证
 

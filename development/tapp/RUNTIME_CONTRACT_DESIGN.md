@@ -45,7 +45,7 @@ Cookie 只能证明用户身份，不能证明调用来自哪个 Tapp。当前�
 - Runtime Grant 只约束 Tapp 运行时 API；公开 Tapp 列表和商店读取不需要它。
 
 这一步是跨 Tapp Data Exchange、Agent、Event、AI Task 的共同前置条件。当前 `/api/tapp`
-运行时路由和 Tapp storage 已迁移；Brew、语音与联邦 REST 宿主代理路径也已通过可选 Grant 头
+运行时路由和 Tapp storage 已迁移；Phantasi、语音与联邦 REST 宿主代理路径也已通过可选 Grant 头
 中间件接入统一服务端 Tapp 归因（带头强制、不带头保持宿主 UI 语义；共享
 `host_attribution` 路由映射）。联邦 WebSocket 由带 Grant 的 REST 请求签发短时、单次且绑定
 subject/Tapp/runtime/目标资源的 ticket，再通过 `tapp_ws_ticket` 查询参数完成升级与归因。
@@ -240,9 +240,9 @@ await interaction.requestIntent({
   授权后，立即调用受信宿主 adapter 执行 `ui.open`、`report.create` 或
   `dataExchange.request`，不会把任意动作执行权交还给 Tapp。
 - 每个消息都携带 `interactionId`，重复提交以幂等键去重；超时或取消后拒绝迟到结果。
-- 5 分钟 deadline 到达后由共享 CAS worker 转为 `expired` 并恢复原 Executor；registry 记录继续
+- 5 分钟 deadline 到达后由共享 CAS worker 转为 `expired` 并恢复原办事任务；registry 记录继续
   保留终态观察窗口，不能通过直接 TTL 删除让 Agent task 卡在 `waiting_for_input`。
-- Executor continuation 通过 `agent_tasks` 的 `waiting_for_input -> running` CAS 取得唯一执行权；
+- 办事任务的续跑通过 `agent_tasks` 的 `waiting_for_input -> running` CAS 取得唯一执行权；
   原 run hub 周期刷新权威数据库，使跨副本 result 在数秒内收敛且按真实终态上报。
 - Agent task 取消写入同一权威状态，并在步骤边界与最终提交前复核；接收取消请求的副本不必是
   实际执行副本，已取消任务不能被迟到完成覆盖。
@@ -415,8 +415,8 @@ Manifest 只声明能力与预算层级，不暴露供应商参数：
 
 当前进度：1 已完成核心路由迁移和共享 Grant；2 已完成 Manifest round-trip、宿主授权队列与
 结构化弹窗、在线 Provider broker、一次性 Grant、同 subject 隔离、主动撤销及响应边界；3 已完成持久化用量账本、独立
-per-call AI 费用账本（`tapp_ai_cost_ledger`）、任务状态机、上下文/输出校验和 SSE；4 已完成在线 at-most-once 路由与 Manifest allowlist；5 已完成
-interaction schema、CAS 接受/提交/拒绝状态机、Executor 恢复以及
+per-call AI 费用账本（`ai_cost_ledger`）、任务状态机、上下文/输出校验和 SSE；4 已完成在线 at-most-once 路由与 Manifest allowlist；5 已完成
+interaction schema、CAS 接受/提交/拒绝状态机、办事任务恢复以及
 `ui.open`、`report.create`、`dataExchange.request` 宿主 adapter。在线状态使用 PostgreSQL
 TTL registry、durable mailbox 与 `pg_notify` 提示；Agent run 元数据和最近 256 个 SSE 事件
 同样写入共享 TTL registry，事件使用独立 sequence 记录追加而非反复重写历史，可跨副本重新

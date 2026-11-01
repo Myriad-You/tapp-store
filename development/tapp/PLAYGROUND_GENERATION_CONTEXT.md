@@ -20,8 +20,8 @@ Playground 项目至少需要 **Page** 或 **Widgets** 之一（允许 Widget-on
   Widget 可见 UI **必须**注册 `Tapp.widgets[<id>] = { render(container, props) { ... } }`
   （宿主调用 `render`）。**不要**在 Widget 层写 `Tapp.widget.register`（那是 Page 动态注册）。
   Widget 沙箱没有 `confirm` / `setTitle` / `fullscreen` / `Tapp.model3d` /
-  `Tapp.game` / 联邦 / `tappList` / `brewList`。全屏只用 `Tapp.ui.fullscreen.*`
-  （仅 Page）。详见 [WIDGET.md](./WIDGET.md)。
+  `Tapp.game` / 联邦 / `tappList` / `phantasiList`。全屏只用 `Tapp.ui.fullscreen.*`
+  （仅 Page）。详见 [WIDGET.md](WIDGET.md)。
 - core 是共享层，三种沙箱都先执行它。Playground 一层一个文件（`core.js` /
   `page/index.js` / `widget/index.js`）；跨层共享在 core 里 `module.exports`，层入口
   `require('../core.js')`。再拆文件只在导出 `.tapp` 并用 CLI 打开之后。
@@ -76,8 +76,8 @@ Playground 项目至少需要 **Page** 或 **Widgets** 之一（允许 Widget-on
   （Myriad 宿主常用语言；简短标题也要翻译）。仅当用户明确要求单语包时才可省略。
 - `locales` **不能**替代 `code.i18n`；应用内文案仍走 `Tapp.i18n`。
 - **不要**把 `long_description` 或 `preview` 写进 `manifest.locales`（安装校验会拒绝未知字段）。
-- 完整字段与回退链见 [MANIFEST · 多语言名称与描述](./MANIFEST.md#多语言名称与描述locales)。
-  商店展示层见 [STORE](./STORE.md)。
+- 完整字段与回退链见 [MANIFEST · 多语言名称与描述](MANIFEST.md#多语言名称与描述locales)。
+  商店展示层见 [STORE](STORE.md)。
 
 示例（顶层中文兜底 + 宿主多语言目录文案）：
 
@@ -191,14 +191,14 @@ Tapp.widgets['my-widget'] = {
 
 - **Federation** 全套（`uploadMedia` → `createNote` 附件 URL、Channel/Room/Ring 等）
 - **Tapp.model3d** / `3d:generate`（仅 Page 有对象；预览无 handlers。包内 GLB 仍走 `Tapp.assets`）
-- **platform** / **report**（含 `Tapp.report.platform.*` 平台分析与本安装 `list`/`get`/`create`）/ **brewList** / **tappList**
+- **platform** / **report**（含 `Tapp.report.platform.*` 平台分析与本安装 `list`/`get`/`create`）/ **phantasiList** / **tappList**
 - **dataExchange**、**ai**、**agent**、**event** Broker、**scheduler**、宿主 **media** 控制
 - 声明式 **`Tapp.api` 执行**（预览仅 list 空表）
 - **`Tapp.background.require`**（预览无常驻；勿空写 `backgroundRequirements`）
 
 生成安装后才有意义的能力时：
 
-- 可在 Manifest 声明真实权限与正式运行时代码（见 [API_REFERENCE](./API_REFERENCE.md)）；
+- 可在 Manifest 声明真实权限与正式运行时代码（见 [API_REFERENCE](API_REFERENCE.md)）；
 - AI **只**走 `Tapp.ai.tasks`（`create` / `get` / `cancel` / `usage` / `subscribe`）。
   不要发明 `Tapp.ai.generate`、`Tapp.search`、直接 `fetch` 搜索，或供应商 / 模型字段。
   临时预览**不执行** AI：调用会失败（明确错误，不是安装后的结果）。把 AI 按钮放进
@@ -221,7 +221,7 @@ Tapp.widgets['my-widget'] = {
   | `search` | `ai:search` | 字符串或 `{ query, searchType?, maxResults?, searchPrompt? }` | **必须** `json` |
 
   完成态读 `task.result`：`{ format, value, contextProvenance }`。业务数据在 `value`
-  （生图是 `{ url, width, height }`，`url` 是 `/api/brew/image-cache/...`，可直接作
+  （生图是 `{ url, width, height }`，`url` 是 `/api/phantasi/image-cache/...`，可直接作
   `<img src>`；下载把 `url`、整份 `task` 或 `task.result` 交给 `Tapp.file.download`，由宿主读缓存，不要 `fetch`。
   3D 用 `/api/model3d/assets/{id}` 或 `getUrl` 的返回对象；TTS 用 `{ audio }` 或 `{ base64: audio }`。
   搜索是 JSON 结果对象）。`subscribe` 的 `result` / 终态 `snapshot`
@@ -267,28 +267,30 @@ Tapp.widgets['my-widget'] = {
 
   文本流式用 `subscribe` 听 `delta`；生图 / 搜索不要 `delivery: "stream"`。
   生图参考图放在 `input.referenceImages` 有序数组中，支持 PNG/JPEG/WebP base64 data URL
-  或 `/api/brew/image-cache/...`，最多 4 张、解码后合计 10 MiB。不要放到 `context`，
+  或 `/api/phantasi/image-cache/...`，最多 4 张、解码后合计 10 MiB。不要放到 `context`，
   不要直接传 `blob:` / 外部 URL。文件选择后可用 `FileReader.readAsDataURL` 转换。
-  完整字段见 [AI API](./API_REFERENCE.md#ai-api)。
+  完整字段见 [AI API](API_REFERENCE.md#ai-api)。
+- 外链图片/音视频（`<img src="https://...">`）要声明 `media:remote` 和 `remoteMedia` 域名列表
+  （`cdn.example.com` 或 `*.example.com`），安装者批准后才生效；`network:fetch` 不放行外链图。
 - 声明式 HTTP API 必须申请 `network:fetch`。请求体默认使用 `bodyMode: "json"`；纯文本、XML
   使用 UTF-8 `raw`，表单使用 `form`。第三方密钥用 Manifest `credentials` +
   `apis.*.credential`（`in`: `header` / `query` / `form` / `sign`）；密钥不进
   `settings` 或模板。`raw`/`form`/`sign` 仅允许 `POST`、`PUT`、`PATCH`、`DELETE`。
   临时预览不会实际执行 `Tapp.api`；完整字段见
-  [MANIFEST · API 声明](./MANIFEST.md#api-声明-apis) 与
-  [安装级凭据](./MANIFEST.md#安装级-api-凭据-credentials)。
+  [MANIFEST · API 声明](MANIFEST.md#api-声明-apis) 与
+  [安装级凭据](MANIFEST.md#安装级-api-凭据-credentials)。
   若要给其他程序调用，再声明 `apis.*.route`（必须 `hmac-sha256-raw` + timestamp/nonce，
   且 `access: public`）；不要编造未签名的 `/tapi` 或把密钥写进源码。
   **不要**在源码、`settings`、i18n 或注释里写入真实或示例密钥；`credentials` 只声明
   `key`/`label`，值由站主安装后写入。
 - 不要把 Three / Pocket 运行时打进生成物，也不要输出 CDN。完整 guest Three 样例见商店
-  `com.myriad.three-lab`；Playground 只需在需要 3D 时按 [GRAPHICS](./GRAPHICS.md) 声明
+  `com.myriad.three-lab`；Playground 只需在需要 3D 时按 [GRAPHICS](GRAPHICS.md) 声明
   `assets/` 并调用 `getUrlMap` / `rewriteUrl`。
 - 预览验证 UI、生命周期、主题、`code.i18n`、`manifest.locales`、内存 storage/settings/shared，
   以及工作区包内 `Tapp.assets`；
-- **不要**臆造预览 mock 联邦 / Brew / platform API。
+- **不要**臆造预览 mock 联邦 / Phantasi / platform API。
 - 若生成 **正式运行后** 调用 `Tapp.tappList.install` 的商店安装代码，必须使用合法 SDK 形状
-  （见 [STORE](./STORE.md) / [API_REFERENCE · Tapp 列表](./API_REFERENCE.md#tapp-列表-api)）：
+  （见 [STORE](STORE.md) / [API_REFERENCE · Tapp 列表](API_REFERENCE.md#tapp-列表-api)）：
   - ✅ `{ source: "store", storeSource: "<源 id 或 catalog URL>", tappId }`
   - ✅ `{ source: "https://…/index.json", tappId }`（HTTP `source` 即 catalog）
   - ❌ `{ source: "1", tappId }`（裸非 HTTP `source` **不会**当作源 id）
@@ -297,7 +299,7 @@ Tapp.widgets['my-widget'] = {
 
 Bridge 默认 payload 约 **1 MiB**；正式运行特例：`file.download` 文本 / base64 / 宿主代取
 生图·3D **32 MiB**，`federation.uploadMedia` 对齐图片 10 MiB / 视频 50 MiB 的 base64 预算（见
-[SANDBOX](./SANDBOX.md#payload-大小)）；带 `input.referenceImages` 数组的生图任务 JSON payload
+[SANDBOX](SANDBOX.md#payload-大小)）；带 `input.referenceImages` 数组的生图任务 JSON payload
 上限为 **14 MiB**，后端另检查图片数量、解码后总大小与文本大小。预览侧勿假设可上传大媒体。
 
 ## Manifest 质量字段（可选但推荐）
@@ -305,6 +307,7 @@ Bridge 默认 payload 约 **1 MiB**；正式运行特例：`file.download` 文�
 - **`locales`**：见上文；默认 `en-US` + `ja-JP`。
 - **`iconSvg`**：生产包优先内联 SVG（优先于 emoji `icon`）；简单 demo 可用 emoji。
 - **`minSystemVersion`**：可选语义版本；声明后安装/更新会与宿主 Myriad 版本比较并拒绝过旧实例。新能力依赖新 runtime 时建议填写。
+- **`minContractVersion`**：只在用到第 1 版契约之后才有的功能（如 `Tapp.context.getCapabilities()`，第 2 版）时写对应版本；没用到就不写，更早的宿主会把带这个字段的 Manifest 整个拒收。
 - **`backgroundRequirements`**：仅当 `code.core` 真正依赖常驻（如 scheduler/sync）时填写；勿为「好看」空挂。
 
 ## 安全与兼容性

@@ -40,9 +40,11 @@ Refused to load the script/style/image '...' because it violates the following C
 
 1. **外部脚本**：不支持直接加载外部 JS 文件；把代码放进包内并用相对路径 `require`
 2. **外部样式**：使用 `styles.css` 文件或内联样式
-3. **图片**：默认只允许 `data:`、`blob:` 和宿主同源。外链图要申请 `network:fetch`。
-   `Tapp.persona.get()` 的 `portraitUrl` 已是同源路径，直接 `<img src>`，不要为此再申请
-   `network:fetch`
+3. **图片**：默认只允许 `data:`、`blob:` 和宿主同源。外链图要声明 `media:remote` 与
+   `remoteMedia` 域名，并由安装者在安装弹窗或 Tapp 详情页「远端图片来源」里批准；
+   控制台出现 `blocked by the Tapp CSP` 时先查域名是否已批准、`*.x.com` 是否漏了 `x.com` 本身。
+   `network:fetch` 不再放行外链图。`Tapp.persona.get()` 的 `portraitUrl` 已是同源路径，
+   直接 `<img src>`
 4. **媒体**：CSP 默认禁止直接加载；使用宿主媒体 API
 5. **API 请求**：在 Manifest 的 `apis` 中声明，再调用 `Tapp.api(name, params)`
 
@@ -501,7 +503,7 @@ Manifest 必须同时声明 `ai:image` **和** `manifest.ai`（`protocolVersion:
 
 1. **默认 bridge 上限**：绝大多数 action 的 JSON payload 约 **1 MiB + 64 KiB**。
 2. **媒体专用上限**：`uploadMedia` 允许更大 data URL/base64，但仍受 raw **图片 10 MiB /
-   视频 50 MiB** 与 base64 膨胀约束（见 [SANDBOX](./SANDBOX.md#payload-大小)）。
+   视频 50 MiB** 与 base64 膨胀约束（见 [SANDBOX](SANDBOX.md#payload-大小)）。
 3. 先把整文件转成 data URL 再 postMessage，体积约为 raw 的 4/3，更容易触顶。
 
 **解决方案**：
@@ -511,12 +513,12 @@ Manifest 必须同时声明 `ai:image` **和** `manifest.ai`（`protocolVersion:
 3. 不要对非 media action 塞大 base64（会撞默认 1 MiB）。
 4. `file.download` 文本 / base64 / 宿主代取生图·3D 上限 32 MiB，与 storage 单值 1 MiB 不同。
 
-### ❌ 附件 URL 被拒绝 / `Attachment URL must look like /media/federation/...`
+### ❌ 附件 URL 被拒绝 / `Invalid attachment URL`
 
 **症状**：`createNote` / `publish` 失败，提示 attachment URL 非法。
 
 **原因**：附件必须是本实例 `uploadMedia` 返回的联邦媒体 URL
-（路径形如 `/media/federation/{userId}/{filename}`），不能塞任意 CDN 或 data URL。
+（路径形如 `/media/assets/{uuid}/{filename}`），不能塞任意 CDN 或 data URL。
 
 **解决方案**：先 `uploadMedia`，再用返回的 `url` + `media_type` 填 `attachments`。
 
@@ -527,7 +529,7 @@ Manifest 必须同时声明 `ai:image` **和** `manifest.ai`（`protocolVersion:
 **原因**：临时预览不签发 Runtime Grant，也不注册 `FederationBridge`。
 
 **解决方案**：预览只测 UI/storage；联邦能力在安装后正式运行验证。见
-[PLAYGROUND_GENERATION_CONTEXT](./PLAYGROUND_GENERATION_CONTEXT.md)。
+[PLAYGROUND_GENERATION_CONTEXT](PLAYGROUND_GENERATION_CONTEXT.md)。
 
 ---
 
@@ -547,13 +549,13 @@ Manifest 必须同时声明 `ai:image` **和** `manifest.ai`（`protocolVersion:
 2. 后端容器访问不了 raw.githubusercontent.com 等外网时 store 安装失败；宿主可能回退为
    浏览器下载 + REST `source: "direct"`。
 3. 上传 `.tapp` 走 `install-file`；SDK 内联包用 `tappList.install({ source: "direct",
-   manifest, modules, ... })`（见 [API 参考 · Tapp 列表](./API_REFERENCE.md#tapp-列表-api)）。
+   manifest, modules, ... })`（见 [API 参考 · Tapp 列表](API_REFERENCE.md#tapp-列表-api)）。
 
 **解决方案**：
 
 1. 使用 `{ source: "store", storeSource: "1", tappId }` 或
-   `{ source: "https://…/index.json", tappId }`（见 [STORE](./STORE.md) /
-   [REST API](./REST_API.md)）。
+   `{ source: "https://…/index.json", tappId }`（见 [STORE](STORE.md) /
+   [REST API](REST_API.md)）。
 2. 确认商店源已启用且 `tappId` 存在于该源 `index.json`。
 3. 离线/内网包使用 `install-file` 或 SDK/REST direct 安装。
 
@@ -566,6 +568,24 @@ Manifest 必须同时声明 `ai:image` **和** `manifest.ai`（`protocolVersion:
 
 **解决方案**：对齐分类稳定 ID；补齐 `download` 路径并保证 `base_url` 下可 GET。见
 [STORE · 索引检查清单](STORE.md#索引检查清单)。
+
+### ❌ 安装时提示「这个应用需要更新版本的 Myriad」
+
+**症状**：上传 `.tapp` 或从商店安装时返回 400，错误码 `tapp_contract_too_new`。
+
+**原因**：Manifest 的 `minContractVersion` 比这个站点实现的 Tapp 契约新，应用用到了站点还没有的
+字段或 SDK 动作。
+
+**解决方案**：站点升级 Myriad 后再装。作者想让旧站点也能装，就别用那些新功能，并删掉
+`minContractVersion`。见 [MANIFEST · 版本要求](MANIFEST.md#版本要求)。
+
+### ❌ `myriad-tapp check` 报 `contract-version-required`
+
+**原因**：代码或 Manifest 用到了第 1 版之后才加的东西（例如 `Tapp.context.getCapabilities()`）。
+
+**解决方案**：照提示在 `manifest.json` 加上 `"minContractVersion": N`。CLI 不会替你写；
+反过来，没用到新功能却写了这个字段，`check` 会给 `contract-version-unneeded` 警告，因为更早的
+站点会把带这个字段的 Manifest 整个拒掉。
 
 ---
 
@@ -623,5 +643,6 @@ Tapp.lifecycle.onReady(async function () {
 - [ ] 在多个 Widget 尺寸下测试显示效果
 - [ ] 在亮色和暗色模式下测试样式
 - [ ] `Tapp.api` 使用的名称已在 manifest 的 `apis` 中声明
+- [ ] `myriad-tapp check` 没有 `contract-version-*` 报错
 - [ ] 无控制台错误（忽略已知的安全警告）
 - [ ] 完整清单见 [STORE.md](STORE.md#索引检查清单)

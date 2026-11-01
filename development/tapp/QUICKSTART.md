@@ -3,16 +3,16 @@
 Tapp (Third-party App) 是 Myriad 的扩展应用系统，允许开发者创建自定义小组件、工具和功能扩展。
 当前推荐使用 `@myriad-you/tapp-cli` 创建、校验和打包项目；Manifest 字段与 SDK 能力分别见
 [Manifest 配置](MANIFEST.md)和 [API 参考](API_REFERENCE.md)。CLI 的完整命令契约见
-[Myriad Tapp CLI](../../../tools/tapp-cli/README.md)。
+[Myriad Tapp CLI](https://github.com/Myriad-You/myriad-tapp/blob/main/tools/tapp-cli/README.md)。
 
 ## For agents
 
 Agent 和 CI 应固定包版本、显式指定 `myriad-tapp` binary，并始终使用 `--json`：
 
 ```bash
-npx --yes --package=@myriad-you/tapp-cli@0.1.4 myriad-tapp init ./my-tapp --type page
-npx --yes --package=@myriad-you/tapp-cli@0.1.4 myriad-tapp check ./my-tapp --json
-npx --yes --package=@myriad-you/tapp-cli@0.1.4 myriad-tapp pack ./my-tapp --json
+npx --yes --package=@myriad-you/tapp-cli@0.2.0 myriad-tapp init ./my-tapp --type page
+npx --yes --package=@myriad-you/tapp-cli@0.2.0 myriad-tapp check ./my-tapp --json
+npx --yes --package=@myriad-you/tapp-cli@0.2.0 myriad-tapp pack ./my-tapp --json
 ```
 
 任何非零退出状态都表示失败。`check` 返回状态 `1` 时，读取 `diagnostics`、修复项目并重新
@@ -25,7 +25,7 @@ npx --yes --package=@myriad-you/tapp-cli@0.1.4 myriad-tapp pack ./my-tapp --json
 starter：
 
 ```bash
-npm install --global @myriad-you/tapp-cli@0.1.4
+npm install --global @myriad-you/tapp-cli@0.2.0
 myriad-tapp init ./my-tapp --type page
 ```
 
@@ -80,7 +80,7 @@ manifest {
 
 | 沙箱     | 加载的层                         | 能调用什么 |
 | -------- | -------------------------------- | ---------- |
-| Widget   | `core` + 该 widget               | 精简 SDK：生命周期、模板与 `render`；没有联邦 / 对局 / Tapp·Brew 管理 |
+| Widget   | `core` + 该 widget               | 精简 SDK：生命周期、模板与 `render`；没有联邦 / 对局 / Tapp·Phantasi 管理 |
 | Page     | `core` + `page`                  | 完整 SDK、生命周期和页面 UI |
 | headless | 仅 `core`（常驻用这一套）        | 无可见 UI；`Tapp.widget` 只有定向 `invalidate({ widgetId })`；没有 register / `tappList` / 组件 / 快捷键 / 动态内容 / DOM / 文件下载 / `model3d` |
 
@@ -502,11 +502,11 @@ Tapp.lifecycle.onReady(async function () {
 
 ## 下一步
 
-- [Manifest 配置](./MANIFEST.md) - 完整的配置选项说明
-- [Tapp 商店](./STORE.md) - 远程目录、安装与发布
-- [API 参考](./API_REFERENCE.md) - 所有可用 API 的详细文档
-- [小组件开发](./WIDGET.md) - Widget 样式与[数据加载与更新](WIDGET.md#数据加载与更新)
-- [页面样式规范](./PAGE.md) - 宿主 React chrome 对照（沙箱样式用 STYLING / DESIGN_SPEC）
-- [样式规范](./STYLING.md) - Glass Morphism 设计规范
-- [安全沙箱](./SANDBOX.md) - 沙箱限制和安全机制
-- [故障排除](./TROUBLESHOOTING.md) - 安装与运行时问题
+- [Manifest 配置](MANIFEST.md) - 完整的配置选项说明
+- [Tapp 商店](STORE.md) - 远程目录、安装与发布
+- [API 参考](API_REFERENCE.md) - 所有可用 API 的详细文档
+- [小组件开发](WIDGET.md) - Widget 样式与[数据加载与更新](WIDGET.md#数据加载与更新)
+- [页面样式规范](PAGE.md) - 宿主 React chrome 对照（沙箱样式用 STYLING / DESIGN_SPEC）
+- [样式规范](STYLING.md) - Glass Morphism 设计规范
+- [安全沙箱](SANDBOX.md) - 沙箱限制和安全机制
+- [故障排除](TROUBLESHOOTING.md) - 安装与运行时问题
