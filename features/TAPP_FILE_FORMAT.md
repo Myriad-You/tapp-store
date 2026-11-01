@@ -235,7 +235,8 @@ core 是三层共享层，三种模式都先执行它；只有后台专属逻辑
 ## 安装流程
 
 1. 浏览器获取 CSRF token 并上传 multipart；
-2. 后端读取并反序列化 `manifest.json`；
+2. 后端读取 `manifest.json`，先看 `minContractVersion`：比宿主实现的契约新就回「需要
+   更新宿主」并停止；否则再严格反序列化；
 3. 校验 `minSystemVersion`，当前 Myriad 版本过低时立即拒绝；
 4. 校验 ID、所有 Manifest 路径和 Widget 模板路径；
 5. 检查同 owner 下是否已安装；

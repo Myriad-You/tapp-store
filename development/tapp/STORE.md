@@ -72,7 +72,7 @@ flowchart TB
 
 前端降级常量 `OFFICIAL_STORE`（`RemoteStoreService`）在 API 不可用时仍指向同一 URL。
 
-第一方示例（以仓库 `index.json` 为准，另有第三方应用）：`com.myriad.music-player`、`com.myriad.quick-notes`、`com.myriad.config-generator`、`com.myriad.doudizhu`、`com.myriad.aro`、`com.myriad.three-lab`。完整 id 列表只认当前 `index.json`。内置演示仅 `helloWorld`；完整应用经商店安装，不随 Myriad 前端打包。
+第一方示例（以仓库 `index.json` 为准，另有第三方应用）：`com.myriad.music-player`、`com.myriad.quick-notes`、`com.myriad.config-generator`、`com.myriad.doudizhu`、`com.myriad.aro`、`com.myriad.three-lab`。完整 id 列表只认当前 `index.json`。随前端打包、可从商店本地目录安装的演示是 `helloWorld` 与 RSS 阅读器 `com.myriad.rss-reader`（包目录 `tapps/rss-reader`，也可用 `tapp-cli` 校验后打成 `.tapp` 文件安装）。其余完整应用经远程商店安装。
 
 ---
 
@@ -108,7 +108,7 @@ flowchart TB
 - 删除官方源由 handler 拒绝；前端也会拦截。
 - 禁用的源不参与 `fetchAllApps` / 商店 UI 聚合。
 
-代码位置：
+代码位置（Myriad 宿主仓库）：
 
 | 层 | 路径 |
 | -- | ---- |
@@ -361,7 +361,8 @@ tapp-store/
 │       └── README.md
 ├── scripts/                # check-pr-scope / sync-index / validate-app / validate-previews
 ├── edge/                   # 可选：全网安装统计（Cloudflare Workers）
-└── development/            # 贡献者文档镜像（契约以 Myriad 主仓库为准）
+├── features/               # `.tapp` 文件格式镜像
+└── development/            # 贡献者文档镜像（作者文档以 myriad-tapp 为准，宿主文档以 Myriad 为准）
 ```
 
 也可用 CLI 打出 `.tapp` 再人工展开到 `apps/` 并登记索引；安装权威仍是后端对 Manifest 与资源的校验，与路径风格无关。
@@ -422,7 +423,7 @@ Cookie: …  X-CSRF-Token: …
 4. 回退：`RemoteStoreService.downloadAppPackage` → `source=direct` 安装。
 
 SDK `Tapp.tappList.install` 与 REST 字段 **不是** 一一同名映射（见
-`frontend/src/tapp/utils/tappListInstallRequest.ts`）：
+Myriad 的 `frontend/src/tapp/utils/tappListInstallRequest.ts`）：
 
 | SDK 请求 | 结果 |
 | -------- | ---- |
@@ -501,7 +502,7 @@ REST 商店安装仍是 body `source: "store"` + `storeSource: catalogRef`（源
 
 ## 后端模块地图（`tapp_store`）
 
-商店相关只是 `backend/src/api/tapp_store/` 的一部分；完整安装/运行见 [ARCHITECTURE](ARCHITECTURE.md)。
+商店相关只是 Myriad `backend/src/api/tapp_store/` 的一部分；完整安装/运行见 [ARCHITECTURE](ARCHITECTURE.md)。
 
 | 模块 | 职责 |
 | ---- | ---- |

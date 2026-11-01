@@ -29,7 +29,7 @@
 - [Federation API](#federation-api)
 - [Game API](#game-api)
 - [Tapp 列表 API](#tapp-列表-api)
-- [Brew 列表 API](#brew-列表-api)
+- [Phantasi 列表 API](#phantasi-列表-api)
 - [组件注册 API](#组件注册-api)
 - [快捷键 API](#快捷键-api)
 - [事件 API](#事件-api)
@@ -326,6 +326,7 @@ await Tapp.ui.openUrl({
 安全行为：
 
 - 未声明的 `id`、逃出 `prefix`/`origin`、绝对 URL 形态的 `path`、危险协议 → **拒绝**
+- `match: same-origin`：`url` 为根相对路径，用宿主自身 origin 解析；结果必须留在宿主 origin，否则拒绝。同一份包因此可在任意自托管域名深链本站页面
 - 声明 URL 仅 **HTTPS**（loopback 可 `http`）；禁止用户名密码与 `#fragment`
 - 宿主 `window.open(url, '_blank', 'noopener,noreferrer')`，带简单速率限制
 - 与 `network:fetch` 无关：openUrl **不会**代发 HTTP 请求，只打开浏览器标签
@@ -491,7 +492,7 @@ await Tapp.platform.addItems([
 **权限**: `analytics:read`（basic，guest-safe；游客可用）
 
 读取站点第一方访客统计的**聚合**结果。**不包含**访客哈希、序位（`your_ordinal_today` /
-`counted`）等身份相关字段。后端实现：`backend/src/api/tapp_runtime/analytics.rs`。
+`counted`）等身份相关字段。后端实现：Myriad 的 `backend/src/api/tapp_runtime/analytics.rs`。
 
 ### 双 scope（角色门控）
 
@@ -548,7 +549,7 @@ Manifest 示例：
 
 ## 3D API
 
-**权限**: `3d:generate`（elevated，默认不下放）
+**权限**: `3d:generate`（elevated，默认不下放；游客不可下放）
 
 生成、绑定、重定向走宿主代调 Tripo；密钥不出沙箱。已持久化的 GLB 仍是公开
 content-addressed 资源，`Tapp.model3d.getUrl` / `getMetadata` 不需要本权限（沙箱
@@ -629,7 +630,7 @@ stop();
 | `prompt` | string | — | 非空 | 也可用整段 `input` 字符串代替对象 |
 | `width` | number \| string | `1024` | clamp 到 256–2048 | 宽（像素）；也接受 `"768"` / `"768px"` |
 | `height` | number \| string | `1024` | clamp 到 256–2048 | 高（像素）；也接受 `"1024"` / `"1024px"` |
-| `referenceImages` | string[] | `[]` | 最多 4 张，解码后合计 ≤ 10 MiB | 按数组顺序提供参考图，支持 PNG / JPEG / WebP 的 base64 data URL，或本平台 `/api/brew/image-cache/...` 路径 |
+| `referenceImages` | string[] | `[]` | 最多 4 张，解码后合计 ≤ 10 MiB | 按数组顺序提供参考图，支持 PNG / JPEG / WebP 的 base64 data URL，或本平台 `/api/phantasi/image-cache/...` 路径 |
 
 参考图只用于本次生图请求，不会作为文本拼进 prompt。可以在 prompt 中按顺序说明“第一张图的
 人物、第二张图的画风”。省略或传空数组时仍是文生图。参考图在预留额度和创建任务前校验；
@@ -702,7 +703,7 @@ await Tapp.ai.tasks.create({
 ```json
 {
   "format": "image",
-  "value": { "url": "/api/brew/image-cache/ab/<sha256>.png", "width": 768, "height": 1024 }
+  "value": { "url": "/api/phantasi/image-cache/ab/<sha256>.png", "width": 768, "height": 1024 }
 }
 ```
 
@@ -744,7 +745,7 @@ const off = Tapp.agent.onInteraction("report.compose", async (interaction) => {
 结果提交默认使用基于 interactionId 的幂等键，提交后恢复原 Agent task。`requestIntent()`
 经后端授权后由 `ui.open`、`report.create` 或 `dataExchange.request` 宿主 adapter 执行；跨
 Tapp 数据读取只显示 Data Exchange 自己的一张明细化一次性授权弹窗。
-到期不是简单删除：共享过期 worker 会以 CAS 转为 `expired`，并让原 Executor 从持久化任务
+到期不是简单删除：共享过期 worker 会以 CAS 转为 `expired`，并让原办事任务从持久化检查点
 恢复，避免任务永久停在等待状态。
 
 ---
@@ -808,6 +809,47 @@ await Tapp.widget.invalidate("config-saved", { target: { widgetId: "stats" } });
 跨 Page ↔ Widget 传数据仍用 `Tapp.storage.set`（会广播并 remount 可见卡）。
 `Tapp.settings.set` 只发 `onChanged`，不拆 iframe。定向 invalidate 只负责触发表面刷新，
 且不能过滤一次 storage 广播。省略 `target` 在 Page/headless 会失败。
+
+### 小组件弹窗
+
+Widget 声明了 `widgets[].popup`（见 [Manifest · Widget 弹窗层](MANIFEST.md#widget-弹窗层)）时，卡片里可以打开
+这张卡的弹窗。弹窗跑在**单独的沙箱**里：先执行 core，再执行 `popup.entry`，渲染注册在
+`Tapp.popups[widgetId]`。它不是卡片 iframe 放大，卡片的 `invalidate` 不会重挂弹窗。
+
+```javascript
+// 卡片（Widget 沙箱）：只在用户刚点过这张卡时生效
+button.onclick = () => Tapp.widget.openPopup({ view: "stats" });
+
+// 弹窗层（popup.entry）
+Tapp.popups["my-widget"] = {
+  render(root, props) {
+    root.textContent = `view = ${props.params?.view}`;
+  },
+};
+Tapp.popup.onParams((params) => {
+  /* 弹窗还开着或收回着时，卡片再次 openPopup 带来的新参数 */
+});
+await Tapp.popup.close();
+```
+
+- `openPopup(params)` 只在用户刚对这张卡操作过时放行：焦点落在这张卡的 iframe 上，并且
+  1.5 秒内刚点进来（一次点进只换一次弹窗），或指针在卡上时页面刚被激活、而这次激活只可能来自卡里
+  （`navigator.userActivation`；宿主页面没被点过，上次打开也已过 5 秒）。不支持
+  `userActivation` 的浏览器只认前一种。同一张卡 0.8 秒内只开一次。定时器、加载完成之类不是
+  用户操作的调用一律拒绝。
+- `params` 必须是 JSON，序列化后不超过 4 KiB（按 UTF-8 字节计）；大数据走 `Tapp.storage`。
+  `openPopup()` 不带参数时弹窗接着上次的参数；传 `null` 会清空。`onParams` 回调里
+  `getParams()` 已是新值。
+- 弹窗不新增权限：声明、批准、授予三层都不变，弹窗沙箱用与卡片相同的授予权限和能力面，
+  另加 `Tapp.popup`。`updateInstanceSettings()` 在弹窗开着时可用，改的是打开它的那张卡；
+  收回后调用会被拒绝。
+- 关掉弹窗只是**收回**：沙箱按隐藏处理，收到 `lifecycle:pause`，iframe 不销毁，重开时收到
+  `lifecycle:resume`，状态还在。收回的 TAPP 弹窗和隐藏的卡片共用暂存池的名额。应用停用、
+  卸载、更新、换登录身份，或那张卡被删掉时才销毁。
+- 宿主总在弹窗角落放关闭按钮，用户随时能关。Esc 也能关：焦点在弹窗 iframe 里时由 SDK 转给
+  宿主；应用自己处理 Esc 时先 `event.preventDefault()`，宿主就不收回。焦点在弹窗里循环，
+  Tab 出 iframe 不会落到弹窗后面。收回后焦点回到卡片外框，不回到卡片 iframe 里。
+- 编辑模式和组件库预览里不能打开弹窗。
 
 `updateInstanceSettings()` 只能更新当前 Widget 的 `widgets[].settings` 已声明字段，宿主会
 按类型、select 选项和数值范围校验，然后写入 Dashboard 布局。顶层 `settings` 仍是整个
@@ -1071,6 +1113,32 @@ const geo = await Tapp.context.getGeo();
 // 安装后: { lat, lon, city, region, country } 或服务不可用时的失败
 ```
 
+### 能力检测
+
+`Tapp.context.getCapabilities()` 回答「在这里能调什么」，由宿主的桥直接回答，不经后端，
+Page、Widget 和 headless core 都可调用。从契约版本 2 起才有：用到它的 Tapp 要在 Manifest
+里写 `"minContractVersion": 2`（`myriad-tapp check` 会提示）。
+
+```javascript
+const caps = await Tapp.context.getCapabilities();
+// {
+//   permissions: ["storage:read", "ui:confirm"],   // 授予的权限，与 Tapp.permissions 相同
+//   actions: ["context.getCapabilities", "storage.get", "ui.confirm", ...]
+// }
+
+if (caps.actions.includes("ui.confirm")) {
+  await Tapp.ui.confirm("继续？");
+}
+```
+
+`actions` 里的动作同时满足三条：这个宿主实现了它，当前界面（Page / Widget / headless）
+没有去掉它，它是公开动作或所需权限已授予。名字就是 `命名空间.方法`，与
+`Tapp.命名空间.方法()` 一一对应。不同宿主实现的动作可能不同，按这里的结果决定显示什么，
+不要按宿主名字猜。
+
+列表只看授予权限。真正调用时宿主还会再校验（比如媒体控制要先换到运行时授权，后端也会按
+登录态和配额再查一遍），所以在列表里的动作也可能被拒；调用结果仍以实际返回为准。
+
 ---
 
 ## 人设名片 API
@@ -1086,7 +1154,7 @@ const card = await Tapp.persona.get();
 //   name: "Arael",
 //   moodBand: "calm",   // floor | sad | tense | calm | excited
 //   activity: "idle",   // idle | working | thinking | talking
-//   portraitUrl: "/api/brew/image-cache/ab/abcd.png" // 或 null
+//   portraitUrl: "/api/phantasi/image-cache/ab/abcd.png" // 或 null
 // }
 
 if (card.portraitUrl) {
@@ -1097,7 +1165,7 @@ if (card.portraitUrl) {
 - `enabled`：人设是否开启。关掉时 `name` 为 `Agent`。
 - `name`：对外显示名。开启但未写名字时为 `Arael`。
 - `moodBand` / `activity`：当前说话对象的心情带与活动。游客没有说话对象状态，得到基线（`calm` / `idle`）。不返回心情数字。
-- `portraitUrl`：宿主同源路径，可直接作为 `<img src>`。没有立绘、或路径不是同源相对路径时为 `null`。不要用 `network:fetch` 去拉这张图；不要假定能拿到性格正文或 live Rig。
+- `portraitUrl`：宿主同源路径，可直接作为 `<img src>`。没有立绘、或路径不是同源相对路径时为 `null`。不要为这张图申请 `media:remote`；不要假定能拿到性格正文或 live Rig。
 
 Playground 预览返回固定样例，不打真实 API。
 
@@ -1166,7 +1234,7 @@ Runtime Grant 中。
 
 Playground **临时预览不注册** federation handlers、也不签发 Runtime Grant；下列 API 仅在
 正式安装运行后可用。权限映射与 REST 对照见
-`docs/development/tapp/fixtures/action_permissions.json` 与
+`docs/fixtures/action_permissions.json` 与
 `host_route_permissions.json`。
 
 ### Feed / Timeline / 身份 / 关注
@@ -1205,8 +1273,8 @@ Timeline。需要同时展示公开内容时优先 `getFeed()`；`getTimeline()`
 **权限**: `federation:post`
 
 推荐流程：**先 `uploadMedia`，再把返回的 URL 放进 `createNote` / `publish` 的
-`attachments`**。不要把任意外链当作附件；bridge 与后端都会校验联邦媒体 URL 形态
-（`/media/federation/{userId}/{filename}`）。
+`attachments`**。不要把任意外链当作附件；bridge 与后端都会校验它是本站媒体
+（`/media/assets/{uuid}/{filename}` 或 `/api/media/{id}/content`）。
 
 ```javascript
 // 1) 上传：data 为 data URL 或 raw base64（经 postMessage；见下方体积上限）
@@ -1252,7 +1320,7 @@ Bridge 对 `federation.uploadMedia` **不**走默认 ~1 MiB JSON 上限：允许
 ### publish / unpublish / 已发布列表
 
 ```javascript
-// 发布本地已有内容（report / brew-article / tapp / library）或 content_type: "note"
+// 发布本地已有内容（report / phantasi-article / tapp / library）或 content_type: "note"
 const published = await Tapp.federation.publish({
   content_type: "report",
   content_id: "report-id",
@@ -1337,7 +1405,7 @@ Channel/Room **JSON 消息**（含内联 base64 图）后端载荷上限默认 *
 加密时 `sendMessage` / `sendRoomMessage` 可设 `encrypt: true`：库内与联邦 fan-out 仍为密文，
 本机 WebSocket 在密钥可用时推送明文以免 UI 先闪 ciphertext。
 
-参数与 REST 字段以 `frontend/src/types/federation.ts`、后端路由与
+参数与 REST 字段以 Myriad 的 `frontend/src/types/federation.ts`、后端路由与
 `fixtures/action_permissions.json` 为准，勿从方法名臆造字段。
 
 ## Game API
@@ -1443,36 +1511,52 @@ await Tapp.tappList.export("com.example.app");
 
 ---
 
-## Brew 列表 API
+## Phantasi 列表 API
 
 **权限**（按 action，见 `permissionConfig` / fixtures）：
 
 | 权限 | 典型方法（与 `fixtures/action_permissions.json` / `PERMISSION_MAP` 对齐） |
 | ---- | -------- |
-| `brew:read` | `list`, `get`, `sources`, `categories`, `stats`, `exportOpml`, `getComments`, `getReplies` |
-| `brew:write` | `markRead`, `markUnread`, `markAllRead`, `star`, `unstar` |
-| `brew:commentWrite` | `createComment`, `updateComment`, `deleteComment`, `createReply` |
-| `brew:manage` | `discover`, `addSource`, `updateSource`, `deleteSource`, `refreshSource`, `importOpml`, `createCategory`, `deleteCategory` |
+| `phantasi:read` | `list`, `get`, `openOriginal`, `sources`, `categories`, `stats`, `exportOpml`, `getComments`, `getReplies` |
+| `phantasi:write` | `markRead`, `markUnread`, `markAllRead`, `star`, `unstar` |
+| `phantasi:commentWrite` | `createComment`, `updateComment`, `deleteComment`, `createReply` |
+| `phantasi:manage` | `discover`, `addSource`, `updateSource`, `deleteSource`, `refreshSource`, `importOpml`, `createCategory`, `updateCategory`, `deleteCategory` |
 
-Playground **临时预览不注册** brew handlers。完整 SDK（`Tapp.brewList`）仅在安装后可用：
+Playground **临时预览不注册** phantasi handlers。完整 SDK（`Tapp.phantasiList`）仅在安装后可用：
 
 ```javascript
-const items = await Tapp.brewList.list({ /* filters optional */ });
-const one = await Tapp.brewList.get(itemId);
-const cats = await Tapp.brewList.categories();
-const sources = await Tapp.brewList.sources();
+const items = await Tapp.phantasiList.list({
+  filter: "unread",       // all | unread | starred
+  source_id: 1,           // 可选
+  category: "News",       // 可选，按源分类
+  cursor: "…",            // 可选；有 cursor 时不再传 page
+  limit: 30,              // 或 per_page
+  sort_order: "desc",     // asc | desc
+});
+// data: { items, total, page, per_page, next_cursor }
+// items[] 含 source_id。游标页的 total 由宿主决定（首屏才计数）。
 
-// 用户文件夹分类（需 brew:manage）
-await Tapp.brewList.createCategory({ name: "Later" });
-await Tapp.brewList.deleteCategory(categoryId);
+const one = await Tapp.phantasiList.get(itemId);
+// 打开原文：沙箱只交文章 id。宿主按当前身份重读 item.link，校验 http(s) 后再开新标签。
+await Tapp.phantasiList.openOriginal(itemId);
+const cats = await Tapp.phantasiList.categories();
+const sources = await Tapp.phantasiList.sources();
+// 缺省 view=catalog：源行，没有真实未读覆盖。
+const feeds = await Tapp.phantasiList.sources({ board: "feeds", category: "News" });
+// board=feeds|notes|sites 走未读聚合；feeds 不含入口型和笔记源。
 
-await Tapp.brewList.markRead(itemId);
-await Tapp.brewList.star(itemId);
-await Tapp.brewList.addSource({ url: "https://example.com/feed.xml" });
-await Tapp.brewList.exportOpml();
+// 用户文件夹分类（需 phantasi:manage）
+await Tapp.phantasiList.createCategory({ name: "Later" });
+await Tapp.phantasiList.updateCategory(categoryId, { name: "Read later" });
+await Tapp.phantasiList.deleteCategory(categoryId);
+
+await Tapp.phantasiList.markRead(itemId);
+await Tapp.phantasiList.star(itemId);
+await Tapp.phantasiList.addSource({ url: "https://example.com/feed.xml" });
+await Tapp.phantasiList.exportOpml();
 ```
 
-参数与 REST 字段以宿主 brew 服务类型为准；不要在预览中假设有 mock 数据。
+参数与 REST 字段以宿主 phantasi 服务类型为准；不要在预览中假设有 mock 数据。
 
 ---
 
@@ -1646,6 +1730,21 @@ await Tapp.dynamicContent.remove();
 
 **权限**: `scheduler:register`
 
+`executionTarget: "frontend"`（以及 `"both"` 的前端阶段）需要运行中的在线前端注册
+`onTask` / `onAnyTask` 回调；仅注册任务不会建立调度 WebSocket，关闭所有站点标签页后也不会有
+在线受众。无受众时，本次执行记录和 `lastRunResult.status` 为 `skipped`，
+`lastRunResult.result.reason` 为 `no_audience`，统计增加 `totalRuns` / `missedRuns`，
+不增加 `failedRuns`，不重试、不发送失败通知。`both` 已完成的后端结果保留在
+`lastRunResult.result.backend`（`status: "success"`），前端结果为
+`lastRunResult.result.frontend`（`status: "skipped", reason: "no_audience"`）。
+
+跳过后推进到下一调度周期；`once` 任务结束并禁用。当前 `missedPolicy` 处理调度器停机等导致的
+过期调度，不会在前端重新上线时补跑已记录为 `skipped` 的执行。展示状态时可使用
+「本次跳过（无在线前端）」，该状态不表示任务正在排队等待上线。
+需要刷新后继续接收任务的应用，应在 `backgroundRequirements` 中声明 `scheduler`，并在 core
+中注册回调；这仍需要至少一个站点标签页运行。详见
+[架构文档的调度器说明](ARCHITECTURE.md#调度器)。
+
 ```javascript
 // 注册定时任务
 await Tapp.scheduler.register({
@@ -1806,7 +1905,7 @@ await Tapp.file.download(task); // 生图完成态，读 result.value.url
 ```
 
 - 文本 `content`、`base64`、宿主代取的 `url` 落盘上限 **32 MiB**（bridge 不走默认 ~1 MiB postMessage 上限）。
-- `url` **只**接受本站 `/api/brew/image-cache/{subdir}/{sha256}.{jpg|jpeg|png|gif|webp}` 或 `/api/model3d/assets/{sha256}`；任意 http(s) 一律拒绝。
+- `url` **只**接受本站 `/api/phantasi/image-cache/{subdir}/{sha256}.{jpg|jpeg|png|gif|webp}` 或 `/api/model3d/assets/{sha256}`；任意 http(s) 一律拒绝。
 - `filename` 不能含路径分隔或 `..`。`url` / `base64` 可省略文件名（图 `image.{ext}`，模型 `model.glb`，音频按 MIME，否则 `download.bin`）。可选 `mimeType`。
 
 语音能力需要对应权限：
@@ -1872,7 +1971,8 @@ Page 完整面当前包含以下命名空间（`analytics` / `agent` 也挂在 `
 | `ai`                                       | 服务端治理的 AI Task                                | `ai:*`（含 `ai:search`）           |
 | `report`                                   | `platform.*` 平台分析目录（只读）；顶层 `list`/`get`/`create` 为本安装报告 | `report:read` / `report:write` |
 | `model3d`                                  | Tripo 图生 3D / rig / retarget；`getUrl` 回沙箱 blob | `3d:generate`（资产读取 public） |
-| `widget`                                   | Page：动态注册 + 定向 `invalidate`；Widget 沙箱：实例设置 / 自刷 `invalidate` | `widget:register`（仅 register 系列）；定向 `invalidate` 要 `storage:write` |
+| `widget`                                   | Page：动态注册 + 定向 `invalidate`；Widget 沙箱：实例设置 / 自刷 `invalidate` / `openPopup` | `widget:register`（仅 register 系列）；定向 `invalidate` 要 `storage:write` |
+| `popup`, `popups`                          | 小组件弹窗层：`popups[widgetId].render`、`popup.close` / `getParams` / `onParams`（仅弹窗沙箱） | public（沿用该 Widget 的授予权限） |
 | `media`                                    | 播放器读取和控制                                    | `media:*`                          |
 | `context`, `user`                          | 应用、用户、导航、系统和地理上下文                  | public                             |
 | `persona`                                  | Agent 人设只读名片（名字、心情带、主立绘路径）      | public                             |
@@ -1883,7 +1983,7 @@ Page 完整面当前包含以下命名空间（`analytics` / `agent` 也挂在 `
 | `file`, `speech`                           | 文件下载、TTS 和 ASR                                | public（`file.download`）, `speech:*` |
 | `assets`                                   | 包内静态资源 list/get/blob URL                      | public（限 manifest.assets）       |
 | `tappList`                                 | Tapp 查询、安装、启停、卸载与导出                   | `tappList:*`                       |
-| `brewList`                                 | Brew 列表、源、用户分类 create/delete、评论和 OPML  | `brew:*`                           |
+| `phantasiList`                                 | Phantasi 列表、源、用户分类 create/delete、评论和 OPML  | `phantasi:*`                           |
 | `federation`                               | 身份、Feed、关注、Note/媒体发布、Channel、Room、Ring、信任和传输 | `federation:*`              |
 | `game`                                     | 联邦房间对局会话（`create`/`join`/`sendIntent`/`sendState`） | `game:session` + `federation:read`/`room`/`message` |
 
@@ -1898,11 +1998,12 @@ Page 完整面当前包含以下命名空间（`analytics` / `agent` 也挂在 `
 | `ui` title / confirm / fullscreen | ✅ | ❌ | ❌ |
 | `widget` register 系列 | ✅ | ❌ | ❌ |
 | `widget` 实例设置 / 自刷 `invalidate` | ❌ | ✅ | ❌ |
+| `widget.openPopup`；弹窗层的 `popups` / `popup` | ❌ | ✅（`popup` 只在弹窗沙箱里可调用） | ❌ |
 | `widget` 定向 `invalidate({ widgetId })` | ✅ 需 `storage:write` | ✅ 需 `storage:write` | ✅ 需 `storage:write` |
 | `tappList`, `component`, `shortcut`, `dynamicContent` | ✅ | ❌ | ❌ 无此对象 |
 | `dom`, `file` | ✅ | ✅ | ❌ 无此对象 |
 | `model3d` | ✅ | ❌ 无此对象 | ❌ 无此对象 |
-| `brewList`, `federation`, `game` | ✅ | ❌ | ✅（有授予权限时可用） |
+| `phantasiList`, `federation`, `game` | ✅ | ❌ | ✅（有授予权限时可用） |
 | `platform` 写 / `report` 写 / `data.transform` | ✅ | ❌ 沙箱没有这些方法 | ✅ |
 
 Widget 不会自动拥有完整面的写入/管理能力。调用前必须核对：当前是 Page、Widget 还是

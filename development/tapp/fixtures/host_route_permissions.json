@@ -1,5 +1,5 @@
 {
-  "description": "Host-proxied REST routes (method + Axum matched path template) → Tapp permission string. Source of truth for backend host_attribution mappers (speech / brew / federation). Edit this fixture first, then update host_attribution.rs; CI unit tests enforce lockstep. Host-only paths intentionally omitted so grant-bearing requests stay denied.",
+  "description": "Host-proxied REST routes (method + Axum matched path template) → Tapp permission string. Source of truth for backend host_attribution mappers (speech / phantasi / federation). Edit this fixture first, then update host_attribution.rs; CI unit tests enforce lockstep. Host-only paths intentionally omitted so grant-bearing requests stay denied.",
   "routes": [
     {
       "domain": "speech",
@@ -32,166 +32,154 @@
       "permission": "speech:tts"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "GET",
-      "path": "/api/brew/sources",
-      "permission": "brew:read"
+      "path": "/api/phantasi/sources",
+      "permission": "phantasi:read"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "GET",
-      "path": "/api/brew/sources/{id}",
-      "permission": "brew:read"
+      "path": "/api/phantasi/export-opml",
+      "permission": "phantasi:read"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "GET",
-      "path": "/api/brew/export-opml",
-      "permission": "brew:read"
+      "path": "/api/phantasi/categories",
+      "permission": "phantasi:read"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "GET",
-      "path": "/api/brew/categories",
-      "permission": "brew:read"
+      "path": "/api/phantasi/items",
+      "permission": "phantasi:read"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "GET",
-      "path": "/api/brew/items",
-      "permission": "brew:read"
+      "path": "/api/phantasi/items/{id}",
+      "permission": "phantasi:read"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "GET",
-      "path": "/api/brew/items/{id}",
-      "permission": "brew:read"
+      "path": "/api/phantasi/stats",
+      "permission": "phantasi:read"
     },
     {
-      "domain": "brew",
-      "method": "GET",
-      "path": "/api/brew/items/{id}/fulltext",
-      "permission": "brew:read"
-    },
-    {
-      "domain": "brew",
-      "method": "GET",
-      "path": "/api/brew/stats",
-      "permission": "brew:read"
-    },
-    {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "POST",
-      "path": "/api/brew/items/{id}/read",
-      "permission": "brew:write"
+      "path": "/api/phantasi/items/{id}/read",
+      "permission": "phantasi:write"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "POST",
-      "path": "/api/brew/items/{id}/unread",
-      "permission": "brew:write"
+      "path": "/api/phantasi/items/{id}/unread",
+      "permission": "phantasi:write"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "POST",
-      "path": "/api/brew/items/{id}/star",
-      "permission": "brew:write"
+      "path": "/api/phantasi/items/{id}/star",
+      "permission": "phantasi:write"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "POST",
-      "path": "/api/brew/items/{id}/unstar",
-      "permission": "brew:write"
+      "path": "/api/phantasi/items/{id}/unstar",
+      "permission": "phantasi:write"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "POST",
-      "path": "/api/brew/mark-all-read",
-      "permission": "brew:write"
+      "path": "/api/phantasi/mark-all-read",
+      "permission": "phantasi:write"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "GET",
-      "path": "/api/brew/items/{id}/comments",
-      "permission": "brew:read"
+      "path": "/api/phantasi/items/{id}/comments",
+      "permission": "phantasi:read"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "POST",
-      "path": "/api/brew/items/{id}/comments",
-      "permission": "brew:commentWrite"
+      "path": "/api/phantasi/items/{id}/comments",
+      "permission": "phantasi:commentWrite"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "PUT",
-      "path": "/api/brew/comments/{id}",
-      "permission": "brew:commentWrite"
+      "path": "/api/phantasi/comments/{id}",
+      "permission": "phantasi:commentWrite"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "DELETE",
-      "path": "/api/brew/comments/{id}",
-      "permission": "brew:commentWrite"
+      "path": "/api/phantasi/comments/{id}",
+      "permission": "phantasi:commentWrite"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "GET",
-      "path": "/api/brew/comments/{id}/replies",
-      "permission": "brew:read"
+      "path": "/api/phantasi/comments/{id}/replies",
+      "permission": "phantasi:read"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "POST",
-      "path": "/api/brew/sources",
-      "permission": "brew:manage"
+      "path": "/api/phantasi/sources",
+      "permission": "phantasi:manage"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "PUT",
-      "path": "/api/brew/sources/{id}",
-      "permission": "brew:manage"
+      "path": "/api/phantasi/sources/{id}",
+      "permission": "phantasi:manage"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "DELETE",
-      "path": "/api/brew/sources/{id}",
-      "permission": "brew:manage"
+      "path": "/api/phantasi/sources/{id}",
+      "permission": "phantasi:manage"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "POST",
-      "path": "/api/brew/sources/{id}/refresh",
-      "permission": "brew:manage"
+      "path": "/api/phantasi/sources/{id}/refresh",
+      "permission": "phantasi:manage"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "POST",
-      "path": "/api/brew/sources/discover",
-      "permission": "brew:manage"
+      "path": "/api/phantasi/sources/discover",
+      "permission": "phantasi:manage"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "POST",
-      "path": "/api/brew/import-opml",
-      "permission": "brew:manage"
+      "path": "/api/phantasi/import-opml",
+      "permission": "phantasi:manage"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "POST",
-      "path": "/api/brew/categories",
-      "permission": "brew:manage"
+      "path": "/api/phantasi/categories",
+      "permission": "phantasi:manage"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "PUT",
-      "path": "/api/brew/categories/{id}",
-      "permission": "brew:manage"
+      "path": "/api/phantasi/categories/{id}",
+      "permission": "phantasi:manage"
     },
     {
-      "domain": "brew",
+      "domain": "phantasi",
       "method": "DELETE",
-      "path": "/api/brew/categories/{id}",
-      "permission": "brew:manage"
+      "path": "/api/phantasi/categories/{id}",
+      "permission": "phantasi:manage"
     },
     {
       "domain": "federation",

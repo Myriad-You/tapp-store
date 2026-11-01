@@ -60,28 +60,29 @@ flowchart LR
 | 运行壳     | `frontend/src/tapp/components/TappAppShell.tsx`、`frontend/src/tapp/components/TappWindowManager.tsx`、`frontend/src/tapp/hooks/useTappMultiWindowSession.ts` | 多窗口会话、全屏 chrome、关闭/presence             |
 | 安装/卸载 UI | `frontend/src/tapp/components/InstallTappDialog.tsx`、`frontend/src/tapp/components/UninstallConfirmDialog.tsx` | 权限同意安装、卸载确认与清理预设文案               |
 | 宿主状态   | `frontend/src/tapp/runtime/TappRuntime.ts`                 | 已安装/运行状态缓存、Widget 注册、后台需求         |
-| 资源加载   | `frontend/src/tapp/runtime/sandbox/resourceLoader.ts`      | 获取、拆分、缓存代码/CSS/HTML/i18n/Page 模块       |
+| 资源加载   | `tapp/runtime/src/sandbox/resourceLoader.ts`               | 获取、拆分、缓存代码/CSS/HTML/i18n/Page 模块       |
 | 沙箱宿主   | `frontend/src/tapp/runtime/TappPageSandbox.tsx`、`frontend/src/tapp/runtime/TappWidgetSandbox.tsx` | 创建 iframe、生成 HTML、注册对应 handler、清理实例 |
 | Widget 加载面 | `frontend/src/components/widgets/shared/WidgetSkeleton.tsx`、`frontend/src/hooks/useTappWidgets.ts` | Dashboard 第三方 Widget 默认骨架（defer / 屏外静态 / themeColor） |
 | 后台宿主   | `frontend/src/tapp/components/TappBackgroundRunner.tsx`    | 为需要常驻的运行中 Tapp 拉起 headless core         |
-| SDK/Bridge | `frontend/src/tapp/runtime/sandbox/sdkGenerator.ts`、`frontend/src/tapp/runtime/TappBridge.ts` | 生成沙箱 SDK、验证消息、权限预检、分发 handler     |
+| SDK/Bridge | `tapp/runtime/src/sandbox/sdkGenerator.ts`、`tapp/runtime/src/TappBridge.ts` | 生成沙箱 SDK、验证消息、权限预检、分发 handler     |
 | 前端 API facade | `frontend/src/tapp/services/TappApiService.ts`        | 领域 API 聚合导出与默认对象装配                    |
 | Tapp 路由装配 | `backend/src/api/tapp_store.rs`                         | 路由组合、子模块声明与公共重导出                    |
 | 访问上下文 | `backend/src/api/tapp_store/access.rs`                    | 可见安装选择、所有权、权限过滤与存储访问身份        |
 | API 响应类型 | `backend/src/api/tapp_store/types.rs`                   | 通用响应 envelope、列表项与详情 DTO                 |
 | 运行生命周期 | `backend/src/api/tapp_store/lifecycle.rs`               | 启停状态、Runtime Grant 吊销与最近使用记录          |
 | 安装与更新 | `backend/src/api/tapp_store/installation.rs`               | 直接/文件安装、staging 事务与更新回滚               |
-| 预处理安装包 | `backend/src/api/tapp_store/prepared_package.rs`          | 统一结构化/归档包校验、资源落盘与安装代际写入       |
+| 预处理安装包 | `backend/src/services/tapp_packages/prepared_package.rs`  | 统一结构化/归档包校验、资源落盘与安装代际写入       |
 | 商店包获取 | `backend/src/api/tapp_store/store_package.rs`               | 可信出站访问、索引匹配、分类校验与远程资源下载      |
 | 卸载事务   | `backend/src/api/tapp_store/uninstall.rs`                  | private-first 鉴权、事务清理、目录隔离与失败恢复；`cleanup-temporary` 按站点策略 |
 | 列表卡片尺寸 | `backend/src/api/tapp_store/list_card_sizes.rs`、`backend/src/services/tapp_list_card_sizes.rs` | GET 双布局 / PUT 纯个人；游客只读站点布局 |
 | 运行时 API | `backend/src/api/tapp_runtime/`                            | AI、数据、上下文、媒体、事件、报告、访问统计、声明 API 等 |
 | 调度入口   | `backend/src/api/tapp_scheduler.rs`                        | HTTP/WS 协议、身份/所有权/权限检查                 |
-| 调度引擎   | `backend/src/services/tapp_scheduler.rs`                   | 任务持久化、触发、重试、前端回执、后端动作         |
-| Manifest 契约 | `crates/tapp-contract/src/manifest.rs`                  | 可安装 `TappManifest`（`deny_unknown_fields`）、声明能力、Widget/设置/API 数据结构 |
-| 权限/路径契约 | `crates/tapp-contract/`                                 | 权限目录、存储键与路径校验、Manifest 校验、宿主 CSS 固定路径；不含授予、HMAC、transform 求值 |
-| Tapp 纯规则 | `crates/myriad-tapp-rules/`                             | HMAC、transform pipeline、已安装资源计划、federation feed、package fs/prepared；backend 对应模块 `pub use` |
-| Agent 纯规则 | `crates/myriad-agent-rules/`                            | 文本上限、brew/MCP/scrape 策略、retry/task 投影；backend `*_pure.rs` `pub use` |
+| 调度引擎   | `backend/src/services/tapp_scheduler/`                     | 任务持久化、触发、重试、前端回执、后端动作         |
+| Manifest 契约 | `tapp/crates/tapp-contract/src/manifest.rs`             | 可安装 `TappManifest`（`deny_unknown_fields`）、声明能力、Widget/设置/API 数据结构 |
+| 契约版本   | `tapp/crates/tapp-contract/src/contract_version.rs`     | 宿主实现的契约版本；安装与商店拉包在严格解析前先读 `minContractVersion`，太新回 `tapp_contract_too_new` |
+| 权限/路径契约 | `tapp/crates/tapp-contract/`                            | 权限目录、存储键与路径校验、Manifest 校验、宿主 CSS 固定路径；不含授予、HMAC、transform 求值 |
+| Tapp 纯规则 | `tapp/crates/myriad-tapp-rules/`                        | HMAC、transform pipeline、已安装资源计划、federation feed、package fs/prepared；backend 对应模块 `pub use` |
+| Agent 纯规则 | `core/crates/myriad-agent-rules/`                       | 文本上限、phantasi/MCP/scrape 策略、retry/task 投影；backend `*_pure.rs` `pub use` |
 | Tapp 目录查询 | `backend/src/api/tapp_store/catalog.rs`                  | 角色权限过滤、private-first 列表与详情查询          |
 | Manifest 校验 | `backend/src/api/tapp_store/validation.rs`              | 路径、权限、资源配额及声明能力的纯校验边界          |
 | 包文件生命周期 | `backend/src/api/tapp_store/package_files.rs`           | staging/activate/recovery、资源读写与归档安全边界   |
@@ -99,7 +100,7 @@ flowchart LR
 | 前端生命周期 API | `frontend/src/tapp/services/TappLifecycleApi.ts`      | 列表、详情、最近使用、启动与停止                    |
 | 声明 API   | `backend/src/services/tapp_api_service.rs`                 | 模板注入、出站请求、builtin、上下文隔离缓存        |
 
-`frontend/src/tapp/types/index.ts` 是前端运行时类型入口。运行时类型不得依赖
+`tapp/runtime/src/types.ts`（经 `@myriad/tapp-runtime` 引用）是运行时类型入口。运行时类型不得依赖
 `examples/`；示例目录只是内置开发/演示应用的源代码。
 
 内部模块、类型和职责名称不使用 `v2`、`v3` 等代际后缀；应按稳定职责命名。只有已经发布的
@@ -196,15 +197,17 @@ Manifest 会经历 Rust 结构的反序列化和再序列化。因此新增 Mani
 `prune_stale_private_tapps`）、`backend/src/main.rs` worker、配置读写
 `permissions_oauth` / DynamicConfig。详情见 [REST_API · 私有安装清理](REST_API.md#私有安装清理-post-apitappscleanup-temporary)。
 
-## `core`、`widget`、`page` 三层
+## `core`、`widget`、`page` 三层与 widget 弹窗层
 
-每层在包里各自有入口文件，由 Manifest 的 `core` / `page` / `widgets[].entry` 声明；
+每层在包里各自有入口文件，由 Manifest 的 `core` / `page` / `widgets[].entry` /
+`widgets[].popup.entry` 声明；
 层内其余文件由入口用相对路径 `require` 进来。宿主按 mode 只下发相关层的依赖图，
 再把这些文件静态包装成模块工厂注入 iframe。
 
 | 模式     | 执行代码                    | UI 资源                        | 主要宿主                   |
 | -------- | --------------------------- | ------------------------------ | -------------------------- |
 | Widget   | core 入口 + 该 widget 入口  | 指定尺寸模板、Widget CSS       | `TappWidgetSandbox`        |
+| Popup    | core 入口 + 该 widget 的弹窗入口 | 该 widget 的作者样式，Tailwind 按闭包现编 | `TappWidgetSandbox surface="popup"`（宿主弹窗里） |
 | Page     | core 入口 + page 入口       | Page HTML、Page CSS、i18n      | `TappPageSandbox`          |
 | Headless | 仅 core 入口                | 不加载 Page/Widget HTML 与 CSS | `TappPageSandbox headless` |
 
@@ -215,6 +218,7 @@ core 在三种模式下都先执行，模块化不改变这一点；只有后台
 
 - `core` 放共享状态、后台监听、调度回调和不依赖可见 DOM 的逻辑。
 - `widget` 只负责小组件定义/渲染；不要假设完整 Page SDK handler 都存在。
+- 弹窗层是某个 widget 的放大界面，能力面与 widget 相同，加 `Tapp.popup`；关掉只暂存不销毁。
 - `page` 负责完整页面生命周期和交互。
 - headless core 没有可见容器，不能把后台任务写在 Page render/onReady 的 UI 分支中。
 
@@ -322,7 +326,7 @@ Page、Widget 和 headless 每个实例启动时由宿主申请 5 分钟 Runtime
 父页面内存，Bridge 调用运行时后端时附加 `X-Tapp-Runtime-Grant`，不会写入 iframe HTML
 或 `postMessage`。服务端只保存令牌 SHA-256，校验当前 Claims subject、Tapp、owner、
 runtime ID 和最终权限；停止、更新、卸载或 Bridge 销毁会撤销对应 Grant。Grant 的哈希与
-租约保存在 PostgreSQL `tapp_runtime_registry`，签发上限与同实例替换在事务锁内完成，因此
+租约保存在 PostgreSQL `runtime_registry`，签发上限与同实例替换在事务锁内完成，因此
 后端重启或请求切换副本不会使有效 Grant 丢失。
 
 所有携带 Grant 的宿主通道（普通请求、声明 API、scheduler 和 SSE）遇到一次
@@ -330,19 +334,19 @@ runtime ID 和最终权限；停止、更新、卸载或 Bridge 销毁会撤销�
 第二次失败直接返回，避免无限重试。SSE 被撤销后重连也走同一规则。
 
 公开商店/Tapp 列表读取和 scheduler 的宿主共享 WebSocket 不属于
-单个沙箱请求，不要求 Runtime Grant。Brew、语音与联邦这三类宿主代理路径已接入统一服务端归因：
-沙箱 handler 调用 `/api/brew`、`/api/speech`、`/api/federation` 时附带
+单个沙箱请求，不要求 Runtime Grant。Phantasi、语音与联邦这三类宿主代理路径已接入统一服务端归因：
+沙箱 handler 调用 `/api/phantasi`、`/api/speech`、`/api/federation` 时附带
 `X-Tapp-Runtime-Grant`，宿主中间件校验 Grant、按“方法 + 路由”映射强制对应 Tapp 权限
-（映射与沙箱 `PERMISSION_MAP` / `permissionConfig` 一致），未映射的宿主专用路由
-（Brew WebSocket、RSSHub 实例管理、缓存管理、离线同步，以及联邦 E2E 密钥交换等）对带 Grant 的
+（映射与沙箱 `PERMISSION_MAP` / `tapp/shared/tapp_sandbox_contract.json` 一致），未映射的宿主专用路由
+（Phantasi WebSocket、RSSHub 实例管理、缓存管理、离线同步，以及联邦 E2E 密钥交换等）对带 Grant 的
 请求直接拒绝；不带 Grant 头的宿主 UI 请求不受影响。联邦 Channel/Room 的浏览器 WebSocket
 升级无法携带自定义头，因此 Bridge 先通过带 Grant 的 `POST .../ws-ticket` 换取短时、单次票据，
 再用 `?tapp_ws_ticket=` 升级；票据按 subject、Tapp、runtime 与目标 Channel/Room 绑定，消费后即删除。
 
-**跨栈一致性（fixtures）**：host 路由 → 权限与沙箱 action → 权限的权威数据在
-`docs/development/tapp/fixtures/host_route_permissions.json` 与
-`action_permissions.json`。**先改 fixture，再改** `host_attribution` 消费端与前端
-`PERMISSION_MAP`；Rust 单测与 `permissionMapConsistency.test.ts` 会在漂移时失败。权限字符串
+**跨栈一致性（fixtures）**：host 路由 → 权限的权威数据在
+`tapp/docs/fixtures/host_route_permissions.json`；沙箱 action → 权限的权威数据在
+`tapp/shared/tapp_sandbox_contract.json`，`action_permissions.json` 只是宿主代理域的一致性
+fixture。改宿主代理动作时同步三处（fixture、`host_attribution` 消费端、沙箱契约数据）；Rust 单测与 `permissionMapConsistency.test.ts` 会在漂移时失败。权限字符串
 还必须能通过 `myriad-tapp-contract` 的 `TappPermission::from_str`；前端 `PERMISSION_LEVELS` 由测试锁到同一份导出。
 
 ### 三种沙箱能调用的面不一样
@@ -350,7 +354,7 @@ runtime ID 和最终权限；停止、更新、卸载或 Bridge 销毁会撤销�
 Page 是完整面（含 `Tapp.game`、联邦、tappList、model3d）。
 Widget 为减小能力面和启动成本，只提供生命周期、UI、用户角色、存储、文件、AI Task、
 平台/报告读取、上下文/人设名片/声明 API、媒体、语音、动画、事件、一次性数据交换、
-Agent Interaction、常驻需求和调度；平台与报告写、Tapp/Brew 管理、组件、快捷键、
+Agent Interaction、常驻需求和调度；平台与报告写、Tapp/Phantasi 管理、组件、快捷键、
 联邦和 `Tapp.game` 不会进入 Widget。
 
 headless（常驻）保留 storage、scheduler、event、联邦、`Tapp.game`、AI、报告、人设名片等
@@ -373,8 +377,9 @@ model3d。SDK 上拿掉的方法，桥也不会再接：不能只从对象上藏
 
 权限目录（名字、等级、替代提示、需登录主体的集合）在 `myriad-tapp-contract`，由
 `export_tapp_contract()` 导出。HMAC 与 transform 求值在 `myriad-tapp-rules`，不进契约。
-SDK action 映射仍以 `docs/development/tapp/fixtures/` 下 JSON
-为 source of truth，由测试强制与 `PERMISSION_MAP`、`host_attribution` 对齐；前端
+SDK action 映射的权威数据是 `tapp/shared/tapp_sandbox_contract.json`（前端 `PERMISSION_MAP`
+直接读取，并经 `export_tapp_contract()` 导出）；`tapp/docs/fixtures/` 下 JSON
+是宿主代理域的一致性 fixture，由测试强制与 `PERMISSION_MAP`、`host_attribution` 对齐；前端
 `PERMISSION_LEVELS` 与 `TappPermission` union 锁到这份导出。授予/下放仍在后端
 `TappPermissionService`。后端永远是授权判定的最终边界。
 
@@ -394,7 +399,7 @@ owner 改变则令牌失效并由宿主重新签发。
 `analytics:read`（**仅** visitor-card 聚合；完整 admin summary 在 handler 内按 Admin 角色
 门控，见 `tapp_runtime/analytics.rs`）。下列能力的真实后端路由仍要求**持久登录**主体，
 不会仅因 broad level 为 basic/elevated 就出现在访客 Grant 中：`report:read`、统一通知、
-组件/快捷键注册、scheduler、语音服务、Brew 写入/评论、`platform:write`。动态 Widget 的
+组件/快捷键注册、scheduler、语音服务、Phantasi 写入/评论、`platform:write`。动态 Widget 的
 注册与注销属于 `privileged` 控制面，只允许当前管理员调用。
 
 ## 调度器
@@ -433,6 +438,11 @@ sequenceDiagram
   执行；回调注册保存为栈，接管者卸载后恢复前一个实例，而不是把任务回调永久删除。
 - 收到执行推送但没有存活回调时立即向后端报告失败，不能让执行记录一直停在运行中。
 - `executionTarget=frontend` 依赖运行中的 Page/Widget/headless core 注册回调。
+- 关闭所有站点标签页等导致无在线受众时，本次执行记为 `skipped`，结果原因是
+  `no_audience`，计入 total/missed 而非 failed；不重试、不发失败通知。`both` 保留
+  已成功执行的后端结果并标明前端 skipped，整体记 skipped。跳过会推进到下一周期，
+  once 任务禁用；前端重新上线不会自动补跑这次执行。结果字段见
+  [定时任务 API](API_REFERENCE.md#定时任务-api)。
 - `executionTarget=backend|both` 必须声明并通过后端校验 `backendActions`。
 - global scope 仅管理员可注册；所有注册仍检查 Tapp 所有权和
   `scheduler:register`。
@@ -481,7 +491,9 @@ sequenceDiagram
 - TappRuntime 列表缓存 TTL 为 30 秒；启动同步使用批量详情接口，Widget 也按集合读取。
   `waitForSync` 直接等待首次同步并明确抛出失败/超时，不得把失败标记成成功空状态。
 - 前端权限等级锁到 `export_tapp_contract()` 的 `permissionLevels`；`permissionConfig.ts` 的
-  `PERMISSION_LEVELS` 是这份目录的前端副本，不是另一份注册表。`PERMISSION_MAP` 仍对 fixture。
+  `PERMISSION_LEVELS` 是这份目录的前端副本，不是另一份注册表。`PERMISSION_MAP` 与 headless
+  禁用动作（`capabilities.deniedActions.headless`）直接读取 `tapp/shared/tapp_sandbox_contract.json`，同一文件经 `export_tapp_contract()`
+  输出给 Tapp CLI/SDK；宿主代理域仍对 fixture。
 - `QuotaManager` 只保存平台读写与声明 API 的短期滑动窗口，未跟踪 action 不创建记录，
   失败调用不计数。AI calls、tokens 与 cooldown 由 PostgreSQL 服务端账本统一执行，前端只展示
   usage snapshot，不再维护另一套计费事实。
@@ -525,12 +537,12 @@ Widget 模板在商店索引、安装请求和资源响应中统一按 `widgetId
 
 Agent Interaction 由可信 Agent 后端创建具名 interaction，Tapp 通过在线 SSE 接收并由单一
 runtime 接受；输入与结果都按 Manifest schema 校验，生命周期、幂等和 intent 的宿主确认由
-后端状态机约束。结果会安全存储并可由 Tapp 查询。Executor 遇到 interaction 会持久化为
+后端状态机约束。结果会安全存储并可由 Tapp 查询。办事任务遇到 interaction 会持久化为
 `waiting_for_input`；结果或拒绝由任意
 副本从 `agent_tasks` 恢复原任务。`ui.open`、`report.create` 与 `dataExchange.request` 有可信
 宿主 adapter，其中跨 Tapp 数据仍只显示 Data Exchange 的一张明细化一次性授权弹窗。
 交互的 5 分钟操作截止时间与 registry 终态保留时间分离；每个副本运行过期扫描，使用数据库
-CAS 只允许一个副本把未完成交互转为 `expired` 并恢复等待中的 Executor。Agent 服务重启时，
+CAS 只允许一个副本把未完成交互转为 `expired` 并恢复等待中的办事任务。Agent 服务重启时，
 无法续跑的 `pending/running` 任务在数据库中一次性转为 `cancelled`；具备持久化
 recipe/context/question 的 `waiting_for_input` 才进入内存恢复索引。等待输入两小时超时只转为
 可查询的失败终态，统一保留 24 小时后删除。恢复前先用 `agent_tasks` 状态 CAS 从
@@ -611,7 +623,7 @@ interaction 使用 PostgreSQL TTL registry 与持久 mailbox。写入同时发�
 `pg_notify` 唤醒信号；当前 SSE 以 mailbox 轮询作为消费与补读路径，通知丢失或副本切换不会
 丢掉权威状态。
 
-仓库不是可发布的前端 SDK 包。未被任何 Astro 入口引用的 `frontend/src/tapp/index.ts` 和
+仓库不是可发布的前端 SDK 包。未被任何 SPA 入口引用的 `frontend/src/tapp/index.ts` 和
 `frontend/src/tapp/services/index.ts` 旧聚合导出已删除；运行时代码按实际边界直接引用，
 避免聚合入口掩盖依赖和保留死导出。
 

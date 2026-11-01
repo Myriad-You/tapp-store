@@ -30,11 +30,13 @@ Manifest 是 Tapp 的核心配置文件，定义了应用的元数据、权限�
 | `game`                   | object   | ❌   | 对局会话 `{protocol, maxPlayers?}`（须 `game:session`） |
 | `runtimeModules`         | string[] | ❌   | 宿主注入库；目前仅 `"three"`（game / developer） |
 | `minSystemVersion`       | string   | ❌   | 最低兼容 Myriad 语义版本           |
+| `minContractVersion`     | integer  | ❌   | 需要的契约版本；只在用到第 1 版之后的功能时写 |
 | `homepage`               | string   | ❌   | 应用主页 URL                       |
 | `repository`             | string   | ❌   | 代码仓库 URL                       |
 | `category`               | string   | ✅   | 应用用途分类（稳定 ID）            |
 | `assets`                 | string[] | ❌   | 包内静态资源路径（须在 `assets/` 下） |
 | `openUrls`               | object[] | ❌   | 宿主代开的外链 allowlist（配合 `ui:openUrl`） |
+| `remoteMedia`            | string[] | ❌   | 远端图片/音视频域名（配合 `media:remote`，安装时逐个批准） |
 
 `author` 整体可选；**若提供**则 `author.name` 必填（1–255 字符），`email` / `url` 可选且须合法。
 作者名称会显示在商店卡片和 Tapp 详情页，详情页还会显示邮箱，并为通过 HTTP(S) 校验的作者主页生成外部链接。
@@ -78,7 +80,7 @@ Page/Widget 模板必须是 `.html`；代码与模板类声明资源必须是安
 | 字段 | 类型 | 必填 | 说明 |
 | ---- | ---- | ---- | ---- |
 | `id` | string | ✅ | 稳定 id，供 SDK 引用（1–64，字母数字与 `._-`） |
-| `url` | string | ✅ | 基址：**HTTPS**；仅 `localhost` / `127.0.0.1` / `::1` 允许 `http`；禁止凭据与 `#fragment`。`match: same-origin` 时改为**根相对路径**（如 `/journal`） |
+| `url` | string | ✅ | 基址：**HTTPS**；仅 `localhost` / `127.0.0.1` / `::1` 允许 `http`；禁止凭据与 `#fragment`。`match: same-origin` 时改为**根相对路径**（如 `/library`） |
 | `match` | string | ❌ | `exact`（默认）/ `prefix` / `origin` / `same-origin` |
 
 匹配规则：
@@ -86,7 +88,7 @@ Page/Widget 模板必须是 `.html`；代码与模板类声明资源必须是安
 - **`exact`**：只能打开声明的完整 URL；不允许 `path` / `query`
 - **`prefix`**：同 origin，路径须落在声明 path 前缀下（可带 `path` / `query`）
 - **`origin`**：同 origin 任意 path/query（自由度最高，商店审核应更严）
-- **`same-origin`**：`url` 是根相对路径，运行时相对**宿主自身 origin** 解析（可带 `path` / `query`）。同一份包在任何自托管域名下都能深链本站页面，不写死作者域名；解析结果必须留在宿主 origin，逃逸到其它 origin 一律拒绝。该匹配自 Myriad v0.6.2（Myriad#607）起提供；使用它的包必须声明 `minSystemVersion` ≥ `"0.6.2"`，否则旧宿主会因未知 `match` 整包校验失败
+- **`same-origin`**：`url` 是根相对路径，运行时相对**宿主自身 origin** 解析（可带 `path` / `query`）。同一份包在任何自托管域名下都能深链本站页面，不写死作者域名；解析结果必须留在宿主 origin，逃逸到其它 origin 一律拒绝
 
 ```json
 {
@@ -119,8 +121,8 @@ await Tapp.ui.openUrl({ id: "status" });
 // → https://status.example.com/health
 
 // same-origin：在任何自托管域名下都解析到当前站点
-await Tapp.ui.openUrl({ id: "self", path: "/journal/notes/1" });
-// → https://<当前站点域名>/journal/notes/1
+await Tapp.ui.openUrl({ id: "self", path: "/blog/posts/hello/" });
+// → https://<当前站点域名>/blog/posts/hello/
 
 // 未声明 id 或逃出 prefix → 失败
 await Tapp.ui.openUrl({ id: "docs", path: "../evil" }); // reject
@@ -128,6 +130,35 @@ await Tapp.ui.openUrl({ id: "docs", path: "../evil" }); // reject
 
 约束摘要：最多 32 条；`ui:openUrl` 与 `openUrls` 必须同时出现；headless core **无**此 API；
 宿主有打开速率限制；实现细节见 [API 参考 · openUrl](API_REFERENCE.md#打开声明链接-openurl)。
+
+### 远端图片与音视频（remoteMedia）
+
+沙箱 CSP 默认只放行 `data:` / `blob:` / 宿主同源的图片和音视频。要显示外部 CDN 上的头像、封面：
+
+1. 在 Manifest 声明 `permissions: ["media:remote"]` 与非空 `remoteMedia`；
+2. 安装者在安装或更新时**逐个批准**这些域名，没批准的域名不会生效；
+3. 沙箱 CSP 的 `img-src` / `media-src` 只追加已批准的 `https://<域名>`，其余外链照旧被拦。
+
+```json
+{
+  "permissions": ["media:remote"],
+  "remoteMedia": ["act-webstatic.mihoyo.com", "*.miyoushe.com"]
+}
+```
+
+写法与限制：
+
+- 只写主机名，小写；国际化域名用 punycode。不带 scheme、端口、路径。只走 HTTPS。
+- `*.example.com` 按 CSP 语义只匹配子域，**不**含 `example.com` 本身；两者都要就各写一条。
+- 拒绝 IP、单段名、`localhost` 及 `.local` / `.internal` / `.test` 等非公网后缀；`*.com` 这类只有一段的通配也拒绝。
+- 共享托管后缀（如 `github.io`、`pages.dev`、`vercel.app`、`amazonaws.com`）不能通配，只能写确切主机名。
+- 最多 16 条；`media:remote` 与 `remoteMedia` 必须同时出现。
+- `media:remote` 是基础权限，游客、普通用户、管理员都能看到这些图。
+
+**安全提示**：Tapp 能把它读到的访客信息拼进图片 URL 发给这些域名。安装者应只批准第三方 CDN，
+不要批准作者自己控制的服务器。Tapp 更新时新增的域名需要重新批准，删掉的域名立即失效。
+
+`network:fetch` 只管服务端声明式 HTTP API，**不再**放行远端图片。
 
 Manifest 采用严格字段校验：未声明字段、拼写错误以及已经移除的字段都会让安装失败，
 不会再被静默忽略。需要授权的运行能力都必须直接写入 `permissions`；宿主只会在真正调用时
@@ -197,15 +228,26 @@ Page、Widget 和 headless core 是运行形态，由 `page`、`widgets` 和
 内置 AI API 必须声明对应的 `ai:*` 权限（含 `ai:search`）。层入口只接受不重复的 `.js`
 文件名。无效声明会在安装或更新时直接拒绝，不留到运行时静默失败。
 
+### 版本要求
+
 `minSystemVersion` 使用语义版本。直接安装、商店安装和更新都会由后端与当前 Myriad
 包版本比较；当前版本过低或字段格式无效时会拒绝写入，避免出现“安装成功但运行时才
 发现 API 不兼容”。最低版本只写在包内 Manifest；商店 index 不重复维护第二份版本来源。
-当包依赖较新的 runtime 能力时必须抬高该字段：例如 `openUrls[].match: "same-origin"`
-需要 Myriad ≥ 0.6.2（Myriad#607），旧宿主不识别该取值，会把整包校验判为失败。
+
+`minContractVersion` 是需要的 **Tapp 契约版本**，一个从 1 开始的整数，和 Myriad 自己的
+版本号无关：任何实现这份契约的宿主都按它判断。契约每加一样应用能依赖的东西（Manifest
+字段或 SDK 动作）就加 1，CLI 生成的 `contract.json` 里 `contractVersion` 是当前版本，
+`manifestFieldsSince` / `actionsSince` 写着第 1 版之后加的字段和动作各从哪一版起有。
+
+宿主在严格解析 Manifest 之前先读这一个字段：比自己实现的版本新，就固定回答「需要更新
+宿主」，而不是因为不认识的字段报「Manifest 无效」。比这个字段更早的宿主不认识它，遇到
+就会整个拒收，所以**只在用到新功能时才写**：`myriad-tapp check` 发现代码或 Manifest 用到
+第 1 版之后的东西却没写（或写低了）时报错并给出该写的值；没用到却写了、或写得比需要的
+高时给警告。
 
 ### 所有权、可见性与同 ID 并存
 
-完整模型以 [ARCHITECTURE.md · 所有权与可见性](./ARCHITECTURE.md#所有权与可见性) 为准；
+完整模型以 [ARCHITECTURE.md · 所有权与可见性](ARCHITECTURE.md#所有权与可见性) 为准；
 本处只固定与 Manifest / 安装相关的要点：
 
 - **公开与私有可并存**：站点管理员在规范公开 owner 命名空间安装的公开 Tapp，与普通用户
@@ -356,6 +398,7 @@ Page、Core 与其余获授能力仍可正常使用。
 | `templates`     | object   | ❌   | HTML 模板（按尺寸覆盖）                                        |
 | `settings`      | object[] | ❌   | 每个 Dashboard 实例独立的设置声明                              |
 | `refreshPolicy` | object   | ❌   | 宿主管理的刷新策略                                             |
+| `popup`         | object   | ❌   | 弹窗层；见 [Widget 弹窗层](#widget-弹窗层)                     |
 
 单个 Tapp 最多声明或动态注册 64 个 Widget；每个 Widget 最多声明 10 个尺寸，且
 `defaultSize` 必须包含在 `sizes` 中。超出限制会在安装或注册时被后端拒绝。
@@ -377,6 +420,24 @@ Widget 实例，因此同一种 Widget 添加两次时可以采用不同配置�
 模板按 `Widget ID + 尺寸` 隔离。同一个 Tapp 的多个 Widget 可以各自声明不同的 `2x2`
 模板，不会互相覆盖。商店索引中的 `download.widget_templates` 也必须使用
 `{ "widgetId": { "2x2": "path/to/template.html" } }` 结构。
+
+### Widget 弹窗层
+
+```json
+{
+  "id": "stats",
+  "entry": "widget/stats.js",
+  "popup": { "entry": "popup/stats.js", "size": "lg" }
+}
+```
+
+| 字段    | 类型   | 必填 | 说明                                                                 |
+| ------- | ------ | ---- | -------------------------------------------------------------------- |
+| `entry` | string | ✅   | 弹窗层入口 `.js`；共享层之后只执行它，代码在 `Tapp.popups[widgetId]` 注册 |
+| `size`  | string | ❌   | `md`（默认）/ `lg` 桌面居中、手机底部面板；`stage` 桌面大幅、手机全屏 |
+
+弹窗层没有自己的样式字段，沿用该 Widget 的 `styles`；没有尺寸模板。它是该 Widget 自己的界面，
+不需要也不能另外声明权限。卡片调用 `Tapp.widget.openPopup()` 才会打开。
 
 ### Widget 分类
 
@@ -1013,7 +1074,7 @@ Tapp 私有 storage、报告和内部状态不会因为知道另一个 `tappId` 
 
 ## 权限列表
 
-权限等级与运行时边界见 [架构文档的权限模型](./ARCHITECTURE.md#权限模型)。Manifest
+权限等级与运行时边界见 [架构文档的权限模型](ARCHITECTURE.md#权限模型)。Manifest
 中的权限仍需经过安装授权；“基础”不表示 Tapp 可以省略申请。
 
 ### 基础权限
@@ -1029,12 +1090,13 @@ Tapp 私有 storage、报告和内部状态不会因为知道另一个 `tappId` 
 | `platform:read`      | 读取平台数据     |
 | `analytics:read`     | 读取站点访问统计（聚合；admin 完整 summary，非 admin 仅访客卡片） |
 | `tappList:read`      | 读取 Tapp 列表   |
-| `brew:read`          | 读取 Brew 内容（含评论与回复） |
-| `brew:write`         | 修改已读/未读/全部已读与收藏（仅当前用户） |
+| `phantasi:read`          | 读取 Phantasi 内容（含评论与回复） |
+| `phantasi:write`         | 修改已读/未读/全部已读与收藏（仅当前用户） |
 | `report:read`        | 读取报告         |
 | `media:read`         | 读取媒体状态     |
 | `media:control`      | 控制媒体播放     |
 | `media:audio`        | 播放包内/blob/data 音频 |
+| `media:remote`       | 从安装时批准的 `remoteMedia` 域名加载远端图片/音视频 |
 | `event:subscribe`    | 订阅声明的 topic |
 | `federation:read`    | 读取联邦数据     |
 | `federation:interact` | 关注/取关、点赞、收藏、转发（announce）（需持久登录主体） |
@@ -1052,8 +1114,8 @@ Tapp 私有 storage、报告和内部状态不会因为知道另一个 `tappId` 
 | `ai:chat`            | AI 对话           |
 | `ai:image`           | AI 图片生成       |
 | `ai:search`          | AI 联网搜索（`Tapp.ai.tasks` `operation: "search"`；默认不下放） |
-| `3d:generate`        | 3D 模型生成（Tripo；默认不下放） |
-| `network:fetch`      | 发送 HTTP 请求    |
+| `3d:generate`        | 3D 模型生成（Tripo；默认不下放，游客不可下放） |
+| `network:fetch`      | 服务端声明式 HTTP API 出站（不含远端图片，见 `media:remote`） |
 | `component:theme`    | 注册自定义主题    |
 | `shortcut:register`  | 注册键盘快捷键    |
 | `event:publish`      | 发布本 Tapp topic |
@@ -1064,23 +1126,23 @@ Tapp 私有 storage、报告和内部状态不会因为知道另一个 `tappId` 
 | `federation:post`    | 发布/取消发布、创建 Note、上传媒体、密钥轮换与对外投递管理 |
 | `federation:channel` | 创建/接受/关闭/删除频道及频道 E2E 密钥协商 |
 | `federation:room`    | 创建/更新/删除/加入/邀请/治理房间、E2E 密钥、贴纸与置顶 |
-| `brew:commentWrite`  | 创建/编辑/删除 Brew 评论与回复 |
+| `phantasi:commentWrite`  | 创建/编辑/删除 Phantasi 评论与回复 |
 
-`brew:write` 描述的是 Tapp 能力，不按宿主用户角色下放。Tapp 仍必须在 Manifest 中声明并在
-安装时获授；实际读写始终落在当前会话可访问的 Brew 数据范围内。
-`brew:commentWrite` 属于 elevated，默认仅管理员可用，站长可在「Tapp 权限管理」中下放给普通用户。
+`phantasi:write` 描述的是 Tapp 能力，不按宿主用户角色下放。Tapp 仍必须在 Manifest 中声明并在
+安装时获授；实际读写始终落在当前会话可访问的 Phantasi 数据范围内。
+`phantasi:commentWrite` 属于 elevated，默认仅管理员可用，站长可在「Tapp 权限管理」中下放给普通用户。
 
 “基础”表示不需要管理员额外下放 elevated 权限，不等于匿名访客一定可用。访客没有持久
 用户主体时，部分能力仍可通过签名游客 session 使用（如 `storage:read`、`platform:read`、
-`analytics:read`）。下列能力的真实后端路由仍要求登录：`brew:write`、
-`brew:commentWrite`、`report:read`、`ui:notification`、`federation:interact`、
+`analytics:read`）。下列能力的真实后端路由仍要求登录：`phantasi:write`、
+`phantasi:commentWrite`、`report:read`、`ui:notification`、`federation:interact`、
 `federation:ring` 等。
 
-评论读取（`getComments`/`getReplies`）并入 `brew:read`；评论写入（创建/编辑/删除）使用
-`brew:commentWrite`。
+评论读取（`getComments`/`getReplies`）并入 `phantasi:read`；评论写入（创建/编辑/删除）使用
+`phantasi:commentWrite`。
 
-> **升级说明**：`brew:write` 保留已读状态与收藏操作；`brew:comment` 的读半边并入
-> `brew:read`，写半边为 `brew:commentWrite`。声明 `brew:comment` 的 manifest 在安装校验时会被明确拒绝。
+> **升级说明**：`phantasi:write` 保留已读状态与收藏操作。退役串 `brew:comment` 不映射；读半边在
+> `phantasi:read`，写半边为 `phantasi:commentWrite`。声明 `brew:comment` 的 manifest 在安装校验时会被明确拒绝。
 
 `component:theme`、`shortcut:register`、`scheduler:register`、`speech:tts` 与 `speech:asr`
 也要求持久登录主体，不会下放给匿名访客；管理配置中的旧字段仅为兼容历史配置而保留，
@@ -1095,6 +1157,6 @@ Tapp 私有 storage、报告和内部状态不会因为知道另一个 `tappId` 
 | `platform:register` | 注册自定义平台 |
 | `component:agent`   | 注册 AI Agent  |
 | `tappList:manage`   | 管理 Tapp      |
-| `brew:manage`       | 管理 Brew      |
+| `phantasi:manage`       | 管理 Phantasi      |
 | `federation:trust`  | 管理联邦信任   |
 | `report:write`      | 创建/修改报告  |

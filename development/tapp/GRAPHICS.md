@@ -118,7 +118,7 @@ CDN / `unpkg` / `jsdelivr` / `esm.sh` 加载，也不要把 `three` 打进 Myria
 生成的 GLB 用 `Tapp.model3d.getUrl(assetId)` 拿沙箱 blob，不要 `load('/api/...')`。
 `Tapp.model3d` 只在 Page；Widget / headless 没有这个对象。
 
-仓库里的权威文件是 `frontend/public/tapp-runtime/three.0.170.iife.js`（SHA-256
+Myriad 仓库里的权威文件是 `frontend/public/tapp-runtime/three.0.170.iife.js`（SHA-256
 `0ca6ee7e41840a8b95d416f7f38b204126838f277f248a1761acdb7662f2b60d`）。
 `frontend/scripts/bundle-tapp-three.mjs` 只是可选重建脚本，**不要**在没有把
 `three@0.170` / `esbuild` 装进 frontend 的情况下当构建步骤跑。
