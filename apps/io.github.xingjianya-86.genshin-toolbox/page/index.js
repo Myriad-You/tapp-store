@@ -250,10 +250,21 @@ function renderChars() {
   if (!refs.chars) return;
   const index = state.cache && state.cache.playerIndex ? state.cache.playerIndex : null;
   const avatars = index && Array.isArray(index.avatars) ? index.avatars : [];
-  // 签名守卫：角色简表只随 playerIndex 变（at 是整包数据时间戳，
-  // 加上数量与首位等级覆盖换人/升级场景），未变不重建 12 张卡。
-  const first = avatars[0];
-  const charSig = [(state.cache && state.cache.at) || 0, avatars.length, first ? first.id + ":" + first.level : "-"].join("|");
+  // 签名守卫：playerIndexAt 是该数据段独立版本（dailyNote 单独失败时 at 不推进，
+  // 用 at 会漏重绘）；再叠全部 avatar 的完整渲染输入摘要兜底换人/升级/图标变更，
+  // 字段对齐 charTile 实际渲染（头像三选一 fallback 链 / ★稀有度 / 元素底色）与
+  // sortAvatars 排序键（rarity→level），未变不重建 12 张卡。
+  const charSig = [
+    (state.cache && (state.cache.playerIndexAt || state.cache.at)) || 0,
+    avatars.length,
+    avatars
+      .map(function (avatar) {
+        return [avatar.id || "", avatar.level || 0, avatar.rarity || 0, avatar.fetter || 0,
+                avatar.name || "", avatar.element || "",
+                avatar.card_image || avatar.image || avatar.icon || ""].join(":");
+      })
+      .join(","),
+  ].join("|");
   if (state.charsSig === charSig && refs.chars.childNodes.length) {
     setText(refs.charCount, avatars.length ? t("app.chars.count", { count: avatars.length }) : "");
     return;
@@ -298,7 +309,8 @@ function renderAbyss() {
   const abyss = pickAbyss(state.cache, state.schedule);
   // 签名守卫：同一期同一档数据不重建（深渊 DOM 是全页最大子树，
   // 含每层每间上下半队伍头像与 6 张排行卡）。
-  const sig = [state.schedule, state.cache && state.cache.abyssAt || 0, abyss && abyss.total_battle_times || 0].join("|");
+  const sig = [state.schedule, (state.cache && (state.cache.abyssCurrentAt || state.cache.abyssAt)) || 0,
+               abyss && abyss.total_battle_times || 0].join("|");
   if (state.abyssSig === sig && refs.abyss.childNodes.length) return;
   state.abyssSig = sig;
 
@@ -374,7 +386,8 @@ function renderPoetry() {
   if (!refs.poetry) return;
   const item = pickPoetryItem(state.cache);
   const stat = item && item.stat ? item.stat : null;
-  const sig = [state.cache && state.cache.abyssAt || 0, stat ? stat.medal_num + "/" + stat.max_round_id : "-"].join("|");
+  const sig = [(state.cache && (state.cache.poetryAt || state.cache.abyssAt)) || 0,
+               stat ? stat.medal_num + "/" + stat.max_round_id : "-"].join("|");
   if (state.poetrySig === sig && refs.poetry.childNodes.length) return;
   state.poetrySig = sig;
 
@@ -463,7 +476,8 @@ function renderAdmin() {
     state.settings.server || "",
     (state.settings.deviceInfo || "").length,
     auth ? String(auth.cookie || "").length + ":" + (auth.uid || "") : "-",
-    state.cache ? state.cache.at || 0 : 0,
+    // 整包数据签名：debug 文案含 at/abyssAt/sections/errors，任一变化都要重算
+    state.cache ? cacheSignature(state.cache) : "",
   ].join("|");
   if (state.adminSig === adminSig) return;
   state.adminSig = adminSig;
@@ -911,8 +925,8 @@ function scheduleRerender() {
   }, 300);
 }
 
-// 数据签名：sections 内容以 at/abyssAt 为准（setCache 总是整体更新这两个时间戳），
-// 再带上错误与风控状态——这些都会影响界面。
+// 数据签名：各数据段以自己的 *At 独立版本为准（core 单项成功即推进对应段），
+// at/abyssAt 仅作老缓存回退；再带上错误与风控状态——这些都会影响界面。
 function cacheSignature(cache) {
   let errors = "";
   try {
@@ -920,7 +934,16 @@ function cacheSignature(cache) {
   } catch (err) {
     errors = "?";
   }
-  return [cache.at || 0, cache.abyssAt || 0, cache.uid || "", cache.riskUntil || 0, errors].join("|");
+  return [
+    cache.playerIndexAt || cache.at || 0,
+    cache.dailyNoteAt || 0,
+    cache.bbsUserAt || 0,
+    cache.abyssCurrentAt || cache.abyssAt || 0,
+    cache.poetryAt || 0,
+    cache.uid || "",
+    cache.riskUntil || 0,
+    errors,
+  ].join("|");
 }
 
 Tapp.lifecycle.onReady(async function () {
