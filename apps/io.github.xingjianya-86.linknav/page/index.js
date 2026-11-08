@@ -495,7 +495,8 @@ function cardSignature(link) {
     link.pinned ? 1 : 0,
     link.audience || "",
     link.icon || "",
-    link.iconData ? "d" + link.iconData.length : "",
+    // 图标内容用完整内容摘要（审查 P2：只比长度时等长不同 PNG 换图漏判）
+    link.iconData ? "d" + core.iconDigest(link.iconData) : "",
     state.role,
     state.favoriteSet.has(link.id) ? 1 : 0,
     openable,
@@ -581,15 +582,13 @@ function renderAll() {
 }
 
 // 数据指纹：links 与收藏任一实际变化才重绘。storage/shared 事件常由内容未变的写触发，
-// 也用于合并本地已显式 reload 过的自写事件。图标用「长度+首尾采样」参与指纹，
-// 图标键单独变更时由 bindDataSignals 先失效缓存再进来，采样足以识别变化。
+// 也用于合并本地已显式 reload 过的自写事件。图标参与指纹用完整内容摘要
+// （审查 P2：「长度+首尾采样」对等长不同 PNG 漏判，外部换图后页面不重绘）。
 function dataFingerprint() {
   const parts = [state.role, String(state.links.length), String(state.favoriteSet.size)];
   for (let i = 0; i < state.links.length; i++) {
     const link = state.links[i];
-    const icon = link.iconData
-      ? link.iconData.length + ":" + link.iconData.slice(0, 16) + ":" + link.iconData.slice(-16)
-      : link.icon || "";
+    const icon = link.iconData ? core.iconDigest(link.iconData) : link.icon || "";
     parts.push(
       [
         link.id,

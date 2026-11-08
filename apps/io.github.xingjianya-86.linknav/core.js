@@ -170,9 +170,38 @@ function iconKey(linkId) {
 let iconMemory = null;
 let iconUsageBytes = -1;
 
+// 图标内容摘要缓存（page 卡片签名 / reload 指纹 / widget 签名三处共用）：
+// 审查 P2——「长度+固定首尾片段」对等长不同 PNG（两张 166 字符 data URL，
+// 前 16 与末尾相同）会漏判，换图后卡片 img.src 仍是旧图。
+// 以完整 iconData 字符串为 key 存双向 FNV-1a 64 位摘要：JS Map 对字符串 key
+// 按值比较，内容相同天然命中、同一图标只算一次；换图=新字符串=必重算。
+// 上限兜底防旧字符串驻留（换图后旧 data URL 仅被本表持有）。
+let iconHashCache = new Map();
+const ICON_HASH_CACHE_MAX = 4096;
+
+function iconDigest(data) {
+  if (typeof data !== "string" || !data) return "";
+  const cached = iconHashCache.get(data);
+  if (cached !== undefined) return cached;
+  const n = data.length;
+  let forward = 0x811c9dc5;
+  let backward = 0x811c9dc5;
+  for (let i = 0; i < n; i++) {
+    forward = Math.imul(forward ^ data.charCodeAt(i), 0x01000193) >>> 0;
+    // 反向再扫一遍：避免「等长 + 首尾相同」采样式判据漏判的同型碰撞
+    backward = Math.imul(backward ^ data.charCodeAt(n - 1 - i), 0x01000193) >>> 0;
+  }
+  const digest = forward.toString(36) + "_" + backward.toString(36) + "x" + n;
+  if (iconHashCache.size >= ICON_HASH_CACHE_MAX) iconHashCache = new Map();
+  iconHashCache.set(data, digest);
+  return digest;
+}
+
 function invalidateIconCache() {
   iconMemory = null;
   iconUsageBytes = -1;
+  // 不清 iconHashCache：它是纯计算缓存，key 按值命中，换图自然产生新 key；
+  // 清掉只会让下一次 reload 对全部图标重扫。上限已在 iconDigest 内兜底。
 }
 
 async function loadIcons(includePrivate) {
@@ -617,6 +646,7 @@ module.exports = {
   MAX_ICON_BYTES: MAX_ICON_BYTES,
   MAX_ICON_TOTAL_BYTES: MAX_ICON_TOTAL_BYTES,
   isIconDataUri: isIconDataUri,
+  iconDigest: iconDigest,
   loadIcons: loadIcons,
   loadIconsFor: loadIconsFor,
   invalidateIconCache: invalidateIconCache,

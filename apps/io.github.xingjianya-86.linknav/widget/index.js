@@ -68,7 +68,7 @@ Tapp.widgets["quick-links"] = {
       t("widget.title"),
       shown
         .map(function (link) {
-          return link.id + "\u0001" + link.title + "\u0001" + (link.iconData ? link.iconData.length : link.icon || "");
+          return link.id + "\u0001" + link.title + "\u0001" + (link.iconData ? core.iconDigest(link.iconData) : link.icon || "");
         })
         .join("\u0002"),
     ].join("\u0000");
