@@ -1198,6 +1198,11 @@ async function refresh(force) {
         if (RISK_CODES.indexOf(res.error) >= 0) riskHit = true;
       } else {
         next[key] = res.data;
+        // 该数据段独立版本：单项成功即推进（页面分区签名靠它判断数据变更，
+        // 不再拿整包 at / endgameAt 当所有段的版本——endgameAt 须三接口全成功，
+        // 单项失败其余成功时不推进，会漏重绘）。
+        // at/endgameAt 保持整包闸门语义（下方 TTL 短路判断依赖），不在此处改。
+        next[key + "At"] = now;
       }
     } catch (err) {
       errors[key] = "NETWORK";

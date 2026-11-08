@@ -289,9 +289,21 @@ function expeditionText(note) {
 function renderChars() {
   if (!refs.chars) return;
   const avatars = ui.pickIndexAvatars(state.cache);
-  // 签名守卫：角色简表只随数据包变（at + 数量 + 首位等级覆盖换人/升级），未变不重建 16 张卡
-  const first = avatars[0];
-  const charSig = [(state.cache && state.cache.at) || 0, avatars.length, first ? first.id + ":" + first.level : "-"].join("|");
+  // 签名守卫：playerIndexAt 是该数据段独立版本（dailyNote 单独失败时 at 不推进，
+  // 用 at 会漏重绘）；再叠全部 avatar 的完整渲染输入摘要兜底换人/升级/图标变更，
+  // 字段对齐 charTile 实际渲染（头像 icon/image / ★稀有度 / 元素底色）与
+  // sortAvatars 排序键（rarity→level），未变不重建 16 张卡。
+  const charSig = [
+    (state.cache && (state.cache.playerIndexAt || state.cache.at)) || 0,
+    avatars.length,
+    avatars
+      .map(function (avatar) {
+        return [avatar.id || "", avatar.level || 0, avatar.rank || 0, avatar.rarity || 0,
+                avatar.name || "", avatar.element || "",
+                avatar.icon || avatar.image || ""].join(":");
+      })
+      .join(","),
+  ].join("|");
   setText(refs.charCount, avatars.length ? t("app.chars.count", { count: avatars.length }) : "");
   if (state.charsSig === charSig && refs.chars.childNodes.length) return;
   state.charsSig = charSig;
@@ -326,7 +338,16 @@ function renderEndgameInfo(container, info, mode) {
   const stars = info ? Number(info.star_num) || 0 : 0;
   // 分区签名守卫：三个 endgame 面板各自比对，未变不重建
   //（每次 renderAll 都重建三个面板含队伍头像，是全页最大 DOM 开销）。
-  const sig = [mode, state.schedule, state.cache && state.cache.endgameAt || 0,
+  // 段版本用各自数据段的 *At：endgameAt 须 moc/fiction/apocalyptic 三接口全成功
+  // 才推进，单项失败其余成功时它不动、面板数据却已更新（审查 P2 复现路径）。
+  // moc 面板横跨本期/上期两个数据段，两个都带上；新字段缺省回退 endgameAt。
+  const cache = state.cache || {};
+  const segAt = mode === "moc"
+    ? [cache.mocCurrentAt || cache.endgameAt || 0, cache.mocPreviousAt || cache.endgameAt || 0]
+    : mode === "fiction"
+      ? [cache.fictionAt || cache.endgameAt || 0]
+      : [cache.apocalypticAt || cache.endgameAt || 0];
+  const sig = [mode, state.schedule, segAt.join(","),
     stars, info ? info.max_floor || "" : "-", info ? info.battle_num || 0 : 0].join("|");
   if (state.endgameSig[mode] === sig && container.childNodes.length) return;
   state.endgameSig[mode] = sig;
@@ -456,7 +477,9 @@ function renderAdmin() {
     state.settings.server || "",
     (state.settings.deviceInfo || "").length,
     auth ? String(auth.cookie || "").length + ":" + (auth.uid || "") : "-",
-    state.cache ? state.cache.at || 0 : 0,
+    // 整包数据签名：debug 文案含 at/endgameAt/sections/errors 与全楼层 JSON，
+    // 任一数据段变化都要重算（endgame 段单项成功也要跟上）
+    state.cache ? cacheSignature(state.cache) : "",
   ].join("|");
   if (state.adminSig === adminSig) return;
   state.adminSig = adminSig;
@@ -920,7 +943,8 @@ function scheduleRerender() {
   }, 300);
 }
 
-// 数据签名：endgame 三区以 at/endgameAt 为准，再带上错误与风控状态——这些都会影响界面。
+// 数据签名：各数据段以自己的 *At 独立版本为准（core 单项成功即推进对应段），
+// at/endgameAt 仅作老缓存回退；再带上错误与风控状态——这些都会影响界面。
 function cacheSignature(cache) {
   let errors = "";
   try {
@@ -929,8 +953,14 @@ function cacheSignature(cache) {
     errors = "?";
   }
   return [
-    cache.at || 0,
-    cache.endgameAt || 0,
+    cache.playerIndexAt || cache.at || 0,
+    cache.dailyNoteAt || 0,
+    cache.roleInfoAt || 0,
+    cache.bbsUserAt || 0,
+    cache.mocCurrentAt || cache.endgameAt || 0,
+    cache.mocPreviousAt || cache.endgameAt || 0,
+    cache.fictionAt || cache.endgameAt || 0,
+    cache.apocalypticAt || cache.endgameAt || 0,
     cache.uid || "",
     cache.riskUntil || 0,
     errors,
