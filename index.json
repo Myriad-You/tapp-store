@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.93",
+  "version": "1.0.94",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-11-10T02:20:31.537Z",
+  "updated_at": "2026-11-10T02:40:15.159Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -1501,9 +1501,9 @@
     {
       "id": "cn.wyyzxzyg.search-submit",
       "name": "搜索引擎收录提交",
-      "version": "1.1.0",
-      "description": "仅管理员可用的百度主动推送与 IndexNow URL 提交工具，支持定时提交与手账订阅源文章/商店源更新后自动提交",
-      "long_description": "面向 Myriad 站点管理员的搜索引擎 URL 主动提交工具，支持百度搜索资源平台和 IndexNow，并提供 URL 清洗、提交确认与本地日志。v1.1 起新增定时提交与自动发现：可按间隔或每天固定时间在 headless core 中自动冲刷待提交队列；开启自动发现后，可读取 Myriad 手账（Phantasi）订阅源文章并按站内阅读页地址生成链接（默认 /journal/articles/{id}，模板可配置；该项默认关闭，因阅读页可能需登录或涉及转载内容，请确认站点与阅读页对公网公开后自行开启），同时可选扫描 sitemap.xml、robots.txt、RSS 与商店 index.json 等来源，只把首次出现的 URL 推送给百度或 IndexNow，避免重复提交。",
+      "version": "1.2.0",
+      "description": "仅管理员可用的 IndexNow URL 提交工具，支持定时提交与手账订阅源文章/商店源更新后自动提交",
+      "long_description": "面向 Myriad 站点管理员的搜索引擎 URL 主动提交工具，通过 IndexNow 提交（1.2.0 起不再支持百度主动推送），并提供 URL 清洗、提交确认与本地日志。v1.1 起新增定时提交与自动发现：可按间隔或每天固定时间在 headless core 中自动冲刷待提交队列；开启自动发现后，可读取 Myriad 手账（Phantasi）订阅源文章并按站内阅读页地址生成链接（默认 /journal/articles/{id}，模板可配置；该项默认关闭，因阅读页可能需登录或涉及转载内容，请确认站点与阅读页对公网公开后自行开启），同时可选扫描 sitemap.xml、robots.txt、RSS 与商店 index.json 等来源，只把首次出现的 URL 推送给 IndexNow，避免重复提交。",
       "author": {
         "name": "我願一直向著陽光.℡",
         "url": "https://github.com/zgzyh"
@@ -1514,7 +1514,6 @@
       "tags": [
         "搜索引擎",
         "SEO",
-        "百度",
         "IndexNow",
         "站长工具",
         "定时提交",
@@ -1561,13 +1560,13 @@
         "page_styles": "apps/cn.wyyzxzyg.search-submit/page.css",
         "page_template": "apps/cn.wyyzxzyg.search-submit/page.html"
       },
-      "size": 65413,
+      "size": 63652,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-11T06:51:21.040Z",
-      "updated_at": "2026-11-10T02:11:32.922Z"
+      "updated_at": "2026-11-10T02:40:15.142Z"
     },
     {
       "id": "com.myriad.three-lab",
