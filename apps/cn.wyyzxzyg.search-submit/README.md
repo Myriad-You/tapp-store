@@ -6,7 +6,7 @@
 
 ## 功能介绍
 
-- **手动提交**：百度主动推送（支持成功/拒绝/剩余额度统计）与 IndexNow 批量提交，含 URL 清洗去重、同站点校验、提交前确认与本地日志。
+- **手动提交**：IndexNow 批量提交，含 URL 清洗去重、同站点校验、提交前确认与本地日志。
 - **定时提交**：按间隔或每天固定时间，在 headless core 中自动冲刷待提交队列（`Tapp.scheduler`，需 `scheduler:register`）。
 - **自动发现**：可读取 Myriad 手账（Phantasi）订阅源文章（默认按 `/journal/articles/{id}` 拼站内阅读页，模板可配置；**默认关闭**，避免转载/重复内容风险），并可扫描 sitemap / robots.txt / RSS / 商店 index.json 等来源，只提交首次出现的 URL。
 
@@ -14,7 +14,7 @@
 
 ## 使用方法
 
-1. 选择百度主动推送或 IndexNow，点击配置区域的官方指南按钮获取 Token 或 Key。
+1. 点击配置区域的官方指南按钮获取 IndexNow Key。
 2. 填写站点地址和凭证，保存配置。
 3. 输入需要提交的完整 URL（每行一个），点击「提交这些 URL」。
 4. 需要自动执行时，在「03 定时提交」和「04 自动发现新增链接」面板开启并保存。
@@ -30,7 +30,7 @@
 | `storage:read` / `storage:write` | 配置、日志、待提交队列与去重记录 |
 | `phantasi:read` | 读取 Myriad 手账订阅源文章列表以发现新内容 |
 | `scheduler:register` | 注册定时提交任务 |
-| `network:fetch` | 百度 / IndexNow 推送，以及拉取自定义扫描来源 |
+| `network:fetch` | IndexNow 推送，以及拉取自定义扫描来源 |
 | `ui:notification` / `ui:confirm` / `ui:theme` / `ui:openUrl` | 通知、确认、主题与官方页面跳转 |
 
 `fetchScanSource` 声明为 `access: "manager"` 的 `GET` API，仅管理员可用。
@@ -38,8 +38,7 @@
 `Host`/`Connection` 等路由头，响应体上限 2 MiB。
 
 > **注意**：`fetchScanSource` 的 `endpoint` 是整条 URL 模板 `"{{params.url}}"`，
-> 由沙箱传入原始（未编码）地址，与 `baiduSubmit` 对 query 值做 `encodeURIComponent` 的写法不同——
-> 宿主按字面量注入模板值。沙箱侧因此额外用 `validateSourceUrl` 挡住花括号、空白、
+> 由沙箱传入原始（未编码）地址，宿主按字面量注入模板值。沙箱侧因此额外用 `validateSourceUrl` 挡住花括号、空白、
 > 非 HTTPS 与内嵌凭据，防止破坏模板解析或请求结构。
 >
 > 它本质上是**管理员可控的任意公网 HTTPS GET**（`access: "manager"`，仅安装 owner /
@@ -48,6 +47,14 @@
 > 提交，但抓取本身可以指向任何公网地址，请只配置可信来源。
 
 ## 更新日志
+
+### v1.2.0
+
+- 删除百度主动推送：`data.zz.baidu.com` 的 HTTPS 证书只覆盖 `baidu.com` / `*.baidu.com`，
+  不包含这个二级子域名，宿主出站校验证书必然失败；平台只允许 HTTPS 接口，应用侧无法绕开。
+  百度目前不支持 IndexNow，暂无替代
+- 之前选择百度的配置会在页面上看到下线说明；填写 IndexNow Key 并保存后，定时提交恢复
+- 配置缺少 IndexNow Key 时提示「尚未保存 IndexNow Key」，不再笼统提示格式不正确
 
 ### v1.1.0
 

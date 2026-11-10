@@ -94,10 +94,9 @@ async function loadEngine({ articles = [], role = 'admin', scripts = {} } = {}) 
 
 function config(overrides) {
   return {
-    provider: 'baidu',
+    provider: 'indexnow',
     siteUrl: 'https://example.com',
-    baiduToken: 'tok',
-    indexNowKey: '',
+    indexNowKey: 'test-key-123',
     keyLocation: '',
     schedule: { enabled: true, type: 'interval', intervalMinutes: 360, time: '09:00', timezone: 'local', missedPolicy: 'run-once' },
     auto: { enabled: true, articlesEnabled: true, articlePathTemplate: '/journal/articles/{id}', mode: 'submit', sourcesEnabled: false, sources: [] },
@@ -116,10 +115,22 @@ test('normalizeConfig 收敛字段并补默认值', async () => {
     siteUrl: 'https://example.com///',
     schedule: { enabled: true },
   })
-  assert.equal(normalized.provider, 'baidu')
+  assert.equal(normalized.provider, 'indexnow')
   assert.equal(normalized.siteUrl, 'https://example.com')
   assert.equal(normalized.schedule.type, 'interval')
   assert.equal(normalized.schedule.intervalMinutes, 360)
+})
+
+test('1.2.0 前选百度的配置：读进来改为 IndexNow，丢掉百度 Token，并能识别出来给提示', async () => {
+  const { engine } = await loadEngine()
+  const legacy = { provider: 'baidu', siteUrl: 'https://example.com', baiduToken: 'tok' }
+  const normalized = engine.normalizeConfig(legacy)
+  assert.equal(normalized.provider, 'indexnow')
+  assert.equal('baiduToken' in normalized, false)
+  assert.equal(engine.configError(normalized), '尚未保存 IndexNow Key')
+  assert.equal(engine.usedBaidu(legacy), true)
+  assert.equal(engine.usedBaidu({ provider: 'indexnow', indexNowKey: 'test-key-123' }), false)
+  assert.equal(engine.usedBaidu({ siteUrl: 'https://example.com' }), false)
 })
 
 test('normalizeAuto 迁移 legacy notesEnabled 并保留模板', async () => {
@@ -159,11 +170,8 @@ test('configError 校验文章地址模板必须以 / 或 https:// 开头', asyn
 test('configError 校验 HTTPS 与必填凭证', async () => {
   const { engine } = await loadEngine()
   assert.match(engine.configError(config({ siteUrl: 'http://example.com' })), /HTTPS/)
-  assert.match(engine.configError(config({ siteUrl: 'https://example.com', baiduToken: '' })), /Token/)
-  assert.match(
-    engine.configError(config({ provider: 'indexnow', siteUrl: 'https://example.com', indexNowKey: 'short' })),
-    /IndexNow Key/,
-  )
+  assert.equal(engine.configError(config({ indexNowKey: '' })), '尚未保存 IndexNow Key')
+  assert.match(engine.configError(config({ indexNowKey: 'short' })), /IndexNow Key 格式不正确/)
   assert.equal(engine.configError(config()), '')
 })
 
@@ -241,8 +249,8 @@ test('自动发现：首次建基线不提交，之后只提交新增', async ()
   host.articles.push(article('a3', 'https://source.example/p3'))
   result = await engine.runAutomation('测试')
   assert.equal(host.apiCalls.length, 1, '只应提交一次')
-  assert.equal(host.apiCalls[0].name, 'baiduSubmit')
-  assert.ok(host.apiCalls[0].params.body.includes('https://example.com/journal/articles/a3'))
+  assert.equal(host.apiCalls[0].name, 'indexNowSubmit')
+  assert.deepEqual([...host.apiCalls[0].params.urls], ['https://example.com/journal/articles/a3'])
 
   // 无新增，第三轮不提交
   host.apiCalls.length = 0
