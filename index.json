@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.92",
+  "version": "1.0.93",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-11-10T02:17:03.482Z",
+  "updated_at": "2026-11-10T02:20:31.537Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -771,10 +771,10 @@
     },
     {
       "id": "cn.wyyzxzyg.minecraft-hub",
-      "name": "Minecraft 服务器与 Wiki",
-      "version": "1.1.0",
-      "description": "面向玩家的 Java/基岩版服务器查询、最近记录与 Minecraft Wiki 搜索工具",
-      "long_description": "面向玩家的 Java/基岩版服务器查询、个人最近查询与 Minecraft Wiki 搜索工具。支持主页小组件轮询展示多台服务器状态。",
+      "name": "Minecraft 工具箱",
+      "version": "1.2.0",
+      "description": "Java/基岩版服务器查询、Minecraft 玩家公开资料、游戏版本资源与 Wiki 搜索工具",
+      "long_description": "面向玩家的 Minecraft 工具箱：查询 Java/基岩版服务器、Java 玩家公开资料与 Skin 原图入口、Bedrock Gamertag/XUID、游戏版本资源及 Minecraft Wiki。支持主页小组件轮询展示多台服务器状态。",
       "author": {
         "name": "我願一直向著陽光.℡",
         "url": "https://github.com/zgzyh"
@@ -786,6 +786,7 @@
       "tags": [
         "Minecraft",
         "服务器",
+        "玩家",
         "Wiki",
         "小组件"
       ],
@@ -834,16 +835,17 @@
         },
         "modules": {
           "page/index.js": "apps/cn.wyyzxzyg.minecraft-hub/page/index.js",
+          "page/player.js": "apps/cn.wyyzxzyg.minecraft-hub/page/player.js",
           "widget/index.js": "apps/cn.wyyzxzyg.minecraft-hub/widget/index.js"
         }
       },
-      "size": 64420,
+      "size": 97932,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-04T16:25:05Z",
-      "updated_at": "2026-08-24T11:33:10.635Z"
+      "updated_at": "2026-11-10T02:20:31.509Z"
     },
     {
       "id": "site.abloom.meliora",
