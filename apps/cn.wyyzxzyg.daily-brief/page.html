@@ -3,7 +3,7 @@
     <div>
       <p class="eyebrow">DAILY BRIEF · <span id="todayLabel">TODAY</span></p>
       <h1>把今天值得读的，放在一起。</h1>
-      <p class="hero-copy">从 Brew 提取重点，少一点信息噪音，多一点清晰行动。</p>
+      <p class="hero-copy">从 Phantasi 提取重点，少一点信息噪音，多一点清晰行动。</p>
     </div>
     <button id="refreshButton" class="primary-button" type="button">刷新简报</button>
   </header>
@@ -24,6 +24,10 @@
           <button type="button" data-filter="all">全部</button>
         </div>
         <div class="access-status"><span id="roleBadge" class="role-badge">访客可读</span><span id="statusText" class="status-text">准备加载</span></div>
+      </div>
+      <div id="contentToggles" class="content-toggles" hidden>
+        <span>展示内容</span>
+        <label><input type="checkbox" data-content-toggle="showSubscriptions" checked> 订阅文章</label>
       </div>
       <div id="feedList" class="feed-list" aria-live="polite"></div>
     </div>
