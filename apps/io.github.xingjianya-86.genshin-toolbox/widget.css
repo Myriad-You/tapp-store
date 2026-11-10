@@ -1,7 +1,7 @@
 /* 原神工具箱 · Widget 样式（共享令牌与原子类见 styles.css） */
 
 .gtw {
-  --gtw-scale: 1;
+  --gtw-scale: var(--tapp-scale, 1);
   position: relative;
   display: flex;
   flex-direction: column;
