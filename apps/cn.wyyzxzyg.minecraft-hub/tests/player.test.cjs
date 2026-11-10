@@ -69,8 +69,9 @@ test('does not load remote textures when the TApp image policy excludes them', (
   global.document = { querySelector: () => null };
   global.Tapp = { lifecycle: { getInfo: () => ({ permissions: ['network:fetch'] }) } };
   assert.equal(player.externalImagesAllowed(), false);
+  // media:remote is not a platform permission; only the page CSP decides.
   global.Tapp.lifecycle.getInfo = () => ({ permissions: ['network:fetch', 'media:remote'] });
-  assert.equal(player.externalImagesAllowed(), true);
+  assert.equal(player.externalImagesAllowed(), false);
   delete global.document;
 });
 
