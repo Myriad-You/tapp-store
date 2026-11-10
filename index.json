@@ -1,10 +1,10 @@
 {
   "$schema": "https://myriad.you/schemas/tapp-store-v1.json",
   "name": "Myriad Official Tapp Store",
-  "version": "1.0.90",
+  "version": "1.0.91",
   "api_version": "2",
   "base_url": "https://raw.githubusercontent.com/Myriad-You/tapp-store/main",
-  "updated_at": "2026-10-29T02:05:09.579Z",
+  "updated_at": "2026-11-10T02:11:32.942Z",
   "maintainer": {
     "name": "Myriad Team",
     "email": "tapp@myriad.you",
@@ -1499,9 +1499,9 @@
     {
       "id": "cn.wyyzxzyg.search-submit",
       "name": "搜索引擎收录提交",
-      "version": "1.0.2",
-      "description": "仅管理员可用的百度主动推送与 IndexNow URL 提交工具",
-      "long_description": "面向 Myriad 站点管理员的搜索引擎 URL 主动提交工具，支持百度搜索资源平台和 IndexNow，并提供 URL 清洗、提交确认与本地日志。",
+      "version": "1.1.0",
+      "description": "仅管理员可用的百度主动推送与 IndexNow URL 提交工具，支持定时提交与手账订阅源文章/商店源更新后自动提交",
+      "long_description": "面向 Myriad 站点管理员的搜索引擎 URL 主动提交工具，支持百度搜索资源平台和 IndexNow，并提供 URL 清洗、提交确认与本地日志。v1.1 起新增定时提交与自动发现：可按间隔或每天固定时间在 headless core 中自动冲刷待提交队列；开启自动发现后，可读取 Myriad 手账（Phantasi）订阅源文章并按站内阅读页地址生成链接（默认 /journal/articles/{id}，模板可配置；该项默认关闭，因阅读页可能需登录或涉及转载内容，请确认站点与阅读页对公网公开后自行开启），同时可选扫描 sitemap.xml、robots.txt、RSS 与商店 index.json 等来源，只把首次出现的 URL 推送给百度或 IndexNow，避免重复提交。",
       "author": {
         "name": "我願一直向著陽光.℡",
         "url": "https://github.com/zgzyh"
@@ -1514,7 +1514,10 @@
         "SEO",
         "百度",
         "IndexNow",
-        "站长工具"
+        "站长工具",
+        "定时提交",
+        "自动提交",
+        "sitemap"
       ],
       "permissions": [
         "storage:read",
@@ -1523,7 +1526,9 @@
         "ui:confirm",
         "ui:theme",
         "ui:openUrl",
-        "network:fetch"
+        "network:fetch",
+        "phantasi:read",
+        "scheduler:register"
       ],
       "icon_svg": "<svg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='11' cy='11' r='6' stroke='currentColor' stroke-width='2'/><path d='m16 16 4 4M8 11h6M11 8v6' stroke='currentColor' stroke-width='2'/></svg>",
       "theme_color": "#2563eb",
@@ -1538,12 +1543,12 @@
         ],
         "viewport": {
           "width": 1440,
-          "height": 900
+          "height": 1080
         },
         "fit": "cover",
         "focus": {
           "x": 0.5,
-          "y": 0.5
+          "y": 0.42
         },
         "theme": "light"
       },
@@ -1554,13 +1559,13 @@
         "page_styles": "apps/cn.wyyzxzyg.search-submit/page.css",
         "page_template": "apps/cn.wyyzxzyg.search-submit/page.html"
       },
-      "size": 17641,
+      "size": 65413,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-08-11T06:51:21.040Z",
-      "updated_at": "2026-08-19T11:09:38.477Z"
+      "updated_at": "2026-11-10T02:11:32.922Z"
     },
     {
       "id": "com.myriad.three-lab",
@@ -2356,19 +2361,19 @@
     {
       "id": "cn.wyyzxzyg.daily-brief",
       "name": "今日简报",
-      "version": "1.0.0",
-      "description": "汇总 Brew 阅读内容，快速生成一份清晰、可回看的今日简报。",
-      "long_description": "今日简报把分散在 Brew 中的阅读内容整理成一页专注视图。访客可以浏览站点公开简报并切换栏目；登录用户可使用站长下放的增强权限；安装设置、公共组件管理等控制面操作仅限管理员。需要进一步提炼时，可让 Myriad AI 根据当前条目生成简短的今日重点。没有 Brew 数据时会显示明确的引导，不会伪造内容。",
+      "version": "1.1.0",
+      "description": "汇总 Phantasi 阅读内容，快速生成一份清晰、可回看的今日简报。",
+      "long_description": "今日简报把分散在 Phantasi 中的阅读内容整理成一页专注视图。访客可以浏览站点公开简报并切换栏目；登录用户可使用站长下放的增强权限；安装设置、公共组件管理等控制面操作仅限管理员。需要进一步提炼时，可让 Myriad AI 根据当前条目生成简短的今日重点。没有 Phantasi 数据时会显示明确的引导，不会伪造内容。",
       "locales": {
         "en-US": {
           "name": "Daily Brief",
-          "description": "Turn your Brew reading queue into a focused daily briefing.",
-          "long_description": "Daily Brief turns your Brew reading queue into a calm, focused overview. Filter unread or starred stories, keep the latest snapshot on your dashboard, and ask Myriad AI for a concise summary when you need it."
+          "description": "Turn your Phantasi reading queue into a focused daily briefing.",
+          "long_description": "Daily Brief turns your Phantasi reading queue into a calm, focused overview. Filter unread or starred stories, keep the latest snapshot on your dashboard, and ask Myriad AI for a concise summary when you need it."
         },
         "ja-JP": {
           "name": "今日のブリーフ",
-          "description": "Brew の記事を集約し、今日の要点をひと目で確認できます。",
-          "long_description": "今日のブリーフは Brew の記事を落ち着いた一覧にまとめます。未読・お気に入りを切り替え、最新のスナップショットをウィジェットで確認し、必要なときだけ AI で要点を整理できます。"
+          "description": "Phantasi の記事を集約し、今日の要点をひと目で確認できます。",
+          "long_description": "今日のブリーフは Phantasi の記事を落ち着いた一覧にまとめます。未読・お気に入りを切り替え、最新のスナップショットをウィジェットで確認し、必要なときだけ AI で要点を整理できます。"
         }
       },
       "author": {
@@ -2381,13 +2386,13 @@
       "category": "productivity",
       "tags": [
         "简报",
-        "Brew",
+        "Phantasi",
         "阅读",
         "AI",
         "小组件"
       ],
       "permissions": [
-        "brew:read",
+        "phantasi:read",
         "storage:read",
         "storage:write",
         "ui:theme",
@@ -2427,13 +2432,13 @@
           }
         }
       },
-      "size": 36824,
+      "size": 39868,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-09-07T03:43:32.212Z",
-      "updated_at": "2026-09-07T03:43:32.212Z"
+      "updated_at": "2026-11-10T02:11:32.933Z"
     },
     {
       "id": "cn.echootaku.persona-stickers",
@@ -2755,7 +2760,7 @@
     {
       "id": "io.github.xingjianya-86.linknav",
       "name": "链接小窝",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "description": "收集与分享网址的萌系导航页：管理员维护共享链接目录并按角色分层可见，人人可收藏，桌面小组件快捷直达",
       "long_description": "链接小窝是一个把网址收藏与分享做成萌系贴纸风的导航页。管理员在小窝里录入链接，并给每条链接设置可见范围——所有人（含游客）、登录用户或仅管理员，前端会按当前角色自动隐藏无权查看的内容；其中「仅管理员」的链接保存在安装级私有数据里，不会进入访客可读的共享数据。\n\n每位登录用户都可以点卡片上的小星星收藏自己喜欢的链接，收藏保存在自己的私有空间，互不可见。桌面小组件会展示置顶链接，点击即可直达。图标支持上传本地图片压缩后缓存进应用数据，也支持管理员在浏览器里自动获取 favicon；缓存后的图标对所有访客可见、离线可用。站长还可以批量导入（JSON / URL 列表 / 书签 HTML / CSV）与导出（完整 JSON / URL 文本 / CSV / 收藏），备份和迁移都很方便。\n\n出于 Myriad 沙箱的安全限制，应用只能打开 Manifest 中声明的站点白名单（首批约 28 个常见站点，命中域名后自动打开）；白名单之外的链接可以「搜索打开」——用已声明的搜索引擎打开该网址，也可以一键复制后手动打开，不会静默失败。\n\n界面支持浅色 / 深色主题，文案提供简体中文、English 和日本語，动效会跟随系统「减少动态效果」设置自动收敛。应用默认离线可用：联网仅用于管理员在浏览器里获取 favicon（需 network:fetch 授权；未授权时自动隐藏该按钮，仍可手动上传）。图标缓存后访客离线也能正常显示，链接数据只保存在你的 Myriad 实例中。",
       "locales": {
@@ -2844,18 +2849,18 @@
           "widget/index.js": "apps/io.github.xingjianya-86.linknav/widget/index.js"
         }
       },
-      "size": 182521,
+      "size": 200581,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-09-17T23:49:32.230Z",
-      "updated_at": "2026-10-06T01:44:20.792Z"
+      "updated_at": "2026-11-10T02:11:32.938Z"
     },
     {
       "id": "io.github.xingjianya-86.genshin-toolbox",
       "name": "应急食品",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "description": "米游社扫码绑定后展示原神账号资料、树脂委托、角色简表、深境螺旋与幻想真境剧诗战绩，并提供 2x2 / 4x2 / 4x4 桌面小组件",
       "long_description": "应急食品是一个把米游社原神战绩搬进 Myriad 的数据面板 Tapp。站长用米游社 App 扫码绑定（或手动粘贴 Cookie）后，页面会展示原粹树脂与恢复时间、每日委托、洞天宝钱、探索与成就统计，以及角色简表（点击头像直达观测枢角色词条）。深渊区块支持深境螺旋本期 / 上期与幻想真境剧诗，逐间展示上下半队伍与通关时间，并汇总总星数。\n\n桌面小组件提供 2x2 / 4x2 / 4x4 三种尺寸：2x2 显示树脂、委托与宝钱；4x2 横排状态并展示前 8 名角色；4x4 额外显示回满时间、探索成就与前 12 名角色。角色头像点击即可跳转观测枢。\n\n数据全部来自米游社公开接口：扫码登录会自动补齐 ltoken 与 cookie_token，机器码 / 设备指纹在站长设置里配置；头像与角色图会压缩成 48px 缓存到本地（增量、限总量），离线也能显示。所有设置与凭据只保存在安装级私有数据里，仅站长可读。应用内置风控冷却（命中风控码后自动暂停请求并逐级延长冷却）、6 小时定时刷新与调试面板，支持简体中文、English、日本語以及浅色 / 深色主题。",
       "locales": {
@@ -2935,18 +2940,18 @@
           "widget/index.js": "apps/io.github.xingjianya-86.genshin-toolbox/widget/index.js"
         }
       },
-      "size": 235921,
+      "size": 248204,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-09-19T11:39:01.894Z",
-      "updated_at": "2026-10-06T01:42:15.976Z"
+      "updated_at": "2026-11-10T02:11:32.939Z"
     },
     {
       "id": "io.github.xingjianya-86.bat-toolbox",
       "name": "银河球棒侠",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "description": "米游社扫码绑定后展示星穹铁道账号资料、开拓力委托、角色简表、混沌回忆/虚构叙事/末日幻影战绩，并提供 2x2 / 4x2 / 4x4 桌面小组件",
       "long_description": "银河球棒侠是一个把米游社星穹铁道战绩搬进 Myriad 的数据面板 Tapp。站长扫码绑定（或手动粘贴 Cookie）后，页面展示开拓力与回满时间、后备开拓力、每日实训、委托、历战余响、差分宇宙拟合值与探索成就，以及角色简表（点击头像直达开拓者笔记）。终局区块包含混沌回忆（本期 / 上期）、虚构叙事与末日幻影三个页签，自动定位最后一关（星启模式），展示每个节点的上下半队伍、得分与通关日期。\n\n桌面小组件提供 2x2 / 4x2 / 4x4 三种尺寸：日常组件 2x2 显示开拓力、实训与委托，4x2 横排状态并展示前 8 名角色，4x4 额外显示回满时间、后备开拓力、探索成就与前 12 名角色；战绩组件 2x2 汇总三个模式的星数，4x2 / 4x4 展示最后一关的通关记录与队伍头像。\n\n数据来自米游社公开接口，DS 签名在应用内计算；扫码登录自动补齐 ltoken 与 cookie_token，机器码 / 设备指纹可在站长设置配置。素材会压缩成 48px 缓存到本地（增量、限总量），离线可用；设置与凭据只保存在安装级私有数据，仅站长可读。应用内置风控冷却、6 小时定时刷新与调试面板，支持简体中文、English、日本語与浅色 / 深色主题。",
       "locales": {
@@ -3026,13 +3031,13 @@
           "widget/index.js": "apps/io.github.xingjianya-86.bat-toolbox/widget/index.js"
         }
       },
-      "size": 250574,
+      "size": 263598,
       "downloads": 0,
       "rating": 0,
       "featured": false,
       "verified": false,
       "created_at": "2026-09-19T11:39:32.511Z",
-      "updated_at": "2026-10-06T01:43:55.887Z"
+      "updated_at": "2026-11-10T02:11:32.941Z"
     },
     {
       "id": "cn.sua17.journal-notes",
