@@ -66,9 +66,11 @@ Tapp.widgets["quick-links"] = {
       size,
       role,
       t("widget.title"),
+      // 点击走 openLink(link, openUrls)：地址或白名单变了，跳过重绘会留下旧的点击目标
+      JSON.stringify(openUrls || []),
       shown
         .map(function (link) {
-          return link.id + "\u0001" + link.title + "\u0001" + (link.iconData ? core.iconDigest(link.iconData) : link.icon || "");
+          return [link.id, link.title, link.url, link.iconData ? core.iconDigest(link.iconData) : link.icon || ""].join("\u0001");
         })
         .join("\u0002"),
     ].join("\u0000");

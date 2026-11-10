@@ -346,7 +346,9 @@ async function pruneIcons(liveIds, role) {
       if (!orphans.length) return;
       await Promise.all(
         orphans.map(async function (key) {
-          freed += await readIconLen(store, key);
+          // 先取到长度再累加：`freed += await …` 会在 await 前读走 freed，并发时互相覆盖
+          const len = await readIconLen(store, key);
+          freed += len;
           try {
             await store.remove(key);
           } catch (err) {
