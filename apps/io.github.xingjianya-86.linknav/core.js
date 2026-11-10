@@ -167,7 +167,49 @@ function iconKey(linkId) {
   return ICON_PREFIX + linkId;
 }
 
+let iconMemory = null;
+let iconUsageBytes = -1;
+
+// 图标内容摘要缓存（page 卡片签名 / reload 指纹 / widget 签名三处共用）：
+// 审查 P2——「长度+固定首尾片段」对等长不同 PNG（两张 166 字符 data URL，
+// 前 16 与末尾相同）会漏判，换图后卡片 img.src 仍是旧图。
+// 以完整 iconData 字符串为 key 存双向 FNV-1a 64 位摘要：JS Map 对字符串 key
+// 按值比较，内容相同天然命中、同一图标只算一次；换图=新字符串=必重算。
+// 上限兜底防旧字符串驻留（换图后旧 data URL 仅被本表持有）。
+let iconHashCache = new Map();
+const ICON_HASH_CACHE_MAX = 4096;
+
+function iconDigest(data) {
+  if (typeof data !== "string" || !data) return "";
+  const cached = iconHashCache.get(data);
+  if (cached !== undefined) return cached;
+  const n = data.length;
+  let forward = 0x811c9dc5;
+  let backward = 0x811c9dc5;
+  for (let i = 0; i < n; i++) {
+    forward = Math.imul(forward ^ data.charCodeAt(i), 0x01000193) >>> 0;
+    // 反向再扫一遍：避免「等长 + 首尾相同」采样式判据漏判的同型碰撞
+    backward = Math.imul(backward ^ data.charCodeAt(n - 1 - i), 0x01000193) >>> 0;
+  }
+  const digest = forward.toString(36) + "_" + backward.toString(36) + "x" + n;
+  if (iconHashCache.size >= ICON_HASH_CACHE_MAX) iconHashCache = new Map();
+  iconHashCache.set(data, digest);
+  return digest;
+}
+
+function invalidateIconCache() {
+  iconMemory = null;
+  iconUsageBytes = -1;
+  // 不清 iconHashCache：它是纯计算缓存，key 按值命中，换图自然产生新 key；
+  // 清掉只会让下一次 reload 对全部图标重扫。上限已在 iconDigest 内兜底。
+}
+
 async function loadIcons(includePrivate) {
+  // 内存缓存：图标（base64，总量可达 4MB）此前每次 loadLinks 都要 getAll 全库，
+  // 页面每次 storage 变化重载都会重复付出这笔开销。写入/删除与图标键变更会主动失效。
+  if (iconMemory && iconMemory.scope >= (includePrivate ? 1 : 0)) {
+    return Object.assign({}, iconMemory.data);
+  }
   const icons = {};
   async function collect(store) {
     try {
@@ -184,10 +226,38 @@ async function loadIcons(includePrivate) {
   }
   await collect(Tapp.shared);
   if (includePrivate) await collect(Tapp.private);
-  return icons;
+  iconMemory = { scope: includePrivate ? 1 : 0, data: icons };
+  return Object.assign({}, icons);
+}
+
+// 只读取指定链接的图标：小组件为显示 ≤6 条不再 getAll 整个 4MB 图标库。
+async function loadIconsFor(ids, includePrivate) {
+  const out = {};
+  const list = (Array.isArray(ids) ? ids : []).filter(function (id) {
+    return typeof id === "string" && id;
+  });
+  if (!list.length) return out;
+  async function pick(store) {
+    await Promise.all(
+      list.map(async function (id) {
+        if (out[id]) return;
+        try {
+          const raw = await store.get(iconKey(id));
+          const data = typeof raw === "string" ? raw : raw && typeof raw.data === "string" ? raw.data : "";
+          if (isIconDataUri(data)) out[id] = data;
+        } catch (err) {
+          /* 单键读取失败按无图标处理 */
+        }
+      }),
+    );
+  }
+  await pick(Tapp.shared);
+  if (includePrivate) await pick(Tapp.private);
+  return out;
 }
 
 async function iconUsage() {
+  if (iconUsageBytes >= 0) return iconUsageBytes;
   let bytes = 0;
   async function sum(store) {
     try {
@@ -201,32 +271,62 @@ async function iconUsage() {
   }
   await sum(Tapp.shared);
   await sum(Tapp.private);
+  iconUsageBytes = bytes;
   return bytes;
+}
+
+async function readIconLen(store, key) {
+  try {
+    const raw = await store.get(key);
+    const data = typeof raw === "string" ? raw : raw && typeof raw.data === "string" ? raw.data : "";
+    return isIconDataUri(data) ? data.length : 0;
+  } catch (err) {
+    return 0;
+  }
+}
+
+// 图标缓存维护：写入路径原样更新内存视图与字节计数，
+// 不再每次写图标都 getAll 整库（导入 N 个图标曾是 N 次全库扫描）。
+function noteIconWritten(linkId, dataUri, deltaBytes) {
+  if (iconMemory) iconMemory.data[linkId] = dataUri;
+  if (iconUsageBytes >= 0) iconUsageBytes = Math.max(0, iconUsageBytes + deltaBytes);
+}
+
+function noteIconRemoved(linkId, deltaBytes) {
+  if (iconMemory) delete iconMemory.data[linkId];
+  if (iconUsageBytes >= 0) iconUsageBytes = Math.max(0, iconUsageBytes + deltaBytes);
 }
 
 async function saveIcon(linkId, dataUri, audience, role) {
   if (role !== "admin") throw new Error("FORBIDDEN");
   if (!isIconDataUri(dataUri)) throw new Error("BAD_ICON");
   if (dataUri.length > MAX_ICON_BYTES) throw new Error("ICON_TOO_LARGE");
+  const store = audience === "admin" ? Tapp.private : Tapp.shared;
+  const key = iconKey(linkId);
+  const prevLen = await readIconLen(store, key);
   const total = await iconUsage();
   if (total > MAX_ICON_TOTAL_BYTES) throw new Error("ICON_QUOTA");
-  const store = audience === "admin" ? Tapp.private : Tapp.shared;
-  await store.set(iconKey(linkId), dataUri);
+  await store.set(key, dataUri);
+  noteIconWritten(linkId, dataUri, dataUri.length - prevLen);
   return true;
 }
 
 async function removeIcon(linkId, role) {
   if (role !== "admin") throw new Error("FORBIDDEN");
+  const key = iconKey(linkId);
+  const freed =
+    (await readIconLen(Tapp.shared, key)) + (await readIconLen(Tapp.private, key));
   try {
-    await Tapp.shared.remove(iconKey(linkId));
+    await Tapp.shared.remove(key);
   } catch (err) {
     /* ignore */
   }
   try {
-    await Tapp.private.remove(iconKey(linkId));
+    await Tapp.private.remove(key);
   } catch (err) {
     /* ignore */
   }
+  noteIconRemoved(linkId, freed);
 }
 
 async function pruneIcons(liveIds, role) {
@@ -235,41 +335,93 @@ async function pruneIcons(liveIds, role) {
   (Array.isArray(liveIds) ? liveIds : []).forEach(function (id) {
     live[id] = true;
   });
+  let freed = 0;
   async function prune(store) {
     try {
       const keys = await store.keys();
-      for (let i = 0; i < (keys || []).length; i++) {
-        const key = keys[i];
-        if (typeof key !== "string" || key.indexOf(ICON_PREFIX) !== 0) continue;
-        const id = key.slice(ICON_PREFIX.length);
-        if (!live[id]) await store.remove(key);
-      }
+      const orphans = (keys || []).filter(function (key) {
+        return typeof key === "string" && key.indexOf(ICON_PREFIX) === 0 && !live[key.slice(ICON_PREFIX.length)];
+      });
+      // 无孤儿直接返回：单条链接保存后不必每次跑两轮全键扫描
+      if (!orphans.length) return;
+      await Promise.all(
+        orphans.map(async function (key) {
+          freed += await readIconLen(store, key);
+          try {
+            await store.remove(key);
+          } catch (err) {
+            /* ignore */
+          }
+          if (iconMemory) delete iconMemory.data[key.slice(ICON_PREFIX.length)];
+        }),
+      );
     } catch (err) {
       /* ignore */
     }
   }
   await prune(Tapp.shared);
   await prune(Tapp.private);
+  if (freed > 0 && iconUsageBytes >= 0) iconUsageBytes = Math.max(0, iconUsageBytes - freed);
 }
 
-async function loadLinks(role) {
+async function loadLinks(role, options) {
+  const opts = options || {};
   const viewerRank = rank(role || (await getRole()));
   const includePrivate = viewerRank >= ROLE_RANK.admin;
   const all = await loadAllLinks(includePrivate);
-  const icons = await loadIcons(includePrivate);
-  return all
-    .filter(function (link) {
-      return rank(link.audience) <= viewerRank;
-    })
-    .sort(function (a, b) {
-      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
-      if (a.order !== b.order) return a.order - b.order;
-      return b.addedAt - a.addedAt;
-    })
-    .map(function (link) {
-      if (icons[link.id]) link.iconData = icons[link.id];
-      return link;
-    });
+  const visible = all.filter(function (link) {
+    return rank(link.audience) <= viewerRank;
+  });
+  visible.sort(function (a, b) {
+    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+    if (a.order !== b.order) return a.order - b.order;
+    return b.addedAt - a.addedAt;
+  });
+  // 只取前 limit 条（小组件用）：先裁剪再读图标，为显示 ≤6 条不必把 500 条都映射一遍。
+  const list = opts.limit > 0 ? visible.slice(0, opts.limit) : visible;
+  if (opts.icons === false) return list;
+  const icons =
+    opts.limit > 0
+      ? await loadIconsFor(
+          list.map(function (link) {
+            return link.id;
+          }),
+          includePrivate,
+        )
+      : await loadIcons(includePrivate);
+  return list.map(function (link) {
+    if (icons[link.id]) link.iconData = icons[link.id];
+    return link;
+  });
+}
+
+// 小组件专用：置顶优先 + limit 裁剪 + 只读这些链接的图标。
+async function loadWidgetLinks(role, limit) {
+  const viewerRank = rank(role || (await getRole()));
+  const includePrivate = viewerRank >= ROLE_RANK.admin;
+  const all = await loadAllLinks(includePrivate);
+  const visible = all.filter(function (link) {
+    return rank(link.audience) <= viewerRank;
+  });
+  visible.sort(function (a, b) {
+    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+    if (a.order !== b.order) return a.order - b.order;
+    return b.addedAt - a.addedAt;
+  });
+  const pinned = visible.filter(function (link) {
+    return link.pinned;
+  });
+  const shown = (pinned.length ? pinned : visible).slice(0, Math.max(1, limit || 6));
+  const icons = await loadIconsFor(
+    shown.map(function (link) {
+      return link.id;
+    }),
+    includePrivate,
+  );
+  shown.forEach(function (link) {
+    if (icons[link.id]) link.iconData = icons[link.id];
+  });
+  return shown;
 }
 
 async function saveLinks(links, role) {
@@ -494,7 +646,10 @@ module.exports = {
   MAX_ICON_BYTES: MAX_ICON_BYTES,
   MAX_ICON_TOTAL_BYTES: MAX_ICON_TOTAL_BYTES,
   isIconDataUri: isIconDataUri,
+  iconDigest: iconDigest,
   loadIcons: loadIcons,
+  loadIconsFor: loadIconsFor,
+  invalidateIconCache: invalidateIconCache,
   iconUsage: iconUsage,
   saveIcon: saveIcon,
   removeIcon: removeIcon,
@@ -506,6 +661,7 @@ module.exports = {
   normalizeLink: normalizeLink,
   loadAllLinks: loadAllLinks,
   loadLinks: loadLinks,
+  loadWidgetLinks: loadWidgetLinks,
   saveLinks: saveLinks,
   loadFavorites: loadFavorites,
   saveFavorites: saveFavorites,
