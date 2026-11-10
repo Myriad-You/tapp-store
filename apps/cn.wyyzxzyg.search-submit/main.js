@@ -196,9 +196,9 @@ var SearchSubmitCore = (function () {
   function normalizeConfig(raw) {
     raw = raw && typeof raw === 'object' ? raw : {};
     return {
-      provider: raw.provider === 'indexnow' ? 'indexnow' : 'baidu',
+      // 只剩 IndexNow 一个服务商；字段保留，旧配置里的 provider / baiduToken 读进来即丢弃。
+      provider: 'indexnow',
       siteUrl: clean(raw.siteUrl).replace(/\/+$/, ''),
-      baiduToken: clean(raw.baiduToken),
       indexNowKey: clean(raw.indexNowKey),
       keyLocation: clean(raw.keyLocation),
       schedule: normalizeSchedule(raw.schedule),
@@ -215,16 +215,14 @@ var SearchSubmitCore = (function () {
     } catch (error) {
       return '站点地址无效';
     }
-    if (config.provider === 'baidu' && !config.baiduToken) return '尚未保存百度 Token';
-    if (config.provider === 'indexnow') {
-      if (!/^[A-Za-z0-9-]{8,128}$/.test(config.indexNowKey)) return 'IndexNow Key 格式不正确';
-      if (config.keyLocation) {
-        try {
-          if (new URL(config.keyLocation).protocol !== 'https:') return 'Key 文件必须使用 HTTPS';
-          if (new URL(config.keyLocation).pathname.endsWith('/')) return 'Key 文件地址必须指向具体文件';
-        } catch (error) {
-          return 'Key 文件地址无效';
-        }
+    if (!config.indexNowKey) return '尚未保存 IndexNow Key';
+    if (!/^[A-Za-z0-9-]{8,128}$/.test(config.indexNowKey)) return 'IndexNow Key 格式不正确';
+    if (config.keyLocation) {
+      try {
+        if (new URL(config.keyLocation).protocol !== 'https:') return 'Key 文件必须使用 HTTPS';
+        if (new URL(config.keyLocation).pathname.endsWith('/')) return 'Key 文件地址必须指向具体文件';
+      } catch (error) {
+        return 'Key 文件地址无效';
       }
     }
     // 文章地址模板必须能解析成站内绝对地址：以 / 开头（相对站内路径）或 https:// 开头的绝对 URL，
@@ -234,16 +232,24 @@ var SearchSubmitCore = (function () {
     return '';
   }
 
-  function providerName(provider) {
-    return provider === 'indexnow' ? 'IndexNow' : '百度主动推送';
+  function providerName() {
+    return 'IndexNow';
   }
 
-  function submitLimit(provider) {
-    return provider === 'baidu' ? 2000 : 10000;
+  function submitLimit() {
+    return 10000;
+  }
+
+  /**
+   * 1.2.0 起删除了百度主动推送：data.zz.baidu.com 的 HTTPS 证书不含这个域名，
+   * 宿主出站校验证书必然失败，而平台只允许 HTTPS 接口。用来给旧配置的管理员一个说明。
+   */
+  function usedBaidu(raw) {
+    return !!(raw && typeof raw === 'object' && raw.provider !== 'indexnow' && clean(raw.baiduToken));
   }
 
   function keyScope(config) {
-    if (config.provider !== 'indexnow' || !config.keyLocation) return '/';
+    if (!config.keyLocation) return '/';
     var path = new URL(config.keyLocation).pathname;
     return path.slice(0, path.lastIndexOf('/') + 1) || '/';
   }
@@ -258,23 +264,6 @@ var SearchSubmitCore = (function () {
 
   async function submitToProvider(config, urls) {
     var data;
-    if (config.provider === 'baidu') {
-      data = apiData(
-        await Tapp.api('baiduSubmit', {
-          site: encodeURIComponent(config.siteUrl),
-          token: encodeURIComponent(config.baiduToken),
-          body: urls.join('\n'),
-        }),
-      );
-      if (data && data.error) throw new Error(data.message || String(data.error));
-      var success = data && typeof data.success === 'number' ? data.success : urls.length;
-      var remain = data && typeof data.remain === 'number' ? '，剩余额度 ' + data.remain : '';
-      var rejected =
-        (data && Array.isArray(data.not_same_site) ? data.not_same_site.length : 0) +
-        (data && Array.isArray(data.not_valid) ? data.not_valid.length : 0);
-      return '成功 ' + success + ' 条' + remain + (rejected ? '，拒绝 ' + rejected + ' 条' : '');
-    }
-
     var payload = { host: new URL(config.siteUrl).hostname, key: config.indexNowKey, urls: urls };
     if (config.keyLocation) {
       data = apiData(await Tapp.api('indexNowSubmitWithLocation', Object.assign({}, payload, { keyLocation: config.keyLocation })));
@@ -392,6 +381,7 @@ var SearchSubmitCore = (function () {
       Tapp.storage.get(STK),
     ]);
     state.config = normalizeConfig(values[0]);
+    state.usedBaidu = usedBaidu(values[0]);
     state.logs = Array.isArray(values[1]) ? values[1] : [];
     state.queue = Array.isArray(values[2]) ? values[2].map(clean).filter(Boolean) : [];
     state.seen = values[3] && typeof values[3] === 'object' && !Array.isArray(values[3]) ? values[3] : {};
@@ -404,6 +394,9 @@ var SearchSubmitCore = (function () {
     var previous = state.config;
     state.config = next;
     await Tapp.storage.set(CK, next);
+    // 存下去的配置已不含百度字段，提示到此为止。
+    state.usedBaidu = false;
+    if (hasDom()) render();
     // 换了站点之后旧的去重记录不再适用，重新建基线避免一次性全量推送。
     if (previous && previous.siteUrl && previous.siteUrl !== next.siteUrl) {
       state.seen = {};
@@ -594,7 +587,7 @@ var SearchSubmitCore = (function () {
 
   /**
    * endpoint 是 `{{params.url}}` 整条替换，宿主按字面量注入，
-   * 所以这里传原始地址（和 baiduSubmit 对 query 值做 encodeURIComponent 不同）。
+   * 所以这里传原始地址，不做 encodeURIComponent。
    */
   async function fetchScanSource(url) {
     var result = await Tapp.api('fetchScanSource', { url: url });
@@ -982,22 +975,8 @@ var SearchSubmitCore = (function () {
   }
 
   function render() {
-    var select = $('provider');
-    if (!select) return;
-    var provider = select.value;
-    var isIndexNow = provider === 'indexnow';
-    var baiduFields = $('baidu-fields');
-    var indexNowFields = $('indexnow-fields');
-    if (baiduFields) {
-      baiduFields.hidden = isIndexNow;
-      baiduFields.style.display = isIndexNow ? 'none' : 'block';
-    }
-    if (indexNowFields) {
-      indexNowFields.hidden = !isIndexNow;
-      indexNowFields.style.display = isIndexNow ? 'block' : 'none';
-    }
-    var badge = $('provider-badge');
-    if (badge) badge.textContent = providerName(provider);
+    var retired = $('baidu-retired');
+    if (retired) retired.hidden = !state.usedBaidu;
     var type = $('schedule-type');
     if (!type) return;
     var daily = type.value === 'daily';
@@ -1025,9 +1004,7 @@ var SearchSubmitCore = (function () {
   }
 
   function fill(config) {
-    $('provider').value = config.provider;
     $('site-url').value = config.siteUrl;
-    $('baidu-token').value = config.baiduToken;
     $('indexnow-key').value = config.indexNowKey;
     $('key-location').value = config.keyLocation;
     fillSchedule(config);
@@ -1037,9 +1014,7 @@ var SearchSubmitCore = (function () {
 
   function readConfig() {
     return normalizeConfig({
-      provider: $('provider').value,
       siteUrl: $('site-url').value,
-      baiduToken: $('baidu-token').value,
       indexNowKey: $('indexnow-key').value,
       keyLocation: $('key-location').value,
       schedule: {
@@ -1258,15 +1233,13 @@ var SearchSubmitCore = (function () {
       });
     });
 
-    $('provider').addEventListener('change', render);
-    $('provider').addEventListener('input', render);
     $('schedule-type').addEventListener('change', render);
 
     $('save-btn').onclick = saveAll;
     $('clear-config-btn').onclick = async function () {
       if (!(await guard())) return;
       if (!(await confirmAction('确定清除配置吗？'))) return;
-      await saveConfig({ provider: $('provider').value });
+      await saveConfig({});
       renderQueue();
       renderStatus();
       await note('配置已清除', 'success');
@@ -1331,6 +1304,7 @@ var SearchSubmitCore = (function () {
     TASK_ID: TASK_ID,
     SEEN_LIMIT: SEEN_LIMIT,
     normalizeConfig: normalizeConfig,
+    usedBaidu: usedBaidu,
     normalizeAuto: normalizeAuto,
     configError: configError,
     normalizeCandidate: normalizeCandidate,
