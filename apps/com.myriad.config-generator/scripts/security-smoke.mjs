@@ -11,7 +11,9 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
-import { generate } from './generator-harness.mjs'
+import { generate, loadGenerator } from './generator-harness.mjs'
+// Keep automatic-version regression coverage in the existing CI smoke entry.
+import './version-selection.test.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const mainPath = join(root, 'main.js')
@@ -332,19 +334,7 @@ assert.match(generatedStandard.compose, /MALLOC_ARENA_MAX: \$\{MALLOC_ARENA_MAX:
 assert.match(generate({ limitPreset: 'small' }).env, /^MALLOC_ARENA_MAX=2$/m)
 assert.match(generate({ limitPreset: 'large' }).env, /^MALLOC_ARENA_MAX=8$/m)
 
-function loadReleaseHelpers() {
-  const semverStart = main.indexOf('function parseVersionTag')
-  const semverEnd = main.indexOf('function pickLatestVersionedTag')
-  const start = main.indexOf('function extractGithubReleases')
-  const end = main.indexOf('async function fetchGithubReleases')
-  assert.ok(semverStart > 0 && semverEnd > semverStart && start > 0 && end > start)
-  return new Function(
-    main.slice(semverStart, semverEnd) + '\n' + main.slice(start, end) +
-    '; return { extractGithubReleases, parseReleaseImages, pickConfirmedGithubRelease };'
-  )()
-}
-
-const releases = loadReleaseHelpers()
+const releases = loadGenerator().context
 const sampleBody = [
   '- backend: `docker.io/somekawahitomi/myriad-backend:v0.5.6` (`sha256:' + 'a'.repeat(64) + '`)',
   '- frontend: `docker.io/somekawahitomi/myriad-frontend:v0.5.6` (`sha256:' + 'b'.repeat(64) + '`)',
@@ -362,6 +352,6 @@ assert.equal(confirmed.updaterTag, 'v0.5.6')
 assert.equal(confirmed.updaterDigest, 'd'.repeat(64))
 assert.equal(confirmed.versionAligned, true)
 assert.deepEqual(releases.extractGithubReleases({ data: [{ tag_name: 'v0.5.6' }] }).length, 1)
-assert.deepEqual(releases.extractGithubReleases({ results: [{ name: 'v1.2.4' }] }), [])
+assert.equal(releases.extractGithubReleases({ results: [{ name: 'v1.2.4' }] }).length, 0)
 
 console.log('config-generator security-smoke: ok')

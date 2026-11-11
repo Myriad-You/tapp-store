@@ -556,8 +556,10 @@ var I18N_FALLBACK = {
   "tags.loading": "正在获取最新版本…",
   "tags.loadingHub": "正在用 GitHub Release 确认版本，并查询 Docker Hub…",
   "tags.githubConfirmed": "GitHub Release 已确认",
-  "tags.githubOnly": "Docker Hub 不可达，已按 GitHub Release 确认",
-  "tags.sourcesEmpty": "GitHub Release 与 Docker Hub 都没有可用的 versioned tag（vX.Y.Z）{detail}",
+  "tags.githubOnly": "Docker Hub 未完整确认，已按 GitHub Release 确认",
+  "tags.sourcesEmpty": "GitHub Release 与 Docker Hub 都没有可用的稳定版本标签（vX.Y.Z）{detail}",
+  "tags.unresolved": "部分组件未找到稳定版本，请检查来源或手动填写",
+  "tags.changedDuringGeneration": "镜像版本已更改，本次生成已取消，请重新生成",
   "tags.githubHttp": "GitHub HTTP {status}",
   "tags.githubUnavailable": "当前环境无法请求 GitHub",
   "tags.aligned": "各仓独立最新",
@@ -794,9 +796,10 @@ function applyResolvedTagStatus(resolved) {
     sourceNote = ' · ' + (resolved.hubConfirmed ? t('tags.githubConfirmed') : t('tags.githubOnly'));
   }
   var showHubFailures = resolved.failures && resolved.failures.length && !resolved.githubConfirmed;
+  var incomplete = !resolved.myriadTag || !resolved.proxyTag || !resolved.updaterTag;
   var failNote = sourceNote + (showHubFailures
     ? ' · ' + t('tags.partialFail', { detail: resolved.failures.join('; ') })
-    : '');
+    : '') + (incomplete ? ' · ' + t('tags.unresolved') : '');
   setTagStatus(
     t('tags.resolved', {
       myriad: resolved.myriadTag,
@@ -805,7 +808,7 @@ function applyResolvedTagStatus(resolved) {
       align: alignNote,
       fail: failNote
     }),
-    showHubFailures ? 'error' : 'ok'
+    showHubFailures || incomplete ? 'error' : 'ok'
   );
 }
 
@@ -2248,7 +2251,8 @@ function pickLatestVersionedTag(tagNames) {
   var parsed = [];
   for (var i = 0; i < tagNames.length; i++) {
     var p = parseVersionTag(tagNames[i]);
-    if (p) parsed.push(p);
+    // Automatic defaults use stable versions only; manual preview inputs remain supported.
+    if (p && !p.pre) parsed.push(p);
   }
   if (!parsed.length) return null;
   parsed.sort(function(a, b) { return compareSemver(b, a); });
@@ -2391,27 +2395,39 @@ function pickConfirmedGithubRelease(releases) {
   var i;
   for (i = 0; i < releases.length; i++) {
     var rel = releases[i];
-    if (!rel || rel.draft) continue;
+    if (!rel || rel.draft || rel.prerelease) continue;
     var tag = parseVersionTag(rel.tag_name);
-    if (!tag) continue;
+    if (!tag || tag.pre) continue;
     parsed.push({ release: rel, parsed: tag });
   }
   if (!parsed.length) return null;
   parsed.sort(function (a, b) { return compareSemver(b.parsed, a.parsed); });
-  var best = parsed[0];
-  var images = parseReleaseImages(best.release.body);
-  var backendTag = images.backend && images.backend.tag;
-  var frontendTag = images.frontend && images.frontend.tag;
-  var myriadTag = (backendTag && frontendTag && backendTag === frontendTag)
-    ? backendTag
-    : (backendTag || frontendTag || best.parsed.raw);
+  // Components have independent release schedules. A missing image entry is not
+  // evidence that the component has an image with the enclosing release's tag.
+  var imageTags = { backend: [], frontend: [], proxy: [], updater: [] };
+  var updaterDigests = {};
+  parsed.forEach(function (entry) {
+    var images = parseReleaseImages(entry.release.body);
+    Object.keys(imageTags).forEach(function (name) {
+      var image = images[name];
+      var version = image && parseVersionTag(image.tag);
+      if (!version || version.pre) return;
+      imageTags[name].push(image.tag);
+      if (name === 'updater' && image.digest && !updaterDigests[image.tag]) {
+        updaterDigests[image.tag] = image.digest;
+      }
+    });
+  });
+  var myriadTag = pickLatestCommonVersionedTag([imageTags.backend, imageTags.frontend]) || '';
+  var updaterTag = pickLatestVersionedTag(imageTags.updater) || '';
   return {
-    tag: best.parsed.raw,
     myriadTag: myriadTag,
-    proxyTag: (images.proxy && images.proxy.tag) || best.parsed.raw,
-    updaterTag: (images.updater && images.updater.tag) || best.parsed.raw,
-    updaterDigest: (images.updater && images.updater.digest) || '',
-    versionAligned: !(backendTag && frontendTag && backendTag !== frontendTag)
+    proxyTag: pickLatestVersionedTag(imageTags.proxy) || '',
+    updaterTag: updaterTag,
+    updaterDigest: updaterDigests[updaterTag] || '',
+    imageTags: imageTags,
+    updaterDigests: updaterDigests,
+    versionAligned: !!myriadTag && pickLatestVersionedTag(imageTags.backend) === pickLatestVersionedTag(imageTags.frontend)
   };
 }
 
@@ -2455,16 +2471,16 @@ function applyResolvedTags(resolved, inputs, channelSelect, opts) {
   opts = opts || {};
   var force = !!opts.force;
 
-  if (shouldFillTagInput(inputs.myriad, force) && resolved.myriadTag) {
-    inputs.myriad.value = resolved.myriadTag;
+  if (shouldFillTagInput(inputs.myriad, force)) {
+    inputs.myriad.value = resolved.myriadTag || '';
     inputs.myriad.dataset.autoFilled = 'true';
   }
-  if (shouldFillTagInput(inputs.proxy, force) && resolved.proxyTag) {
-    inputs.proxy.value = resolved.proxyTag;
+  if (shouldFillTagInput(inputs.proxy, force)) {
+    inputs.proxy.value = resolved.proxyTag || '';
     inputs.proxy.dataset.autoFilled = 'true';
   }
-  if (shouldFillTagInput(inputs.updater, force) && resolved.updaterTag) {
-    inputs.updater.value = resolved.updaterTag;
+  if (shouldFillTagInput(inputs.updater, force)) {
+    inputs.updater.value = resolved.updaterTag || '';
     inputs.updater.dataset.autoFilled = 'true';
   }
 
@@ -2517,54 +2533,43 @@ async function resolveLatestImageTags() {
   var confirmed = pickConfirmedGithubRelease(listAt(4));
 
   // MYRIAD_TAG is shared by backend + frontend. PROXY_TAG and UPDATER_TAG
-  // each take that image's own latest versioned tag — do not pin all four together.
-  var businessCommon = pickLatestCommonVersionedTag([backendTags, frontendTags]);
-  var hubMyriad = businessCommon || pickLatestVersionedTag(backendTags) || pickLatestVersionedTag(frontendTags) || '';
-  var hubProxy = pickLatestVersionedTag(proxyTags) || '';
-  var hubUpdater = pickLatestVersionedTag(updaterTags) || '';
-
-  if (confirmed) {
-    var myriadTag = confirmed.myriadTag || hubMyriad;
-    var proxyTag = confirmed.proxyTag || hubProxy || confirmed.tag;
-    var updaterTag = confirmed.updaterTag || hubUpdater || confirmed.tag;
-    return {
-      myriadTag: myriadTag,
-      proxyTag: proxyTag,
-      updaterTag: updaterTag,
-      updaterDigest: confirmed.updaterDigest || '',
-      githubConfirmed: true,
-      hubConfirmed: hubListsContain(backendTags, myriadTag) || hubListsContain(frontendTags, myriadTag),
-      backendCount: backendTags.length,
-      frontendCount: frontendTags.length,
-      proxyCount: proxyTags.length,
-      updaterCount: updaterTags.length,
-      failures: failures,
-      versionAligned: confirmed.versionAligned,
-      commonTag: confirmed.tag
-    };
+  // each take that image's own latest versioned tag (stable only).
+  // Merge explicit release evidence with Hub so stale release notes cannot
+  // override a newer component image. Never infer an image from a release title.
+  function candidates(name, hubTags) {
+    return hubTags.concat(confirmed ? confirmed.imageTags[name] : []);
   }
+  var backendCandidates = candidates('backend', backendTags);
+  var frontendCandidates = candidates('frontend', frontendTags);
+  var myriadTag = pickLatestCommonVersionedTag([backendCandidates, frontendCandidates]) || '';
+  var proxyTag = pickLatestVersionedTag(candidates('proxy', proxyTags)) || '';
+  var updaterTag = pickLatestVersionedTag(candidates('updater', updaterTags)) || '';
 
-  if (!hubMyriad && !hubProxy && !hubUpdater) {
+  if (!myriadTag && !proxyTag && !updaterTag) {
     var detail = failures.length ? '（' + failures.join('; ') + '）' : '';
     throw new Error(t('tags.sourcesEmpty', { detail: detail }));
   }
 
-  var backendLatest = pickLatestVersionedTag(backendTags);
-  var frontendLatest = pickLatestVersionedTag(frontendTags);
+  var backendLatest = pickLatestVersionedTag(backendCandidates);
+  var frontendLatest = pickLatestVersionedTag(frontendCandidates);
   return {
-    myriadTag: hubMyriad,
-    proxyTag: hubProxy,
-    updaterTag: hubUpdater,
-    updaterDigest: '',
-    githubConfirmed: false,
-    hubConfirmed: true,
+    myriadTag: myriadTag,
+    proxyTag: proxyTag,
+    updaterTag: updaterTag,
+    // A release digest belongs to its exact updater tag, never another version.
+    updaterDigest: (confirmed && confirmed.updaterDigests[updaterTag]) || '',
+    githubConfirmed: !!(confirmed && myriadTag && proxyTag && updaterTag &&
+      hubListsContain(confirmed.imageTags.backend, myriadTag) && hubListsContain(confirmed.imageTags.frontend, myriadTag) &&
+      hubListsContain(confirmed.imageTags.proxy, proxyTag) && hubListsContain(confirmed.imageTags.updater, updaterTag)),
+    hubConfirmed: hubListsContain(backendTags, myriadTag) && hubListsContain(frontendTags, myriadTag) &&
+      hubListsContain(proxyTags, proxyTag) && hubListsContain(updaterTags, updaterTag),
     backendCount: backendTags.length,
     frontendCount: frontendTags.length,
     proxyCount: proxyTags.length,
     updaterCount: updaterTags.length,
     failures: failures,
-    versionAligned: !(backendLatest && frontendLatest && backendLatest !== frontendLatest),
-    commonTag: businessCommon || ''
+    versionAligned: !!myriadTag && backendLatest === frontendLatest,
+    commonTag: myriadTag
   };
 }
 
@@ -2593,9 +2598,10 @@ async function refreshLatestTags(inputs, channelSelect, opts) {
       applyResolvedTags(resolved, inputs, channelSelect, { force: !!opts.force });
       applyResolvedTagStatus(resolved);
       if (opts.notify) {
+        var complete = resolved.myriadTag && resolved.proxyTag && resolved.updaterTag;
         showNotification(
-          resolved.versionAligned ? t('notify.tagsAligned') : t('notify.tagsMixed'),
-          'success'
+          complete ? (resolved.versionAligned ? t('notify.tagsAligned') : t('notify.tagsMixed')) : t('tags.unresolved'),
+          complete ? 'success' : 'error'
         );
       }
       return resolved;
@@ -4096,6 +4102,14 @@ function initPage() {
         try {
           var resolvedUpdaterDigest = await resolveUpdaterDigest(state.updaterTag);
           if (!generationIsCurrent()) return;
+          // Refresh and manual edits can run while the tag-specific request is
+          // pending. Never attach its digest to a newer selection in state.
+          if (myriadTagInput.value.trim() !== myriadTag || proxyTagInput.value.trim() !== proxyTag ||
+              updaterTagInput.value.trim() !== updaterTag || state.myriadTag !== myriadRef.tag ||
+              state.proxyTag !== proxyRef.tag || state.updaterTag !== updaterRef.tag) {
+            showNotification(t('tags.changedDuringGeneration'), 'error');
+            return;
+          }
           state.updaterDigest = resolvedUpdaterDigest;
         } catch (digestErr) {
           showNotification((digestErr && digestErr.message) ? digestErr.message : t('error.needUpdaterDigest'), 'error');
