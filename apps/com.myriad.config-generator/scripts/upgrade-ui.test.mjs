@@ -12,7 +12,7 @@ const engine = require('./upgrade.js');
 const main = readFileSync(new URL('../main.js', import.meta.url), 'utf8');
 const html = readFileSync(new URL('../page.html', import.meta.url), 'utf8');
 const tick = () => new Promise(resolve => setTimeout(resolve, 10));
-async function openPage(t) {
+async function openPage(t, api) {
   const errors = [], notifications = [];
   const vc = new VirtualConsole();vc.on('jsdomError', e => {if (!/Not implemented:.*(?:scroll|navigation)/.test(e.message)) errors.push(e);});
   const dom = new JSDOM(html, {runScripts:'outside-only',url:'https://generator.test/',pretendToBeVisual:true,virtualConsole:vc});
@@ -21,6 +21,7 @@ async function openPage(t) {
   w.HTMLElement.prototype.scrollIntoView=()=>{};
   let ready;
   w.Tapp={lifecycle:{onReady(cb){ready=cb;},onUnload(){}},ui:{showNotification:async note=>notifications.push(note)},api:async name=>name==='dockerHubTag'?{digest:'sha256:'+'b'.repeat(64)}:{results:[{name:'v1.2.4'}]}};
+  if (api) w.Tapp.api = api;
   w.eval(main);assert.equal(typeof ready,'function');ready();await tick();
   const el=id=>w.document.getElementById(id);
   const enter=(id,value)=>{el(id).value=value;el(id).dispatchEvent(new w.Event('input',{bubbles:true}));};
@@ -101,3 +102,117 @@ test('page blocks directory generation with an incompatible selected updater rel
   assert.ok(page.notifications.some(n=>/v0.5.8/.test(n.message)),page.notifications.map(n=>n.message).join('\n'));
   page.enter('updater-tag','v0.5.8');assert.ok((await page.output()).compose);
 });
+
+// Exercise the actual refresh and generate listeners, including digest gating.
+const releaseDigest = 'a'.repeat(64);
+const hubDigest = 'c'.repeat(64);
+function versionApi({ githubFails = false, hubFails = false, updater = 'v0.7.0', digestResult = { digest: 'sha256:' + hubDigest }, missingUpdater = false } = {}) {
+  const digestRequests = [];
+  const images = (versions) => Object.entries(versions).map(([component, tag]) =>
+    `- ${component}: \`docker.io/somekawahitomi/myriad-${component}:${tag}\` (\`sha256:${releaseDigest}\`)`).join('\n');
+  const releases = [{ tag_name: 'v0.8.0', body: images({ backend: 'v0.8.0', frontend: 'v0.8.0', proxy: 'v0.8.0' }) }];
+  if (!missingUpdater) releases.push({ tag_name: 'v0.7.0', body: images({ updater: 'v0.7.0' }) });
+  const api = async (name, params) => {
+    if (name === 'githubReleases') {
+      if (githubFails) throw new Error('GitHub unavailable');
+      return releases;
+    }
+    if (name === 'dockerHubTags') {
+      if (hubFails) throw new Error('Hub unavailable');
+      if (params.repo === 'myriad-updater' && missingUpdater) return { results: [] };
+      return { results: [{ name: params.repo === 'myriad-updater' ? updater : 'v0.8.0' }] };
+    }
+    assert.equal(name, 'dockerHubTag');
+    digestRequests.push(params.tag);
+    if (digestResult instanceof Error) throw digestResult;
+    return digestResult;
+  };
+  return { api, digestRequests };
+}
+for (const [label, options, expectedRequests, expectedDigest] of [
+  ['release omits updater', {}, [], releaseDigest],
+  ['GitHub unavailable', { githubFails: true }, ['v0.7.0'], hubDigest],
+  ['Hub unavailable', { hubFails: true }, [], releaseDigest],
+  ['Hub updater is newer than release digest', { updater: 'v0.7.1' }, ['v0.7.1'], hubDigest]
+]) test('page generates independent stable versions: ' + label, async t => {
+  const mock = versionApi(options);
+  const page = await openPage(t, mock.api);page.inspect(legacy());
+  const output = await page.output();
+  assert.ok(output.compose, page.notifications.map(n => n.message).join('\n'));
+  const env = engine.parseEnv(output.env);
+  assert.equal(env.MYRIAD_TAG, 'v0.8.0');assert.equal(env.PROXY_TAG, 'v0.8.0');
+  assert.equal(env.UPDATER_TAG, options.updater || 'v0.7.0');
+  assert.equal(page.w.state.updaterDigest, expectedDigest);
+  assert.deepEqual(mock.digestRequests, expectedRequests);
+  assert.equal(page.errors.length, 0);
+});
+for (const [label, response] of [['missing', {}], ['malformed', { digest: 'sha256:invalid' }], ['failed', new Error('HTTP 404 - tag not found')]]) {
+  test('page blocks generation when updater digest is ' + label, async t => {
+    const mock = versionApi({ githubFails: true, digestResult: response });
+    const page = await openPage(t, mock.api);page.inspect(legacy());
+    const output = await page.output();
+    assert.equal(output.compose, '');assert.equal(output.env, '');
+    assert.deepEqual(mock.digestRequests, ['v0.7.0']);
+    assert.ok(page.notifications.some(n => /digest|404/i.test(n.message)), JSON.stringify(page.notifications));
+  });
+}
+test('manual updater version cannot reuse the cached release digest for another tag', async t => {
+  const mock = versionApi();const page = await openPage(t, mock.api);page.inspect(legacy());
+  page.enter('updater-tag', 'v0.7.2');
+  const output = await page.output();assert.ok(output.compose);
+  assert.deepEqual(mock.digestRequests, ['v0.7.2']);
+  assert.equal(page.w.state.updaterDigest, hubDigest);
+});
+test('page blocks unresolved updater instead of querying the main release version', async t => {
+  const mock = versionApi({ missingUpdater: true });const page = await openPage(t, mock.api);page.inspect(legacy());
+  const output = await page.output();assert.equal(output.compose, '');
+  assert.equal(page.el('updater-tag').value, '');assert.deepEqual(mock.digestRequests, []);
+  assert.match(page.el('tag-status').textContent, /未找到稳定版本/);
+});
+test('fresh-install generate button accepts independently selected stable versions', async t => {
+  const mock = versionApi();const page = await openPage(t, mock.api);
+  page.el('btn-start-new').click();
+  page.enter('main-domain', 'example.com');page.enter('extra-domain', 'social.example.com');
+  page.enter('compose-host-root', '/srv/myriad');
+  const output = await page.output();
+  assert.ok(output.compose, page.notifications.map(n => n.message).join('\n'));
+  const env = engine.parseEnv(output.env);
+  assert.equal(env.MYRIAD_TAG, 'v0.8.0');assert.equal(env.PROXY_TAG, 'v0.8.0');assert.equal(env.UPDATER_TAG, 'v0.7.0');
+  assert.equal(page.w.state.updaterDigest, releaseDigest);
+  assert.deepEqual(mock.digestRequests, []);
+  assert.equal(page.errors.length, 0);
+});
+test('refreshing versions during digest lookup cancels generation instead of mixing tags and digest', async t => {
+  const mock = versionApi({ githubFails: true });
+  const page = await openPage(t, mock.api);page.inspect(legacy());
+  let resolveDigest;
+  page.w.Tapp.api = async (name, params) => name === 'dockerHubTag'
+    ? new Promise(resolve => { resolveDigest = resolve; }) : mock.api(name, params);
+  page.el('btn-generate-all').click();await tick();
+  assert.equal(typeof resolveDigest, 'function');
+  const newer = versionApi({ githubFails: true, updater: 'v0.7.1' });
+  page.w.Tapp.api = newer.api;
+  page.el('btn-refresh-tags').click();await tick();
+  assert.equal(page.el('updater-tag').value, 'v0.7.1');
+  resolveDigest({ digest: 'sha256:' + 'd'.repeat(64) });await tick();
+  assert.equal(page.el('result-env').textContent, '');
+  assert.equal(page.el('updater-tag').value, 'v0.7.1');
+  assert.ok(page.notifications.some(n => /生成已取消/.test(n.message)));
+  const output = await page.output();assert.ok(output.env);
+  assert.equal(engine.parseEnv(output.env).UPDATER_TAG, 'v0.7.1');
+  assert.equal(page.w.state.updaterDigest, hubDigest);
+  assert.deepEqual(newer.digestRequests, ['v0.7.1']);
+});
+for (const field of ['myriad-tag', 'proxy-tag', 'updater-tag']) {
+  test('manual edit during digest lookup cancels pending generation: ' + field, async t => {
+    const mock = versionApi({ githubFails: true });const page = await openPage(t, mock.api);page.inspect(legacy());
+    let resolveDigest;
+    page.w.Tapp.api = async (name, params) => name === 'dockerHubTag'
+      ? new Promise(resolve => { resolveDigest = resolve; }) : mock.api(name, params);
+    page.el('btn-generate-all').click();await tick();assert.equal(typeof resolveDigest, 'function');
+    page.enter(field, 'v0.9.0');resolveDigest({ digest: 'sha256:' + 'd'.repeat(64) });await tick();
+    assert.equal(page.el('result-env').textContent, '');assert.equal(page.el(field).value, 'v0.9.0');
+    assert.ok(page.notifications.some(n => /生成已取消/.test(n.message)));
+    assert.equal(page.el('btn-generate-all').disabled, false);
+  });
+}

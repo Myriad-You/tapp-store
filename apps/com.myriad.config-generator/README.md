@@ -93,6 +93,10 @@ Guard、updater、updater-gateway 共用 `UPDATER_IMAGE:UPDATER_TAG` 部署目�
 
 ## 镜像与密钥
 
+自动选版分别选择主体、proxy、updater 的最新稳定版本号，不要求三者一致，也不使用浮动 `latest`。主体共用 `MYRIAD_TAG`，因此只选 backend 与 frontend 都有发布证据的相同标签。Docker Hub 标签与 GitHub 稳定 Release 明确列出的各组件镜像共同参与选版；忽略草稿、预发布和 `rc` / `beta` 等标签。最新 Release 缺少某组件时，可使用历史稳定 Release 的明确镜像条目，不把 Release 标题版本当成该组件版本。所有来源均缺少某组件时须补齐版本才能生成。
+
+updater 的 Release digest 仅用于完全相同的标签；选择更新版本或手动改版后，仍须取得对应 digest，否则阻止生成。自动刷新保留用户手动输入，显式点击刷新会重新选版。来源查询范围沿用 Docker Hub 最近 100 个标签与 GitHub 最近 20 条 Release；网络失败时只依据可用来源，不保证覆盖未返回的历史记录。
+
 业务 backend / frontend / proxy 使用版本 tag；拒绝业务 digest 输入，避免同一 digest 错用于不同镜像，或使 updater 的版本切换失效。Guard、updater 和 gateway 共用所选 updater tag，解析得到的 digest 用于核验与恢复记录；不接受 `latest`。
 
 新装自动生成独立身份密钥、安装暗号与统计盐，产物经密钥与 `.env` 一致性检查。`MYRIAD_SETUP_SECRET` 用于首次创建所有者。`PROXY_ALLOW_DIRECT_UPDATER` 保持 false，backend 经 gateway 更新。YouTube / OpenXBL / PSN、出站 HTTP 代理（`PROXY_ENABLED` / `PROXY_URL` / `PROXY_BYPASS`）与 Gemini / GitHub API 镜像不在此写入，走 `/config` → 高级；宿主 `.env` 残留键会被忽略。管理台保存只双写 `BASE_URL`（改公网 origin 时同时改 `FRONTEND_URL` / `CORS_ORIGINS`）。高级资源限额与内存节约模式可按主机能力调整。
@@ -103,6 +107,7 @@ Guard、updater、updater-gateway 共用 `UPDATER_IMAGE:UPDATER_TAG` 部署目�
 
 ```sh
 node scripts/security-smoke.mjs
+node --test scripts/version-selection.test.mjs
 node scripts/platform-guide-smoke.mjs
 node scripts/platform-matrix.mjs
 node scripts/upgrade.test.mjs
